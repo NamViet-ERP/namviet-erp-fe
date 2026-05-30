@@ -1,0 +1,337 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─────────────────────────────────────────────
+   OKLCH Design Tokens — CSS Custom Properties
+   All colors are defined in OKLCH color space
+   for perceptual uniformity and consistency.
+   ───────────────────────────────────────────── */
+:root {
+  /* Chrome surfaces (header, dark areas) */
+  --chrome-bg: oklch(0.215 0.032 264);
+  --chrome-hover: oklch(0.275 0.028 264);
+  --chrome-active: oklch(0.30 0.025 264);
+  --chrome-border: oklch(0.30 0.022 264);
+  --chrome-text: oklch(0.90 0.006 264);
+  --chrome-text-muted: oklch(0.62 0.018 264);
+
+  /* Page surfaces */
+  --surface-page: oklch(0.972 0.008 264);
+  --surface-card: oklch(1.0 0 0);
+  --surface-muted: oklch(0.965 0.005 264);
+  --surface-subtle: oklch(0.945 0.008 264);
+
+  /* Sidebar */
+  --sidebar-bg: oklch(1.0 0 0);
+  --sidebar-border: oklch(0.925 0.006 264);
+  --sidebar-item-hover: oklch(0.960 0.010 264);
+  --sidebar-item-active: oklch(0.940 0.020 58);
+
+  /* Accent */
+  --accent: oklch(0.625 0.142 58);
+  --accent-hover: oklch(0.555 0.140 55);
+  --accent-subtle: oklch(0.960 0.022 58);
+  --accent-text: oklch(0.480 0.110 55);
+
+  /* Ink (text) */
+  --ink-primary: oklch(0.225 0.025 264);
+  --ink-secondary: oklch(0.475 0.018 264);
+  --ink-tertiary: oklch(0.600 0.012 264);
+  --ink-muted: oklch(0.700 0.008 264);
+
+  /* Borders */
+  --border-default: oklch(0.920 0.006 264);
+  --border-subtle: oklch(0.945 0.004 264);
+  --border-strong: oklch(0.850 0.012 264);
+
+  /* Status — muted, professional tones */
+  --status-success: oklch(0.620 0.135 160);
+  --status-warning: oklch(0.630 0.125 80);
+  --status-error: oklch(0.545 0.155 25);
+  --status-info: oklch(0.590 0.095 220);
+
+  /* Stat card palettes — richer, less "AI gradient" */
+  --card-stock-from: oklch(0.585 0.175 25);
+  --card-stock-to: oklch(0.640 0.165 40);
+  --card-value-from: oklch(0.500 0.150 255);
+  --card-value-to: oklch(0.580 0.130 220);
+  --card-warehouse-from: oklch(0.500 0.155 300);
+  --card-warehouse-to: oklch(0.565 0.155 340);
+}
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'cv11', 'ss01', 'ss03';
+    background-color: var(--surface-page);
+    color: var(--ink-primary);
+    line-height: 1.5;
+    font-size: 14px;
+  }
+
+  /* Refined scrollbar */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: oklch(0.82 0.010 264);
+    border-radius: 100px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: oklch(0.70 0.015 264);
+  }
+
+  /* Remove default focus outlines, add custom */
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* ─── Stat Cards ─── */
+  .card-gradient-stock {
+    background: linear-gradient(135deg, var(--card-stock-from), var(--card-stock-to));
+  }
+  .card-gradient-value {
+    background: linear-gradient(135deg, var(--card-value-from), var(--card-value-to));
+  }
+  .card-gradient-warehouse {
+    background: linear-gradient(135deg, var(--card-warehouse-from), var(--card-warehouse-to));
+  }
+
+  /* ─── Data Table ─── */
+  .table-header-cell {
+    padding: 10px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: oklch(0.98 0 0);
+    background: var(--chrome-bg);
+    white-space: nowrap;
+  }
+  .table-header-cell:first-child { border-radius: 8px 0 0 0; }
+  .table-header-cell:last-child { border-radius: 0 8px 0 0; }
+
+  .table-row {
+    border-bottom: 1px solid var(--border-subtle);
+    transition: background-color 0.1s ease;
+  }
+  .table-row:hover {
+    background-color: oklch(0.975 0.008 264);
+  }
+  .table-row:nth-child(even) {
+    background-color: oklch(0.985 0.003 264);
+  }
+  .table-row:nth-child(even):hover {
+    background-color: oklch(0.975 0.008 264);
+  }
+
+  .table-cell {
+    padding: 10px 16px;
+    font-size: 13px;
+    color: var(--ink-primary);
+  }
+
+  /* ─── Status Badges ─── */
+  .badge {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-medium;
+  }
+  .badge-approved {
+    background: oklch(0.955 0.025 160);
+    color: oklch(0.400 0.100 160);
+    border: 1px solid oklch(0.900 0.040 160);
+  }
+  .badge-pending {
+    background: oklch(0.960 0.025 80);
+    color: oklch(0.420 0.100 80);
+    border: 1px solid oklch(0.900 0.040 80);
+  }
+  .badge-exported {
+    background: oklch(0.955 0.020 220);
+    color: oklch(0.420 0.080 220);
+    border: 1px solid oklch(0.900 0.030 220);
+  }
+  .badge-new {
+    background: oklch(0.950 0.025 25);
+    color: oklch(0.430 0.130 25);
+    border: 1px solid oklch(0.900 0.040 25);
+  }
+  .badge-draft {
+    background: oklch(0.955 0.006 264);
+    color: oklch(0.450 0.020 264);
+    border: 1px solid oklch(0.900 0.008 264);
+  }
+
+  /* ─── Sidebar Items ─── */
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-secondary);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.12s ease;
+    position: relative;
+  }
+  .sidebar-item:hover {
+    background: var(--sidebar-item-hover);
+    color: var(--ink-primary);
+  }
+  .sidebar-item.active {
+    background: var(--sidebar-item-active);
+    color: var(--accent-text);
+    font-weight: 600;
+  }
+  .sidebar-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 6px;
+    bottom: 6px;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: var(--accent);
+  }
+
+  /* ─── Sidebar Transition Animations ─── */
+  .sidebar-label {
+    white-space: nowrap;
+    opacity: 1;
+    max-width: 150px;
+    display: inline-block;
+    transition: opacity 200ms ease, max-width 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sidebar-label.collapsed {
+    opacity: 0;
+    max-width: 0;
+    flex: none !important;
+    pointer-events: none;
+  }
+
+  /* ─── Submenu height transition using Grid ─── */
+  .submenu-wrapper {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .submenu-wrapper.expanded {
+    grid-template-rows: 1fr;
+  }
+  .submenu-content {
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 180ms ease;
+  }
+  .submenu-wrapper.expanded .submenu-content {
+    opacity: 1;
+  }
+
+  /* ─── Buttons ─── */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer;
+    transition: all 0.12s ease;
+  }
+  .btn-primary {
+    background: var(--chrome-bg);
+    color: oklch(0.95 0 0);
+    box-shadow: 0 1px 2px oklch(0.15 0.02 264 / 0.15);
+  }
+  .btn-primary:hover {
+    background: var(--chrome-hover);
+  }
+  .btn-primary:active {
+    background: oklch(0.185 0.030 264);
+  }
+  .btn-action {
+    background: var(--status-info);
+    color: white;
+    box-shadow: 0 1px 2px oklch(0.50 0.10 220 / 0.20);
+  }
+  .btn-action:hover {
+    background: oklch(0.540 0.090 220);
+  }
+  .btn-outline {
+    border: 1.5px solid var(--border-strong);
+    color: var(--ink-secondary);
+    background: transparent;
+  }
+  .btn-outline:hover {
+    background: var(--surface-muted);
+    border-color: oklch(0.80 0.015 264);
+    color: var(--ink-primary);
+  }
+  .btn-danger {
+    background: var(--status-error);
+    color: white;
+  }
+  .btn-danger:hover { background: oklch(0.500 0.155 25); }
+  .btn-success {
+    background: var(--status-success);
+    color: white;
+  }
+  .btn-success:hover { background: oklch(0.570 0.135 160); }
+
+  /* ─── Form Inputs ─── */
+  .form-input {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 13px;
+    border: 1px solid var(--border-default);
+    border-radius: 6px;
+    background: var(--surface-card);
+    color: var(--ink-primary);
+    transition: all 0.12s ease;
+  }
+  .form-input::placeholder { color: var(--ink-muted); }
+  .form-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px oklch(0.625 0.142 58 / 0.12);
+  }
+
+  .form-select {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 13px;
+    border: 1px solid var(--border-default);
+    border-radius: 6px;
+    background: var(--surface-card);
+    color: var(--ink-primary);
+    cursor: pointer;
+    transition: all 0.12s ease;
+  }
+  .form-select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px oklch(0.625 0.142 58 / 0.12);
+  }
+
+  .form-label {
+    @apply block text-sm font-medium mb-1;
+    color: var(--ink-primary);
+  }
+}
+
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+}
