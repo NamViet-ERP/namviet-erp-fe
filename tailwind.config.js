@@ -4,103 +4,161 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        /* OKLCH-derived navy scale — perceptually uniform slate-blue */
-        navy: {
-          50:  '#f4f6fa',  /* oklch(0.972 0.008 264) */
-          100: '#e4e8f1',  /* oklch(0.935 0.014 264) */
-          200: '#c8d0e2',  /* oklch(0.860 0.024 264) */
-          300: '#9aa7c2',  /* oklch(0.720 0.034 264) */
-          400: '#6d7d9e',  /* oklch(0.575 0.038 264) */
-          500: '#506488',  /* oklch(0.475 0.042 264) */
-          600: '#3e506f',  /* oklch(0.395 0.038 264) */
-          700: '#313f59',  /* oklch(0.325 0.033 264) */
-          800: '#26334c',  /* oklch(0.270 0.030 264) */
-          900: '#1c2640',  /* oklch(0.225 0.032 264) */
-          950: '#121a30',  /* oklch(0.165 0.028 264) */
-        },
-        brand: {
-          orange: '#c67a2e',      /* oklch(0.625 0.142 58) — warmer, less saturated */
-          'orange-light': '#dba05c', /* oklch(0.735 0.115 60) */
-        },
-        accent: {
-          DEFAULT: '#c67a2e',     /* oklch(0.625 0.142 58) */
-          subtle: '#f5ede2',      /* oklch(0.950 0.025 60) */
-          hover: '#a8642a',       /* oklch(0.545 0.130 55) */
-        },
-        status: {
-          approved: '#2a9d68',    /* oklch(0.620 0.135 160) */
-          'approved-bg': '#e8f5ee', /* oklch(0.955 0.025 160) */
-          pending: '#b8892a',     /* oklch(0.630 0.125 80) */
-          'pending-bg': '#faf3e2', /* oklch(0.960 0.025 80) */
-          exported: '#2a8aad',    /* oklch(0.590 0.095 220) */
-          'exported-bg': '#e5f3f8', /* oklch(0.955 0.020 220) */
-          new: '#c0453a',         /* oklch(0.545 0.155 25) */
-          'new-bg': '#fbe8e6',    /* oklch(0.950 0.025 25) */
-          draft: '#697585',       /* oklch(0.535 0.018 260) */
-          'draft-bg': '#f0f1f4',  /* oklch(0.955 0.006 260) */
-        },
-        action: {
-          blue: '#2a8aad',        /* oklch(0.590 0.095 220) */
-          'blue-hover': '#237a9a', /* oklch(0.540 0.090 220) */
-        },
-        /* Semantic surface tokens */
-        surface: {
-          page: '#f4f6fa',
-          card: '#ffffff',
-          muted: '#f8f9fc',
-          subtle: '#eef1f6',
-        },
-        ink: {
-          primary: '#1c2640',
-          secondary: '#506488',
-          tertiary: '#8893a8',
-          muted: '#a4adbf',
+        /* ══════════════════════════════════════════════════════
+           Material Design 3 — Purple/Violet Seed (#6750A4)
+           Generated tonal palette following MD3 specifications
+           ══════════════════════════════════════════════════════ */
+        md: {
+          /* Primary */
+          primary:                '#6750A4',
+          'on-primary':           '#FFFFFF',
+          'primary-container':    '#EADDFF',
+          'on-primary-container': '#21005D',
+
+          /* Secondary */
+          secondary:                '#625B71',
+          'on-secondary':           '#FFFFFF',
+          'secondary-container':    '#E8DEF8',
+          'on-secondary-container': '#1D192B',
+
+          /* Tertiary */
+          tertiary:                '#7D5260',
+          'on-tertiary':           '#FFFFFF',
+          'tertiary-container':    '#FFD8E4',
+          'on-tertiary-container': '#31111D',
+
+          /* Surface system */
+          surface:                '#FFFBFE',
+          'on-surface':           '#1C1B1F',
+          'surface-variant':      '#E7E0EC',
+          'on-surface-variant':   '#49454F',
+          'surface-container':    '#F3EDF7',
+          'surface-container-low': '#E7E0EC',
+          'surface-container-high': '#ECE6F0',
+          'inverse-surface':      '#313033',
+          'inverse-on-surface':   '#F4EFF4',
+
+          /* Outline */
+          outline:         '#79747E',
+          'outline-variant': '#CAC4D0',
+
+          /* Error */
+          error:              '#B3261E',
+          'on-error':         '#FFFFFF',
+          'error-container':  '#F9DEDC',
+          'on-error-container': '#410E0B',
+
+          /* Status tonal */
+          success:              '#386A20',
+          'on-success':         '#FFFFFF',
+          'success-container':  '#C4EFA4',
+          'on-success-container': '#072100',
+
+          warning:              '#7A5100',
+          'on-warning':         '#FFFFFF',
+          'warning-container':  '#FFDEA1',
+          'on-warning-container': '#261900',
+
+          info:              '#005DB6',
+          'on-info':         '#FFFFFF',
+          'info-container':  '#D5E3FF',
+          'on-info-container': '#001B3D',
+
+          /* Dark mode surface system */
+          'dark-surface':                '#1C1B1F',
+          'dark-on-surface':             '#E6E1E5',
+          'dark-surface-variant':        '#49454F',
+          'dark-on-surface-variant':     '#CAC4D0',
+          'dark-surface-container':      '#211F26',
+          'dark-surface-container-low':  '#1D1B20',
+          'dark-surface-container-high': '#2B2930',
+          'dark-primary':                '#D0BCFF',
+          'dark-on-primary':             '#381E72',
+          'dark-primary-container':      '#4F378B',
+          'dark-on-primary-container':   '#EADDFF',
+          'dark-secondary':              '#CCC2DC',
+          'dark-on-secondary':           '#332D41',
+          'dark-secondary-container':    '#4A4458',
+          'dark-on-secondary-container': '#E8DEF8',
+          'dark-outline':                '#938F99',
+          'dark-outline-variant':        '#49454F',
+          'dark-inverse-surface':        '#E6E1E5',
+          'dark-inverse-on-surface':     '#313033',
         },
       },
+
       fontFamily: {
-        inter: ['Inter', 'system-ui', 'sans-serif'],
+        roboto: ['Roboto', 'sans-serif'],
+        sans:   ['Roboto', 'sans-serif'],
       },
+
+      fontSize: {
+        /* MD3 Type Scale */
+        'md-display-lg':  ['3.5rem',   { lineHeight: '1.15', letterSpacing: '-0.015em', fontWeight: '400' }],
+        'md-headline-lg': ['3rem',     { lineHeight: '1.2',  letterSpacing: '-0.01em',  fontWeight: '500' }],
+        'md-headline-md': ['2rem',     { lineHeight: '1.25', letterSpacing: '0',        fontWeight: '500' }],
+        'md-title-lg':    ['1.5rem',   { lineHeight: '1.3',  letterSpacing: '0',        fontWeight: '500' }],
+        'md-title-md':    ['1.25rem',  { lineHeight: '1.4',  letterSpacing: '0.005em',  fontWeight: '500' }],
+        'md-title-sm':    ['0.875rem', { lineHeight: '1.4',  letterSpacing: '0.01em',   fontWeight: '500' }],
+        'md-body-lg':     ['1rem',     { lineHeight: '1.5',  letterSpacing: '0.015em',  fontWeight: '400' }],
+        'md-body-md':     ['0.875rem', { lineHeight: '1.5',  letterSpacing: '0.01em',   fontWeight: '400' }],
+        'md-label-lg':    ['0.875rem', { lineHeight: '1.4',  letterSpacing: '0.01em',   fontWeight: '500' }],
+        'md-label-md':    ['0.75rem',  { lineHeight: '1.4',  letterSpacing: '0.04em',   fontWeight: '500' }],
+        'md-label-sm':    ['0.6875rem',{ lineHeight: '1.3',  letterSpacing: '0.04em',   fontWeight: '500' }],
+      },
+
       borderRadius: {
-        '2xl': '12px',
-        'xl': '10px',
-        'lg': '8px',
-        'md': '6px',
+        'md-xs':  '8px',
+        'md-sm':  '12px',
+        'md':     '16px',
+        'md-lg':  '24px',
+        'md-xl':  '28px',
+        'md-2xl': '32px',
+        'md-3xl': '48px',
       },
+
       boxShadow: {
-        'card': '0 1px 3px oklch(0.20 0.01 264 / 0.06), 0 1px 2px oklch(0.20 0.01 264 / 0.04)',
-        'card-hover': '0 4px 12px oklch(0.20 0.01 264 / 0.08), 0 2px 4px oklch(0.20 0.01 264 / 0.04)',
-        'sidebar': '1px 0 0 oklch(0.90 0.006 264)',
-        'dropdown': '0 4px 24px oklch(0.15 0.02 264 / 0.12), 0 1px 3px oklch(0.15 0.02 264 / 0.08)',
-        'header': '0 1px 0 oklch(0.30 0.02 264)',
-        'inset': 'inset 0 1px 2px oklch(0.20 0.01 264 / 0.06)',
-        'ring': '0 0 0 2px oklch(0.625 0.142 58 / 0.25)',
+        /* MD3 Elevation levels */
+        'md-1': '0 1px 2px 0 rgba(0,0,0,0.08), 0 1px 3px 1px rgba(0,0,0,0.06)',
+        'md-2': '0 1px 2px 0 rgba(0,0,0,0.1),  0 2px 6px 2px rgba(0,0,0,0.08)',
+        'md-3': '0 4px 8px 3px rgba(0,0,0,0.1), 0 1px 3px 0 rgba(0,0,0,0.1)',
+        'md-4': '0 6px 10px 4px rgba(0,0,0,0.1),0 2px 3px 0 rgba(0,0,0,0.1)',
+        'md-5': '0 8px 12px 6px rgba(0,0,0,0.1),0 4px 4px 0 rgba(0,0,0,0.1)',
       },
+
+      transitionTimingFunction: {
+        'md': 'cubic-bezier(0.2, 0, 0, 1)',
+        'md-accel': 'cubic-bezier(0.3, 0, 1, 1)',
+        'md-decel': 'cubic-bezier(0, 0, 0, 1)',
+      },
+
       animation: {
-        'fade-in': 'fadeIn 0.25s cubic-bezier(0.2, 0.8, 0.2, 1)',
-        'slide-in': 'slideIn 0.25s cubic-bezier(0.2, 0.8, 0.2, 1)',
-        'slide-up': 'slideUp 0.25s cubic-bezier(0.2, 0.8, 0.2, 1)',
-        'scale-in': 'scaleIn 0.25s cubic-bezier(0.2, 0.8, 0.2, 1)',
-        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'md-fade-in':  'mdFadeIn 300ms cubic-bezier(0.2,0,0,1) forwards',
+        'md-scale-in': 'mdScaleIn 300ms cubic-bezier(0.2,0,0,1) forwards',
+        'md-slide-up': 'mdSlideUp 300ms cubic-bezier(0.2,0,0,1) forwards',
+        'md-slide-in': 'mdSlideIn 300ms cubic-bezier(0.2,0,0,1) forwards',
       },
+
       keyframes: {
-        fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
+        mdFadeIn: {
+          from: { opacity: '0' },
+          to:   { opacity: '1' },
         },
-        slideIn: {
-          '0%': { transform: 'translateX(-8px)', opacity: '0' },
-          '100%': { transform: 'translateX(0)', opacity: '1' },
+        mdScaleIn: {
+          from: { opacity: '0', transform: 'scale(0.92)' },
+          to:   { opacity: '1', transform: 'scale(1)' },
         },
-        slideUp: {
-          '0%': { transform: 'translateY(4px)', opacity: '0' },
-          '100%': { transform: 'translateY(0)', opacity: '1' },
+        mdSlideUp: {
+          from: { opacity: '0', transform: 'translateY(8px)' },
+          to:   { opacity: '1', transform: 'translateY(0)' },
         },
-        scaleIn: {
-          '0%': { transform: 'scale(0.97)', opacity: '0' },
-          '100%': { transform: 'scale(1)', opacity: '1' },
+        mdSlideIn: {
+          from: { opacity: '0', transform: 'translateX(-8px)' },
+          to:   { opacity: '1', transform: 'translateX(0)' },
         },
       },
     },
