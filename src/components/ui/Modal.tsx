@@ -1,6 +1,7 @@
 import type { ModalSize } from '../../types';
 import { X } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 
 /**
  * MD3 Dialog component
@@ -27,12 +28,12 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', f
     full: '1100px',
   };
 
-  return (
+  return createPortal(
     <div
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 60,
+        zIndex: 1000, // Make it very high so it's on top of everything including Header
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -136,6 +137,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', f
           </>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

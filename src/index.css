@@ -6,7 +6,7 @@
 
 /* ═══════════════════════════════════════════════════════════════════════
    NamViet WMS — Material Design 3 (Material You)
-   Seed Color: #6750A4 (Purple/Violet)
+   Seed Color: #0E3063 (Navy Blue)
    ─────────────────────────────────────────────────────────────────────
    Light mode: Warm off-white surfaces, tonal depth hierarchy
    Dark mode:  Rich dark surfaces, expressive tonal palettes
@@ -16,17 +16,38 @@
    DESIGN TOKENS — CSS Custom Properties
    ═══════════════════════════════════════════════════════════ */
 :root {
+  /* ── Header custom tokens ── */
+  --nv-header-bg:                #0E3063;
+  --nv-header-on-bg:             #FFFFFF;
+  --nv-header-icon:              rgba(255, 255, 255, 0.75);
+  --nv-header-icon-hover:        #FFFFFF;
+  --nv-header-icon-active:       #FFFFFF;
+  --nv-header-icon-active-bg:    rgba(255, 255, 255, 0.15);
+  --nv-header-search-bg:         #FFFFFF;
+  --nv-header-search-text:       #323a45;
+  --nv-header-search-placeholder:#999fc0;
+  --nv-header-border:            rgba(255, 255, 255, 0.15);
+
+  /* ── Table Header custom tokens ── */
+  --nv-table-header-bg:          #0E3063;
+  --nv-table-header-text:        #FFFFFF;
+
+  /* ── Badge Draft custom tokens ── */
+  --nv-badge-draft-bg:           #f1f5f9;
+  --nv-badge-draft-text:         #475569;
+  --nv-badge-draft-border:       #cbd5e1;
+
   /* ── Primary ── */
-  --md-primary:                  #6750A4;
+  --md-primary:                  #0E3063;
   --md-on-primary:               #FFFFFF;
-  --md-primary-container:        #EADDFF;
-  --md-on-primary-container:     #21005D;
+  --md-primary-container:        #d9edf7;
+  --md-on-primary-container:     #0E3063;
 
   /* ── Secondary ── */
-  --md-secondary:                #625B71;
+  --md-secondary:                #008ece;
   --md-on-secondary:             #FFFFFF;
-  --md-secondary-container:      #E8DEF8;
-  --md-on-secondary-container:   #1D192B;
+  --md-secondary-container:      #d9edf7;
+  --md-on-secondary-container:   #0E3063;
 
   /* ── Tertiary ── */
   --md-tertiary:                 #7D5260;
@@ -35,19 +56,19 @@
   --md-on-tertiary-container:    #31111D;
 
   /* ── Surface System ── */
-  --md-surface:                  #FFFBFE;
-  --md-on-surface:               #1C1B1F;
-  --md-surface-variant:          #E7E0EC;
-  --md-on-surface-variant:       #49454F;
-  --md-surface-container:        #F3EDF7;
-  --md-surface-container-low:    #E7E0EC;
-  --md-surface-container-high:   #ECE6F0;
-  --md-inverse-surface:          #313033;
-  --md-inverse-on-surface:       #F4EFF4;
+  --md-surface:                  #f4f4f4;
+  --md-on-surface:               #323a45;
+  --md-surface-variant:          #ffffff;
+  --md-on-surface-variant:       #362e2e;
+  --md-surface-container:        #ffffff;
+  --md-surface-container-low:    #ffffff;
+  --md-surface-container-high:   #f4f4f4;
+  --md-inverse-surface:          #323a45;
+  --md-inverse-on-surface:       #f4f4f4;
 
   /* ── Outline ── */
-  --md-outline:          #79747E;
-  --md-outline-variant:  #CAC4D0;
+  --md-outline:          #f0f0f0;
+  --md-outline-variant:  #f0f0f0;
 
   /* ── Error ── */
   --md-error:                #B3261E;
@@ -67,14 +88,14 @@
   --md-on-info-container:    #001B3D;
 
   /* ── Elevation shadows ── */
-  --md-shadow-1: 0 1px 2px 0 rgba(0,0,0,0.08), 0 1px 3px 1px rgba(0,0,0,0.06);
-  --md-shadow-2: 0 1px 2px 0 rgba(0,0,0,0.10), 0 2px 6px 2px rgba(0,0,0,0.08);
-  --md-shadow-3: 0 4px 8px 3px rgba(0,0,0,0.10), 0 1px 3px 0 rgba(0,0,0,0.10);
-  --md-shadow-4: 0 6px 10px 4px rgba(0,0,0,0.10), 0 2px 3px 0 rgba(0,0,0,0.10);
+  --md-shadow-1: 0 1px 2px 0 rgba(0,0,0,0.05);
+  --md-shadow-2: 0 2px 4px 0 rgba(0,0,0,0.05);
+  --md-shadow-3: 0 4px 8px 0 rgba(0,0,0,0.05);
+  --md-shadow-4: 0 8px 16px 0 rgba(0,0,0,0.05);
 
   /* ── Transition ── */
   --md-easing: cubic-bezier(0.2, 0, 0, 1);
-  --md-duration: 300ms;
+  --md-duration: 200ms;
 
   /* ── Semantic aliases (used by components) ── */
   --surface:            var(--md-surface);
@@ -92,7 +113,7 @@
   --nv-surface-card:     var(--md-surface-container);
   --nv-surface-raised:   var(--md-surface-container);
   --nv-surface-subtle:   var(--md-surface-container-low);
-  --nv-surface-hover:    rgba(103, 80, 164, 0.08);
+  --nv-surface-hover:    rgba(14, 48, 99, 0.08);
   --nv-border-default:   var(--md-outline-variant);
   --nv-border-subtle:    var(--md-outline-variant);
   --nv-text-primary:     var(--md-on-surface);
@@ -114,21 +135,42 @@
   --nv-shadow-lg:        var(--md-shadow-3);
   --nv-sidebar-bg:       var(--md-surface-container);
   --nv-sidebar-border:   transparent;
-  --nv-sidebar-item-hover: rgba(103, 80, 164, 0.08);
-  --nv-sidebar-item-active-bg: var(--md-secondary-container);
+  --nv-sidebar-item-hover:       rgba(0, 142, 206, 0.08);
+  --nv-sidebar-item-active-bg:   rgba(0, 142, 206, 0.12);
   --nv-chrome-bg:        var(--md-surface-container);
   --nv-chrome-border:    var(--md-outline-variant);
   --nv-chrome-text:      var(--md-on-surface);
-  --nv-chrome-bg-hover:  rgba(103, 80, 164, 0.08);
+  --nv-chrome-bg-hover:  rgba(14, 48, 99, 0.08);
   --sidebar-bg:          var(--md-surface-container);
 }
 
 /* ── Dark Mode Token Overrides ── */
 .dark {
-  --md-primary:                  #D0BCFF;
-  --md-on-primary:               #381E72;
-  --md-primary-container:        #4F378B;
-  --md-on-primary-container:     #EADDFF;
+  /* ── Header custom tokens (Dark Mode) ── */
+  --nv-header-bg:                var(--md-surface-container);
+  --nv-header-on-bg:             var(--md-on-surface);
+
+  /* ── Table Header custom tokens (Dark Mode) ── */
+  --nv-table-header-bg:          var(--md-surface-container-low);
+  --nv-table-header-text:        var(--md-on-surface-variant);
+
+  /* ── Badge Draft custom tokens (Dark Mode) ── */
+  --nv-badge-draft-bg:           #334155;
+  --nv-badge-draft-text:         #cbd5e1;
+  --nv-badge-draft-border:       #475569;
+  --nv-header-icon:              var(--md-on-surface-variant);
+  --nv-header-icon-hover:        var(--md-on-surface);
+  --nv-header-icon-active:       var(--md-primary);
+  --nv-header-icon-active-bg:    rgba(173, 198, 255, 0.12);
+  --nv-header-search-bg:         var(--md-surface-container-high);
+  --nv-header-search-text:       var(--md-on-surface);
+  --nv-header-search-placeholder:var(--md-on-surface-variant);
+  --nv-header-border:            var(--md-outline-variant);
+
+  --md-primary:                  #ADC6FF;
+  --md-on-primary:               #002E69;
+  --md-primary-container:        #0E3063;
+  --md-on-primary-container:     #D2E4FF;
   --md-secondary:                #CCC2DC;
   --md-on-secondary:             #332D41;
   --md-secondary-container:      #4A4458;
@@ -164,8 +206,9 @@
   --md-shadow-3: 0 4px 8px 3px rgba(0,0,0,0.3), 0 1px 3px 0 rgba(0,0,0,0.2);
   --md-shadow-4: 0 6px 10px 4px rgba(0,0,0,0.3), 0 2px 3px 0 rgba(0,0,0,0.2);
 
-  --nv-surface-hover:    rgba(208, 188, 255, 0.08);
-  --nv-sidebar-item-hover: rgba(208, 188, 255, 0.08);
+  --nv-surface-hover:    rgba(173, 198, 255, 0.08);
+  --nv-sidebar-item-hover:       rgba(173, 198, 255, 0.08);
+  --nv-sidebar-item-active-bg:   rgba(173, 198, 255, 0.12);
 }
 
 
@@ -185,14 +228,14 @@
   }
 
   body {
-    font-family: 'Roboto', sans-serif;
+    font-family: 'Roboto', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
     font-weight: 400;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background-color: var(--md-surface);
     color: var(--md-on-surface);
-    line-height: 1.5;
-    font-size: 16px;
+    line-height: 18.5714px;
+    font-size: 13px;
     transition: background-color var(--md-duration) var(--md-easing),
                 color var(--md-duration) var(--md-easing);
   }
@@ -212,7 +255,7 @@
   }
 
   ::selection {
-    background: rgba(103, 80, 164, 0.2);
+    background: rgba(14, 48, 99, 0.2);
     color: var(--md-on-surface);
   }
 }
@@ -356,6 +399,7 @@
     font-weight: 500;
     letter-spacing: 0.04em;
     border: none;
+    white-space: nowrap;
   }
   .badge-md-success {
     background: var(--md-success-container);
@@ -386,9 +430,9 @@
   .badge-pending  { background: var(--md-warning-container); color: var(--md-on-warning-container); }
   .badge-new      { background: var(--md-primary-container); color: var(--md-on-primary-container); }
   .badge-exported { background: var(--md-info-container); color: var(--md-on-info-container); }
-  .badge-draft    { background: var(--md-surface-variant); color: var(--md-on-surface-variant); }
+  .badge-draft    { background: var(--nv-badge-draft-bg); color: var(--nv-badge-draft-text); border: 1px solid var(--nv-badge-draft-border); }
   .badge-info     { background: var(--md-info-container); color: var(--md-on-info-container); }
-  .badge-neutral  { background: var(--md-surface-variant); color: var(--md-on-surface-variant); }
+  .badge-neutral  { background: var(--nv-badge-draft-bg); color: var(--nv-badge-draft-text); border: 1px solid var(--nv-badge-draft-border); }
   .badge-success  { background: var(--md-success-container); color: var(--md-on-success-container); }
   .badge-warning  { background: var(--md-warning-container); color: var(--md-on-warning-container); }
   .badge-error    { background: var(--md-error-container); color: var(--md-on-error-container); }
@@ -478,11 +522,11 @@
     padding: 12px 16px;
     font-family: 'Roboto', sans-serif;
     font-size: 0.75rem;
-    font-weight: 500;
+    font-weight: 700;
     letter-spacing: 0.04em;
     text-align: left;
-    color: var(--md-on-surface-variant);
-    background: var(--md-surface-container-low);
+    color: var(--nv-table-header-text);
+    background: var(--nv-table-header-bg);
     border-bottom: 1px solid var(--md-outline-variant);
     white-space: nowrap;
   }
@@ -491,7 +535,7 @@
     transition: background-color 200ms var(--md-easing);
   }
   .table-row:hover {
-    background: rgba(103, 80, 164, 0.05);
+    background: rgba(14, 48, 99, 0.05);
   }
   .table-cell {
     padding: 12px 16px;
@@ -501,7 +545,7 @@
     color: var(--md-on-surface);
   }
   .dark .table-row:hover {
-    background: rgba(208, 188, 255, 0.05);
+    background: rgba(173, 198, 255, 0.05);
   }
 
   /* ────────────────────────────────────────────────────────
@@ -510,13 +554,13 @@
   .sidebar-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 10px 16px;
+    gap: 6px;
+    padding: 5px 10px;
     border-radius: 9999px; /* pill */
     font-family: 'Roboto', sans-serif;
-    font-size: 0.875rem;
+    font-size: 12px;
     font-weight: 500;
-    color: var(--md-on-surface-variant);
+    color: var(--md-on-surface);
     cursor: pointer;
     transition: background-color 200ms var(--md-easing),
                 color 200ms var(--md-easing);
@@ -528,27 +572,27 @@
     letter-spacing: 0.01em;
   }
   .sidebar-item:hover {
-    background: rgba(103, 80, 164, 0.08);
+    background: var(--nv-sidebar-item-hover);
     color: var(--md-on-surface);
   }
   .sidebar-item.active {
-    background: var(--md-secondary-container);
-    color: var(--md-on-secondary-container);
-    font-weight: 700;
+    background: var(--nv-sidebar-item-active-bg);
+    color: var(--md-secondary);
+    font-weight: 600;
   }
   .dark .sidebar-item:hover {
-    background: rgba(208, 188, 255, 0.08);
+    background: var(--nv-sidebar-item-hover);
   }
   .dark .sidebar-item.active {
-    background: var(--md-secondary-container);
-    color: var(--md-on-secondary-container);
+    background: var(--nv-sidebar-item-active-bg);
+    color: var(--md-secondary);
   }
 
   /* Sidebar label collapse animation */
   .sidebar-label {
     white-space: nowrap;
     opacity: 1;
-    max-width: 150px;
+    max-width: 130px;
     overflow: hidden;
     text-overflow: ellipsis;
     transition: opacity 200ms var(--md-easing),
@@ -710,8 +754,8 @@
   }
 
   /* ── State Layer utilities ── */
-  .state-layer-primary:hover { background: rgba(103, 80, 164, 0.08); }
-  .state-layer-primary:active { background: rgba(103, 80, 164, 0.12); }
+  .state-layer-primary:hover { background: rgba(14, 48, 99, 0.08); }
+  .state-layer-primary:active { background: rgba(14, 48, 99, 0.12); }
   .glow-hover { transition: box-shadow var(--md-duration) var(--md-easing); }
   .glow-hover:hover { box-shadow: var(--md-shadow-2); }
   .glow-card { transition: box-shadow var(--md-duration) var(--md-easing), transform var(--md-duration) var(--md-easing); }

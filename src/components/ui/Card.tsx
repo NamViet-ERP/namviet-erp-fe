@@ -23,7 +23,7 @@ const accentMap: Record<CardAccent, AccentStyle> = {
   blue: {
     containerBg:  'var(--md-primary-container)',
     iconColor:    'var(--md-on-primary-container)',
-    blurColor:    'rgba(103, 80, 164, 0.12)',
+    blurColor:    'rgba(14, 48, 99, 0.12)',
     valueSuffix:  '',
   },
   teal: {
@@ -35,7 +35,7 @@ const accentMap: Record<CardAccent, AccentStyle> = {
   purple: {
     containerBg:  'var(--md-primary-container)',
     iconColor:    'var(--md-on-primary-container)',
-    blurColor:    'rgba(103, 80, 164, 0.12)',
+    blurColor:    'rgba(14, 48, 99, 0.12)',
     valueSuffix:  '',
   },
 };

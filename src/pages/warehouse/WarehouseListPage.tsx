@@ -22,6 +22,8 @@ interface WarehouseForm {
   manager: string;
 }
 
+const generateUniqueWarehouseId = () => `wh-${Date.now()}`;
+
 export default function WarehouseListPage() {
   const [warehouseList, setWarehouseList] = useState<Warehouse[]>(initialWarehouses);
   const [search, setSearch] = useState('');
@@ -78,7 +80,7 @@ export default function WarehouseListPage() {
       setWarehouseList(prev => prev.map(w => w.id === editingItem.id ? { ...w, ...form } : w));
       showToast('success', `Đã cập nhật kho "${form.name}"`, 'Cập nhật thành công');
     } else {
-      const newWh: Warehouse = { id: `wh-${Date.now()}`, ...form, totalStock: 0, totalValue: 0, status: 'active' };
+      const newWh: Warehouse = { id: generateUniqueWarehouseId(), ...form, totalStock: 0, totalValue: 0, status: 'active' };
       setWarehouseList(prev => [...prev, newWh]);
       showToast('success', `Đã tạo kho "${form.name}" thành công!`, 'Tạo mới thành công');
     }
@@ -117,7 +119,7 @@ export default function WarehouseListPage() {
 
         {filtered.length === 0 ? <EmptyState message="Không tìm thấy kho hàng nào!" /> : (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full text-xs" style={{ minWidth: '950px' }}>
               <thead><tr>
                 <th className="table-header-cell">Mã kho</th>
                 <th className="table-header-cell">Tên kho</th>
@@ -142,7 +144,7 @@ export default function WarehouseListPage() {
                     <td className="table-cell text-[var(--md-on-surface)]">{w.manager}</td>
                     <td className="table-cell text-center font-medium text-[var(--md-on-surface)]">{formatCurrency(w.totalStock)}</td>
                     <td className="table-cell text-center font-medium text-[var(--md-on-surface)]">{formatCurrency(w.totalValue)}</td>
-                    <td className="table-cell text-center"><Badge status={w.status === 'active' ? 'approved' : 'draft'} /></td>
+                    <td className="table-cell text-center"><Badge status={w.status} /></td>
                     <td className="table-cell text-center">
                       <Dropdown items={[
                         { label: 'Xem chi tiết', icon: Eye, onClick: () => { setDetailItem(w); setShowDetail(true); } },
@@ -231,7 +233,7 @@ export default function WarehouseListPage() {
             </div>
             <div><span className="text-xs text-[var(--md-on-surface-variant)]">Người phụ trách</span><p className="font-medium text-[var(--md-on-surface)]">{detailItem.manager}</p></div>
             <div><span className="text-xs text-[var(--md-on-surface-variant)]">Trạng thái</span>
-              <div className="mt-1"><Badge status={detailItem.status === 'active' ? 'approved' : 'draft'} /></div>
+              <div className="mt-1"><Badge status={detailItem.status} /></div>
             </div>
             <div className="rounded-xl p-4 border" style={{ background: 'var(--md-success-container)', borderColor: 'var(--md-outline-variant)' }}>
               <span className="text-xs block opacity-80" style={{ color: 'var(--md-on-success-container)' }}>Tổng sản phẩm tồn kho</span>

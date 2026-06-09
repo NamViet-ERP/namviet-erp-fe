@@ -9,21 +9,21 @@ export default {
     extend: {
       colors: {
         /* ══════════════════════════════════════════════════════
-           Material Design 3 — Purple/Violet Seed (#6750A4)
+           Material Design 3 — Navy Blue Seed (#0E3063)
            Generated tonal palette following MD3 specifications
            ══════════════════════════════════════════════════════ */
         md: {
           /* Primary */
-          primary:                '#6750A4',
+          primary:                '#0E3063',
           'on-primary':           '#FFFFFF',
-          'primary-container':    '#EADDFF',
-          'on-primary-container': '#21005D',
+          'primary-container':    '#d9edf7',
+          'on-primary-container': '#0E3063',
 
           /* Secondary */
-          secondary:                '#625B71',
+          secondary:                '#008ece',
           'on-secondary':           '#FFFFFF',
-          'secondary-container':    '#E8DEF8',
-          'on-secondary-container': '#1D192B',
+          'secondary-container':    '#d9edf7',
+          'on-secondary-container': '#0E3063',
 
           /* Tertiary */
           tertiary:                '#7D5260',
@@ -32,19 +32,19 @@ export default {
           'on-tertiary-container': '#31111D',
 
           /* Surface system */
-          surface:                '#FFFBFE',
-          'on-surface':           '#1C1B1F',
-          'surface-variant':      '#E7E0EC',
-          'on-surface-variant':   '#49454F',
-          'surface-container':    '#F3EDF7',
-          'surface-container-low': '#E7E0EC',
-          'surface-container-high': '#ECE6F0',
-          'inverse-surface':      '#313033',
-          'inverse-on-surface':   '#F4EFF4',
+          surface:                '#f4f4f4',
+          'on-surface':           '#323a45',
+          'surface-variant':      '#ffffff',
+          'on-surface-variant':   '#362e2e',
+          'surface-container':    '#ffffff',
+          'surface-container-low': '#ffffff',
+          'surface-container-high': '#f4f4f4',
+          'inverse-surface':      '#323a45',
+          'inverse-on-surface':   '#f4f4f4',
 
           /* Outline */
-          outline:         '#79747E',
-          'outline-variant': '#CAC4D0',
+          outline:         '#f0f0f0',
+          'outline-variant': '#f0f0f0',
 
           /* Error */
           error:              '#B3261E',
@@ -76,10 +76,10 @@ export default {
           'dark-surface-container':      '#211F26',
           'dark-surface-container-low':  '#1D1B20',
           'dark-surface-container-high': '#2B2930',
-          'dark-primary':                '#D0BCFF',
-          'dark-on-primary':             '#381E72',
-          'dark-primary-container':      '#4F378B',
-          'dark-on-primary-container':   '#EADDFF',
+          'dark-primary':                '#ADC6FF',
+          'dark-on-primary':             '#002E69',
+          'dark-primary-container':      '#0E3063',
+          'dark-on-primary-container':   '#D2E4FF',
           'dark-secondary':              '#CCC2DC',
           'dark-on-secondary':           '#332D41',
           'dark-secondary-container':    '#4A4458',
@@ -92,8 +92,8 @@ export default {
       },
 
       fontFamily: {
-        roboto: ['Roboto', 'sans-serif'],
-        sans:   ['Roboto', 'sans-serif'],
+        roboto: ['Roboto', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
+        sans:   ['Roboto', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
       },
 
       fontSize: {

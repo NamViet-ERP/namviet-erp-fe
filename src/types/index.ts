@@ -23,7 +23,12 @@ export type StatusKey =
   | 'completed'
   | 'frozen'
   | 'counting'
-  | 'rejected';
+  | 'rejected'
+  | 'loan_pending'
+  | 'borrowing'
+  | 'returned'
+  | 'active'
+  | 'inactive';
 
 /** Adjustment type: increase or decrease */
 export type AdjustmentType = 'increase' | 'decrease';

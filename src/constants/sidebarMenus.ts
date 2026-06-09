@@ -1,12 +1,12 @@
 import type { SidebarMenuItem } from '../types';
 import {
-  LayoutDashboard, Warehouse, ArrowLeftRight, RefreshCw,
+  LayoutDashboard, Warehouse, ArrowLeftRight,
   PackagePlus, PackageMinus, Settings,
-  ClipboardCheck, SlidersHorizontal, CalendarRange, Scale, Truck, Barcode
+  ClipboardCheck, SlidersHorizontal, CalendarRange, Scale, Truck, Barcode, Users
 } from 'lucide-react';
 
 export const warehouseMenu: SidebarMenuItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/warehouse/dashboard' },
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/warehouse/dashboard-warehouse' },
   {
     id: 'warehouse', label: 'Kho hàng', icon: Warehouse, path: '/warehouse/list',
     children: [
@@ -20,7 +20,6 @@ export const warehouseMenu: SidebarMenuItem[] = [
   { id: 'suppliers', label: 'Gợi ý Nhà Cung Cấp', icon: Truck, path: '/warehouse/suppliers' },
   { id: 'barcodes', label: 'Mã SKU & Barcode', icon: Barcode, path: '/warehouse/barcodes' },
   { id: 'transfer', label: 'Chuyển kho', icon: ArrowLeftRight, path: '/warehouse/transfer' },
-  { id: 'conversion', label: 'Chuyển đổi kho', icon: RefreshCw, path: '/warehouse/conversion' },
   { id: 'import', label: 'Nhập kho', icon: PackagePlus, path: '/warehouse/import' },
   { id: 'export', label: 'Xuất kho giao hàng', icon: PackageMinus, path: '/warehouse/export' },
   { id: 'settings', label: 'Thiết lập', icon: Settings, path: '/warehouse/settings' },
@@ -30,4 +29,9 @@ export const stocktakeMenu: SidebarMenuItem[] = [
   { id: 'stocktake', label: 'Kiểm kê kho', icon: ClipboardCheck, path: '/stocktake/list' },
   { id: 'adjustment', label: 'Điều chỉnh kho', icon: SlidersHorizontal, path: '/stocktake/adjustment' },
   { id: 'st-settings', label: 'Thiết lập', icon: Settings, path: '/stocktake/settings' },
+];
+
+export const membersMenu: SidebarMenuItem[] = [
+  { id: 'members-list', label: 'Danh sách thành viên', icon: Users, path: '/members/list' },
+  { id: 'members-settings', label: 'Thiết lập quyền', icon: Settings, path: '/warehouse/settings' },
 ];

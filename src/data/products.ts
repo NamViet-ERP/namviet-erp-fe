@@ -13,6 +13,9 @@ export const products: Product[] = [
   { id: 'p-010', sku: 'DK-OIL-20L', name: 'Dầu máy nén khí 20L', category: 'Phụ kiện', unit: 'Thùng', price: 2800000 },
   { id: 'p-011', sku: 'MNK-SC-30', name: 'Máy nén khí trục vít 30HP', category: 'Máy nén khí trục vít', unit: 'Cái', price: 135000000 },
   { id: 'p-012', sku: 'MNK-SC-50', name: 'Máy nén khí trục vít 50HP', category: 'Máy nén khí trục vít', unit: 'Cái', price: 210000000 },
+  { id: 'p-013', sku: 'QH-KT-421', name: 'Que hàn điện Kim Tín KT-421', category: 'Vật tư tiêu hao', unit: 'Hộp', price: 120000 },
+  { id: 'p-014', sku: 'GT-BH-DA', name: 'Găng tay bảo hộ hàn da bò', category: 'Vật tư tiêu hao', unit: 'Đôi', price: 45000 },
+  { id: 'p-015', sku: 'DC-HD-100', name: 'Đá cắt sắt Hải Dương 100mm', category: 'Vật tư tiêu hao', unit: 'Viên', price: 15000 },
 ];
 
 export const productCategories: string[] = [
@@ -22,4 +25,5 @@ export const productCategories: string[] = [
   'Máy sấy khí',
   'Lọc khí',
   'Phụ kiện',
+  'Vật tư tiêu hao',
 ];

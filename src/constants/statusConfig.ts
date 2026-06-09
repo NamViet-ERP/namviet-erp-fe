@@ -3,19 +3,19 @@ import { Check, Clock, AlertCircle, Package, X } from 'lucide-react';
 
 export const statusConfig: Record<StatusKey, StatusConfigItem> = {
   approved: {
-    label: 'Đã Duyệt',
+    label: 'Đã duyệt',
     className: 'badge-approved',
     icon: Check,
     color: '#22C55E',
   },
   pending: {
-    label: 'Chưa duyệt',
+    label: 'Chờ duyệt',
     className: 'badge-pending',
     icon: Clock,
     color: '#F59E0B',
   },
   exported: {
-    label: 'Đã có xuất kho',
+    label: 'Đã xuất kho',
     className: 'badge-exported',
     icon: Package,
     color: '#06B6D4',
@@ -39,7 +39,7 @@ export const statusConfig: Record<StatusKey, StatusConfigItem> = {
     color: '#6B7280',
   },
   new: {
-    label: 'new',
+    label: 'Mới',
     className: 'badge-new',
     icon: AlertCircle,
     color: '#EF4444',
@@ -57,19 +57,49 @@ export const statusConfig: Record<StatusKey, StatusConfigItem> = {
     color: '#22C55E',
   },
   frozen: {
-    label: 'Đang đóng băng',
+    label: 'Tạm khóa',
     className: 'badge-exported',
     icon: AlertCircle,
     color: '#06B6D4',
   },
   counting: {
-    label: 'Đang đếm',
+    label: 'Đang kiểm đếm',
     className: 'badge-pending',
     icon: Clock,
     color: '#F59E0B',
   },
   rejected: {
     label: 'Từ chối',
+    className: 'badge-error',
+    icon: X,
+    color: '#EF4444',
+  },
+  loan_pending: {
+    label: 'Chờ duyệt PM',
+    className: 'badge-pending',
+    icon: Clock,
+    color: '#F59E0B',
+  },
+  borrowing: {
+    label: 'Đang mượn',
+    className: 'badge-exported',
+    icon: Clock,
+    color: '#06B6D4',
+  },
+  returned: {
+    label: 'Đã hoàn trả',
+    className: 'badge-approved',
+    icon: Check,
+    color: '#22C55E',
+  },
+  active: {
+    label: 'Hoạt động',
+    className: 'badge-approved',
+    icon: Check,
+    color: '#22C55E',
+  },
+  inactive: {
+    label: 'Tạm khóa',
     className: 'badge-error',
     icon: X,
     color: '#EF4444',

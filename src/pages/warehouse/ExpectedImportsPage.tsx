@@ -159,13 +159,13 @@ export default function ExpectedImportsPage() {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left">
+              <table className="w-full text-left text-xs" style={{ minWidth: '850px' }}>
                 <thead>
                   <tr>
                     <th className="table-header-cell w-[22%]">Dự án yêu cầu</th>
                     <th className="table-header-cell w-[30%]">Vật tư / SKU</th>
                     <th className="table-header-cell w-[10%] text-right">Dự kiến</th>
-                    <th className="table-header-cell w-[14%] text-center text-[var(--md-primary)]">Lượng thừa (Surplus)</th>
+                    <th className="table-header-cell w-[14%] text-center">Lượng thừa (Surplus)</th>
                     <th className="table-header-cell w-[8%] text-center">ĐVT</th>
                     <th className="table-header-cell w-[16%] text-center">Ngày nhập dự kiến</th>
                   </tr>

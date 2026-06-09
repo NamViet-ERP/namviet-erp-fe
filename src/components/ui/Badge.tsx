@@ -23,6 +23,7 @@ export default function Badge({ status, className = '' }: BadgeProps) {
           fontSize: '0.75rem',
           fontWeight: 500,
           letterSpacing: '0.04em',
+          whiteSpace: 'nowrap',
         }}
       >
         {status}

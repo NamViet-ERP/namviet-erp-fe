@@ -10,6 +10,31 @@ const icons: Record<ToastType, LucideIcon> = {
   info:    Info,
 };
 
+const toastStyles = `
+@keyframes mdSlideInRight {
+  from { opacity: 0; transform: translateX(100%); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes mdSlideOutRight {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(100%); }
+}
+@keyframes toastProgress {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+`;
+
+if (typeof document !== 'undefined') {
+  const id = 'nv-toast-styles';
+  if (!document.getElementById(id)) {
+    const style = document.createElement('style');
+    style.id = id;
+    style.appendChild(document.createTextNode(toastStyles));
+    document.head.appendChild(style);
+  }
+}
+
 /* MD3 Snackbar uses inverse-surface for high contrast */
 const snackbarStyle: React.CSSProperties = {
   background:  'var(--md-inverse-surface)',
@@ -45,10 +70,12 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
   useEffect(() => {
     const timer = setTimeout(() => {
       setExiting(true);
-      setTimeout(() => onDismiss(toast.id), 300);
-    }, toast.duration || 4000);
+      setTimeout(() => onDismiss(toast.id), 280);
+    }, toast.duration || 2500);
     return () => clearTimeout(timer);
   }, [toast, onDismiss]);
+
+  const animationName = exiting ? 'mdSlideOutRight' : 'mdSlideInRight';
 
   return (
     <div
@@ -56,16 +83,15 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
         display: 'flex',
         alignItems: 'center',
         gap: '12px',
-        padding: '12px 16px',
-        minWidth: '300px',
+        padding: '12px 16px 14px',
+        minWidth: '320px',
         maxWidth: '440px',
-        borderRadius: '4px',
+        borderRadius: '8px',
         ...snackbarStyle,
         boxShadow: 'var(--md-shadow-3)',
-        transform: exiting ? 'translateY(16px)' : 'translateY(0)',
-        opacity: exiting ? 0 : 1,
-        transition: 'all 300ms var(--md-easing)',
-        animation: 'mdSlideUp 300ms var(--md-easing) forwards',
+        position: 'relative',
+        overflow: 'hidden',
+        animation: `${animationName} 250ms var(--md-easing) forwards`,
       }}
     >
       <Icon
@@ -102,7 +128,7 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
         </p>
       </div>
       <button
-        onClick={() => { setExiting(true); setTimeout(() => onDismiss(toast.id), 300); }}
+        onClick={() => { setExiting(true); setTimeout(() => onDismiss(toast.id), 280); }}
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -123,6 +149,18 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
       >
         <X size={16} />
       </button>
+
+      {/* Countdown progress line */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          height: '3px',
+          background: iconColors[toast.type] || iconColors.info,
+          animation: `toastProgress ${toast.duration || 2500}ms linear forwards`,
+        }}
+      />
     </div>
   );
 }
@@ -132,7 +170,7 @@ let toastListeners: Array<(toast: Toast) => void> = [];
 let toastId = 0;
 
 // eslint-disable-next-line react-refresh/only-export-components
-export function showToast(type: ToastType, message: string, title = '', duration = 4000): void {
+export function showToast(type: ToastType, message: string, title = '', duration = 2500): void {
   const toast: Toast = { id: ++toastId, type, message, title, duration };
   toastListeners.forEach(fn => fn(toast));
 }
@@ -142,7 +180,7 @@ export default function ToastContainer() {
 
   useEffect(() => {
     const listener = (toast: Toast) => setToasts(prev => [...prev, toast]);
-    toastListeners.push(listener);
+    toastListeners = [listener];
     return () => { toastListeners = toastListeners.filter(l => l !== listener); };
   }, []);
 
@@ -152,9 +190,9 @@ export default function ToastContainer() {
     <div
       style={{
         position: 'fixed',
-        bottom: '24px',
+        top: '80px',
         right: '24px',
-        zIndex: 100,
+        zIndex: 9999,
         display: 'flex',
         flexDirection: 'column',
         gap: '8px',

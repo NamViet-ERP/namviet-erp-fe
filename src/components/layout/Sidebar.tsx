@@ -1,14 +1,22 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
-import { ChevronDown, ChevronRight, ChevronLeft, Warehouse as WarehouseIcon, ClipboardCheck } from 'lucide-react';
+import { ChevronDown, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight, Warehouse as WarehouseIcon, ClipboardCheck, Users } from 'lucide-react';
 import type { SidebarMenuItem } from '../../types';
 import type { LucideIcon } from 'lucide-react';
 
-type Module = 'warehouse' | 'stocktake';
+type Module = 'warehouse' | 'stocktake' | 'members';
 
-const moduleIcons: Record<Module, LucideIcon> = { warehouse: WarehouseIcon, stocktake: ClipboardCheck };
-const moduleLabels: Record<Module, string> = { warehouse: 'KHO HÀNG', stocktake: 'KIỂM KÊ' };
+const moduleIcons: Record<Module, LucideIcon> = { 
+  warehouse: WarehouseIcon, 
+  stocktake: ClipboardCheck,
+  members: Users
+};
+const moduleLabels: Record<Module, string> = { 
+  warehouse: 'KHO HÀNG', 
+  stocktake: 'KIỂM KÊ',
+  members: 'THÀNH VIÊN'
+};
 
 interface SidebarProps {
   collapsed: boolean;
@@ -145,7 +153,7 @@ export default function Sidebar({ collapsed, onToggle, menuItems, currentModule 
         display: 'flex',
         flexDirection: 'column',
         top: '64px',
-        width: collapsed ? '72px' : '240px',
+        width: collapsed ? '48px' : '180px',
         background: 'var(--md-surface-container)',
         borderRight: '1px solid var(--md-outline-variant)',
         transition: 'width 300ms var(--md-easing)',
@@ -154,73 +162,98 @@ export default function Sidebar({ collapsed, onToggle, menuItems, currentModule 
       {/* ── Sidebar Header ── */}
       <div
         style={{
-          height: '56px',
+          height: '48px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: collapsed ? 'center' : 'space-between',
-          padding: collapsed ? '0 16px' : '0 12px 0 20px',
+          padding: collapsed ? '0' : '0 8px 0 12px',
           borderBottom: '1px solid var(--md-outline-variant)',
           flexShrink: 0,
           transition: 'padding 300ms var(--md-easing)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', overflow: 'hidden', flex: collapsed ? '0 0 auto' : 1 }}>
-          <ModuleIcon
-            size={18}
+        {collapsed ? (
+          <button
+            onClick={onToggle}
+            title="Mở rộng"
             style={{
-              color: 'var(--md-primary)',
-              flexShrink: 0,
-              opacity: collapsed ? 0 : 1,
-              width: collapsed ? 0 : '18px',
-              marginRight: collapsed ? 0 : '8px',
-              transition: 'all 250ms var(--md-easing)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '32px',
+              height: '32px',
+              borderRadius: '6px',
+              background: 'var(--md-secondary)',
+              color: '#ffffff',
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'transform 200ms var(--md-easing)',
             }}
-          />
-          <span
-            style={{
-              fontFamily: "'Roboto', sans-serif",
-              fontSize: '0.6875rem',
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              letterSpacing: '0.08em',
-              color: 'var(--md-on-surface-variant)',
-              opacity: collapsed ? 0 : 1,
-              maxWidth: collapsed ? 0 : '120px',
-              overflow: 'hidden',
-              whiteSpace: 'nowrap',
-              transition: 'all 250ms var(--md-easing)',
-            }}
+            onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.05)'; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
           >
-            {moduleLabels[currentModule]}
-          </span>
-        </div>
-
-        <button
-          onClick={onToggle}
-          title={collapsed ? 'Mở rộng' : 'Thu gọn'}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '32px',
-            height: '32px',
-            borderRadius: '9999px',
-            border: 'none',
-            background: 'transparent',
-            color: 'var(--md-on-surface-variant)',
-            cursor: 'pointer',
-            flexShrink: 0,
-            transition: 'background 200ms var(--md-easing), color 200ms var(--md-easing)',
-          }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(103,80,164,0.08)'; e.currentTarget.style.color = 'var(--md-primary)'; }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--md-on-surface-variant)'; }}
-        >
-          {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-        </button>
+            <ModuleIcon size={16} />
+          </button>
+        ) : (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', overflow: 'hidden', flex: 1 }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '6px',
+                  background: 'var(--md-secondary)',
+                  color: '#ffffff',
+                  flexShrink: 0,
+                  marginRight: '8px',
+                }}
+              >
+                <ModuleIcon size={16} />
+              </div>
+              <span
+                style={{
+                  fontFamily: "'Roboto', sans-serif",
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  color: 'var(--md-secondary)',
+                  overflow: 'hidden',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {moduleLabels[currentModule]}
+              </span>
+            </div>
+            <button
+              onClick={onToggle}
+              title="Thu gọn"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '28px',
+                height: '28px',
+                borderRadius: '9999px',
+                border: 'none',
+                background: 'transparent',
+                color: 'var(--md-secondary)',
+                cursor: 'pointer',
+                flexShrink: 0,
+                transition: 'background 200ms var(--md-easing)',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0, 142, 206, 0.08)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+            >
+              <ChevronsLeft size={16} />
+            </button>
+          </>
+        )}
       </div>
 
       {/* ── Nav items ── */}
-      <nav style={{ flex: 1, overflowY: 'auto', padding: '8px', transition: 'all 200ms var(--md-easing)' }}>
+      <nav style={{ flex: 1, overflowY: 'auto', padding: '6px', transition: 'all 200ms var(--md-easing)' }}>
         {menuItems.map((item) => {
           const Icon = item.icon;
           const hasChildren = (item.children?.length ?? 0) > 0;
@@ -255,32 +288,32 @@ export default function Sidebar({ collapsed, onToggle, menuItems, currentModule 
                 className={`sidebar-item ${active ? 'active' : ''}`}
                 style={{
                   justifyContent: collapsed ? 'center' : 'flex-start',
-                  padding: collapsed ? '10px' : '10px 16px',
-                  gap: collapsed ? '0' : '12px',
+                  padding: collapsed ? '6px' : '5px 10px',
+                  gap: collapsed ? '0' : '6px',
                   transition: 'padding 300ms var(--md-easing), gap 300ms var(--md-easing)',
                   width: '100%',
                 }}
                 title={collapsed ? item.label : undefined}
               >
                 <Icon
-                  size={20}
+                  size={18}
                   style={{
                     flexShrink: 0,
-                    color: active ? 'var(--md-primary)' : 'var(--md-on-surface-variant)',
+                    color: active ? 'var(--md-secondary)' : 'var(--md-on-surface)',
                     transition: 'color 200ms var(--md-easing)',
                   }}
                 />
                 <span
                   className={`sidebar-label flex-1 text-left ${collapsed ? 'collapsed' : ''}`}
-                  style={{ fontFamily: "'Roboto', sans-serif", fontSize: '0.875rem' }}
+                  style={{ fontFamily: "'Roboto', sans-serif", fontSize: '12px' }}
                 >
                   {item.label}
                 </span>
                 {hasChildren && !collapsed && (
                   <ChevronDown
-                    size={14}
+                    size={12}
                     style={{
-                      color: 'var(--md-on-surface-variant)',
+                      color: 'var(--md-on-surface)',
                       transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
                       opacity: collapsed ? 0 : 1,
                       transition: 'transform 300ms var(--md-easing), opacity 200ms var(--md-easing)',
@@ -296,8 +329,8 @@ export default function Sidebar({ collapsed, onToggle, menuItems, currentModule 
                   <div className="submenu-content">
                     <div
                       style={{
-                        marginLeft: '28px',
-                        paddingLeft: '8px',
+                        marginLeft: '14px',
+                        paddingLeft: '6px',
                         marginTop: '2px',
                         marginBottom: '4px',
                         borderLeft: '2px solid var(--md-outline-variant)',
@@ -310,28 +343,28 @@ export default function Sidebar({ collapsed, onToggle, menuItems, currentModule 
                           style={{
                             width: '100%',
                             textAlign: 'left',
-                            padding: '8px 12px',
+                            padding: '4px 8px',
                             fontFamily: "'Roboto', sans-serif",
-                            fontSize: '0.8125rem',
-                            fontWeight: isActive(c.path) ? 700 : 400,
+                            fontSize: '11px',
+                            fontWeight: isActive(c.path) ? 600 : 400,
                             borderRadius: '9999px',
                             border: 'none',
                             background: isActive(c.path) ? 'var(--md-secondary-container)' : 'transparent',
-                            color: isActive(c.path) ? 'var(--md-on-secondary-container)' : 'var(--md-on-surface-variant)',
+                            color: isActive(c.path) ? 'var(--md-on-secondary-container)' : 'var(--md-on-surface)',
                             cursor: 'pointer',
                             transition: 'background 200ms var(--md-easing), color 200ms var(--md-easing)',
                             display: 'block',
                           }}
                           onMouseEnter={e => {
                             if (!isActive(c.path)) {
-                              e.currentTarget.style.background = 'rgba(103,80,164,0.08)';
+                              e.currentTarget.style.background = 'rgba(14, 48, 99, 0.08)';
                               e.currentTarget.style.color = 'var(--md-on-surface)';
                             }
                           }}
                           onMouseLeave={e => {
                             if (!isActive(c.path)) {
                               e.currentTarget.style.background = 'transparent';
-                              e.currentTarget.style.color = 'var(--md-on-surface-variant)';
+                              e.currentTarget.style.color = 'var(--md-on-surface)';
                             }
                           }}
                         >
@@ -403,7 +436,7 @@ export default function Sidebar({ collapsed, onToggle, menuItems, currentModule 
                       cursor: 'pointer',
                       transition: 'background 200ms var(--md-easing)',
                     }}
-                    onMouseEnter={e => { if (!isActive(c.path)) e.currentTarget.style.background = 'rgba(103,80,164,0.08)'; }}
+                    onMouseEnter={e => { if (!isActive(c.path)) e.currentTarget.style.background = 'rgba(14, 48, 99, 0.08)'; }}
                     onMouseLeave={e => { if (!isActive(c.path)) e.currentTarget.style.background = 'transparent'; }}
                   >
                     <div

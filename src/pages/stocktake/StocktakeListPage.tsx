@@ -44,6 +44,9 @@ const emptyForm: StocktakeForm = {
   items: [{ productId: '', systemQty: '', actualQty: '' }],
 };
 
+const generateUniqueStocktakeId = () => `st-${Date.now()}`;
+const getLocaleDateString = () => new Date().toLocaleDateString('vi-VN');
+
 export default function StocktakeListPage() {
   const [data, setData] = useState<Stocktake[]>(initialStocktakes);
   const [activeTab, setActiveTab] = useState<string>('all');
@@ -92,8 +95,8 @@ export default function StocktakeListPage() {
     if (!validate()) return;
     const wh = warehouses.find(w => w.id === form.warehouseId);
     const newItem: Stocktake = {
-      id: `st-${Date.now()}`, voucherCode: generateCode('KK'),
-      date: new Date().toLocaleDateString('vi-VN'),
+      id: generateUniqueStocktakeId(), voucherCode: generateCode('KK'),
+      date: getLocaleDateString(),
       createdBy: 'Admin', status: 'pending',
       warehouseId: form.warehouseId, warehouseName: wh?.name?.toUpperCase() || '',
       condition: 'counting', isFrozen: true, note: form.note,

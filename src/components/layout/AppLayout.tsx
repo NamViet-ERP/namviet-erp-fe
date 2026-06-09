@@ -1,24 +1,36 @@
 import { useState } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import ToastContainer from '../ui/Toast';
-import { warehouseMenu, stocktakeMenu } from '../../constants/sidebarMenus';
+import { warehouseMenu, stocktakeMenu, membersMenu } from '../../constants/sidebarMenus';
 import type { SidebarMenuItem } from '../../types';
 
-type Module = 'warehouse' | 'stocktake';
+type Module = 'warehouse' | 'stocktake' | 'members';
 
 export default function AppLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
-  const currentModule: Module = location.pathname.startsWith('/stocktake') ? 'stocktake' : 'warehouse';
-  const menuItems: SidebarMenuItem[] = currentModule === 'stocktake' ? stocktakeMenu : warehouseMenu;
+  const isLoggedIn = localStorage.getItem('nv-logged-in') === 'true';
+
+  if (!isLoggedIn) {
+    return <Navigate to="/login" replace />;
+  }
+
+  const currentModule: Module = location.pathname.startsWith('/stocktake') ? 'stocktake' :
+                                location.pathname.startsWith('/members') ? 'members' : 'warehouse';
+  const menuItems: SidebarMenuItem[] = currentModule === 'stocktake' ? stocktakeMenu :
+                                       currentModule === 'members' ? membersMenu : warehouseMenu;
 
   const handleModuleSwitch = (module: Module) => {
-    navigate(module === 'warehouse' ? '/warehouse/dashboard' : '/stocktake/list');
+    if (module === 'warehouse') navigate('/warehouse/dashboard-warehouse');
+    else if (module === 'stocktake') navigate('/stocktake/list');
+    else if (module === 'members') navigate('/members/list');
   };
+
+  const hideSidebar = location.pathname === '/profile' || location.pathname === '/warehouse/dashboard';
 
   return (
     <div
@@ -30,24 +42,26 @@ export default function AppLayout() {
       }}
     >
       <Header currentModule={currentModule} onModuleSwitch={handleModuleSwitch} />
-      <Sidebar
-        collapsed={sidebarCollapsed}
-        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-        menuItems={menuItems}
-        currentModule={currentModule}
-      />
+      {!hideSidebar && (
+        <Sidebar
+          collapsed={sidebarCollapsed}
+          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+          menuItems={menuItems}
+          currentModule={currentModule}
+        />
+      )}
       <main
         style={{
           minHeight: '100vh',
           paddingTop: '64px',
-          marginLeft: sidebarCollapsed ? '72px' : '240px',
+          marginLeft: hideSidebar ? '0px' : (sidebarCollapsed ? '48px' : '180px'),
           transition: `margin-left 300ms var(--md-easing)`,
         }}
       >
         <div
           className="animate-fade-in"
           key={location.pathname}
-          style={{ padding: '24px 32px' }}
+          style={{ padding: '16px 20px' }}
         >
           <Outlet />
         </div>

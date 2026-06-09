@@ -1,498 +1,758 @@
-import { Package, DollarSign, Warehouse, TrendingUp, ArrowUpRight, Activity } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { 
+  Package, DollarSign, Warehouse, TrendingUp, ArrowUpRight, Activity,
+  Megaphone, HeartHandshake, ShoppingCart, CreditCard, FolderKanban,
+  FileSignature, Wrench, Factory, Users, ChevronRight, Calendar,
+  Truck, PackagePlus, UserCheck, ArrowLeftRight, Barcode, ClipboardCheck,
+  ChevronLeft, Gift, Settings
+} from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import {
-  PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend,
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, BarChart, Bar,
-} from 'recharts';
 
-import Card from '../../components/ui/Card';
-import { warehouses } from '../../data/warehouses';
-import { formatCurrency, formatCurrencyShort } from '../../utils/formatCurrency';
+import { showToast } from '../../components/ui/Toast';
 
-const totalStock = warehouses.reduce((sum, w) => sum + w.totalStock, 0);
-const totalValue = warehouses.reduce((sum, w) => sum + w.totalValue, 0);
-const totalWarehouses = warehouses.filter(w => w.status === 'active').length;
+// ── Design Tokens ──
+const tokens = {
+  text: {
+    primary: 'var(--md-on-surface-variant)',
+    secondary: 'var(--md-on-surface)',
+    tertiary: 'var(--md-secondary)',
+  },
+  surface: {
+    muted: 'var(--md-surface-container)',
+    base: 'var(--md-surface)',
+    raised: 'var(--md-surface-container-low)',
+    strong: 'var(--md-secondary-container)',
+  },
+  border: {
+    strong: 'var(--md-outline-variant)',
+  },
+  space: {
+    1: '4px',
+    2: '5px',
+    3: '6px',
+    4: '8px',
+    5: '12px',
+    6: '15px',
+    7: '20px',
+  },
+  radius: {
+    xs: '3px',
+    sm: '4px',
+  },
+  motion: {
+    duration: {
+      instant: '150ms',
+      fast: '200ms',
+    }
+  }
+};
 
-/* ── Mock activity trend data (6 months) ── */
-interface TrendDataPoint {
-  month: string;
-  imports: number;
-  exports: number;
-  value: number;
-}
-
-const trendData: TrendDataPoint[] = [
-  { month: 'T1', imports: 320, exports: 280, value: 4200 },
-  { month: 'T2', imports: 410, exports: 340, value: 5100 },
-  { month: 'T3', imports: 280, exports: 390, value: 3800 },
-  { month: 'T4', imports: 520, exports: 420, value: 6200 },
-  { month: 'T5', imports: 460, exports: 380, value: 5800 },
-  { month: 'T6', imports: 590, exports: 510, value: 7100 },
-];
-
-interface CategoryDataPoint {
+// ── Mock Birthdays Data ──
+interface BirthdayEvent {
   name: string;
-  value: number;
-  color: string;
+  role: 'Nhân viên' | 'Khách hàng';
 }
 
-const stockByCategory: CategoryDataPoint[] = [
-  { name: 'Máy nén trục vít', value: 420, color: '#386A20' }, // Success green
-  { name: 'Máy nén piston',   value: 280, color: '#005DB6' }, // Info blue
-  { name: 'Bình chứa khí',   value: 195, color: '#7A5100' }, // Warning amber
-  { name: 'Máy sấy khí',     value: 110, color: '#7D5260' }, // Tertiary red/pink
-  { name: 'Lọc khí',         value: 340, color: '#B3261E' }, // Error red
-  { name: 'Phụ kiện',        value: 560, color: '#625B71' }, // Secondary gray
-];
-
-const stockByWarehouse: CategoryDataPoint[] = warehouses
-  .filter(w => w.group === 'Kho chính' || w.group === 'Kho phụ')
-  .map((w, i) => ({
-    name: w.branch,
-    value: w.totalStock,
-    color: ['#6750A4', '#005DB6', '#386A20', '#7D5260', '#B3261E'][i % 5],
-  }));
-
-/* ── Recent activity ── */
-interface ActivityItem {
-  type: string;
-  label: string;
-  value: string;
-  time: string;
-  accent: string;
-}
-
-const recentActivity: ActivityItem[] = [
-  { type: 'import',   label: 'Nhập kho #NK-2026089', value: '+240 sản phẩm', time: '8 phút trước',   accent: '#386A20' },
-  { type: 'export',   label: 'Xuất kho #XK-2026043', value: '-85 sản phẩm',  time: '32 phút trước',  accent: '#B3261E' },
-  { type: 'import',   label: 'Nhập kho #NK-2026088', value: '+120 sản phẩm', time: '1 giờ trước',    accent: '#386A20' },
-  { type: 'transfer', label: 'Chuyển kho #CK-001',   value: '60 sản phẩm',  time: '2 giờ trước',    accent: '#7A5100' },
-  { type: 'stocktake',label: 'Kiểm kê Kho HN-01',    value: '1,905 SKU',    time: '5 giờ trước',    accent: '#7D5260' },
-];
-
-/* ── MD3 Custom Tooltip ── */
-interface CustomTooltipInternalProps {
-  active?: boolean;
-  payload?: Array<{ name?: string; value?: number; color?: string; fill?: string }>;
-  label?: string;
-}
-const CustomTooltip = ({ active, payload, label }: CustomTooltipInternalProps) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div
-      style={{
-        padding: '12px 16px',
-        background: 'var(--md-surface-container-high)',
-        border: '1px solid var(--md-outline-variant)',
-        borderRadius: '12px',
-        boxShadow: 'var(--md-shadow-2)',
-        fontFamily: "'Roboto', sans-serif",
-        fontSize: '13px',
-        color: 'var(--md-on-surface)',
-      }}
-    >
-      {label && (
-        <p style={{ fontWeight: 500, fontSize: '11px', color: 'var(--md-on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
-          {label}
-        </p>
-      )}
-      {(payload as Array<{ name?: string; value?: number; color?: string; fill?: string }>).map((p, i) => (
-        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: i > 0 ? '4px' : 0 }}>
-          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: p.color || p.fill, flexShrink: 0 }} />
-          <span style={{ color: 'var(--md-on-surface-variant)' }}>{p.name}:</span>
-          <span style={{ fontWeight: 700, color: 'var(--md-on-surface)' }}>
-            {typeof p.value === 'number' ? formatCurrency(p.value) : p.value}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
+const birthdaysData: Record<number, BirthdayEvent[]> = {
+  9: [
+    { name: 'Nguyễn Hoàng Nam', role: 'Nhân viên' },
+    { name: 'Công ty TNHH Mayzer Việt Nam', role: 'Khách hàng' }
+  ],
+  15: [
+    { name: 'Trần Bích Thủy', role: 'Nhân viên' }
+  ],
+  22: [
+    { name: 'Lê Minh Đức', role: 'Nhân viên' },
+    { name: 'Đoàn Quốc Bảo', role: 'Khách hàng' }
+  ],
+  29: [
+    { name: 'Phan Thanh Hải', role: 'Nhân viên' }
+  ]
 };
 
-/* ── MD3 Pie label ── */
-interface PieLabelProps {
-  cx: number;
-  cy: number;
-  midAngle: number;
-  innerRadius: number;
-  outerRadius: number;
-  percent: number;
-}
-
-const RADIAN = Math.PI / 180;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const renderCustomLabel = (props: any) => {
-  const { cx, cy, midAngle, innerRadius, outerRadius, percent } = props as PieLabelProps;
-  if (percent < 0.06) return null;
-  const r = innerRadius + (outerRadius - innerRadius) * 0.55;
-  const x = cx + r * Math.cos(-midAngle * RADIAN);
-  const y = cy + r * Math.sin(-midAngle * RADIAN);
-  return (
-    <text x={x} y={y} fill="#ffffff" textAnchor="middle" dominantBaseline="central" fontSize={10} fontWeight={700} fontFamily="Roboto, sans-serif">
-      {`${(percent * 100).toFixed(0)}%`}
-    </text>
-  );
-};
-
-/* ── Section heading — MD3 Roboto style ── */
-interface SectionHeadingProps {
-  children: React.ReactNode;
-  sub?: string;
-}
-
-function SectionHeading({ children, sub }: SectionHeadingProps) {
-  return (
-    <div style={{ marginBottom: '16px' }}>
-      <h2
-        style={{
-          fontFamily: "'Roboto', sans-serif",
-          fontSize: '18px',
-          fontWeight: 500,
-          color: 'var(--md-on-surface)',
-        }}
-      >
-        {children}
-      </h2>
-      {sub && (
-        <p style={{ fontFamily: "'Roboto', sans-serif", fontSize: '12px', color: 'var(--md-on-surface-variant)', marginTop: '2px' }}>
-          {sub}
-        </p>
-      )}
-    </div>
-  );
-}
-
-/* ── Bento card — MD3 style ── */
-interface BentoCardProps {
-  children: React.ReactNode;
-  className?: string;
-  style?: React.CSSProperties;
-}
-
-function BentoCard({ children, className = '', style = {} }: BentoCardProps) {
-  return (
-    <div
-      className={className}
-      style={{
-        background: 'var(--md-surface-container)',
-        borderRadius: '24px',
-        boxShadow: 'var(--md-shadow-1)',
-        padding: '24px',
-        position: 'relative',
-        transition: 'all 300ms var(--md-easing)',
-        ...style,
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-
-/* ── Mini stat item type ── */
-interface MiniStat {
+// ── Departments Grid Definition ──
+interface SubItem {
   label: string;
-  value: string;
-  color: string;
   icon: LucideIcon;
+  path?: string;
 }
+
+interface Department {
+  title: string;
+  icon: LucideIcon;
+  items: SubItem[];
+}
+
+const departments: Department[] = [
+  {
+    title: 'MARKETING - SALE',
+    icon: Megaphone,
+    items: [
+      { label: 'Marketing - Sale', icon: TrendingUp }
+    ]
+  },
+  {
+    title: 'CSKH - SAU BÁN',
+    icon: HeartHandshake,
+    items: [
+      { label: 'Chăm sóc Khách Hàng', icon: Users },
+      { label: 'Lịch CSKH - Sau Bán', icon: Calendar },
+      { label: 'Công Việc CSKH', icon: ClipboardCheck },
+      { label: 'Bảo Hành', icon: Wrench }
+    ]
+  },
+  {
+    title: 'MUA HÀNG',
+    icon: ShoppingCart,
+    items: [
+      { label: 'Nhà Cung Cấp', icon: Truck, path: '/warehouse/suppliers' },
+      { label: 'Mua Hàng', icon: PackagePlus, path: '/warehouse/expected-imports' }
+    ]
+  },
+  {
+    title: 'KẾ TOÁN',
+    icon: CreditCard,
+    items: [
+      { label: 'Công Nợ Bán', icon: DollarSign },
+      { label: 'Công Nợ Mua', icon: DollarSign },
+      { label: 'Quỹ', icon: Activity },
+      { label: 'Ngân Hàng', icon: Warehouse },
+      { label: 'Phiếu Kế Toán/Kế Hoạch Chi', icon: FileSignature },
+      { label: 'Đề Nghị Thanh Toán', icon: FileSignature }
+    ]
+  },
+  {
+    title: 'DỰ ÁN',
+    icon: FolderKanban,
+    items: [
+      { label: 'Công Việc Dự Án', icon: ClipboardCheck },
+      { label: 'Lịch Dự Án', icon: Calendar }
+    ]
+  },
+  {
+    title: 'BÁN HÀNG',
+    icon: FileSignature,
+    items: [
+      { label: 'Bán Hàng', icon: DollarSign },
+      { label: 'Kế Hoạch Giao Hàng', icon: Calendar },
+      { label: 'Hợp Đồng Bán', icon: FileSignature },
+      { label: 'Trả Lại Hàng Bán', icon: ArrowLeftRight }
+    ]
+  },
+  {
+    title: 'KỸ THUẬT',
+    icon: Wrench,
+    items: [
+      { label: 'Công Việc Kỹ Thuật', icon: ClipboardCheck },
+      { label: 'Lịch Kỹ Thuật', icon: Calendar },
+      { label: 'Chăm Sóc Khách Hàng', icon: Users },
+      { label: 'Đánh Giá (KPI)', icon: Activity }
+    ]
+  },
+  {
+    title: 'KHO HÀNG',
+    icon: Warehouse,
+    items: [
+      { label: 'Kho Hàng', icon: Warehouse, path: '/warehouse/dashboard-warehouse' },
+      { label: 'Kiểm Kê', icon: ClipboardCheck, path: '/stocktake/list' },
+      { label: 'Thành Phẩm, Phụ Tùng, NVL', icon: Barcode, path: '/warehouse/stock' }
+    ]
+  },
+  {
+    title: 'SẢN XUẤT',
+    icon: Factory,
+    items: [
+      { label: 'Sản Xuất', icon: Factory },
+      { label: 'QC', icon: Activity }
+    ]
+  },
+  {
+    title: 'HRM',
+    icon: Users,
+    items: [
+      { label: 'Nhân Viên', icon: Users, path: '/members/list' },
+      { label: 'Tuyển Dụng', icon: UserCheck },
+      { label: 'C & B', icon: CreditCard },
+      { label: 'Đăng Ký KM', icon: FileSignature },
+      { label: 'Công Tác Phí', icon: DollarSign }
+    ]
+  }
+];
+
+// ── Top Products & Materials Data ──
+const topProducts = [
+  { imageIcon: Wrench, code: '2102205001', name: 'Bảo trì máy, thay vật tư, kiểm tra tổng thể, vệ sinh máy', qty: 57 },
+  { imageIcon: Settings, code: 'LD-ONG', name: 'Lắp đặt đường ống cụm máy', qty: 14 },
+  { imageIcon: Activity, code: 'KPF50-T', name: 'Bộ lọc thô King Power', qty: 5 },
+  { imageIcon: Activity, code: 'KPF50-A', name: 'Bộ lọc tinh King Power', qty: 5 },
+  { imageIcon: Package, code: 'MZ1000-8', name: 'Bình chứa khí nén', qty: 5 },
+];
+
+const topMaterials = [
+  { imageIcon: Activity, code: '101615004', name: 'King Power Air Compressor Oil (18L)', qty: 63 },
+  { imageIcon: Settings, code: '2101602002', name: 'King Power oil filter', qty: 48 },
+  { imageIcon: Activity, code: '2101605005', name: 'Motor grease GSR NO.2', qty: 19 },
+  { imageIcon: Activity, code: '2101705001', name: 'King Power air filter', qty: 19 },
+  { imageIcon: Settings, code: '2101610002', name: 'King Power oil filter', qty: 18 },
+];
 
 export default function DashboardPage() {
-  return (
-    <div className="relative animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      
-      {/* ── Ambient Blur Shapes ── */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          top: '-10%',
-          left: '-5%',
-          width: '400px',
-          height: '400px',
-          borderRadius: '50%',
-          background: 'rgba(103, 80, 164, 0.06)',
-          filter: 'blur(100px)',
-          pointerEvents: 'none',
-          zIndex: 0,
-        }}
-      />
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          bottom: '20%',
-          right: '-5%',
-          width: '350px',
-          height: '350px',
-          borderRadius: '50%',
-          background: 'rgba(125, 82, 96, 0.05)',
-          filter: 'blur(90px)',
-          pointerEvents: 'none',
-          zIndex: 0,
-        }}
-      />
+  const navigate = useNavigate();
+  const [selectedDay, setSelectedDay] = useState<number>(9); // Default today (June 9)
 
+  const handleItemClick = (item: SubItem, deptTitle: string) => {
+    if (item.path) {
+      navigate(item.path);
+    } else {
+      showToast('info', `Phân hệ "${item.label}" thuộc bộ phận "${deptTitle}" đang được phát triển.`, 'Chức năng giả lập');
+    }
+  };
+
+  // ── Render Birthday Cake SVG ──
+  const renderCake = () => (
+    <svg width="100" height="100" viewBox="0 0 120 120" className="mx-auto block" style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.06))' }}>
+      {/* Stand */}
+      <path d="M20,95 L100,95 A3,3 0 0,1 100,98 L20,98 A3,3 0 0,1 20,95 Z" fill="var(--md-outline)" />
+      <path d="M48,98 L72,98 L68,106 L52,106 Z" fill="var(--md-outline-variant)" />
+      
+      {/* Bottom tier */}
+      <rect x="25" y="65" width="70" height="30" rx="4" fill="var(--md-primary)" opacity="0.85" />
+      <path d="M25,75 Q60,82 95,75" fill="none" stroke="var(--md-primary-container)" strokeWidth="2" />
+      <circle cx="35" cy="73" r="2.5" fill="#f43f5e" />
+      <circle cx="48" cy="73" r="2.5" fill="#eab308" />
+      <circle cx="60" cy="73" r="2.5" fill="#10b981" />
+      <circle cx="72" cy="73" r="2.5" fill="#f43f5e" />
+      <circle cx="85" cy="73" r="2.5" fill="#eab308" />
+
+      {/* Top tier */}
+      <rect x="35" y="42" width="50" height="23" rx="4" fill="var(--md-secondary)" />
+      <path d="M35,49 Q60,55 85,49" fill="none" stroke="var(--md-secondary-container)" strokeWidth="2" />
+      <circle cx="43" cy="47" r="2" fill="#eab308" />
+      <circle cx="51" cy="47" r="2" fill="#f43f5e" />
+      <circle cx="60" cy="47" r="2" fill="#10b981" />
+      <circle cx="69" cy="47" r="2" fill="#eab308" />
+      <circle cx="77" cy="47" r="2" fill="#f43f5e" />
+
+      {/* Candles */}
+      <rect x="44" y="28" width="2" height="14" fill="#fb923c" />
+      <path d="M45,23 C46,25 45,28 45,28 C44,28 43,25 45,23 Z" fill="#ef4444" className="animate-pulse" />
+
+      <rect x="59" y="24" width="2" height="18" fill="#f87171" />
+      <path d="M60,18 C61,21 60,24 60,24 C59,24 58,21 60,18 Z" fill="#f59e0b" className="animate-pulse" />
+
+      <rect x="74" y="28" width="2" height="14" fill="#fb923c" />
+      <path d="M75,23 C76,25 75,28 75,28 C74,28 73,25 75,23 Z" fill="#ef4444" className="animate-pulse" />
+
+      <ellipse cx="60" cy="42" rx="4" ry="2" fill="var(--md-surface-container-high)" />
+      <circle cx="60" cy="40" r="1.5" fill="#ef4444" />
+    </svg>
+  );
+
+  // ── June 2026 Calendar Grid Generation ──
+  // Column 1 is Sunday.
+  // Row 1 starts Sunday May 31.
+  const calendarCells = [
+    { day: 31, isCurrentMonth: false }, // Sunday May 31
+    { day: 1, isCurrentMonth: true },
+    { day: 2, isCurrentMonth: true },
+    { day: 3, isCurrentMonth: true },
+    { day: 4, isCurrentMonth: true },
+    { day: 5, isCurrentMonth: true },
+    { day: 6, isCurrentMonth: true },
+    { day: 7, isCurrentMonth: true },
+    { day: 8, isCurrentMonth: true },
+    { day: 9, isCurrentMonth: true }, // Today
+    { day: 10, isCurrentMonth: true },
+    { day: 11, isCurrentMonth: true },
+    { day: 12, isCurrentMonth: true },
+    { day: 13, isCurrentMonth: true },
+    { day: 14, isCurrentMonth: true },
+    { day: 15, isCurrentMonth: true },
+    { day: 16, isCurrentMonth: true },
+    { day: 17, isCurrentMonth: true },
+    { day: 18, isCurrentMonth: true },
+    { day: 19, isCurrentMonth: true },
+    { day: 20, isCurrentMonth: true },
+    { day: 21, isCurrentMonth: true },
+    { day: 22, isCurrentMonth: true },
+    { day: 23, isCurrentMonth: true },
+    { day: 24, isCurrentMonth: true },
+    { day: 25, isCurrentMonth: true },
+    { day: 26, isCurrentMonth: true },
+    { day: 27, isCurrentMonth: true },
+    { day: 28, isCurrentMonth: true },
+    { day: 29, isCurrentMonth: true },
+    { day: 30, isCurrentMonth: true },
+    { day: 1, isCurrentMonth: false }, // July 1
+    { day: 2, isCurrentMonth: false },
+    { day: 3, isCurrentMonth: false },
+    { day: 4, isCurrentMonth: false },
+  ];
+
+  return (
+    <div className="relative flex flex-col gap-5 animate-fade-in pb-10">
+      
       {/* ── Page Header ── */}
-      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
+      <div className="flex items-end justify-between relative z-10">
         <div>
-          <p
-            style={{
-              fontFamily: "'Roboto', sans-serif",
-              fontSize: '11px',
-              fontWeight: 500,
-              textTransform: 'uppercase',
-              letterSpacing: '0.08em',
-              color: 'var(--md-primary)',
-              marginBottom: '4px',
-            }}
-          >
-            TỔNG QUAN
+          <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--md-primary)] mb-1">
+            HỆ THỐNG ĐIỀU HÀNH
           </p>
-          <h1
-            style={{
-              fontFamily: "'Roboto', sans-serif",
-              fontSize: '28px',
-              fontWeight: 700,
-              color: 'var(--md-on-surface)',
-              letterSpacing: '-0.01em',
-            }}
-          >
-            Dashboard Kho hàng
+          <h1 className="text-2xl font-bold tracking-tight text-[var(--md-on-surface)]">
+            Bảng Điều Hướng Trung Tâm (WMS Portal)
           </h1>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontFamily: "'Roboto', sans-serif", fontSize: '12px', color: 'var(--md-on-surface-variant)' }}>
-          <Activity size={13} style={{ color: 'var(--md-primary)' }} />
+        <div className="flex items-center gap-1.5 text-xs text-[var(--md-on-surface-variant)]">
+          <Activity size={13} className="text-[var(--md-primary)]" />
           Cập nhật lúc: {new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
         </div>
       </div>
 
-      {/* ── KPI Cards ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px', position: 'relative', zIndex: 1 }}>
-        <Card
-          title="Tổng Tồn Kho"
-          value={formatCurrency(totalStock)}
-          subtitle="sản phẩm trong tất cả kho"
-          accent="amber"
-          icon={Package}
-          trend={12.4}
-          trendLabel="so tháng trước"
-        />
-        <Card
-          title="Tổng Giá Trị"
-          value={formatCurrencyShort(totalValue)}
-          subtitle="giá trị hàng tồn kho"
-          accent="blue"
-          icon={DollarSign}
-          trend={8.1}
-          trendLabel="so tháng trước"
-        />
-        <Card
-          title="Tổng Kho Hoạt Động"
-          value={totalWarehouses}
-          subtitle="kho đang hoạt động"
-          accent="teal"
-          icon={Warehouse}
-          trend={0}
-          trendLabel="không thay đổi"
-        />
-      </div>
-
-      {/* ── Main charts row ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', position: 'relative', zIndex: 1 }} className="lg:grid-cols-[3fr_2fr]">
+      {/* ── Grid Row 1: Functional Department cards (6 columns) ── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 relative z-10">
         
-        {/* Area chart + Pie in a row */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }} className="md:grid-cols-2 lg:col-span-2">
-
-          {/* Area chart */}
-          <BentoCard>
-            <SectionHeading sub="6 tháng gần nhất">Xu hướng Nhập / Xuất</SectionHeading>
-            <ResponsiveContainer width="100%" height={210}>
-              <AreaChart data={trendData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="gradImport" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#386A20" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="#386A20" stopOpacity={0.02} />
-                  </linearGradient>
-                  <linearGradient id="gradExport" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#B3261E" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="#B3261E" stopOpacity={0.02} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="4 4" stroke="var(--md-outline-variant)" vertical={false} opacity={0.3} />
-                <XAxis dataKey="month" stroke="transparent" tick={{ fill: 'var(--md-on-surface-variant)', fontSize: 11, fontFamily: 'Roboto, sans-serif' }} />
-                <YAxis stroke="transparent" tick={{ fill: 'var(--md-on-surface-variant)', fontSize: 11, fontFamily: 'Roboto, sans-serif' }} />
-                <Tooltip content={<CustomTooltip />} />
-                <Area type="monotone" dataKey="imports" name="Nhập kho"
-                  stroke="#386A20" strokeWidth={2} fill="url(#gradImport)" dot={false} activeDot={{ r: 5, fill: '#386A20', stroke: 'var(--md-surface)', strokeWidth: 1.5 }} />
-                <Area type="monotone" dataKey="exports" name="Xuất kho"
-                  stroke="#B3261E" strokeWidth={2} fill="url(#gradExport)" dot={false} activeDot={{ r: 5, fill: '#B3261E', stroke: 'var(--md-surface)', strokeWidth: 1.5 }} />
-                <Legend iconType="circle" iconSize={8}
-                  formatter={v => <span style={{ fontFamily: 'Roboto, sans-serif', color: 'var(--md-on-surface-variant)', fontSize: 12 }}>{v}</span>} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </BentoCard>
-
-          {/* Pie chart */}
-          <BentoCard>
-            <SectionHeading sub="Theo loại hàng">Cơ cấu tồn kho</SectionHeading>
-            <ResponsiveContainer width="100%" height={210}>
-              <PieChart>
-                <Pie
-                  data={stockByCategory}
-                  cx="50%" cy="45%"
-                  labelLine={false}
-                  label={renderCustomLabel}
-                  outerRadius={80} innerRadius={32}
-                  dataKey="value"
-                  animationDuration={700}
-                  strokeWidth={2}
-                  stroke="var(--md-surface-container)"
-                >
-                  {stockByCategory.map((e, i) => (
-                    <Cell key={i} fill={e.color} />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-                <Legend
-                  verticalAlign="bottom" iconType="circle" iconSize={8}
-                  formatter={v => <span style={{ fontFamily: 'Roboto, sans-serif', color: 'var(--md-on-surface-variant)', fontSize: 11 }}>{v}</span>}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </BentoCard>
-        </div>
-      </div>
-
-      {/* ── Bottom row: bar chart + recent activity ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', position: 'relative', zIndex: 1 }} className="lg:grid-cols-[3fr_2fr]">
-
-        {/* Bar chart */}
-        <BentoCard>
-          <SectionHeading sub="Top kho theo tồn kho thực tế">Phân bổ theo kho</SectionHeading>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={stockByWarehouse} margin={{ top: 5, right: 5, left: -20, bottom: 20 }} barCategoryGap="38%">
-              <CartesianGrid strokeDasharray="4 4" stroke="var(--md-outline-variant)" vertical={false} opacity={0.3} />
-              <XAxis dataKey="name" stroke="transparent"
-                tick={{ fill: 'var(--md-on-surface-variant)', fontSize: 10, fontFamily: 'Roboto, sans-serif' }}
-                angle={-15} textAnchor="end" interval={0} />
-              <YAxis stroke="transparent" tick={{ fill: 'var(--md-on-surface-variant)', fontSize: 11, fontFamily: 'Roboto, sans-serif' }} />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(103, 80, 164, 0.04)' }} />
-              <Bar dataKey="value" name="Tồn kho" radius={[4, 4, 0, 0]}>
-                {stockByWarehouse.map((e, i) => (
-                  <Cell key={i} fill={e.color} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </BentoCard>
-
-        {/* Recent activity feed */}
-        <BentoCard>
-          <SectionHeading sub="Hoạt động gần nhất">Nhật ký kho</SectionHeading>
-          <div>
-            {recentActivity.map((item, i) => (
-              <div
-                key={i}
-                style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '12px',
-                  paddingTop: '12px',
-                  paddingBottom: '12px',
-                  borderBottom: i < recentActivity.length - 1 ? '1px solid var(--md-outline-variant)' : 'none',
-                }}
+        {/* Column 1: Marketing-Sale, CSKH-Sau bán, Mua hàng */}
+        <div className="flex flex-col gap-3">
+          {departments.slice(0, 3).map((dept) => {
+            const DeptIcon = dept.icon;
+            return (
+              <div 
+                key={dept.title} 
+                className="bg-[var(--md-surface-container)] rounded-lg border border-[var(--md-outline-variant)] p-3 shadow-sm"
               >
-                {/* Dot + connector */}
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', alignSelf: 'stretch', flexShrink: 0 }}>
-                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: item.accent, marginTop: '4px', flexShrink: 0 }} />
-                  {i < recentActivity.length - 1 && (
-                    <div style={{ width: '1px', flex: 1, marginTop: '8px', background: 'var(--md-outline-variant)', opacity: 0.5 }} />
-                  )}
+                <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-[var(--md-outline-variant)]">
+                  <DeptIcon size={16} className="text-[var(--md-secondary)]" />
+                  <h3 className="text-[11.5px] font-bold text-[var(--md-primary)]">{dept.title}</h3>
                 </div>
-
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <p style={{ fontFamily: "'Roboto', sans-serif", fontSize: '13px', fontWeight: 500, color: 'var(--md-on-surface)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {item.label}
-                  </p>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}>
-                    <span style={{ fontFamily: "'Roboto', sans-serif", fontSize: '12px', fontWeight: 700, color: item.accent }}>{item.value}</span>
-                    <span style={{ fontFamily: "'Roboto', sans-serif", fontSize: '11px', color: 'var(--md-on-surface-variant)' }}>{item.time}</span>
-                  </div>
+                <div className="flex flex-col gap-1.5">
+                  {dept.items.map((item) => {
+                    const ItemIcon = item.icon;
+                    return (
+                      <button
+                        key={item.label}
+                        onClick={() => handleItemClick(item, dept.title)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleItemClick(item, dept.title); }}
+                        className="flex items-center justify-between w-full p-2 bg-[var(--md-surface-container-low)] hover:bg-[var(--nv-sidebar-item-hover)] border border-[var(--md-outline-variant)] hover:border-[var(--md-secondary)] rounded transition-all duration-150 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--md-secondary)]"
+                        style={{ outlineOffset: '2px' }}
+                      >
+                        <div className="flex items-center gap-2 overflow-hidden">
+                          <ItemIcon size={14} className="text-[var(--md-on-surface-variant)] flex-shrink-0" />
+                          <span className="text-[12px] font-medium text-[var(--md-on-surface)] truncate">{item.label}</span>
+                        </div>
+                        <ChevronRight size={12} className="text-[var(--md-on-surface-variant)] flex-shrink-0 ml-1" />
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
-            ))}
+            );
+          })}
+        </div>
+
+        {/* Column 2: Kế toán, Dự án */}
+        <div className="flex flex-col gap-3">
+          {departments.slice(3, 5).map((dept) => {
+            const DeptIcon = dept.icon;
+            return (
+              <div 
+                key={dept.title} 
+                className="bg-[var(--md-surface-container)] rounded-lg border border-[var(--md-outline-variant)] p-3 shadow-sm"
+              >
+                <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-[var(--md-outline-variant)]">
+                  <DeptIcon size={16} className="text-[var(--md-secondary)]" />
+                  <h3 className="text-[11.5px] font-bold text-[var(--md-primary)]">{dept.title}</h3>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  {dept.items.map((item) => {
+                    const ItemIcon = item.icon;
+                    return (
+                      <button
+                        key={item.label}
+                        onClick={() => handleItemClick(item, dept.title)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleItemClick(item, dept.title); }}
+                        className="flex items-center justify-between w-full p-2 bg-[var(--md-surface-container-low)] hover:bg-[var(--nv-sidebar-item-hover)] border border-[var(--md-outline-variant)] hover:border-[var(--md-secondary)] rounded transition-all duration-150 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--md-secondary)]"
+                        style={{ outlineOffset: '2px' }}
+                      >
+                        <div className="flex items-center gap-2 overflow-hidden">
+                          <ItemIcon size={14} className="text-[var(--md-on-surface-variant)] flex-shrink-0" />
+                          <span className="text-[12px] font-medium text-[var(--md-on-surface)] truncate">{item.label}</span>
+                        </div>
+                        <ChevronRight size={12} className="text-[var(--md-on-surface-variant)] flex-shrink-0 ml-1" />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Column 3: Bán hàng, Kỹ thuật */}
+        <div className="flex flex-col gap-3">
+          {departments.slice(5, 7).map((dept) => {
+            const DeptIcon = dept.icon;
+            return (
+              <div 
+                key={dept.title} 
+                className="bg-[var(--md-surface-container)] rounded-lg border border-[var(--md-outline-variant)] p-3 shadow-sm"
+              >
+                <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-[var(--md-outline-variant)]">
+                  <DeptIcon size={16} className="text-[var(--md-secondary)]" />
+                  <h3 className="text-[11.5px] font-bold text-[var(--md-primary)]">{dept.title}</h3>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  {dept.items.map((item) => {
+                    const ItemIcon = item.icon;
+                    return (
+                      <button
+                        key={item.label}
+                        onClick={() => handleItemClick(item, dept.title)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleItemClick(item, dept.title); }}
+                        className="flex items-center justify-between w-full p-2 bg-[var(--md-surface-container-low)] hover:bg-[var(--nv-sidebar-item-hover)] border border-[var(--md-outline-variant)] hover:border-[var(--md-secondary)] rounded transition-all duration-150 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--md-secondary)]"
+                        style={{ outlineOffset: '2px' }}
+                      >
+                        <div className="flex items-center gap-2 overflow-hidden">
+                          <ItemIcon size={14} className="text-[var(--md-on-surface-variant)] flex-shrink-0" />
+                          <span className="text-[12px] font-medium text-[var(--md-on-surface)] truncate">{item.label}</span>
+                        </div>
+                        <ChevronRight size={12} className="text-[var(--md-on-surface-variant)] flex-shrink-0 ml-1" />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Column 4: Kho hàng, Sản xuất */}
+        <div className="flex flex-col gap-3">
+          {departments.slice(7, 9).map((dept) => {
+            const DeptIcon = dept.icon;
+            return (
+              <div 
+                key={dept.title} 
+                className="bg-[var(--md-surface-container)] rounded-lg border border-[var(--md-outline-variant)] p-3 shadow-sm"
+              >
+                <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-[var(--md-outline-variant)]">
+                  <DeptIcon size={16} className="text-[var(--md-secondary)]" />
+                  <h3 className="text-[11.5px] font-bold text-[var(--md-primary)]">{dept.title}</h3>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  {dept.items.map((item) => {
+                    const ItemIcon = item.icon;
+                    return (
+                      <button
+                        key={item.label}
+                        onClick={() => handleItemClick(item, dept.title)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleItemClick(item, dept.title); }}
+                        className="flex items-center justify-between w-full p-2 bg-[var(--md-surface-container-low)] hover:bg-[var(--nv-sidebar-item-hover)] border border-[var(--md-outline-variant)] hover:border-[var(--md-secondary)] rounded transition-all duration-150 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--md-secondary)]"
+                        style={{ outlineOffset: '2px' }}
+                      >
+                        <div className="flex items-center gap-2 overflow-hidden">
+                          <ItemIcon size={14} className="text-[var(--md-on-surface-variant)] flex-shrink-0" />
+                          <span className="text-[12px] font-medium text-[var(--md-on-surface)] truncate">{item.label}</span>
+                        </div>
+                        <ChevronRight size={12} className="text-[var(--md-on-surface-variant)] flex-shrink-0 ml-1" />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Column 5: HRM */}
+        <div className="flex flex-col gap-3">
+          {departments.slice(9, 10).map((dept) => {
+            const DeptIcon = dept.icon;
+            return (
+              <div 
+                key={dept.title} 
+                className="bg-[var(--md-surface-container)] rounded-lg border border-[var(--md-outline-variant)] p-3 shadow-sm h-full flex flex-col"
+              >
+                <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-[var(--md-outline-variant)]">
+                  <DeptIcon size={16} className="text-[var(--md-secondary)]" />
+                  <h3 className="text-[11.5px] font-bold text-[var(--md-primary)]">{dept.title}</h3>
+                </div>
+                <div className="flex flex-col gap-1.5 flex-1">
+                  {dept.items.map((item) => {
+                    const ItemIcon = item.icon;
+                    return (
+                      <button
+                        key={item.label}
+                        onClick={() => handleItemClick(item, dept.title)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleItemClick(item, dept.title); }}
+                        className="flex items-center justify-between w-full p-2 bg-[var(--md-surface-container-low)] hover:bg-[var(--nv-sidebar-item-hover)] border border-[var(--md-outline-variant)] hover:border-[var(--md-secondary)] rounded transition-all duration-150 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--md-secondary)]"
+                        style={{ outlineOffset: '2px' }}
+                      >
+                        <div className="flex items-center gap-2 overflow-hidden">
+                          <ItemIcon size={14} className="text-[var(--md-on-surface-variant)] flex-shrink-0" />
+                          <span className="text-[12px] font-medium text-[var(--md-on-surface)] truncate">{item.label}</span>
+                        </div>
+                        <ChevronRight size={12} className="text-[var(--md-on-surface-variant)] flex-shrink-0 ml-1" />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Column 6: Right Side Cards */}
+        <div className="flex flex-col gap-3">
+          {/* Card 1: Pending tasks */}
+          <div 
+            className="rounded-lg p-3 text-white flex items-center justify-between cursor-pointer transition-transform duration-150 hover:scale-[1.02] shadow-sm select-none focus-visible:ring focus-visible:ring-[var(--md-secondary)]"
+            style={{
+              background: 'linear-gradient(135deg, var(--md-secondary), var(--md-primary))'
+            }}
+            tabIndex={0}
+            onClick={() => showToast('info', 'Bạn không có công việc nào chưa hoàn thiện!', 'Công việc')}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') showToast('info', 'Bạn không có công việc nào chưa hoàn thiện!', 'Công việc'); }}
+            aria-label="0 công việc chưa hoàn thiện"
+          >
+            <div className="flex items-center gap-4">
+              <span className="text-4xl font-extrabold tracking-tight">0</span>
+              <div className="leading-tight">
+                <p className="text-[13px] font-bold text-white">Công việc</p>
+                <p className="text-[11px] text-[var(--md-primary-container)] font-medium">chưa hoàn thiện</p>
+              </div>
+            </div>
+            <ChevronRight size={16} className="text-white opacity-80" />
           </div>
 
-          <button
-            style={{
-              marginTop: '16px',
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px',
-              height: '40px',
-              fontFamily: "'Roboto', sans-serif",
-              fontSize: '13px',
-              fontWeight: 500,
-              border: '1px solid var(--md-outline)',
-              borderRadius: '9999px',
-              background: 'transparent',
-              color: 'var(--md-primary)',
-              cursor: 'pointer',
-              transition: 'all 200ms var(--md-easing)',
-            }}
-            className="hover:bg-[rgba(103,80,164,0.08)] active:bg-[rgba(103,80,164,0.12)]"
-          >
-            Xem toàn bộ <ArrowUpRight size={14} />
-          </button>
-        </BentoCard>
+          {/* Card 2: Birthday Month */}
+          <div className="bg-[var(--md-surface-container)] rounded-lg border border-[var(--md-outline-variant)] p-3 shadow-sm flex-1 flex flex-col justify-between">
+            <div>
+              <h4 className="text-[13px] font-bold text-[var(--md-primary)] flex items-center gap-1.5">
+                <Gift size={14} className="text-[var(--md-secondary)]" />
+                Sinh nhật tháng 6
+              </h4>
+              <div className="flex items-center gap-3 mt-1.5 text-[11.5px] text-[var(--md-on-surface)] font-medium">
+                <span>Nhân viên: <strong className="text-[var(--md-secondary)] font-bold">9</strong></span>
+                <span className="h-3 w-[1px] bg-[var(--md-outline-variant)]" />
+                <span>Khách hàng: <strong className="text-[var(--md-primary)] font-bold">3</strong></span>
+              </div>
+            </div>
+            <div className="my-2">
+              {renderCake()}
+            </div>
+            <p className="text-[11px] text-center text-[var(--md-on-surface-variant)] italic">
+              Chúc mừng sinh nhật các thành viên tháng 6!
+            </p>
+          </div>
+        </div>
+
       </div>
 
-      {/* ── Mini stat bar (bottom) ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px', position: 'relative', zIndex: 1 }}>
-        {([
-          { label: 'Nhập hôm nay', value: '47 phiếu',   color: '#386A20', icon: TrendingUp },
-          { label: 'Xuất hôm nay', value: '31 phiếu',   color: '#7A5100', icon: ArrowUpRight },
-          { label: 'Chờ duyệt',    value: '12 phiếu',   color: '#B3261E', icon: Activity },
-          { label: 'SKU sắp hết',  value: '8 mặt hàng', color: '#7D5260', icon: Package },
-        ] as MiniStat[]).map(s => (
-          <div
-            key={s.label}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              background: 'var(--md-surface-container)',
-              borderRadius: '16px',
-              padding: '12px 16px',
-              boxShadow: 'var(--md-shadow-1)',
-            }}
-          >
-            <div
-              style={{
-                width: '36px',
-                height: '36px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-                borderRadius: '8px',
-                background: `${s.color}15`,
-              }}
-            >
-              <s.icon size={16} style={{ color: s.color }} />
+      {/* ── Grid Row 2: Tables & Interactive Calendar ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 mt-1 relative z-10">
+        
+        {/* Left Columns (3/5 width): Top 5 Tables */}
+        <div className="lg:col-span-3 flex flex-col gap-4">
+          
+          {/* Table 1: Top 5 Products */}
+          <div className="bg-[var(--md-surface-container)] rounded-lg border border-[var(--md-outline-variant)] shadow-sm overflow-hidden">
+            <div className="bg-[var(--nv-table-header-bg)] text-[var(--nv-table-header-text)] px-3.5 py-2">
+              <h3 className="text-xs font-bold uppercase tracking-wider">
+                TOP 5 SẢN PHẨM ĐƯỢC BÁN NHIỀU NHẤT TRONG THÁNG
+              </h3>
             </div>
-            <div>
-              <p style={{ fontFamily: "'Roboto', sans-serif", fontSize: '16px', fontWeight: 700, color: 'var(--md-on-surface)', lineHeight: 1.2 }}>
-                {s.value}
-              </p>
-              <p style={{ fontFamily: "'Roboto', sans-serif", fontSize: '11px', color: 'var(--md-on-surface-variant)', marginTop: '2px' }}>
-                {s.label}
-              </p>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-[var(--md-outline-variant)] bg-[var(--md-surface-container-high)]">
+                    <th className="p-2 text-[11px] font-bold text-[var(--md-on-surface-variant)] w-[70px] text-center">Hình ảnh</th>
+                    <th className="p-2 text-[11px] font-bold text-[var(--md-on-surface-variant)] w-[110px]">Mã thành phẩm</th>
+                    <th className="p-2 text-[11px] font-bold text-[var(--md-on-surface-variant)]">Tên thành phẩm</th>
+                    <th className="p-2 text-[11px] font-bold text-[var(--md-on-surface-variant)] w-[80px] text-right">Số lượng</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {topProducts.map((p, i) => {
+                    const ProductIcon = p.imageIcon;
+                    return (
+                      <tr 
+                        key={i} 
+                        className="border-b border-[var(--md-outline-variant)] hover:bg-[var(--nv-surface-hover)] transition-colors duration-150"
+                      >
+                        <td className="p-2 text-center">
+                          <div 
+                            className="w-8 h-8 rounded-full mx-auto flex items-center justify-center bg-[var(--nv-sidebar-item-hover)]"
+                          >
+                            <ProductIcon size={14} className="text-[var(--md-primary)]" />
+                          </div>
+                        </td>
+                        <td className="p-2 text-[12px] font-semibold text-[var(--md-on-surface)]">{p.code}</td>
+                        <td className="p-2 text-[12px] text-[var(--md-on-surface)] font-medium leading-tight">{p.name}</td>
+                        <td className="p-2 text-[12px] font-bold text-[var(--md-primary)] text-right pr-4">{p.qty}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </div>
-        ))}
+
+          {/* Table 2: Top 5 Tools/Materials */}
+          <div className="bg-[var(--md-surface-container)] rounded-lg border border-[var(--md-outline-variant)] shadow-sm overflow-hidden">
+            <div className="bg-[var(--nv-table-header-bg)] text-[var(--nv-table-header-text)] px-3.5 py-2">
+              <h3 className="text-xs font-bold uppercase tracking-wider">
+                TOP 5 CÔNG CỤ VẬT TƯ ĐƯỢC BÁN NHIỀU NHẤT TRONG THÁNG
+              </h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-[var(--md-outline-variant)] bg-[var(--md-surface-container-high)]">
+                    <th className="p-2 text-[11px] font-bold text-[var(--md-on-surface-variant)] w-[70px] text-center">Hình ảnh</th>
+                    <th className="p-2 text-[11px] font-bold text-[var(--md-on-surface-variant)] w-[110px]">Mã thành phẩm</th>
+                    <th className="p-2 text-[11px] font-bold text-[var(--md-on-surface-variant)]">Tên thành phẩm</th>
+                    <th className="p-2 text-[11px] font-bold text-[var(--md-on-surface-variant)] w-[80px] text-right">Số lượng</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {topMaterials.map((m, i) => {
+                    const MaterialIcon = m.imageIcon;
+                    return (
+                      <tr 
+                        key={i} 
+                        className="border-b border-[var(--md-outline-variant)] hover:bg-[var(--nv-surface-hover)] transition-colors duration-150"
+                      >
+                        <td className="p-2 text-center">
+                          <div 
+                            className="w-8 h-8 rounded-full mx-auto flex items-center justify-center bg-[var(--nv-sidebar-item-hover)]"
+                          >
+                            <MaterialIcon size={14} className="text-[var(--md-primary)]" />
+                          </div>
+                        </td>
+                        <td className="p-2 text-[12px] font-semibold text-[var(--md-on-surface)]">{m.code}</td>
+                        <td className="p-2 text-[12px] text-[var(--md-on-surface)] font-medium leading-tight">{m.name}</td>
+                        <td className="p-2 text-[12px] font-bold text-[var(--md-primary)] text-right pr-4">{m.qty}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Right Column (2/5 width): Calendar Card */}
+        <div className="lg:col-span-2">
+          <div className="bg-[var(--md-surface-container)] rounded-lg border border-[var(--md-outline-variant)] shadow-sm overflow-hidden h-full flex flex-col">
+            <div className="bg-[var(--nv-table-header-bg)] text-[var(--nv-table-header-text)] px-3.5 py-2">
+              <h3 className="text-xs font-bold uppercase tracking-wider">
+                LỊCH SINH NHẬT NHÂN VIÊN TRONG THÁNG
+              </h3>
+            </div>
+            
+            {/* Calendar Controls */}
+            <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--md-outline-variant)] bg-[var(--md-surface-container-high)]">
+              <span className="text-[12.5px] font-bold text-[var(--md-on-surface)] uppercase">tháng 6 2026</span>
+              <div className="flex items-center gap-1">
+                <button 
+                  onClick={() => showToast('info', 'Lịch được đặt cố định ở tháng 6/2026', 'Thông báo')}
+                  className="p-1 hover:bg-[var(--md-surface-container)] rounded border border-transparent hover:border-[var(--md-outline-variant)] transition-colors"
+                  aria-label="Tháng trước"
+                >
+                  <ChevronLeft size={14} className="text-[var(--md-on-surface)]" />
+                </button>
+                <button 
+                  onClick={() => showToast('info', 'Lịch được đặt cố định ở tháng 6/2026', 'Thông báo')}
+                  className="p-1 hover:bg-[var(--md-surface-container)] rounded border border-transparent hover:border-[var(--md-outline-variant)] transition-colors"
+                  aria-label="Tháng sau"
+                >
+                  <ChevronRight size={14} className="text-[var(--md-on-surface)]" />
+                </button>
+              </div>
+            </div>
+
+            {/* Calendar Grid */}
+            <div className="p-3 flex-1 flex flex-col justify-between">
+              <div>
+                {/* Days of the week */}
+                <div className="grid grid-cols-7 text-center mb-1 text-[11px] font-bold text-[var(--md-on-surface-variant)]">
+                  <div>CN</div>
+                  <div>T2</div>
+                  <div>T3</div>
+                  <div>T4</div>
+                  <div>T5</div>
+                  <div>T6</div>
+                  <div>T7</div>
+                </div>
+
+                {/* Days of the month */}
+                <div className="grid grid-cols-7 gap-1">
+                  {calendarCells.map((cell, idx) => {
+                    const isToday = cell.isCurrentMonth && cell.day === 9;
+                    const hasBirthday = cell.isCurrentMonth && birthdaysData[cell.day];
+                    const isSelected = cell.isCurrentMonth && selectedDay === cell.day;
+                    
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          if (cell.isCurrentMonth) {
+                            setSelectedDay(cell.day);
+                          }
+                        }}
+                        className={`relative aspect-square flex flex-col items-center justify-center rounded-full text-xs font-semibold border-none cursor-pointer transition-all duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--md-secondary)]
+                          ${!cell.isCurrentMonth ? 'text-[var(--md-outline)] cursor-default' : 'text-[var(--md-on-surface)] hover:bg-[var(--nv-sidebar-item-hover)]'}
+                          ${isToday ? 'bg-[var(--md-secondary-container)] text-[var(--md-secondary)]' : ''}
+                          ${isSelected && !isToday ? 'bg-[var(--nv-sidebar-item-hover)]' : ''}
+                        `}
+                        disabled={!cell.isCurrentMonth}
+                        style={{ outlineOffset: '-1px' }}
+                      >
+                        {/* Day number */}
+                        <span className={isToday ? 'font-bold' : ''}>{cell.day}</span>
+                        
+                        {/* Birthday dot indicator */}
+                        {hasBirthday && (
+                          <span 
+                            className={`absolute bottom-1 w-1.5 h-1.5 rounded-full ${isToday ? 'bg-[var(--md-secondary)]' : 'bg-[#f43f5e]'}`}
+                            title="Có sinh nhật"
+                          />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Selected Day Birthday Details */}
+              <div className="mt-4 p-3 bg-[var(--nv-sidebar-item-hover)] border border-[var(--md-outline-variant)] rounded-lg">
+                <h4 className="text-[11.5px] font-bold text-[var(--md-primary)] mb-1.5 flex items-center gap-1.5">
+                  <Gift size={12} className="text-[var(--md-secondary)]" />
+                  Chi tiết sinh nhật ngày {selectedDay}/06/2026:
+                </h4>
+                {birthdaysData[selectedDay] ? (
+                  <div className="flex flex-col gap-1">
+                    {birthdaysData[selectedDay].map((b, i) => (
+                      <div key={i} className="text-[12px] text-[var(--md-on-surface)] font-medium flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#f43f5e]" />
+                        <strong>{b.name}</strong> 
+                        <span className="text-[var(--md-on-surface-variant)] text-[11px]">({b.role})</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-[12px] text-[var(--md-on-surface-variant)] italic">
+                    Không có sinh nhật nào trong ngày này.
+                  </p>
+                )}
+              </div>
+            </div>
+
+          </div>
+        </div>
+
       </div>
 
     </div>
