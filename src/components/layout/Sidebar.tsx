@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
-import { ChevronDown, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight, Warehouse as WarehouseIcon, ClipboardCheck, Users } from 'lucide-react';
+import { ChevronDown, ChevronsLeft, Warehouse as WarehouseIcon, ClipboardCheck, Users } from 'lucide-react';
 import type { SidebarMenuItem } from '../../types';
 import type { LucideIcon } from 'lucide-react';
 

@@ -553,7 +553,7 @@ export default function TransferListPage() {
 
       {/* CREATE TRANSFER TICKET MODAL */}
       <Modal isOpen={showCreateTransfer} onClose={() => { setShowCreateTransfer(false); setErrors({}); }}
-        title="TẠO PHIẾU CHUYỂN KHO NỘI BỘ" size="xl"
+        title="TẠO PHIẾU CHUYỂN KHO NỘI BỘ" size="full"
         footer={<>
           <button className="btn btn-outline text-xs" onClick={() => { setShowCreateTransfer(false); setErrors({}); }}>HỦY BỎ</button>
           <button className="btn btn-filled text-xs" onClick={handleCreateTransferSubmit}>TẠO PHIẾU CHUYỂN</button>
@@ -591,50 +591,52 @@ export default function TransferListPage() {
           </button>
         </div>
         {errors.items && <p className="text-[var(--md-error)] text-xs mb-2">{errors.items}</p>}
-        <table className="w-full text-xs">
-          <thead>
-            <tr>
-              <th className="table-header-cell w-10">STT</th>
-              <th className="table-header-cell">Sản phẩm</th>
-              <th className="table-header-cell w-32">Số lượng</th>
-              <th className="table-header-cell w-12"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {transferForm.items.map((it, i) => (
-              <tr key={i} className="table-row">
-                <td className="table-cell text-center">{i + 1}</td>
-                <td className="table-cell">
-                  <select className="form-select text-xs" value={it.productId}
-                    onChange={e => {
-                      const items = [...transferForm.items];
-                      items[i].productId = e.target.value;
-                      setTransferForm({ ...transferForm, items });
-                    }}>
-                    <option value="">-- Chọn sản phẩm --</option>
-                    {products.map(p => <option key={p.id} value={p.id}>{p.sku} — {p.name}</option>)}
-                  </select>
-                </td>
-                <td className="table-cell">
-                  <input type="number" min="1" className={`form-input text-xs text-right ${errors[`item_qty_${i}`] ? 'border-[var(--md-error)]' : ''}`}
-                    value={it.qty} onChange={e => {
-                      const items = [...transferForm.items];
-                      items[i].qty = e.target.value;
-                      setTransferForm({ ...transferForm, items });
-                    }} placeholder="0" />
-                  {errors[`item_qty_${i}`] && <p className="text-[var(--md-error)] text-[9px] mt-0.5">{errors[`item_qty_${i}`]}</p>}
-                </td>
-                <td className="table-cell text-center">
-                  {transferForm.items.length > 1 && (
-                    <button className="p-1 text-[var(--md-error)]" onClick={() => {
-                      setTransferForm({ ...transferForm, items: transferForm.items.filter((_, idx) => idx !== i) });
-                    }}><Trash2 size={12} /></button>
-                  )}
-                </td>
+        <div className="overflow-x-auto">
+          <table className="form-table text-xs" style={{ minWidth: '750px' }}>
+            <thead>
+              <tr>
+                <th className="table-header-cell w-10">STT</th>
+                <th className="table-header-cell">Sản phẩm</th>
+                <th className="table-header-cell w-32">Số lượng</th>
+                <th className="table-header-cell w-12"></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {transferForm.items.map((it, i) => (
+                <tr key={i} className="table-row">
+                  <td className="table-cell text-center">{i + 1}</td>
+                  <td className="table-cell">
+                    <select className="form-select text-xs" value={it.productId}
+                      onChange={e => {
+                        const items = [...transferForm.items];
+                        items[i].productId = e.target.value;
+                        setTransferForm({ ...transferForm, items });
+                      }}>
+                      <option value="">-- Chọn sản phẩm --</option>
+                      {products.map(p => <option key={p.id} value={p.id}>{p.sku} — {p.name}</option>)}
+                    </select>
+                  </td>
+                  <td className="table-cell">
+                    <input type="number" min="1" className={`form-input text-xs text-right ${errors[`item_qty_${i}`] ? 'border-[var(--md-error)]' : ''}`}
+                      value={it.qty} onChange={e => {
+                        const items = [...transferForm.items];
+                        items[i].qty = e.target.value;
+                        setTransferForm({ ...transferForm, items });
+                      }} placeholder="0" />
+                    {errors[`item_qty_${i}`] && <p className="text-[var(--md-error)] text-[9px] mt-0.5">{errors[`item_qty_${i}`]}</p>}
+                  </td>
+                  <td className="table-cell text-center">
+                    {transferForm.items.length > 1 && (
+                      <button className="p-1 text-[var(--md-error)]" onClick={() => {
+                        setTransferForm({ ...transferForm, items: transferForm.items.filter((_, idx) => idx !== i) });
+                      }}><Trash2 size={12} /></button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Modal>
 
       {/* CREATE LOAN REQUEST MODAL */}

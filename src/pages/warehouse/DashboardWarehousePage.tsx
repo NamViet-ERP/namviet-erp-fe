@@ -8,6 +8,7 @@ import {
 import Card from '../../components/ui/Card';
 import { warehouses } from '../../data/warehouses';
 import { formatCurrency, formatCurrencyShort } from '../../utils/formatCurrency';
+import { showToast } from '../../components/ui/Toast';
 
 const totalStock = warehouses.reduce((sum, w) => sum + w.totalStock, 0);
 const totalValue = warehouses.reduce((sum, w) => sum + w.totalValue, 0);

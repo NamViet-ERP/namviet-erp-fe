@@ -159,7 +159,7 @@ export default function ExpectedImportsPage() {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs" style={{ minWidth: '850px' }}>
+              <table className="w-full text-left text-xs" style={{ minWidth: '650px' }}>
                 <thead>
                   <tr>
                     <th className="table-header-cell w-[22%]">Dự án yêu cầu</th>
@@ -173,7 +173,7 @@ export default function ExpectedImportsPage() {
                 <tbody>
                   {expectedData.map((item) => (
                     <tr key={item.id} className="table-row">
-                      <td className="table-cell max-w-[180px] font-medium truncate">{item.project}</td>
+                      <td className="table-cell font-medium break-words whitespace-normal">{item.project}</td>
                       <td className="table-cell">
                         <div className="font-semibold">{item.name}</div>
                         <div className="text-[10px] text-[var(--md-on-surface-variant)]">{item.sku}</div>

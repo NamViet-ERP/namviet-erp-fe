@@ -347,7 +347,7 @@ export default function ImportListPage() {
 
       {/* Create modal */}
       <Modal isOpen={showCreate} onClose={() => { setShowCreate(false); setErrors({}); }}
-        title="TẠO PHIẾU NHẬP KHO CHUYÊN BIỆT DỰ ÁN" size="xl"
+        title="TẠO PHIẾU NHẬP KHO CHUYÊN BIỆT DỰ ÁN" size="full"
         footer={<>
           {!isStorekeeper && (
             <div className="flex-1 text-left">
@@ -440,59 +440,61 @@ export default function ImportListPage() {
         </div>
         {errors.items && <p className="text-[var(--md-error)] text-xs mb-2">{errors.items}</p>}
         
-        <table className="w-full text-xs">
-          <thead>
-            <tr>
-              <th className="table-header-cell w-10">STT</th>
-              <th className="table-header-cell">Sản phẩm vật tư</th>
-              <th className="table-header-cell w-20">Số lượng</th>
-              <th className="table-header-cell w-36">Linh kiện thiết bị</th>
-              {!isStorekeeper && <th className="table-header-cell w-28">Đơn giá (VND)</th>}
-              {!isStorekeeper && <th className="table-header-cell w-28 text-right">Thành tiền</th>}
-              <th className="table-header-cell w-8"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {form.items.map((it, i) => {
-              const lineTotal = (Number(it.qty) || 0) * (Number(it.unitPrice) || 0);
-              return (
-                <tr key={i} className="table-row">
-                  <td className="table-cell text-center">{i + 1}</td>
-                  <td className="table-cell">
-                    <select className="form-select text-xs" value={it.productId} onChange={e => updateItem(i, 'productId', e.target.value)}>
-                      <option value="">-- Chọn sản phẩm --</option>
-                      {products.map(p => <option key={p.id} value={p.id}>{p.sku} — {p.name}</option>)}
-                    </select>
-                  </td>
-                  <td className="table-cell">
-                    <input type="number" min="1" className={`form-input text-xs text-right ${errors[`qty_${i}`] ? 'border-[var(--md-error)]' : ''}`}
-                      value={it.qty} onChange={e => updateItem(i, 'qty', e.target.value)} placeholder="0" />
-                    {errors[`qty_${i}`] && <p className="text-[var(--md-error)] text-[9px]">{errors[`qty_${i}`]}</p>}
-                  </td>
-                  <td className="table-cell">
-                    <select className="form-select text-xs" value={it.equipmentComponent} onChange={e => updateItem(i, 'equipmentComponent', e.target.value)}>
-                      <option value="xyclo">Thiết bị xyclo lọc bụi</option>
-                      <option value="pano">Pano tấm che bảo vệ</option>
-                      <option value="hộp khói">Hộp thu gom khói thải</option>
-                      <option value="khác">Khác / Vật tư rời</option>
-                    </select>
-                  </td>
-                  {!isStorekeeper && (
+        <div className="overflow-x-auto">
+          <table className="form-table text-xs" style={{ minWidth: '1050px' }}>
+            <thead>
+              <tr>
+                <th className="table-header-cell w-10">STT</th>
+                <th className="table-header-cell">Sản phẩm vật tư</th>
+                <th className="table-header-cell w-20">Số lượng</th>
+                <th className="table-header-cell w-56">Linh kiện thiết bị</th>
+                {!isStorekeeper && <th className="table-header-cell w-28">Đơn giá (VND)</th>}
+                {!isStorekeeper && <th className="table-header-cell w-28 text-right">Thành tiền</th>}
+                <th className="table-header-cell w-8"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {form.items.map((it, i) => {
+                const lineTotal = (Number(it.qty) || 0) * (Number(it.unitPrice) || 0);
+                return (
+                  <tr key={i} className="table-row">
+                    <td className="table-cell text-center">{i + 1}</td>
                     <td className="table-cell">
-                      <input type="number" min="0" className={`form-input text-xs text-right ${errors[`price_${i}`] ? 'border-[var(--md-error)]' : ''}`}
-                        value={it.unitPrice} onChange={e => updateItem(i, 'unitPrice', e.target.value)} placeholder="0" />
-                      {errors[`price_${i}`] && <p className="text-[var(--md-error)] text-[9px]">{errors[`price_${i}`]}</p>}
+                      <select className="form-select text-xs" value={it.productId} onChange={e => updateItem(i, 'productId', e.target.value)}>
+                        <option value="">-- Chọn sản phẩm --</option>
+                        {products.map(p => <option key={p.id} value={p.id}>{p.sku} — {p.name}</option>)}
+                      </select>
                     </td>
-                  )}
-                  {!isStorekeeper && <td className="table-cell text-right font-semibold text-xs">{formatCurrency(lineTotal)}</td>}
-                  <td className="table-cell text-center">
-                    {form.items.length > 1 && <button className="p-1 text-[var(--md-error)] opacity-80 hover:opacity-100" onClick={() => removeItem(i)}><Trash2 size={12} /></button>}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                    <td className="table-cell">
+                      <input type="number" min="1" className={`form-input text-xs text-right ${errors[`qty_${i}`] ? 'border-[var(--md-error)]' : ''}`}
+                        value={it.qty} onChange={e => updateItem(i, 'qty', e.target.value)} placeholder="0" />
+                      {errors[`qty_${i}`] && <p className="text-[var(--md-error)] text-[9px]">{errors[`qty_${i}`]}</p>}
+                    </td>
+                    <td className="table-cell">
+                      <select className="form-select text-xs" value={it.equipmentComponent} onChange={e => updateItem(i, 'equipmentComponent', e.target.value)}>
+                        <option value="xyclo">Thiết bị xyclo lọc bụi</option>
+                        <option value="pano">Pano tấm che bảo vệ</option>
+                        <option value="hộp khói">Hộp thu gom khói thải</option>
+                        <option value="khác">Khác / Vật tư rời</option>
+                      </select>
+                    </td>
+                    {!isStorekeeper && (
+                      <td className="table-cell">
+                        <input type="number" min="0" className={`form-input text-xs text-right ${errors[`price_${i}`] ? 'border-[var(--md-error)]' : ''}`}
+                          value={it.unitPrice} onChange={e => updateItem(i, 'unitPrice', e.target.value)} placeholder="0" />
+                        {errors[`price_${i}`] && <p className="text-[var(--md-error)] text-[9px]">{errors[`price_${i}`]}</p>}
+                      </td>
+                    )}
+                    {!isStorekeeper && <td className="table-cell text-right font-semibold text-xs">{formatCurrency(lineTotal)}</td>}
+                    <td className="table-cell text-center">
+                      {form.items.length > 1 && <button className="p-1 text-[var(--md-error)] opacity-80 hover:opacity-100" onClick={() => removeItem(i)}><Trash2 size={12} /></button>}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </Modal>
 
       {/* Details modal */}

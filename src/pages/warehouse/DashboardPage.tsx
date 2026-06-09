@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Package, DollarSign, Warehouse, TrendingUp, ArrowUpRight, Activity,
+  Package, DollarSign, Warehouse, TrendingUp, Activity,
   Megaphone, HeartHandshake, ShoppingCart, CreditCard, FolderKanban,
   FileSignature, Wrench, Factory, Users, ChevronRight, Calendar,
   Truck, PackagePlus, UserCheck, ArrowLeftRight, Barcode, ClipboardCheck,
@@ -12,6 +12,7 @@ import type { LucideIcon } from 'lucide-react';
 import { showToast } from '../../components/ui/Toast';
 
 // ── Design Tokens ──
+/*
 const tokens = {
   text: {
     primary: 'var(--md-on-surface-variant)',
@@ -47,6 +48,7 @@ const tokens = {
     }
   }
 };
+*/
 
 // ── Mock Birthdays Data ──
 interface BirthdayEvent {

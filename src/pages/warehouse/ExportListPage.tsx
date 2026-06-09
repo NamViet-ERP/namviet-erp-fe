@@ -285,7 +285,7 @@ export default function ExportListPage() {
 
       {/* Create modal */}
       <Modal isOpen={showCreate} onClose={() => { setShowCreate(false); setErrors({}); }}
-        title="TẠO YÊU CẦU XUẤT KHO VẬT TƯ DỰ ÁN" size="xl"
+        title="TẠO YÊU CẦU XUẤT KHO VẬT TƯ DỰ ÁN" size="full"
         footer={<>
           <button className="btn btn-outline text-xs" onClick={() => { setShowCreate(false); setErrors({}); }}>HỦY BỎ</button>
           <button className="btn btn-filled text-xs" onClick={handleSubmit}>TẠO PHIẾU XUẤT</button>
@@ -357,48 +357,50 @@ export default function ExportListPage() {
         </div>
         {errors.items && <p className="text-[var(--md-error)] text-xs mb-2">{errors.items}</p>}
         
-        <table className="w-full text-xs">
-          <thead>
-            <tr>
-              <th className="table-header-cell w-10">STT</th>
-              <th className="table-header-cell">Sản phẩm vật tư</th>
-              <th className="table-header-cell w-24">Số lượng xuất</th>
-              <th className="table-header-cell w-36">Linh kiện chi định</th>
-              <th className="table-header-cell w-8"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {form.items.map((it, i) => (
-              <tr key={i} className="table-row">
-                <td className="table-cell text-center">{i + 1}</td>
-                <td className="table-cell">
-                  <select className="form-select text-xs" value={it.productId} onChange={e => updateItem(i, 'productId', e.target.value)}>
-                    <option value="">-- Chọn sản phẩm --</option>
-                    {products.map(p => (
-                      <option key={p.id} value={p.id}>{p.sku} — {p.name}</option>
-                    ))}
-                  </select>
-                </td>
-                <td className="table-cell">
-                  <input type="number" min="1" className={`form-input text-xs text-right ${errors[`qty_${i}`] ? 'border-[var(--md-error)]' : ''}`}
-                    value={it.qty} onChange={e => updateItem(i, 'qty', e.target.value)} placeholder="0" />
-                  {errors[`qty_${i}`] && <p className="text-[var(--md-error)] text-[9px] mt-0.5">{errors[`qty_${i}`]}</p>}
-                </td>
-                <td className="table-cell">
-                  <select className="form-select text-xs" value={it.equipmentComponent} onChange={e => updateItem(i, 'equipmentComponent', e.target.value)}>
-                    <option value="xyclo">Thiết bị xyclo lọc bụi</option>
-                    <option value="pano">Pano tấm che bảo vệ</option>
-                    <option value="hộp khói">Hộp thu gom khói thải</option>
-                    <option value="khác">Khác / Vật tư rời</option>
-                  </select>
-                </td>
-                <td className="table-cell text-center">
-                  {form.items.length > 1 && <button className="p-1 text-[var(--md-error)] opacity-80 hover:opacity-100" onClick={() => removeItem(i)}><Trash2 size={12} /></button>}
-                </td>
+        <div className="overflow-x-auto">
+          <table className="form-table text-xs" style={{ minWidth: '950px' }}>
+            <thead>
+              <tr>
+                <th className="table-header-cell w-10">STT</th>
+                <th className="table-header-cell">Sản phẩm vật tư</th>
+                <th className="table-header-cell w-24">Số lượng xuất</th>
+                <th className="table-header-cell w-56">Linh kiện chi định</th>
+                <th className="table-header-cell w-8"></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {form.items.map((it, i) => (
+                <tr key={i} className="table-row">
+                  <td className="table-cell text-center">{i + 1}</td>
+                  <td className="table-cell">
+                    <select className="form-select text-xs" value={it.productId} onChange={e => updateItem(i, 'productId', e.target.value)}>
+                      <option value="">-- Chọn sản phẩm --</option>
+                      {products.map(p => (
+                        <option key={p.id} value={p.id}>{p.sku} — {p.name}</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="table-cell">
+                    <input type="number" min="1" className={`form-input text-xs text-right ${errors[`qty_${i}`] ? 'border-[var(--md-error)]' : ''}`}
+                      value={it.qty} onChange={e => updateItem(i, 'qty', e.target.value)} placeholder="0" />
+                    {errors[`qty_${i}`] && <p className="text-[var(--md-error)] text-[9px] mt-0.5">{errors[`qty_${i}`]}</p>}
+                  </td>
+                  <td className="table-cell">
+                    <select className="form-select text-xs" value={it.equipmentComponent} onChange={e => updateItem(i, 'equipmentComponent', e.target.value)}>
+                      <option value="xyclo">Thiết bị xyclo lọc bụi</option>
+                      <option value="pano">Pano tấm che bảo vệ</option>
+                      <option value="hộp khói">Hộp thu gom khói thải</option>
+                      <option value="khác">Khác / Vật tư rời</option>
+                    </select>
+                  </td>
+                  <td className="table-cell text-center">
+                    {form.items.length > 1 && <button className="p-1 text-[var(--md-error)] opacity-80 hover:opacity-100" onClick={() => removeItem(i)}><Trash2 size={12} /></button>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Modal>
 
       {/* Detail Modal */}

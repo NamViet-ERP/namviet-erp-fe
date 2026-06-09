@@ -6,7 +6,7 @@ import {
   User, LogOut, X, Check, AlertTriangle, Package, FileText, Moon, Sun,
   Megaphone, HeartHandshake, ShoppingCart, CreditCard, FolderKanban,
   FileSignature, Wrench, Factory, Users, ChevronRight, Calendar,
-  TrendingUp, ClipboardCheck, UserCheck, Gift, ArrowLeftRight, Barcode,
+  TrendingUp, ClipboardCheck, UserCheck, ArrowLeftRight, Barcode,
   PackagePlus, Truck, Activity, Warehouse, DollarSign
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -121,43 +121,8 @@ const departments: Department[] = [
   }
 ];
 
-const renderCake = () => (
-  <svg width="60" height="60" viewBox="0 0 120 120" className="mx-auto block" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.06))' }}>
-    <path d="M20,95 L100,95 A3,3 0 0,1 100,98 L20,98 A3,3 0 0,1 20,95 Z" fill="var(--md-outline)" />
-    <path d="M48,98 L72,98 L68,106 L52,106 Z" fill="var(--md-outline-variant)" />
-    <rect x="25" y="65" width="70" height="30" rx="4" fill="var(--md-primary)" opacity="0.85" />
-    <path d="M25,75 Q60,82 95,75" fill="none" stroke="var(--md-primary-container)" strokeWidth="2" />
-    <circle cx="35" cy="73" r="2.5" fill="#f43f5e" />
-    <circle cx="48" cy="73" r="2.5" fill="#eab308" />
-    <circle cx="60" cy="73" r="2.5" fill="#10b981" />
-    <circle cx="72" cy="73" r="2.5" fill="#f43f5e" />
-    <circle cx="85" cy="73" r="2.5" fill="#eab308" />
-    <rect x="35" y="42" width="50" height="23" rx="4" fill="var(--md-secondary)" />
-    <path d="M35,49 Q60,55 85,49" fill="none" stroke="var(--md-secondary-container)" strokeWidth="2" />
-    <circle cx="43" cy="47" r="2" fill="#eab308" />
-    <circle cx="51" cy="47" r="2" fill="#f43f5e" />
-    <circle cx="60" cy="47" r="2" fill="#10b981" />
-    <circle cx="69" cy="47" r="2" fill="#eab308" />
-    <circle cx="77" cy="47" r="2" fill="#f43f5e" />
-    <rect x="44" y="28" width="2" height="14" fill="#fb923c" />
-    <path d="M45,23 C46,25 45,28 45,28 C44,28 43,25 45,23 Z" fill="#ef4444" className="animate-pulse" />
-    <rect x="59" y="24" width="2" height="18" fill="#f87171" />
-    <path d="M60,18 C61,21 60,24 60,24 C59,24 58,21 60,18 Z" fill="#f59e0b" className="animate-pulse" />
-    <rect x="74" y="28" width="2" height="14" fill="#fb923c" />
-    <path d="M75,23 C76,25 75,28 75,28 C74,28 73,25 75,23 Z" fill="#ef4444" className="animate-pulse" />
-    <ellipse cx="60" cy="42" rx="4" ry="2" fill="var(--md-surface-container-high)" />
-    <circle cx="60" cy="40" r="1.5" fill="#ef4444" />
-  </svg>
-);
-
 type Module = 'warehouse' | 'stocktake' | 'members';
 type NotifType = 'warning' | 'import' | 'export' | 'info';
-
-const moduleLabels: Record<Module, string> = { 
-  warehouse: 'Kho hàng', 
-  stocktake: 'Kiểm kê',
-  members: 'Thành viên'
-};
 
 interface User {
   name: string;
@@ -330,7 +295,7 @@ interface HeaderProps {
   onModuleSwitch: (module: Module) => void;
 }
 
-export default function Header({ currentModule, onModuleSwitch }: HeaderProps) {
+export default function Header({ currentModule: _currentModule, onModuleSwitch: _onModuleSwitch }: HeaderProps) {
   const navigate = useNavigate();
   const activeRole = localStorage.getItem('nv-user-role') || 'admin';
   const currentUser = rolesMap[activeRole as keyof typeof rolesMap] || rolesMap.admin;

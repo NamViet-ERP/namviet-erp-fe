@@ -221,7 +221,7 @@ export default function StocktakeListPage() {
 
       {/* Create modal */}
       <Modal isOpen={showCreate} onClose={() => { setShowCreate(false); setErrors({}); }}
-        title="TẠO PHIẾU KIỂM KÊ" size="xl"
+        title="TẠO PHIẾU KIỂM KÊ" size="full"
         footer={<>
           <button className="btn btn-outline" onClick={() => { setShowCreate(false); setErrors({}); }}>Hủy bỏ</button>
           <button className="btn btn-primary" onClick={handleSubmit}>Tạo phiếu kiểm kê</button>
@@ -248,48 +248,50 @@ export default function StocktakeListPage() {
           <p className="text-xs">⚠️ Khi tạo phiếu kiểm kê, các SKU sẽ tự động <b>đóng băng</b>. Không thể nhập/xuất/giữ hàng cho đến khi phiếu được duyệt hoặc mở băng.</p>
         </div>
         {errors.items && <p className="text-[var(--md-error)] text-xs mb-2">{errors.items}</p>}
-        <table className="w-full">
-          <thead><tr>
-            <th className="table-header-cell w-12">STT</th>
-            <th className="table-header-cell">Sản phẩm</th>
-            <th className="table-header-cell w-28">SL hệ thống</th>
-            <th className="table-header-cell w-28">SL thực tế</th>
-            <th className="table-header-cell w-24 text-right">Chênh lệch</th>
-            <th className="table-header-cell w-12"></th>
-          </tr></thead>
-          <tbody>
-            {form.items.map((it, i) => {
-              const diff: number | null = it.productId && it.systemQty !== '' && it.actualQty !== '' ? Number(it.actualQty) - Number(it.systemQty) : null;
-              return (
-                <tr key={i} className="table-row">
-                  <td className="table-cell text-center">{i + 1}</td>
-                  <td className="table-cell">
-                    <select className="form-select text-sm" value={it.productId} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => updateItem(i, 'productId', e.target.value)}>
-                      <option value="">-- Chọn sản phẩm --</option>
-                      {products.map(p => <option key={p.id} value={p.id}>{p.sku} — {p.name}</option>)}
-                    </select>
-                  </td>
-                  <td className="table-cell">
-                    <input type="number" min="0" className={`form-input text-sm text-right ${errors[`sysqty_${i}`] ? 'border-[var(--md-error)]' : ''}`}
-                      value={it.systemQty} onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateItem(i, 'systemQty', e.target.value)} placeholder="0" />
-                    {errors[`sysqty_${i}`] && <p className="text-[var(--md-error)] text-[10px]">{errors[`sysqty_${i}`]}</p>}
-                  </td>
-                  <td className="table-cell">
-                    <input type="number" min="0" className={`form-input text-sm text-right ${errors[`actqty_${i}`] ? 'border-[var(--md-error)]' : ''}`}
-                      value={it.actualQty} onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateItem(i, 'actualQty', e.target.value)} placeholder="0" />
-                    {errors[`actqty_${i}`] && <p className="text-[var(--md-error)] text-[10px]">{errors[`actqty_${i}`]}</p>}
-                  </td>
-                  <td className={`table-cell text-right font-bold text-sm ${diff === null ? '' : diff > 0 ? 'text-[var(--md-success)]' : diff < 0 ? 'text-[var(--md-error)]' : 'text-[var(--md-on-surface-variant)]'}`}>
-                    {diff === null ? '—' : diff > 0 ? `+${diff}` : diff}
-                  </td>
-                  <td className="table-cell text-center">
-                    {form.items.length > 1 && <button className="p-1 text-[var(--md-error)] hover:opacity-80" onClick={() => removeItem(i)}>✕</button>}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <div className="overflow-x-auto">
+          <table className="form-table text-xs" style={{ minWidth: '850px' }}>
+            <thead><tr>
+              <th className="table-header-cell w-12">STT</th>
+              <th className="table-header-cell">Sản phẩm</th>
+              <th className="table-header-cell w-28">SL hệ thống</th>
+              <th className="table-header-cell w-28">SL thực tế</th>
+              <th className="table-header-cell w-24 text-right">Chênh lệch</th>
+              <th className="table-header-cell w-12"></th>
+            </tr></thead>
+            <tbody>
+              {form.items.map((it, i) => {
+                const diff: number | null = it.productId && it.systemQty !== '' && it.actualQty !== '' ? Number(it.actualQty) - Number(it.systemQty) : null;
+                return (
+                  <tr key={i} className="table-row">
+                    <td className="table-cell text-center">{i + 1}</td>
+                    <td className="table-cell">
+                      <select className="form-select text-sm" value={it.productId} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => updateItem(i, 'productId', e.target.value)}>
+                        <option value="">-- Chọn sản phẩm --</option>
+                        {products.map(p => <option key={p.id} value={p.id}>{p.sku} — {p.name}</option>)}
+                      </select>
+                    </td>
+                    <td className="table-cell">
+                      <input type="number" min="0" className={`form-input text-sm text-right ${errors[`sysqty_${i}`] ? 'border-[var(--md-error)]' : ''}`}
+                        value={it.systemQty} onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateItem(i, 'systemQty', e.target.value)} placeholder="0" />
+                      {errors[`sysqty_${i}`] && <p className="text-[var(--md-error)] text-[10px]">{errors[`sysqty_${i}`]}</p>}
+                    </td>
+                    <td className="table-cell">
+                      <input type="number" min="0" className={`form-input text-sm text-right ${errors[`actqty_${i}`] ? 'border-[var(--md-error)]' : ''}`}
+                        value={it.actualQty} onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateItem(i, 'actualQty', e.target.value)} placeholder="0" />
+                      {errors[`actqty_${i}`] && <p className="text-[var(--md-error)] text-[10px]">{errors[`actqty_${i}`]}</p>}
+                    </td>
+                    <td className={`table-cell text-right font-bold text-sm ${diff === null ? '' : diff > 0 ? 'text-[var(--md-success)]' : diff < 0 ? 'text-[var(--md-error)]' : 'text-[var(--md-on-surface-variant)]'}`}>
+                      {diff === null ? '—' : diff > 0 ? `+${diff}` : diff}
+                    </td>
+                    <td className="table-cell text-center">
+                      {form.items.length > 1 && <button className="p-1 text-[var(--md-error)] hover:opacity-80" onClick={() => removeItem(i)}>✕</button>}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </Modal>
 
       {/* Detail modal */}
