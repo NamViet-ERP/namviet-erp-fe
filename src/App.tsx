@@ -18,6 +18,7 @@ import StockListPage from './pages/warehouse/StockListPage';
 import MembersPage from './pages/members/MembersPage';
 import UserProfilePage from './pages/profile/UserProfilePage';
 import LoginPage from './pages/auth/LoginPage';
+import CandidateListPage from './pages/members/CandidateListPage';
 
 // Stocktake pages
 import StocktakeListPage from './pages/stocktake/StocktakeListPage';
@@ -50,6 +51,7 @@ export default function App() {
 
           {/* Module 3: Thành viên */}
           <Route path="/members/list" element={<MembersPage />} />
+          <Route path="/members/recruits" element={<CandidateListPage />} />
 
           {/* User profile */}
           <Route path="/profile" element={<UserProfilePage />} />

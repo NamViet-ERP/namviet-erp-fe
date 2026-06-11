@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { CheckCircle, XCircle, AlertTriangle, Info, X } from 'lucide-react';
 import type { Toast, ToastType } from '../../types';
 import type { LucideIcon } from 'lucide-react';
@@ -73,7 +73,7 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
       setTimeout(() => onDismiss(toast.id), 280);
     }, toast.duration || 2500);
     return () => clearTimeout(timer);
-  }, [toast, onDismiss]);
+  }, [toast.id, toast.duration, onDismiss]);
 
   const animationName = exiting ? 'mdSlideOutRight' : 'mdSlideInRight';
 
@@ -184,7 +184,7 @@ export default function ToastContainer() {
     return () => { toastListeners = toastListeners.filter(l => l !== listener); };
   }, []);
 
-  const dismiss = (id: number) => setToasts(prev => prev.filter(t => t.id !== id));
+  const dismiss = useCallback((id: number) => setToasts(prev => prev.filter(t => t.id !== id)), []);
 
   return (
     <div
