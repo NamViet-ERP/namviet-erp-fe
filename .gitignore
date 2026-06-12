@@ -22,3 +22,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local AI / editor tooling (do not push)
+.cursor/
+.claude/
+.sixth/
+
+# Local env (use .env.example)
+.env
+.env.production
