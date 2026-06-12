@@ -9,8 +9,9 @@ import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { showToast } from '../ui/Toast';
 import { departments } from '../../constants/departments';
-import { getRolesMap, getLoginEligibleUsers, canUserLogin, systemUsers } from '../../constants/systemUsers';
+import { getSessionUser, clearSessionUser } from '../../constants/systemUsers';
 import DepartmentCard from './DepartmentCard';
+import RoleSwitcher from './RoleSwitcher';
 
 type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment';
 type NotifType = 'warning' | 'import' | 'export' | 'info';
@@ -22,7 +23,6 @@ interface User {
   email: string;
 }
 
-const rolesMap = getRolesMap();
 
 interface Notification {
   id: number;
@@ -182,8 +182,9 @@ interface HeaderProps {
 
 export default function Header({ currentModule: _currentModule, onModuleSwitch: _onModuleSwitch }: HeaderProps) {
   const navigate = useNavigate();
-  const activeRole = localStorage.getItem('nv-user-role') || 'admin';
-  const currentUser = rolesMap[activeRole] || rolesMap.admin || { name: 'User', initials: 'U', roleLabel: '', email: '' };
+  const sessionUser = getSessionUser();
+  const currentUser = sessionUser ?? { name: 'User', initials: 'U', roleLabel: '', email: '' };
+  const activeUserId = sessionUser?.id ?? 'admin';
 
   const [showModuleMenu, setShowModuleMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -527,62 +528,25 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
           </button>
 
           {showUserMenu && (
-            <div
-              className="animate-scale-in"
-              style={{
-                position: 'absolute',
-                right: 0,
-                top: 'calc(100% + 8px)',
-                width: '240px',
-                background: 'var(--md-surface-container)',
-                borderRadius: '16px',
-                boxShadow: 'var(--md-shadow-3)',
-                zIndex: 60,
-                overflow: 'hidden',
-              }}
-            >
-              {/* User info */}
-              <div style={{ padding: '16px', display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid var(--md-outline-variant)' }}>
-                <div style={{ width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Roboto', sans-serif", fontWeight: 700, fontSize: '14px', background: 'var(--md-primary-container)', color: 'var(--md-on-primary-container)', borderRadius: '9999px', flexShrink: 0 }}>
-                  {currentUser.initials}
-                </div>
+            <div className="user-menu-panel animate-scale-in">
+              <div className="user-menu-panel__profile">
+                <div className="user-menu-panel__avatar">{currentUser.initials}</div>
                 <div style={{ minWidth: 0 }}>
-                  <p style={{ fontFamily: "'Roboto', sans-serif", fontSize: '0.9375rem', fontWeight: 700, color: 'var(--md-on-surface)' }}>{currentUser.name}</p>
-                  <p style={{ fontFamily: "'Roboto', sans-serif", fontSize: '0.75rem', color: 'var(--md-on-surface-variant)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{currentUser.email}</p>
+                  <p className="user-menu-panel__name">{currentUser.name}</p>
+                  <p className="user-menu-panel__email">{currentUser.email}</p>
+                  {'roleLabel' in currentUser && currentUser.roleLabel && (
+                    <span className="user-menu-panel__role-badge">{currentUser.roleLabel}</span>
+                  )}
                 </div>
               </div>
 
-              {/* Role Switcher */}
-              <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--md-outline-variant)', background: 'color-mix(in srgb, var(--md-primary) 3%, transparent)' }}>
-                <label style={{ fontFamily: "'Roboto', sans-serif", fontSize: '0.6875rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--md-on-surface-variant)', display: 'block', marginBottom: '6px', letterSpacing: '0.04em' }}>
-                  Vai trò mô phỏng
-                </label>
-                <select
-                  value={activeRole}
-                  onChange={(e) => {
-                    localStorage.setItem('nv-user-role', e.target.value);
-                    setShowUserMenu(false);
-                    window.location.reload();
-                  }}
-                  style={{
-                    width: '100%',
-                    padding: '8px 10px',
-                    borderRadius: '8px',
-                    border: '1px solid var(--md-outline)',
-                    background: 'var(--md-surface-container-low)',
-                    color: 'var(--md-on-surface)',
-                    fontSize: '0.8125rem',
-                    fontFamily: "'Roboto', sans-serif",
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                    outline: 'none',
-                  }}
-                >
-                  {getLoginEligibleUsers().map(u => (
-                    <option key={u.id} value={u.role}>{u.roleLabel}</option>
-                  ))}
-                </select>
-              </div>
+              <RoleSwitcher
+                activeUserId={activeUserId}
+                onSwitch={() => {
+                  setShowUserMenu(false);
+                  window.location.reload();
+                }}
+              />
 
               <div style={{ padding: '4px 0' }}>
                 <MenuBtn icon={User} label="Thông tin tài khoản" onClick={() => { navigate('/profile'); setShowUserMenu(false); }} />
@@ -591,6 +555,7 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
               <div style={{ borderTop: '1px solid var(--md-outline-variant)', padding: '4px 0' }}>
                 <MenuBtn icon={LogOut} label="Đăng xuất" danger onClick={() => {
                   localStorage.removeItem('nv-logged-in');
+                  clearSessionUser();
                   setShowUserMenu(false);
                   navigate('/login');
                 }} />

@@ -1261,6 +1261,222 @@
     font-weight: 600;
   }
 
+  /* User menu — role simulation picker */
+  .user-menu-panel {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    width: min(300px, calc(100vw - 24px));
+    background: var(--md-surface-container-high);
+    border: 1px solid var(--md-outline-variant);
+    border-radius: 16px;
+    box-shadow: var(--md-shadow-3);
+    z-index: 60;
+    overflow: hidden;
+  }
+  .dark .user-menu-panel {
+    border-color: color-mix(in srgb, var(--md-outline) 35%, var(--md-outline-variant));
+  }
+  .user-menu-panel__profile {
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--md-outline-variant);
+    background: color-mix(in srgb, var(--md-primary) 4%, var(--md-surface-container-high));
+  }
+  .user-menu-panel__avatar {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Roboto', sans-serif;
+    font-weight: 700;
+    font-size: 0.875rem;
+    background: var(--md-primary-container);
+    color: var(--md-on-primary-container);
+    border-radius: 9999px;
+    flex-shrink: 0;
+    border: 2px solid color-mix(in srgb, var(--md-primary) 20%, transparent);
+  }
+  .user-menu-panel__name {
+    font-family: 'Roboto', sans-serif;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--md-on-surface);
+    line-height: 1.3;
+  }
+  .user-menu-panel__email {
+    font-family: 'Roboto', sans-serif;
+    font-size: 0.75rem;
+    color: var(--md-on-surface-variant);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-top: 2px;
+  }
+  .user-menu-panel__role-badge {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    background: color-mix(in srgb, var(--md-secondary) 12%, var(--md-surface-container));
+    color: var(--md-primary);
+  }
+
+  .role-switcher {
+    padding: 12px 14px 14px;
+    border-bottom: 1px solid var(--md-outline-variant);
+  }
+  .role-switcher--compact .role-switcher__list {
+    max-height: 220px;
+  }
+  .role-switcher--embedded {
+    border-bottom: none;
+    padding: 12px 14px 14px;
+  }
+  .role-switcher__label {
+    display: block;
+    font-family: 'Roboto', sans-serif;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--md-on-surface-variant);
+    margin-bottom: 8px;
+  }
+  .role-switcher__search {
+    position: relative;
+    margin-bottom: 8px;
+  }
+  .role-switcher__search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--md-on-surface-variant);
+    pointer-events: none;
+  }
+  .role-switcher__search-input {
+    width: 100%;
+    height: 34px;
+    padding: 0 10px 0 32px;
+    border-radius: 10px;
+    border: 1px solid var(--md-outline-variant);
+    background: var(--md-surface-container);
+    color: var(--md-on-surface);
+    font-family: 'Roboto', sans-serif;
+    font-size: 0.8125rem;
+    outline: none;
+    transition: border-color var(--md-duration) var(--md-easing), box-shadow var(--md-duration) var(--md-easing);
+  }
+  .role-switcher__search-input::placeholder {
+    color: var(--md-on-surface-variant);
+    opacity: 0.85;
+  }
+  .role-switcher__search-input:focus {
+    border-color: var(--md-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--md-primary) 15%, transparent);
+  }
+  .role-switcher__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 240px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--md-outline-variant) transparent;
+  }
+  .role-switcher__list::-webkit-scrollbar {
+    width: 6px;
+  }
+  .role-switcher__list::-webkit-scrollbar-thumb {
+    background: var(--md-outline-variant);
+    border-radius: 999px;
+  }
+  .role-switcher__empty {
+    padding: 12px 8px;
+    text-align: center;
+    font-size: 0.8125rem;
+    color: var(--md-on-surface-variant);
+  }
+  .role-switcher__item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    transition: background var(--md-duration) var(--md-easing), border-color var(--md-duration) var(--md-easing);
+  }
+  .role-switcher__item:hover {
+    background: var(--tint-primary-weak);
+  }
+  .role-switcher__item--selected {
+    background: color-mix(in srgb, var(--md-primary) 10%, var(--md-surface-container));
+    border-color: color-mix(in srgb, var(--md-primary) 28%, transparent);
+  }
+  .role-switcher__avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-family: 'Roboto', sans-serif;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    background: var(--md-surface-container);
+    color: var(--md-primary);
+    border: 1px solid var(--md-outline-variant);
+  }
+  .role-switcher__item--selected .role-switcher__avatar {
+    background: var(--md-primary-container);
+    color: var(--md-on-primary-container);
+    border-color: transparent;
+  }
+  .role-switcher__meta {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  .role-switcher__name {
+    font-family: 'Roboto', sans-serif;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--md-on-surface);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .role-switcher__role {
+    font-size: 0.6875rem;
+    color: var(--md-on-surface-variant);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .role-switcher__item--selected .role-switcher__name {
+    color: var(--md-primary);
+  }
+  .role-switcher__check {
+    flex-shrink: 0;
+    color: var(--md-primary);
+  }
+
   .page-header {
     display: flex;
     align-items: flex-end;

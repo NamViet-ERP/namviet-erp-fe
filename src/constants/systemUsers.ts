@@ -40,6 +40,32 @@ export function getUserByRole(role: string): SystemUser | undefined {
   return systemUsers.find(u => u.role === role);
 }
 
+export function getUserById(id: string): SystemUser | undefined {
+  return systemUsers.find(u => u.id === id);
+}
+
+/** Phiên đăng nhập — ưu tiên id (phân biệt nhiều user cùng role, vd. 2 HR). */
+export function getSessionUser(): SystemUser | undefined {
+  const userId = localStorage.getItem('nv-user-id');
+  if (userId) {
+    const byId = getUserById(userId);
+    if (byId) return byId;
+  }
+  const legacyRole = localStorage.getItem('nv-user-role');
+  if (legacyRole) return getUserByRole(legacyRole);
+  return getUserById('admin');
+}
+
+export function setSessionUser(user: SystemUser): void {
+  localStorage.setItem('nv-user-id', user.id);
+  localStorage.setItem('nv-user-role', user.role);
+}
+
+export function clearSessionUser(): void {
+  localStorage.removeItem('nv-user-id');
+  localStorage.removeItem('nv-user-role');
+}
+
 export function getUserByUsername(username: string): SystemUser | undefined {
   return systemUsers.find(u => u.username === username);
 }

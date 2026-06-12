@@ -3,14 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { Lock, User, Eye, EyeOff, ShieldAlert, FileText } from 'lucide-react';
 import { showToast } from '../../components/ui/Toast';
 import ToastContainer from '../../components/ui/Toast';
-import { systemUsers, getLoginEligibleUsers, getUserByRole, canUserLogin } from '../../constants/systemUsers';
+import { systemUsers, getUserById, canUserLogin, setSessionUser } from '../../constants/systemUsers';
 import { getAccountLockReason } from '../../services/employeesService';
 import namvietGroupLogo from '../../assets/NamViet Group.png';
+import RoleSwitcher from '../../components/layout/RoleSwitcher';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('storekeeper');
   const [password, setPassword] = useState('123456');
-  const [role, setRole] = useState('storekeeper');
+  const [userId, setUserId] = useState('storekeeper');
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -29,13 +30,13 @@ export default function LoginPage() {
 
     setTimeout(() => {
       setLoading(false);
-      const user = getUserByRole(role) ?? systemUsers.find(u => u.username === username);
+      const user = getUserById(userId) ?? systemUsers.find(u => u.username === username);
       if (user && !canUserLogin(user)) {
         setError(getAccountLockReason(user.employeeId) ?? 'Tài khoản không còn hoạt động.');
         return;
       }
       localStorage.setItem('nv-logged-in', 'true');
-      localStorage.setItem('nv-user-role', role);
+      if (user) setSessionUser(user);
       if (rememberMe) {
         localStorage.setItem('nv-remember-me', 'true');
         localStorage.setItem('nv-saved-user', username);
@@ -113,23 +114,17 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div>
-              <label className="hrm-field__label">Vai trò mô phỏng đăng nhập</label>
-              <select
-                className="form-select w-full h-12 rounded-lg"
-                value={role}
-                onChange={e => {
-                  setRole(e.target.value);
-                  const user = systemUsers.find(u => u.role === e.target.value);
-                  if (user) setUsername(user.username);
+            <div className="rounded-xl border border-[var(--md-outline-variant)] overflow-hidden bg-[var(--md-surface-container-low)]">
+              <RoleSwitcher
+                compact
+                embedded
+                previewOnly
+                activeUserId={userId}
+                onSwitch={user => {
+                  setUserId(user.id);
+                  setUsername(user.username);
                 }}
-              >
-                {getLoginEligibleUsers().map(u => (
-                  <option key={u.id} value={u.role}>
-                    {u.roleLabel} - {u.username}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
 
             <div className="flex items-center justify-between text-sm pt-1">

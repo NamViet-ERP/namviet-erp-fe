@@ -4,7 +4,7 @@ import Header from './Header';
 import Sidebar from './Sidebar';
 import ToastContainer from '../ui/Toast';
 import { warehouseMenu, stocktakeMenu, membersMenu, recruitmentMenu } from '../../constants/sidebarMenus';
-import { getUserByRole, canUserLogin } from '../../constants/systemUsers';
+import { getSessionUser, canUserLogin, clearSessionUser } from '../../constants/systemUsers';
 import type { SidebarMenuItem } from '../../types';
 
 type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment';
@@ -15,8 +15,7 @@ export default function AppLayout() {
   const location = useLocation();
 
   const isLoggedIn = localStorage.getItem('nv-logged-in') === 'true';
-  const activeRole = localStorage.getItem('nv-user-role') || 'admin';
-  const sessionUser = getUserByRole(activeRole);
+  const sessionUser = getSessionUser();
 
   if (!isLoggedIn || !sessionUser || !canUserLogin(sessionUser)) {
     if (isLoggedIn) localStorage.removeItem('nv-logged-in');

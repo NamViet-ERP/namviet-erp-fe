@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Mail, Phone, Building, Calendar, ShieldCheck, CheckCircle, Key, ArrowLeft } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
+import { getSessionUser } from '../../constants/systemUsers';
 
-const rolesMap = {
+const profileByRole = {
   admin: {
     name: 'Nguyễn Minh Tuấn',
     initials: 'AD',
@@ -104,15 +104,12 @@ const rolesMap = {
 };
 
 export default function UserProfilePage() {
-  const [activeRole, setActiveRole] = useState('storekeeper');
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const role = localStorage.getItem('nv-user-role') || 'storekeeper';
-    setActiveRole(role);
-  }, []);
-
-  const user = rolesMap[activeRole as keyof typeof rolesMap] || rolesMap.storekeeper;
+  const sessionUser = getSessionUser();
+  const template = profileByRole[sessionUser?.role as keyof typeof profileByRole] ?? profileByRole.storekeeper;
+  const user = sessionUser
+    ? { ...template, name: sessionUser.name, initials: sessionUser.initials, role: sessionUser.roleLabel, email: sessionUser.email }
+    : template;
 
   return (
     <div className="animate-fade-in">
