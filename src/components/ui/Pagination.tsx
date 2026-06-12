@@ -32,7 +32,7 @@ function PageBtn({ children, onClick, active, disabled }: PageBtnProps) {
         padding: '0 6px',
       }}
       onMouseEnter={e => {
-        if (!disabled && !active) e.currentTarget.style.background = 'rgba(103,80,164,0.08)';
+        if (!disabled && !active) e.currentTarget.style.background = 'var(--tint-primary-hover)';
       }}
       onMouseLeave={e => {
         if (!active) e.currentTarget.style.background = 'transparent';

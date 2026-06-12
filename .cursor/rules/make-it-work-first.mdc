@@ -1,0 +1,45 @@
+---
+description: Two-phase workflow — make it work first, refactor only when asked
+alwaysApply: true
+---
+
+# Make It Work First / Làm cho chạy trước
+
+Default workflow for **every new request or function** in this frontend repo.
+
+## Phase 1: Make it work (default)
+
+**Mục tiêu:** Code chạy được, logic đúng, end-to-end.
+
+- Implement the smallest change that satisfies the request
+- Wire API, state, routing, and UI enough to verify behavior
+- Match existing project patterns; don't invent new architecture
+- Skip polish: no premature refactor, DRY sweeps, or "perfect" UI
+- Do **not** touch unrelated files or refactor code outside the task scope
+- Verify it runs (build, manual flow, or stated acceptance path)
+
+**Example — new feature:** User asks for "export list filter by date"
+→ Add filter state, call existing service with params, show filtered results. Done when filter works.
+
+**Example — bug fix:** Fix the broken path only. No drive-by cleanup.
+
+## Phase 2: Make it right (explicit user request only)
+
+**Chỉ khi user yêu cầu rõ:** "Make it right", refactor, clean code, maintainability, extensibility.
+
+Then you may:
+- Extract components/hooks, improve naming, tighten types
+- DRY duplicated logic, simplify structure
+- Add tests when they add real value
+- Polish UI/UX if requested
+
+**Example:** After export filter works, user says "Make it right"
+→ Extract `useExportDateFilter`, shared filter UI, stronger types, clearer file layout.
+
+## Do NOT
+
+- Start new work with ideal architecture or full abstractions
+- Refactor unrelated code during Phase 1
+- Enter Phase 2 without an explicit user ask
+
+When unsure which phase applies: **default to Phase 1**.

@@ -129,15 +129,14 @@ export default function Dropdown({ trigger, items, className = '' }: DropdownPro
                 }}
                 onMouseEnter={e => {
                   e.currentTarget.style.background = item.danger
-                    ? 'rgba(179,38,30,0.08)'
-                    : 'rgba(103,80,164,0.08)';
+                    ? 'var(--tint-error-soft)'
+                    : 'var(--tint-primary-hover)';
                 }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
               >
                 {item.icon && (
                   <item.icon
                     size={18}
-                    strokeWidth={1.5}
                     style={{ color: item.danger ? 'var(--md-error)' : 'var(--md-on-surface-variant)' }}
                   />
                 )}

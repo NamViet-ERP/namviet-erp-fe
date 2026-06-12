@@ -31,8 +31,11 @@ export const stocktakeMenu: SidebarMenuItem[] = [
   { id: 'st-settings', label: 'Thiết lập', icon: Settings, path: '/stocktake/settings' },
 ];
 
+export const recruitmentMenu: SidebarMenuItem[] = [
+  { id: 'candidates-list', label: 'Danh sách ứng viên', icon: UserCheck, path: '/recruitment/candidates' },
+];
+
 export const membersMenu: SidebarMenuItem[] = [
   { id: 'members-list', label: 'Danh sách thành viên', icon: Users, path: '/members/list' },
-  { id: 'recruits-list', label: 'Danh sách ứng viên', icon: UserCheck, path: '/members/recruits' },
   { id: 'members-settings', label: 'Thiết lập quyền', icon: Settings, path: '/warehouse/settings' },
 ];

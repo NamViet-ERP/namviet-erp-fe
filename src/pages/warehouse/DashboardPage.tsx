@@ -1,15 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Package, DollarSign, Warehouse, TrendingUp, Activity,
-  Megaphone, HeartHandshake, ShoppingCart, CreditCard, FolderKanban,
-  FileSignature, Wrench, Factory, Users, ChevronRight, Calendar,
-  Truck, PackagePlus, UserCheck, ArrowLeftRight, Barcode, ClipboardCheck,
-  ChevronLeft, Gift, Settings
+import {
+  Package, Activity, Wrench, ChevronRight,
+  ChevronLeft, Gift, Settings,
 } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
 
 import { showToast } from '../../components/ui/Toast';
+import { departments, type DepartmentSubItem } from '../../constants/departments';
+import DepartmentCard from '../../components/layout/DepartmentCard';
 
 // ── Design Tokens ──
 /*
@@ -73,115 +71,6 @@ const birthdaysData: Record<number, BirthdayEvent[]> = {
   ]
 };
 
-// ── Departments Grid Definition ──
-interface SubItem {
-  label: string;
-  icon: LucideIcon;
-  path?: string;
-}
-
-interface Department {
-  title: string;
-  icon: LucideIcon;
-  items: SubItem[];
-}
-
-const departments: Department[] = [
-  {
-    title: 'MARKETING - SALE',
-    icon: Megaphone,
-    items: [
-      { label: 'Marketing - Sale', icon: TrendingUp }
-    ]
-  },
-  {
-    title: 'CSKH - SAU BÁN',
-    icon: HeartHandshake,
-    items: [
-      { label: 'Chăm sóc Khách Hàng', icon: Users },
-      { label: 'Lịch CSKH - Sau Bán', icon: Calendar },
-      { label: 'Công Việc CSKH', icon: ClipboardCheck },
-      { label: 'Bảo Hành', icon: Wrench }
-    ]
-  },
-  {
-    title: 'MUA HÀNG',
-    icon: ShoppingCart,
-    items: [
-      { label: 'Nhà Cung Cấp', icon: Truck, path: '/warehouse/suppliers' },
-      { label: 'Mua Hàng', icon: PackagePlus, path: '/warehouse/expected-imports' }
-    ]
-  },
-  {
-    title: 'KẾ TOÁN',
-    icon: CreditCard,
-    items: [
-      { label: 'Công Nợ Bán', icon: DollarSign },
-      { label: 'Công Nợ Mua', icon: DollarSign },
-      { label: 'Quỹ', icon: Activity },
-      { label: 'Ngân Hàng', icon: Warehouse },
-      { label: 'Phiếu Kế Toán/Kế Hoạch Chi', icon: FileSignature },
-      { label: 'Đề Nghị Thanh Toán', icon: FileSignature }
-    ]
-  },
-  {
-    title: 'DỰ ÁN',
-    icon: FolderKanban,
-    items: [
-      { label: 'Công Việc Dự Án', icon: ClipboardCheck },
-      { label: 'Lịch Dự Án', icon: Calendar }
-    ]
-  },
-  {
-    title: 'BÁN HÀNG',
-    icon: FileSignature,
-    items: [
-      { label: 'Bán Hàng', icon: DollarSign },
-      { label: 'Kế Hoạch Giao Hàng', icon: Calendar },
-      { label: 'Hợp Đồng Bán', icon: FileSignature },
-      { label: 'Trả Lại Hàng Bán', icon: ArrowLeftRight }
-    ]
-  },
-  {
-    title: 'KỸ THUẬT',
-    icon: Wrench,
-    items: [
-      { label: 'Công Việc Kỹ Thuật', icon: ClipboardCheck },
-      { label: 'Lịch Kỹ Thuật', icon: Calendar },
-      { label: 'Chăm Sóc Khách Hàng', icon: Users },
-      { label: 'Đánh Giá (KPI)', icon: Activity }
-    ]
-  },
-  {
-    title: 'KHO HÀNG',
-    icon: Warehouse,
-    items: [
-      { label: 'Kho Hàng', icon: Warehouse, path: '/warehouse/dashboard-warehouse' },
-      { label: 'Kiểm Kê', icon: ClipboardCheck, path: '/stocktake/list' },
-      { label: 'Thành Phẩm, Phụ Tùng, NVL', icon: Barcode, path: '/warehouse/stock' }
-    ]
-  },
-  {
-    title: 'SẢN XUẤT',
-    icon: Factory,
-    items: [
-      { label: 'Sản Xuất', icon: Factory },
-      { label: 'QC', icon: Activity }
-    ]
-  },
-  {
-    title: 'HRM',
-    icon: Users,
-    items: [
-      { label: 'Nhân Viên', icon: Users, path: '/members/list' },
-      { label: 'Tuyển Dụng', icon: UserCheck },
-      { label: 'C & B', icon: CreditCard },
-      { label: 'Đăng Ký KM', icon: FileSignature },
-      { label: 'Công Tác Phí', icon: DollarSign }
-    ]
-  }
-];
-
 // ── Top Products & Materials Data ──
 const topProducts = [
   { imageIcon: Wrench, code: '2102205001', name: 'Bảo trì máy, thay vật tư, kiểm tra tổng thể, vệ sinh máy', qty: 57 },
@@ -203,7 +92,7 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const [selectedDay, setSelectedDay] = useState<number>(9); // Default today (June 9)
 
-  const handleItemClick = (item: SubItem, deptTitle: string) => {
+  const handleItemClick = (item: DepartmentSubItem, deptTitle: string) => {
     if (item.path) {
       navigate(item.path);
     } else {
@@ -221,33 +110,33 @@ export default function DashboardPage() {
       {/* Bottom tier */}
       <rect x="25" y="65" width="70" height="30" rx="4" fill="var(--md-primary)" opacity="0.85" />
       <path d="M25,75 Q60,82 95,75" fill="none" stroke="var(--md-primary-container)" strokeWidth="2" />
-      <circle cx="35" cy="73" r="2.5" fill="#f43f5e" />
-      <circle cx="48" cy="73" r="2.5" fill="#eab308" />
-      <circle cx="60" cy="73" r="2.5" fill="#10b981" />
-      <circle cx="72" cy="73" r="2.5" fill="#f43f5e" />
-      <circle cx="85" cy="73" r="2.5" fill="#eab308" />
+      <circle cx="35" cy="73" r="2.5" fill="var(--chart-6)" />
+      <circle cx="48" cy="73" r="2.5" fill="var(--chart-4)" />
+      <circle cx="60" cy="73" r="2.5" fill="var(--chart-3)" />
+      <circle cx="72" cy="73" r="2.5" fill="var(--chart-6)" />
+      <circle cx="85" cy="73" r="2.5" fill="var(--chart-4)" />
 
       {/* Top tier */}
       <rect x="35" y="42" width="50" height="23" rx="4" fill="var(--md-secondary)" />
       <path d="M35,49 Q60,55 85,49" fill="none" stroke="var(--md-secondary-container)" strokeWidth="2" />
-      <circle cx="43" cy="47" r="2" fill="#eab308" />
-      <circle cx="51" cy="47" r="2" fill="#f43f5e" />
-      <circle cx="60" cy="47" r="2" fill="#10b981" />
-      <circle cx="69" cy="47" r="2" fill="#eab308" />
-      <circle cx="77" cy="47" r="2" fill="#f43f5e" />
+      <circle cx="43" cy="47" r="2" fill="var(--chart-4)" />
+      <circle cx="51" cy="47" r="2" fill="var(--chart-6)" />
+      <circle cx="60" cy="47" r="2" fill="var(--chart-3)" />
+      <circle cx="69" cy="47" r="2" fill="var(--chart-4)" />
+      <circle cx="77" cy="47" r="2" fill="var(--chart-6)" />
 
       {/* Candles */}
-      <rect x="44" y="28" width="2" height="14" fill="#fb923c" />
-      <path d="M45,23 C46,25 45,28 45,28 C44,28 43,25 45,23 Z" fill="#ef4444" className="animate-pulse" />
+      <rect x="44" y="28" width="2" height="14" fill="var(--chart-4)" />
+      <path d="M45,23 C46,25 45,28 45,28 C44,28 43,25 45,23 Z" fill="var(--chart-6)" className="animate-pulse" />
 
-      <rect x="59" y="24" width="2" height="18" fill="#f87171" />
-      <path d="M60,18 C61,21 60,24 60,24 C59,24 58,21 60,18 Z" fill="#f59e0b" className="animate-pulse" />
+      <rect x="59" y="24" width="2" height="18" fill="var(--chart-5)" />
+      <path d="M60,18 C61,21 60,24 60,24 C59,24 58,21 60,18 Z" fill="var(--chart-4)" className="animate-pulse" />
 
-      <rect x="74" y="28" width="2" height="14" fill="#fb923c" />
-      <path d="M75,23 C76,25 75,28 75,28 C74,28 73,25 75,23 Z" fill="#ef4444" className="animate-pulse" />
+      <rect x="74" y="28" width="2" height="14" fill="var(--chart-4)" />
+      <path d="M75,23 C76,25 75,28 75,28 C74,28 73,25 75,23 Z" fill="var(--chart-6)" className="animate-pulse" />
 
       <ellipse cx="60" cy="42" rx="4" ry="2" fill="var(--md-surface-container-high)" />
-      <circle cx="60" cy="40" r="1.5" fill="#ef4444" />
+      <circle cx="60" cy="40" r="1.5" fill="var(--chart-6)" />
     </svg>
   );
 
@@ -297,14 +186,6 @@ export default function DashboardPage() {
       
       {/* ── Page Header ── */}
       <div className="flex items-end justify-between relative z-10">
-        <div>
-          <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--md-primary)] mb-1">
-            HỆ THỐNG ĐIỀU HÀNH
-          </p>
-          <h1 className="text-2xl font-bold tracking-tight text-[var(--md-on-surface)]">
-            Bảng Điều Hướng Trung Tâm (WMS Portal)
-          </h1>
-        </div>
         <div className="flex items-center gap-1.5 text-xs text-[var(--md-on-surface-variant)]">
           <Activity size={13} className="text-[var(--md-primary)]" />
           Cập nhật lúc: {new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
@@ -314,195 +195,18 @@ export default function DashboardPage() {
       {/* ── Grid Row 1: Functional Department cards (6 columns) ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 relative z-10">
         
-        {/* Column 1: Marketing-Sale, CSKH-Sau bán, Mua hàng */}
-        <div className="flex flex-col gap-3">
-          {departments.slice(0, 3).map((dept) => {
-            const DeptIcon = dept.icon;
-            return (
-              <div 
-                key={dept.title} 
-                className="bg-[var(--md-surface-container)] rounded-lg border border-[var(--md-outline-variant)] p-3 shadow-sm"
-              >
-                <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-[var(--md-outline-variant)]">
-                  <DeptIcon size={16} className="text-[var(--md-secondary)]" />
-                  <h3 className="text-[11.5px] font-bold text-[var(--md-primary)]">{dept.title}</h3>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  {dept.items.map((item) => {
-                    const ItemIcon = item.icon;
-                    return (
-                      <button
-                        key={item.label}
-                        onClick={() => handleItemClick(item, dept.title)}
-                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleItemClick(item, dept.title); }}
-                        className="flex items-center justify-between w-full p-2 bg-[var(--md-surface-container-low)] hover:bg-[var(--nv-sidebar-item-hover)] border border-[var(--md-outline-variant)] hover:border-[var(--md-secondary)] rounded transition-all duration-150 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--md-secondary)]"
-                        style={{ outlineOffset: '2px' }}
-                      >
-                        <div className="flex items-center gap-2 overflow-hidden">
-                          <ItemIcon size={14} className="text-[var(--md-on-surface-variant)] flex-shrink-0" />
-                          <span className="text-[12px] font-medium text-[var(--md-on-surface)] truncate">{item.label}</span>
-                        </div>
-                        <ChevronRight size={12} className="text-[var(--md-on-surface-variant)] flex-shrink-0 ml-1" />
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Column 2: Kế toán, Dự án */}
-        <div className="flex flex-col gap-3">
-          {departments.slice(3, 5).map((dept) => {
-            const DeptIcon = dept.icon;
-            return (
-              <div 
-                key={dept.title} 
-                className="bg-[var(--md-surface-container)] rounded-lg border border-[var(--md-outline-variant)] p-3 shadow-sm"
-              >
-                <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-[var(--md-outline-variant)]">
-                  <DeptIcon size={16} className="text-[var(--md-secondary)]" />
-                  <h3 className="text-[11.5px] font-bold text-[var(--md-primary)]">{dept.title}</h3>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  {dept.items.map((item) => {
-                    const ItemIcon = item.icon;
-                    return (
-                      <button
-                        key={item.label}
-                        onClick={() => handleItemClick(item, dept.title)}
-                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleItemClick(item, dept.title); }}
-                        className="flex items-center justify-between w-full p-2 bg-[var(--md-surface-container-low)] hover:bg-[var(--nv-sidebar-item-hover)] border border-[var(--md-outline-variant)] hover:border-[var(--md-secondary)] rounded transition-all duration-150 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--md-secondary)]"
-                        style={{ outlineOffset: '2px' }}
-                      >
-                        <div className="flex items-center gap-2 overflow-hidden">
-                          <ItemIcon size={14} className="text-[var(--md-on-surface-variant)] flex-shrink-0" />
-                          <span className="text-[12px] font-medium text-[var(--md-on-surface)] truncate">{item.label}</span>
-                        </div>
-                        <ChevronRight size={12} className="text-[var(--md-on-surface-variant)] flex-shrink-0 ml-1" />
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Column 3: Bán hàng, Kỹ thuật */}
-        <div className="flex flex-col gap-3">
-          {departments.slice(5, 7).map((dept) => {
-            const DeptIcon = dept.icon;
-            return (
-              <div 
-                key={dept.title} 
-                className="bg-[var(--md-surface-container)] rounded-lg border border-[var(--md-outline-variant)] p-3 shadow-sm"
-              >
-                <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-[var(--md-outline-variant)]">
-                  <DeptIcon size={16} className="text-[var(--md-secondary)]" />
-                  <h3 className="text-[11.5px] font-bold text-[var(--md-primary)]">{dept.title}</h3>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  {dept.items.map((item) => {
-                    const ItemIcon = item.icon;
-                    return (
-                      <button
-                        key={item.label}
-                        onClick={() => handleItemClick(item, dept.title)}
-                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleItemClick(item, dept.title); }}
-                        className="flex items-center justify-between w-full p-2 bg-[var(--md-surface-container-low)] hover:bg-[var(--nv-sidebar-item-hover)] border border-[var(--md-outline-variant)] hover:border-[var(--md-secondary)] rounded transition-all duration-150 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--md-secondary)]"
-                        style={{ outlineOffset: '2px' }}
-                      >
-                        <div className="flex items-center gap-2 overflow-hidden">
-                          <ItemIcon size={14} className="text-[var(--md-on-surface-variant)] flex-shrink-0" />
-                          <span className="text-[12px] font-medium text-[var(--md-on-surface)] truncate">{item.label}</span>
-                        </div>
-                        <ChevronRight size={12} className="text-[var(--md-on-surface-variant)] flex-shrink-0 ml-1" />
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Column 4: Kho hàng, Sản xuất */}
-        <div className="flex flex-col gap-3">
-          {departments.slice(7, 9).map((dept) => {
-            const DeptIcon = dept.icon;
-            return (
-              <div 
-                key={dept.title} 
-                className="bg-[var(--md-surface-container)] rounded-lg border border-[var(--md-outline-variant)] p-3 shadow-sm"
-              >
-                <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-[var(--md-outline-variant)]">
-                  <DeptIcon size={16} className="text-[var(--md-secondary)]" />
-                  <h3 className="text-[11.5px] font-bold text-[var(--md-primary)]">{dept.title}</h3>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  {dept.items.map((item) => {
-                    const ItemIcon = item.icon;
-                    return (
-                      <button
-                        key={item.label}
-                        onClick={() => handleItemClick(item, dept.title)}
-                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleItemClick(item, dept.title); }}
-                        className="flex items-center justify-between w-full p-2 bg-[var(--md-surface-container-low)] hover:bg-[var(--nv-sidebar-item-hover)] border border-[var(--md-outline-variant)] hover:border-[var(--md-secondary)] rounded transition-all duration-150 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--md-secondary)]"
-                        style={{ outlineOffset: '2px' }}
-                      >
-                        <div className="flex items-center gap-2 overflow-hidden">
-                          <ItemIcon size={14} className="text-[var(--md-on-surface-variant)] flex-shrink-0" />
-                          <span className="text-[12px] font-medium text-[var(--md-on-surface)] truncate">{item.label}</span>
-                        </div>
-                        <ChevronRight size={12} className="text-[var(--md-on-surface-variant)] flex-shrink-0 ml-1" />
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Column 5: HRM */}
-        <div className="flex flex-col gap-3">
-          {departments.slice(9, 10).map((dept) => {
-            const DeptIcon = dept.icon;
-            return (
-              <div 
-                key={dept.title} 
-                className="bg-[var(--md-surface-container)] rounded-lg border border-[var(--md-outline-variant)] p-3 shadow-sm h-full flex flex-col"
-              >
-                <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-[var(--md-outline-variant)]">
-                  <DeptIcon size={16} className="text-[var(--md-secondary)]" />
-                  <h3 className="text-[11.5px] font-bold text-[var(--md-primary)]">{dept.title}</h3>
-                </div>
-                <div className="flex flex-col gap-1.5 flex-1">
-                  {dept.items.map((item) => {
-                    const ItemIcon = item.icon;
-                    return (
-                      <button
-                        key={item.label}
-                        onClick={() => handleItemClick(item, dept.title)}
-                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleItemClick(item, dept.title); }}
-                        className="flex items-center justify-between w-full p-2 bg-[var(--md-surface-container-low)] hover:bg-[var(--nv-sidebar-item-hover)] border border-[var(--md-outline-variant)] hover:border-[var(--md-secondary)] rounded transition-all duration-150 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--md-secondary)]"
-                        style={{ outlineOffset: '2px' }}
-                      >
-                        <div className="flex items-center gap-2 overflow-hidden">
-                          <ItemIcon size={14} className="text-[var(--md-on-surface-variant)] flex-shrink-0" />
-                          <span className="text-[12px] font-medium text-[var(--md-on-surface)] truncate">{item.label}</span>
-                        </div>
-                        <ChevronRight size={12} className="text-[var(--md-on-surface-variant)] flex-shrink-0 ml-1" />
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        {/* Columns 1-5: department cards grouped to balance the 6-col layout */}
+        {([[0, 1], [1, 2], [2, 3], [3, 4], [4, 5]] as const).map(([start, end]) => (
+          <div key={start} className="flex flex-col gap-3">
+            {departments.slice(start, end).map((dept) => (
+              <DepartmentCard
+                key={dept.title}
+                dept={dept}
+                onItemClick={(item) => handleItemClick(item, dept.title)}
+              />
+            ))}
+          </div>
+        ))}
 
         {/* Column 6: Right Side Cards */}
         <div className="flex flex-col gap-3">
@@ -718,7 +422,7 @@ export default function DashboardPage() {
                         {/* Birthday dot indicator */}
                         {hasBirthday && (
                           <span 
-                            className={`absolute bottom-1 w-1.5 h-1.5 rounded-full ${isToday ? 'bg-[var(--md-secondary)]' : 'bg-[#f43f5e]'}`}
+                            className={`absolute bottom-1 w-1.5 h-1.5 rounded-full ${isToday ? 'bg-[var(--md-secondary)]' : 'bg-[var(--chart-5)]'}`}
                             title="Có sinh nhật"
                           />
                         )}
@@ -738,7 +442,7 @@ export default function DashboardPage() {
                   <div className="flex flex-col gap-1">
                     {birthdaysData[selectedDay].map((b, i) => (
                       <div key={i} className="text-[12px] text-[var(--md-on-surface)] font-medium flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#f43f5e]" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--chart-5)]" />
                         <strong>{b.name}</strong> 
                         <span className="text-[var(--md-on-surface-variant)] text-[11px]">({b.role})</span>
                       </div>

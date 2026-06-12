@@ -11,6 +11,7 @@ import FormField from '../../components/ui/FormField';
 import Pagination from '../../components/ui/Pagination';
 import PageHeader from '../../components/ui/PageHeader';
 import { formatCurrency } from '../../utils/formatCurrency';
+import { useActiveEmployees } from '../../hooks/useEmployees';
 import type { Warehouse } from '../../types';
 
 interface WarehouseForm {
@@ -25,6 +26,7 @@ interface WarehouseForm {
 const generateUniqueWarehouseId = () => `wh-${Date.now()}`;
 
 export default function WarehouseListPage() {
+  const { data: activeEmployees = [] } = useActiveEmployees();
   const [warehouseList, setWarehouseList] = useState<Warehouse[]>(initialWarehouses);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -200,8 +202,18 @@ export default function WarehouseListPage() {
               onChange={e => setForm({...form, address: e.target.value})} placeholder="Nhập địa chỉ kho" />
           </FormField>
           <FormField label="Nhân viên phụ trách" required error={errors.manager} className="col-span-2">
-            <input className="form-input" value={form.manager}
-              onChange={e => setForm({...form, manager: e.target.value})} placeholder="Nhập tên người phụ trách" />
+            <select
+              className={`form-select ${errors.manager ? 'border-[var(--md-error)]' : ''}`}
+              value={form.manager}
+              onChange={e => setForm({ ...form, manager: e.target.value })}
+            >
+              <option value="">-- Chọn nhân viên phụ trách --</option>
+              {activeEmployees.map(emp => (
+                <option key={emp.id} value={emp.fullName}>
+                  {emp.code ? `${emp.code} — ` : ''}{emp.fullName}{emp.position ? ` (${emp.position})` : ''}
+                </option>
+              ))}
+            </select>
           </FormField>
         </div>
       </Modal>

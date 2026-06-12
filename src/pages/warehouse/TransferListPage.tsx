@@ -15,6 +15,14 @@ import EmptyState from '../../components/ui/EmptyState';
 import Modal from '../../components/ui/Modal';
 import FormField from '../../components/ui/FormField';
 import PageHeader from '../../components/ui/PageHeader';
+import type { Transfer } from '../../types';
+
+type TransferTab = 'internal' | 'loans' | 'consolidation';
+
+/** Transfer voucher row, extended with a UI-only creation timestamp. */
+interface TransferRow extends Transfer {
+  createdTime?: string;
+}
 
 interface FormItem {
   productId: string;
@@ -36,8 +44,8 @@ const getLocaleDateString = () => new Date().toLocaleDateString('vi-VN');
 
 export default function TransferListPage() {
   const activeRole = localStorage.getItem('nv-user-role') || 'admin';
-  const [activeTab, setActiveTab] = useState<'internal' | 'loans' | 'consolidation'>('internal');
-  const [transfers, setTransfers] = useState<any[]>(initialTransfers);
+  const [activeTab, setActiveTab] = useState<TransferTab>('internal');
+  const [transfers, setTransfers] = useState<TransferRow[]>(initialTransfers);
   const [loans, setLoans] = useState<LendingLog[]>(initialLendingLogs);
   
   // Consolidation State
@@ -53,7 +61,7 @@ export default function TransferListPage() {
   const [showCreateTransfer, setShowCreateTransfer] = useState(false);
   const [showCreateLoan, setShowCreateLoan] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
-  const [selectedTransfer, setSelectedTransfer] = useState<any | null>(null);
+  const [selectedTransfer, setSelectedTransfer] = useState<TransferRow | null>(null);
   const [showLoanDetail, setShowLoanDetail] = useState(false);
   const [selectedLoan, setSelectedLoan] = useState<LendingLog | null>(null);
 
@@ -185,7 +193,7 @@ export default function TransferListPage() {
     const fromWh = warehouses.find(w => w.id === transferForm.fromWarehouseId);
     const toWh = warehouses.find(w => w.id === transferForm.toWarehouseId);
     
-    const newTf = {
+    const newTf: TransferRow = {
       id: generateUniqueTransferId(),
       voucherCode: generateCode('CK'),
       date: getLocaleDateString(),
@@ -244,7 +252,7 @@ export default function TransferListPage() {
     showToast('success', `Đã tạo yêu cầu mượn liên dự án ${newLoan.voucherCode}. Đang chờ PM đối tác ký duyệt.`, 'Tạo yêu cầu thành công');
   };
 
-  const getTransferActions = (item: any) => [
+  const getTransferActions = (item: TransferRow) => [
     { label: 'Xem chi tiết', icon: Eye, onClick: () => { setSelectedTransfer(item); setShowDetail(true); } },
     { label: 'In phiếu xuất kho', icon: FileText, onClick: () => showToast('info', 'Đang kết nối máy in...') }
   ];
@@ -270,7 +278,7 @@ export default function TransferListPage() {
         }
       />
 
-      <TabFilter tabs={tabs} activeTab={activeTab} onChange={(id) => { setActiveTab(id as any); setSearch(''); setPage(1); }} />
+      <TabFilter tabs={tabs} activeTab={activeTab} onChange={(id) => { setActiveTab(id as TransferTab); setSearch(''); setPage(1); }} />
 
       {/* SEARCH BAR FOR LISTS */}
       {activeTab !== 'consolidation' && (
@@ -301,7 +309,7 @@ export default function TransferListPage() {
                 </thead>
                 <tbody>
                   {paginatedTransfers.map((t) => (
-                    <tr key={t.id} className="table-row cursor-pointer hover:bg-[rgba(103,80,164,0.04)]"
+                    <tr key={t.id} className="table-row cursor-pointer hover:bg-[var(--tint-primary-weak)]"
                       onClick={() => { setSelectedTransfer(t); setShowDetail(true); }}>
                       <td className="table-cell text-[var(--md-on-surface)]">{t.date}</td>
                       <td className="table-cell font-bold text-[var(--md-primary)]">{t.voucherCode}</td>
@@ -383,7 +391,7 @@ export default function TransferListPage() {
                       const projLend = projects.find(p => p.id === l.lendingProjectId);
                       
                       return (
-                        <tr key={l.id} className="table-row border-b border-[var(--md-outline-variant)] cursor-pointer hover:bg-[rgba(103,80,164,0.04)]"
+                        <tr key={l.id} className="table-row border-b border-[var(--md-outline-variant)] cursor-pointer hover:bg-[var(--tint-primary-weak)]"
                           onClick={() => { setSelectedLoan(l); setShowLoanDetail(true); }}>
                           <td className="table-cell font-bold text-[var(--md-primary)] font-mono">{l.voucherCode}</td>
                           <td className="table-cell text-[var(--md-on-surface)]">{l.date}</td>
@@ -401,7 +409,7 @@ export default function TransferListPage() {
                               <div className="flex items-center gap-1">
                                 <span className="text-[9px] font-semibold">PM Mượn:</span>
                                 {l.borrowPmSigned ? (
-                                  <span className="text-[9px] font-bold text-[var(--md-success)] bg-[rgba(56,106,32,0.1)] px-1.5 py-0.5 rounded">Đã ký</span>
+                                  <span className="text-[9px] font-bold text-[var(--md-success)] bg-[var(--tint-success-soft)] px-1.5 py-0.5 rounded">Đã ký</span>
                                 ) : (
                                   <button onClick={(e) => { e.stopPropagation(); handlePmSign(l.id, 'borrow'); }} className="text-[9px] font-bold text-[var(--md-primary)] hover:underline">Ký duyệt</button>
                                 )}
@@ -410,7 +418,7 @@ export default function TransferListPage() {
                               <div className="flex items-center gap-1">
                                 <span className="text-[9px] font-semibold">PM Cho:</span>
                                 {l.lendPmSigned ? (
-                                  <span className="text-[9px] font-bold text-[var(--md-success)] bg-[rgba(56,106,32,0.1)] px-1.5 py-0.5 rounded">Đã ký</span>
+                                  <span className="text-[9px] font-bold text-[var(--md-success)] bg-[var(--tint-success-soft)] px-1.5 py-0.5 rounded">Đã ký</span>
                                 ) : (
                                   <button onClick={(e) => { e.stopPropagation(); handlePmSign(l.id, 'lend'); }} className="text-[9px] font-bold text-[var(--md-primary)] hover:underline">Ký duyệt</button>
                                 )}
@@ -508,21 +516,21 @@ export default function TransferListPage() {
                         <td className="py-3 text-center font-mono">MNK-SC-7.5</td>
                         <td className="py-3 text-center">Cái</td>
                         <td className="py-3 text-right font-bold text-rose-500">1</td>
-                        <td className="py-3 text-center"><span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-[rgba(56,106,32,0.1)] text-[var(--md-success)] border border-[rgba(56,106,32,0.15)] whitespace-nowrap uppercase">Chưa qua sử dụng</span></td>
+                        <td className="py-3 text-center"><span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-[var(--tint-success-soft)] text-[var(--md-success)] border border-[var(--tint-success-border)] whitespace-nowrap uppercase">Chưa qua sử dụng</span></td>
                       </tr>
                       <tr className="border-b">
                         <td className="py-3 font-semibold pl-3">Que hàn điện Kim Tín KT-421</td>
                         <td className="py-3 text-center font-mono">QH-KT-421</td>
                         <td className="py-3 text-center">Hộp</td>
                         <td className="py-3 text-right font-bold text-rose-500">15</td>
-                        <td className="py-3 text-center"><span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-[rgba(56,106,32,0.1)] text-[var(--md-success)] border border-[rgba(56,106,32,0.15)] whitespace-nowrap uppercase">Mới nguyên niêm phong</span></td>
+                        <td className="py-3 text-center"><span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-[var(--tint-success-soft)] text-[var(--md-success)] border border-[var(--tint-success-border)] whitespace-nowrap uppercase">Mới nguyên niêm phong</span></td>
                       </tr>
                       <tr className="border-b">
                         <td className="py-3 font-semibold pl-3">Dầu máy nén khí 20L</td>
                         <td className="py-3 text-center font-mono">DK-OIL-20L</td>
                         <td className="py-3 text-center">Thùng</td>
                         <td className="py-3 text-right font-bold text-rose-500">3</td>
-                        <td className="py-3 text-center"><span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-[rgba(56,106,32,0.1)] text-[var(--md-success)] border border-[rgba(56,106,32,0.15)] whitespace-nowrap uppercase">Mới nguyên vỏ hộp</span></td>
+                        <td className="py-3 text-center"><span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-[var(--tint-success-soft)] text-[var(--md-success)] border border-[var(--tint-success-border)] whitespace-nowrap uppercase">Mới nguyên vỏ hộp</span></td>
                       </tr>
                     </>
                   ) : (
@@ -532,14 +540,14 @@ export default function TransferListPage() {
                         <td className="py-3 text-center font-mono">BLK-500</td>
                         <td className="py-3 text-center">Cái</td>
                         <td className="py-3 text-right font-bold text-rose-500">1</td>
-                        <td className="py-3 text-center"><span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-[rgba(56,106,32,0.1)] text-[var(--md-success)] border border-[rgba(56,106,32,0.15)] whitespace-nowrap uppercase">Chưa qua sử dụng</span></td>
+                        <td className="py-3 text-center"><span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-[var(--tint-success-soft)] text-[var(--md-success)] border border-[var(--tint-success-border)] whitespace-nowrap uppercase">Chưa qua sử dụng</span></td>
                       </tr>
                       <tr className="border-b">
                         <td className="py-3 font-semibold pl-3">Găng tay bảo hộ hàn da bò</td>
                         <td className="py-3 text-center font-mono">GT-BH-DA</td>
                         <td className="py-3 text-center">Đôi</td>
                         <td className="py-3 text-right font-bold text-rose-500">10</td>
-                        <td className="py-3 text-center"><span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-[rgba(56,106,32,0.1)] text-[var(--md-success)] border border-[rgba(56,106,32,0.15)] whitespace-nowrap uppercase">Mới nguyên hộp</span></td>
+                        <td className="py-3 text-center"><span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-[var(--tint-success-soft)] text-[var(--md-success)] border border-[var(--tint-success-border)] whitespace-nowrap uppercase">Mới nguyên hộp</span></td>
                       </tr>
                     </>
                   )}
@@ -690,7 +698,7 @@ export default function TransferListPage() {
               placeholder="Nhập lý do mượn (VD: Thiếu hụt vật tư chờ PO-002410)..." />
           </FormField>
 
-          <div className="bg-[rgba(103,80,164,0.06)] p-3 rounded-lg border text-[11px] text-[var(--md-on-surface-variant)] flex items-start gap-2">
+          <div className="bg-[var(--tint-primary-soft)] p-3 rounded-lg border text-[11px] text-[var(--md-on-surface-variant)] flex items-start gap-2">
             <AlertTriangle size={14} className="text-[var(--md-primary)] flex-shrink-0 mt-0.5" />
             <p>
               **BẢO MẬT & ĐỐI CHIẾU PM**: Yêu cầu mượn vật tư sau khi tạo sẽ ở trạng thái **Chờ duyệt PM**. Bắt buộc PM của cả 2 dự án phải thực hiện ký số xác nhận thì vật tư mới được luân chuyển thực tế.
@@ -748,7 +756,7 @@ export default function TransferListPage() {
                 </tr>
               </thead>
               <tbody>
-                {selectedTransfer.items?.map((it: any, i: number) => (
+                {selectedTransfer.items?.map((it, i) => (
                   <tr key={i} className="border-b" style={{ borderColor: 'var(--md-outline-variant)' }}>
                     <td className="py-2">
                       <div className="font-bold">{it.name}</div>

@@ -84,6 +84,22 @@ const rolesMap = {
       'Khởi tạo đợt kiểm kê kho và nhập số liệu đếm thực tế',
       'Được ẩn các trường thông tin về đơn giá và tổng giá trị tài chính để đảm bảo bảo mật kho bãi'
     ]
+  },
+  hr: {
+    name: 'Nguyễn Thị Lan',
+    initials: 'NL',
+    role: 'Nhân sự (HR)',
+    email: 'lan.nguyen@namviet.vn',
+    phone: '0903.456.789',
+    dept: 'Phòng Nhân sự',
+    joined: '01/03/2021',
+    privileges: [
+      'Quản lý danh sách ứng viên và quy trình tuyển dụng',
+      'Quản lý hồ sơ nhân viên toàn công ty',
+      'Gán mã nhân viên và cập nhật thông tin tổ chức',
+      'Theo dõi onboarding nhân viên mới',
+      'Xem và chỉnh sửa thông tin chi tiết ứng viên/nhân viên'
+    ]
   }
 };
 

@@ -15,27 +15,27 @@ interface AccentStyle {
 
 const accentMap: Record<CardAccent, AccentStyle> = {
   amber: {
-    containerBg:  'var(--md-tertiary-container)',
-    iconColor:    'var(--md-on-tertiary-container)',
-    blurColor:    'rgba(125, 82, 96, 0.12)',
+    containerBg:  'var(--md-warning-container)',
+    iconColor:    'var(--md-on-warning-container)',
+    blurColor:    'color-mix(in srgb, var(--md-warning) 14%, transparent)',
     valueSuffix:  '⬆',
   },
   blue: {
     containerBg:  'var(--md-primary-container)',
     iconColor:    'var(--md-on-primary-container)',
-    blurColor:    'rgba(14, 48, 99, 0.12)',
+    blurColor:    'color-mix(in srgb, var(--md-primary) 14%, transparent)',
     valueSuffix:  '',
   },
   teal: {
     containerBg:  'var(--md-secondary-container)',
     iconColor:    'var(--md-on-secondary-container)',
-    blurColor:    'rgba(98, 91, 113, 0.12)',
+    blurColor:    'color-mix(in srgb, var(--md-secondary) 14%, transparent)',
     valueSuffix:  '',
   },
   purple: {
     containerBg:  'var(--md-primary-container)',
     iconColor:    'var(--md-on-primary-container)',
-    blurColor:    'rgba(14, 48, 99, 0.12)',
+    blurColor:    'color-mix(in srgb, var(--md-primary) 14%, transparent)',
     valueSuffix:  '',
   },
 };

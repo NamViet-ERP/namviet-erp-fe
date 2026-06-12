@@ -1,127 +1,18 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import logoWhite from '../../assets/logo-white.png';
+import namvietGroupLogo from '../../assets/NamViet Group.png';
 import {
   Search, Grid3X3, Settings, BarChart3, Bell, ChevronDown,
   User, LogOut, X, Check, AlertTriangle, Package, FileText, Moon, Sun,
-  Megaphone, HeartHandshake, ShoppingCart, CreditCard, FolderKanban,
-  FileSignature, Wrench, Factory, Users, ChevronRight, Calendar,
-  TrendingUp, ClipboardCheck, UserCheck, ArrowLeftRight, Barcode,
-  PackagePlus, Truck, Activity, Warehouse, DollarSign
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { showToast } from '../ui/Toast';
+import { departments } from '../../constants/departments';
+import { getRolesMap, getLoginEligibleUsers, canUserLogin, systemUsers } from '../../constants/systemUsers';
+import DepartmentCard from './DepartmentCard';
 
-interface SubItem {
-  label: string;
-  icon: LucideIcon;
-  path?: string;
-}
-
-interface Department {
-  title: string;
-  icon: LucideIcon;
-  items: SubItem[];
-}
-
-const departments: Department[] = [
-  {
-    title: 'MARKETING - SALE',
-    icon: Megaphone,
-    items: [
-      { label: 'Marketing - Sale', icon: TrendingUp }
-    ]
-  },
-  {
-    title: 'CSKH - SAU BÁN',
-    icon: HeartHandshake,
-    items: [
-      { label: 'Chăm sóc Khách Hàng', icon: Users },
-      { label: 'Lịch CSKH - Sau Bán', icon: Calendar },
-      { label: 'Công Việc CSKH', icon: ClipboardCheck },
-      { label: 'Bảo Hành', icon: Wrench }
-    ]
-  },
-  {
-    title: 'MUA HÀNG',
-    icon: ShoppingCart,
-    items: [
-      { label: 'Nhà Cung Cấp', icon: Truck, path: '/warehouse/suppliers' },
-      { label: 'Mua Hàng', icon: PackagePlus, path: '/warehouse/expected-imports' }
-    ]
-  },
-  {
-    title: 'KÊ TOÁN',
-    icon: CreditCard,
-    items: [
-      { label: 'Công Nợ Bán', icon: DollarSign },
-      { label: 'Công Nợ Mua', icon: DollarSign },
-      { label: 'Quỹ', icon: Activity },
-      { label: 'Ngân Hàng', icon: Warehouse },
-      { label: 'Phiếu Kế Toán/Kế Hoạch Chi', icon: FileSignature },
-      { label: 'Đề Nghị Thanh Toán', icon: FileSignature }
-    ]
-  },
-  {
-    title: 'DỰ ÁN',
-    icon: FolderKanban,
-    items: [
-      { label: 'Công Việc Dự Án', icon: ClipboardCheck },
-      { label: 'Lịch Dự Án', icon: Calendar }
-    ]
-  },
-  {
-    title: 'BÁN HÀNG',
-    icon: FileSignature,
-    items: [
-      { label: 'Bán Hàng', icon: DollarSign },
-      { label: 'Kế Hoạch Giao Hàng', icon: Calendar },
-      { label: 'Hợp Đồng Bán', icon: FileSignature },
-      { label: 'Trả Lại Hàng Bán', icon: ArrowLeftRight }
-    ]
-  },
-  {
-    title: 'KỸ THUẬT',
-    icon: Wrench,
-    items: [
-      { label: 'Công Việc Kỹ Thuật', icon: ClipboardCheck },
-      { label: 'Lịch Kỹ Thuật', icon: Calendar },
-      { label: 'Chăm Sóc Khách Hàng', icon: Users },
-      { label: 'Đánh Giá (KPI)', icon: Activity }
-    ]
-  },
-  {
-    title: 'KHO HÀNG',
-    icon: Warehouse,
-    items: [
-      { label: 'Kho Hàng', icon: Warehouse, path: '/warehouse/dashboard-warehouse' },
-      { label: 'Kiểm Kê', icon: ClipboardCheck, path: '/stocktake/list' },
-      { label: 'Thành Phẩm, Phụ Tùng, NVL', icon: Barcode, path: '/warehouse/stock' }
-    ]
-  },
-  {
-    title: 'SẢN XUẤT',
-    icon: Factory,
-    items: [
-      { label: 'Sản Xuất', icon: Factory },
-      { label: 'QC', icon: Activity }
-    ]
-  },
-  {
-    title: 'HRM',
-    icon: Users,
-    items: [
-      { label: 'Nhân Viên', icon: Users, path: '/members/list' },
-      { label: 'Tuyển Dụng', icon: UserCheck },
-      { label: 'C & B', icon: CreditCard },
-      { label: 'Đăng Ký KM', icon: FileSignature },
-      { label: 'Công Tác Phí', icon: DollarSign }
-    ]
-  }
-];
-
-type Module = 'warehouse' | 'stocktake' | 'members';
+type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment';
 type NotifType = 'warning' | 'import' | 'export' | 'info';
 
 interface User {
@@ -131,13 +22,7 @@ interface User {
   email: string;
 }
 
-const rolesMap = {
-  admin: { name: 'Admin', initials: 'AD', role: 'Quản trị viên', email: 'admin@namviet.vn' },
-  accountant: { name: 'Lê Thị Hồng', initials: 'LH', role: 'Kế toán trưởng', email: 'hong.le@namviet.vn' },
-  procurement: { name: 'Mỹ Chi', initials: 'MC', role: 'Phòng mua hàng', email: 'chi.my@namviet.vn' },
-  pm: { name: 'Nguyễn Văn Hùng', initials: 'NH', role: 'Quản lý dự án (PM)', email: 'hung.nguyen@namviet.vn' },
-  storekeeper: { name: 'Phan Văn Vỹ', initials: 'VV', role: 'Thủ kho (Storekeeper)', email: 'vy.phan@namviet.vn' },
-};
+const rolesMap = getRolesMap();
 
 interface Notification {
   id: number;
@@ -159,7 +44,7 @@ const mockNotifications: Notification[] = [
 
 /* MD3 tonal containers for notification types */
 const notifContainers: Record<NotifType, { bg: string; color: string }> = {
-  warning: { bg: 'var(--md-tertiary-container)',        color: 'var(--md-on-tertiary-container)' },
+  warning: { bg: 'var(--md-warning-container)',        color: 'var(--md-on-warning-container)' },
   import:  { bg: 'var(--md-primary-container)',         color: 'var(--md-on-primary-container)' },
   export:  { bg: 'var(--md-secondary-container)',       color: 'var(--md-on-secondary-container)' },
   info:    { bg: 'var(--md-surface-container-low)',     color: 'var(--md-on-surface-variant)' },
@@ -262,12 +147,12 @@ function MenuBtn({ icon: Icon, label, onClick, danger }: MenuBtnProps) {
       }}
       onMouseEnter={e => {
         e.currentTarget.style.background = danger
-          ? 'rgba(179,38,30,0.08)'
-          : 'rgba(103,80,164,0.08)';
+          ? 'color-mix(in srgb, var(--md-error) 8%, transparent)'
+          : 'var(--nv-surface-hover)';
       }}
       onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
     >
-      <Icon size={18} strokeWidth={1.5} style={{ color: danger ? 'var(--md-error)' : 'var(--md-on-surface-variant)', flexShrink: 0 }} />
+      <Icon size={18} style={{ color: danger ? 'var(--md-error)' : 'var(--md-on-surface-variant)', flexShrink: 0 }} />
       {label}
     </button>
   );
@@ -298,7 +183,7 @@ interface HeaderProps {
 export default function Header({ currentModule: _currentModule, onModuleSwitch: _onModuleSwitch }: HeaderProps) {
   const navigate = useNavigate();
   const activeRole = localStorage.getItem('nv-user-role') || 'admin';
-  const currentUser = rolesMap[activeRole as keyof typeof rolesMap] || rolesMap.admin;
+  const currentUser = rolesMap[activeRole] || rolesMap.admin || { name: 'User', initials: 'U', roleLabel: '', email: '' };
 
   const [showModuleMenu, setShowModuleMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -355,10 +240,10 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
       >
         {/* Mayzer Logo */}
         <img
-          src={logoWhite}
-          alt="Mayzer Logo"
+          src={namvietGroupLogo}
+          alt="NamViet Group"
           style={{
-            height: '60px',
+            height: '56px',
             objectFit: 'contain',
             borderRadius: '6px',
           }}
@@ -440,225 +325,25 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
                   className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3"
                   style={{ width: '100%' }}
                 >
-                  {/* Column 1: MARKETING-SALE, CSKH-SAU BÁN, MUA HÀNG */}
-                  <div className="flex flex-col gap-3">
-                    {departments.slice(0, 3).map((dept) => {
-                      const DeptIcon = dept.icon;
-                      return (
-                        <div 
-                          key={dept.title} 
-                          className="bg-[var(--md-surface-container)] rounded-lg border border-[var(--md-outline-variant)] p-3 shadow-sm"
-                        >
-                          <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-[var(--md-outline-variant)]">
-                            <DeptIcon size={16} className="text-[var(--md-secondary)]" />
-                            <h3 className="text-[11.5px] font-bold text-[var(--md-primary)]">{dept.title}</h3>
-                          </div>
-                          <div className="flex flex-col gap-1.5">
-                            {dept.items.map((item) => {
-                              const ItemIcon = item.icon;
-                              return (
-                                <button
-                                  key={item.label}
-                                  onClick={() => {
-                                    if (item.path) {
-                                      navigate(item.path);
-                                    } else {
-                                      showToast('info', `Phân hệ "${item.label}" thuộc bộ phận "${dept.title}" đang được phát triển.`, 'Chức năng giả lập');
-                                    }
-                                    setShowModuleMenu(false);
-                                  }}
-                                  className="flex items-center justify-between w-full p-2 bg-[var(--md-surface-container-low)] hover:bg-[var(--nv-sidebar-item-hover)] border border-[var(--md-outline-variant)] hover:border-[var(--md-secondary)] rounded transition-all duration-150 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--md-secondary)]"
-                                  style={{ borderStyle: 'solid', borderWidth: '1px', outlineOffset: '2px', cursor: 'pointer' }}
-                                >
-                                  <div className="flex items-center gap-2 overflow-hidden">
-                                    <ItemIcon size={14} className="text-[var(--md-on-surface-variant)] flex-shrink-0" />
-                                    <span className="text-[12px] font-medium text-[var(--md-on-surface)] truncate">{item.label}</span>
-                                  </div>
-                                  <ChevronRight size={12} className="text-[var(--md-on-surface-variant)] flex-shrink-0 ml-1" />
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Column 2: KẾ TOÁN, DỰ ÁN */}
-                  <div className="flex flex-col gap-3">
-                    {departments.slice(3, 5).map((dept) => {
-                      const DeptIcon = dept.icon;
-                      return (
-                        <div 
-                          key={dept.title} 
-                          className="bg-[var(--md-surface-container)] rounded-lg border border-[var(--md-outline-variant)] p-3 shadow-sm"
-                        >
-                          <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-[var(--md-outline-variant)]">
-                            <DeptIcon size={16} className="text-[var(--md-secondary)]" />
-                            <h3 className="text-[11.5px] font-bold text-[var(--md-primary)]">{dept.title}</h3>
-                          </div>
-                          <div className="flex flex-col gap-1.5">
-                            {dept.items.map((item) => {
-                              const ItemIcon = item.icon;
-                              return (
-                                <button
-                                  key={item.label}
-                                  onClick={() => {
-                                    if (item.path) {
-                                      navigate(item.path);
-                                    } else {
-                                      showToast('info', `Phân hệ "${item.label}" thuộc bộ phận "${dept.title}" đang được phát triển.`, 'Chức năng giả lập');
-                                    }
-                                    setShowModuleMenu(false);
-                                  }}
-                                  className="flex items-center justify-between w-full p-2 bg-[var(--md-surface-container-low)] hover:bg-[var(--nv-sidebar-item-hover)] border border-[var(--md-outline-variant)] hover:border-[var(--md-secondary)] rounded transition-all duration-150 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--md-secondary)]"
-                                  style={{ borderStyle: 'solid', borderWidth: '1px', outlineOffset: '2px', cursor: 'pointer' }}
-                                >
-                                  <div className="flex items-center gap-2 overflow-hidden">
-                                    <ItemIcon size={14} className="text-[var(--md-on-surface-variant)] flex-shrink-0" />
-                                    <span className="text-[12px] font-medium text-[var(--md-on-surface)] truncate">{item.label}</span>
-                                  </div>
-                                  <ChevronRight size={12} className="text-[var(--md-on-surface-variant)] flex-shrink-0 ml-1" />
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Column 3: BÁN HÀNG, KỸ THUẬT */}
-                  <div className="flex flex-col gap-3">
-                    {departments.slice(5, 7).map((dept) => {
-                      const DeptIcon = dept.icon;
-                      return (
-                        <div 
-                          key={dept.title} 
-                          className="bg-[var(--md-surface-container)] rounded-lg border border-[var(--md-outline-variant)] p-3 shadow-sm"
-                        >
-                          <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-[var(--md-outline-variant)]">
-                            <DeptIcon size={16} className="text-[var(--md-secondary)]" />
-                            <h3 className="text-[11.5px] font-bold text-[var(--md-primary)]">{dept.title}</h3>
-                          </div>
-                          <div className="flex flex-col gap-1.5">
-                            {dept.items.map((item) => {
-                              const ItemIcon = item.icon;
-                              return (
-                                <button
-                                  key={item.label}
-                                  onClick={() => {
-                                    if (item.path) {
-                                      navigate(item.path);
-                                    } else {
-                                      showToast('info', `Phân hệ "${item.label}" thuộc bộ phận "${dept.title}" đang được phát triển.`, 'Chức năng giả lập');
-                                    }
-                                    setShowModuleMenu(false);
-                                  }}
-                                  className="flex items-center justify-between w-full p-2 bg-[var(--md-surface-container-low)] hover:bg-[var(--nv-sidebar-item-hover)] border border-[var(--md-outline-variant)] hover:border-[var(--md-secondary)] rounded transition-all duration-150 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--md-secondary)]"
-                                  style={{ borderStyle: 'solid', borderWidth: '1px', outlineOffset: '2px', cursor: 'pointer' }}
-                                >
-                                  <div className="flex items-center gap-2 overflow-hidden">
-                                    <ItemIcon size={14} className="text-[var(--md-on-surface-variant)] flex-shrink-0" />
-                                    <span className="text-[12px] font-medium text-[var(--md-on-surface)] truncate">{item.label}</span>
-                                  </div>
-                                  <ChevronRight size={12} className="text-[var(--md-on-surface-variant)] flex-shrink-0 ml-1" />
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Column 4: KHO HÀNG, SẢN XUẤT */}
-                  <div className="flex flex-col gap-3">
-                    {departments.slice(7, 9).map((dept) => {
-                      const DeptIcon = dept.icon;
-                      return (
-                        <div 
-                          key={dept.title} 
-                          className="bg-[var(--md-surface-container)] rounded-lg border border-[var(--md-outline-variant)] p-3 shadow-sm"
-                        >
-                          <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-[var(--md-outline-variant)]">
-                            <DeptIcon size={16} className="text-[var(--md-secondary)]" />
-                            <h3 className="text-[11.5px] font-bold text-[var(--md-primary)]">{dept.title}</h3>
-                          </div>
-                          <div className="flex flex-col gap-1.5">
-                            {dept.items.map((item) => {
-                              const ItemIcon = item.icon;
-                              return (
-                                <button
-                                  key={item.label}
-                                  onClick={() => {
-                                    if (item.path) {
-                                      navigate(item.path);
-                                    } else {
-                                      showToast('info', `Phân hệ "${item.label}" thuộc bộ phận "${dept.title}" đang được phát triển.`, 'Chức năng giả lập');
-                                    }
-                                    setShowModuleMenu(false);
-                                  }}
-                                  className="flex items-center justify-between w-full p-2 bg-[var(--md-surface-container-low)] hover:bg-[var(--nv-sidebar-item-hover)] border border-[var(--md-outline-variant)] hover:border-[var(--md-secondary)] rounded transition-all duration-150 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--md-secondary)]"
-                                  style={{ borderStyle: 'solid', borderWidth: '1px', outlineOffset: '2px', cursor: 'pointer' }}
-                                >
-                                  <div className="flex items-center gap-2 overflow-hidden">
-                                    <ItemIcon size={14} className="text-[var(--md-on-surface-variant)] flex-shrink-0" />
-                                    <span className="text-[12px] font-medium text-[var(--md-on-surface)] truncate">{item.label}</span>
-                                  </div>
-                                  <ChevronRight size={12} className="text-[var(--md-on-surface-variant)] flex-shrink-0 ml-1" />
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Column 5: HRM */}
-                  <div className="flex flex-col gap-3">
-                    {departments.slice(9, 10).map((dept) => {
-                      const DeptIcon = dept.icon;
-                      return (
-                        <div 
-                          key={dept.title} 
-                          className="bg-[var(--md-surface-container)] rounded-lg border border-[var(--md-outline-variant)] p-3 shadow-sm h-full flex flex-col"
-                        >
-                          <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-[var(--md-outline-variant)]">
-                            <DeptIcon size={16} className="text-[var(--md-secondary)]" />
-                            <h3 className="text-[11.5px] font-bold text-[var(--md-primary)]">{dept.title}</h3>
-                          </div>
-                          <div className="flex flex-col gap-1.5 flex-1">
-                            {dept.items.map((item) => {
-                              const ItemIcon = item.icon;
-                              return (
-                                <button
-                                  key={item.label}
-                                  onClick={() => {
-                                    if (item.path) {
-                                      navigate(item.path);
-                                    } else {
-                                      showToast('info', `Phân hệ "${item.label}" thuộc bộ phận "${dept.title}" đang được phát triển.`, 'Chức năng giả lập');
-                                    }
-                                    setShowModuleMenu(false);
-                                  }}
-                                  className="flex items-center justify-between w-full p-2 bg-[var(--md-surface-container-low)] hover:bg-[var(--nv-sidebar-item-hover)] border border-[var(--md-outline-variant)] hover:border-[var(--md-secondary)] rounded transition-all duration-150 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--md-secondary)]"
-                                  style={{ borderStyle: 'solid', borderWidth: '1px', outlineOffset: '2px', cursor: 'pointer' }}
-                                >
-                                  <div className="flex items-center gap-2 overflow-hidden">
-                                    <ItemIcon size={14} className="text-[var(--md-on-surface-variant)] flex-shrink-0" />
-                                    <span className="text-[12px] font-medium text-[var(--md-on-surface)] truncate">{item.label}</span>
-                                  </div>
-                                  <ChevronRight size={12} className="text-[var(--md-on-surface-variant)] flex-shrink-0 ml-1" />
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  {/* Columns 1-5: department cards (shared DepartmentCard component) */}
+                  {([[0, 1], [1, 2], [2, 3], [3, 4], [4, 5]] as const).map(([start, end]) => (
+                    <div key={start} className="flex flex-col gap-3">
+                      {departments.slice(start, end).map((dept) => (
+                        <DepartmentCard
+                          key={dept.title}
+                          dept={dept}
+                          onItemClick={(item) => {
+                            if (item.path) {
+                              navigate(item.path);
+                            } else {
+                              showToast('info', `Phân hệ "${item.label}" thuộc bộ phận "${dept.title}" đang được phát triển.`, 'Chức năng giả lập');
+                            }
+                            setShowModuleMenu(false);
+                          }}
+                        />
+                      ))}
+                    </div>
+                  ))}
 
 
                 </div>
@@ -738,7 +423,7 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
                   <button
                     onClick={() => setShowNotifications(false)}
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '9999px', border: 'none', background: 'transparent', color: 'var(--md-on-surface-variant)', cursor: 'pointer' }}
-                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(103,80,164,0.08)'; }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--nv-surface-hover)'; }}
                     onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
                   >
                     <X size={16} />
@@ -764,12 +449,12 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
                         gap: '12px',
                         border: 'none',
                         borderBottom: '1px solid var(--md-outline-variant)',
-                        background: !n.read ? 'rgba(103,80,164,0.04)' : 'transparent',
+                        background: !n.read ? 'color-mix(in srgb, var(--md-primary) 4%, transparent)' : 'transparent',
                         cursor: 'pointer',
                         transition: 'background 200ms var(--md-easing)',
                       }}
-                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(103,80,164,0.08)'; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = !n.read ? 'rgba(103,80,164,0.04)' : 'transparent'; }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'var(--nv-surface-hover)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = !n.read ? 'color-mix(in srgb, var(--md-primary) 4%, transparent)' : 'transparent'; }}
                     >
                       <div style={{ width: '36px', height: '36px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: c.bg, color: c.color }}>
                         <NIcon size={16} />
@@ -797,7 +482,7 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
               <div style={{ padding: '12px 16px' }}>
                 <button
                   style={{ width: '100%', textAlign: 'center', fontFamily: "'Roboto', sans-serif", fontSize: '0.875rem', fontWeight: 500, color: 'var(--md-primary)', border: 'none', background: 'transparent', cursor: 'pointer', padding: '8px', borderRadius: '9999px' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(103,80,164,0.08)'; }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--nv-surface-hover)'; }}
                   onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
                 >
                   Xem tất cả thông báo
@@ -868,7 +553,7 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
               </div>
 
               {/* Role Switcher */}
-              <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--md-outline-variant)', background: 'rgba(103,80,164,0.03)' }}>
+              <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--md-outline-variant)', background: 'color-mix(in srgb, var(--md-primary) 3%, transparent)' }}>
                 <label style={{ fontFamily: "'Roboto', sans-serif", fontSize: '0.6875rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--md-on-surface-variant)', display: 'block', marginBottom: '6px', letterSpacing: '0.04em' }}>
                   Vai trò mô phỏng
                 </label>
@@ -893,11 +578,9 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
                     outline: 'none',
                   }}
                 >
-                  <option value="admin">Quản trị viên (Admin)</option>
-                  <option value="accountant">Kế toán trưởng</option>
-                  <option value="procurement">Phòng mua hàng</option>
-                  <option value="pm">Quản lý dự án (PM)</option>
-                  <option value="storekeeper">Thủ kho (Storekeeper)</option>
+                  {getLoginEligibleUsers().map(u => (
+                    <option key={u.id} value={u.role}>{u.roleLabel}</option>
+                  ))}
                 </select>
               </div>
 

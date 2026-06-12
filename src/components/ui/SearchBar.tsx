@@ -33,7 +33,7 @@ export default function SearchBar({ value, onChange, onRefresh, placeholder = 'T
             transition: 'background 200ms var(--md-easing)',
             flexShrink: 0,
           }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(103,80,164,0.08)'; }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'var(--tint-primary-hover)'; }}
           onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
         >
           <RefreshCw size={18} />

@@ -38,7 +38,7 @@ export default function DetailModal({ isOpen, onClose, title, data, columns, bad
         style={{
           position: 'absolute',
           inset: 0,
-          background: 'rgba(28, 27, 31, 0.45)',
+          background: 'var(--md-scrim)',
           backdropFilter: 'blur(2px)',
           WebkitBackdropFilter: 'blur(2px)',
         }}
@@ -90,7 +90,7 @@ export default function DetailModal({ isOpen, onClose, title, data, columns, bad
               cursor: 'pointer',
               transition: 'background 200ms var(--md-easing)',
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(103,80,164,0.08)'; }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--tint-primary-hover)'; }}
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
           >
             <X size={20} />

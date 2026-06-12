@@ -10,84 +10,71 @@ export default {
       colors: {
         /* ══════════════════════════════════════════════════════
            Material Design 3 — Navy Blue Seed (#0E3063)
-           Generated tonal palette following MD3 specifications
+           Each token references the CSS custom property defined in
+           src/index.css, so Tailwind utilities (bg-md-primary) and
+           arbitrary values (bg-[var(--md-primary)]) behave identically
+           AND both adapt automatically to dark mode.
            ══════════════════════════════════════════════════════ */
         md: {
           /* Primary */
-          primary:                '#0E3063',
-          'on-primary':           '#FFFFFF',
-          'primary-container':    '#d9edf7',
-          'on-primary-container': '#0E3063',
+          primary:                'var(--md-primary)',
+          'on-primary':           'var(--md-on-primary)',
+          'primary-container':    'var(--md-primary-container)',
+          'on-primary-container': 'var(--md-on-primary-container)',
 
           /* Secondary */
-          secondary:                '#008ece',
-          'on-secondary':           '#FFFFFF',
-          'secondary-container':    '#d9edf7',
-          'on-secondary-container': '#0E3063',
+          secondary:                'var(--md-secondary)',
+          'on-secondary':           'var(--md-on-secondary)',
+          'secondary-container':    'var(--md-secondary-container)',
+          'on-secondary-container': 'var(--md-on-secondary-container)',
 
           /* Tertiary */
-          tertiary:                '#7D5260',
-          'on-tertiary':           '#FFFFFF',
-          'tertiary-container':    '#FFD8E4',
-          'on-tertiary-container': '#31111D',
+          tertiary:                'var(--md-tertiary)',
+          'on-tertiary':           'var(--md-on-tertiary)',
+          'tertiary-container':    'var(--md-tertiary-container)',
+          'on-tertiary-container': 'var(--md-on-tertiary-container)',
 
           /* Surface system */
-          surface:                '#f4f4f4',
-          'on-surface':           '#323a45',
-          'surface-variant':      '#ffffff',
-          'on-surface-variant':   '#362e2e',
-          'surface-container':    '#ffffff',
-          'surface-container-low': '#ffffff',
-          'surface-container-high': '#f4f4f4',
-          'inverse-surface':      '#323a45',
-          'inverse-on-surface':   '#f4f4f4',
+          surface:                  'var(--md-surface)',
+          'on-surface':             'var(--md-on-surface)',
+          'surface-variant':        'var(--md-surface-variant)',
+          'on-surface-variant':     'var(--md-on-surface-variant)',
+          'surface-container':      'var(--md-surface-container)',
+          'surface-container-low':  'var(--md-surface-container-low)',
+          'surface-container-high': 'var(--md-surface-container-high)',
+          'inverse-surface':        'var(--md-inverse-surface)',
+          'inverse-on-surface':     'var(--md-inverse-on-surface)',
 
           /* Outline */
-          outline:         '#f0f0f0',
-          'outline-variant': '#f0f0f0',
+          outline:           'var(--md-outline)',
+          'outline-variant': 'var(--md-outline-variant)',
 
           /* Error */
-          error:              '#B3261E',
-          'on-error':         '#FFFFFF',
-          'error-container':  '#F9DEDC',
-          'on-error-container': '#410E0B',
+          error:                'var(--md-error)',
+          'on-error':           'var(--md-on-error)',
+          'error-container':    'var(--md-error-container)',
+          'on-error-container': 'var(--md-on-error-container)',
 
-          /* Status tonal */
-          success:              '#386A20',
-          'on-success':         '#FFFFFF',
-          'success-container':  '#C4EFA4',
-          'on-success-container': '#072100',
+          /* Status tonal (containers) */
+          success:                'var(--md-success)',
+          'success-container':    'var(--md-success-container)',
+          'on-success-container': 'var(--md-on-success-container)',
 
-          warning:              '#7A5100',
-          'on-warning':         '#FFFFFF',
-          'warning-container':  '#FFDEA1',
-          'on-warning-container': '#261900',
+          warning:                'var(--md-warning)',
+          'warning-container':    'var(--md-warning-container)',
+          'on-warning-container': 'var(--md-on-warning-container)',
 
-          info:              '#005DB6',
-          'on-info':         '#FFFFFF',
-          'info-container':  '#D5E3FF',
-          'on-info-container': '#001B3D',
+          info:                'var(--md-info)',
+          'info-container':    'var(--md-info-container)',
+          'on-info-container': 'var(--md-on-info-container)',
+        },
 
-          /* Dark mode surface system */
-          'dark-surface':                '#1C1B1F',
-          'dark-on-surface':             '#E6E1E5',
-          'dark-surface-variant':        '#49454F',
-          'dark-on-surface-variant':     '#CAC4D0',
-          'dark-surface-container':      '#211F26',
-          'dark-surface-container-low':  '#1D1B20',
-          'dark-surface-container-high': '#2B2930',
-          'dark-primary':                '#ADC6FF',
-          'dark-on-primary':             '#002E69',
-          'dark-primary-container':      '#0E3063',
-          'dark-on-primary-container':   '#D2E4FF',
-          'dark-secondary':              '#CCC2DC',
-          'dark-on-secondary':           '#332D41',
-          'dark-secondary-container':    '#4A4458',
-          'dark-on-secondary-container': '#E8DEF8',
-          'dark-outline':                '#938F99',
-          'dark-outline-variant':        '#49454F',
-          'dark-inverse-surface':        '#E6E1E5',
-          'dark-inverse-on-surface':     '#313033',
+        /* Status accent tokens for icons / charts / dots — adapt to dark mode */
+        status: {
+          success: 'var(--status-success)',
+          warning: 'var(--status-warning)',
+          info:    'var(--status-info)',
+          error:   'var(--status-error)',
         },
       },
 
@@ -136,31 +123,15 @@ export default {
         'md-decel': 'cubic-bezier(0, 0, 0, 1)',
       },
 
-      animation: {
-        'md-fade-in':  'mdFadeIn 300ms cubic-bezier(0.2,0,0,1) forwards',
-        'md-scale-in': 'mdScaleIn 300ms cubic-bezier(0.2,0,0,1) forwards',
-        'md-slide-up': 'mdSlideUp 300ms cubic-bezier(0.2,0,0,1) forwards',
-        'md-slide-in': 'mdSlideIn 300ms cubic-bezier(0.2,0,0,1) forwards',
+      transitionDuration: {
+        'md-fast': '150ms',
+        'md':      '200ms',
+        'md-slow': '300ms',
       },
 
-      keyframes: {
-        mdFadeIn: {
-          from: { opacity: '0' },
-          to:   { opacity: '1' },
-        },
-        mdScaleIn: {
-          from: { opacity: '0', transform: 'scale(0.92)' },
-          to:   { opacity: '1', transform: 'scale(1)' },
-        },
-        mdSlideUp: {
-          from: { opacity: '0', transform: 'translateY(8px)' },
-          to:   { opacity: '1', transform: 'translateY(0)' },
-        },
-        mdSlideIn: {
-          from: { opacity: '0', transform: 'translateX(-8px)' },
-          to:   { opacity: '1', transform: 'translateX(0)' },
-        },
-      },
+      /* Keyframes + animations live in a single source: src/index.css
+         (the app uses the .animate-fade-in / .animate-scale-in / .animate-slide-up
+         utilities defined there). Don't redeclare them here. */
     },
   },
   plugins: [],

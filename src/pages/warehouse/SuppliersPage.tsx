@@ -243,7 +243,7 @@ export default function SuppliersPage() {
               {scoredSuppliers.map((s, idx) => (
                 <div key={idx} className="p-4 rounded-xl border flex flex-col justify-between transition-all"
                   style={{ 
-                    background: idx === 0 ? 'rgba(56,106,32,0.02)' : 'var(--md-surface-container-low)', 
+                    background: idx === 0 ? 'var(--tint-success-soft)' : 'var(--md-surface-container-low)', 
                     borderColor: idx === 0 ? 'var(--md-success)' : 'var(--md-outline-variant)',
                     borderWidth: idx === 0 ? '2px' : '1px'
                   }}>

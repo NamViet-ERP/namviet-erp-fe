@@ -1,21 +1,23 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
-import { ChevronDown, ChevronsLeft, Warehouse as WarehouseIcon, ClipboardCheck, Users } from 'lucide-react';
+import { ChevronDown, ChevronsLeft, Warehouse as WarehouseIcon, ClipboardCheck, Users, UserCheck } from 'lucide-react';
 import type { SidebarMenuItem } from '../../types';
 import type { LucideIcon } from 'lucide-react';
 
-type Module = 'warehouse' | 'stocktake' | 'members';
+type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment';
 
 const moduleIcons: Record<Module, LucideIcon> = { 
   warehouse: WarehouseIcon, 
   stocktake: ClipboardCheck,
-  members: Users
+  members: Users,
+  recruitment: UserCheck,
 };
 const moduleLabels: Record<Module, string> = { 
   warehouse: 'KHO HÀNG', 
   stocktake: 'KIỂM KÊ',
-  members: 'THÀNH VIÊN'
+  members: 'NHÂN VIÊN',
+  recruitment: 'TUYỂN DỤNG',
 };
 
 interface SidebarProps {
@@ -184,7 +186,7 @@ export default function Sidebar({ collapsed, onToggle, menuItems, currentModule 
               height: '32px',
               borderRadius: '6px',
               background: 'var(--md-secondary)',
-              color: '#ffffff',
+              color: 'var(--md-on-secondary)',
               border: 'none',
               cursor: 'pointer',
               transition: 'transform 200ms var(--md-easing)',
@@ -206,7 +208,7 @@ export default function Sidebar({ collapsed, onToggle, menuItems, currentModule 
                   height: '28px',
                   borderRadius: '6px',
                   background: 'var(--md-secondary)',
-                  color: '#ffffff',
+                  color: 'var(--md-on-secondary)',
                   flexShrink: 0,
                   marginRight: '8px',
                 }}
@@ -243,7 +245,7 @@ export default function Sidebar({ collapsed, onToggle, menuItems, currentModule 
                 flexShrink: 0,
                 transition: 'background 200ms var(--md-easing)',
               }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0, 142, 206, 0.08)'; }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'var(--nv-sidebar-item-hover)'; }}
               onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
             >
               <ChevronsLeft size={16} />
@@ -357,7 +359,7 @@ export default function Sidebar({ collapsed, onToggle, menuItems, currentModule 
                           }}
                           onMouseEnter={e => {
                             if (!isActive(c.path)) {
-                              e.currentTarget.style.background = 'rgba(14, 48, 99, 0.08)';
+                              e.currentTarget.style.background = 'var(--tint-primary-hover)';
                               e.currentTarget.style.color = 'var(--md-on-surface)';
                             }
                           }}
@@ -436,7 +438,7 @@ export default function Sidebar({ collapsed, onToggle, menuItems, currentModule 
                       cursor: 'pointer',
                       transition: 'background 200ms var(--md-easing)',
                     }}
-                    onMouseEnter={e => { if (!isActive(c.path)) e.currentTarget.style.background = 'rgba(14, 48, 99, 0.08)'; }}
+                    onMouseEnter={e => { if (!isActive(c.path)) e.currentTarget.style.background = 'var(--tint-primary-hover)'; }}
                     onMouseLeave={e => { if (!isActive(c.path)) e.currentTarget.style.background = 'transparent'; }}
                   >
                     <div

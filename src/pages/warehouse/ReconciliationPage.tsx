@@ -105,7 +105,7 @@ export default function ReconciliationPage() {
       <div className="animate-fade-in py-12 flex flex-col items-center justify-center min-h-[500px]">
         <div className="rounded-3xl p-8 max-w-md text-center border shadow-card space-y-6"
           style={{ background: 'var(--md-surface-container)', borderColor: 'var(--md-error)' }}>
-          <div className="w-16 h-16 rounded-full bg-[rgba(179,38,30,0.1)] text-[var(--md-error)] mx-auto flex items-center justify-center">
+          <div className="w-16 h-16 rounded-full bg-[var(--tint-error-strong)] text-[var(--md-error)] mx-auto flex items-center justify-center">
             <ShieldAlert size={36} />
           </div>
           <div className="space-y-2">
@@ -179,7 +179,7 @@ export default function ReconciliationPage() {
           onClick={() => setActiveSubTab('pogrn')}
           className={`flex items-center gap-2 px-6 py-3 border-b-2 font-bold text-xs transition-all ${
             activeSubTab === 'pogrn'
-              ? 'border-[var(--md-primary)] text-[var(--md-primary)] bg-[rgba(103,80,164,0.04)] rounded-t-xl'
+              ? 'border-[var(--md-primary)] text-[var(--md-primary)] bg-[var(--tint-primary-weak)] rounded-t-xl'
               : 'border-transparent text-[var(--md-on-surface-variant)] hover:text-[var(--md-on-surface)]'
           }`}
         >
@@ -189,7 +189,7 @@ export default function ReconciliationPage() {
           onClick={() => setActiveSubTab('misa')}
           className={`flex items-center gap-2 px-6 py-3 border-b-2 font-bold text-xs transition-all ${
             activeSubTab === 'misa'
-              ? 'border-[var(--md-primary)] text-[var(--md-primary)] bg-[rgba(103,80,164,0.04)] rounded-t-xl'
+              ? 'border-[var(--md-primary)] text-[var(--md-primary)] bg-[var(--tint-primary-weak)] rounded-t-xl'
               : 'border-transparent text-[var(--md-on-surface-variant)] hover:text-[var(--md-on-surface)]'
           }`}
         >
@@ -262,7 +262,7 @@ export default function ReconciliationPage() {
           <div className="lg:col-span-3 space-y-6">
             {hasExceedLimit && (
               <div className="rounded-2xl p-4 flex items-start gap-4 animate-slide-in border" style={{ background: 'var(--md-error-container)', color: 'var(--md-on-error-container)', borderColor: 'var(--md-error)' }}>
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(179,38,30,0.12)', color: 'var(--md-error)' }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'var(--tint-error-strong)', color: 'var(--md-error)' }}>
                   <AlertTriangle size={20} />
                 </div>
                 <div className="flex-1">
@@ -281,7 +281,7 @@ export default function ReconciliationPage() {
 
             {isApproved && (
               <div className="rounded-2xl p-4 flex items-center gap-4 animate-scale-in border" style={{ background: 'var(--md-success-container)', color: 'var(--md-on-success-container)', borderColor: 'var(--md-success)' }}>
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(56,106,32,0.12)', color: 'var(--md-success)' }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'var(--tint-success-soft)', color: 'var(--md-success)' }}>
                   <ShieldCheck size={20} />
                 </div>
                 <div>
@@ -316,7 +316,7 @@ export default function ReconciliationPage() {
                       <tr 
                         key={item.sku} 
                         className={`table-row ${
-                          item.exceedLimit && !isApproved ? 'bg-[rgba(179,38,30,0.05)] text-[var(--md-error)] font-semibold' : ''
+                          item.exceedLimit && !isApproved ? 'bg-[var(--tint-error-soft)] text-[var(--md-error)] font-semibold' : ''
                         }`}
                       >
                         <td className="table-cell">

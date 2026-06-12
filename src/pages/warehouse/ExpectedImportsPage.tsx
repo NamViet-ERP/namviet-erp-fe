@@ -251,10 +251,10 @@ export default function ExpectedImportsPage() {
 
             {/* Scanning Overlay Animation */}
             {isScanning && (
-              <div className="absolute inset-0 bg-navy-950/80 backdrop-blur-sm flex flex-col items-center justify-center space-y-4 z-10">
+              <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center space-y-4 z-10">
                 <div className="relative w-16 h-16">
-                  <div className="absolute inset-0 rounded-full border-4 border-amber-500/20 border-t-amber-500 animate-spin" />
-                  <div className="absolute inset-2 rounded-full border-4 border-amber-500/10 border-b-amber-500 animate-spin-reverse" style={{ animationDirection: 'reverse', animationDuration: '1s' }} />
+                  <div className="absolute inset-0 rounded-full border-4 border-[var(--tint-warning-border)] border-t-[var(--status-warning)] animate-spin" />
+                  <div className="absolute inset-2 rounded-full border-4 border-[var(--tint-warning-soft)] border-b-[var(--status-warning)] animate-spin-reverse" style={{ animationDirection: 'reverse', animationDuration: '1s' }} />
                 </div>
                 <div className="text-center">
                   <p className="text-xs font-bold text-amber-500 tracking-widest animate-pulse">SCM SCANNERS RUNNING</p>

@@ -211,7 +211,7 @@ export default function StockListPage() {
           onClick={() => { setActiveTab('matrix'); setSearch(''); setSelectedProjectFilter('all'); }}
           className={`flex items-center gap-2 px-6 py-3 border-b-2 font-bold text-sm transition-all ${
             activeTab === 'matrix'
-              ? 'border-[var(--md-primary)] text-[var(--md-primary)] bg-[rgba(103,80,164,0.04)] rounded-t-xl'
+              ? 'border-[var(--md-primary)] text-[var(--md-primary)] bg-[var(--tint-primary-weak)] rounded-t-xl'
               : 'border-transparent text-[var(--md-on-surface-variant)] hover:text-[var(--md-on-surface)]'
           }`}
         >
@@ -221,7 +221,7 @@ export default function StockListPage() {
           onClick={() => { setActiveTab('consumables'); setSearch(''); setSelectedProjectFilter('all'); }}
           className={`flex items-center gap-2 px-6 py-3 border-b-2 font-bold text-sm transition-all ${
             activeTab === 'consumables'
-              ? 'border-[var(--md-primary)] text-[var(--md-primary)] bg-[rgba(103,80,164,0.04)] rounded-t-xl'
+              ? 'border-[var(--md-primary)] text-[var(--md-primary)] bg-[var(--tint-primary-weak)] rounded-t-xl'
               : 'border-transparent text-[var(--md-on-surface-variant)] hover:text-[var(--md-on-surface)]'
           }`}
         >
@@ -288,8 +288,8 @@ export default function StockListPage() {
                         <tr
                           key={p.id}
                           onClick={() => toggleRow(p.id)}
-                          className={`hover:bg-[rgba(103,80,164,0.04)] cursor-pointer transition-colors ${
-                            isExpanded ? 'bg-[rgba(103,80,164,0.02)]' : 'border-b border-[var(--md-outline-variant)]'
+                          className={`hover:bg-[var(--tint-primary-weak)] cursor-pointer transition-colors ${
+                            isExpanded ? 'bg-[var(--tint-primary-weak)]' : 'border-b border-[var(--md-outline-variant)]'
                           }`}
                         >
                           <td className="table-cell text-center font-bold text-lg text-[var(--md-outline)]">
@@ -299,18 +299,18 @@ export default function StockListPage() {
                           <td className="table-cell font-semibold text-[var(--md-on-surface)]">{p.name}</td>
                           <td className="table-cell text-center">{p.unit}</td>
                           {/* Closing stocks */}
-                          <td className="table-cell text-right font-bold text-[var(--md-primary)]" style={{ background: 'rgba(103,80,164,0.03)' }}>{p.stocks['general']}</td>
+                          <td className="table-cell text-right font-bold text-[var(--md-primary)]" style={{ background: 'var(--tint-primary-weak)' }}>{p.stocks['general']}</td>
                           {displayedProjects.map(proj => (
                             <td key={proj.id} className="table-cell text-right">{p.stocks[proj.id] || '—'}</td>
                           ))}
                           <td className="table-cell text-right font-extrabold text-[var(--md-on-surface)]" style={{ borderLeft: '1px solid var(--md-outline-variant)' }}>{p.actualQty}</td>
                           <td className="table-cell text-right text-amber-600 font-medium">+{p.incomingQty}</td>
                           <td className="table-cell text-right text-rose-500 font-medium">-{p.reservedQty}</td>
-                          <td className="table-cell text-right font-black text-[var(--md-success)]" style={{ background: 'rgba(56,106,32,0.02)', borderLeft: '1px solid var(--md-outline-variant)' }}>{p.availableQty}</td>
+                          <td className="table-cell text-right font-black text-[var(--md-success)]" style={{ background: 'var(--tint-success-soft)', borderLeft: '1px solid var(--md-outline-variant)' }}>{p.availableQty}</td>
                         </tr>
 
                         {isExpanded && (
-                          <tr className="bg-[rgba(103,80,164,0.015)] border-b border-[var(--md-outline-variant)]">
+                          <tr className="bg-[var(--tint-primary-weak)] border-b border-[var(--md-outline-variant)]">
                             <td colSpan={14} className="p-4">
                               <div className="rounded-xl p-4 border border-[var(--md-outline-variant)] bg-[var(--md-surface-container-low)] space-y-3">
                                 <h4 className="font-bold text-[var(--md-primary)] text-xs uppercase tracking-wider flex items-center gap-1.5">
@@ -397,7 +397,7 @@ export default function StockListPage() {
                 </thead>
                 <tbody>
                   {paginatedConsumables.map((c, idx) => (
-                    <tr key={idx} className="table-row border-b border-[var(--md-outline-variant)] hover:bg-[rgba(103,80,164,0.04)]">
+                    <tr key={idx} className="table-row border-b border-[var(--md-outline-variant)] hover:bg-[var(--tint-primary-weak)]">
                       <td className="table-cell font-bold text-[var(--md-on-surface)] pl-4">{c.projectName}</td>
                       <td className="table-cell font-mono font-bold text-gray-500">{c.productSku}</td>
                       <td className="table-cell font-semibold text-[var(--md-on-surface)]">{c.productName}</td>
@@ -486,7 +486,7 @@ export default function StockListPage() {
             />
           </FormField>
 
-          <div className="bg-[rgba(103,80,164,0.06)] p-3 rounded-lg border border-[var(--md-outline-variant)] text-xs text-[var(--md-on-surface-variant)] flex items-start gap-2">
+          <div className="bg-[var(--tint-primary-soft)] p-3 rounded-lg border border-[var(--md-outline-variant)] text-xs text-[var(--md-on-surface-variant)] flex items-start gap-2">
             <AlertTriangle size={14} className="text-[var(--md-primary)] flex-shrink-0 mt-0.5" />
             <p>
               Hệ thống sẽ tự động trừ số lượng trong **Kho tổng (General Warehouse)** và ghi nhận khối lượng nhập vào kho của **Dự án thụ hưởng**, đồng thời kiểm đếm trực tiếp vào hạn mức định mức dự toán của dự án.

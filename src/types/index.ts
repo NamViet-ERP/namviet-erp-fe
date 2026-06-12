@@ -53,13 +53,11 @@ export interface StatusConfigItem {
   label: string;
   className: string;
   icon: LucideIcon;
-  color: string;
 }
 
 export interface AdjustmentTypeConfigItem {
   label: string;
   className: string;
-  color: string;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

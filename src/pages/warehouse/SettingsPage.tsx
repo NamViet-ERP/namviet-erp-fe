@@ -16,8 +16,8 @@ const settingSections: SettingSection[] = [
   {
     id: 'codes',
     icon: Hash,
-    iconColor: '#60a5fa',
-    iconBg: 'rgba(96,165,250,0.10)',
+    iconColor: 'var(--status-info)',
+    iconBg: 'color-mix(in srgb, var(--status-info) 12%, transparent)',
     title: 'Mã tự động',
     desc: 'Cấu hình định dạng mã chứng từ',
     content: 'codes',
@@ -25,8 +25,8 @@ const settingSections: SettingSection[] = [
   {
     id: 'perms',
     icon: Shield,
-    iconColor: '#a78bfa',
-    iconBg: 'rgba(167,139,250,0.10)',
+    iconColor: 'var(--chart-5)',
+    iconBg: 'color-mix(in srgb, var(--chart-5) 12%, transparent)',
     title: 'Phân quyền',
     desc: 'Quản lý quyền truy cập module kho',
     content: 'perms',
@@ -34,8 +34,8 @@ const settingSections: SettingSection[] = [
   {
     id: 'notif',
     icon: Bell,
-    iconColor: 'var(--nv-accent)',
-    iconBg: 'var(--nv-accent-subtle)',
+    iconColor: 'var(--md-primary)',
+    iconBg: 'color-mix(in srgb, var(--md-primary) 12%, transparent)',
     title: 'Thông báo',
     desc: 'Cấu hình thông báo kho hàng',
     content: 'notif',
@@ -43,8 +43,8 @@ const settingSections: SettingSection[] = [
   {
     id: 'general',
     icon: Globe,
-    iconColor: '#34d399',
-    iconBg: 'rgba(52,211,153,0.10)',
+    iconColor: 'var(--status-success)',
+    iconBg: 'color-mix(in srgb, var(--status-success) 12%, transparent)',
     title: 'Cài đặt chung',
     desc: 'Cấu hình hệ thống chung',
     content: 'general',

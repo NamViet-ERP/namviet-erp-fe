@@ -3,10 +3,11 @@ import { Outlet, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import ToastContainer from '../ui/Toast';
-import { warehouseMenu, stocktakeMenu, membersMenu } from '../../constants/sidebarMenus';
+import { warehouseMenu, stocktakeMenu, membersMenu, recruitmentMenu } from '../../constants/sidebarMenus';
+import { getUserByRole, canUserLogin } from '../../constants/systemUsers';
 import type { SidebarMenuItem } from '../../types';
 
-type Module = 'warehouse' | 'stocktake' | 'members';
+type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment';
 
 export default function AppLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -14,19 +15,28 @@ export default function AppLayout() {
   const location = useLocation();
 
   const isLoggedIn = localStorage.getItem('nv-logged-in') === 'true';
+  const activeRole = localStorage.getItem('nv-user-role') || 'admin';
+  const sessionUser = getUserByRole(activeRole);
 
-  if (!isLoggedIn) {
+  if (!isLoggedIn || !sessionUser || !canUserLogin(sessionUser)) {
+    if (isLoggedIn) localStorage.removeItem('nv-logged-in');
     return <Navigate to="/login" replace />;
   }
 
-  const currentModule: Module = location.pathname.startsWith('/stocktake') ? 'stocktake' :
-                                location.pathname.startsWith('/members') ? 'members' : 'warehouse';
-  const menuItems: SidebarMenuItem[] = currentModule === 'stocktake' ? stocktakeMenu :
-                                       currentModule === 'members' ? membersMenu : warehouseMenu;
+  const currentModule: Module =
+    location.pathname.startsWith('/stocktake') ? 'stocktake' :
+    location.pathname.startsWith('/recruitment') ? 'recruitment' :
+    location.pathname.startsWith('/members') ? 'members' : 'warehouse';
+
+  const menuItems: SidebarMenuItem[] =
+    currentModule === 'stocktake' ? stocktakeMenu :
+    currentModule === 'recruitment' ? recruitmentMenu :
+    currentModule === 'members' ? membersMenu : warehouseMenu;
 
   const handleModuleSwitch = (module: Module) => {
     if (module === 'warehouse') navigate('/warehouse/dashboard-warehouse');
     else if (module === 'stocktake') navigate('/stocktake/list');
+    else if (module === 'recruitment') navigate('/recruitment/candidates');
     else if (module === 'members') navigate('/members/list');
   };
 

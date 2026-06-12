@@ -51,7 +51,7 @@ export default function TabFilter({ tabs, activeTab, onChange }: TabFilterProps)
             }}
             onMouseEnter={e => {
               if (!isActive) {
-                e.currentTarget.style.background = 'rgba(103,80,164,0.08)';
+                e.currentTarget.style.background = 'var(--tint-primary-hover)';
                 e.currentTarget.style.color = 'var(--md-on-surface)';
               }
             }}

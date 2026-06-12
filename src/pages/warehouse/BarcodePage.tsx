@@ -283,7 +283,7 @@ export default function BarcodePage() {
                 )}
 
                 <div className="absolute inset-8 border border-dashed border-gray-600/40 rounded-lg flex items-center justify-center">
-                  <div className="w-48 h-20 border border-amber-500/30 rounded flex items-center justify-center flex-col">
+                  <div className="w-48 h-20 border border-[var(--tint-warning-border)] rounded flex items-center justify-center flex-col">
                     <BarcodeIcon size={32} className={`text-gray-600 ${isScanning ? 'animate-pulse text-amber-500' : ''}`} />
                     <span className="text-[10px] text-gray-500 mt-1 uppercase font-bold tracking-widest text-center">
                       {isScanning ? 'QUÉT TÍN HIỆU LASER...' : 'ĐƯA NHÃN 12 SỐ VÀO KHUNG'}

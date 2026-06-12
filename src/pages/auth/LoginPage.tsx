@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, User, Eye, EyeOff, ShieldAlert } from 'lucide-react';
+import { Lock, User, Eye, EyeOff, ShieldAlert, FileText } from 'lucide-react';
 import { showToast } from '../../components/ui/Toast';
-import CandidateForm from '../../components/recruitment/CandidateForm';
-import logoWhite from '../../assets/logo-white.png';
+import ToastContainer from '../../components/ui/Toast';
+import { systemUsers, getLoginEligibleUsers, getUserByRole, canUserLogin } from '../../constants/systemUsers';
+import { getAccountLockReason } from '../../services/employeesService';
+import namvietGroupLogo from '../../assets/NamViet Group.png';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('storekeeper');
@@ -21,13 +23,17 @@ export default function LoginPage() {
       setError('Vui lòng điền đầy đủ tên đăng nhập và mật khẩu');
       return;
     }
-    
+
     setLoading(true);
     setError('');
 
-    // Simulate network latency
     setTimeout(() => {
       setLoading(false);
+      const user = getUserByRole(role) ?? systemUsers.find(u => u.username === username);
+      if (user && !canUserLogin(user)) {
+        setError(getAccountLockReason(user.employeeId) ?? 'Tài khoản không còn hoạt động.');
+        return;
+      }
       localStorage.setItem('nv-logged-in', 'true');
       localStorage.setItem('nv-user-role', role);
       if (rememberMe) {
@@ -43,342 +49,137 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex flex-col-reverse md:flex-row min-h-screen w-full overflow-x-hidden">
-      
-      {/* LEFT PANEL: Recruitment Submission Form */}
-      <div className="w-full md:w-[55%] bg-[var(--md-surface)] p-6 md:p-12 overflow-y-auto md:h-screen">
-        <div className="max-w-2xl mx-auto">
-          {/* Header branding for Recruitment */}
-          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <h1
-              style={{
-                fontFamily: "'Roboto', sans-serif",
-                fontSize: '1.875rem',
-                fontWeight: 700,
-                color: 'var(--md-on-surface)',
-                marginBottom: '8px',
-              }}
-            >
-              Tiếp nhận CV - Vinh Việt HR
-            </h1>
-            <p
-              style={{
-                fontSize: '0.875rem',
-                color: 'var(--md-on-surface-variant)',
-                maxWidth: '520px',
-                margin: '0 auto',
-                lineHeight: 1.5,
-              }}
-            >
-              Vui lòng cung cấp các thông tin tuyển dụng dưới đây để nộp hồ sơ xin việc của bạn vào hệ thống nhân sự Vinh Việt.
-            </p>
-          </div>
+    <div className="login-page">
+      <div className="login-page__glow login-page__glow--tr" />
+      <div className="login-page__glow login-page__glow--bl" />
 
-          <div
-            style={{
-              background: 'var(--md-surface-container)',
-              borderRadius: '24px',
-              border: '1px solid var(--md-outline-variant)',
-              padding: '32px 24px',
-              boxShadow: 'var(--md-shadow-1)',
-            }}
-          >
-            {/* Recruitment form component */}
-            <CandidateForm />
-          </div>
-
-          <div style={{ textAlign: 'center', marginTop: '24px', color: 'var(--md-on-surface-variant)', fontSize: '0.75rem' }}>
-            © {new Date().getFullYear()} Vinh Việt HR. Bảo mật thông tin hồ sơ ứng viên.
-          </div>
-        </div>
-      </div>
-
-      {/* RIGHT PANEL: System Login Form */}
-      <div 
-        className="w-full md:w-[45%] flex items-center justify-center p-6 md:p-12 md:h-screen"
-        style={{
-          background: 'radial-gradient(circle at top right, var(--md-primary-container) 0%, var(--md-surface) 60%)',
-          position: 'relative',
-        }}
-      >
-        {/* Background decorative shapes */}
-        <div
-          style={{
-            position: 'absolute',
-            top: '-5%',
-            right: '-5%',
-            width: '300px',
-            height: '300px',
-            borderRadius: '50%',
-            background: 'rgba(14, 48, 99, 0.05)',
-            filter: 'blur(60px)',
-            zIndex: 0,
-            pointerEvents: 'none',
-          }}
-        />
-        
-        {/* Login Card */}
-        <div
-          className="animate-scale-in w-full"
-          style={{
-            position: 'relative',
-            maxWidth: '400px',
-            background: 'var(--md-surface-container)',
-            borderRadius: '28px',
-            boxShadow: 'var(--md-shadow-3)',
-            border: '1px solid var(--md-outline-variant)',
-            padding: '36px 28px',
-            zIndex: 10,
-          }}
-        >
-          {/* Logo and Brand */}
-          <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-            <div
-              style={{
-                background: '#0E3063',
-                padding: '10px 18px',
-                borderRadius: '12px',
-                display: 'inline-block',
-                margin: '0 auto 16px',
-                boxShadow: 'var(--md-shadow-1)',
-              }}
-            >
-              <img
-                src={logoWhite}
-                alt="Logo"
-                style={{
-                  height: '36px',
-                  objectFit: 'contain',
-                }}
-              />
+      <div className="relative z-10 w-full max-w-[420px] animate-scale-in">
+        <div className="login-card">
+          <div className="text-center mb-7">
+            <div className="inline-block rounded-xl mb-4 overflow-hidden">
+              <img src={namvietGroupLogo} alt="NamViet Group" className="h-14 object-contain" />
             </div>
-            <h2
-              style={{
-                fontFamily: "'Roboto', sans-serif",
-                fontSize: '1.6rem',
-                fontWeight: 700,
-                color: 'var(--md-on-surface)',
-                lineHeight: 1.2,
-                marginBottom: '6px',
-              }}
-            >
-              NamViệt <span style={{ color: 'var(--md-primary)' }}>WMS</span>
+            <h2 className="text-2xl font-bold text-[var(--md-on-surface)] mb-1">
+              NamViệt <span className="text-[var(--md-primary)]">WMS</span>
             </h2>
-            <p
-              style={{
-                fontSize: '0.8125rem',
-                color: 'var(--md-on-surface-variant)',
-                fontWeight: 500,
-                letterSpacing: '0.02em',
-              }}
-            >
+            <p className="text-xs font-medium tracking-wide text-[var(--md-on-surface-variant)]">
               HỆ THỐNG QUẢN LÝ KHO & CHUỖI CUNG ỨNG
             </p>
           </div>
 
           {error && (
             <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                padding: '12px 16px',
-                background: 'var(--md-error-container)',
-                color: 'var(--md-on-error-container)',
-                borderRadius: '12px',
-                fontSize: '0.8125rem',
-                marginBottom: '16px',
-                border: '1px solid var(--md-outline-variant)',
-              }}
+              className="flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm mb-4 border border-[var(--md-outline-variant)]"
+              style={{ background: 'var(--md-error-container)', color: 'var(--md-on-error-container)' }}
             >
-              <ShieldAlert size={16} style={{ flexShrink: 0 }} />
+              <ShieldAlert size={16} className="shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
           <form onSubmit={handleLogin} className="space-y-4">
-            {/* Username */}
             <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  color: 'var(--md-on-surface-variant)',
-                  marginBottom: '6px',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.04em',
-                }}
-              >
-                Tên đăng nhập
-              </label>
-              <div style={{ position: 'relative' }}>
+              <label className="hrm-field__label">Tên đăng nhập</label>
+              <div className="relative">
                 <input
                   type="text"
-                  className="form-input"
-                  style={{ paddingLeft: '40px', width: '100%', height: '48px', paddingTop: '0', borderRadius: '8px' }}
+                  className="form-input w-full h-12 pl-10 rounded-lg"
                   value={username}
                   onChange={e => setUsername(e.target.value)}
                   placeholder="Nhập tên đăng nhập..."
                 />
-                <User
-                  size={16}
-                  style={{
-                    position: 'absolute',
-                    left: '14px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    color: 'var(--md-on-surface-variant)',
-                  }}
-                />
+                <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--md-on-surface-variant)]" />
               </div>
             </div>
 
-            {/* Password */}
             <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  color: 'var(--md-on-surface-variant)',
-                  marginBottom: '6px',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.04em',
-                }}
-              >
-                Mật khẩu
-              </label>
-              <div style={{ position: 'relative' }}>
+              <label className="hrm-field__label">Mật khẩu</label>
+              <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
-                  className="form-input"
-                  style={{ paddingLeft: '40px', paddingRight: '40px', width: '100%', height: '48px', paddingTop: '0', borderRadius: '8px' }}
+                  className="form-input w-full h-12 pl-10 pr-10 rounded-lg"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   placeholder="Nhập mật khẩu..."
                 />
-                <Lock
-                  size={16}
-                  style={{
-                    position: 'absolute',
-                    left: '14px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    color: 'var(--md-on-surface-variant)',
-                  }}
-                />
+                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--md-on-surface-variant)]" />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  style={{
-                    position: 'absolute',
-                    right: '12px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--md-on-surface-variant)',
-                    cursor: 'pointer',
-                    padding: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--md-on-surface-variant)] bg-transparent border-none cursor-pointer p-0 flex"
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
 
-            {/* Role Simulation */}
             <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  color: 'var(--md-on-surface-variant)',
-                  marginBottom: '6px',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.04em',
-                }}
-              >
-                Vai trò mô phỏng đăng nhập
-              </label>
+              <label className="hrm-field__label">Vai trò mô phỏng đăng nhập</label>
               <select
-                className="form-select"
-                style={{ width: '100%', height: '48px', borderRadius: '8px', borderBottom: '1px solid var(--md-outline)' }}
+                className="form-select w-full h-12 rounded-lg"
                 value={role}
                 onChange={e => {
                   setRole(e.target.value);
-                  setUsername(e.target.value);
+                  const user = systemUsers.find(u => u.role === e.target.value);
+                  if (user) setUsername(user.username);
                 }}
               >
-                <option value="storekeeper">Thủ kho (Storekeeper) - vy.phan</option>
-                <option value="pm">Quản lý dự án (PM) - hung.nguyen</option>
-                <option value="accountant">Kế toán trưởng - hong.le</option>
-                <option value="procurement">Phòng mua hàng - chi.my</option>
-                <option value="admin">Quản trị viên (Admin) - tuan.nguyen</option>
+                {getLoginEligibleUsers().map(u => (
+                  <option key={u.id} value={u.role}>
+                    {u.roleLabel} - {u.username}
+                  </option>
+                ))}
               </select>
             </div>
 
-            {/* Remember me checkbox and Forgot password */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.8125rem', paddingTop: '4px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                <input 
-                  type="checkbox" 
-                  checked={rememberMe} 
-                  onChange={(e) => setRememberMe(e.target.checked)} 
-                  style={{ accentColor: 'var(--md-primary)', cursor: 'pointer' }}
+            <div className="flex items-center justify-between text-sm pt-1">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={e => setRememberMe(e.target.checked)}
+                  style={{ accentColor: 'var(--md-primary)' }}
                 />
-                <span style={{ color: 'var(--md-on-surface-variant)', fontWeight: 500 }}>Ghi nhớ đăng nhập</span>
+                <span className="text-[var(--md-on-surface-variant)] font-medium">Ghi nhớ đăng nhập</span>
               </label>
-              
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => showToast('info', 'Vui lòng liên hệ quản trị viên để khôi phục mật khẩu.', 'Quên mật khẩu')}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--md-primary)',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  fontSize: '0.8125rem',
-                  padding: 0
-                }}
+                className="bg-transparent border-none text-[var(--md-primary)] font-semibold cursor-pointer text-sm p-0"
               >
                 Quên mật khẩu?
               </button>
             </div>
 
-            {/* Login Button */}
             <button
               type="submit"
-              className="btn btn-primary"
-              style={{
-                width: '100%',
-                padding: '12px',
-                fontSize: '0.875rem',
-                fontWeight: 700,
-                borderRadius: '9999px',
-                marginTop: '16px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
+              className="btn btn-primary w-full py-3 text-sm font-bold rounded-full mt-2"
               disabled={loading}
             >
               {loading ? 'ĐANG XỬ LÝ...' : 'ĐĂNG NHẬP'}
             </button>
           </form>
 
-          <div style={{ textAlign: 'center', marginTop: '24px' }}>
-            <span style={{ fontSize: '0.75rem', color: 'var(--md-on-surface-variant)' }}>
-              Phiên bản thử nghiệm nghiệp vụ Mayzer WMS v1.2.0
-            </span>
+          <div className="mt-6 pt-5 border-t border-[var(--md-outline-variant)]">
+            <p className="text-center text-xs text-[var(--md-on-surface-variant)] mb-3">
+              Bạn là ứng viên? Nộp hồ sơ tại đây
+            </p>
+            <button
+              type="button"
+              onClick={() => navigate('/recruitment/apply')}
+              className="btn btn-outlined w-full py-2.5 text-sm font-semibold rounded-full flex items-center justify-center gap-2"
+            >
+              <FileText size={16} />
+              Nộp đơn ứng tuyển
+            </button>
           </div>
+
+          <p className="text-center mt-5 text-xs text-[var(--md-on-surface-variant)]">
+            Phiên bản thử nghiệm Mayzer WMS v1.2.0
+          </p>
         </div>
       </div>
+      <ToastContainer />
     </div>
   );
 }

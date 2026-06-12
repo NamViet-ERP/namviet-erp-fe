@@ -16,17 +16,40 @@ import EmptyState from '../../components/ui/EmptyState';
 import Modal from '../../components/ui/Modal';
 import FormField from '../../components/ui/FormField';
 import PageHeader from '../../components/ui/PageHeader';
+import type { Export, ExportItem } from '../../types';
+
+type EquipmentComponent = 'xyclo' | 'pano' | 'hộp khói' | 'khác';
+type ProjectStage = 'Chế tạo' | 'Lắp đặt' | 'Hoàn thiện';
+
+/** Export line decorated with pricing + equipment metadata. */
+interface ExportRowItem extends ExportItem {
+  unitPrice: number;
+  equipmentComponent?: EquipmentComponent;
+}
+
+/** Export voucher row, extended with project-specific UI fields. */
+interface ExportRow extends Omit<Export, 'items' | 'soCode' | 'customer'> {
+  items: ExportRowItem[];
+  soCode?: string;
+  customer?: string;
+  projectId?: string;
+  projectName?: string;
+  recipientTeam?: string;
+  stage?: ProjectStage;
+  totalValue: number;
+  createdTime?: string;
+}
 
 interface FormItem {
   productId: string;
   qty: string;
-  equipmentComponent: 'xyclo' | 'pano' | 'hộp khói' | 'khác';
+  equipmentComponent: EquipmentComponent;
 }
 
 interface ExportForm {
   projectId: string;
   recipientTeam: string;
-  stage: 'Chế tạo' | 'Lắp đặt' | 'Hoàn thiện';
+  stage: ProjectStage;
   warehouseId: string;
   note: string;
   items: FormItem[];
@@ -42,24 +65,24 @@ const emptyForm: ExportForm = {
 };
 
 // Decorate mock exports with project-specific fields
-const decoratedExports = initialExports.map((exp, idx) => {
+const decoratedExports: ExportRow[] = initialExports.map((exp, idx) => {
   const proj = projects[idx % projects.length];
   return {
     ...exp,
     projectId: proj.id,
     projectName: proj.name,
     recipientTeam: idx % 2 === 0 ? 'Tổ lắp máy 1' : 'Tổ chế tạo 2',
-    stage: (idx % 2 === 0 ? 'Chế tạo' : 'Lắp đặt') as 'Chế tạo' | 'Lắp đặt' | 'Hoàn thiện',
+    stage: (idx % 2 === 0 ? 'Chế tạo' : 'Lắp đặt') as ProjectStage,
     // Add default unitPrice for price masking demonstration
     totalValue: exp.items.reduce((sum, it) => {
       const prod = products.find(p => p.sku === it.sku);
       return sum + (it.qty * (prod?.price || 100000));
     }, 0),
-    items: exp.items.map(it => ({
+    items: exp.items.map((it): ExportRowItem => ({
       ...it,
       unitPrice: products.find(p => p.sku === it.sku)?.price || 100000,
-      equipmentComponent: (idx % 3 === 0 ? 'xyclo' : idx % 3 === 1 ? 'pano' : 'hộp khói') as 'xyclo' | 'pano' | 'hộp khói' | 'khác'
-    }))
+      equipmentComponent: (idx % 3 === 0 ? 'xyclo' : idx % 3 === 1 ? 'pano' : 'hộp khói') as EquipmentComponent,
+    })),
   };
 });
 
@@ -67,12 +90,12 @@ const generateUniqueExportId = () => `ex-${Date.now()}`;
 const getLocaleDateString = () => new Date().toLocaleDateString('vi-VN');
 
 export default function ExportListPage() {
-  const [data, setData] = useState<any[]>(decoratedExports);
+  const [data, setData] = useState<ExportRow[]>(decoratedExports);
   const [activeTab, setActiveTab] = useState('all');
   const [search, setSearch] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<any | null>(null);
+  const [selectedItem, setSelectedItem] = useState<ExportRow | null>(null);
   const [form, setForm] = useState<ExportForm>({ ...emptyForm });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -149,7 +172,7 @@ export default function ExportListPage() {
 
     const totalValue = items.reduce((sum, it) => sum + (it.qty * it.unitPrice), 0);
 
-    const newItem = {
+    const newItem: ExportRow = {
       id: generateUniqueExportId(),
       voucherCode: generateCode('XK'),
       date: getLocaleDateString(),
@@ -174,12 +197,12 @@ export default function ExportListPage() {
     showToast('success', `Phiếu xuất kho ${newItem.voucherCode} đã được tạo!`, 'Tạo phiếu thành công');
   };
 
-  const handleConfirmExport = (item: any) => {
+  const handleConfirmExport = (item: ExportRow) => {
     setData(data.map(e => e.id === item.id ? { ...e, status: 'completed' as const } : e));
     showToast('success', `Đã xác nhận thực tế xuất kho ${item.voucherCode}. Tồn kho dự án đã được cập nhật.`, 'Xuất kho thành công');
   };
 
-  const handleCancel = (item: any) => {
+  const handleCancel = (item: ExportRow) => {
     if (item.status === 'completed') {
       showToast('error', 'Không thể hủy phiếu đã hoàn thành', 'Lỗi');
       return;
@@ -188,7 +211,7 @@ export default function ExportListPage() {
     showToast('warning', `Đã hủy phiếu xuất ${item.voucherCode}. Vật tư chờ xuất đã được giải phóng.`, 'Đã hủy phiếu');
   };
 
-  const handleApprove = (item: any) => {
+  const handleApprove = (item: ExportRow) => {
     setData(data.map(e => e.id === item.id ? { ...e, status: 'approved' as const } : e));
     showToast('success', `Đã duyệt phiếu ${item.voucherCode}`);
   };
@@ -201,7 +224,7 @@ export default function ExportListPage() {
     setForm({ ...form, items });
   };
 
-  const getActions = (item: any) => {
+  const getActions = (item: ExportRow) => {
     const a: { label?: string; icon?: LucideIcon; onClick?: () => void; danger?: boolean; divider?: boolean }[] = [
       { label: 'Xem chi tiết', icon: Eye, onClick: () => { setSelectedItem(item); setShowDetail(true); } },
     ];
@@ -227,7 +250,7 @@ export default function ExportListPage() {
       />
 
       {isStorekeeper && (
-        <div className="mb-4 bg-[rgba(103,80,164,0.06)] border border-[var(--md-outline-variant)] text-[var(--md-primary)] rounded-2xl p-4 text-xs font-semibold flex items-center gap-2">
+        <div className="mb-4 bg-[var(--tint-primary-soft)] border border-[var(--md-outline-variant)] text-[var(--md-primary)] rounded-2xl p-4 text-xs font-semibold flex items-center gap-2">
           <ShieldAlert size={16} />
           <span>VAI TRÒ THỦ KHO: Đơn giá và trị giá xuất kho được bảo mật, ẩn hoàn toàn.</span>
         </div>
@@ -259,7 +282,7 @@ export default function ExportListPage() {
               </thead>
               <tbody>
                 {filtered.map((exp) => (
-                  <tr key={exp.id} className="table-row cursor-pointer hover:bg-[rgba(103,80,164,0.04)]"
+                  <tr key={exp.id} className="table-row cursor-pointer hover:bg-[var(--tint-primary-weak)]"
                     onClick={() => { setSelectedItem(exp); setShowDetail(true); }}>
                     <td className="table-cell text-[var(--md-on-surface)]">{exp.date}</td>
                     <td className="table-cell font-bold text-[var(--md-primary)]">{exp.voucherCode}</td>
@@ -309,7 +332,7 @@ export default function ExportListPage() {
           </FormField>
 
           <FormField label="Giai đoạn thi công lắp ráp" required>
-            <select className="form-select" value={form.stage} onChange={e => setForm({ ...form, stage: e.target.value as any })}>
+            <select className="form-select" value={form.stage} onChange={e => setForm({ ...form, stage: e.target.value as ProjectStage })}>
               <option value="Chế tạo">Chế tạo cấu kiện</option>
               <option value="Lắp đặt">Lắp đặt cơ khí / Thiết bị</option>
               <option value="Hoàn thiện">Hoàn thiện hệ thống</option>
@@ -332,7 +355,7 @@ export default function ExportListPage() {
         </div>
 
         {form.projectId && (
-          <div className="bg-[rgba(103,80,164,0.04)] border border-[var(--md-outline-variant)] rounded-xl p-3 text-xs mb-4">
+          <div className="bg-[var(--tint-primary-weak)] border border-[var(--md-outline-variant)] rounded-xl p-3 text-xs mb-4">
             <h5 className="font-bold text-[var(--md-primary)] uppercase mb-1.5 flex items-center gap-1">
               <AlertTriangle size={13} />
               ĐỊNH BIÊN DỰ TOÁN BOM CHO DỰ ÁN ĐÃ CHỌN:
@@ -463,7 +486,7 @@ export default function ExportListPage() {
                 </tr>
               </thead>
               <tbody>
-                {selectedItem.items?.map((it: any, i: number) => (
+                {selectedItem.items?.map((it, i) => (
                   <tr key={i} className="border-b" style={{ borderColor: 'var(--md-outline-variant)' }}>
                     <td className="py-2">
                       <div className="font-bold">{it.name}</div>

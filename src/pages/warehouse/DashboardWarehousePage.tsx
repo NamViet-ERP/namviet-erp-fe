@@ -38,20 +38,22 @@ interface CategoryDataPoint {
 }
 
 const stockByCategory: CategoryDataPoint[] = [
-  { name: 'Máy nén trục vít', value: 420, color: '#386A20' }, // Success green
-  { name: 'Máy nén piston',   value: 280, color: '#005DB6' }, // Info blue
-  { name: 'Bình chứa khí',   value: 195, color: '#7A5100' }, // Warning amber
-  { name: 'Máy sấy khí',     value: 110, color: '#7D5260' }, // Tertiary red/pink
-  { name: 'Lọc khí',         value: 340, color: '#B3261E' }, // Error red
-  { name: 'Phụ kiện',        value: 560, color: '#625B71' }, // Secondary gray
+  { name: 'Máy nén trục vít', value: 420, color: 'var(--chart-3)' },
+  { name: 'Máy nén piston',   value: 280, color: 'var(--chart-2)' },
+  { name: 'Bình chứa khí',   value: 195, color: 'var(--chart-4)' },
+  { name: 'Máy sấy khí',     value: 110, color: 'var(--chart-5)' },
+  { name: 'Lọc khí',         value: 340, color: 'var(--chart-6)' },
+  { name: 'Phụ kiện',        value: 560, color: 'var(--chart-1)' },
 ];
+
+const chartSeries = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-5)', 'var(--chart-6)'];
 
 const stockByWarehouse: CategoryDataPoint[] = warehouses
   .filter(w => w.group === 'Kho chính' || w.group === 'Kho phụ')
   .map((w, i) => ({
     name: w.branch,
     value: w.totalStock,
-    color: ['#0E3063', '#005DB6', '#386A20', '#7D5260', '#B3261E'][i % 5],
+    color: chartSeries[i % chartSeries.length] as string,
   }));
 
 /* ── Recent activity ── */
@@ -64,11 +66,11 @@ interface ActivityItem {
 }
 
 const recentActivity: ActivityItem[] = [
-  { type: 'import',   label: 'Nhập kho #NK-2026089', value: '+240 sản phẩm', time: '8 phút trước',   accent: '#386A20' },
-  { type: 'export',   label: 'Xuất kho #XK-2026043', value: '-85 sản phẩm',  time: '32 phút trước',  accent: '#B3261E' },
-  { type: 'import',   label: 'Nhập kho #NK-2026088', value: '+120 sản phẩm', time: '1 giờ trước',    accent: '#386A20' },
-  { type: 'transfer', label: 'Chuyển kho #CK-001',   value: '60 sản phẩm',  time: '2 giờ trước',    accent: '#7A5100' },
-  { type: 'stocktake',label: 'Kiểm kê Kho HN-01',    value: '1,905 SKU',    time: '5 giờ trước',    accent: '#7D5260' },
+  { type: 'import',   label: 'Nhập kho #NK-2026089', value: '+240 sản phẩm', time: '8 phút trước',   accent: 'var(--status-success)' },
+  { type: 'export',   label: 'Xuất kho #XK-2026043', value: '-85 sản phẩm',  time: '32 phút trước',  accent: 'var(--status-error)' },
+  { type: 'import',   label: 'Nhập kho #NK-2026088', value: '+120 sản phẩm', time: '1 giờ trước',    accent: 'var(--status-success)' },
+  { type: 'transfer', label: 'Chuyển kho #CK-001',   value: '60 sản phẩm',  time: '2 giờ trước',    accent: 'var(--status-warning)' },
+  { type: 'stocktake',label: 'Kiểm kê Kho HN-01',    value: '1,905 SKU',    time: '5 giờ trước',    accent: 'var(--chart-5)' },
 ];
 
 /* ── MD3 Custom Tooltip ── */
@@ -129,7 +131,7 @@ const renderCustomLabel = (props: any) => {
   const x = cx + r * Math.cos(-midAngle * RADIAN);
   const y = cy + r * Math.sin(-midAngle * RADIAN);
   return (
-    <text x={x} y={y} fill="#ffffff" textAnchor="middle" dominantBaseline="central" fontSize={10} fontWeight={700} fontFamily="Roboto, sans-serif">
+    <text x={x} y={y} fill="var(--md-inverse-on-surface)" textAnchor="middle" dominantBaseline="central" fontSize={10} fontWeight={700} fontFamily="Roboto, sans-serif">
       {`${(percent * 100).toFixed(0)}%`}
     </text>
   );
@@ -211,7 +213,7 @@ export default function DashboardWarehousePage() {
           width: '400px',
           height: '400px',
           borderRadius: '50%',
-          background: 'rgba(14, 48, 99, 0.06)',
+          background: 'color-mix(in srgb, var(--md-primary) 6%, transparent)',
           filter: 'blur(100px)',
           pointerEvents: 'none',
           zIndex: 0,
@@ -226,7 +228,7 @@ export default function DashboardWarehousePage() {
           width: '350px',
           height: '350px',
           borderRadius: '50%',
-          background: 'rgba(125, 82, 96, 0.05)',
+          background: 'color-mix(in srgb, var(--md-secondary) 6%, transparent)',
           filter: 'blur(90px)',
           pointerEvents: 'none',
           zIndex: 0,
@@ -311,12 +313,12 @@ export default function DashboardWarehousePage() {
               <AreaChart data={trendData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="gradImport" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#386A20" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="#386A20" stopOpacity={0.02} />
+                    <stop offset="0%" stopColor="var(--status-success)" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="var(--status-success)" stopOpacity={0.02} />
                   </linearGradient>
                   <linearGradient id="gradExport" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#B3261E" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="#B3261E" stopOpacity={0.02} />
+                    <stop offset="0%" stopColor="var(--md-secondary)" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="var(--md-secondary)" stopOpacity={0.02} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="4 4" stroke="var(--md-outline-variant)" vertical={false} opacity={0.3} />
@@ -324,9 +326,9 @@ export default function DashboardWarehousePage() {
                 <YAxis stroke="transparent" tick={{ fill: 'var(--md-on-surface-variant)', fontSize: 11, fontFamily: 'Roboto, sans-serif' }} />
                 <Tooltip content={<CustomTooltip />} />
                 <Area type="monotone" dataKey="imports" name="Nhập kho"
-                  stroke="#386A20" strokeWidth={2} fill="url(#gradImport)" dot={false} activeDot={{ r: 5, fill: '#386A20', stroke: 'var(--md-surface)', strokeWidth: 1.5 }} />
+                  stroke="var(--status-success)" strokeWidth={2} fill="url(#gradImport)" dot={false} activeDot={{ r: 5, fill: 'var(--status-success)', stroke: 'var(--md-surface)', strokeWidth: 1.5 }} />
                 <Area type="monotone" dataKey="exports" name="Xuất kho"
-                  stroke="#B3261E" strokeWidth={2} fill="url(#gradExport)" dot={false} activeDot={{ r: 5, fill: '#B3261E', stroke: 'var(--md-surface)', strokeWidth: 1.5 }} />
+                  stroke="var(--md-secondary)" strokeWidth={2} fill="url(#gradExport)" dot={false} activeDot={{ r: 5, fill: 'var(--md-secondary)', stroke: 'var(--md-surface)', strokeWidth: 1.5 }} />
                 <Legend iconType="circle" iconSize={8}
                   formatter={v => <span style={{ fontFamily: 'Roboto, sans-serif', color: 'var(--md-on-surface-variant)', fontSize: 12 }}>{v}</span>} />
               </AreaChart>
@@ -377,7 +379,7 @@ export default function DashboardWarehousePage() {
                 tick={{ fill: 'var(--md-on-surface-variant)', fontSize: 10, fontFamily: 'Roboto, sans-serif' }}
                 angle={-15} textAnchor="end" interval={0} />
               <YAxis stroke="transparent" tick={{ fill: 'var(--md-on-surface-variant)', fontSize: 11, fontFamily: 'Roboto, sans-serif' }} />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(14, 48, 99, 0.04)' }} />
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--tint-primary-weak)' }} />
               <Bar dataKey="value" name="Tồn kho" radius={[4, 4, 0, 0]}>
                 {stockByWarehouse.map((e, i) => (
                   <Cell key={i} fill={e.color} />
@@ -443,7 +445,7 @@ export default function DashboardWarehousePage() {
               cursor: 'pointer',
               transition: 'all 200ms var(--md-easing)',
             }}
-            className="hover:bg-[rgba(14,48,99,0.08)] active:bg-[rgba(14,48,99,0.12)]"
+            className="hover:bg-[var(--tint-primary-hover)] active:bg-[var(--tint-primary-active)]"
             onClick={() => showToast('info', 'Hoạt động nhật ký đầy đủ đang được tải...', 'Nhật ký')}
           >
             Xem toàn bộ <ArrowUpRight size={14} />
@@ -454,10 +456,10 @@ export default function DashboardWarehousePage() {
       {/* ── Mini stat bar (bottom) ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px', position: 'relative', zIndex: 1 }}>
         {([
-          { label: 'Nhập hôm nay', value: '47 phiếu',   color: '#386A20', icon: TrendingUp },
-          { label: 'Xuất hôm nay', value: '31 phiếu',   color: '#7A5100', icon: ArrowUpRight },
-          { label: 'Chờ duyệt',    value: '12 phiếu',   color: '#B3261E', icon: Activity },
-          { label: 'SKU sắp hết',  value: '8 mặt hàng', color: '#7D5260', icon: Package },
+          { label: 'Nhập hôm nay', value: '47 phiếu',   color: 'var(--status-success)', icon: TrendingUp },
+          { label: 'Xuất hôm nay', value: '31 phiếu',   color: 'var(--status-warning)', icon: ArrowUpRight },
+          { label: 'Chờ duyệt',    value: '12 phiếu',   color: 'var(--status-error)',   icon: Activity },
+          { label: 'SKU sắp hết',  value: '8 mặt hàng', color: 'var(--chart-5)',        icon: Package },
         ] as MiniStat[]).map(s => (
           <div
             key={s.label}
@@ -480,7 +482,7 @@ export default function DashboardWarehousePage() {
                 justifyContent: 'center',
                 flexShrink: 0,
                 borderRadius: '8px',
-                background: `${s.color}15`,
+                background: `color-mix(in srgb, ${s.color} 12%, transparent)`,
               }}
             >
               <s.icon size={16} style={{ color: s.color }} />

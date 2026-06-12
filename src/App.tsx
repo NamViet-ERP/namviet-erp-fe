@@ -16,9 +16,13 @@ import SuppliersPage from './pages/warehouse/SuppliersPage';
 import BarcodePage from './pages/warehouse/BarcodePage';
 import StockListPage from './pages/warehouse/StockListPage';
 import MembersPage from './pages/members/MembersPage';
+import EmployeeDetailPage from './pages/members/EmployeeDetailPage';
 import UserProfilePage from './pages/profile/UserProfilePage';
 import LoginPage from './pages/auth/LoginPage';
-import CandidateListPage from './pages/members/CandidateListPage';
+import CandidateApplyPage from './pages/public/CandidateApplyPage';
+import EmployeeOnboardPage from './pages/public/EmployeeOnboardPage';
+import CandidateListPage from './pages/recruitment/CandidateListPage';
+import CandidateDetailPage from './pages/recruitment/CandidateDetailPage';
 
 // Stocktake pages
 import StocktakeListPage from './pages/stocktake/StocktakeListPage';
@@ -30,8 +34,9 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/recruitment/apply" element={<CandidateApplyPage />} />
+        <Route path="/employee/onboarding" element={<EmployeeOnboardPage />} />
         <Route element={<AppLayout />}>
-          {/* Redirect root to dashboard */}
           <Route path="/" element={<Navigate to="/warehouse/dashboard" replace />} />
 
           {/* Module 1: Kho hàng */}
@@ -49,11 +54,17 @@ export default function App() {
           <Route path="/warehouse/export" element={<ExportListPage />} />
           <Route path="/warehouse/settings" element={<SettingsPage />} />
 
-          {/* Module 3: Thành viên */}
+          {/* Module: Nhân viên */}
           <Route path="/members/list" element={<MembersPage />} />
-          <Route path="/members/recruits" element={<CandidateListPage />} />
+          <Route path="/members/:id" element={<EmployeeDetailPage />} />
 
-          {/* User profile */}
+          {/* Module: Tuyển dụng */}
+          <Route path="/recruitment/candidates" element={<CandidateListPage />} />
+          <Route path="/recruitment/candidates/:id" element={<CandidateDetailPage />} />
+
+          {/* Legacy redirect */}
+          <Route path="/members/recruits" element={<Navigate to="/recruitment/candidates" replace />} />
+
           <Route path="/profile" element={<UserProfilePage />} />
 
           {/* Module 2: Kiểm kê */}
@@ -61,7 +72,6 @@ export default function App() {
           <Route path="/stocktake/adjustment" element={<AdjustmentListPage />} />
           <Route path="/stocktake/settings" element={<StocktakeSettingsPage />} />
 
-          {/* Catch-all */}
           <Route path="*" element={<Navigate to="/warehouse/dashboard" replace />} />
         </Route>
       </Routes>

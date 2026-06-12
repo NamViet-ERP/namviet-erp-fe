@@ -10,53 +10,19 @@ const icons: Record<ToastType, LucideIcon> = {
   info:    Info,
 };
 
-const toastStyles = `
-@keyframes mdSlideInRight {
-  from { opacity: 0; transform: translateX(100%); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-@keyframes mdSlideOutRight {
-  from { opacity: 1; transform: translateX(0); }
-  to   { opacity: 0; transform: translateX(100%); }
-}
-@keyframes toastProgress {
-  from { width: 100%; }
-  to { width: 0%; }
-}
-`;
-
-if (typeof document !== 'undefined') {
-  const id = 'nv-toast-styles';
-  if (!document.getElementById(id)) {
-    const style = document.createElement('style');
-    style.id = id;
-    style.appendChild(document.createTextNode(toastStyles));
-    document.head.appendChild(style);
-  }
-}
-
 /* MD3 Snackbar uses inverse-surface for high contrast */
 const snackbarStyle: React.CSSProperties = {
   background:  'var(--md-inverse-surface)',
   color:       'var(--md-inverse-on-surface)',
 };
 
+/* Status accents tuned for the inverse-surface background (adapts to dark mode) */
 const iconColors: Record<ToastType, string> = {
-  success: '#72D44C',   /* bright green on dark bg */
-  error:   '#FFB4AB',   /* md error-container tone */
-  warning: '#FFD170',   /* warm amber on dark */
-  info:    '#A8C8FF',   /* light blue on dark */
+  success: 'var(--status-success-on-inverse)',
+  error:   'var(--status-error-on-inverse)',
+  warning: 'var(--status-warning-on-inverse)',
+  info:    'var(--status-info-on-inverse)',
 };
-
-const actionColors: Record<ToastType, string> = {
-  success: '#72D44C',
-  error:   '#FFB4AB',
-  warning: '#FFD170',
-  info:    '#A8C8FF',
-};
-
-// Suppress unused variable lint — actionColors is kept for reference/future use
-void actionColors;
 
 interface ToastItemProps {
   toast: Toast;
@@ -144,7 +110,7 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
           opacity: 0.7,
           transition: 'opacity 200ms, background 200ms',
         }}
-        onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; }}
+        onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.background = 'color-mix(in srgb, var(--md-inverse-on-surface) 14%, transparent)'; }}
         onMouseLeave={e => { e.currentTarget.style.opacity = '0.7'; e.currentTarget.style.background = 'transparent'; }}
       >
         <X size={16} />

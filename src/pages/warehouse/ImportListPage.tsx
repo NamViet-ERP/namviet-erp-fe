@@ -16,13 +16,31 @@ import EmptyState from '../../components/ui/EmptyState';
 import Modal from '../../components/ui/Modal';
 import FormField from '../../components/ui/FormField';
 import PageHeader from '../../components/ui/PageHeader';
-import type { Import } from '../../types';
+import type { Import, ImportItem } from '../../types';
+
+type EquipmentComponent = 'xyclo' | 'pano' | 'hộp khói' | 'khác';
+type ProjectStage = 'Chế tạo' | 'Lắp đặt' | 'Hoàn thiện';
+
+/** Import line decorated with project-specific equipment metadata. */
+interface ImportRowItem extends ImportItem {
+  equipmentComponent?: EquipmentComponent;
+}
+
+/** Import voucher row, extended with project-specific UI fields. */
+interface ImportRow extends Omit<Import, 'items'> {
+  items: ImportRowItem[];
+  invoiceNumber?: string;
+  dnttNumber?: string;
+  stage?: ProjectStage;
+  arisingReason?: string;
+  createdTime?: string;
+}
 
 interface FormItem {
   productId: string;
   qty: string;
   unitPrice: string;
-  equipmentComponent: 'xyclo' | 'pano' | 'hộp khói' | 'khác';
+  equipmentComponent: EquipmentComponent;
 }
 
 interface ImportForm {
@@ -47,23 +65,23 @@ const emptyForm: ImportForm = {
 };
 
 // Decorate mock data with project-specific attributes
-const decoratedImports = initialImports.map((imp, idx) => ({
+const decoratedImports: ImportRow[] = initialImports.map((imp, idx) => ({
   ...imp,
   invoiceNumber: `HD-2026-0${idx + 10}`,
   dnttNumber: `DNTT-2026-0${idx + 10}`,
-  stage: (idx % 2 === 0 ? 'Chế tạo' : 'Lắp đặt') as 'Chế tạo' | 'Lắp đặt' | 'Hoàn thiện',
+  stage: (idx % 2 === 0 ? 'Chế tạo' : 'Lắp đặt') as ProjectStage,
   arisingReason: idx === 3 ? 'Bổ sung vật tư lắp ráp xyclo phát sinh ngoài dự toán' : '',
-  items: imp.items.map(it => ({
+  items: imp.items.map((it): ImportRowItem => ({
     ...it,
-    equipmentComponent: (idx % 3 === 0 ? 'xyclo' : idx % 3 === 1 ? 'pano' : 'hộp khói') as 'xyclo' | 'pano' | 'hộp khói' | 'khác'
-  }))
+    equipmentComponent: (idx % 3 === 0 ? 'xyclo' : idx % 3 === 1 ? 'pano' : 'hộp khói') as EquipmentComponent,
+  })),
 }));
 
 const generateUniqueImportId = () => `im-${Date.now()}`;
 const getLocaleDateString = () => new Date().toLocaleDateString('vi-VN');
 
 export default function ImportListPage() {
-  const [data, setData] = useState<any[]>(decoratedImports);
+  const [data, setData] = useState<ImportRow[]>(decoratedImports);
   const [activeTab, setActiveTab] = useState('all');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -71,7 +89,7 @@ export default function ImportListPage() {
 
   const [showCreate, setShowCreate] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<any | null>(null);
+  const [selectedItem, setSelectedItem] = useState<ImportRow | null>(null);
   const [form, setForm] = useState<ImportForm>({ ...emptyForm });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -141,7 +159,7 @@ export default function ImportListPage() {
       };
     });
     const totalValue = items.reduce((sum, it) => sum + it.qty * it.unitPrice, 0);
-    const newItem = {
+    const newItem: ImportRow = {
       id: generateUniqueImportId(),
       voucherCode: generateCode('NK'),
       date: getLocaleDateString(),
@@ -242,7 +260,7 @@ export default function ImportListPage() {
       />
 
       {isStorekeeper && (
-        <div className="mb-4 bg-[rgba(103,80,164,0.06)] border border-[var(--md-outline-variant)] text-[var(--md-primary)] rounded-2xl p-4 text-xs font-semibold flex items-center gap-2">
+        <div className="mb-4 bg-[var(--tint-primary-soft)] border border-[var(--md-outline-variant)] text-[var(--md-primary)] rounded-2xl p-4 text-xs font-semibold flex items-center gap-2">
           <ShieldAlert size={16} />
           <span>VAI TRÒ THỦ KHO: Đơn giá và tổng giá trị tài chính đã được ẩn để bảo mật 100%.</span>
         </div>
@@ -279,13 +297,13 @@ export default function ImportListPage() {
               </thead>
               <tbody>
                 {paginated.map((imp) => (
-                  <tr key={imp.id} className="table-row cursor-pointer hover:bg-[rgba(103,80,164,0.04)]"
+                  <tr key={imp.id} className="table-row cursor-pointer hover:bg-[var(--tint-primary-weak)]"
                     onClick={() => { setSelectedItem(imp); setShowDetail(true); }}>
                     <td className="table-cell text-[var(--md-on-surface)]">{imp.date}</td>
                     <td className="table-cell font-bold text-[var(--md-primary)]">
                       <div>{imp.voucherCode}</div>
                       {imp.isDirectProcurement && (
-                        <span className="inline-block text-[9px] font-bold bg-[rgba(122,81,0,0.15)] text-[var(--md-warning)] px-2 py-0.5 rounded-full border border-[rgba(122,81,0,0.25)] mt-0.5">
+                        <span className="inline-block text-[9px] font-bold bg-[var(--tint-warning-soft)] text-[var(--md-warning)] px-2 py-0.5 rounded-full border border-[var(--tint-warning-border)] mt-0.5">
                           MUA TRỰC TIẾP DỰ ÁN
                         </span>
                       )}
@@ -383,7 +401,7 @@ export default function ImportListPage() {
           </FormField>
 
           <FormField label="Giai đoạn thi công dự án" required>
-            <select className="form-select" value={form.stage} onChange={e => setForm({ ...form, stage: e.target.value as any })}>
+            <select className="form-select" value={form.stage} onChange={e => setForm({ ...form, stage: e.target.value as ProjectStage })}>
               <option value="Chế tạo">Chế tạo phụ kiện & máy nén khí</option>
               <option value="Lắp đặt">Lắp đặt tại công trình</option>
               <option value="Hoàn thiện">Hoàn thiện kiểm thử & bàn giao</option>
@@ -549,7 +567,7 @@ export default function ImportListPage() {
                 <p className="font-semibold">{selectedItem.note || '—'}</p>
               </div>
               {selectedItem.arisingReason && (
-                <div className="col-span-2 md:col-span-3 bg-[rgba(235,143,0,0.08)] p-2 rounded border border-amber-500/20 text-amber-700">
+                <div className="col-span-2 md:col-span-3 bg-[var(--tint-warning-soft)] p-2 rounded border border-[var(--tint-warning-border)] text-[var(--status-warning)]">
                   <span className="text-[9px] font-bold block uppercase">Lý do phát sinh ngoài dự toán:</span>
                   <p className="font-semibold text-xs mt-0.5">{selectedItem.arisingReason}</p>
                 </div>
@@ -570,7 +588,7 @@ export default function ImportListPage() {
                 </tr>
               </thead>
               <tbody>
-                {selectedItem.items?.map((it: any, i: number) => (
+                {selectedItem.items?.map((it, i) => (
                   <tr key={i} className="border-b" style={{ borderColor: 'var(--md-outline-variant)' }}>
                     <td className="py-2">
                       <div className="font-bold">{it.name}</div>
