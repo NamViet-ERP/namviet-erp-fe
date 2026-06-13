@@ -354,7 +354,7 @@ export default function DashboardPage() {
           <div className="bg-[var(--md-surface-container)] rounded-lg border border-[var(--md-outline-variant)] shadow-sm overflow-hidden h-full flex flex-col">
             <div className="bg-[var(--nv-table-header-bg)] text-[var(--nv-table-header-text)] px-3.5 py-2">
               <h3 className="text-xs font-bold uppercase tracking-wider">
-                LỊCH SINH NHẬT NHÂN VIÊN TRONG THÁNG
+                LỊCH SINH NHẬT NHÂN VIÊN
               </h3>
             </div>
             
