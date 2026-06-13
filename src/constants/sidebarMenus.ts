@@ -33,6 +33,7 @@ export const stocktakeMenu: SidebarMenuItem[] = [
 
 export const recruitmentMenu: SidebarMenuItem[] = [
   { id: 'candidates-list', label: 'Danh sách ứng viên', icon: UserCheck, path: '/recruitment/candidates' },
+  { id: 'recruitment-settings', label: 'Thiết lập', icon: Settings, path: '/recruitment/settings' },
 ];
 
 export const membersMenu: SidebarMenuItem[] = [

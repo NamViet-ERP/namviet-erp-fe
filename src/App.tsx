@@ -23,6 +23,7 @@ import CandidateApplyPage from './pages/public/CandidateApplyPage';
 import EmployeeOnboardPage from './pages/public/EmployeeOnboardPage';
 import CandidateListPage from './pages/recruitment/CandidateListPage';
 import CandidateDetailPage from './pages/recruitment/CandidateDetailPage';
+import RecruitmentSettingsPage from './pages/recruitment/RecruitmentSettingsPage';
 
 // Stocktake pages
 import StocktakeListPage from './pages/stocktake/StocktakeListPage';
@@ -61,6 +62,7 @@ export default function App() {
           {/* Module: Tuyển dụng */}
           <Route path="/recruitment/candidates" element={<CandidateListPage />} />
           <Route path="/recruitment/candidates/:id" element={<CandidateDetailPage />} />
+          <Route path="/recruitment/settings" element={<RecruitmentSettingsPage />} />
 
           {/* Legacy redirect */}
           <Route path="/members/recruits" element={<Navigate to="/recruitment/candidates" replace />} />

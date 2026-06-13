@@ -7,7 +7,8 @@ import { showToast } from '../ui/Toast';
 import { getHrStaff } from '../../constants/systemUsers';
 import { candidatesService } from '../../services/candidatesService';
 import FormSectionHeader from '../hr/FormSectionHeader';
-import { RECRUITMENT_POSITIONS, RECRUITMENT_SOURCES, EDUCATION_LEVELS } from '../../constants/recruitment';
+import { RECRUITMENT_SOURCES, EDUCATION_LEVELS } from '../../constants/recruitment';
+import { useActivePositions } from '../../hooks/usePositions';
 
 const candidateSchema = z.object({
   fullName: z.string().min(2, 'Họ và tên phải có ít nhất 2 ký tự'),
@@ -36,6 +37,7 @@ export default function CandidateForm() {
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
+  const { data: positions = [] } = useActivePositions();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -295,7 +297,7 @@ export default function CandidateForm() {
           <label className="hrm-field__label">Vị trí ứng tuyển *</label>
           <select className={`hrm-field-select h-11${errors.position ? ' hrm-field-input--error' : ''}`} {...register('position')}>
             <option value="">-- Chọn vị trí ứng tuyển --</option>
-            {RECRUITMENT_POSITIONS.map(pos => (
+            {positions.map(pos => (
               <option key={pos} value={pos}>{pos}</option>
             ))}
           </select>

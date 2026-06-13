@@ -8,7 +8,8 @@ import HrmPanel from '../../components/hr/HrmPanel';
 import HrmStatCard from '../../components/hr/HrmStatCard';
 import { showToast } from '../../components/ui/Toast';
 import { useCandidates } from '../../hooks/useCandidates';
-import { RECRUITMENT_POSITIONS, RECRUITMENT_SOURCES } from '../../constants/recruitment';
+import { RECRUITMENT_SOURCES } from '../../constants/recruitment';
+import { usePositions } from '../../hooks/usePositions';
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('vi-VN', {
@@ -25,6 +26,7 @@ function birthYear(date: string) {
 export default function CandidateListPage() {
   const navigate = useNavigate();
   const { data: candidates = [], isLoading } = useCandidates();
+  const { data: positions = [] } = usePositions();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPosition, setSelectedPosition] = useState('');
   const [selectedSource, setSelectedSource] = useState('');
@@ -97,7 +99,7 @@ export default function CandidateListPage() {
             onChange={e => { setSelectedPosition(e.target.value); setPage(1); }}
           >
             <option value="">Tất cả vị trí</option>
-            {RECRUITMENT_POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}
+            {positions.map(p => <option key={p} value={p}>{p}</option>)}
           </select>
           <select
             className="form-select h-10 rounded-xl min-w-[140px]"

@@ -4,7 +4,8 @@ import { Edit, Save, X, FileText, Download } from 'lucide-react';
 import { showToast } from '../../components/ui/Toast';
 import { useCandidate, useUpdateCandidate } from '../../hooks/useCandidates';
 import { getHrStaff } from '../../constants/systemUsers';
-import { RECRUITMENT_POSITIONS, RECRUITMENT_SOURCES, EDUCATION_LEVELS } from '../../constants/recruitment';
+import { RECRUITMENT_SOURCES, EDUCATION_LEVELS } from '../../constants/recruitment';
+import { usePositions } from '../../hooks/usePositions';
 import DetailSection from '../../components/hr/DetailSection';
 import { FieldView, FieldInput, FieldSelect } from '../../components/hr/DetailFields';
 import { HrmDetailHeader } from '../../components/hr/HrmPageChrome';
@@ -15,6 +16,7 @@ export default function CandidateDetailPage() {
   const navigate = useNavigate();
   const { data: candidate, isLoading, isError } = useCandidate(id);
   const updateMutation = useUpdateCandidate();
+  const { data: positions = [] } = usePositions();
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState<Candidate | null>(null);
   const hrStaff = getHrStaff();
@@ -89,7 +91,7 @@ export default function CandidateDetailPage() {
               <FieldSelect label="Trình độ học vấn" value={form.education as string} onChange={v => set('education', v)} options={[...EDUCATION_LEVELS]} />
               <FieldInput label="Trường" value={form.school} onChange={v => set('school', v)} />
               <FieldInput label="Chuyên ngành" value={form.major} onChange={v => set('major', v)} />
-              <FieldSelect label="Vị trí ứng tuyển" value={form.position} onChange={v => set('position', v)} options={[...RECRUITMENT_POSITIONS]} />
+              <FieldSelect label="Vị trí ứng tuyển" value={form.position} onChange={v => set('position', v)} options={positions} />
               <FieldInput label="Số năm kinh nghiệm" value={form.experience} onChange={v => set('experience', v)} />
               <FieldSelect label="Nguồn ứng tuyển" value={form.source as string} onChange={v => set('source', v)} options={[...RECRUITMENT_SOURCES]} />
               <FieldSelect label="HR phụ trách" value={form.hrResponsible} onChange={v => set('hrResponsible', v)} options={hrStaff.map(h => h.name)} />

@@ -40,4 +40,7 @@ export const queryKeys = {
     all: ['adjustments'] as const,
     detail: (id: string) => ['adjustments', id] as const,
   },
+  positions: {
+    all: ['positions'] as const,
+  },
 } as const;
