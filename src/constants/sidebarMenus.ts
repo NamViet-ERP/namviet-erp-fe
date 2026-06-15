@@ -2,7 +2,7 @@ import type { SidebarMenuItem } from '../types';
 import {
   LayoutDashboard, Warehouse, ArrowLeftRight,
   PackagePlus, PackageMinus, Settings,
-  ClipboardCheck, SlidersHorizontal, CalendarRange, Scale, Truck, Barcode, Users, UserCheck
+  ClipboardCheck, SlidersHorizontal, CalendarRange, Scale, Truck, Barcode, Users, UserCheck, Briefcase
 } from 'lucide-react';
 
 export const warehouseMenu: SidebarMenuItem[] = [
@@ -33,6 +33,7 @@ export const stocktakeMenu: SidebarMenuItem[] = [
 
 export const recruitmentMenu: SidebarMenuItem[] = [
   { id: 'candidates-list', label: 'Danh sách ứng viên', icon: UserCheck, path: '/recruitment/candidates' },
+  { id: 'recruitment-positions', label: 'Vị trí tuyển dụng', icon: Briefcase, path: '/recruitment/positions' },
 ];
 
 export const membersMenu: SidebarMenuItem[] = [

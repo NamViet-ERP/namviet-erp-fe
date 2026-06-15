@@ -41,11 +41,13 @@ export default function AppLayout() {
 
   const hideSidebar = location.pathname === '/profile' || location.pathname === '/warehouse/dashboard';
 
+  const pageBackground = currentModule === 'members' || currentModule === 'recruitment' ? '#FFFFFF' : 'var(--md-surface)';
+
   return (
     <div
       style={{
         minHeight: '100vh',
-        background: 'var(--md-surface)',
+        background: pageBackground,
         color: 'var(--md-on-surface)',
         transition: 'background var(--md-duration) var(--md-easing), color var(--md-duration) var(--md-easing)',
       }}

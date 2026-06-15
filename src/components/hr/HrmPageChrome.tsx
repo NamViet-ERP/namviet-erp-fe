@@ -6,6 +6,7 @@ interface HrmPageChromeProps {
   title: string;
   subtitle?: string;
   actions?: ReactNode;
+  hideBackButton?: boolean;
 }
 
 export function HrmBackButton({ onBack, label = 'Quay lại' }: { onBack: () => void; label?: string }) {
@@ -17,10 +18,10 @@ export function HrmBackButton({ onBack, label = 'Quay lại' }: { onBack: () => 
   );
 }
 
-export function HrmDetailHeader({ onBack, title, subtitle, actions }: HrmPageChromeProps) {
+export function HrmDetailHeader({ onBack, title, subtitle, actions, hideBackButton }: HrmPageChromeProps) {
   return (
     <div className="hrm-detail-header">
-      <HrmBackButton onBack={onBack} />
+      {!hideBackButton && <HrmBackButton onBack={onBack} />}
       <div className="hrm-detail-header__row">
         <div className="hrm-detail-header__main">
           <h1 className="hrm-detail-header__title">{title}</h1>

@@ -591,6 +591,7 @@
     border: none;
     border-bottom: 1px solid var(--md-outline);
     /* border-radius: 4px 4px 0 0; */
+
     outline: none;
     transition: border-color 200ms var(--md-easing);
     width: 100%;
@@ -640,12 +641,12 @@
     background: var(--nv-table-header-bg);
     border-bottom: 1px solid var(--md-outline-variant);
     white-space: nowrap;
-    border: 1px solid #cedae6;
+    border: 1px solid var(--md-outline-variant02);
   }
   .table-row {
     border-bottom: 1px solid var(--md-outline-variant);
     transition: background-color 200ms var(--md-easing);
-    border: 1px solid #cedae6;
+    border: 1px solid var(--md-outline-variant02);
   }
   .table-row:hover {
     background: rgba(14, 48, 99, 0.05);
@@ -674,7 +675,7 @@
   }
 
   .hrm-panel {
-    background: var(--md-surface-container-high);
+    background: #FFFFFF;
     /*border: 1px solid var(--md-outline-variant);
     border-radius: 20px;
     box-shadow: var(--md-shadow-1);
@@ -759,9 +760,10 @@
   .hrm-filter-bar .hrm-field-select {
     min-width: 160px;
     height: 40px;
-    /* border-radius: 12px; */
-    border: 1px solid var(--md-outline-variant);
-    background: var(--md-surface-container);
+    border: none;
+    border-bottom: 1px solid var(--md-outline-variant);
+    background: transparent;
+    border-radius: 0;
     padding: 0 12px;
     font-size: 0.8125rem;
     color: var(--md-on-surface);
@@ -844,7 +846,7 @@
 
   .hrm-detail-section {
     background: var(--md-surface-container-high);
-    border: 1px solid var(--md-outline-variant);
+    border: 1px solid var(--md-outline-variant02);
     border-radius: 20px;
     box-shadow: var(--md-shadow-1);
     overflow: hidden;
@@ -868,6 +870,7 @@
   }
   .hrm-detail-section__body {
     padding: 20px;
+    background: #FFFFFF;
   }
 
   .hrm-field__label {
@@ -883,7 +886,7 @@
     display: block;
     font-size: 0.875rem;
     font-weight: 600;
-    color: var(--md-on-surface);
+    color: #2C5EAD;
     line-height: 1.45;
   }
   .hrm-field__error {
