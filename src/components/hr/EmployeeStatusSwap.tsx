@@ -22,10 +22,10 @@ const statusMeta: Record<EmployeeStatus, { dot: string; pillBg: string; pillText
     pillBorder: 'color-mix(in srgb, var(--status-error) 28%, transparent)',
   },
   'Thai sản': {
-    dot: 'var(--status-warning)',
-    pillBg: 'color-mix(in srgb, var(--md-warning-container) 55%, var(--md-surface-container-high))',
+    dot: 'var(--md-surface-variant_purple)',
+    pillBg: 'color-mix(in srgb, var(--md-surface-variant_purple) 55%, var(--md-surface-container-high))',
     pillText: 'var(--md-on-warning-container)',
-    pillBorder: 'color-mix(in srgb, var(--status-warning) 28%, transparent)',
+    pillBorder: 'color-mix(in srgb, var(--md-surface-variant_purple) 28%, transparent)',
   },
 };
 

@@ -36,6 +36,6 @@ export const recruitmentMenu: SidebarMenuItem[] = [
 ];
 
 export const membersMenu: SidebarMenuItem[] = [
-  { id: 'members-list', label: 'Danh sách thành viên', icon: Users, path: '/members/list' },
+  { id: 'members-list', label: 'Hồ sơ nhân sự', icon: Users, path: '/members/list' },
   { id: 'members-settings', label: 'Thiết lập quyền', icon: Settings, path: '/warehouse/settings' },
 ];

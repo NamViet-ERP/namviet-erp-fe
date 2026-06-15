@@ -68,7 +68,6 @@ export default function Pagination({ currentPage, totalPages, onPageChange, page
         justifyContent: 'space-between',
         marginTop: '16px',
         paddingTop: '12px',
-        borderTop: '1px solid var(--md-outline-variant)',
       }}
     >
       {/* Left: page size */}

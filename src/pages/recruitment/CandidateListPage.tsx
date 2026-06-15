@@ -64,18 +64,18 @@ export default function CandidateListPage() {
 
   return (
     <div className="hrm-page">
-      <PageHeader
+      {/* <PageHeader
         eyebrow="TUYỂN DỤNG"
         title="Danh sách ứng viên"
         subtitle="Quản lý hồ sơ ứng viên từ form nộp đơn công khai"
-      />
+      /> */}
 
       <div className="hrm-stat-grid">
         <HrmStatCard label="Tổng hồ sơ" value={candidates.length} icon={Users} tone="primary" />
         <HrmStatCard
           label="Đang hiển thị"
           value={filteredCandidates.length}
-          hint={hasFilters ? 'Đã lọc' : 'Tất cả'}
+          hint={hasFilters ? 'Đã lọc' : ''}
           icon={Filter}
           tone="neutral"
         />
@@ -92,7 +92,7 @@ export default function CandidateListPage() {
             />
           </div>
           <select
-            className="form-select h-10 rounded-xl min-w-[160px]"
+            className="form-select h-10 min-w-[160px]"
             value={selectedPosition}
             onChange={e => { setSelectedPosition(e.target.value); setPage(1); }}
           >
@@ -100,7 +100,7 @@ export default function CandidateListPage() {
             {RECRUITMENT_POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}
           </select>
           <select
-            className="form-select h-10 rounded-xl min-w-[140px]"
+            className="form-select h-10 min-w-[140px]"
             value={selectedSource}
             onChange={e => { setSelectedSource(e.target.value); setPage(1); }}
           >
@@ -110,17 +110,17 @@ export default function CandidateListPage() {
           <button
             type="button"
             onClick={resetFilters}
-            className="btn btn-outline h-10 px-3 flex items-center gap-2 rounded-xl"
+            className="h-10 px-3 flex items-center gap-2 rounded bg-[#fc2d42] text-white whitespace-nowrap btn-clear-filters"
             title="Đặt lại bộ lọc"
           >
             <RotateCcw size={15} />
-            <span className="hidden sm:inline">Đặt lại</span>
+            <span className="hidden sm:inline">XÓA BỘ LỌC</span>
           </button>
         </div>
       </HrmPanel>
 
       <HrmPanel noPadding>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto scrollbar">
           <table className="w-full min-w-max border-collapse hrm-table">
             <thead>
               <tr>
@@ -142,7 +142,7 @@ export default function CandidateListPage() {
                     onClick={() => navigate(`/recruitment/candidates/${cand.id}`)}
                   >
                     <td className="table-cell text-xs whitespace-nowrap text-center">{formatDate(cand.appliedAt)}</td>
-                    <td className="table-cell font-semibold whitespace-nowrap">{cand.fullName}</td>
+                    <td className="table-cell font-semibold whitespace-nowrap candidate-name">{cand.fullName}</td>
                     <td className="table-cell">{cand.phone}</td>
                     <td className="table-cell text-sm">{cand.email}</td>
                     <td className="table-cell text-center">{cand.gender}</td>
