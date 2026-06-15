@@ -10,7 +10,6 @@ export function useEmployees() {
   });
 }
 
-/** Chỉ nhân viên đang làm / thai sản — dùng cho dropdown chọn người. */
 export function useActiveEmployees() {
   return useQuery({
     queryKey: [...queryKeys.employees.all, 'active'],
@@ -21,11 +20,7 @@ export function useActiveEmployees() {
 export function useEmployee(id: string | undefined) {
   return useQuery({
     queryKey: queryKeys.employees.detail(id ?? ''),
-    queryFn: () => {
-      const found = employeesService.getById(id as string);
-      if (!found) throw new Error(`Không tìm thấy nhân viên ${id}`);
-      return found;
-    },
+    queryFn: () => employeesService.getById(id as string),
     enabled: Boolean(id),
   });
 }
@@ -33,7 +28,7 @@ export function useEmployee(id: string | undefined) {
 export function useCreateEmployee() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (dto: CreateEmployeeDto) => Promise.resolve(employeesService.create(dto)),
+    mutationFn: (dto: CreateEmployeeDto) => employeesService.create(dto),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.employees.all }),
   });
 }
@@ -42,7 +37,7 @@ export function useUpdateEmployee() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, dto }: { id: string; dto: UpdateEmployeeDto }) =>
-      Promise.resolve(employeesService.update(id, dto)),
+      employeesService.update(id, dto),
     onSuccess: (_data, { id }) => {
       qc.invalidateQueries({ queryKey: queryKeys.employees.all });
       qc.invalidateQueries({ queryKey: queryKeys.employees.detail(id) });

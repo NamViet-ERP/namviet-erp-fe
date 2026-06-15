@@ -11,7 +11,7 @@ import FormField from '../../components/ui/FormField';
 import { showToast } from '../../components/ui/Toast';
 
 const getProjectShortName = (name: string) => {
-  let cleaned = name.replace(/Dự án |Nhà máy |Sữa |Bia /g, '');
+  const cleaned = name.replace(/Dự án |Nhà máy |Sữa |Bia /g, '');
   const words = cleaned.split(' ');
   const firstWord = words[0].toUpperCase();
   if (['HEINEKEN', 'VINAMILK', 'SABECO', 'VINHOMES'].includes(firstWord)) {

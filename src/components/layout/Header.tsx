@@ -10,6 +10,8 @@ import type { ReactNode } from 'react';
 import { showToast } from '../ui/Toast';
 import { departments } from '../../constants/departments';
 import { getSessionUser, clearSessionUser } from '../../constants/systemUsers';
+import { authService } from '../../services/authService';
+import { USE_MOCK } from '../../lib/mock';
 import DepartmentCard from './DepartmentCard';
 import RoleSwitcher from './RoleSwitcher';
 
@@ -540,13 +542,15 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
                 </div>
               </div>
 
-              <RoleSwitcher
-                activeUserId={activeUserId}
-                onSwitch={() => {
-                  setShowUserMenu(false);
-                  window.location.reload();
-                }}
-              />
+              {USE_MOCK && (
+                <RoleSwitcher
+                  activeUserId={activeUserId}
+                  onSwitch={() => {
+                    setShowUserMenu(false);
+                    window.location.reload();
+                  }}
+                />
+              )}
 
               <div style={{ padding: '4px 0' }}>
                 <MenuBtn icon={User} label="Thông tin tài khoản" onClick={() => { navigate('/profile'); setShowUserMenu(false); }} />
@@ -554,7 +558,7 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
               </div>
               <div style={{ borderTop: '1px solid var(--md-outline-variant)', padding: '4px 0' }}>
                 <MenuBtn icon={LogOut} label="Đăng xuất" danger onClick={() => {
-                  localStorage.removeItem('nv-logged-in');
+                  authService.logout();
                   clearSessionUser();
                   setShowUserMenu(false);
                   navigate('/login');

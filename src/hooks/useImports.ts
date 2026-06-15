@@ -32,7 +32,10 @@ export function useUpdateImport() {
   return useMutation({
     mutationFn: ({ id, dto }: { id: string; dto: UpdateImportDto }) =>
       importsService.update(id, dto),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.imports.all }),
+    onSuccess: (_data, { id }) => {
+      qc.invalidateQueries({ queryKey: queryKeys.imports.all });
+      qc.invalidateQueries({ queryKey: queryKeys.imports.detail(id) });
+    },
   });
 }
 
@@ -40,7 +43,10 @@ export function useApproveImport() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => importsService.approve(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.imports.all }),
+    onSuccess: (_data, id) => {
+      qc.invalidateQueries({ queryKey: queryKeys.imports.all });
+      qc.invalidateQueries({ queryKey: queryKeys.imports.detail(id) });
+    },
   });
 }
 

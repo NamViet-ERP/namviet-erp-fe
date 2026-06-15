@@ -1,13 +1,15 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 
 /** Shared view/edit form state for HRM detail pages. */
 export function useEditableForm<T>(source: T | undefined) {
   const [isEditing, setIsEditing] = useState(false);
-  const [form, setForm] = useState<T | null>(null);
+  const [form, setForm] = useState<T | null>(source ? { ...source } : null);
+  const [prevSource, setPrevSource] = useState(source);
 
-  useEffect(() => {
-    if (source) setForm({ ...source });
-  }, [source]);
+  if (source !== prevSource) {
+    setPrevSource(source);
+    setForm(source ? { ...source } : null);
+  }
 
   const setField = useCallback(<K extends keyof T>(key: K, value: T[K]) => {
     setForm(prev => (prev ? { ...prev, [key]: value } : prev));

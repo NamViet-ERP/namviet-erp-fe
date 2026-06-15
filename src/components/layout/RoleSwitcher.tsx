@@ -3,7 +3,7 @@ import { Check, Search } from 'lucide-react';
 import { getLoginEligibleUsers, setSessionUser, type SystemUser } from '../../constants/systemUsers';
 
 interface RoleSwitcherProps {
-  activeUserId: string;
+  activeUserId?: string;
   onSwitch: (user: SystemUser) => void;
   /** Chỉ chọn trước khi đăng nhập — không ghi session */
   previewOnly?: boolean;

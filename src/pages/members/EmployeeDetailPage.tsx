@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { showToast } from '../../components/ui/Toast';
 import { useEmployee, useUpdateEmployee } from '../../hooks/useEmployees';
@@ -22,10 +22,12 @@ export default function EmployeeDetailPage() {
   const updateMutation = useUpdateEmployee();
   const { isEditing, setIsEditing, form, setField, cancelEdit } = useEditableForm(employee);
   const [codeError, setCodeError] = useState('');
+  const [prevEmployeeId, setPrevEmployeeId] = useState(employee?.id);
 
-  useEffect(() => {
+  if (employee?.id !== prevEmployeeId) {
+    setPrevEmployeeId(employee?.id);
     setCodeError('');
-  }, [employee]);
+  }
 
   if (isLoading) return <HrmLoadingState />;
   if (isError || !employee || !form) {
@@ -172,8 +174,8 @@ export default function EmployeeDetailPage() {
           )}
         </DetailFieldGrid>
         <DetailFieldGrid layout="two" className="mt-4">
-          <ImagePreview label="CCCD mặt trước" url={form.cccdFront?.previewUrl} fileName={form.cccdFront?.fileName} />
-          <ImagePreview label="CCCD mặt sau" url={form.cccdBack?.previewUrl} fileName={form.cccdBack?.fileName} />
+          <ImagePreview label="CCCD mặt trước" url={form.cccdFront?.previewUrl} fileName={form.cccdFront?.fileName} document />
+          <ImagePreview label="CCCD mặt sau" url={form.cccdBack?.previewUrl} fileName={form.cccdBack?.fileName} document />
         </DetailFieldGrid>
       </DetailSection>
 
@@ -216,7 +218,7 @@ export default function EmployeeDetailPage() {
           )}
         </DetailFieldGrid>
         <div className="mt-4">
-          <ImagePreview label="Ảnh bằng cấp" url={form.degreePhoto?.previewUrl} fileName={form.degreePhoto?.fileName} />
+          <ImagePreview label="Ảnh bằng cấp" url={form.degreePhoto?.previewUrl} fileName={form.degreePhoto?.fileName} document />
         </div>
       </DetailSection>
 

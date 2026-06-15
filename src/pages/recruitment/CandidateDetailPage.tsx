@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Edit, Save, X, FileText, Download } from 'lucide-react';
 import { showToast } from '../../components/ui/Toast';
@@ -18,12 +18,14 @@ export default function CandidateDetailPage() {
   const updateMutation = useUpdateCandidate();
   const { data: positions = [] } = usePositions();
   const [isEditing, setIsEditing] = useState(false);
-  const [form, setForm] = useState<Candidate | null>(null);
+  const [form, setForm] = useState<Candidate | null>(candidate ? { ...candidate } : null);
+  const [prevCandidate, setPrevCandidate] = useState(candidate);
   const hrStaff = getHrStaff();
 
-  useEffect(() => {
-    if (candidate) setForm({ ...candidate });
-  }, [candidate]);
+  if (candidate !== prevCandidate) {
+    setPrevCandidate(candidate);
+    setForm(candidate ? { ...candidate } : null);
+  }
 
   if (isLoading) return <div className="hrm-empty">Đang tải...</div>;
   if (isError || !candidate || !form) {
@@ -91,7 +93,7 @@ export default function CandidateDetailPage() {
               <FieldSelect label="Trình độ học vấn" value={form.education as string} onChange={v => set('education', v)} options={[...EDUCATION_LEVELS]} />
               <FieldInput label="Trường" value={form.school} onChange={v => set('school', v)} />
               <FieldInput label="Chuyên ngành" value={form.major} onChange={v => set('major', v)} />
-              <FieldSelect label="Vị trí ứng tuyển" value={form.position} onChange={v => set('position', v)} options={positions} />
+              <FieldSelect label="Vị trí ứng tuyển" value={form.position} onChange={v => set('position', v)} options={positions.map(p => p.name)} />
               <FieldInput label="Số năm kinh nghiệm" value={form.experience} onChange={v => set('experience', v)} />
               <FieldSelect label="Nguồn ứng tuyển" value={form.source as string} onChange={v => set('source', v)} options={[...RECRUITMENT_SOURCES]} />
               <FieldSelect label="HR phụ trách" value={form.hrResponsible} onChange={v => set('hrResponsible', v)} options={hrStaff.map(h => h.name)} />

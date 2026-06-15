@@ -1,4 +1,7 @@
 import { isAccountActiveForEmployee } from '../services/employeesService';
+import { USE_MOCK } from '../lib/mock';
+
+const SESSION_USER_KEY = 'nv-session-user';
 
 export type SystemUserRole = 'admin' | 'storekeeper' | 'accountant' | 'procurement' | 'pm' | 'hr';
 
@@ -15,7 +18,7 @@ export interface SystemUser {
 }
 
 export const systemUsers: SystemUser[] = [
-  { id: 'admin', username: 'tuan.nguyen', role: 'admin', name: 'Nguyễn Minh Tuấn', initials: 'AD', roleLabel: 'Quản trị viên', email: 'admin@namviet.vn' },
+  { id: 'admin', username: 'tuan.nguyen', role: 'admin', name: 'Nguyễn Minh Tuấn', initials: 'AD', roleLabel: 'Quản trị viên', email: 'tuan.nguyen@namviet.vn' },
   { id: 'storekeeper', username: 'vy.phan', role: 'storekeeper', name: 'Phan Văn Vỹ', initials: 'VV', roleLabel: 'Thủ kho (Storekeeper)', email: 'vy.phan@namviet.vn', employeeId: 'emp_1' },
   { id: 'accountant', username: 'hong.le', role: 'accountant', name: 'Lê Thị Hồng', initials: 'LH', roleLabel: 'Kế toán trưởng', email: 'hong.le@namviet.vn' },
   { id: 'procurement', username: 'chi.my', role: 'procurement', name: 'Mỹ Chi', initials: 'MC', roleLabel: 'Phòng mua hàng', email: 'chi.my@namviet.vn' },
@@ -44,8 +47,25 @@ export function getUserById(id: string): SystemUser | undefined {
   return systemUsers.find(u => u.id === id);
 }
 
-/** Phiên đăng nhập — ưu tiên id (phân biệt nhiều user cùng role, vd. 2 HR). */
+function readStoredSessionUser(): SystemUser | undefined {
+  const raw = localStorage.getItem(SESSION_USER_KEY);
+  if (!raw) return undefined;
+  try {
+    const parsed = JSON.parse(raw) as SystemUser;
+    if (parsed?.id && parsed?.username && parsed?.role) return parsed;
+  } catch {
+    /* ignore corrupt payload */
+  }
+  return undefined;
+}
+
+/** Phiên đăng nhập — ưu tiên JSON từ API; mock mode fallback systemUsers. */
 export function getSessionUser(): SystemUser | undefined {
+  const stored = readStoredSessionUser();
+  if (stored) return stored;
+
+  if (!USE_MOCK) return undefined;
+
   const userId = localStorage.getItem('nv-user-id');
   if (userId) {
     const byId = getUserById(userId);
@@ -57,17 +77,32 @@ export function getSessionUser(): SystemUser | undefined {
 }
 
 export function setSessionUser(user: SystemUser): void {
+  localStorage.setItem(SESSION_USER_KEY, JSON.stringify(user));
   localStorage.setItem('nv-user-id', user.id);
   localStorage.setItem('nv-user-role', user.role);
 }
 
 export function clearSessionUser(): void {
+  localStorage.removeItem(SESSION_USER_KEY);
   localStorage.removeItem('nv-user-id');
   localStorage.removeItem('nv-user-role');
 }
 
 export function getUserByUsername(username: string): SystemUser | undefined {
   return systemUsers.find(u => u.username === username);
+}
+
+/** Match username, full email, or local-part before @ (vd. vy.phan ↔ vy.phan@namviet.vn). */
+export function findUserByLogin(login: string): SystemUser | undefined {
+  const q = login.trim().toLowerCase();
+  if (!q) return undefined;
+  const localPart = q.includes('@') ? q.split('@')[0] : q;
+  return systemUsers.find(
+    u =>
+      u.username.toLowerCase() === q ||
+      u.email.toLowerCase() === q ||
+      u.username.toLowerCase() === localPart,
+  );
 }
 
 export function getRolesMap(): Record<string, Pick<SystemUser, 'name' | 'initials' | 'roleLabel' | 'email'>> {

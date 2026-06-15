@@ -3,50 +3,98 @@ import { useNavigate } from 'react-router-dom';
 import { Lock, User, Eye, EyeOff, ShieldAlert, FileText } from 'lucide-react';
 import { showToast } from '../../components/ui/Toast';
 import ToastContainer from '../../components/ui/Toast';
-import { systemUsers, getUserById, canUserLogin, setSessionUser } from '../../constants/systemUsers';
+import { getUserById, canUserLogin, setSessionUser, findUserByLogin } from '../../constants/systemUsers';
 import { getAccountLockReason } from '../../services/employeesService';
+import { authService } from '../../services/authService';
+import { USE_MOCK } from '../../lib/mock';
 import namvietGroupLogo from '../../assets/NamViet Group.png';
 import RoleSwitcher from '../../components/layout/RoleSwitcher';
 
+const HAS_API = Boolean(import.meta.env.VITE_API_BASE_URL?.trim());
+
 export default function LoginPage() {
-  const [username, setUsername] = useState('storekeeper');
-  const [password, setPassword] = useState('123456');
-  const [userId, setUserId] = useState('storekeeper');
-  const [rememberMe, setRememberMe] = useState(false);
+  const [username, setUsername] = useState(() => {
+    if (localStorage.getItem('nv-remember-me') === 'true') {
+      return localStorage.getItem('nv-saved-user') ?? '';
+    }
+    return '';
+  });
+  const [password, setPassword] = useState('');
+  const [mockUserId, setMockUserId] = useState('');
+  const [useMockQuickLogin, setUseMockQuickLogin] = useState(false);
+  const [rememberMe, setRememberMe] = useState(
+    () => localStorage.getItem('nv-remember-me') === 'true',
+  );
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username.trim() || !password.trim()) {
-      setError('Vui lòng điền đầy đủ tên đăng nhập và mật khẩu');
-      return;
-    }
-
     setLoading(true);
     setError('');
 
-    setTimeout(() => {
-      setLoading(false);
-      const user = getUserById(userId) ?? systemUsers.find(u => u.username === username);
-      if (user && !canUserLogin(user)) {
-        setError(getAccountLockReason(user.employeeId) ?? 'Tài khoản không còn hoạt động.');
-        return;
+    try {
+      if (USE_MOCK && useMockQuickLogin) {
+        if (!mockUserId) {
+          setError('Vui lòng chọn vai trò mô phỏng');
+          return;
+        }
+        await new Promise(r => setTimeout(r, 800));
+        const user = getUserById(mockUserId);
+        if (!user) {
+          setError('Không tìm thấy vai trò mô phỏng');
+          return;
+        }
+        if (!canUserLogin(user)) {
+          setError(getAccountLockReason(user.employeeId) ?? 'Tài khoản không còn hoạt động.');
+          return;
+        }
+        localStorage.setItem('nv-logged-in', 'true');
+        setSessionUser(user);
+      } else {
+        if (!username.trim() || !password.trim()) {
+          setError('Vui lòng điền đầy đủ email/tên đăng nhập và mật khẩu');
+          return;
+        }
+
+        if (HAS_API) {
+          await authService.loginFe(username.trim(), password);
+        } else if (USE_MOCK) {
+          await new Promise(r => setTimeout(r, 800));
+          const user = findUserByLogin(username);
+          if (!user) {
+            setError('Tài khoản không tồn tại');
+            return;
+          }
+          if (!canUserLogin(user)) {
+            setError(getAccountLockReason(user.employeeId) ?? 'Tài khoản không còn hoạt động.');
+            return;
+          }
+          localStorage.setItem('nv-logged-in', 'true');
+          setSessionUser(user);
+        } else {
+          setError('Chưa cấu hình API. Thêm VITE_API_BASE_URL=http://localhost:8080 vào file .env');
+          return;
+        }
       }
-      localStorage.setItem('nv-logged-in', 'true');
-      if (user) setSessionUser(user);
-      if (rememberMe) {
+
+      if (rememberMe && !useMockQuickLogin) {
         localStorage.setItem('nv-remember-me', 'true');
-        localStorage.setItem('nv-saved-user', username);
+        localStorage.setItem('nv-saved-user', username.trim());
       } else {
         localStorage.removeItem('nv-remember-me');
         localStorage.removeItem('nv-saved-user');
       }
       showToast('success', 'Chào mừng bạn quay trở lại hệ thống!', 'Đăng nhập thành công');
       navigate('/warehouse/dashboard');
-    }, 800);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Đăng nhập thất bại';
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -80,14 +128,17 @@ export default function LoginPage() {
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="hrm-field__label">Tên đăng nhập</label>
+              <label className="hrm-field__label">
+                {USE_MOCK ? 'Email hoặc tên đăng nhập' : 'Email'}
+              </label>
               <div className="relative">
                 <input
                   type="text"
                   className="form-input w-full h-12 pl-10 rounded-lg"
                   value={username}
                   onChange={e => setUsername(e.target.value)}
-                  placeholder="Nhập tên đăng nhập..."
+                  placeholder={USE_MOCK ? 'vd: vy.phan hoặc vy.phan@namviet.vn' : 'vd: tuan.nguyen@namviet.vn'}
+                  disabled={USE_MOCK && useMockQuickLogin}
                 />
                 <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--md-on-surface-variant)]" />
               </div>
@@ -102,6 +153,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   placeholder="Nhập mật khẩu..."
+                  disabled={USE_MOCK && useMockQuickLogin}
                 />
                 <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--md-on-surface-variant)]" />
                 <button
@@ -114,18 +166,39 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-[var(--md-outline-variant)] overflow-hidden bg-[var(--md-surface-container-low)]">
-              <RoleSwitcher
-                compact
-                embedded
-                previewOnly
-                activeUserId={userId}
-                onSwitch={user => {
-                  setUserId(user.id);
-                  setUsername(user.username);
-                }}
-              />
-            </div>
+            {USE_MOCK && (
+              <>
+                <label className="flex items-center gap-2 cursor-pointer text-sm">
+                  <input
+                    type="checkbox"
+                    checked={useMockQuickLogin}
+                    onChange={e => {
+                      setUseMockQuickLogin(e.target.checked);
+                      if (!e.target.checked) setMockUserId('');
+                    }}
+                    style={{ accentColor: 'var(--md-primary)' }}
+                  />
+                  <span className="text-[var(--md-on-surface-variant)] font-medium">
+                    Đăng nhập nhanh theo vai trò mô phỏng
+                  </span>
+                </label>
+
+                {useMockQuickLogin && (
+                  <div className="rounded-xl border border-[var(--md-outline-variant)] overflow-hidden bg-[var(--md-surface-container-low)]">
+                    <RoleSwitcher
+                      compact
+                      embedded
+                      previewOnly
+                      activeUserId={mockUserId || undefined}
+                      onSwitch={user => {
+                        setMockUserId(user.id);
+                        setUsername(user.email);
+                      }}
+                    />
+                  </div>
+                )}
+              </>
+            )}
 
             <div className="flex items-center justify-between text-sm pt-1">
               <label className="flex items-center gap-2 cursor-pointer">

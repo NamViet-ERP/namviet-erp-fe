@@ -139,7 +139,7 @@ export default function CandidateForm() {
     }
   };
 
-  const onSubmit = (data: CandidateFormValues) => {
+  const onSubmit = async (data: CandidateFormValues) => {
     if (!cvFile) {
       setFileError('Vui lòng tải lên file CV của bạn');
       return;
@@ -151,7 +151,7 @@ export default function CandidateForm() {
 
     // Save to localStorage simulated candidate database
     try {
-      candidatesService.create({
+      await candidatesService.create({
         fullName: data.fullName,
         phone: data.phone,
         email: data.email,

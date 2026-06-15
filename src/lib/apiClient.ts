@@ -67,10 +67,15 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   const data = isJson ? await response.json().catch(() => null) : null;
 
   if (!response.ok) {
-    const message =
-      (data && typeof data === 'object' && 'message' in data && typeof data.message === 'string')
-        ? data.message
-        : `Yêu cầu thất bại (HTTP ${response.status})`;
+    let message = `Yêu cầu thất bại (HTTP ${response.status})`;
+    if (data && typeof data === 'object') {
+      if ('message' in data && typeof data.message === 'string') message = data.message;
+      else if ('title' in data && typeof data.title === 'string') message = data.title;
+      else if ('detail' in data && typeof data.detail === 'string') message = data.detail;
+    } else if (!isJson) {
+      const text = await response.text().catch(() => '');
+      if (text.trim()) message = text.trim();
+    }
     throw new ApiError(message, response.status, data);
   }
 
@@ -88,4 +93,28 @@ export const apiClient = {
     request<T>(path, { method: 'PATCH', body }),
   delete: <T>(path: string) =>
     request<T>(path, { method: 'DELETE' }),
+
+  postForm: <T>(path: string, formData: FormData) => {
+    const token = authTokenProvider();
+    const url = buildUrl(path);
+    return fetch(url, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: formData,
+    }).then(async (response) => {
+      const isJson = response.headers.get('content-type')?.includes('application/json');
+      const data = isJson ? await response.json().catch(() => null) : null;
+      if (!response.ok) {
+        const message =
+          (data && typeof data === 'object' && 'message' in data && typeof data.message === 'string')
+            ? data.message
+            : `Yêu cầu thất bại (HTTP ${response.status})`;
+        throw new ApiError(message, response.status, data);
+      }
+      return data as T;
+    });
+  },
 };

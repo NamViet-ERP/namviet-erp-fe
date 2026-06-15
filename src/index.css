@@ -886,9 +886,18 @@
   .hrm-field-image {
     width: 128px;
     height: 128px;
-    object-fit: cover;
+    object-fit: contain;
+    object-position: center;
     border-radius: 12px;
     border: 1px solid var(--md-outline-variant);
+    background: var(--md-surface-container-low);
+  }
+  .hrm-field-image--document {
+    width: 100%;
+    max-width: 320px;
+    height: auto;
+    max-height: 200px;
+    aspect-ratio: 16 / 10;
   }
 
   .hrm-alert {
@@ -918,7 +927,9 @@
     width: 72px;
     height: 72px;
     border-radius: 50%;
-    object-fit: cover;
+    object-fit: contain;
+    object-position: center;
+    background: var(--md-surface-container-low);
     border: 2px solid color-mix(in srgb, var(--md-primary) 25%, transparent);
   }
 

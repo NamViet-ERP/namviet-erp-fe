@@ -38,12 +38,18 @@ export function FieldSelect({ label, value, onChange, options }: {
   );
 }
 
-export function ImagePreview({ label, url, fileName }: { label: string; url?: string; fileName?: string }) {
+export function ImagePreview({ label, url, fileName, document }: {
+  label: string; url?: string; fileName?: string; document?: boolean;
+}) {
   return (
     <div className="hrm-field">
       <span className="hrm-field__label">{label}</span>
       {url ? (
-        <img src={url} alt={label} className="hrm-field-image" />
+        <img
+          src={url}
+          alt={label}
+          className={`hrm-field-image${document ? ' hrm-field-image--document' : ''}`}
+        />
       ) : (
         <span className="hrm-field__value">{fileName || '—'}</span>
       )}

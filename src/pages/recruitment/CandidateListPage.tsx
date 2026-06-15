@@ -99,7 +99,7 @@ export default function CandidateListPage() {
             onChange={e => { setSelectedPosition(e.target.value); setPage(1); }}
           >
             <option value="">Tất cả vị trí</option>
-            {positions.map(p => <option key={p} value={p}>{p}</option>)}
+            {positions.map(p => <option key={p.name} value={p.name}>{p.name}</option>)}
           </select>
           <select
             className="form-select h-10 rounded-xl min-w-[140px]"

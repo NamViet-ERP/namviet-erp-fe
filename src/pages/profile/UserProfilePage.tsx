@@ -17,7 +17,7 @@ const profileByRole = {
       'Tạo mới và quản lý kho bãi, sơ đồ vị trí',
       'Quản lý danh sách thành viên và phân quyền truy cập',
       'Định cấu hình các định dạng mã chứng từ tự động',
-      'Xem tất cả báo cáo giá trị tồn kho và đối chiếu tài chính MISA'
+      'Xem tất cả báo cáo giá trị tồn kho và đối chiếu PO-GRN'
     ]
   },
   accountant: {
@@ -31,7 +31,7 @@ const profileByRole = {
     privileges: [
       'Xem chi tiết giá trị tồn kho tài chính',
       'Thực hiện đối chiếu chứng từ mua hàng PO với phiếu nhập GRN',
-      'Xem báo cáo chênh lệch kế toán MISA ERP và WMS',
+      'Xem báo cáo chênh lệch đơn giá PO so với dự toán',
       'Duyệt điều chỉnh số liệu chênh lệch sau kiểm kê',
       'Quản lý dữ liệu lịch sử giá trị nhập xuất của từng dự án'
     ]

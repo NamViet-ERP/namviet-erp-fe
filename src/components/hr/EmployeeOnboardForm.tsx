@@ -5,6 +5,8 @@ import * as z from 'zod';
 import { Upload, Trash2, CheckCircle2, ChevronRight } from 'lucide-react';
 import { showToast } from '../ui/Toast';
 import { employeesService } from '../../services/employeesService';
+import { filesService } from '../../services/filesService';
+import { USE_MOCK } from '../../lib/mock';
 import { removeVietnameseTones } from '../../lib/vietnamese';
 import FormSectionHeader from './FormSectionHeader';
 import { EDUCATION_LEVELS } from '../../constants/recruitment';
@@ -94,26 +96,49 @@ export default function EmployeeOnboardForm() {
   const toAttachment = (f: FileState | null) =>
     f ? { fileName: f.file.name, fileSize: (f.file.size / 1024).toFixed(0) + ' KB', previewUrl: f.preview } : undefined;
 
-  const onSubmit = (data: FormValues) => {
+  const onSubmit = async (data: FormValues) => {
     if (!profilePhoto) { showToast('error', 'Vui lòng tải ảnh hồ sơ'); return; }
     if (!cccdFront || !cccdBack) { showToast('error', 'Vui lòng tải ảnh CCCD mặt trước và mặt sau'); return; }
 
     try {
-      employeesService.create({
+      const sessionId = crypto.randomUUID();
+      let profileAtt = toAttachment(profilePhoto);
+      let cccdFrontAtt = toAttachment(cccdFront);
+      let cccdBackAtt = toAttachment(cccdBack);
+      let degreeAtt = degreePhoto ? toAttachment(degreePhoto) : undefined;
+
+      if (!USE_MOCK) {
+        const [profileUp, frontUp, backUp, degreeUp] = await Promise.all([
+          filesService.upload(profilePhoto.file, 'profile', { sessionId }),
+          filesService.upload(cccdFront.file, 'cccd-front', { sessionId }),
+          filesService.upload(cccdBack.file, 'cccd-back', { sessionId }),
+          degreePhoto
+            ? filesService.upload(degreePhoto.file, 'degree', { sessionId })
+            : Promise.resolve(null),
+        ]);
+        profileAtt = { fileName: profileUp.fileName, fileSize: `${Math.round(profileUp.fileSize / 1024)} KB`, previewUrl: profileUp.url };
+        cccdFrontAtt = { fileName: frontUp.fileName, fileSize: `${Math.round(frontUp.fileSize / 1024)} KB`, previewUrl: frontUp.url };
+        cccdBackAtt = { fileName: backUp.fileName, fileSize: `${Math.round(backUp.fileSize / 1024)} KB`, previewUrl: backUp.url };
+        if (degreeUp) {
+          degreeAtt = { fileName: degreeUp.fileName, fileSize: `${Math.round(degreeUp.fileSize / 1024)} KB`, previewUrl: degreeUp.url };
+        }
+      }
+
+      await employeesService.createOnboard({
         fullName: data.fullName,
         gender: data.gender,
         birthDate: data.birthDate,
         joinDate: data.joinDate,
         status: 'Đang làm',
-        profilePhoto: toAttachment(profilePhoto),
+        profilePhoto: profileAtt,
         cmndNumber: data.cmndNumber,
         cmndIssueDate: data.cmndIssueDate,
         cmndIssuePlace: data.cmndIssuePlace,
         cccdNumber: data.cccdNumber,
         cccdIssueDate: data.cccdIssueDate,
         cccdIssuePlace: data.cccdIssuePlace,
-        cccdFront: toAttachment(cccdFront),
-        cccdBack: toAttachment(cccdBack),
+        cccdFront: cccdFrontAtt,
+        cccdBack: cccdBackAtt,
         personalEmail: data.personalEmail,
         personalPhone: data.personalPhone,
         permanentAddress: data.permanentAddress,
@@ -121,7 +146,7 @@ export default function EmployeeOnboardForm() {
         education: data.education,
         school: data.school,
         major: data.major,
-        degreePhoto: toAttachment(degreePhoto),
+        degreePhoto: degreeAtt,
         maritalStatus: data.maritalStatus,
         bankAccountName: data.bankAccountName,
         bankAccountNumber: data.bankAccountNumber,
@@ -132,8 +157,9 @@ export default function EmployeeOnboardForm() {
       });
       setIsSubmitted(true);
       showToast('success', 'Thông tin đã được gửi thành công!');
-    } catch {
-      showToast('error', 'Có lỗi xảy ra, vui lòng thử lại');
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Có lỗi xảy ra, vui lòng thử lại';
+      showToast('error', msg);
     }
   };
 

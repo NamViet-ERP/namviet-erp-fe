@@ -1,5 +1,9 @@
+import { apiClient } from '../lib/apiClient';
+import { fromApi, toApi, type FeCandidateApiDto } from '../lib/hrm/candidateApiMapper';
+import { USE_MOCK, mockDelay } from '../lib/mock';
 import type { Candidate, CreateCandidateDto, UpdateCandidateDto } from '../types/hr';
 
+const ENDPOINT = '/api/candidates';
 const STORAGE_KEY = 'nv-candidate-data';
 
 const MOCK_INITIAL: Candidate[] = [
@@ -59,36 +63,59 @@ function writeStore(items: Candidate[]): void {
 }
 
 export const candidatesService = {
-  list(): Candidate[] {
-    return readStore();
+  async list(): Promise<Candidate[]> {
+    if (USE_MOCK) return mockDelay(readStore());
+    const items = await apiClient.get<FeCandidateApiDto[]>(ENDPOINT);
+    return items.map(fromApi);
   },
 
-  getById(id: string): Candidate | undefined {
-    return readStore().find(c => c.id === id);
+  async getById(id: string): Promise<Candidate> {
+    if (USE_MOCK) {
+      const found = readStore().find(c => c.id === id);
+      if (!found) throw new Error(`Không tìm thấy ứng viên ${id}`);
+      return mockDelay(found);
+    }
+    const dto = await apiClient.get<FeCandidateApiDto>(`${ENDPOINT}/${id}`);
+    return fromApi(dto);
   },
 
-  create(dto: CreateCandidateDto): Candidate {
-    const created: Candidate = {
-      ...dto,
-      id: 'cand_' + Date.now(),
-      appliedAt: new Date().toISOString(),
-    };
-    const items = readStore();
-    items.unshift(created);
-    writeStore(items);
-    return created;
+  async create(dto: CreateCandidateDto): Promise<Candidate> {
+    if (USE_MOCK) {
+      const created: Candidate = {
+        ...dto,
+        id: 'cand_' + Date.now(),
+        appliedAt: new Date().toISOString(),
+      };
+      const items = readStore();
+      items.unshift(created);
+      writeStore(items);
+      return mockDelay(created);
+    }
+    const payload = toApi(dto);
+    const res = await apiClient.post<FeCandidateApiDto>(ENDPOINT, payload);
+    return fromApi(res);
   },
 
-  update(id: string, dto: UpdateCandidateDto): Candidate {
-    const items = readStore();
-    const idx = items.findIndex(c => c.id === id);
-    if (idx === -1) throw new Error(`Không tìm thấy ứng viên ${id}`);
-    items[idx] = { ...items[idx], ...dto };
-    writeStore(items);
-    return items[idx];
+  async update(id: string, dto: UpdateCandidateDto): Promise<Candidate> {
+    if (USE_MOCK) {
+      const items = readStore();
+      const idx = items.findIndex(c => c.id === id);
+      if (idx === -1) throw new Error(`Không tìm thấy ứng viên ${id}`);
+      items[idx] = { ...items[idx], ...dto };
+      writeStore(items);
+      return mockDelay(items[idx]);
+    }
+    const payload = toApi({ ...dto, fullName: dto.fullName ?? '' } as CreateCandidateDto, id);
+    const res = await apiClient.put<FeCandidateApiDto>(`${ENDPOINT}/${id}`, payload);
+    return fromApi(res);
   },
 
-  remove(id: string): void {
-    writeStore(readStore().filter(c => c.id !== id));
+  async remove(id: string): Promise<void> {
+    if (USE_MOCK) {
+      writeStore(readStore().filter(c => c.id !== id));
+      await mockDelay(null);
+      return;
+    }
+    await apiClient.delete<void>(`${ENDPOINT}/${id}`);
   },
 };

@@ -1,40 +1,13 @@
+import { apiClient } from '../lib/apiClient';
+import { fromApi, toApi, type FeEmployeeApiDto } from '../lib/hrm/employeeApiMapper';
+import { USE_MOCK, mockDelay } from '../lib/mock';
 import type { CreateEmployeeDto, Employee, UpdateEmployeeDto } from '../types/hr';
 import { isActiveEmployee } from '../types/hr';
+import { getEmployeeLockReason, isActiveEmployeeStatus } from '../constants/employeeStatus';
+import { mockEmployees } from '../data/employees';
 
+const ENDPOINT = '/api/employees';
 const STORAGE_KEY = 'nv-employee-data';
-
-const MOCK_INITIAL: Employee[] = [
-  {
-    id: 'emp_1',
-    code: 'NV-0001',
-    fullName: 'Phan Văn Vỹ',
-    gender: 'Nam',
-    birthDate: '1990-03-12',
-    joinDate: '2022-03-12',
-    officialDate: '2022-09-12',
-    status: 'Đang làm',
-    segment: 'Sản xuất',
-    branch: 'Cần Thơ',
-    department: 'Kho bãi',
-    position: 'Thủ kho',
-    personalEmail: 'vy.phan@gmail.com',
-    personalPhone: '0901234567',
-  },
-  {
-    id: 'emp_2',
-    fullName: 'Nguyễn Thị Mai',
-    gender: 'Nữ',
-    birthDate: '1995-08-20',
-    joinDate: '2024-01-15',
-    status: 'Đang làm',
-    segment: 'Hành chính',
-    branch: 'TP. HCM',
-    department: 'Nhân sự',
-    position: 'Chuyên viên HCNS',
-    personalEmail: 'mai.nguyen@gmail.com',
-    personalPhone: '0988776655',
-  },
-];
 
 function readStore(): Employee[] {
   try {
@@ -43,25 +16,40 @@ function readStore(): Employee[] {
   } catch {
     /* ignore */
   }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(MOCK_INITIAL));
-  return [...MOCK_INITIAL];
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(mockEmployees));
+  return [...mockEmployees];
 }
 
 function writeStore(items: Employee[]): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
 }
 
-export function validateUniqueCode(code: string, excludeId?: string): boolean {
-  const normalized = code.trim().toUpperCase();
-  if (!normalized) return true;
-  return !readStore().some(
-    e => e.id !== excludeId && e.code?.trim().toUpperCase() === normalized
-  );
+export function cacheEmployeeStatus(employeeId: string, status: string): void {
+  localStorage.setItem(`nv-emp-status-${employeeId}`, status);
 }
 
-/** Kiểm tra tài khoản hệ thống còn được đăng nhập (theo hồ sơ nhân viên liên kết). */
+export async function validateUniqueCode(code: string, excludeId?: string): Promise<boolean> {
+  const normalized = code.trim().toUpperCase();
+  if (!normalized) return true;
+  if (USE_MOCK) {
+    return !readStore().some(
+      e => e.id !== excludeId && e.code?.trim().toUpperCase() === normalized,
+    );
+  }
+  const res = await apiClient.get<{ available: boolean }>(`${ENDPOINT}/check-code`, {
+    code: normalized,
+    excludeId: excludeId ?? '',
+  });
+  return res.available;
+}
+
 export function isAccountActiveForEmployee(employeeId?: string): boolean {
   if (!employeeId) return true;
+  if (!USE_MOCK) {
+    const cached = localStorage.getItem(`nv-emp-status-${employeeId}`);
+    if (cached) return isActiveEmployeeStatus(cached);
+    return true;
+  }
   const emp = readStore().find(e => e.id === employeeId);
   if (!emp) return true;
   return isActiveEmployee(emp);
@@ -69,63 +57,93 @@ export function isAccountActiveForEmployee(employeeId?: string): boolean {
 
 export function getAccountLockReason(employeeId?: string): string | null {
   if (!employeeId) return null;
+  if (!USE_MOCK) {
+    const cached = localStorage.getItem(`nv-emp-status-${employeeId}`);
+    return getEmployeeLockReason(cached);
+  }
   const emp = readStore().find(e => e.id === employeeId);
   if (!emp || isActiveEmployee(emp)) return null;
-  if (emp.status === 'Nghỉ việc') return 'Tài khoản đã bị khóa vì nhân viên đã nghỉ việc.';
-  return 'Tài khoản không còn hoạt động.';
+  return getEmployeeLockReason(emp.status);
 }
 
 export const employeesService = {
-  list(): Employee[] {
-    return readStore();
+  async list(): Promise<Employee[]> {
+    if (USE_MOCK) return mockDelay(readStore());
+    const items = await apiClient.get<FeEmployeeApiDto[]>(ENDPOINT);
+    return items.map(fromApi);
   },
 
-  getById(id: string): Employee | undefined {
-    return readStore().find(e => e.id === id);
+  async getById(id: string): Promise<Employee> {
+    if (USE_MOCK) {
+      const found = readStore().find(e => e.id === id);
+      if (!found) throw new Error(`Không tìm thấy nhân viên ${id}`);
+      return mockDelay(found);
+    }
+    const dto = await apiClient.get<FeEmployeeApiDto>(`${ENDPOINT}/${id}`);
+    cacheEmployeeStatus(id, dto.status);
+    return fromApi(dto);
   },
 
-  create(dto: CreateEmployeeDto): Employee {
-    const created: Employee = {
-      ...dto,
-      id: 'emp_' + Date.now(),
-      status: dto.status ?? 'Đang làm',
-    };
-    const items = readStore();
-    items.unshift(created);
-    writeStore(items);
-    return created;
+  async create(dto: CreateEmployeeDto): Promise<Employee> {
+    if (USE_MOCK) {
+      const created: Employee = {
+        ...dto,
+        id: 'emp_' + Date.now(),
+        status: dto.status ?? 'Đang làm',
+      };
+      const items = readStore();
+      items.unshift(created);
+      writeStore(items);
+      return mockDelay(created);
+    }
+    const payload = toApi(dto);
+    const res = await apiClient.post<FeEmployeeApiDto>(ENDPOINT, payload);
+    return fromApi(res);
   },
 
-  update(id: string, dto: UpdateEmployeeDto): Employee {
+  async createOnboard(dto: CreateEmployeeDto): Promise<Employee> {
+    if (USE_MOCK) return this.create(dto);
+    const payload = toApi(dto);
+    const res = await apiClient.post<FeEmployeeApiDto>(`${ENDPOINT}/onboard`, payload);
+    return fromApi(res);
+  },
+
+  async update(id: string, dto: UpdateEmployeeDto): Promise<Employee> {
     if (dto.code?.trim()) {
-      if (!validateUniqueCode(dto.code, id)) {
-        throw new Error('Mã nhân viên đã tồn tại');
+      const ok = await validateUniqueCode(dto.code, id);
+      if (!ok) throw new Error('Mã nhân viên đã tồn tại');
+    }
+    if (USE_MOCK) {
+      const items = readStore();
+      const idx = items.findIndex(e => e.id === id);
+      if (idx === -1) throw new Error(`Không tìm thấy nhân viên ${id}`);
+      const next: Employee = { ...items[idx], ...dto };
+      if (next.status === 'Nghỉ việc' && !next.resignDate) {
+        next.resignDate = new Date().toISOString().slice(0, 10);
       }
+      if (next.status === 'Đang làm') next.resignDate = undefined;
+      items[idx] = next;
+      writeStore(items);
+      return mockDelay(items[idx]);
     }
-    const items = readStore();
-    const idx = items.findIndex(e => e.id === id);
-    if (idx === -1) throw new Error(`Không tìm thấy nhân viên ${id}`);
-
-    const next: Employee = { ...items[idx], ...dto };
-    if (next.status === 'Nghỉ việc' && !next.resignDate) {
-      next.resignDate = new Date().toISOString().slice(0, 10);
-    }
-    if (next.status === 'Đang làm') {
-      next.resignDate = undefined;
-    }
-
-    items[idx] = next;
-    writeStore(items);
-    return items[idx];
+    const payload = toApi({ ...dto, fullName: dto.fullName ?? '' } as CreateEmployeeDto, id);
+    const res = await apiClient.put<FeEmployeeApiDto>(`${ENDPOINT}/${id}`, payload);
+    cacheEmployeeStatus(id, res.status);
+    return fromApi(res);
   },
 
-  /** Chỉ nhân viên đang làm / thai sản — dùng cho dropdown chọn người. */
-  listActive(): Employee[] {
-    return readStore().filter(isActiveEmployee);
+  async listActive(): Promise<Employee[]> {
+    if (USE_MOCK) return mockDelay(readStore().filter(isActiveEmployee));
+    const items = await apiClient.get<FeEmployeeApiDto[]>(ENDPOINT, { activeOnly: true });
+    return items.map(fromApi);
   },
 
-  getByIdIfActive(id: string): Employee | undefined {
-    const emp = readStore().find(e => e.id === id);
-    return emp && isActiveEmployee(emp) ? emp : undefined;
+  async getByIdIfActive(id: string): Promise<Employee | undefined> {
+    try {
+      const emp = await this.getById(id);
+      return isActiveEmployee(emp) ? emp : undefined;
+    } catch {
+      return undefined;
+    }
   },
 };
