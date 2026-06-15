@@ -71,6 +71,7 @@ export default function EmployeeDetailPage() {
     <div className="hrm-page w-full">
       <HrmDetailHeader
         onBack={() => navigate('/members/list')}
+        hideBackButton
         title={employee.fullName}
         subtitle={employee.code ? `Mã NV: ${employee.code}` : 'Chưa có mã nhân viên'}
         actions={
@@ -146,8 +147,8 @@ export default function EmployeeDetailPage() {
           )}
         </DetailFieldGrid>
         <div className="hrm-info-card mt-4">
-          <p className="hrm-info-card__label">Thâm niên (tự động)</p>
-          <p className="hrm-info-card__value">{seniority.years} năm {seniority.months} tháng {seniority.days} ngày</p>
+          <p className="hrm-info-card__label">⏳Thâm niên</p>
+          <p className="hrm-info-card__value" style={{ color: '#399918' }}>{seniority.years} năm {seniority.months} tháng {seniority.days} ngày</p>
         </div>
       </DetailSection>
 

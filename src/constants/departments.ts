@@ -24,7 +24,7 @@ export interface Department {
  */
 export const departments: Department[] = [
   {
-    title: 'KHO HÀNG',
+    title: 'KHO MAYZER',
     icon: Warehouse,
     items: [
       { label: 'Kho Hàng', icon: Warehouse, path: '/warehouse/dashboard-warehouse' },

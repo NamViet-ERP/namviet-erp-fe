@@ -14,7 +14,7 @@ export default function DepartmentCard({ dept, onItemClick }: DepartmentCardProp
     <div className="bg-[var(--md-surface-container)] rounded-lg border border-[var(--md-outline-variant)] p-3 shadow-sm">
       <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-[var(--md-outline-variant)]">
         <DeptIcon size={ICON_SIZE.base} className="text-[var(--md-secondary)]" />
-        <h3 className="text-[11.5px] font-bold text-[var(--md-primary)]">{dept.title}</h3>
+        <h3 className="text-[16px] font-bold text-[var(--md-primary)]">{dept.title}</h3>
       </div>
       <div className="flex flex-col gap-1.5">
         {dept.items.map((item) => {

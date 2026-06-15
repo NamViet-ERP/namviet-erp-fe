@@ -47,14 +47,9 @@ export default function MembersPage() {
 
   return (
     <div className="hrm-page">
-      <PageHeader
-        eyebrow="NHÂN SỰ"
-        title="Danh sách nhân viên"
-        subtitle="Quản lý hồ sơ toàn bộ nhân viên công ty"
-      />
 
       <div className="hrm-stat-grid">
-        <HrmStatCard label="Tổng nhân viên" value={employees.length} icon={Users} tone="primary" />
+        <HrmStatCard label="Tổng" value={employees.length} icon={Users} tone="primary" />
         <HrmStatCard label="Đang làm" value={stats.active} icon={UserCheck} tone="success" />
         <HrmStatCard label="Nghỉ việc" value={stats.resigned} icon={UserX} tone="warning" />
         <HrmStatCard label="Thai sản" value={stats.maternity} icon={Baby} tone="neutral" />
@@ -66,7 +61,7 @@ export default function MembersPage() {
             <SearchBar value={search} onChange={v => { setSearch(v); setPage(1); }} placeholder="Tìm theo tên, mã NV, bộ phận..." />
           </div>
           <select
-            className="form-select h-10 rounded-xl min-w-[150px]"
+            className="form-select h-10 min-w-[150px]"
             value={statusFilter}
             onChange={e => { setStatusFilter(e.target.value as EmployeeStatus | ''); setPage(1); }}
           >
@@ -99,7 +94,7 @@ export default function MembersPage() {
                     onClick={() => navigate(`/members/${emp.id}`)}
                   >
                     <td className="table-cell font-mono text-sm text-[var(--md-primary)]">{emp.code || '—'}</td>
-                    <td className="table-cell font-semibold">{emp.fullName}</td>
+                    <td className="table-cell font-semibold member-name">{emp.fullName}</td>
                     <td className="table-cell">{emp.gender}</td>
                     <td className="table-cell whitespace-nowrap">{fmtDate(emp.birthDate)}</td>
                     <td className="table-cell">{emp.segment || '—'}</td>

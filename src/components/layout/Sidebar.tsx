@@ -145,6 +145,8 @@ export default function Sidebar({ collapsed, onToggle, menuItems, currentModule 
     }
   }, [popoverItem, updateFlyoutPosition]);
 
+  const sidebarBackground = currentModule === 'members' || currentModule === 'recruitment' ? '#e5e7eb' : 'var(--md-surface-container)';
+
   return (
     <aside
       style={{
@@ -156,7 +158,7 @@ export default function Sidebar({ collapsed, onToggle, menuItems, currentModule 
         flexDirection: 'column',
         top: '64px',
         width: collapsed ? '48px' : '180px',
-        background: 'var(--md-surface-container)',
+        background: sidebarBackground,
         borderRight: '1px solid var(--md-outline-variant)',
         transition: 'width 300ms var(--md-easing)',
       }}

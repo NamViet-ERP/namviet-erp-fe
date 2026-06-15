@@ -75,8 +75,9 @@ export default function CandidateDetailPage() {
     <div className="hrm-page w-full">
       <HrmDetailHeader
         onBack={() => navigate('/recruitment/candidates')}
+        hideBackButton
         title={candidate.fullName}
-        subtitle={`Nộp hồ sơ: ${new Date(candidate.appliedAt).toLocaleString('vi-VN')}`}
+        subtitle={`Nộp hồ sơ _ ${new Date(candidate.appliedAt).toLocaleString('vi-VN')}`}
         actions={editActions}
       />
 
@@ -124,13 +125,13 @@ export default function CandidateDetailPage() {
               <p className="text-xs text-[var(--md-on-surface-variant)]">{form.cvFileSize}</p>
             </div>
           </div>
-          <button type="button" onClick={() => showToast('info', `Tải ${form.cvFileName}`, 'Tải CV')} className="btn btn-outline rounded-full text-sm flex items-center gap-2">
+          <button type="button" onClick={() => showToast('info', `Tải ${form.cvFileName}`, 'Tải CV')} className="btn btn-primary rounded-full text-sm flex items-center gap-2">
             <Download size={14} /> Tải CV
           </button>
         </div>
       </DetailSection>
 
-      <DetailSection title="Quy trình tuyển dụng (HR)" description="Theo dõi pipeline từ sơ tuyển đến nhận việc">
+      <DetailSection title="Quy trình tuyển dụng" description="Theo dõi từ sơ tuyển đến nhận việc">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {isEditing ? (
             <>
