@@ -258,12 +258,12 @@ export default function ExportListPage() {
 
       <div className="rounded-2xl shadow-card overflow-hidden" style={{ background: 'var(--md-surface-container)', border: '1px solid var(--md-outline-variant)' }}>
         <div className="px-4 pt-4"><TabFilter tabs={tabs} activeTab={activeTab} onChange={setActiveTab} /></div>
-        <div className="px-4 pb-3 flex items-center justify-end">
+        <div className="px-4 pb-3 flex items-center justify-end page-filter-bar">
           <SearchBar value={search} onChange={setSearch} placeholder="Tìm kiếm dự án, mã chứng từ, tổ nhận..." />
         </div>
 
         {filtered.length === 0 ? <EmptyState message="Không tìm thấy phiếu xuất kho dự án nào!" /> : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto table-scroll">
             <table className="w-full text-xs" style={{ minWidth: '1100px' }}>
               <thead>
                 <tr>
@@ -380,7 +380,7 @@ export default function ExportListPage() {
         </div>
         {errors.items && <p className="text-[var(--md-error)] text-xs mb-2">{errors.items}</p>}
         
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto table-scroll">
           <table className="form-table text-xs" style={{ minWidth: '950px' }}>
             <thead>
               <tr>

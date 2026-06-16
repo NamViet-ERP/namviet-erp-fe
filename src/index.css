@@ -346,13 +346,6 @@
     background: rgba(0, 142, 206, 0.35);
     color: var(--md-on-surface);
   }
-  .scrollbar::-webkit-scrollbar-thumb {
-    background: #DEDED1;
-  }
-
-  .scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #C5C7BC;
-  }
 }
 
 
@@ -589,14 +582,17 @@
     color: var(--md-on-surface);
     background: var(--md-surface-container-low);
     border: none;
-    border-bottom: 1px solid var(--md-outline);
-    /* border-radius: 4px 4px 0 0; */
-
+    border-bottom: 2px solid var(--md-outline-variant02);
     outline: none;
-    transition: border-color 200ms var(--md-easing);
+    box-sizing: border-box;
+    transition: border-color 200ms var(--md-easing), color 200ms var(--md-easing);
     width: 100%;
   }
-  .form-input-compact:focus { border-bottom: 2px solid var(--md-primary); }
+  .form-input-compact:focus {
+    color: #008ece;
+    border: 2px solid #008ece;
+    box-shadow: none;
+  }
   .form-input-compact::placeholder { color: var(--md-on-surface-variant); opacity: 0.7; }
 
   .form-select {
@@ -757,16 +753,39 @@
     align-items: center;
   }
   .hrm-filter-bar .form-select,
-  .hrm-filter-bar .hrm-field-select {
+  .hrm-filter-bar .hrm-field-select,
+  .page-filter-bar .form-select,
+  .page-filter-bar .hrm-field-input {
     min-width: 160px;
     height: 40px;
     border: none;
-    border-bottom: 1px solid var(--md-outline-variant);
+    border-bottom: 2px solid var(--md-outline-variant02);
     background: transparent;
     border-radius: 0;
     padding: 0 12px;
     font-size: 0.8125rem;
     color: var(--md-on-surface);
+    outline: none;
+    box-sizing: border-box;
+    cursor: pointer;
+    transition: border-color 200ms var(--md-easing), color 200ms var(--md-easing);
+  }
+  .page-filter-bar .form-select {
+    min-width: unset;
+    font-size: 0.875rem;
+    background: var(--md-surface-container-low);
+  }
+  .page-filter-bar .hrm-field-input {
+    min-width: unset;
+    cursor: text;
+  }
+  .hrm-filter-bar .form-select:focus,
+  .hrm-filter-bar .hrm-field-select:focus,
+  .page-filter-bar .form-select:focus,
+  .page-filter-bar .hrm-field-input:focus {
+    color: #008ece;
+    border: 2px solid #008ece;
+    box-shadow: none;
   }
 
   .hrm-table tbody tr:nth-child(even) {
@@ -784,6 +803,30 @@
   .hrm-table .candidate-name:hover,
   .hrm-table .member-name:hover {
     color: #0D5EA6;
+  }
+
+  .table-scroll,
+  .scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #84bed0 transparent;
+  }
+  .table-scroll::-webkit-scrollbar,
+  .scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .table-scroll::-webkit-scrollbar-track,
+  .scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .table-scroll::-webkit-scrollbar-thumb,
+  .scrollbar::-webkit-scrollbar-thumb {
+    background: #84bed0;
+    border-radius: 999px;
+  }
+  .table-scroll::-webkit-scrollbar-thumb:hover,
+  .scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #6ba8bd;
   }
 
   .hrm-empty {

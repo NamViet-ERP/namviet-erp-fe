@@ -99,7 +99,7 @@ export default function RecruitmentSettingsPage() {
             </form>
 
             {/* Search & Filter */}
-            <div className="relative mb-4">
+            <div className="relative mb-4 page-filter-bar">
               <span className="absolute inset-y-0 left-3 flex items-center text-[var(--md-on-surface-variant)]">
                 <Search size={16} />
               </span>
@@ -142,7 +142,7 @@ export default function RecruitmentSettingsPage() {
                       <button
                         type="button"
                         onClick={() => handleToggle(pos.name)}
-                        className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${pos.isActive ? 'bg-[var(--status-success)]' : 'bg-gray-400 dark:bg-gray-600'}`}
+                        className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${pos.isActive ? 'bg-[#92c348]' : 'bg-gray-400 dark:bg-gray-600'}`}
                         role="switch"
                         aria-checked={pos.isActive}
                         title={pos.isActive ? "Đang bật (Hiển thị)" : "Đang tắt (Ẩn)"}

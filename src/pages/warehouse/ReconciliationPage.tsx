@@ -236,7 +236,7 @@ export default function ReconciliationPage() {
               <h2 className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--md-on-surface)' }}>Bảng so sánh đơn giá chi tiết</h2>
             </div>
 
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto table-scroll">
               <table className="w-full text-xs text-left" style={{ minWidth: '850px' }}>
                 <thead>
                   <tr>

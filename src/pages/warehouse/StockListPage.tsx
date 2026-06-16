@@ -231,7 +231,7 @@ export default function StockListPage() {
 
       {/* Filter bar */}
       <div className="rounded-2xl shadow-card p-4" style={{ background: 'var(--md-surface-container)', border: '1px solid var(--md-outline-variant)' }}>
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div className="flex flex-col md:flex-row gap-4 items-center justify-between page-filter-bar">
           <div className="flex items-center gap-4 w-full md:w-auto">
             <select
               className="form-select w-full md:w-64 text-sm"
@@ -259,7 +259,7 @@ export default function StockListPage() {
           {filteredMatrix.length === 0 ? (
             <EmptyState message="Không tìm thấy dữ liệu tồn kho phù hợp!" />
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto table-scroll">
               <table className="w-full text-xs" style={{ minWidth: '1300px' }}>
                 <thead>
                   <tr style={{ borderBottom: '2px solid var(--md-outline-variant)' }}>
@@ -381,7 +381,7 @@ export default function StockListPage() {
           {filteredConsumables.length === 0 ? (
             <EmptyState message="Không tìm thấy định mức vật tư tiêu hao nào!" />
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto table-scroll">
               <table className="w-full text-xs" style={{ minWidth: '1000px' }}>
                 <thead>
                   <tr style={{ borderBottom: '2px solid var(--md-outline-variant)' }}>

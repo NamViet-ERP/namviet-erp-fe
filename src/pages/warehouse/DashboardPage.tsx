@@ -268,7 +268,7 @@ export default function DashboardPage() {
                 TOP 5 SẢN PHẨM ĐƯỢC BÁN NHIỀU NHẤT TRONG THÁNG
               </h3>
             </div>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto table-scroll">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-[var(--md-outline-variant)] bg-[var(--md-surface-container-high)]">
@@ -311,7 +311,7 @@ export default function DashboardPage() {
                 TOP 5 CÔNG CỤ VẬT TƯ ĐƯỢC BÁN NHIỀU NHẤT TRONG THÁNG
               </h3>
             </div>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto table-scroll">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-[var(--md-outline-variant)] bg-[var(--md-surface-container-high)]">

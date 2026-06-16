@@ -108,7 +108,7 @@ export default function WarehouseListPage() {
       />
 
       <div className="rounded-2xl shadow-card overflow-hidden" style={{ background: 'var(--md-surface-container)' }}>
-        <div className="p-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--md-outline-variant)' }}>
+        <div className="p-4 flex items-center justify-between page-filter-bar" style={{ borderBottom: '1px solid var(--md-outline-variant)' }}>
           <div className="flex items-center gap-2">
             <select className="form-select w-24 text-xs py-1.5" value={pageSize}
               onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }}>
@@ -120,7 +120,7 @@ export default function WarehouseListPage() {
         </div>
 
         {filtered.length === 0 ? <EmptyState message="Không tìm thấy kho hàng nào!" /> : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto table-scroll">
             <table className="w-full text-xs" style={{ minWidth: '950px' }}>
               <thead><tr>
                 <th className="table-header-cell">Mã kho</th>

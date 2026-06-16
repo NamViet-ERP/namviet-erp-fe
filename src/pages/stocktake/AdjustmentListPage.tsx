@@ -85,7 +85,7 @@ export default function AdjustmentListPage() {
 
       <div className="rounded-2xl shadow-card overflow-hidden" style={{ background: 'var(--md-surface-container)', border: '1px solid var(--md-outline-variant)' }}>
         <div className="px-4 pt-4"><TabFilter tabs={tabs} activeTab={activeTab} onChange={(id) => { setActiveTab(id); setPage(1); }} /></div>
-        <div className="px-4 pb-3 flex items-center justify-between">
+        <div className="px-4 pb-3 flex items-center justify-between page-filter-bar">
           <div className="flex items-center gap-2">
             <select className="form-select w-20 text-xs py-1.5" value={pageSize} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setPageSize(Number(e.target.value))}>
               {[10, 15, 25].map(n => <option key={n} value={n}>{n}</option>)}
@@ -95,7 +95,7 @@ export default function AdjustmentListPage() {
         </div>
 
         {paginated.length === 0 ? <EmptyState message="Không tìm thấy phiếu điều chỉnh nào!" /> : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto table-scroll">
             <table className="w-full">
               <thead><tr>
                 <th className="table-header-cell">Ngày chứng từ</th>

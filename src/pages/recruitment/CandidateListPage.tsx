@@ -122,7 +122,7 @@ export default function CandidateListPage() {
       </HrmPanel>
 
       <HrmPanel noPadding>
-        <div className="overflow-x-auto scrollbar">
+        <div className="overflow-x-auto table-scroll">
           <table className="w-full min-w-max border-collapse hrm-table">
             <thead>
               <tr>

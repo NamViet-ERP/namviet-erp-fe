@@ -158,7 +158,7 @@ export default function ExpectedImportsPage() {
               </span>
             </div>
 
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto table-scroll">
               <table className="w-full text-left text-xs" style={{ minWidth: '650px' }}>
                 <thead>
                   <tr>
