@@ -7,8 +7,10 @@ export default function EmployeeOnboardPage() {
     <>
       <PublicFormLayout
         wide
-        title="Khai báo thông tin nhân viên mới"
-        subtitle="Vui lòng điền đầy đủ thông tin cá nhân, liên hệ, học vấn và ngân hàng để hoàn tất hồ sơ nhân viên."
+        eyebrow="THÔNG TIN NHÂN VIÊN MỚI - NAM VIỆT GROUP"
+        eyebrowAsTitle
+        title="Cập nhật thông tin nhân viên"
+        subtitle="Vui lòng cung cấp đầy đủ và chính xác thông tin để hoàn tất hồ sơ nhân sự"
       >
         <EmployeeOnboardForm />
       </PublicFormLayout>

@@ -199,9 +199,8 @@ export default function CandidateForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-1">
+    <form onSubmit={handleSubmit(onSubmit)} className="candidate-apply-form space-y-1">
       <FormSectionHeader step={1} title="Thông tin ứng viên" />
-      <p className="text-xs text-[var(--md-on-surface-variant)] -mt-2 mb-4">Vui lòng cung cấp chính xác các thông tin dưới đây để chúng tôi liên hệ.</p>
 
       <div className="hrm-form-grid">
         <div>
@@ -209,7 +208,7 @@ export default function CandidateForm() {
           <input
             type="text"
             className={`hrm-field-input${errors.fullName ? ' hrm-field-input--error' : ''}`}
-            placeholder="Nhập họ và tên..."
+            placeholder="Nhập họ tên"
             {...register('fullName')}
           />
           {errors.fullName && <p className="hrm-field__error">{errors.fullName.message}</p>}
@@ -231,7 +230,7 @@ export default function CandidateForm() {
           <input
             type="tel"
             className={`hrm-field-input${errors.phone ? ' hrm-field-input--error' : ''}`}
-            placeholder="Ví dụ: 0912345678..."
+            placeholder="Nhập số điện thoại"
             {...register('phone')}
           />
           {errors.phone && <p className="hrm-field__error">{errors.phone.message}</p>}
@@ -241,7 +240,7 @@ export default function CandidateForm() {
           <input
             type="email"
             className={`hrm-field-input${errors.email ? ' hrm-field-input--error' : ''}`}
-            placeholder="Ví dụ: hoten@gmail.com..."
+            placeholder="Nhập email"
             {...register('email')}
           />
           {errors.email && <p className="hrm-field__error">{errors.email.message}</p>}
@@ -311,7 +310,7 @@ export default function CandidateForm() {
           <input
             type="text"
             className={`hrm-field-input${errors.school ? ' hrm-field-input--error' : ''}`}
-            placeholder="Nhập tên trường..."
+            placeholder="Nhập tên trường"
             {...register('school')}
           />
           {errors.school && <p className="hrm-field__error">{errors.school.message}</p>}
@@ -321,7 +320,7 @@ export default function CandidateForm() {
           <input
             type="text"
             className={`hrm-field-input${errors.major ? ' hrm-field-input--error' : ''}`}
-            placeholder="Nhập chuyên ngành..."
+            placeholder="Nhập chuyên ngành"
             {...register('major')}
           />
           {errors.major && <p className="hrm-field__error">{errors.major.message}</p>}
@@ -329,7 +328,7 @@ export default function CandidateForm() {
       </div>
 
       <div>
-        <label className="hrm-field__label">Số năm kinh nghiệm (Tùy chọn)</label>
+        <label className="hrm-field__label">Số năm kinh nghiệm *</label>
         <input
           type="text"
           className="hrm-field-input"
@@ -365,8 +364,10 @@ export default function CandidateForm() {
         </select>
         {errors.hrResponsible && <p className="hrm-field__error">{errors.hrResponsible.message}</p>}
       </div>
-
-      <FormSectionHeader step={3} title="Tải lên CV" />
+          
+      <div className="candidate-upload-header" style={{ marginTop: '16px' }}>
+        <FormSectionHeader step={3} title="Tải lên CV" />
+      </div>
       <div>
         <label className="hrm-field__label">File CV *</label>
 

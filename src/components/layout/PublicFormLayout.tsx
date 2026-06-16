@@ -3,13 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { LogIn } from 'lucide-react';
 
 interface PublicFormLayoutProps {
+  eyebrow?: string;
+  eyebrowAsTitle?: boolean;
   title: string;
-  subtitle: string;
+  subtitle?: string;
   children: ReactNode;
   wide?: boolean;
 }
 
-export default function PublicFormLayout({ title, subtitle, children, wide = false }: PublicFormLayoutProps) {
+export default function PublicFormLayout({ eyebrow, eyebrowAsTitle = false, title, subtitle, children, wide = false }: PublicFormLayoutProps) {
   const navigate = useNavigate();
 
   return (
@@ -26,12 +28,26 @@ export default function PublicFormLayout({ title, subtitle, children, wide = fal
           </button>
         </div>
 
-        <div className="text-center mb-8">
-          <p className="text-xs font-semibold uppercase tracking-widest text-[var(--md-primary)] mb-2">NamViet Group · HR</p>
-          <h1 className="text-3xl font-bold text-[var(--md-on-surface)] mb-2">{title}</h1>
-          <p className="text-sm text-[var(--md-on-surface-variant)] max-w-lg mx-auto leading-relaxed">
-            {subtitle}
-          </p>
+        <div className="mb-5">
+          {eyebrowAsTitle ? (
+            <h1 className="text-3xl font-bold text-[var(--md-primary)] uppercase text-center">{eyebrow ?? 'NAM VIỆT GROUP TUYỂN DỤNG'}</h1>
+          ) : (
+            eyebrow ? (
+              <p className="text-xs font-semibold uppercase tracking-widest text-[var(--md-primary)] mb-2 text-center">{eyebrow}</p>
+            ) : null
+          )}
+
+          {title && (
+            <h2 className={`${eyebrowAsTitle ? 'text-xl font-semibold uppercase text-left' : 'text-3xl font-bold text-[var(--md-on-surface)] mb-2 text-center'}`}>
+              {title}
+            </h2>
+          )}
+
+          {subtitle && (
+            <p className="text-sm text-[var(--md-on-surface-variant)] max-w-lg mx-auto leading-relaxed">
+              {subtitle}
+            </p>
+          )}
         </div>
 
         <div className="hrm-public-card">
