@@ -23,14 +23,14 @@ export default function DepartmentCard({ dept, onItemClick }: DepartmentCardProp
             <button
               key={item.label}
               onClick={() => onItemClick(item, dept)}
-              className="flex items-center justify-between w-full p-2 bg-[var(--md-surface-container-low)] hover:bg-[var(--nv-sidebar-item-hover)] border border-[var(--md-outline-variant)] hover:border-[var(--md-secondary)] rounded transition-all duration-md-fast text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--md-secondary)]"
+              className="mega-menu-item group flex items-center justify-between w-full p-2 bg-[var(--md-surface-container-low)] hover:bg-[var(--nv-sidebar-item-hover)] border border-[var(--md-outline-variant)] hover:border-[var(--md-secondary)] rounded transition-[background-color,border-color,color,transform] duration-md ease-md hover:translate-x-0.5 active:scale-[0.99] text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--md-secondary)]"
               style={{ outlineOffset: '2px', cursor: 'pointer' }}
             >
               <div className="flex items-center gap-2 overflow-hidden">
                 <ItemIcon size={ICON_SIZE.dense} className="text-[var(--md-on-surface-variant)] flex-shrink-0" />
                 <span className="text-[12px] font-medium text-[var(--md-on-surface)] truncate">{item.label}</span>
               </div>
-              <ChevronRight size={12} className="text-[var(--md-on-surface-variant)] flex-shrink-0 ml-1" />
+              <ChevronRight size={12} className="text-[var(--md-on-surface-variant)] flex-shrink-0 ml-1 transition-transform duration-md ease-md group-hover:translate-x-0.5" />
             </button>
           );
         })}

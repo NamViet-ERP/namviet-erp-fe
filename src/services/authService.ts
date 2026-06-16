@@ -2,11 +2,16 @@ import { apiClient, setAuthTokenProvider } from '../lib/apiClient';
 import { USE_MOCK } from '../lib/mock';
 import { cacheEmployeeStatus } from './employeesService';
 import type { SystemUser } from '../constants/systemUsers';
-import { setSessionUser, clearSessionUser } from '../constants/systemUsers';
+import { setSessionUser } from '../constants/systemUsers';
 import { getEmployeeLockReason } from '../constants/employeeStatus';
+import {
+  clearAuthSession as clearSession,
+  getStoredToken,
+  REFRESH_KEY,
+  TOKEN_KEY,
+} from '../lib/authSession';
 
-const TOKEN_KEY = 'nv-access-token';
-const REFRESH_KEY = 'nv-refresh-token';
+export { clearSession as clearAuthSession, getStoredToken };
 
 export interface FeAuthUserDto {
   id: string;
@@ -44,17 +49,6 @@ function lockReasonFromStatus(status?: string): string | null {
   return getEmployeeLockReason(status);
 }
 
-export function getStoredToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY);
-}
-
-export function clearAuthSession(): void {
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(REFRESH_KEY);
-  localStorage.removeItem('nv-logged-in');
-  clearSessionUser();
-}
-
 export function initAuthTokenProvider(): void {
   setAuthTokenProvider(getStoredToken);
 }
@@ -79,7 +73,7 @@ export const authService = {
   },
 
   logout(): void {
-    clearAuthSession();
+    clearSession();
   },
 
   isLoggedIn(): boolean {

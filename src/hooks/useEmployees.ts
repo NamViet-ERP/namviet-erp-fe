@@ -7,6 +7,8 @@ export function useEmployees() {
   return useQuery({
     queryKey: queryKeys.employees.all,
     queryFn: () => employeesService.list(),
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 }
 

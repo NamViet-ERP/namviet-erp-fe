@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Shield, Plus, Trash2, Search } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { showToast } from '../../components/ui/Toast';
 import { useRoles, useCreateRole, useDeleteRole, useToggleRoleStatus } from '../../hooks/useRoles';
 
@@ -13,6 +14,7 @@ export default function AdminSettingsPage() {
   const [label, setLabel] = useState('');
   const [code, setCode] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<{ code: string; label: string } | null>(null);
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,13 +47,12 @@ export default function AdminSettingsPage() {
     }
   };
 
-  const handleDelete = async (roleCode: string, roleLabel: string) => {
-    if (!window.confirm(`Bạn có chắc muốn xóa vai trò "${roleLabel}"?\n\nHành động này không thể hoàn tác.`)) {
-      return;
-    }
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
     try {
-      await deleteMutation.mutateAsync(roleCode);
-      showToast('success', `Đã xóa vai trò "${roleLabel}"`);
+      await deleteMutation.mutateAsync(deleteTarget.code);
+      showToast('success', `Đã xóa vai trò "${deleteTarget.label}"`);
+      setDeleteTarget(null);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Không thể xóa vai trò';
       showToast('error', message);
@@ -154,7 +155,7 @@ export default function AdminSettingsPage() {
 
                   <button
                     type="button"
-                    onClick={() => handleDelete(role.code, role.label)}
+                    onClick={() => setDeleteTarget({ code: role.code, label: role.label })}
                     className="text-[var(--md-error)] p-1 rounded-lg hover:bg-[var(--md-error-container)] transition-colors"
                     title="Xóa vai trò"
                   >
@@ -171,6 +172,24 @@ export default function AdminSettingsPage() {
           {searchTerm && <span>Tìm thấy: <strong>{filtered.length}</strong></span>}
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDeleteConfirm}
+        title="Xóa vai trò"
+        message={
+          <>
+            Bạn có chắc muốn xóa vai trò{' '}
+            <strong style={{ color: 'var(--md-on-surface)' }}>&ldquo;{deleteTarget?.label}&rdquo;</strong>?
+            <br />
+            <span style={{ fontSize: '0.8125rem', opacity: 0.85 }}>Hành động này không thể hoàn tác.</span>
+          </>
+        }
+        confirmLabel="Xóa vĩnh viễn"
+        cancelLabel="Hủy bỏ"
+        isLoading={deleteMutation.isPending}
+      />
     </div>
   );
 }

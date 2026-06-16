@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import {
   addMonths,
@@ -59,6 +59,43 @@ function resolveYearRange(min?: string, max?: string, yearFrom?: number, yearTo?
   return { from: Math.min(from, to), to: Math.max(from, to) };
 }
 
+const POPOVER_GAP = 6;
+const VIEWPORT_PADDING = 8;
+const POPOVER_WIDTH = 320;
+
+type PopoverLayout = {
+  top: number;
+  left: number;
+  width: number;
+  maxHeight: number;
+  placement: 'top' | 'bottom';
+};
+
+function computePopoverLayout(trigger: HTMLElement, popover: HTMLElement): PopoverLayout {
+  const triggerRect = trigger.getBoundingClientRect();
+  const popoverHeight = popover.offsetHeight || 380;
+  const width = Math.min(POPOVER_WIDTH, window.innerWidth - VIEWPORT_PADDING * 2);
+
+  const spaceBelow = window.innerHeight - triggerRect.bottom - POPOVER_GAP - VIEWPORT_PADDING;
+  const spaceAbove = triggerRect.top - POPOVER_GAP - VIEWPORT_PADDING;
+  const placement: 'top' | 'bottom' =
+    spaceBelow >= popoverHeight || spaceBelow >= spaceAbove ? 'bottom' : 'top';
+  const maxHeight = Math.max(180, placement === 'bottom' ? spaceBelow : spaceAbove);
+
+  const top =
+    placement === 'bottom'
+      ? triggerRect.bottom + POPOVER_GAP
+      : Math.max(VIEWPORT_PADDING, triggerRect.top - POPOVER_GAP - Math.min(popoverHeight, maxHeight));
+
+  let left = triggerRect.left;
+  if (left + width > window.innerWidth - VIEWPORT_PADDING) {
+    left = window.innerWidth - VIEWPORT_PADDING - width;
+  }
+  left = Math.max(VIEWPORT_PADDING, left);
+
+  return { top, left, width, maxHeight, placement };
+}
+
 export default function HrmDatePicker({
   value = '',
   onChange,
@@ -74,12 +111,17 @@ export default function HrmDatePicker({
 }: HrmDatePickerProps) {
   const listId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
+  const [popoverLayout, setPopoverLayout] = useState<PopoverLayout | null>(null);
   const [quickInput, setQuickInput] = useState('');
   const [quickError, setQuickError] = useState('');
   const selected = parseIsoDate(value);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
 
   const [viewMonth, setViewMonth] = useState(() =>
     selected
@@ -102,6 +144,7 @@ export default function HrmDatePicker({
     const onDocClick = (e: MouseEvent) => {
       if (!rootRef.current?.contains(e.target as Node)) {
         setOpen(false);
+        setPopoverLayout(null);
         onBlur?.();
       }
     };
@@ -109,18 +152,44 @@ export default function HrmDatePicker({
     return () => document.removeEventListener('mousedown', onDocClick);
   }, [open, onBlur]);
 
-  useEffect(() => {
-    if (selected) {
-      setViewMonth(new Date(selected.getFullYear(), selected.getMonth(), 1));
-    }
-  }, [value]);
+  useLayoutEffect(() => {
+    if (!open || !rootRef.current || !popoverRef.current) return;
 
-  useEffect(() => {
+    const updateLayout = () => {
+      if (!rootRef.current || !popoverRef.current) return;
+      setPopoverLayout(computePopoverLayout(rootRef.current, popoverRef.current));
+    };
+
+    updateLayout();
+    window.addEventListener('resize', updateLayout);
+    window.addEventListener('scroll', updateLayout, true);
+    return () => {
+      window.removeEventListener('resize', updateLayout);
+      window.removeEventListener('scroll', updateLayout, true);
+    };
+  }, [open, viewMonth, value, quickError]);
+
+  const closePopover = useCallback(() => {
+    setOpen(false);
+    setPopoverLayout(null);
+  }, []);
+
+  const handleToggleOpen = useCallback(() => {
+    if (disabled) return;
     if (open) {
-      setQuickInput(value ? isoToDisplay(value) : '');
-      setQuickError('');
+      closePopover();
+      return;
     }
-  }, [open, value]);
+    const sel = parseIsoDate(value);
+    setViewMonth(
+      sel
+        ? new Date(sel.getFullYear(), sel.getMonth(), 1)
+        : new Date(today.getFullYear(), today.getMonth(), 1),
+    );
+    setQuickInput(value ? isoToDisplay(value) : '');
+    setQuickError('');
+    setOpen(true);
+  }, [closePopover, disabled, open, today, value]);
 
   const cells = buildMonthGrid(viewMonth);
   const viewYear = viewMonth.getFullYear();
@@ -129,14 +198,14 @@ export default function HrmDatePicker({
   const pick = (date: Date) => {
     if (!isWithinBounds(date, min, max)) return;
     onChange(toIsoDate(date));
-    setOpen(false);
+    closePopover();
     onBlur?.();
   };
 
   const clear = (e: React.MouseEvent) => {
     e.stopPropagation();
     onChange('');
-    setOpen(false);
+    closePopover();
     onBlur?.();
   };
 
@@ -177,7 +246,7 @@ export default function HrmDatePicker({
         type="button"
         disabled={disabled}
         className={`hrm-date-picker__trigger hrm-field-input ${error ? 'hrm-field-input--error' : ''} ${open ? 'hrm-date-picker__trigger--open' : ''}`}
-        onClick={() => !disabled && setOpen(v => !v)}
+        onClick={handleToggleOpen}
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={listId}
@@ -189,7 +258,23 @@ export default function HrmDatePicker({
       </button>
 
       {open && (
-        <div id={listId} className="hrm-date-picker__popover" role="dialog" aria-label="Chọn ngày">
+        <div
+          ref={popoverRef}
+          id={listId}
+          className="hrm-date-picker__popover hrm-date-picker__popover--floating"
+          role="dialog"
+          aria-label="Chọn ngày"
+          style={
+            popoverLayout
+              ? {
+                  top: popoverLayout.top,
+                  left: popoverLayout.left,
+                  width: popoverLayout.width,
+                  maxHeight: popoverLayout.maxHeight,
+                }
+              : { visibility: 'hidden' as const }
+          }
+        >
           <div className="hrm-date-picker__quick">
             <input
               type="text"

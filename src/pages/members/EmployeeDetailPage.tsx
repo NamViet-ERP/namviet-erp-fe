@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { showToast } from '../../components/ui/Toast';
 import { useEmployee, useUpdateEmployee } from '../../hooks/useEmployees';
+import { getSuggestedEmployeeCode } from '../../services/employeesService';
+import { employeeCodeNextHint } from '../../lib/hrm/suggestedEmployeeCode';
 import { useEditableForm } from '../../hooks/useEditableForm';
 import { getSystemUserByEmployeeId } from '../../constants/systemUsers';
 import { EMPLOYEE_STATUSES } from '../../constants/recruitment';
@@ -20,14 +22,32 @@ export default function EmployeeDetailPage() {
   const navigate = useNavigate();
   const { data: employee, isLoading, isError } = useEmployee(id);
   const updateMutation = useUpdateEmployee();
-  const { isEditing, setIsEditing, form, setField, cancelEdit } = useEditableForm(employee);
+  const { isEditing, setIsEditing, form, setForm, setField, cancelEdit } = useEditableForm(employee);
   const [codeError, setCodeError] = useState('');
+  const [codeHint, setCodeHint] = useState('');
   const [prevEmployeeId, setPrevEmployeeId] = useState(employee?.id);
 
   if (employee?.id !== prevEmployeeId) {
     setPrevEmployeeId(employee?.id);
     setCodeError('');
+    setCodeHint('');
   }
+
+  const handleEdit = async () => {
+    if (!form) return;
+    if (!form.code?.trim() && id) {
+      try {
+        const suggested = await getSuggestedEmployeeCode(id);
+        setForm({ ...form, code: suggested });
+        setCodeHint(employeeCodeNextHint(suggested));
+      } catch {
+        setCodeHint('');
+      }
+    } else {
+      setCodeHint('');
+    }
+    setIsEditing(true);
+  };
 
   if (isLoading) return <HrmLoadingState />;
   if (isError || !employee || !form) {
@@ -71,15 +91,14 @@ export default function EmployeeDetailPage() {
     <div className="hrm-page w-full">
       <HrmDetailHeader
         onBack={() => navigate('/members/list')}
-        hideBackButton
         title={employee.fullName}
         subtitle={employee.code ? `Mã NV: ${employee.code}` : 'Chưa có mã nhân viên'}
         actions={
           <HrmEditActions
             isEditing={isEditing}
             isSaving={updateMutation.isPending}
-            onEdit={() => setIsEditing(true)}
-            onCancel={() => { cancelEdit(); setCodeError(''); }}
+            onEdit={handleEdit}
+            onCancel={() => { cancelEdit(); setCodeError(''); setCodeHint(''); }}
             onSave={handleSave}
           />
         }
@@ -105,6 +124,9 @@ export default function EmployeeDetailPage() {
           {isEditing ? (
             <>
               <FieldInput label="Mã nhân viên" value={form.code ?? ''} onChange={v => setField('code', v)} error={codeError} />
+              {codeHint && (
+                <p className="text-xs text-[var(--md-on-surface-variant)] col-span-full -mt-2">{codeHint}</p>
+              )}
               <FieldInput label="Mảng" value={form.segment ?? ''} onChange={v => setField('segment', v)} />
               <FieldInput label="Chi nhánh" value={form.branch ?? ''} onChange={v => setField('branch', v)} />
               <FieldInput label="Bộ phận" value={form.department ?? ''} onChange={v => setField('department', v)} />

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import namvietGroupLogo from '../../assets/NamViet Group.png';
 import {
@@ -189,6 +189,7 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
   const activeUserId = sessionUser?.id ?? 'admin';
 
   const [showModuleMenu, setShowModuleMenu] = useState(false);
+  const [moduleMenuClosing, setModuleMenuClosing] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
@@ -199,17 +200,53 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
   const notifRef = useRef<HTMLDivElement>(null);
   const moduleMenuRef = useRef<HTMLDivElement>(null);
 
+  const moduleMenuTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const closeModuleMenu = useCallback(() => {
+    if (!showModuleMenu || moduleMenuClosing) return;
+    setModuleMenuClosing(true);
+    moduleMenuTimer.current = setTimeout(() => {
+      setShowModuleMenu(false);
+      setModuleMenuClosing(false);
+    }, 280);
+  }, [showModuleMenu, moduleMenuClosing]);
+
+  const openModuleMenu = useCallback(() => {
+    if (moduleMenuTimer.current) clearTimeout(moduleMenuTimer.current);
+    setModuleMenuClosing(false);
+    setShowModuleMenu(true);
+  }, []);
+
+  const toggleModuleMenu = useCallback(() => {
+    if (showModuleMenu) closeModuleMenu();
+    else openModuleMenu();
+  }, [showModuleMenu, closeModuleMenu, openModuleMenu]);
+
+  useEffect(() => () => {
+    if (moduleMenuTimer.current) clearTimeout(moduleMenuTimer.current);
+  }, []);
+
+  const handleModuleItemClick = useCallback((item: { path?: string; label: string }, deptTitle: string) => {
+    if (item.path) {
+      navigate(item.path);
+    } else {
+      showToast('info', `Phân hệ "${item.label}" thuộc bộ phận "${deptTitle}" đang được phát triển.`, 'Chức năng giả lập');
+    }
+    closeModuleMenu();
+  }, [navigate, closeModuleMenu]);
+
+  const moduleMenuOpen = showModuleMenu || moduleMenuClosing;
   const unreadCount = notifications.filter(n => !n.read).length;
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) setShowUserMenu(false);
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) setShowNotifications(false);
-      if (moduleMenuRef.current && !moduleMenuRef.current.contains(e.target as Node)) setShowModuleMenu(false);
+      if (moduleMenuRef.current && !moduleMenuRef.current.contains(e.target as Node)) closeModuleMenu();
     };
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
-  }, []);
+  }, [closeModuleMenu]);
 
   const markAllRead = () => setNotifications(p => p.map(n => ({ ...n, read: true })));
   const markAsRead = (id: number) => setNotifications(p => p.map(n => n.id === id ? { ...n, read: true } : n));
@@ -284,13 +321,14 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
 
         {/* Module switcher */}
         <div style={{ position: 'relative' }} ref={moduleMenuRef}>
-          <IconBtn title="Chuyển module" active={showModuleMenu} onClick={() => setShowModuleMenu(!showModuleMenu)}>
+          <IconBtn title="Chuyển module" active={moduleMenuOpen} onClick={toggleModuleMenu}>
             <Grid3X3 size={20} />
           </IconBtn>
-          {showModuleMenu && (
+          {moduleMenuOpen && (
             <>
               {/* Backdrop */}
               <div
+                className={moduleMenuClosing ? 'mega-menu-scrim--out' : 'mega-menu-scrim'}
                 style={{
                   position: 'fixed',
                   top: '64px',
@@ -301,11 +339,11 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
                   backdropFilter: 'blur(4px)',
                   zIndex: 90,
                 }}
-                onClick={() => setShowModuleMenu(false)}
+                onClick={closeModuleMenu}
               />
               {/* Mega Menu Dropdown */}
               <div
-                className="animate-scale-in"
+                className={`mega-menu-panel ${moduleMenuClosing ? 'animate-scale-out' : 'animate-scale-in'}`}
                 style={{
                   position: 'fixed',
                   top: '72px',
@@ -335,14 +373,7 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
                         <DepartmentCard
                           key={dept.title}
                           dept={dept}
-                          onItemClick={(item) => {
-                            if (item.path) {
-                              navigate(item.path);
-                            } else {
-                              showToast('info', `Phân hệ "${item.label}" thuộc bộ phận "${dept.title}" đang được phát triển.`, 'Chức năng giả lập');
-                            }
-                            setShowModuleMenu(false);
-                          }}
+                          onItemClick={(item) => handleModuleItemClick(item, dept.title)}
                         />
                       ))}
                     </div>

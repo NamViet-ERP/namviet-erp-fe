@@ -1,3 +1,6 @@
+import { apiClient } from '../lib/apiClient';
+import { sortVi, sortViBy } from '../lib/sortVi';
+import { USE_MOCK, mockDelay } from '../lib/mock';
 import { RECRUITMENT_POSITIONS } from '../constants/recruitment';
 
 export interface RecruitmentPosition {
@@ -6,6 +9,7 @@ export interface RecruitmentPosition {
 }
 
 const STORAGE_KEY = 'nv-recruitment-positions-v2';
+const ENDPOINT = '/api/recruitment/positions';
 
 function readStore(): RecruitmentPosition[] {
   try {
@@ -16,7 +20,7 @@ function readStore(): RecruitmentPosition[] {
   }
   const initial: RecruitmentPosition[] = RECRUITMENT_POSITIONS.map(name => ({
     name,
-    isActive: true
+    isActive: true,
   }));
   localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
   return initial;
@@ -27,41 +31,58 @@ function writeStore(items: RecruitmentPosition[]): void {
 }
 
 export const positionsService = {
-  list(): RecruitmentPosition[] {
-    return readStore();
+  async list(): Promise<RecruitmentPosition[]> {
+    if (USE_MOCK) return mockDelay(sortViBy(readStore(), p => p.name));
+    const items = await apiClient.get<RecruitmentPosition[]>(ENDPOINT);
+    return sortViBy(items, p => p.name);
   },
 
-  listActiveNames(): string[] {
-    return readStore()
-      .filter(p => p.isActive)
-      .map(p => p.name);
+  async listActiveNames(): Promise<string[]> {
+    const items = await this.list();
+    return sortVi(items.filter(p => p.isActive).map(p => p.name));
   },
 
-  create(name: string): RecruitmentPosition {
+  async create(name: string): Promise<RecruitmentPosition> {
     const trimmed = name.trim();
     if (!trimmed) throw new Error('Tên vị trí không được để trống');
-    const items = readStore();
-    if (items.some(item => item.name.toLowerCase() === trimmed.toLowerCase())) {
-      throw new Error('Vị trí này đã tồn tại');
+
+    if (USE_MOCK) {
+      const items = readStore();
+      if (items.some(item => item.name.toLowerCase() === trimmed.toLowerCase())) {
+        throw new Error('Vị trí này đã tồn tại');
+      }
+      const created: RecruitmentPosition = { name: trimmed, isActive: true };
+      items.push(created);
+      writeStore(items);
+      return mockDelay(created);
     }
-    const created: RecruitmentPosition = { name: trimmed, isActive: true };
-    items.push(created);
-    writeStore(items);
-    return created;
+
+    return apiClient.post<RecruitmentPosition>(ENDPOINT, { name: trimmed, isActive: true });
   },
 
-  toggleStatus(name: string): RecruitmentPosition {
-    const items = readStore();
-    const idx = items.findIndex(item => item.name === name);
-    if (idx === -1) throw new Error(`Không tìm thấy vị trí "${name}"`);
-    items[idx].isActive = !items[idx].isActive;
-    writeStore(items);
-    return items[idx];
+  async toggleStatus(name: string): Promise<RecruitmentPosition> {
+    if (USE_MOCK) {
+      const items = readStore();
+      const idx = items.findIndex(item => item.name === name);
+      if (idx === -1) throw new Error(`Không tìm thấy vị trí "${name}"`);
+      items[idx].isActive = !items[idx].isActive;
+      writeStore(items);
+      return mockDelay(items[idx]);
+    }
+
+    await apiClient.patch<void>(`${ENDPOINT}/${encodeURIComponent(name)}/toggle`);
+    const items = await this.list();
+    const found = items.find(p => p.name === name);
+    if (!found) throw new Error(`Không tìm thấy vị trí "${name}"`);
+    return found;
   },
 
-  remove(name: string): void {
-    const items = readStore();
-    const updated = items.filter(item => item.name !== name);
-    writeStore(updated);
-  }
+  async remove(name: string): Promise<void> {
+    if (USE_MOCK) {
+      writeStore(readStore().filter(item => item.name !== name));
+      await mockDelay(undefined);
+      return;
+    }
+    await apiClient.delete<void>(`${ENDPOINT}/${encodeURIComponent(name)}`);
+  },
 };

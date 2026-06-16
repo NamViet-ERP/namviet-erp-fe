@@ -1,8 +1,10 @@
 import { apiClient } from '../lib/apiClient';
-import { fromApi, toApi, type FeCandidateApiDto } from '../lib/hrm/candidateApiMapper';
+import { getStoredToken } from '../lib/authSession';
+import { fromApi, toApi, compareCandidateAppliedAtNewestFirst, type FeCandidateApiDto } from '../lib/hrm/candidateApiMapper';
 import { USE_MOCK, mockDelay } from '../lib/mock';
 import type { Candidate, CreateCandidateDto, UpdateCandidateDto } from '../types/hr';
 
+const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
 const ENDPOINT = '/api/candidates';
 const STORAGE_KEY = 'nv-candidate-data';
 
@@ -18,10 +20,10 @@ const MOCK_INITIAL: Candidate[] = [
     education: 'Đại học',
     school: 'ĐH Cần Thơ',
     major: 'Quản trị kinh doanh',
-    position: 'Quản lý trang trại',
+    position: 'Kế toán',
     experience: '3 năm',
     source: 'TopCV',
-    hrResponsible: 'Nguyễn Thị Lan',
+    hrResponsible: 'Thùy Dương',
     cvFileName: 'CV_NguyenVanAn.pdf',
     cvFileSize: '1.85 MB',
     appliedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
@@ -40,7 +42,7 @@ const MOCK_INITIAL: Candidate[] = [
     position: 'Kế toán',
     experience: '5 năm',
     source: 'Facebook',
-    hrResponsible: 'Trần Văn Minh',
+    hrResponsible: 'Phương Thảo',
     cvFileName: 'CV_LeThiBinh.docx',
     cvFileSize: '2.12 MB',
     appliedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
@@ -62,11 +64,93 @@ function writeStore(items: Candidate[]): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
 }
 
+export interface CandidateListParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  position?: string;
+  source?: string;
+  hrResponsible?: string;
+  status?: string;
+}
+
+export interface CandidatePagedResult {
+  items: Candidate[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  totalUnfiltered: number;
+  uniquePositionCount: number;
+}
+
+interface FeCandidatePagedApiDto {
+  items: FeCandidateApiDto[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  totalUnfiltered: number;
+  uniquePositionCount: number;
+}
+
+function mockList(params: CandidateListParams): CandidatePagedResult {
+  const page = Math.max(1, params.page ?? 1);
+  const pageSize = Math.max(1, params.pageSize ?? 10);
+  const all = readStore();
+  const totalUnfiltered = all.length;
+  const uniquePositionCount = new Set(all.map(c => c.position?.trim()).filter(Boolean)).size;
+
+  let filtered = all;
+  const q = params.search?.trim();
+  if (q) {
+    const lower = q.toLowerCase();
+    filtered = filtered.filter(c =>
+      c.fullName.toLowerCase().includes(lower) ||
+      c.email.toLowerCase().includes(lower) ||
+      c.phone.includes(q),
+    );
+  }
+  if (params.position) filtered = filtered.filter(c => c.position === params.position);
+  if (params.source) filtered = filtered.filter(c => c.source === params.source);
+  if (params.hrResponsible) filtered = filtered.filter(c => c.hrResponsible === params.hrResponsible);
+
+  filtered = [...filtered].sort(compareCandidateAppliedAtNewestFirst);
+  const totalCount = filtered.length;
+  const items = filtered.slice((page - 1) * pageSize, page * pageSize);
+
+  return {
+    items,
+    totalCount,
+    page,
+    pageSize,
+    totalPages: Math.max(1, Math.ceil(totalCount / pageSize)),
+    totalUnfiltered,
+    uniquePositionCount,
+  };
+}
+
 export const candidatesService = {
-  async list(): Promise<Candidate[]> {
-    if (USE_MOCK) return mockDelay(readStore());
-    const items = await apiClient.get<FeCandidateApiDto[]>(ENDPOINT);
-    return items.map(fromApi);
+  async list(params: CandidateListParams = {}): Promise<CandidatePagedResult> {
+    if (USE_MOCK) return mockDelay(mockList(params));
+    const res = await apiClient.get<FeCandidatePagedApiDto>(ENDPOINT, {
+      page: params.page ?? 1,
+      pageSize: params.pageSize ?? 20,
+      search: params.search?.trim() || undefined,
+      position: params.position || undefined,
+      source: params.source || undefined,
+      hrResponsible: params.hrResponsible || undefined,
+      status: params.status || undefined,
+    });
+    return {
+      items: res.items.map(fromApi),
+      totalCount: res.totalCount,
+      page: res.page,
+      pageSize: res.pageSize,
+      totalPages: res.totalPages,
+      totalUnfiltered: res.totalUnfiltered,
+      uniquePositionCount: res.uniquePositionCount,
+    };
   },
 
   async getById(id: string): Promise<Candidate> {
@@ -101,7 +185,8 @@ export const candidatesService = {
       const items = readStore();
       const idx = items.findIndex(c => c.id === id);
       if (idx === -1) throw new Error(`Không tìm thấy ứng viên ${id}`);
-      items[idx] = { ...items[idx], ...dto };
+      const { appliedAt: _ignored, ...patch } = dto;
+      items[idx] = { ...items[idx], ...patch, appliedAt: items[idx].appliedAt };
       writeStore(items);
       return mockDelay(items[idx]);
     }
@@ -117,5 +202,35 @@ export const candidatesService = {
       return;
     }
     await apiClient.delete<void>(`${ENDPOINT}/${id}`);
+  },
+
+  async downloadCv(id: string, fileName?: string): Promise<void> {
+    if (USE_MOCK) {
+      await mockDelay(null);
+      throw new Error('Tải CV chỉ khả dụng khi kết nối API');
+    }
+
+    const token = getStoredToken();
+    const url = `${BASE_URL}${ENDPOINT}/${id}/cv`;
+    const response = await fetch(url, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(text.trim() || `Không thể tải CV (HTTP ${response.status})`);
+    }
+
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = objectUrl;
+    anchor.download = fileName?.trim() || `CV-${id}`;
+    anchor.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;pointer-events:none';
+    document.body.appendChild(anchor);
+    anchor.click();
+    window.setTimeout(() => {
+      anchor.remove();
+      URL.revokeObjectURL(objectUrl);
+    }, 500);
   },
 };

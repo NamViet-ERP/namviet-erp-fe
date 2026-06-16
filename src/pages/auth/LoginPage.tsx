@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Lock, User, Eye, EyeOff, ShieldAlert, FileText } from 'lucide-react';
 import { showToast } from '../../components/ui/Toast';
 import ToastContainer from '../../components/ui/Toast';
@@ -31,6 +31,8 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [searchParams] = useSearchParams();
+  const sessionExpired = searchParams.get('expired') === '1';
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -113,6 +115,16 @@ export default function LoginPage() {
               HỆ THỐNG QUẢN LÝ KHO & CHUỖI CUNG ỨNG
             </p>
           </div>
+
+          {sessionExpired && !error && (
+            <div
+              className="flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm mb-4 border border-[var(--md-outline-variant)]"
+              style={{ background: 'var(--md-warning-container, #fff8e1)', color: 'var(--md-on-surface)' }}
+            >
+              <ShieldAlert size={16} className="shrink-0" />
+              <span>Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.</span>
+            </div>
+          )}
 
           {error && (
             <div

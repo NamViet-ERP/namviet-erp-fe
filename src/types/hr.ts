@@ -19,6 +19,7 @@ export interface Candidate {
   hrResponsible: string;
   cvFileName: string;
   cvFileSize: string;
+  cvFileUrl?: string;
   appliedAt: string;
   // HR workflow
   screeningType?: string;

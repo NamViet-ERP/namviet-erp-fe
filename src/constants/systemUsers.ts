@@ -204,27 +204,27 @@ const seedSystemUsers: SystemUser[] = [
 
     id: 'hr1',
 
-    username: 'lan.nguyen',
+    username: 'thuy.duong',
 
     role: 'hr',
 
-    name: 'Nguyễn Thị Lan',
+    name: 'Thùy Dương',
 
-    initials: 'NL',
+    initials: 'TD',
 
     roleLabel: 'Nhân sự (HR)',
 
-    email: 'lan.nguyen@namviet.vn',
+    email: 'thuy.duong@namviet.vn',
 
-    phone: '0945678901',
+    phone: '0901000001',
 
-    employeeCode: 'NV-0006',
+    employeeCode: 'NV-0101',
 
     department: 'Nhân sự',
 
     position: 'Chuyên viên HCNS',
 
-    createdAt: '2024-07-15',
+    createdAt: '2024-01-01',
 
   },
 
@@ -232,25 +232,193 @@ const seedSystemUsers: SystemUser[] = [
 
     id: 'hr2',
 
-    username: 'minh.tran',
+    username: 'phuong.thao',
 
     role: 'hr',
 
-    name: 'Trần Văn Minh',
+    name: 'Phương Thảo',
 
-    initials: 'TM',
+    initials: 'PT',
 
     roleLabel: 'Nhân sự (HR)',
 
-    email: 'minh.tran@namviet.vn',
+    email: 'phuong.thao@namviet.vn',
 
-    phone: '0956789012',
+    phone: '0901000002',
 
-    employeeCode: 'NV-0007',
+    employeeCode: 'NV-0102',
 
     department: 'Nhân sự',
 
-    position: 'Chuyên viên tuyển dụng',
+    position: 'Chuyên viên HCNS',
+
+    createdAt: '2024-02-01',
+
+  },
+
+  {
+
+    id: 'hr3',
+
+    username: 'vinh.viet',
+
+    role: 'hr',
+
+    name: 'Vinh Việt',
+
+    initials: 'VV',
+
+    roleLabel: 'Nhân sự (HR)',
+
+    email: 'vinh.viet@namviet.vn',
+
+    phone: '0901000003',
+
+    employeeCode: 'NV-0103',
+
+    department: 'Nhân sự',
+
+    position: 'Chuyên viên HCNS',
+
+    createdAt: '2024-03-01',
+
+  },
+
+  {
+
+    id: 'hr4',
+
+    username: 'thuy.tien',
+
+    role: 'hr',
+
+    name: 'Thủy Tiên',
+
+    initials: 'TT',
+
+    roleLabel: 'Nhân sự (HR)',
+
+    email: 'thuy.tien@namviet.vn',
+
+    phone: '0901000004',
+
+    employeeCode: 'NV-0104',
+
+    department: 'Nhân sự',
+
+    position: 'Chuyên viên HCNS',
+
+    createdAt: '2024-04-01',
+
+  },
+
+  {
+
+    id: 'hr5',
+
+    username: 'kim.ngan',
+
+    role: 'hr',
+
+    name: 'Kim Ngân',
+
+    initials: 'KN',
+
+    roleLabel: 'Nhân sự (HR)',
+
+    email: 'kim.ngan@namviet.vn',
+
+    phone: '0901000005',
+
+    employeeCode: 'NV-0105',
+
+    department: 'Nhân sự',
+
+    position: 'Chuyên viên HCNS',
+
+    createdAt: '2024-05-01',
+
+  },
+
+  {
+
+    id: 'hr6',
+
+    username: 'kim.hue',
+
+    role: 'hr',
+
+    name: 'Kim Huệ',
+
+    initials: 'KH',
+
+    roleLabel: 'Nhân sự (HR)',
+
+    email: 'kim.hue@namviet.vn',
+
+    phone: '0901000006',
+
+    employeeCode: 'NV-0106',
+
+    department: 'Nhân sự',
+
+    position: 'Chuyên viên HCNS',
+
+    createdAt: '2024-06-01',
+
+  },
+
+  {
+
+    id: 'hr7',
+
+    username: 'son.ny',
+
+    role: 'hr',
+
+    name: 'Son Ny',
+
+    initials: 'SN',
+
+    roleLabel: 'Nhân sự (HR)',
+
+    email: 'son.ny@namviet.vn',
+
+    phone: '0901000007',
+
+    employeeCode: 'NV-0107',
+
+    department: 'Nhân sự',
+
+    position: 'Chuyên viên HCNS',
+
+    createdAt: '2024-07-01',
+
+  },
+
+  {
+
+    id: 'hr8',
+
+    username: 'thao.phat',
+
+    role: 'hr',
+
+    name: 'Thảo Phát',
+
+    initials: 'TP',
+
+    roleLabel: 'Nhân sự (HR)',
+
+    email: 'thao.phat@namviet.vn',
+
+    phone: '0901000008',
+
+    employeeCode: 'NV-0108',
+
+    department: 'Nhân sự',
+
+    position: 'Chuyên viên HCNS',
 
     createdAt: '2024-08-01',
 

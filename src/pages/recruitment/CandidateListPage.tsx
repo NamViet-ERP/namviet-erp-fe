@@ -1,22 +1,18 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RotateCcw, FileText, Download, Users, Filter, Briefcase } from 'lucide-react';
-import PageHeader from '../../components/ui/PageHeader';
 import SearchBar from '../../components/ui/SearchBar';
 import Pagination from '../../components/ui/Pagination';
 import HrmPanel from '../../components/hr/HrmPanel';
 import HrmStatCard from '../../components/hr/HrmStatCard';
 import { showToast } from '../../components/ui/Toast';
 import { useCandidates } from '../../hooks/useCandidates';
+import { candidatesService } from '../../services/candidatesService';
 import { RECRUITMENT_SOURCES } from '../../constants/recruitment';
-import { usePositions } from '../../hooks/usePositions';
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('vi-VN', {
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit',
-  });
-}
+import { usePositionSelectOptions } from '../../hooks/usePositions';
+import { useHrStaffSelectOptions } from '../../hooks/useHrStaff';
+import { formatCandidateAppliedAt } from '../../lib/hrm/candidateApiMapper';
+import { getApiErrorMessage } from '../../lib/apiClient';
 
 function birthYear(date: string) {
   const y = new Date(date).getFullYear();
@@ -25,58 +21,60 @@ function birthYear(date: string) {
 
 export default function CandidateListPage() {
   const navigate = useNavigate();
-  const { data: candidates = [], isLoading } = useCandidates();
-  const { data: positions = [] } = usePositions();
+  const positionFilterOptions = usePositionSelectOptions();
+  const hrStaffFilterOptions = useHrStaffSelectOptions();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPosition, setSelectedPosition] = useState('');
   const [selectedSource, setSelectedSource] = useState('');
+  const [selectedHr, setSelectedHr] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const filteredCandidates = useMemo(() => {
-    return candidates.filter(cand => {
-      const q = searchQuery.toLowerCase();
-      const matchSearch =
-        cand.fullName.toLowerCase().includes(q) ||
-        cand.email.toLowerCase().includes(q) ||
-        cand.phone.includes(searchQuery);
-      const matchPosition = selectedPosition ? cand.position === selectedPosition : true;
-      const matchSource = selectedSource ? cand.source === selectedSource : true;
-      return matchSearch && matchPosition && matchSource;
-    });
-  }, [candidates, searchQuery, selectedPosition, selectedSource]);
+  const { data, isLoading, isError, error } = useCandidates({
+    page,
+    pageSize,
+    search: searchQuery || undefined,
+    position: selectedPosition || undefined,
+    source: selectedSource || undefined,
+    hrResponsible: selectedHr || undefined,
+  });
 
-  const totalPages = Math.max(1, Math.ceil(filteredCandidates.length / pageSize));
-  const paginated = filteredCandidates.slice((page - 1) * pageSize, page * pageSize);
-  const uniquePositions = useMemo(() => new Set(candidates.map(c => c.position)).size, [candidates]);
+  const candidates = data?.items ?? [];
+  const totalCount = data?.totalCount ?? 0;
+  const totalPages = data?.totalPages ?? 1;
+  const totalUnfiltered = data?.totalUnfiltered ?? 0;
+  const uniquePositions = data?.uniquePositionCount ?? 0;
 
-  const handleDownloadCV = (cvName: string, e: React.MouseEvent) => {
+  const handleDownloadCV = async (cand: { id: string; cvFileName: string }, e: React.MouseEvent) => {
     e.stopPropagation();
-    showToast('info', `Bắt đầu tải xuống file: ${cvName}`, 'Tải CV');
+    if (!cand.cvFileName) {
+      showToast('warning', 'Ứng viên chưa có file CV');
+      return;
+    }
+    try {
+      await candidatesService.downloadCv(cand.id, cand.cvFileName);
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không thể tải CV'));
+    }
   };
 
   const resetFilters = () => {
     setSearchQuery('');
     setSelectedPosition('');
     setSelectedSource('');
+    setSelectedHr('');
     setPage(1);
   };
 
-  const hasFilters = searchQuery || selectedPosition || selectedSource;
+  const hasFilters = searchQuery || selectedPosition || selectedSource || selectedHr;
 
   return (
     <div className="hrm-page">
-      {/* <PageHeader
-        eyebrow="TUYỂN DỤNG"
-        title="Danh sách ứng viên"
-        subtitle="Quản lý hồ sơ ứng viên từ form nộp đơn công khai"
-      /> */}
-
       <div className="hrm-stat-grid">
-        <HrmStatCard label="Tổng hồ sơ" value={candidates.length} icon={Users} tone="primary" />
+        <HrmStatCard label="Tổng hồ sơ" value={totalUnfiltered} icon={Users} tone="primary" />
         <HrmStatCard
           label="Đang hiển thị"
-          value={filteredCandidates.length}
+          value={totalCount}
           hint={hasFilters ? 'Đã lọc' : ''}
           icon={Filter}
           tone="neutral"
@@ -99,7 +97,7 @@ export default function CandidateListPage() {
             onChange={e => { setSelectedPosition(e.target.value); setPage(1); }}
           >
             <option value="">Tất cả vị trí</option>
-            {positions.map(p => <option key={p.name} value={p.name}>{p.name}</option>)}
+            {positionFilterOptions.map(name => <option key={name} value={name}>{name}</option>)}
           </select>
           <select
             className="form-select h-10 min-w-[140px]"
@@ -108,6 +106,14 @@ export default function CandidateListPage() {
           >
             <option value="">Tất cả nguồn</option>
             {RECRUITMENT_SOURCES.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+          <select
+            className="form-select h-10 min-w-[160px]"
+            value={selectedHr}
+            onChange={e => { setSelectedHr(e.target.value); setPage(1); }}
+          >
+            <option value="">Tất cả HR</option>
+            {hrStaffFilterOptions.map(name => <option key={name} value={name}>{name}</option>)}
           </select>
           <button
             type="button"
@@ -134,16 +140,22 @@ export default function CandidateListPage() {
             <tbody>
               {isLoading ? (
                 <tr><td colSpan={15} className="hrm-empty">Đang tải...</td></tr>
-              ) : paginated.length === 0 ? (
+              ) : isError ? (
+                <tr>
+                  <td colSpan={15} className="hrm-empty text-[var(--md-error)]">
+                    Không tải được danh sách ứng viên: {getApiErrorMessage(error)}
+                  </td>
+                </tr>
+              ) : candidates.length === 0 ? (
                 <tr><td colSpan={15} className="hrm-empty">Không tìm thấy ứng viên phù hợp.</td></tr>
               ) : (
-                paginated.map(cand => (
+                candidates.map(cand => (
                   <tr
                     key={cand.id}
                     className="table-row cursor-pointer"
                     onClick={() => navigate(`/recruitment/candidates/${cand.id}`)}
                   >
-                    <td className="table-cell text-xs whitespace-nowrap text-center">{formatDate(cand.appliedAt)}</td>
+                    <td className="table-cell text-xs whitespace-nowrap text-center">{formatCandidateAppliedAt(cand.appliedAt)}</td>
                     <td className="table-cell font-semibold whitespace-nowrap candidate-name">{cand.fullName}</td>
                     <td className="table-cell">{cand.phone}</td>
                     <td className="table-cell text-sm">{cand.email}</td>
@@ -157,7 +169,7 @@ export default function CandidateListPage() {
                     <td className="table-cell whitespace-nowrap text-center">{cand.experience}</td>
                     <td className="table-cell whitespace-nowrap text-center">{cand.source}</td>
                     <td className="table-cell" onClick={e => e.stopPropagation()}>
-                      <button type="button" onClick={e => handleDownloadCV(cand.cvFileName, e)} className="hrm-cv-chip">
+                      <button type="button" onClick={e => handleDownloadCV(cand, e)} className="hrm-cv-chip">
                         <FileText size={13} />
                         <span className="max-w-[72px] truncate">{cand.cvFileName}</span>
                         <Download size={12} />
@@ -172,12 +184,12 @@ export default function CandidateListPage() {
         </div>
       </HrmPanel>
 
-      {filteredCandidates.length > 0 && (
+      {totalCount > 0 && (
         <Pagination
           currentPage={page}
           totalPages={totalPages}
           pageSize={pageSize}
-          totalItems={filteredCandidates.length}
+          totalItems={totalCount}
           onPageChange={setPage}
           onPageSizeChange={s => { setPageSize(s); setPage(1); }}
         />

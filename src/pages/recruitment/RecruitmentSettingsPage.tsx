@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { Briefcase, Plus, Trash2, Search, Link2, Copy, Check } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { usePositions, useCreatePosition, useDeletePosition, useTogglePositionStatus } from '../../hooks/usePositions';
+import { getApiErrorMessage } from '../../lib/apiClient';
 import { showToast } from '../../components/ui/Toast';
 
 export default function RecruitmentSettingsPage() {
@@ -13,6 +15,7 @@ export default function RecruitmentSettingsPage() {
   const [newPosition, setNewPosition] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [copied, setCopied] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,27 +29,27 @@ export default function RecruitmentSettingsPage() {
       await createMutation.mutateAsync(val);
       showToast('success', `Đã thêm vị trí "${val}"`);
       setNewPosition('');
-    } catch (err: any) {
-      showToast('error', err.message || 'Không thể thêm vị trí');
+    } catch (err: unknown) {
+      showToast('error', getApiErrorMessage(err, 'Không thể thêm vị trí'));
     }
   };
 
   const handleToggle = async (posName: string) => {
     try {
       await toggleStatusMutation.mutateAsync(posName);
-    } catch (err: any) {
-      showToast('error', err.message || 'Không thể thay đổi trạng thái');
+    } catch (err: unknown) {
+      showToast('error', getApiErrorMessage(err, 'Không thể thay đổi trạng thái'));
     }
   };
 
-  const handleDelete = async (pos: string) => {
-    if (window.confirm(`Bạn có chắc chắn muốn xóa vĩnh viễn vị trí tuyển dụng "${pos}"?\n\nHành động này không thể hoàn tác.`)) {
-      try {
-        await deleteMutation.mutateAsync(pos);
-        showToast('success', `Đã xóa vị trí "${pos}"`);
-      } catch (err: any) {
-        showToast('error', err.message || 'Không thể xóa vị trí');
-      }
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    try {
+      await deleteMutation.mutateAsync(deleteTarget);
+      showToast('success', `Đã xóa vị trí "${deleteTarget}"`);
+      setDeleteTarget(null);
+    } catch (err: unknown) {
+      showToast('error', getApiErrorMessage(err, 'Không thể xóa vị trí'));
     }
   };
 
@@ -158,7 +161,7 @@ export default function RecruitmentSettingsPage() {
                       {/* Nút xóa */}
                       <button
                         type="button"
-                        onClick={() => handleDelete(pos.name)}
+                        onClick={() => setDeleteTarget(pos.name)}
                         className="text-[var(--md-error)] p-1 rounded-lg hover:bg-[var(--md-error-container)] transition-colors flex-shrink-0"
                         title="Xóa vĩnh viễn"
                       >
@@ -232,6 +235,24 @@ export default function RecruitmentSettingsPage() {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDeleteConfirm}
+        title="Xóa vị trí tuyển dụng"
+        message={
+          <>
+            Bạn có chắc chắn muốn xóa vĩnh viễn vị trí{' '}
+            <strong style={{ color: 'var(--md-on-surface)' }}>&ldquo;{deleteTarget}&rdquo;</strong>?
+            <br />
+            <span style={{ fontSize: '0.8125rem', opacity: 0.85 }}>Hành động này không thể hoàn tác.</span>
+          </>
+        }
+        confirmLabel="Xóa vĩnh viễn"
+        cancelLabel="Hủy bỏ"
+        isLoading={deleteMutation.isPending}
+      />
     </div>
   );
 }

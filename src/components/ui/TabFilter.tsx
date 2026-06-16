@@ -37,14 +37,16 @@ export default function TabFilter({ tabs, activeTab, onChange }: TabFilterProps)
               gap: '6px',
               padding: '12px 16px',
               border: 'none',
+              borderBottom: `2px solid ${isActive ? 'var(--md-primary)' : 'transparent'}`,
+              marginBottom: '-1px',
               background: 'transparent',
               color: isActive ? 'var(--md-primary)' : 'var(--md-on-surface-variant)',
               fontFamily: "'Roboto', sans-serif",
               fontSize: '0.875rem',
-              fontWeight: isActive ? 500 : 400,
+              fontWeight: 500,
               letterSpacing: '0.01em',
               cursor: 'pointer',
-              transition: 'color 200ms var(--md-easing), background 200ms var(--md-easing)',
+              transition: 'color 280ms var(--md-easing), background 280ms var(--md-easing), border-color 280ms var(--md-easing)',
               borderRadius: '0',
               whiteSpace: 'nowrap',
               flexShrink: 0,
@@ -75,25 +77,11 @@ export default function TabFilter({ tabs, activeTab, onChange }: TabFilterProps)
                   fontFamily: "'Roboto', sans-serif",
                   fontSize: '0.6875rem',
                   fontWeight: 500,
-                  transition: 'background 200ms, color 200ms',
+                  transition: 'background 280ms var(--md-easing), color 280ms var(--md-easing)',
                 }}
               >
                 {tab.count}
               </span>
-            )}
-            {/* Active indicator */}
-            {isActive && (
-              <span
-                style={{
-                  position: 'absolute',
-                  bottom: '-1px',
-                  left: 0,
-                  right: 0,
-                  height: '2px',
-                  background: 'var(--md-primary)',
-                  borderRadius: '2px 2px 0 0',
-                }}
-              />
             )}
           </button>
         );

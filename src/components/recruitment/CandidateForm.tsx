@@ -1,15 +1,16 @@
 import { useState, useRef } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Upload, FileText, Trash2, CheckCircle2, ChevronRight } from 'lucide-react';
 import { showToast } from '../ui/Toast';
-import { getHrStaff } from '../../constants/systemUsers';
 import { candidatesService } from '../../services/candidatesService';
+import { filesService } from '../../services/filesService';
 import FormSectionHeader from '../hr/FormSectionHeader';
 import HrmDatePicker from '../hr/HrmDatePicker';
 import { RECRUITMENT_SOURCES, EDUCATION_LEVELS } from '../../constants/recruitment';
 import { useActivePositions } from '../../hooks/usePositions';
+import { useHrStaffSelectOptions } from '../../hooks/useHrStaff';
 
 const candidateSchema = z.object({
   fullName: z.string().min(2, 'Họ và tên phải có ít nhất 2 ký tự'),
@@ -32,14 +33,47 @@ const candidateSchema = z.object({
 
 type CandidateFormValues = z.infer<typeof candidateSchema>;
 
+const FIELD_LABELS: Record<keyof CandidateFormValues, string> = {
+  fullName: 'Họ và tên',
+  birthDate: 'Năm sinh',
+  phone: 'Số điện thoại',
+  email: 'Email',
+  gender: 'Giới tính',
+  address: 'Địa chỉ hiện tại',
+  education: 'Trình độ học vấn',
+  position: 'Vị trí ứng tuyển',
+  school: 'Trường đào tạo',
+  major: 'Chuyên ngành',
+  experience: 'Kinh nghiệm',
+  source: 'Nguồn ứng tuyển',
+  hrResponsible: 'HR phụ trách',
+};
+
+const VALIDATION_FIELD_ORDER: (keyof CandidateFormValues)[] = [
+  'fullName', 'birthDate', 'phone', 'email', 'gender', 'address',
+  'education', 'position', 'school', 'major', 'source', 'hrResponsible',
+];
+
+function scrollToField(field: string) {
+  const el = document.querySelector(`[data-form-field="${field}"]`);
+  el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const focusable = el?.querySelector<HTMLElement>('input, select, textarea, button');
+  focusable?.focus();
+}
+
 export default function CandidateForm() {
   const [cvFile, setCvFile] = useState<File | null>(null);
+  const [cvFileUrl, setCvFileUrl] = useState<string | null>(null);
+  const [cvFileSize, setCvFileSize] = useState<string>('');
   const [fileError, setFileError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
   const { data: positions = [] } = useActivePositions();
+  const hrStaffOptions = useHrStaffSelectOptions();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cvSectionRef = useRef<HTMLDivElement>(null);
+  const uploadSessionId = useRef(crypto.randomUUID()).current;
 
   const {
     register,
@@ -63,10 +97,7 @@ export default function CandidateForm() {
   const selectedGender = watch('gender');
   const selectedEducation = watch('education');
   const selectedSource = watch('source');
-  const hrStaff = getHrStaff();
 
-  // Handle drag events
-  const [dragActive, setDragActive] = useState(false);
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -77,7 +108,9 @@ export default function CandidateForm() {
     }
   };
 
-  const validateAndUploadFile = (file: File) => {
+  const [dragActive, setDragActive] = useState(false);
+
+  const validateAndUploadFile = async (file: File) => {
     const validTypes = [
       'application/pdf',
       'application/msword',
@@ -88,32 +121,36 @@ export default function CandidateForm() {
     if (!validTypes.includes(file.type) && !['pdf', 'docx', 'doc'].includes(extension || '')) {
       setFileError('Định dạng file không hỗ trợ. Chỉ nhận file .pdf, .docx, .doc');
       setCvFile(null);
+      setCvFileUrl(null);
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
       setFileError('Dung lượng file vượt quá 5MB');
       setCvFile(null);
+      setCvFileUrl(null);
       return;
     }
 
     setFileError(null);
     setCvFile(file);
     setIsUploading(true);
-    setUploadProgress(0);
+    setUploadProgress(10);
 
-    // Simulate progress
-    const interval = setInterval(() => {
-      setUploadProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setIsUploading(false);
-          showToast('success', 'Tải file CV lên thành công');
-          return 100;
-        }
-        return prev + 10;
-      });
-    }, 100);
+    try {
+      const uploaded = await filesService.upload(file, 'cv', { sessionId: uploadSessionId });
+      setCvFileUrl(uploaded.url);
+      setCvFileSize((uploaded.fileSize / (1024 * 1024)).toFixed(2) + ' MB');
+      setUploadProgress(100);
+      showToast('success', 'Tải file CV lên thành công');
+    } catch {
+      setFileError('Không thể tải CV lên máy chủ. Vui lòng thử lại.');
+      setCvFile(null);
+      setCvFileUrl(null);
+      setUploadProgress(0);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -133,6 +170,8 @@ export default function CandidateForm() {
 
   const handleRemoveFile = () => {
     setCvFile(null);
+    setCvFileUrl(null);
+    setCvFileSize('');
     setUploadProgress(0);
     setFileError(null);
     if (fileInputRef.current) {
@@ -140,9 +179,28 @@ export default function CandidateForm() {
     }
   };
 
+  const onInvalid = (fieldErrors: FieldErrors<CandidateFormValues>) => {
+    const invalidKeys = VALIDATION_FIELD_ORDER.filter(key => fieldErrors[key]?.message);
+    if (invalidKeys.length === 0) return;
+
+    const firstKey = invalidKeys[0];
+    const firstMessage = fieldErrors[firstKey]?.message ?? 'Vui lòng kiểm tra lại thông tin';
+    showToast(
+      'warning',
+      firstMessage,
+      invalidKeys.length > 1
+        ? `Còn ${invalidKeys.length - 1} mục chưa hợp lệ — vui lòng kiểm tra form`
+        : `${FIELD_LABELS[firstKey]} chưa hợp lệ`,
+    );
+    scrollToField(firstKey);
+  };
+
   const onSubmit = async (data: CandidateFormValues) => {
-    if (!cvFile) {
-      setFileError('Vui lòng tải lên file CV của bạn');
+    if (!cvFile || !cvFileUrl) {
+      const message = 'Vui lòng tải lên file CV của bạn';
+      setFileError(message);
+      showToast('warning', message, 'Thiếu file CV');
+      cvSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
     if (isUploading) {
@@ -167,13 +225,13 @@ export default function CandidateForm() {
         source: data.source,
         hrResponsible: data.hrResponsible,
         cvFileName: cvFile.name,
-        cvFileSize: (cvFile.size / (1024 * 1024)).toFixed(2) + ' MB',
+        cvFileSize: cvFileSize || (cvFile.size / (1024 * 1024)).toFixed(2) + ' MB',
+        cvFileUrl,
       });
 
       setIsSubmitted(true);
       showToast('success', 'Hồ sơ của bạn đã được tiếp nhận!', 'Nộp hồ sơ thành công');
-    } catch (e) {
-      console.error(e);
+    } catch {
       showToast('error', 'Có lỗi xảy ra khi gửi hồ sơ. Vui lòng thử lại!');
     }
   };
@@ -200,12 +258,12 @@ export default function CandidateForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-1">
+    <form onSubmit={handleSubmit(onSubmit, onInvalid)} noValidate className="space-y-1">
       <FormSectionHeader step={1} title="Thông tin ứng viên" />
       <p className="text-xs text-[var(--md-on-surface-variant)] -mt-2 mb-4">Vui lòng cung cấp chính xác các thông tin dưới đây để chúng tôi liên hệ.</p>
 
       <div className="hrm-form-grid">
-        <div>
+        <div data-form-field="fullName">
           <label className="hrm-field__label">Họ và tên *</label>
           <input
             type="text"
@@ -215,7 +273,7 @@ export default function CandidateForm() {
           />
           {errors.fullName && <p className="hrm-field__error">{errors.fullName.message}</p>}
         </div>
-        <div>
+        <div data-form-field="birthDate">
           <label className="hrm-field__label">Năm sinh *</label>
           <HrmDatePicker
             value={watch('birthDate') ?? ''}
@@ -229,7 +287,7 @@ export default function CandidateForm() {
       </div>
 
       <div className="hrm-form-grid">
-        <div>
+        <div data-form-field="phone">
           <label className="hrm-field__label">Số điện thoại *</label>
           <input
             type="tel"
@@ -239,17 +297,19 @@ export default function CandidateForm() {
           />
           {errors.phone && <p className="hrm-field__error">{errors.phone.message}</p>}
         </div>
-        <div>
+        <div data-form-field="email">
           <label className="hrm-field__label">Email *</label>
           <input
-            type="email"
+            type="text"
+            inputMode="email"
+            autoComplete="email"
             className={`hrm-field-input${errors.email ? ' hrm-field-input--error' : ''}`}
             placeholder="Ví dụ: hoten@gmail.com..."
             {...register('email')}
           />
           {errors.email && <p className="hrm-field__error">{errors.email.message}</p>}
         </div>
-        <div>
+        <div data-form-field="gender">
           <label className="hrm-field__label">Giới tính *</label>
           <div className="hrm-radio-row">
             {(['Nam', 'Nữ'] as const).map(g => (
@@ -265,7 +325,7 @@ export default function CandidateForm() {
           </div>
           {errors.gender && <p className="hrm-field__error">{errors.gender.message}</p>}
         </div>
-        <div>
+        <div data-form-field="address">
           <label className="hrm-field__label">Địa chỉ hiện tại *</label>
           <input
             type="text"
@@ -280,7 +340,7 @@ export default function CandidateForm() {
       <FormSectionHeader step={2} title="Trình độ & Vị trí ứng tuyển" />
 
       <div className="hrm-form-grid">
-        <div>
+        <div data-form-field="education">
           <label className="hrm-field__label">Trình độ học vấn *</label>
           <div className="hrm-radio-row">
             {EDUCATION_LEVELS.map(edu => (
@@ -296,7 +356,7 @@ export default function CandidateForm() {
           </div>
           {errors.education && <p className="hrm-field__error">{errors.education.message}</p>}
         </div>
-        <div>
+        <div data-form-field="position">
           <label className="hrm-field__label">Vị trí ứng tuyển *</label>
           <select className={`hrm-field-select h-11${errors.position ? ' hrm-field-input--error' : ''}`} {...register('position')}>
             <option value="">-- Chọn vị trí ứng tuyển --</option>
@@ -309,7 +369,7 @@ export default function CandidateForm() {
       </div>
 
       <div className="hrm-form-grid">
-        <div>
+        <div data-form-field="school">
           <label className="hrm-field__label">Trường đào tạo *</label>
           <input
             type="text"
@@ -319,7 +379,7 @@ export default function CandidateForm() {
           />
           {errors.school && <p className="hrm-field__error">{errors.school.message}</p>}
         </div>
-        <div>
+        <div data-form-field="major">
           <label className="hrm-field__label">Chuyên ngành *</label>
           <input
             type="text"
@@ -341,7 +401,7 @@ export default function CandidateForm() {
         />
       </div>
 
-      <div>
+      <div data-form-field="source">
         <label className="hrm-field__label">Nguồn ứng tuyển *</label>
         <div className="hrm-radio-row">
           {RECRUITMENT_SOURCES.map(src => (
@@ -358,19 +418,19 @@ export default function CandidateForm() {
         {errors.source && <p className="hrm-field__error">{errors.source.message}</p>}
       </div>
 
-      <div>
+      <div data-form-field="hrResponsible">
         <label className="hrm-field__label">HR phụ trách *</label>
         <select className={`hrm-field-select h-11${errors.hrResponsible ? ' hrm-field-input--error' : ''}`} {...register('hrResponsible')}>
           <option value="">-- Chọn HR phụ trách --</option>
-          {hrStaff.map(hr => (
-            <option key={hr.id} value={hr.name}>{hr.name}</option>
+          {hrStaffOptions.map(name => (
+            <option key={name} value={name}>{name}</option>
           ))}
         </select>
         {errors.hrResponsible && <p className="hrm-field__error">{errors.hrResponsible.message}</p>}
       </div>
 
       <FormSectionHeader step={3} title="Tải lên CV" />
-      <div>
+      <div ref={cvSectionRef}>
         <label className="hrm-field__label">File CV *</label>
 
         {!cvFile ? (

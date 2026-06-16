@@ -1,12 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { candidatesService } from '../services/candidatesService';
+import { candidatesService, type CandidateListParams } from '../services/candidatesService';
 import type { CreateCandidateDto, UpdateCandidateDto } from '../types/hr';
 import { queryKeys } from '../services/queryKeys';
 
-export function useCandidates() {
+export function useCandidates(params: CandidateListParams) {
   return useQuery({
-    queryKey: queryKeys.candidates.all,
-    queryFn: () => candidatesService.list(),
+    queryKey: [...queryKeys.candidates.all, params] as const,
+    queryFn: () => candidatesService.list(params),
   });
 }
 

@@ -10,6 +10,8 @@ import EmployeeStatusSwap from '../../components/hr/EmployeeStatusSwap';
 import { useEmployees } from '../../hooks/useEmployees';
 import { EMPLOYEE_STATUSES } from '../../constants/recruitment';
 import type { EmployeeStatus } from '../../types/hr';
+import { getApiErrorMessage } from '../../lib/apiClient';
+import { compareEmployeeCodeNewestFirst } from '../../lib/hrm/suggestedEmployeeCode';
 
 function fmtDate(d?: string) {
   if (!d) return '—';
@@ -18,32 +20,42 @@ function fmtDate(d?: string) {
 
 export default function MembersPage() {
   const navigate = useNavigate();
-  const { data: employees = [], isLoading } = useEmployees();
+  const {
+    data: employees,
+    isPending,
+    isFetching,
+    isError,
+    error,
+  } = useEmployees();
+  const employeeList = employees ?? [];
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<EmployeeStatus | ''>('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
   const stats = useMemo(() => ({
-    active: employees.filter(e => e.status === 'Đang làm').length,
-    resigned: employees.filter(e => e.status === 'Nghỉ việc').length,
-    maternity: employees.filter(e => e.status === 'Thai sản').length,
-  }), [employees]);
+    active: employeeList.filter(e => e.status === 'Đang làm').length,
+    resigned: employeeList.filter(e => e.status === 'Nghỉ việc').length,
+    maternity: employeeList.filter(e => e.status === 'Thai sản').length,
+  }), [employeeList]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    return employees.filter(e => {
-      const matchSearch =
-        e.fullName.toLowerCase().includes(q) ||
-        (e.code?.toLowerCase().includes(q) ?? false) ||
-        (e.department?.toLowerCase().includes(q) ?? false);
-      const matchStatus = statusFilter ? e.status === statusFilter : true;
-      return matchSearch && matchStatus;
-    });
-  }, [employees, search, statusFilter]);
+    return employeeList
+      .filter(e => {
+        const matchSearch =
+          e.fullName.toLowerCase().includes(q) ||
+          (e.code?.toLowerCase().includes(q) ?? false) ||
+          (e.department?.toLowerCase().includes(q) ?? false);
+        const matchStatus = statusFilter ? e.status === statusFilter : true;
+        return matchSearch && matchStatus;
+      })
+      .sort(compareEmployeeCodeNewestFirst);
+  }, [employeeList, search, statusFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
+  const loading = isPending || (isFetching && employeeList.length === 0);
 
   return (
     <div className="hrm-page">
@@ -59,7 +71,7 @@ export default function MembersPage() {
       />
 
       <div className="hrm-stat-grid">
-        <HrmStatCard label="Tổng" value={employees.length} icon={Users} tone="primary" />
+        <HrmStatCard label="Tổng" value={employeeList.length} icon={Users} tone="primary" />
         <HrmStatCard label="Đang làm" value={stats.active} icon={UserCheck} tone="success" />
         <HrmStatCard label="Nghỉ việc" value={stats.resigned} icon={UserX} tone="warning" />
         <HrmStatCard label="Thai sản" value={stats.maternity} icon={Baby} tone="neutral" />
@@ -92,8 +104,14 @@ export default function MembersPage() {
               </tr>
             </thead>
             <tbody>
-              {isLoading ? (
+              {loading ? (
                 <tr><td colSpan={12} className="hrm-empty">Đang tải...</td></tr>
+              ) : isError ? (
+                <tr>
+                  <td colSpan={12} className="hrm-empty text-[var(--md-error)]">
+                    Không tải được danh sách nhân viên: {getApiErrorMessage(error)}
+                  </td>
+                </tr>
               ) : paginated.length === 0 ? (
                 <tr><td colSpan={12} className="hrm-empty">Không có nhân viên phù hợp.</td></tr>
               ) : (
@@ -103,7 +121,7 @@ export default function MembersPage() {
                     className="table-row cursor-pointer"
                     onClick={() => navigate(`/members/${emp.id}`)}
                   >
-                    <td className="table-cell font-mono text-sm text-[var(--md-primary)]">{emp.code || '—'}</td>
+                    <td className="table-cell font-mono text-sm text-[var(--md-primary)]">{emp.code ?? ''}</td>
                     <td className="table-cell font-semibold member-name">{emp.fullName}</td>
                     <td className="table-cell">{emp.gender}</td>
                     <td className="table-cell whitespace-nowrap">{fmtDate(emp.birthDate)}</td>

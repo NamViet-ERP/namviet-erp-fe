@@ -72,11 +72,7 @@ export default function AppLayout() {
           transition: `margin-left 300ms var(--md-easing)`,
         }}
       >
-        <div
-          className="animate-fade-in"
-          key={location.pathname}
-          style={{ padding: '16px 20px' }}
-        >
+        <div style={{ padding: '16px 20px' }}>
           <Outlet />
         </div>
       </main>

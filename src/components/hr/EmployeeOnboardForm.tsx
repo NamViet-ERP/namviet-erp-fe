@@ -1,10 +1,11 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Upload, Trash2, CheckCircle2, ChevronRight } from 'lucide-react';
 import { showToast } from '../ui/Toast';
-import { employeesService, validateUniqueCode } from '../../services/employeesService';
+import { employeesService, getSuggestedEmployeeCode, validateUniqueCode } from '../../services/employeesService';
+import { employeeCodeNextHint } from '../../lib/hrm/suggestedEmployeeCode';
 import { filesService } from '../../services/filesService';
 import { USE_MOCK } from '../../lib/mock';
 import { removeVietnameseTones } from '../../lib/vietnamese';
@@ -95,11 +96,27 @@ export default function EmployeeOnboardForm({ mode = 'public', onCreated }: Empl
   const [cccdBack, setCccdBack] = useState<FileState | null>(null);
   const [degreePhoto, setDegreePhoto] = useState<FileState | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [codeHint, setCodeHint] = useState('');
 
   const { register, handleSubmit, setValue, watch, formState: { errors, isSubmitting }, reset } = useForm<FormValues>({
     resolver: zodResolver(employeeSchema),
     defaultValues: { gender: undefined, maritalStatus: undefined, hadSocialInsurance: undefined },
   });
+
+  useEffect(() => {
+    if (!isHr) return;
+    let cancelled = false;
+    getSuggestedEmployeeCode()
+      .then(code => {
+        if (cancelled) return;
+        setValue('code', code);
+        setCodeHint(employeeCodeNextHint(code));
+      })
+      .catch(() => {
+        if (!cancelled) setCodeHint('');
+      });
+    return () => { cancelled = true; };
+  }, [isHr, setValue]);
 
   const gender = watch('gender');
   const maritalStatus = watch('maritalStatus');
@@ -112,6 +129,10 @@ export default function EmployeeOnboardForm({ mode = 'public', onCreated }: Empl
   const onSubmit = async (data: FormValues) => {
     if (!profilePhoto) { showToast('error', 'Vui lòng tải ảnh hồ sơ'); return; }
     if (!cccdFront || !cccdBack) { showToast('error', 'Vui lòng tải ảnh CCCD mặt trước và mặt sau'); return; }
+    if (isHr && !data.code?.trim()) {
+      showToast('error', 'Vui lòng nhập mã nhân viên');
+      return;
+    }
     if (isHr && data.code?.trim()) {
       const ok = await validateUniqueCode(data.code);
       if (!ok) { showToast('error', 'Mã nhân viên đã tồn tại'); return; }
@@ -215,7 +236,13 @@ export default function EmployeeOnboardForm({ mode = 'public', onCreated }: Empl
           <div className="hrm-form-grid">
             <div>
               <label className="hrm-field__label">Mã nhân viên</label>
-              <input className="hrm-field-input" placeholder="Để trống để hệ thống tự sinh" {...register('code')} />
+              <input
+                className="hrm-field-input font-mono"
+                placeholder="VD: NV-0101"
+                maxLength={7}
+                {...register('code')}
+              />
+              {codeHint && <p className="text-xs text-[var(--md-on-surface-variant)] mt-1">{codeHint}</p>}
             </div>
             <div>
               <label className="hrm-field__label">Mảng</label>

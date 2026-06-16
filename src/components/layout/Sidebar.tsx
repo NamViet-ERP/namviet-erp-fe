@@ -162,7 +162,7 @@ export default function Sidebar({ collapsed, onToggle, menuItems, currentModule 
         width: collapsed ? '48px' : '180px',
         background: sidebarBackground,
         borderRight: '1px solid var(--md-outline-variant)',
-        transition: 'width 300ms var(--md-easing)',
+        transition: 'width 300ms var(--md-easing), background 300ms var(--md-easing)',
       }}
     >
       {/* ── Sidebar Header ── */}
@@ -259,7 +259,11 @@ export default function Sidebar({ collapsed, onToggle, menuItems, currentModule 
       </div>
 
       {/* ── Nav items ── */}
-      <nav style={{ flex: 1, overflowY: 'auto', padding: '6px', transition: 'all 200ms var(--md-easing)' }}>
+      <nav
+        key={currentModule}
+        className="sidebar-nav-enter"
+        style={{ flex: 1, overflowY: 'auto', padding: '6px' }}
+      >
         {menuItems.map((item) => {
           const Icon = item.icon;
           const hasChildren = (item.children?.length ?? 0) > 0;
@@ -306,7 +310,7 @@ export default function Sidebar({ collapsed, onToggle, menuItems, currentModule 
                   style={{
                     flexShrink: 0,
                     color: active ? 'var(--md-secondary)' : 'var(--md-on-surface)',
-                    transition: 'color 200ms var(--md-easing)',
+                    transition: 'color 280ms var(--md-easing)',
                   }}
                 />
                 <span
@@ -352,13 +356,13 @@ export default function Sidebar({ collapsed, onToggle, menuItems, currentModule 
                             padding: '4px 8px',
                             fontFamily: "'Roboto', sans-serif",
                             fontSize: '11px',
-                            fontWeight: isActive(c.path) ? 600 : 400,
+                            fontWeight: 500,
                             borderRadius: '9999px',
                             border: 'none',
                             background: isActive(c.path) ? 'var(--md-secondary-container)' : 'transparent',
                             color: isActive(c.path) ? 'var(--md-on-secondary-container)' : 'var(--md-on-surface)',
                             cursor: 'pointer',
-                            transition: 'background 200ms var(--md-easing), color 200ms var(--md-easing)',
+                            transition: 'background 280ms var(--md-easing), color 280ms var(--md-easing)',
                             display: 'block',
                           }}
                           onMouseEnter={e => {

@@ -1,6 +1,6 @@
 import { apiClient } from '../lib/apiClient';
 
-export type UploadCategory = 'profile' | 'cccd-front' | 'cccd-back' | 'degree';
+export type UploadCategory = 'profile' | 'cccd-front' | 'cccd-back' | 'degree' | 'cv';
 
 export interface UploadResult {
   url: string;

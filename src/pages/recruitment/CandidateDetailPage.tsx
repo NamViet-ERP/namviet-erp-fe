@@ -1,14 +1,17 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Edit, Save, X, FileText, Download } from 'lucide-react';
 import { showToast } from '../../components/ui/Toast';
 import { useCandidate, useUpdateCandidate } from '../../hooks/useCandidates';
-import { getHrStaff } from '../../constants/systemUsers';
+import { useHrStaffSelectOptions } from '../../hooks/useHrStaff';
 import { RECRUITMENT_SOURCES, EDUCATION_LEVELS } from '../../constants/recruitment';
-import { usePositions } from '../../hooks/usePositions';
+import { usePositionSelectOptions } from '../../hooks/usePositions';
+import { candidatesService } from '../../services/candidatesService';
+import { getApiErrorMessage } from '../../lib/apiClient';
 import DetailSection from '../../components/hr/DetailSection';
 import { FieldView, FieldInput, FieldSelect } from '../../components/hr/DetailFields';
 import { HrmDetailHeader } from '../../components/hr/HrmPageChrome';
+import { formatCandidateAppliedAt } from '../../lib/hrm/candidateApiMapper';
 import type { Candidate } from '../../types/hr';
 
 export default function CandidateDetailPage() {
@@ -16,16 +19,12 @@ export default function CandidateDetailPage() {
   const navigate = useNavigate();
   const { data: candidate, isLoading, isError } = useCandidate(id);
   const updateMutation = useUpdateCandidate();
-  const { data: positions = [] } = usePositions();
   const [isEditing, setIsEditing] = useState(false);
-  const [form, setForm] = useState<Candidate | null>(candidate ? { ...candidate } : null);
-  const [prevCandidate, setPrevCandidate] = useState(candidate);
-  const hrStaff = getHrStaff();
-
-  if (candidate !== prevCandidate) {
-    setPrevCandidate(candidate);
-    setForm(candidate ? { ...candidate } : null);
-  }
+  const [draft, setDraft] = useState<Candidate | null>(null);
+  const downloadingCvRef = useRef(false);
+  const form = isEditing ? draft : candidate;
+  const positionOptions = usePositionSelectOptions(form?.position ?? candidate?.position);
+  const hrStaffOptions = useHrStaffSelectOptions(form?.hrResponsible ?? candidate?.hrResponsible);
 
   if (isLoading) return <div className="hrm-empty">Đang tải...</div>;
   if (isError || !candidate || !form) {
@@ -37,7 +36,7 @@ export default function CandidateDetailPage() {
     );
   }
 
-  const set = (key: keyof Candidate, value: string) => setForm(prev => prev ? { ...prev, [key]: value } : prev);
+  const set = (key: keyof Candidate, value: string) => setDraft(prev => prev ? { ...prev, [key]: value } : prev);
 
   const handleSave = async () => {
     if (!id || !form) return;
@@ -45,6 +44,7 @@ export default function CandidateDetailPage() {
       const { id: _id, appliedAt, ...dto } = form;
       await updateMutation.mutateAsync({ id, dto });
       showToast('success', 'Đã lưu thông tin ứng viên');
+      setDraft(null);
       setIsEditing(false);
     } catch {
       showToast('error', 'Không thể lưu thông tin');
@@ -52,12 +52,33 @@ export default function CandidateDetailPage() {
   };
 
   const handleCancel = () => {
-    setForm({ ...candidate });
+    setDraft(null);
     setIsEditing(false);
   };
 
+  const handleStartEditing = () => {
+    setDraft({ ...candidate });
+    setIsEditing(true);
+  };
+
+  const handleDownloadCv = async () => {
+    if (!id || !form.cvFileName) {
+      showToast('warning', 'Ứng viên chưa có file CV');
+      return;
+    }
+    if (downloadingCvRef.current) return;
+    downloadingCvRef.current = true;
+    try {
+      await candidatesService.downloadCv(id, form.cvFileName);
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không thể tải CV'));
+    } finally {
+      downloadingCvRef.current = false;
+    }
+  };
+
   const editActions = !isEditing ? (
-    <button type="button" onClick={() => setIsEditing(true)} className="btn btn-primary rounded-full px-5 flex items-center gap-2">
+    <button type="button" onClick={handleStartEditing} className="btn btn-primary rounded-full px-5 flex items-center gap-2">
       <Edit size={16} /> Chỉnh sửa
     </button>
   ) : (
@@ -75,9 +96,8 @@ export default function CandidateDetailPage() {
     <div className="hrm-page w-full">
       <HrmDetailHeader
         onBack={() => navigate('/recruitment/candidates')}
-        hideBackButton
         title={candidate.fullName}
-        subtitle={`Nộp hồ sơ _ ${new Date(candidate.appliedAt).toLocaleString('vi-VN')}`}
+        subtitle={`Nộp hồ sơ · ${formatCandidateAppliedAt(candidate.appliedAt)}`}
         actions={editActions}
       />
 
@@ -94,10 +114,10 @@ export default function CandidateDetailPage() {
               <FieldSelect label="Trình độ học vấn" value={form.education as string} onChange={v => set('education', v)} options={[...EDUCATION_LEVELS]} />
               <FieldInput label="Trường" value={form.school} onChange={v => set('school', v)} />
               <FieldInput label="Chuyên ngành" value={form.major} onChange={v => set('major', v)} />
-              <FieldSelect label="Vị trí ứng tuyển" value={form.position} onChange={v => set('position', v)} options={positions.map(p => p.name)} />
+              <FieldSelect label="Vị trí ứng tuyển" value={form.position} onChange={v => set('position', v)} options={positionOptions} />
               <FieldInput label="Số năm kinh nghiệm" value={form.experience} onChange={v => set('experience', v)} />
               <FieldSelect label="Nguồn ứng tuyển" value={form.source as string} onChange={v => set('source', v)} options={[...RECRUITMENT_SOURCES]} />
-              <FieldSelect label="HR phụ trách" value={form.hrResponsible} onChange={v => set('hrResponsible', v)} options={hrStaff.map(h => h.name)} />
+              <FieldSelect label="HR phụ trách" value={form.hrResponsible} onChange={v => set('hrResponsible', v)} options={hrStaffOptions} />
             </>
           ) : (
             <>
@@ -125,7 +145,7 @@ export default function CandidateDetailPage() {
               <p className="text-xs text-[var(--md-on-surface-variant)]">{form.cvFileSize}</p>
             </div>
           </div>
-          <button type="button" onClick={() => showToast('info', `Tải ${form.cvFileName}`, 'Tải CV')} className="btn btn-primary rounded-full text-sm flex items-center gap-2">
+          <button type="button" onClick={handleDownloadCv} disabled={!form.cvFileName} className="btn btn-primary rounded-full text-sm flex items-center gap-2 shrink-0 min-w-[6.5rem] justify-center">
             <Download size={14} /> Tải CV
           </button>
         </div>

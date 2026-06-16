@@ -9,6 +9,8 @@
  * Domain services depend on this so swapping mock → real API is a config change.
  */
 
+import { clearAuthSession } from './authSession';
+
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
 
 /** Normalized API failure. Carries the HTTP status and any server payload. */
@@ -36,6 +38,13 @@ export function getApiErrorMessage(err: unknown, fallback = 'Đã xảy ra lỗi
   if (err instanceof ApiError) return err.message;
   if (err instanceof Error && err.message.trim()) return err.message.trim();
   return fallback;
+}
+
+function handleAuthFailure(status: number): void {
+  if (status !== 401 || typeof window === 'undefined') return;
+  if (window.location.pathname.startsWith('/login')) return;
+  clearAuthSession();
+  window.location.assign('/login?expired=1');
 }
 
 function extractErrorMessage(data: unknown, fallback: string): string {
@@ -122,8 +131,13 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   if (!response.ok) {
     const message = extractErrorMessage(
       data,
-      `Yêu cầu thất bại (HTTP ${response.status})`,
+      response.status === 401
+        ? 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'
+        : response.status === 403
+          ? 'Bạn không có quyền truy cập chức năng này.'
+          : `Yêu cầu thất bại (HTTP ${response.status})`,
     );
+    if (response.status === 401) handleAuthFailure(401);
     throw new ApiError(message, response.status, data);
   }
 
@@ -157,8 +171,13 @@ export const apiClient = {
       if (!response.ok) {
         const message = extractErrorMessage(
           data,
-          `Yêu cầu thất bại (HTTP ${response.status})`,
+          response.status === 401
+            ? 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'
+            : response.status === 403
+              ? 'Bạn không có quyền truy cập chức năng này.'
+              : `Yêu cầu thất bại (HTTP ${response.status})`,
         );
+        if (response.status === 401) handleAuthFailure(401);
         throw new ApiError(message, response.status, data);
       }
       return data as T;

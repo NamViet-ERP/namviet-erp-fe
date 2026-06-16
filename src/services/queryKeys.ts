@@ -43,6 +43,9 @@ export const queryKeys = {
   positions: {
     all: ['positions'] as const,
   },
+  hrStaff: {
+    all: ['hrStaff'] as const,
+  },
   roles: {
     all: ['roles'] as const,
   },

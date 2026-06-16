@@ -961,6 +961,14 @@
     box-shadow: var(--md-shadow-3);
     animation: fade-in 160ms var(--md-easing);
   }
+  .hrm-date-picker__popover--floating {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 200;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
   .hrm-date-picker__quick {
     display: flex;
     gap: 6px;
@@ -1817,8 +1825,9 @@
     font-weight: 500;
     color: var(--md-on-surface);
     cursor: pointer;
-    transition: background-color 200ms var(--md-easing),
-                color 200ms var(--md-easing);
+    transition: background-color 280ms var(--md-easing),
+                color 280ms var(--md-easing),
+                transform 200ms var(--md-easing);
     position: relative;
     border: none;
     background: transparent;
@@ -1833,7 +1842,7 @@
   .sidebar-item.active {
     background: var(--nv-sidebar-item-active-bg);
     color: var(--md-secondary);
-    font-weight: 600;
+    font-weight: 500;
   }
   .dark .sidebar-item:hover {
     background: var(--nv-sidebar-item-hover);
@@ -1992,16 +2001,58 @@
   /* ── Animation utilities ── */
   .cinematic-fade { animation: mdFadeIn var(--md-duration-slow) var(--md-easing) forwards; }
   .animate-fade-in  { animation: mdFadeIn var(--md-duration-slow) var(--md-easing) forwards; }
+  .animate-fade-out { animation: mdFadeOut var(--md-duration-slow) var(--md-easing) forwards; }
   .animate-scale-in { animation: mdScaleIn var(--md-duration-slow) var(--md-easing) forwards; }
+  .animate-scale-out { animation: mdScaleOut var(--md-duration-slow) var(--md-easing) forwards; }
   .animate-slide-up { animation: mdSlideUp var(--md-duration-slow) var(--md-easing) forwards; }
+
+  /* Page + sidebar nav — same motion language as mega menu (scale + fade) */
+  .animate-page-enter {
+    animation: pageEnterScale 320ms var(--md-easing) forwards;
+    transform-origin: top center;
+    will-change: opacity, transform;
+  }
+  .sidebar-nav-enter {
+    animation: sidebarNavEnter 320ms var(--md-easing) forwards;
+    transform-origin: top left;
+    will-change: opacity, transform;
+  }
+  .mega-menu-panel {
+    transform-origin: top center;
+    will-change: opacity, transform;
+  }
+  .mega-menu-scrim {
+    animation: mdFadeIn 320ms var(--md-easing) forwards;
+    will-change: opacity;
+  }
+  .mega-menu-scrim--out {
+    animation: mdFadeOut 280ms var(--md-easing) forwards;
+  }
+
+  @keyframes pageEnterScale {
+    from { opacity: 0; transform: scale(0.96); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  @keyframes sidebarNavEnter {
+    from { opacity: 0; transform: scale(0.96) translateX(-6px); }
+    to   { opacity: 1; transform: scale(1) translateX(0); }
+  }
 
   @keyframes mdFadeIn {
     from { opacity: 0; }
     to   { opacity: 1; }
   }
+  @keyframes mdFadeOut {
+    from { opacity: 1; }
+    to   { opacity: 0; }
+  }
   @keyframes mdScaleIn {
     from { opacity: 0; transform: scale(0.92); }
     to   { opacity: 1; transform: scale(1); }
+  }
+  @keyframes mdScaleOut {
+    from { opacity: 1; transform: scale(1); }
+    to   { opacity: 0; transform: scale(0.96); }
   }
   @keyframes mdSlideUp {
     from { opacity: 0; transform: translateY(8px); }

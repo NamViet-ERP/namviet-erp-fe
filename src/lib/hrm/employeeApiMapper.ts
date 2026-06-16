@@ -1,4 +1,4 @@
-import type { CreateEmployeeDto, Employee, UpdateEmployeeDto } from '../types/hr';
+import type { CreateEmployeeDto, Employee, UpdateEmployeeDto } from '../../types/hr';
 
 /** API payload shape (camelCase from ASP.NET JSON). */
 export interface FeEmployeeApiDto {

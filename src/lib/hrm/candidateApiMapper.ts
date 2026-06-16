@@ -17,6 +17,7 @@ export interface FeCandidateApiDto {
   hrResponsible: string;
   cvFileName: string;
   cvFileSize: string;
+  cvFileUrl?: string;
   appliedAt: string;
   screeningType?: string;
   targetPosition?: string;
@@ -73,6 +74,46 @@ function mapSourceFromApi(value?: string): string {
   return map[v] ?? v;
 }
 
+function readApiField(dto: FeCandidateApiDto, camel: keyof FeCandidateApiDto, pascal: string): string {
+  const raw = dto as FeCandidateApiDto & Record<string, unknown>;
+  const v = raw[camel] ?? raw[pascal];
+  return typeof v === 'string' ? v.trim() : '';
+}
+
+/** Parse ngày nhận hồ sơ (ISO hoặc dd/MM/yyyy[ HH:mm]). */
+export function parseCandidateAppliedAt(value?: string): number {
+  if (!value?.trim()) return 0;
+  const vi = /^(\d{2})\/(\d{2})\/(\d{4})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?/.exec(value.trim());
+  if (vi) {
+    const [, d, mo, y, h = '0', mi = '0', s = '0'] = vi;
+    return new Date(`${y}-${mo}-${d}T${h.padStart(2, '0')}:${mi.padStart(2, '0')}:${s.padStart(2, '0')}`).getTime();
+  }
+  const t = new Date(value).getTime();
+  return Number.isNaN(t) ? 0 : t;
+}
+
+export function formatCandidateAppliedAt(value?: string): string {
+  if (!value?.trim()) return '';
+  const t = parseCandidateAppliedAt(value);
+  if (!t) return value.trim();
+  return new Date(t).toLocaleString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+export function compareCandidateAppliedAtNewestFirst(
+  a: { id: string; appliedAt: string },
+  b: { id: string; appliedAt: string },
+): number {
+  const diff = parseCandidateAppliedAt(b.appliedAt) - parseCandidateAppliedAt(a.appliedAt);
+  if (diff !== 0) return diff;
+  return Number(b.id) - Number(a.id);
+}
+
 export function fromApi(dto: FeCandidateApiDto): Candidate {
   return {
     id: dto.id,
@@ -91,7 +132,8 @@ export function fromApi(dto: FeCandidateApiDto): Candidate {
     hrResponsible: dto.hrResponsible ?? '',
     cvFileName: dto.cvFileName ?? '',
     cvFileSize: dto.cvFileSize ?? '',
-    appliedAt: dto.appliedAt,
+    cvFileUrl: dto.cvFileUrl,
+    appliedAt: readApiField(dto, 'appliedAt', 'AppliedAt'),
     screeningType: dto.screeningType,
     targetPosition: dto.targetPosition,
     targetDepartment: dto.targetDepartment,
@@ -128,7 +170,9 @@ export function toApi(candidate: CreateCandidateDto | UpdateCandidateDto, id = '
     hrResponsible: c.hrResponsible ?? '',
     cvFileName: c.cvFileName ?? '',
     cvFileSize: c.cvFileSize ?? '',
-    appliedAt: c.appliedAt ?? '',
+    cvFileUrl: c.cvFileUrl,
+    // appliedAt do server ghi khi nộp form — client không gửi khi create/update
+    appliedAt: '',
     screeningType: c.screeningType,
     targetPosition: c.targetPosition,
     targetDepartment: c.targetDepartment,

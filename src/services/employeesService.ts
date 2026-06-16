@@ -1,5 +1,6 @@
 import { apiClient } from '../lib/apiClient';
 import { fromApi, toApi, type FeEmployeeApiDto } from '../lib/hrm/employeeApiMapper';
+import { suggestNextEmployeeCode } from '../lib/hrm/suggestedEmployeeCode';
 import { USE_MOCK, mockDelay } from '../lib/mock';
 import type { CreateEmployeeDto, Employee, UpdateEmployeeDto } from '../types/hr';
 import { isActiveEmployee } from '../types/hr';
@@ -12,7 +13,10 @@ const STORAGE_KEY = 'nv-employee-data';
 function readStore(): Employee[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw) as Employee[];
+    if (raw) {
+      const parsed = JSON.parse(raw) as Employee[];
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
   } catch {
     /* ignore */
   }
@@ -43,6 +47,19 @@ export async function validateUniqueCode(code: string, excludeId?: string): Prom
   return res.available;
 }
 
+export async function getSuggestedEmployeeCode(excludeId?: string): Promise<string> {
+  if (USE_MOCK) {
+    const codes = readStore()
+      .filter(e => e.id !== excludeId && e.status === 'Đang làm')
+      .map(e => e.code);
+    return suggestNextEmployeeCode(codes);
+  }
+  const res = await apiClient.get<{ suggestedCode: string }>(`${ENDPOINT}/suggested-code`, {
+    excludeId: excludeId ?? '',
+  });
+  return res.suggestedCode;
+}
+
 export function isAccountActiveForEmployee(employeeId?: string): boolean {
   if (!employeeId) return true;
   if (!USE_MOCK) {
@@ -70,6 +87,7 @@ export const employeesService = {
   async list(): Promise<Employee[]> {
     if (USE_MOCK) return mockDelay(readStore());
     const items = await apiClient.get<FeEmployeeApiDto[]>(ENDPOINT);
+    if (!Array.isArray(items)) return [];
     return items.map(fromApi);
   },
 
