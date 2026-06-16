@@ -306,14 +306,14 @@ export default function EmployeeOnboardForm({ mode = 'public', onCreated }: Empl
       </div>
       <ImageUpload label="Ảnh hồ sơ *" file={profilePhoto} onFile={setProfilePhoto} onRemove={() => setProfilePhoto(null)} />
 
-      <FormSectionHeader step={isHr ? 3 : 2} title="CMND (nếu có)" />
+      <FormSectionHeader step={isHr ? 3 : 2} title="CMND (nếu có)" style={{ marginTop: '12px' }} />
       <div className="hrm-form-grid hrm-form-grid--3">
         <div><label className="hrm-field__label">Số CMND</label><input className="hrm-field-input" {...register('cmndNumber')} /></div>
         <div><label className="hrm-field__label">Ngày cấp</label><HrmDatePicker value={watch('cmndIssueDate') ?? ''} onChange={v => setValue('cmndIssueDate', v)} /></div>
         <div><label className="hrm-field__label">Nơi cấp</label><input className="hrm-field-input" {...register('cmndIssuePlace')} /></div>
       </div>
 
-      <FormSectionHeader step={isHr ? 4 : 3} title="CCCD" />
+      <FormSectionHeader step={isHr ? 4 : 3} title="CCCD" style={{ marginTop: '12px' }} />
       <div className="hrm-form-grid hrm-form-grid--3">
         <div>
           <label className="hrm-field__label">Số CCCD *</label>
@@ -340,7 +340,7 @@ export default function EmployeeOnboardForm({ mode = 'public', onCreated }: Empl
         <ImageUpload label="Ảnh CCCD mặt sau *" file={cccdBack} onFile={setCccdBack} onRemove={() => setCccdBack(null)} />
       </div>
 
-      <FormSectionHeader step={isHr ? 5 : 4} title="Liên hệ" />
+      <FormSectionHeader step={isHr ? 5 : 4} title="Liên hệ" style={{ marginTop: '12px' }} />
       <div className="hrm-form-grid">
         <div>
           <label className="hrm-field__label">Email cá nhân *</label>
@@ -363,7 +363,7 @@ export default function EmployeeOnboardForm({ mode = 'public', onCreated }: Empl
         </div>
       </div>
 
-      <FormSectionHeader step={isHr ? 6 : 5} title="Học vấn" />
+      <FormSectionHeader step={isHr ? 6 : 5} title="Học vấn" style={{ marginTop: '12px' }} />
       <div className="hrm-form-grid">
         <div>
           <label className="hrm-field__label">Trình độ *</label>
@@ -394,7 +394,7 @@ export default function EmployeeOnboardForm({ mode = 'public', onCreated }: Empl
       </div>
       <ImageUpload label="Ảnh bằng cấp đính kèm" file={degreePhoto} onFile={setDegreePhoto} onRemove={() => setDegreePhoto(null)} />
 
-      <FormSectionHeader step={isHr ? 7 : 6} title="Ngân hàng" />
+      <FormSectionHeader step={isHr ? 7 : 6} title="Ngân hàng" style={{ marginTop: '12px' }} />
       <div className="hrm-form-grid">
         <div>
           <label className="hrm-field__label">Tên chủ tài khoản (IN HOA KHÔNG DẤU) *</label>
@@ -422,7 +422,7 @@ export default function EmployeeOnboardForm({ mode = 'public', onCreated }: Empl
         </div>
       </div>
 
-      <FormSectionHeader step={isHr ? 8 : 7} title="BHXH" />
+      <FormSectionHeader step={isHr ? 8 : 7} title="BHXH" style={{ marginTop: '12px' }} />
       <div className="hrm-form-grid">
         <div>
           <label className="hrm-field__label">Đã tham gia BHXH chưa *</label>
@@ -442,7 +442,7 @@ export default function EmployeeOnboardForm({ mode = 'public', onCreated }: Empl
         </div>
       </div>
 
-      <button type="submit" disabled={isSubmitting} className="btn btn-primary w-full h-12 rounded-full font-bold mt-8 flex items-center justify-center gap-2">
+      <button type="submit" disabled={isSubmitting} className="btn btn-primary w-full h-12 rounded-full font-bold flex items-center justify-center gap-2" style={{ marginTop: '24px' }}>
         {isSubmitting
           ? (isHr ? 'ĐANG LƯU...' : 'ĐANG GỬI...')
           : (isHr ? 'LƯU NHÂN VIÊN' : 'GỬI THÔNG TIN')}

@@ -94,8 +94,8 @@ export default function MembersPage() {
       </HrmPanel>
 
       <HrmPanel noPadding>
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse hrm-table">
+        <div className="overflow-x-auto table-scroll">
+          <table className="w-full min-w-max border-collapse hrm-table">
             <thead>
               <tr>
                 {['Mã NV', 'Họ tên', 'Giới tính', 'Ngày sinh', 'Mảng', 'Chi nhánh', 'Bộ phận', 'Chức vụ', 'Vào làm', 'Chính thức', 'Trạng thái', 'Nghỉ việc'].map(h => (
@@ -121,7 +121,7 @@ export default function MembersPage() {
                     className="table-row cursor-pointer"
                     onClick={() => navigate(`/members/${emp.id}`)}
                   >
-                    <td className="table-cell font-mono text-sm text-[var(--md-primary)]">{emp.code ?? ''}</td>
+                    <td className="table-cell font-mono text-sm text-[var(--md-primary)] whitespace-nowrap">{emp.code || '—'}</td>
                     <td className="table-cell font-semibold member-name">{emp.fullName}</td>
                     <td className="table-cell">{emp.gender}</td>
                     <td className="table-cell whitespace-nowrap">{fmtDate(emp.birthDate)}</td>

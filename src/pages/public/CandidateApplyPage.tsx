@@ -7,8 +7,10 @@ export default function CandidateApplyPage() {
     <>
       <PublicFormLayout
         wide
-        title="Nộp đơn ứng tuyển"
-        subtitle="Vui lòng cung cấp các thông tin tuyển dụng dưới đây để nộp hồ sơ xin việc của bạn vào hệ thống nhân sự Vinh Việt."
+        eyebrow="NAM VIỆT GROUP TUYỂN DỤNG"
+        eyebrowAsTitle
+        title=""
+        subtitle="Vui lòng điền đầy đủ thông tin để chúng tôi có thể liên hệ và phản hồi sớm nhất"
       >
         <CandidateForm />
       </PublicFormLayout>

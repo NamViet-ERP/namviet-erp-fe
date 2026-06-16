@@ -282,7 +282,7 @@ export default function TransferListPage() {
 
       {/* SEARCH BAR FOR LISTS */}
       {activeTab !== 'consolidation' && (
-        <div className="rounded-2xl shadow-card p-4 flex justify-between items-center" style={{ background: 'var(--md-surface-container)', border: '1px solid var(--md-outline-variant)' }}>
+        <div className="rounded-2xl shadow-card p-4 flex justify-between items-center page-filter-bar" style={{ background: 'var(--md-surface-container)', border: '1px solid var(--md-outline-variant)' }}>
           <SearchBar value={search} onChange={setSearch} placeholder="Tìm kiếm chứng từ, tên dự án, sản phẩm..." />
         </div>
       )}
@@ -293,7 +293,7 @@ export default function TransferListPage() {
           {paginatedTransfers.length === 0 ? (
             <EmptyState message="Không tìm thấy phiếu chuyển kho nào!" />
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto table-scroll">
               <table className="w-full text-xs" style={{ minWidth: '900px' }}>
                 <thead>
                   <tr>
@@ -367,7 +367,7 @@ export default function TransferListPage() {
             {filteredLoans.length === 0 ? (
               <EmptyState message="Không tìm thấy yêu cầu mượn trả nào!" />
             ) : (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto table-scroll">
                 <table className="w-full text-xs" style={{ minWidth: '1100px' }}>
                   <thead>
                     <tr style={{ background: 'var(--md-surface-container-high)' }}>
@@ -497,7 +497,7 @@ export default function TransferListPage() {
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto table-scroll">
                 <table className="w-full text-xs" style={{ minWidth: '800px' }}>
                 <thead>
                   <tr style={{ background: 'var(--md-surface-container-high)', borderBottom: '1px solid var(--md-outline-variant)' }}>
@@ -599,7 +599,7 @@ export default function TransferListPage() {
           </button>
         </div>
         {errors.items && <p className="text-[var(--md-error)] text-xs mb-2">{errors.items}</p>}
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto table-scroll">
           <table className="form-table text-xs" style={{ minWidth: '750px' }}>
             <thead>
               <tr>

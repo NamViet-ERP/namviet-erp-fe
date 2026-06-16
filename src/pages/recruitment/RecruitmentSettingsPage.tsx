@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Briefcase, Plus, Trash2, Search, Link2, Copy, Check } from 'lucide-react';
-import PageHeader from '../../components/ui/PageHeader';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { usePositions, useCreatePosition, useDeletePosition, useTogglePositionStatus } from '../../hooks/usePositions';
 import { getApiErrorMessage } from '../../lib/apiClient';
@@ -67,8 +66,6 @@ export default function RecruitmentSettingsPage() {
 
   return (
     <div className="animate-fade-in">
-      <PageHeader eyebrow="TUYỂN DỤNG" title="THIẾT LẬP TUYỂN DỤNG" />
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Manage positions (2 cols wide) */}
         <div className="lg:col-span-2 space-y-6">
@@ -78,7 +75,7 @@ export default function RecruitmentSettingsPage() {
                 <Briefcase size={20} style={{ color: 'var(--md-primary)' }} />
               </div>
               <div>
-                <h3 className="font-bold text-lg" style={{ color: 'var(--md-on-surface)' }}>Vị trí ứng tuyển</h3>
+                <h3 className="font-bold text-lg uppercase" style={{ color: 'var(--md-on-surface)' }}>VỊ TRÍ ỨNG TUYỂN</h3>
                 <p className="text-xs" style={{ color: 'var(--md-on-surface-variant)' }}>Bật/tắt trạng thái hiển thị hoặc xóa vị trí tuyển dụng</p>
               </div>
             </div>
@@ -95,7 +92,8 @@ export default function RecruitmentSettingsPage() {
               />
               <button
                 type="submit"
-                className="btn btn-primary flex items-center gap-2 px-5 h-11"
+                className="btn btn-primary flex items-center gap-2 px-4 h-10"
+                style={{ paddingTop: 0, paddingBottom: 0 }}
                 disabled={createMutation.isPending}
               >
                 <Plus size={18} />
@@ -104,7 +102,7 @@ export default function RecruitmentSettingsPage() {
             </form>
 
             {/* Search & Filter */}
-            <div className="relative mb-4">
+            <div className="relative mb-4 page-filter-bar">
               <span className="absolute inset-y-0 left-3 flex items-center text-[var(--md-on-surface-variant)]">
                 <Search size={16} />
               </span>
@@ -147,7 +145,7 @@ export default function RecruitmentSettingsPage() {
                       <button
                         type="button"
                         onClick={() => handleToggle(pos.name)}
-                        className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${pos.isActive ? 'bg-[var(--md-primary)]' : 'bg-gray-400 dark:bg-gray-600'}`}
+                        className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${pos.isActive ? 'bg-[#92c348]' : 'bg-gray-400 dark:bg-gray-600'}`}
                         role="switch"
                         aria-checked={pos.isActive}
                         title={pos.isActive ? "Đang bật (Hiển thị)" : "Đang tắt (Ẩn)"}
@@ -219,17 +217,19 @@ export default function RecruitmentSettingsPage() {
           <div className="rounded-2xl p-6 shadow-card" style={{ background: 'var(--md-surface-container)', border: '1px solid var(--md-outline-variant)' }}>
             <h4 className="font-bold text-sm mb-3" style={{ color: 'var(--md-on-surface)' }}>💡 Hướng dẫn vận hành</h4>
             <div className="space-y-3 text-xs" style={{ color: 'var(--md-on-surface-variant)' }}>
-              <div className="flex gap-2">
-                <span className="text-green-500 font-bold">●</span>
-                <p><strong>Bật công tắc (Active):</strong> Vị trí hiển thị ngoài Form ứng tuyển công khai để ứng viên nộp hồ sơ.</p>
-              </div>
-              <div className="flex gap-2">
-                <span className="text-gray-400 font-bold">●</span>
-                <p><strong>Tắt công tắc (Deactive):</strong> Ẩn vị trí khỏi Form ứng tuyển mà <strong>không cần xóa vĩnh viễn</strong>. Giúp tạm ngưng nhận hồ sơ cho vị trí này.</p>
-              </div>
-              <div className="flex gap-2">
-                <span className="text-red-500 font-bold">●</span>
-                <p><strong>Xóa vĩnh viễn (Trash):</strong> Xóa hoàn toàn vị trí ra khỏi hệ thống. Không ảnh hưởng đến hồ sơ cũ đã nộp.</p>
+              <div className="space-y-2">
+                <div className="flex gap-2 items-start">
+                  <span className="text-green-500 font-bold mt-1">●</span>
+                  <p className="mb-0"><strong>Bật công tắc (Active):</strong> Vị trí hiển thị ngoài Form ứng tuyển công khai để ứng viên nộp hồ sơ.</p>
+                </div>
+                <div className="flex gap-2 items-start">
+                  <span className="text-gray-400 font-bold mt-1">●</span>
+                  <p className="mb-0"><strong>Tắt công tắc (Deactive):</strong> Ẩn vị trí khỏi Form ứng tuyển mà <strong>không cần xóa vĩnh viễn</strong>. Giúp tạm ngưng nhận hồ sơ cho vị trí này.</p>
+                </div>
+                <div className="flex gap-2 items-start">
+                  <span className="text-red-500 font-bold mt-1">●</span>
+                  <p className="mb-0"><strong>Xóa vĩnh viễn (Trash):</strong> Xóa hoàn toàn vị trí ra khỏi hệ thống. Không ảnh hưởng đến hồ sơ cũ đã nộp.</p>
+                </div>
               </div>
             </div>
           </div>

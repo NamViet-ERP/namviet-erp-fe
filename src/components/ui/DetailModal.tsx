@@ -181,7 +181,7 @@ export default function DetailModal({ isOpen, onClose, title, data, columns, bad
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px' }}>
           {children ? children : (
             data.items && data.items.length > 0 ? (
-              <div style={{ overflowX: 'auto' }}>
+              <div style={{ overflowX: 'auto' }} className="table-scroll">
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr>

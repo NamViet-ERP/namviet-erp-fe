@@ -167,7 +167,7 @@ export default function StocktakeListPage() {
 
       <div className="rounded-2xl shadow-card overflow-hidden" style={{ background: 'var(--md-surface-container)', border: '1px solid var(--md-outline-variant)' }}>
         <div className="px-4 pt-4"><TabFilter tabs={tabs} activeTab={activeTab} onChange={(id) => { setActiveTab(id); setPage(1); }} /></div>
-        <div className="px-4 pb-3 flex items-center justify-between">
+        <div className="px-4 pb-3 flex items-center justify-between page-filter-bar">
           <div className="flex items-center gap-2">
             <select className="form-select w-20 text-xs py-1.5" value={pageSize} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setPageSize(Number(e.target.value))}>
               {[10, 15, 25].map(n => <option key={n} value={n}>{n}</option>)}
@@ -177,7 +177,7 @@ export default function StocktakeListPage() {
         </div>
 
         {paginated.length === 0 ? <EmptyState message="Không tìm thấy phiếu kiểm kê nào!" /> : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto table-scroll">
             <table className="w-full">
               <thead><tr>
                 <th className="table-header-cell">Ngày chứng từ</th>
@@ -248,7 +248,7 @@ export default function StocktakeListPage() {
           <p className="text-xs">⚠️ Khi tạo phiếu kiểm kê, các SKU sẽ tự động <b>đóng băng</b>. Không thể nhập/xuất/giữ hàng cho đến khi phiếu được duyệt hoặc mở băng.</p>
         </div>
         {errors.items && <p className="text-[var(--md-error)] text-xs mb-2">{errors.items}</p>}
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto table-scroll">
           <table className="form-table text-xs" style={{ minWidth: '850px' }}>
             <thead><tr>
               <th className="table-header-cell w-12">STT</th>
