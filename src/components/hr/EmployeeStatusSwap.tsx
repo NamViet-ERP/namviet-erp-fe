@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { Check, ChevronDown } from 'lucide-react';
 import { showToast } from '../ui/Toast';
 import { useUpdateEmployee } from '../../hooks/useEmployees';
-import { systemUsers } from '../../constants/systemUsers';
+import { getSystemUserByEmployeeId } from '../../constants/systemUsers';
 import type { Employee, EmployeeStatus } from '../../types/hr';
 
 const STATUS_OPTIONS: EmployeeStatus[] = ['Đang làm', 'Nghỉ việc', 'Thai sản'];
@@ -86,7 +86,7 @@ export default function EmployeeStatusSwap({ employee }: EmployeeStatusSwapProps
     setOpen(false);
     try {
       await updateMutation.mutateAsync({ id: employee.id, dto: { status: next } });
-      const linkedAccount = systemUsers.find(u => u.employeeId === employee.id);
+      const linkedAccount = getSystemUserByEmployeeId(employee.id);
       if (next === 'Nghỉ việc') {
         showToast(
           'warning',

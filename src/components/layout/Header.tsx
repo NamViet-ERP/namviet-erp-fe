@@ -15,7 +15,7 @@ import { USE_MOCK } from '../../lib/mock';
 import DepartmentCard from './DepartmentCard';
 import RoleSwitcher from './RoleSwitcher';
 
-type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment';
+type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin';
 type NotifType = 'warning' | 'import' | 'export' | 'info';
 
 interface User {

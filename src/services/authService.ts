@@ -1,7 +1,7 @@
 import { apiClient, setAuthTokenProvider } from '../lib/apiClient';
 import { USE_MOCK } from '../lib/mock';
 import { cacheEmployeeStatus } from './employeesService';
-import type { SystemUser, SystemUserRole } from '../constants/systemUsers';
+import type { SystemUser } from '../constants/systemUsers';
 import { setSessionUser, clearSessionUser } from '../constants/systemUsers';
 import { getEmployeeLockReason } from '../constants/employeeStatus';
 
@@ -26,26 +26,17 @@ interface FeAuthResponse {
   user: FeAuthUserDto;
 }
 
-const FE_ROLE_MAP: Record<string, SystemUserRole> = {
-  admin: 'admin',
-  storekeeper: 'storekeeper',
-  accountant: 'accountant',
-  procurement: 'procurement',
-  pm: 'pm',
-  hr: 'hr',
-};
-
 function mapFeUser(dto: FeAuthUserDto): SystemUser {
-  const role = FE_ROLE_MAP[dto.role.toLowerCase()] ?? 'storekeeper';
   return {
     id: dto.id,
     username: dto.username,
-    role,
+    role: dto.role.toLowerCase(),
     name: dto.name,
     initials: dto.initials,
     roleLabel: dto.roleLabel,
     email: dto.email,
     employeeId: dto.employeeId,
+    createdAt: new Date().toISOString().slice(0, 10),
   };
 }
 

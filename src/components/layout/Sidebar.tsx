@@ -1,23 +1,25 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
-import { ChevronDown, ChevronsLeft, Warehouse as WarehouseIcon, ClipboardCheck, Users, UserCheck } from 'lucide-react';
+import { ChevronDown, ChevronsLeft, Warehouse as WarehouseIcon, ClipboardCheck, Users, UserCheck, ShieldCheck } from 'lucide-react';
 import type { SidebarMenuItem } from '../../types';
 import type { LucideIcon } from 'lucide-react';
 
-type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment';
+type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin';
 
 const moduleIcons: Record<Module, LucideIcon> = { 
   warehouse: WarehouseIcon, 
   stocktake: ClipboardCheck,
   members: Users,
   recruitment: UserCheck,
+  admin: ShieldCheck,
 };
 const moduleLabels: Record<Module, string> = { 
   warehouse: 'KHO HÀNG', 
   stocktake: 'KIỂM KÊ',
   members: 'NHÂN VIÊN',
   recruitment: 'TUYỂN DỤNG',
+  admin: 'ADMIN',
 };
 
 interface SidebarProps {
@@ -145,7 +147,7 @@ export default function Sidebar({ collapsed, onToggle, menuItems, currentModule 
     }
   }, [popoverItem, updateFlyoutPosition]);
 
-  const sidebarBackground = currentModule === 'members' || currentModule === 'recruitment' ? '#e5e7eb' : 'var(--md-surface-container)';
+  const sidebarBackground = currentModule === 'members' || currentModule === 'recruitment' || currentModule === 'admin' ? '#e5e7eb' : 'var(--md-surface-container)';
 
   return (
     <aside

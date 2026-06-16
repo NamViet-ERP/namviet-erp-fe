@@ -16,7 +16,9 @@ import SuppliersPage from './pages/warehouse/SuppliersPage';
 import BarcodePage from './pages/warehouse/BarcodePage';
 import StockListPage from './pages/warehouse/StockListPage';
 import MembersPage from './pages/members/MembersPage';
+import EmployeeCreatePage from './pages/members/EmployeeCreatePage';
 import EmployeeDetailPage from './pages/members/EmployeeDetailPage';
+import MembersSettingsPage from './pages/members/MembersSettingsPage';
 import UserProfilePage from './pages/profile/UserProfilePage';
 import LoginPage from './pages/auth/LoginPage';
 import CandidateApplyPage from './pages/public/CandidateApplyPage';
@@ -24,6 +26,8 @@ import EmployeeOnboardPage from './pages/public/EmployeeOnboardPage';
 import CandidateListPage from './pages/recruitment/CandidateListPage';
 import CandidateDetailPage from './pages/recruitment/CandidateDetailPage';
 import RecruitmentSettingsPage from './pages/recruitment/RecruitmentSettingsPage';
+import AdminUsersPage from './pages/admin/AdminUsersPage';
+import AdminSettingsPage from './pages/admin/AdminSettingsPage';
 
 // Stocktake pages
 import StocktakeListPage from './pages/stocktake/StocktakeListPage';
@@ -57,6 +61,8 @@ export default function App() {
 
           {/* Module: Nhân viên */}
           <Route path="/members/list" element={<MembersPage />} />
+          <Route path="/members/settings" element={<MembersSettingsPage />} />
+          <Route path="/members/new" element={<EmployeeCreatePage />} />
           <Route path="/members/:id" element={<EmployeeDetailPage />} />
 
           {/* Module: Tuyển dụng */}
@@ -68,6 +74,10 @@ export default function App() {
           <Route path="/members/recruits" element={<Navigate to="/recruitment/candidates" replace />} />
 
           <Route path="/profile" element={<UserProfilePage />} />
+
+          {/* Module: Admin */}
+          <Route path="/admin/users" element={<AdminUsersPage />} />
+          <Route path="/admin/settings" element={<AdminSettingsPage />} />
 
           {/* Module 2: Kiểm kê */}
           <Route path="/stocktake/list" element={<StocktakeListPage />} />

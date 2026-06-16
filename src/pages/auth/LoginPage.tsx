@@ -5,12 +5,15 @@ import { showToast } from '../../components/ui/Toast';
 import ToastContainer from '../../components/ui/Toast';
 import { getUserById, canUserLogin, setSessionUser, findUserByLogin } from '../../constants/systemUsers';
 import { getAccountLockReason } from '../../services/employeesService';
+import { getApiErrorMessage } from '../../lib/apiClient';
 import { authService } from '../../services/authService';
 import { USE_MOCK } from '../../lib/mock';
 import namvietGroupLogo from '../../assets/NamViet Group.png';
 import RoleSwitcher from '../../components/layout/RoleSwitcher';
 
 const HAS_API = Boolean(import.meta.env.VITE_API_BASE_URL?.trim());
+/** Chạy frontend thuần — không cần Docker/PostgreSQL; dùng dữ liệu mô phỏng trong `src/data/*`. */
+const PURE_MOCK_DEV = USE_MOCK && !HAS_API;
 
 export default function LoginPage() {
   const [username, setUsername] = useState(() => {
@@ -21,7 +24,7 @@ export default function LoginPage() {
   });
   const [password, setPassword] = useState('');
   const [mockUserId, setMockUserId] = useState('');
-  const [useMockQuickLogin, setUseMockQuickLogin] = useState(false);
+  const [useMockQuickLogin, setUseMockQuickLogin] = useState(PURE_MOCK_DEV);
   const [rememberMe, setRememberMe] = useState(
     () => localStorage.getItem('nv-remember-me') === 'true',
   );
@@ -36,11 +39,7 @@ export default function LoginPage() {
     setError('');
 
     try {
-      if (USE_MOCK && useMockQuickLogin) {
-        if (!mockUserId) {
-          setError('Vui lòng chọn vai trò mô phỏng');
-          return;
-        }
+      if (USE_MOCK && useMockQuickLogin && mockUserId) {
         await new Promise(r => setTimeout(r, 800));
         const user = getUserById(mockUserId);
         if (!user) {
@@ -80,7 +79,7 @@ export default function LoginPage() {
         }
       }
 
-      if (rememberMe && !useMockQuickLogin) {
+      if (rememberMe && !mockUserId) {
         localStorage.setItem('nv-remember-me', 'true');
         localStorage.setItem('nv-saved-user', username.trim());
       } else {
@@ -90,8 +89,7 @@ export default function LoginPage() {
       showToast('success', 'Chào mừng bạn quay trở lại hệ thống!', 'Đăng nhập thành công');
       navigate('/warehouse/dashboard');
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Đăng nhập thất bại';
-      setError(msg);
+      setError(getApiErrorMessage(err, 'Đăng nhập thất bại'));
     } finally {
       setLoading(false);
     }
@@ -138,7 +136,7 @@ export default function LoginPage() {
                   value={username}
                   onChange={e => setUsername(e.target.value)}
                   placeholder={USE_MOCK ? 'vd: vy.phan hoặc vy.phan@namviet.vn' : 'vd: tuan.nguyen@namviet.vn'}
-                  disabled={USE_MOCK && useMockQuickLogin}
+                  disabled={USE_MOCK && useMockQuickLogin && Boolean(mockUserId)}
                 />
                 <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--md-on-surface-variant)]" />
               </div>
@@ -153,7 +151,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   placeholder="Nhập mật khẩu..."
-                  disabled={USE_MOCK && useMockQuickLogin}
+                  disabled={USE_MOCK && useMockQuickLogin && Boolean(mockUserId)}
                 />
                 <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--md-on-surface-variant)]" />
                 <button
@@ -166,7 +164,22 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {USE_MOCK && (
+            {PURE_MOCK_DEV && (
+              <div className="rounded-xl border border-[var(--md-outline-variant)] overflow-hidden bg-[var(--md-surface-container-low)]">
+                <RoleSwitcher
+                  compact
+                  embedded
+                  previewOnly
+                  activeUserId={mockUserId || undefined}
+                  onSwitch={user => {
+                    setMockUserId(user.id);
+                    setUsername(user.email);
+                  }}
+                />
+              </div>
+            )}
+
+            {USE_MOCK && HAS_API && (
               <>
                 <label className="flex items-center gap-2 cursor-pointer text-sm">
                   <input
@@ -179,7 +192,7 @@ export default function LoginPage() {
                     style={{ accentColor: 'var(--md-primary)' }}
                   />
                   <span className="text-[var(--md-on-surface-variant)] font-medium">
-                    Đăng nhập nhanh theo vai trò mô phỏng
+                    Đăng nhập nhanh theo vai trò mô phỏng (bỏ qua API)
                   </span>
                 </label>
 
@@ -241,6 +254,14 @@ export default function LoginPage() {
               Nộp đơn ứng tuyển
             </button>
           </div>
+
+          {PURE_MOCK_DEV && (
+            <p className="text-center mt-4 text-xs text-[var(--md-on-surface-variant)] leading-relaxed">
+              Chế độ dev: không cần backend — chọn vai trò rồi bấm Đăng nhập.
+              <br />
+              Hoặc nhập email/tên đăng nhập mock (mật khẩu bất kỳ).
+            </p>
+          )}
 
           <p className="text-center mt-5 text-xs text-[var(--md-on-surface-variant)]">
             Phiên bản thử nghiệm Mayzer WMS v1.2.0

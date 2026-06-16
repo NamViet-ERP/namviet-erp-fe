@@ -1,3 +1,5 @@
+import HrmDatePicker from './HrmDatePicker';
+
 export function FieldView({ label, value }: { label: string; value?: string }) {
   return (
     <div className="hrm-field">
@@ -13,12 +15,16 @@ export function FieldInput({ label, value, onChange, type = 'text', error }: {
   return (
     <div className="hrm-field">
       <label className="hrm-field__label">{label}</label>
-      <input
-        type={type}
-        className={`hrm-field-input ${error ? 'hrm-field-input--error' : ''}`}
-        value={value}
-        onChange={e => onChange(e.target.value)}
-      />
+      {type === 'date' ? (
+        <HrmDatePicker value={value} onChange={onChange} error={Boolean(error)} />
+      ) : (
+        <input
+          type={type}
+          className={`hrm-field-input ${error ? 'hrm-field-input--error' : ''}`}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+        />
+      )}
       {error && <p className="hrm-field__error">{error}</p>}
     </div>
   );

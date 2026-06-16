@@ -915,6 +915,240 @@
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--md-primary) 18%, transparent);
   }
   .hrm-field-input--error { border-color: var(--md-error); }
+
+  .hrm-date-picker {
+    position: relative;
+    width: 100%;
+  }
+  .hrm-date-picker__trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    cursor: pointer;
+    text-align: left;
+  }
+  .hrm-date-picker__trigger:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+  .hrm-date-picker__trigger--open {
+    border-color: var(--md-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--md-primary) 18%, transparent);
+  }
+  .hrm-date-picker__value {
+    color: var(--md-on-surface);
+    font-weight: 500;
+  }
+  .hrm-date-picker__placeholder {
+    color: var(--md-on-surface-variant);
+    opacity: 0.75;
+  }
+  .hrm-date-picker__icon {
+    flex-shrink: 0;
+    color: var(--md-primary);
+  }
+  .hrm-date-picker__popover {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 50;
+    width: min(100%, 320px);
+    padding: 12px;
+    border-radius: 16px;
+    border: 1px solid var(--md-outline-variant);
+    background: var(--md-surface-container-high);
+    box-shadow: var(--md-shadow-3);
+    animation: fade-in 160ms var(--md-easing);
+  }
+  .hrm-date-picker__quick {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .hrm-date-picker__quick-input {
+    flex: 1;
+    min-width: 0;
+    height: 36px;
+    padding: 0 10px;
+    border-radius: 10px;
+    border: 1px solid var(--md-outline-variant);
+    background: var(--md-surface-container);
+    color: var(--md-on-surface);
+    font-size: 0.8125rem;
+    outline: none;
+  }
+  .hrm-date-picker__quick-input:focus {
+    border-color: var(--md-primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--md-primary) 18%, transparent);
+  }
+  .hrm-date-picker__quick-input--error {
+    border-color: var(--md-error);
+  }
+  .hrm-date-picker__quick-btn {
+    flex-shrink: 0;
+    height: 36px;
+    padding: 0 12px;
+    border: none;
+    border-radius: 10px;
+    background: var(--md-primary-container);
+    color: var(--md-on-primary-container);
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .hrm-date-picker__quick-btn:hover {
+    filter: brightness(0.97);
+  }
+  .hrm-date-picker__quick-error {
+    margin: -4px 0 8px;
+    font-size: 0.6875rem;
+    color: var(--md-error);
+    line-height: 1.35;
+  }
+  .hrm-date-picker__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+  .hrm-date-picker__selects {
+    flex: 1;
+    display: flex;
+    gap: 4px;
+    min-width: 0;
+  }
+  .hrm-date-picker__select {
+    flex: 1;
+    min-width: 0;
+    height: 32px;
+    padding: 0 8px;
+    border-radius: 8px;
+    border: 1px solid var(--md-outline-variant);
+    background: var(--md-surface-container);
+    color: var(--md-on-surface);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+  }
+  .hrm-date-picker__select--year {
+    flex: 0 0 76px;
+    max-width: 76px;
+  }
+  .hrm-date-picker__select:focus {
+    border-color: var(--md-primary);
+  }
+  .hrm-date-picker__month {
+    flex: 1;
+    text-align: center;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--md-on-surface);
+    text-transform: capitalize;
+  }
+  .hrm-date-picker__nav {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 9999px;
+    background: transparent;
+    color: var(--md-on-surface-variant);
+    cursor: pointer;
+    transition: background var(--md-duration) var(--md-easing);
+  }
+  .hrm-date-picker__nav:hover:not(:disabled) {
+    background: var(--tint-primary-hover);
+    color: var(--md-primary);
+  }
+  .hrm-date-picker__nav:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+  .hrm-date-picker__weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    margin-bottom: 4px;
+  }
+  .hrm-date-picker__weekday {
+    text-align: center;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--md-on-surface-variant);
+    padding: 4px 0;
+  }
+  .hrm-date-picker__grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+  }
+  .hrm-date-picker__day {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    aspect-ratio: 1;
+    border: none;
+    border-radius: 9999px;
+    background: transparent;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--md-on-surface);
+    cursor: pointer;
+    transition: background var(--md-duration) var(--md-easing), color var(--md-duration) var(--md-easing);
+  }
+  .hrm-date-picker__day:hover:not(:disabled):not(.hrm-date-picker__day--selected) {
+    background: var(--tint-primary-hover);
+  }
+  .hrm-date-picker__day--today {
+    box-shadow: inset 0 0 0 1px var(--md-primary);
+    color: var(--md-primary);
+    font-weight: 700;
+  }
+  .hrm-date-picker__day--selected {
+    background: var(--md-primary);
+    color: var(--md-on-primary);
+    font-weight: 700;
+  }
+  .hrm-date-picker__day--disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+  .hrm-date-picker__day--empty {
+    pointer-events: none;
+  }
+  .hrm-date-picker__footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--md-outline-variant);
+  }
+  .hrm-date-picker__action {
+    border: none;
+    background: transparent;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--md-primary);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 8px;
+  }
+  .hrm-date-picker__action:hover {
+    background: var(--tint-primary-hover);
+  }
+  .hrm-date-picker__action--muted {
+    color: var(--md-on-surface-variant);
+  }
+
   .hrm-field-image {
     width: 128px;
     height: 128px;

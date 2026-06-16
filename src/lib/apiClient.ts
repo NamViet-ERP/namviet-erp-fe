@@ -24,6 +24,60 @@ export class ApiError extends Error {
   }
 }
 
+interface ProblemDetailsLike {
+  title?: string;
+  detail?: string;
+  message?: string;
+  errors?: Record<string, string[]>;
+}
+
+/** User-facing message from any caught error (never raw JSON). */
+export function getApiErrorMessage(err: unknown, fallback = 'Đã xảy ra lỗi'): string {
+  if (err instanceof ApiError) return err.message;
+  if (err instanceof Error && err.message.trim()) return err.message.trim();
+  return fallback;
+}
+
+function extractErrorMessage(data: unknown, fallback: string): string {
+  if (data == null) return fallback;
+
+  if (typeof data === 'string') {
+    const trimmed = data.trim();
+    if (!trimmed) return fallback;
+    if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+      try {
+        return extractErrorMessage(JSON.parse(trimmed), fallback);
+      } catch {
+        return trimmed;
+      }
+    }
+    return trimmed;
+  }
+
+  if (typeof data === 'object') {
+    const obj = data as ProblemDetailsLike;
+    if (typeof obj.detail === 'string' && obj.detail.trim()) return obj.detail.trim();
+    if (typeof obj.message === 'string' && obj.message.trim()) return obj.message.trim();
+    if (typeof obj.title === 'string' && obj.title.trim()) return obj.title.trim();
+    if (obj.errors && typeof obj.errors === 'object') {
+      const msgs = Object.values(obj.errors).flat().filter(Boolean);
+      if (msgs.length) return msgs.join('; ');
+    }
+  }
+
+  return fallback;
+}
+
+async function readResponseBody(response: Response): Promise<unknown> {
+  const text = await response.text();
+  if (!text.trim()) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
+}
+
 /** Auth token provider — swap this for your real auth store when wiring JWT. */
 let authTokenProvider: () => string | null = () => null;
 
@@ -63,19 +117,13 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
 
-  const isJson = response.headers.get('content-type')?.includes('application/json');
-  const data = isJson ? await response.json().catch(() => null) : null;
+  const data = await readResponseBody(response);
 
   if (!response.ok) {
-    let message = `Yêu cầu thất bại (HTTP ${response.status})`;
-    if (data && typeof data === 'object') {
-      if ('message' in data && typeof data.message === 'string') message = data.message;
-      else if ('title' in data && typeof data.title === 'string') message = data.title;
-      else if ('detail' in data && typeof data.detail === 'string') message = data.detail;
-    } else if (!isJson) {
-      const text = await response.text().catch(() => '');
-      if (text.trim()) message = text.trim();
-    }
+    const message = extractErrorMessage(
+      data,
+      `Yêu cầu thất bại (HTTP ${response.status})`,
+    );
     throw new ApiError(message, response.status, data);
   }
 
@@ -105,13 +153,12 @@ export const apiClient = {
       },
       body: formData,
     }).then(async (response) => {
-      const isJson = response.headers.get('content-type')?.includes('application/json');
-      const data = isJson ? await response.json().catch(() => null) : null;
+      const data = await readResponseBody(response);
       if (!response.ok) {
-        const message =
-          (data && typeof data === 'object' && 'message' in data && typeof data.message === 'string')
-            ? data.message
-            : `Yêu cầu thất bại (HTTP ${response.status})`;
+        const message = extractErrorMessage(
+          data,
+          `Yêu cầu thất bại (HTTP ${response.status})`,
+        );
         throw new ApiError(message, response.status, data);
       }
       return data as T;

@@ -3,12 +3,12 @@ import { Outlet, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import ToastContainer from '../ui/Toast';
-import { warehouseMenu, stocktakeMenu, membersMenu, recruitmentMenu } from '../../constants/sidebarMenus';
+import { warehouseMenu, stocktakeMenu, membersMenu, recruitmentMenu, adminMenu } from '../../constants/sidebarMenus';
 import { getSessionUser, canUserLogin } from '../../constants/systemUsers';
 import { authService } from '../../services/authService';
 import type { SidebarMenuItem } from '../../types';
 
-type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment';
+type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin';
 
 export default function AppLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -25,23 +25,26 @@ export default function AppLayout() {
   const currentModule: Module =
     location.pathname.startsWith('/stocktake') ? 'stocktake' :
     location.pathname.startsWith('/recruitment') ? 'recruitment' :
-    location.pathname.startsWith('/members') ? 'members' : 'warehouse';
+    location.pathname.startsWith('/members') ? 'members' :
+    location.pathname.startsWith('/admin') ? 'admin' : 'warehouse';
 
   const menuItems: SidebarMenuItem[] =
     currentModule === 'stocktake' ? stocktakeMenu :
     currentModule === 'recruitment' ? recruitmentMenu :
-    currentModule === 'members' ? membersMenu : warehouseMenu;
+    currentModule === 'members' ? membersMenu :
+    currentModule === 'admin' ? adminMenu : warehouseMenu;
 
   const handleModuleSwitch = (module: Module) => {
     if (module === 'warehouse') navigate('/warehouse/dashboard-warehouse');
     else if (module === 'stocktake') navigate('/stocktake/list');
     else if (module === 'recruitment') navigate('/recruitment/candidates');
     else if (module === 'members') navigate('/members/list');
+    else if (module === 'admin') navigate('/admin/users');
   };
 
   const hideSidebar = location.pathname === '/profile' || location.pathname === '/warehouse/dashboard';
 
-  const pageBackground = currentModule === 'members' || currentModule === 'recruitment' ? '#FFFFFF' : 'var(--md-surface)';
+  const pageBackground = currentModule === 'members' || currentModule === 'recruitment' || currentModule === 'admin' ? '#FFFFFF' : 'var(--md-surface)';
 
   return (
     <div

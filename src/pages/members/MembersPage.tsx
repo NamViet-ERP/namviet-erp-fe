@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, UserCheck, UserX, Baby } from 'lucide-react';
+import { Users, UserCheck, UserX, Baby, Plus } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import SearchBar from '../../components/ui/SearchBar';
 import Pagination from '../../components/ui/Pagination';
@@ -47,6 +47,16 @@ export default function MembersPage() {
 
   return (
     <div className="hrm-page">
+      <PageHeader
+        title="Hồ sơ nhân sự"
+        subtitle="Quản lý danh sách nhân viên; HR có thể thêm hồ sơ thủ công hoặc nhận từ form khai báo công khai"
+        actions={
+          <button type="button" className="btn btn-primary flex items-center gap-2" onClick={() => navigate('/members/new')}>
+            <Plus size={16} />
+            Thêm nhân viên
+          </button>
+        }
+      />
 
       <div className="hrm-stat-grid">
         <HrmStatCard label="Tổng" value={employees.length} icon={Users} tone="primary" />

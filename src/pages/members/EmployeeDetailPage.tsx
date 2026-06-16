@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { showToast } from '../../components/ui/Toast';
 import { useEmployee, useUpdateEmployee } from '../../hooks/useEmployees';
 import { useEditableForm } from '../../hooks/useEditableForm';
-import { systemUsers } from '../../constants/systemUsers';
+import { getSystemUserByEmployeeId } from '../../constants/systemUsers';
 import { EMPLOYEE_STATUSES } from '../../constants/recruitment';
 import { calcSeniority } from '../../types/hr';
 import type { Employee } from '../../types/hr';
@@ -47,7 +47,7 @@ export default function EmployeeDetailPage() {
     try {
       const { id: _id, ...dto } = form;
       await updateMutation.mutateAsync({ id, dto });
-      const linkedAccount = systemUsers.find(u => u.employeeId === id);
+      const linkedAccount = getSystemUserByEmployeeId(id);
       if (form.status === 'Nghỉ việc') {
         showToast(
           'warning',

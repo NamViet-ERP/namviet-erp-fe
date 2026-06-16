@@ -7,6 +7,7 @@ import { showToast } from '../ui/Toast';
 import { getHrStaff } from '../../constants/systemUsers';
 import { candidatesService } from '../../services/candidatesService';
 import FormSectionHeader from '../hr/FormSectionHeader';
+import HrmDatePicker from '../hr/HrmDatePicker';
 import { RECRUITMENT_SOURCES, EDUCATION_LEVELS } from '../../constants/recruitment';
 import { useActivePositions } from '../../hooks/usePositions';
 
@@ -216,10 +217,12 @@ export default function CandidateForm() {
         </div>
         <div>
           <label className="hrm-field__label">Năm sinh *</label>
-          <input
-            type="date"
-            className={`hrm-field-input${errors.birthDate ? ' hrm-field-input--error' : ''}`}
-            {...register('birthDate')}
+          <HrmDatePicker
+            value={watch('birthDate') ?? ''}
+            onChange={v => setValue('birthDate', v, { shouldValidate: true })}
+            error={Boolean(errors.birthDate)}
+            max={new Date().toISOString().slice(0, 10)}
+            yearFrom={1940}
           />
           {errors.birthDate && <p className="hrm-field__error">{errors.birthDate.message}</p>}
         </div>

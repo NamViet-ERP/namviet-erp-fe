@@ -2,8 +2,8 @@ import type { LucideIcon } from 'lucide-react';
 import {
   Megaphone, HeartHandshake, ShoppingCart, CreditCard, FolderKanban,
   FileSignature, Wrench, Factory, Users, Calendar, TrendingUp,
-  ClipboardCheck, UserCheck, ArrowLeftRight, Barcode, PackagePlus,
-  Truck, Activity, Warehouse, DollarSign,
+  UserCheck, Package, PackagePlus, PackageMinus,
+  Activity, Warehouse, DollarSign, ShieldCheck, UserCog, Settings, LayoutDashboard,
 } from 'lucide-react';
 
 export interface DepartmentSubItem {
@@ -27,9 +27,11 @@ export const departments: Department[] = [
     title: 'KHO MAYZER',
     icon: Warehouse,
     items: [
-      { label: 'Kho Hàng', icon: Warehouse, path: '/warehouse/dashboard-warehouse' },
-      { label: 'Kiểm Kê', icon: ClipboardCheck, path: '/stocktake/list' },
-      { label: 'Thành Phẩm, Phụ Tùng, NVL', icon: Barcode, path: '/warehouse/stock' },
+      { label: 'Dashboard', icon: LayoutDashboard, path: '/warehouse/dashboard-warehouse' },
+      { label: 'Kho hàng', icon: Warehouse, path: '/warehouse/list' },
+      { label: 'Vật tư', icon: Package, path: '/warehouse/stock' },
+      { label: 'Nhập kho', icon: PackagePlus, path: '/warehouse/import' },
+      { label: 'Xuất kho', icon: PackageMinus, path: '/warehouse/export' },
     ],
   },
   {
@@ -39,6 +41,14 @@ export const departments: Department[] = [
       { label: 'Nhân Viên', icon: Users, path: '/members/list' },
       { label: 'Tuyển Dụng', icon: UserCheck, path: '/recruitment/candidates' },
       { label: 'C & B', icon: CreditCard },
+    ],
+  },
+  {
+    title: 'Admin',
+    icon: ShieldCheck,
+    items: [
+      { label: 'Quản lý người dùng', icon: UserCog, path: '/admin/users' },
+      { label: 'Thiết lập', icon: Settings, path: '/admin/settings' },
     ],
   },
 ];
