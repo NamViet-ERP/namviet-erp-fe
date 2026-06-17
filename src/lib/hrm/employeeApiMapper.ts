@@ -1,7 +1,7 @@
 import type { CreateEmployeeDto, Employee, UpdateEmployeeDto } from '../../types/hr';
 
 /** API payload shape (camelCase from ASP.NET JSON). */
-export interface FeEmployeeApiDto {
+export interface EmployeeApiDto {
   id: string;
   code?: string;
   fullName: string;
@@ -74,7 +74,7 @@ export function resolveMediaUrl(url?: string): string | undefined {
   return `${base.replace(/\/$/, '')}${url.startsWith('/') ? url : `/${url}`}`;
 }
 
-export function fromApi(dto: FeEmployeeApiDto): Employee {
+export function fromApi(dto: EmployeeApiDto): Employee {
   return {
     id: dto.id,
     code: dto.code?.trim() || undefined,
@@ -124,7 +124,7 @@ function toStoredUrl(preview?: string): string | undefined {
   return preview;
 }
 
-export function toApi(employee: CreateEmployeeDto | UpdateEmployeeDto, id = ''): FeEmployeeApiDto {
+export function toApi(employee: CreateEmployeeDto | UpdateEmployeeDto, id = ''): EmployeeApiDto {
   const e = employee as Partial<Employee>;
   return {
     id,

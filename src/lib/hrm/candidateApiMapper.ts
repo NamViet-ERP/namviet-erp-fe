@@ -1,6 +1,6 @@
 import type { Candidate, CreateCandidateDto, UpdateCandidateDto } from '../../types/hr';
 
-export interface FeCandidateApiDto {
+export interface CandidateApiDto {
   id: string;
   fullName: string;
   phone: string;
@@ -74,8 +74,8 @@ function mapSourceFromApi(value?: string): string {
   return map[v] ?? v;
 }
 
-function readApiField(dto: FeCandidateApiDto, camel: keyof FeCandidateApiDto, pascal: string): string {
-  const raw = dto as FeCandidateApiDto & Record<string, unknown>;
+function readApiField(dto: CandidateApiDto, camel: keyof CandidateApiDto, pascal: string): string {
+  const raw = dto as CandidateApiDto & Record<string, unknown>;
   const v = raw[camel] ?? raw[pascal];
   return typeof v === 'string' ? v.trim() : '';
 }
@@ -114,7 +114,7 @@ export function compareCandidateAppliedAtNewestFirst(
   return Number(b.id) - Number(a.id);
 }
 
-export function fromApi(dto: FeCandidateApiDto): Candidate {
+export function fromApi(dto: CandidateApiDto): Candidate {
   return {
     id: dto.id,
     fullName: dto.fullName,
@@ -151,7 +151,7 @@ export function fromApi(dto: FeCandidateApiDto): Candidate {
   };
 }
 
-export function toApi(candidate: CreateCandidateDto | UpdateCandidateDto, id = ''): FeCandidateApiDto {
+export function toApi(candidate: CreateCandidateDto | UpdateCandidateDto, id = ''): CandidateApiDto {
   const c = candidate as Partial<Candidate>;
   return {
     id,

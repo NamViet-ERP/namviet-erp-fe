@@ -1,11 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { rolesService, type CreateRoleDto } from '../services/rolesService';
+import { rolesService, type CreateRoleDto, type RoleListParams } from '../services/rolesService';
 import { queryKeys } from '../services/queryKeys';
 
-export function useRoles() {
+export function useRoles(params: RoleListParams = {}) {
   return useQuery({
-    queryKey: queryKeys.roles.all,
-    queryFn: () => rolesService.listAsync(),
+    queryKey: [...queryKeys.roles.all, params] as const,
+    queryFn: () => rolesService.listAsync(params),
   });
 }
 

@@ -3,13 +3,12 @@
  *
  * - Reads the base URL from `import.meta.env.VITE_API_BASE_URL`.
  * - Sends/parses JSON and normalizes failures into `ApiError`.
- * - Has a slot to attach a JWT `Authorization: Bearer` header (for .NET Core
- *   Identity/JWT later) without touching call sites.
- *
- * Domain services depend on this so swapping mock → real API is a config change.
+ * - On 401, tries silent refresh before forcing logout.
  */
 
 import { clearAuthSession } from './authSession';
+import { refreshAccessToken } from './authRefresh';
+import { translateErrorMessage } from './translateErrorMessage';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
 
@@ -30,18 +29,18 @@ interface ProblemDetailsLike {
   title?: string;
   detail?: string;
   message?: string;
-  errors?: Record<string, string[]>;
+  errors?: Record<string, string[]> | string[];
 }
 
 /** User-facing message from any caught error (never raw JSON). */
 export function getApiErrorMessage(err: unknown, fallback = 'Đã xảy ra lỗi'): string {
-  if (err instanceof ApiError) return err.message;
-  if (err instanceof Error && err.message.trim()) return err.message.trim();
+  if (err instanceof ApiError) return translateErrorMessage(err.message);
+  if (err instanceof Error && err.message.trim()) return translateErrorMessage(err.message.trim());
   return fallback;
 }
 
-function handleAuthFailure(status: number): void {
-  if (status !== 401 || typeof window === 'undefined') return;
+function forceLogoutExpired(): void {
+  if (typeof window === 'undefined') return;
   if (window.location.pathname.startsWith('/login')) return;
   clearAuthSession();
   window.location.assign('/login?expired=1');
@@ -57,19 +56,28 @@ function extractErrorMessage(data: unknown, fallback: string): string {
       try {
         return extractErrorMessage(JSON.parse(trimmed), fallback);
       } catch {
-        return trimmed;
+        return translateErrorMessage(trimmed);
       }
     }
-    return trimmed;
+    return translateErrorMessage(trimmed);
   }
 
   if (typeof data === 'object') {
     const obj = data as ProblemDetailsLike;
-    if (typeof obj.detail === 'string' && obj.detail.trim()) return obj.detail.trim();
-    if (typeof obj.message === 'string' && obj.message.trim()) return obj.message.trim();
-    if (typeof obj.title === 'string' && obj.title.trim()) return obj.title.trim();
+    if (typeof obj.detail === 'string' && obj.detail.trim()) {
+      return translateErrorMessage(obj.detail.trim());
+    }
+    if (typeof obj.message === 'string' && obj.message.trim()) {
+      return translateErrorMessage(obj.message.trim());
+    }
+    if (typeof obj.title === 'string' && obj.title.trim()) {
+      return translateErrorMessage(obj.title.trim());
+    }
     if (obj.errors && typeof obj.errors === 'object') {
-      const msgs = Object.values(obj.errors).flat().filter(Boolean);
+      const raw = Array.isArray(obj.errors)
+        ? obj.errors
+        : Object.values(obj.errors).flat();
+      const msgs = raw.filter(Boolean).map(item => translateErrorMessage(String(item)));
       if (msgs.length) return msgs.join('; ');
     }
   }
@@ -99,6 +107,8 @@ interface RequestOptions extends Omit<RequestInit, 'body'> {
   body?: unknown;
   /** Query string params. */
   params?: Record<string, string | number | boolean | undefined>;
+  /** Internal: skip refresh retry once. */
+  _retried?: boolean;
 }
 
 function buildUrl(path: string, params?: RequestOptions['params']): string {
@@ -111,8 +121,19 @@ function buildUrl(path: string, params?: RequestOptions['params']): string {
   return url.toString();
 }
 
+let refreshInFlight: Promise<boolean> | null = null;
+
+async function tryRefreshSession(): Promise<boolean> {
+  if (!refreshInFlight) {
+    refreshInFlight = refreshAccessToken().finally(() => {
+      refreshInFlight = null;
+    });
+  }
+  return refreshInFlight;
+}
+
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { body, params, headers, ...rest } = options;
+  const { body, params, headers, _retried, ...rest } = options;
   const token = authTokenProvider();
 
   const response = await fetch(buildUrl(path, params), {
@@ -128,6 +149,13 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
   const data = await readResponseBody(response);
 
+  if (response.status === 401 && !_retried && !path.includes('/api/auth/login') && !path.includes('/api/auth/refresh')) {
+    const refreshed = await tryRefreshSession();
+    if (refreshed) {
+      return request<T>(path, { ...options, _retried: true });
+    }
+  }
+
   if (!response.ok) {
     const message = extractErrorMessage(
       data,
@@ -137,7 +165,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
           ? 'Bạn không có quyền truy cập chức năng này.'
           : `Yêu cầu thất bại (HTTP ${response.status})`,
     );
-    if (response.status === 401) handleAuthFailure(401);
+    if (response.status === 401) forceLogoutExpired();
     throw new ApiError(message, response.status, data);
   }
 
@@ -157,17 +185,24 @@ export const apiClient = {
     request<T>(path, { method: 'DELETE' }),
 
   postForm: <T>(path: string, formData: FormData) => {
-    const token = authTokenProvider();
-    const url = buildUrl(path);
-    return fetch(url, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: formData,
-    }).then(async (response) => {
+    const run = async (retried = false): Promise<T> => {
+      const token = authTokenProvider();
+      const url = buildUrl(path);
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: formData,
+      });
       const data = await readResponseBody(response);
+
+      if (response.status === 401 && !retried) {
+        const refreshed = await tryRefreshSession();
+        if (refreshed) return run(true);
+      }
+
       if (!response.ok) {
         const message = extractErrorMessage(
           data,
@@ -177,10 +212,11 @@ export const apiClient = {
               ? 'Bạn không có quyền truy cập chức năng này.'
               : `Yêu cầu thất bại (HTTP ${response.status})`,
         );
-        if (response.status === 401) handleAuthFailure(401);
+        if (response.status === 401) forceLogoutExpired();
         throw new ApiError(message, response.status, data);
       }
       return data as T;
-    });
+    };
+    return run();
   },
 };

@@ -1,6 +1,6 @@
 import { apiClient } from '../lib/apiClient';
 import { getStoredToken } from '../lib/authSession';
-import { fromApi, toApi, compareCandidateAppliedAtNewestFirst, type FeCandidateApiDto } from '../lib/hrm/candidateApiMapper';
+import { fromApi, toApi, compareCandidateAppliedAtNewestFirst, type CandidateApiDto } from '../lib/hrm/candidateApiMapper';
 import { USE_MOCK, mockDelay } from '../lib/mock';
 import type { Candidate, CreateCandidateDto, UpdateCandidateDto } from '../types/hr';
 
@@ -84,8 +84,8 @@ export interface CandidatePagedResult {
   uniquePositionCount: number;
 }
 
-interface FeCandidatePagedApiDto {
-  items: FeCandidateApiDto[];
+interface CandidatePagedApiDto {
+  items: CandidateApiDto[];
   totalCount: number;
   page: number;
   pageSize: number;
@@ -133,7 +133,7 @@ function mockList(params: CandidateListParams): CandidatePagedResult {
 export const candidatesService = {
   async list(params: CandidateListParams = {}): Promise<CandidatePagedResult> {
     if (USE_MOCK) return mockDelay(mockList(params));
-    const res = await apiClient.get<FeCandidatePagedApiDto>(ENDPOINT, {
+    const res = await apiClient.get<CandidatePagedApiDto>(ENDPOINT, {
       page: params.page ?? 1,
       pageSize: params.pageSize ?? 20,
       search: params.search?.trim() || undefined,
@@ -159,7 +159,7 @@ export const candidatesService = {
       if (!found) throw new Error(`Không tìm thấy ứng viên ${id}`);
       return mockDelay(found);
     }
-    const dto = await apiClient.get<FeCandidateApiDto>(`${ENDPOINT}/${id}`);
+    const dto = await apiClient.get<CandidateApiDto>(`${ENDPOINT}/${id}`);
     return fromApi(dto);
   },
 
@@ -176,7 +176,7 @@ export const candidatesService = {
       return mockDelay(created);
     }
     const payload = toApi(dto);
-    const res = await apiClient.post<FeCandidateApiDto>(ENDPOINT, payload);
+    const res = await apiClient.post<CandidateApiDto>(ENDPOINT, payload);
     return fromApi(res);
   },
 
@@ -191,7 +191,7 @@ export const candidatesService = {
       return mockDelay(items[idx]);
     }
     const payload = toApi({ ...dto, fullName: dto.fullName ?? '' } as CreateCandidateDto, id);
-    const res = await apiClient.put<FeCandidateApiDto>(`${ENDPOINT}/${id}`, payload);
+    const res = await apiClient.put<CandidateApiDto>(`${ENDPOINT}/${id}`, payload);
     return fromApi(res);
   },
 

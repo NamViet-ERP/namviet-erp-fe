@@ -1,5 +1,5 @@
-import { apiClient, setAuthTokenProvider } from '../lib/apiClient';
 import { USE_MOCK } from '../lib/mock';
+import { apiClient, setAuthTokenProvider } from '../lib/apiClient';
 import { cacheEmployeeStatus } from './employeesService';
 import type { SystemUser } from '../constants/systemUsers';
 import { setSessionUser } from '../constants/systemUsers';
@@ -7,13 +7,16 @@ import { getEmployeeLockReason } from '../constants/employeeStatus';
 import {
   clearAuthSession as clearSession,
   getStoredToken,
-  REFRESH_KEY,
-  TOKEN_KEY,
+  hasAuthSession,
+  isAccessTokenExpired,
+  persistTokens,
+  setRememberMePreference,
 } from '../lib/authSession';
+import { refreshAccessToken } from '../lib/authRefresh';
 
 export { clearSession as clearAuthSession, getStoredToken };
 
-export interface FeAuthUserDto {
+export interface AuthUserDto {
   id: string;
   username: string;
   role: string;
@@ -25,13 +28,13 @@ export interface FeAuthUserDto {
   employeeStatus?: string;
 }
 
-interface FeAuthResponse {
+interface LoginResponse {
   token: string;
   refreshToken: string;
-  user: FeAuthUserDto;
+  user: AuthUserDto;
 }
 
-function mapFeUser(dto: FeAuthUserDto): SystemUser {
+function mapAuthUser(dto: AuthUserDto): SystemUser {
   return {
     id: dto.id,
     username: dto.username,
@@ -54,22 +57,41 @@ export function initAuthTokenProvider(): void {
 }
 
 export const authService = {
-  async loginFe(username: string, password: string): Promise<SystemUser> {
-    const res = await apiClient.post<FeAuthResponse>('/api/auth/login', { username, password });
+  async loginFe(username: string, password: string, rememberMe = false): Promise<SystemUser> {
+    const res = await apiClient.post<LoginResponse>('/api/auth/login', {
+      username,
+      password,
+      rememberMe,
+    });
     const lockReason = lockReasonFromStatus(res.user.employeeStatus);
     if (lockReason) throw new Error(lockReason);
 
-    localStorage.setItem(TOKEN_KEY, res.token);
-    localStorage.setItem(REFRESH_KEY, res.refreshToken);
+    persistTokens(res.token, res.refreshToken, rememberMe);
+    setRememberMePreference(rememberMe, rememberMe ? username.trim() : undefined);
     localStorage.setItem('nv-logged-in', 'true');
 
     if (res.user.employeeId && res.user.employeeStatus) {
       cacheEmployeeStatus(res.user.employeeId, res.user.employeeStatus);
     }
 
-    const user = mapFeUser(res.user);
+    const user = mapAuthUser(res.user);
     setSessionUser(user);
     return user;
+  },
+
+  async ensureSession(): Promise<boolean> {
+    if (USE_MOCK) return localStorage.getItem('nv-logged-in') === 'true';
+    if (!hasAuthSession()) return false;
+
+    const token = getStoredToken();
+    if (token && !isAccessTokenExpired(token)) return true;
+
+    return refreshAccessToken();
+  },
+
+  async refreshSession(): Promise<boolean> {
+    if (USE_MOCK) return true;
+    return refreshAccessToken();
   },
 
   logout(): void {
@@ -78,6 +100,6 @@ export const authService = {
 
   isLoggedIn(): boolean {
     if (USE_MOCK) return localStorage.getItem('nv-logged-in') === 'true';
-    return Boolean(getStoredToken());
+    return hasAuthSession();
   },
 };

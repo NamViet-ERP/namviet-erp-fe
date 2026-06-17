@@ -147,7 +147,10 @@ export default function Sidebar({ collapsed, onToggle, menuItems, currentModule 
     }
   }, [popoverItem, updateFlyoutPosition]);
 
-  const sidebarBackground = currentModule === 'members' || currentModule === 'recruitment' || currentModule === 'admin' ? '#e5e7eb' : 'var(--md-surface-container)';
+  const sidebarBackground =
+    currentModule === 'members' || currentModule === 'recruitment' || currentModule === 'admin'
+      ? 'var(--nv-sidebar-bg-alt)'
+      : 'var(--nv-sidebar-bg)';
 
   return (
     <aside
