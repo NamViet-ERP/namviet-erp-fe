@@ -46,7 +46,7 @@ export const departments: Department[] = [
     ],
   },
   {
-    title: 'Admin',
+    title: 'ADMIN',
     icon: ShieldCheck,
     items: [
       { label: 'Quản lý người dùng', icon: UserCog, path: '/admin/users' },

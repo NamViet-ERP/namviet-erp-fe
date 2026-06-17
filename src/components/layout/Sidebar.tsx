@@ -168,7 +168,7 @@ export default function Sidebar({ collapsed, onToggle, menuItems, currentModule 
         flexDirection: 'column',
         top: '64px',
         width: collapsed ? '48px' : '180px',
-        background: sidebarBackground,
+        background: 'var(--md-inverse-on-surface)',
         borderRight: '1px solid var(--md-outline-variant)',
         transition: 'width 300ms var(--md-easing), background 300ms var(--md-easing)',
       }}

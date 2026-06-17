@@ -132,7 +132,7 @@ export default function CandidateListPage() {
           <table className="w-full min-w-max border-collapse hrm-table">
             <thead>
               <tr>
-                {['Ngày nhận', 'Họ và tên', 'SĐT', 'Email', 'Giới tính', 'Địa chỉ', 'Năm sinh', 'Học vấn', 'Trường', 'Chuyên ngành', 'Vị trí', 'KN', 'Nguồn', 'CV', 'HR'].map(h => (
+                {['Ngày nhận', 'Họ và tên', 'SĐT', 'Email', 'Giới tính', 'Địa chỉ', 'Năm sinh', 'Học vấn', 'Trường', 'Chuyên ngành', 'Vị trí', 'KN', 'Nguồn', 'CV', 'HR phụ trách'].map(h => (
                   <th key={h} className="table-header-cell whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -156,7 +156,7 @@ export default function CandidateListPage() {
                     onClick={() => navigate(`/recruitment/candidates/${cand.id}`)}
                   >
                     <td className="table-cell text-xs whitespace-nowrap text-center">{formatCandidateAppliedAt(cand.appliedAt)}</td>
-                    <td className="table-cell font-semibold whitespace-nowrap candidate-name">{cand.fullName}</td>
+                    <td className="table-cell whitespace-nowrap candidate-name">{cand.fullName}</td>
                     <td className="table-cell">{cand.phone}</td>
                     <td className="table-cell text-sm">{cand.email}</td>
                     <td className="table-cell text-center">{cand.gender}</td>
