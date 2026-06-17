@@ -62,6 +62,15 @@ export interface CreateSystemUserDto {
   role: SystemUserRole;
 
   username?: string;
+
+  /** Liên kết hồ sơ nhân viên khi cấp tài khoản từ HR */
+  employeeId?: string;
+}
+
+const USER_PASSWORD_PREFIX = 'nv-user-password-';
+
+export function setUserPassword(userId: string, password: string): void {
+  localStorage.setItem(`${USER_PASSWORD_PREFIX}${userId}`, password);
 }
 
 const seedSystemUsers: SystemUser[] = [
@@ -533,6 +542,8 @@ export function createSystemUser(dto: CreateSystemUserDto): SystemUser {
     department: dto.department?.trim() || undefined,
 
     position: dto.position?.trim() || undefined,
+
+    employeeId: dto.employeeId,
 
     createdAt: new Date().toISOString().slice(0, 10),
 

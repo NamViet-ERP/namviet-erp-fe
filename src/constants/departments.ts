@@ -3,7 +3,7 @@ import {
   Megaphone, HeartHandshake, ShoppingCart, CreditCard, FolderKanban,
   FileSignature, Wrench, Factory, Users, Calendar, TrendingUp,
   UserCheck, Package, PackagePlus, PackageMinus,
-  Activity, Warehouse, DollarSign, ShieldCheck, UserCog, Settings, LayoutDashboard,
+  Activity, Warehouse, DollarSign, ShieldCheck, UserCog, LayoutDashboard,
 } from 'lucide-react';
 
 export interface DepartmentSubItem {
@@ -48,7 +48,6 @@ export const departments: Department[] = [
     icon: ShieldCheck,
     items: [
       { label: 'Quản lý người dùng', icon: UserCog, path: '/admin/users' },
-      { label: 'Thiết lập', icon: Settings, path: '/admin/settings' },
     ],
   },
 ];

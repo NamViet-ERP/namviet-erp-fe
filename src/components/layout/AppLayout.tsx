@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import Header from './Header';
 import Sidebar from './Sidebar';
@@ -12,13 +12,27 @@ type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin';
 
 export default function AppLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
+  const [sessionOk, setSessionOk] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isLoggedIn = authService.isLoggedIn();
+  useEffect(() => {
+    let cancelled = false;
+    authService.ensureSession().then(ok => {
+      if (!cancelled) {
+        setSessionOk(ok);
+        setSessionReady(true);
+      }
+    });
+    return () => { cancelled = true; };
+  }, []);
+
   const sessionUser = getSessionUser();
 
-  if (!isLoggedIn || !sessionUser || !canUserLogin(sessionUser)) {
+  if (!sessionReady) return null;
+
+  if (!sessionOk || !authService.isLoggedIn() || !sessionUser || !canUserLogin(sessionUser)) {
     return <Navigate to="/login" replace />;
   }
 
@@ -44,7 +58,10 @@ export default function AppLayout() {
 
   const hideSidebar = location.pathname === '/profile' || location.pathname === '/warehouse/dashboard';
 
-  const pageBackground = currentModule === 'members' || currentModule === 'recruitment' || currentModule === 'admin' ? '#FFFFFF' : 'var(--md-surface)';
+  const pageBackground =
+    currentModule === 'members' || currentModule === 'recruitment' || currentModule === 'admin'
+      ? 'var(--md-surface-container)'
+      : 'var(--md-surface)';
 
   return (
     <div

@@ -25,6 +25,13 @@ export function formatDateCell(iso?: string): string {
   return formatDateVi(iso) ?? '—';
 }
 
+/** Admin list dates may already be dd/MM/yyyy from API. */
+export function formatAdminDateCell(value?: string): string {
+  if (!value || value === '—') return '—';
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(value)) return value;
+  return formatDateCell(value);
+}
+
 export function birthYearFromIso(iso: string): string | number {
   const y = new Date(iso).getFullYear();
   return Number.isNaN(y) ? '—' : y;

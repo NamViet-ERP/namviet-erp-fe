@@ -6,15 +6,15 @@ import { showToast } from '../../components/ui/Toast';
 import { useRoles, useCreateRole, useDeleteRole, useToggleRoleStatus } from '../../hooks/useRoles';
 
 export default function AdminSettingsPage() {
-  const { data: roles = [], isLoading } = useRoles();
-  const createMutation = useCreateRole();
-  const deleteMutation = useDeleteRole();
-  const toggleMutation = useToggleRoleStatus();
-
   const [label, setLabel] = useState('');
   const [code, setCode] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<{ code: string; label: string } | null>(null);
+
+  const { data: roles = [], isLoading } = useRoles({ search: searchTerm || undefined });
+  const createMutation = useCreateRole();
+  const deleteMutation = useDeleteRole();
+  const toggleMutation = useToggleRoleStatus();
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,10 +59,7 @@ export default function AdminSettingsPage() {
     }
   };
 
-  const filtered = roles.filter(r =>
-    r.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    r.code.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const filtered = roles;
 
   return (
     <div className="animate-fade-in hrm-page">
@@ -126,12 +123,7 @@ export default function AdminSettingsPage() {
             {filtered.map(role => (
               <div
                 key={role.code}
-                className="flex items-center justify-between p-3 rounded-xl transition-all"
-                style={{
-                  background: role.isActive ? 'var(--md-surface-container-low)' : 'rgba(0, 0, 0, 0.05)',
-                  border: '1px solid var(--md-outline-variant)',
-                  opacity: role.isActive ? 1 : 0.65,
-                }}
+                className={`admin-role-card flex items-center justify-between p-3 transition-all ${role.isActive ? '' : 'admin-role-card--inactive'}`}
               >
                 <div className="min-w-0 pr-3">
                   <p className="text-sm font-medium truncate" style={{ color: 'var(--md-on-surface)' }}>{role.label}</p>
@@ -142,14 +134,14 @@ export default function AdminSettingsPage() {
                   <button
                     type="button"
                     onClick={() => handleToggle(role.code)}
-                    className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${role.isActive ? 'bg-[var(--md-primary)]' : 'bg-gray-400 dark:bg-gray-600'}`}
+                    className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${role.isActive ? 'bg-[var(--md-primary)]' : 'switch-track-off bg-[var(--md-outline)]'}`}
                     role="switch"
                     aria-checked={role.isActive}
                     title={role.isActive ? 'Đang bật' : 'Đang tắt'}
                   >
                     <span
                       aria-hidden="true"
-                      className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${role.isActive ? 'translate-x-4' : 'translate-x-0'}`}
+                      className={`pointer-events-none inline-block h-4 w-4 transform rounded-full switch-thumb bg-white shadow ring-0 transition duration-200 ease-in-out ${role.isActive ? 'translate-x-4' : 'translate-x-0'}`}
                     />
                   </button>
 

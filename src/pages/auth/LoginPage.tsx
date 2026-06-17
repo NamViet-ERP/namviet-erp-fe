@@ -8,6 +8,7 @@ import { getAccountLockReason } from '../../services/employeesService';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { authService } from '../../services/authService';
 import { USE_MOCK } from '../../lib/mock';
+import { REMEMBER_KEY, SAVED_USER_KEY, setRememberMePreference } from '../../lib/authSession';
 import RoleSwitcher from '../../components/layout/RoleSwitcher';
 
 const HAS_API = Boolean(import.meta.env.VITE_API_BASE_URL?.trim());
@@ -16,8 +17,8 @@ const PURE_MOCK_DEV = USE_MOCK && !HAS_API;
 
 export default function LoginPage() {
   const [username, setUsername] = useState(() => {
-    if (localStorage.getItem('nv-remember-me') === 'true') {
-      return localStorage.getItem('nv-saved-user') ?? '';
+    if (localStorage.getItem(REMEMBER_KEY) === 'true') {
+      return localStorage.getItem(SAVED_USER_KEY) ?? '';
     }
     return '';
   });
@@ -25,7 +26,7 @@ export default function LoginPage() {
   const [mockUserId, setMockUserId] = useState('');
   const [useMockQuickLogin, setUseMockQuickLogin] = useState(PURE_MOCK_DEV);
   const [rememberMe, setRememberMe] = useState(
-    () => localStorage.getItem('nv-remember-me') === 'true',
+    () => localStorage.getItem(REMEMBER_KEY) === 'true',
   );
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -60,7 +61,7 @@ export default function LoginPage() {
         }
 
         if (HAS_API) {
-          await authService.loginFe(username.trim(), password);
+          await authService.loginFe(username.trim(), password, rememberMe);
         } else if (USE_MOCK) {
           await new Promise(r => setTimeout(r, 800));
           const user = findUserByLogin(username);
@@ -80,12 +81,12 @@ export default function LoginPage() {
         }
       }
 
-      if (rememberMe && !mockUserId) {
-        localStorage.setItem('nv-remember-me', 'true');
-        localStorage.setItem('nv-saved-user', username.trim());
-      } else {
-        localStorage.removeItem('nv-remember-me');
-        localStorage.removeItem('nv-saved-user');
+      if (!HAS_API || (USE_MOCK && useMockQuickLogin && mockUserId)) {
+        if (rememberMe && !mockUserId) {
+          setRememberMePreference(true, username.trim());
+        } else if (!mockUserId) {
+          setRememberMePreference(false);
+        }
       }
       showToast('success', 'Chào mừng bạn quay trở lại hệ thống!', 'Đăng nhập thành công');
       navigate('/warehouse/dashboard');
@@ -240,6 +241,9 @@ export default function LoginPage() {
                 Quên mật khẩu?
               </button>
             </div>
+            <p className="text-xs text-[var(--md-on-surface-variant)] -mt-2">
+              Bật: giữ phiên 30 ngày, tự làm mới khi làm việc. Tắt: đóng trình duyệt sẽ cần đăng nhập lại.
+            </p>
 
             <button
               type="submit"

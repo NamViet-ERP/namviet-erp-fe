@@ -87,7 +87,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange, page
             color: 'var(--md-on-surface-variant)',
           }}
         >
-          Hiển thị {Math.min(pageSize, totalItems)} / {totalItems} bản ghi
+          Hiển thị {totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, totalItems)} / {totalItems} bản ghi
         </span>
       </div>
 

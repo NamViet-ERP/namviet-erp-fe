@@ -27,6 +27,7 @@ import CandidateListPage from './pages/recruitment/CandidateListPage';
 import CandidateDetailPage from './pages/recruitment/CandidateDetailPage';
 import RecruitmentSettingsPage from './pages/recruitment/RecruitmentSettingsPage';
 import AdminUsersPage from './pages/admin/AdminUsersPage';
+import AdminUserDetailPage from './pages/admin/AdminUserDetailPage';
 import AdminSettingsPage from './pages/admin/AdminSettingsPage';
 
 // Stocktake pages
@@ -77,6 +78,7 @@ export default function App() {
 
           {/* Module: Admin */}
           <Route path="/admin/users" element={<AdminUsersPage />} />
+          <Route path="/admin/users/:id" element={<AdminUserDetailPage />} />
           <Route path="/admin/settings" element={<AdminSettingsPage />} />
 
           {/* Module 2: Kiểm kê */}

@@ -1,5 +1,5 @@
 import { apiClient } from '../lib/apiClient';
-import { fromApi, toApi, type FeEmployeeApiDto } from '../lib/hrm/employeeApiMapper';
+import { fromApi, toApi, type EmployeeApiDto } from '../lib/hrm/employeeApiMapper';
 import { suggestNextEmployeeCode } from '../lib/hrm/suggestedEmployeeCode';
 import { USE_MOCK, mockDelay } from '../lib/mock';
 import type { CreateEmployeeDto, Employee, UpdateEmployeeDto } from '../types/hr';
@@ -86,7 +86,7 @@ export function getAccountLockReason(employeeId?: string): string | null {
 export const employeesService = {
   async list(): Promise<Employee[]> {
     if (USE_MOCK) return mockDelay(readStore());
-    const items = await apiClient.get<FeEmployeeApiDto[]>(ENDPOINT);
+    const items = await apiClient.get<EmployeeApiDto[]>(ENDPOINT);
     if (!Array.isArray(items)) return [];
     return items.map(fromApi);
   },
@@ -97,7 +97,7 @@ export const employeesService = {
       if (!found) throw new Error(`Không tìm thấy nhân viên ${id}`);
       return mockDelay(found);
     }
-    const dto = await apiClient.get<FeEmployeeApiDto>(`${ENDPOINT}/${id}`);
+    const dto = await apiClient.get<EmployeeApiDto>(`${ENDPOINT}/${id}`);
     cacheEmployeeStatus(id, dto.status);
     return fromApi(dto);
   },
@@ -115,14 +115,14 @@ export const employeesService = {
       return mockDelay(created);
     }
     const payload = toApi(dto);
-    const res = await apiClient.post<FeEmployeeApiDto>(ENDPOINT, payload);
+    const res = await apiClient.post<EmployeeApiDto>(ENDPOINT, payload);
     return fromApi(res);
   },
 
   async createOnboard(dto: CreateEmployeeDto): Promise<Employee> {
     if (USE_MOCK) return this.create(dto);
     const payload = toApi(dto);
-    const res = await apiClient.post<FeEmployeeApiDto>(`${ENDPOINT}/onboard`, payload);
+    const res = await apiClient.post<EmployeeApiDto>(`${ENDPOINT}/onboard`, payload);
     return fromApi(res);
   },
 
@@ -145,14 +145,14 @@ export const employeesService = {
       return mockDelay(items[idx]);
     }
     const payload = toApi({ ...dto, fullName: dto.fullName ?? '' } as CreateEmployeeDto, id);
-    const res = await apiClient.put<FeEmployeeApiDto>(`${ENDPOINT}/${id}`, payload);
+    const res = await apiClient.put<EmployeeApiDto>(`${ENDPOINT}/${id}`, payload);
     cacheEmployeeStatus(id, res.status);
     return fromApi(res);
   },
 
   async listActive(): Promise<Employee[]> {
     if (USE_MOCK) return mockDelay(readStore().filter(isActiveEmployee));
-    const items = await apiClient.get<FeEmployeeApiDto[]>(ENDPOINT, { activeOnly: true });
+    const items = await apiClient.get<EmployeeApiDto[]>(ENDPOINT, { activeOnly: true });
     return items.map(fromApi);
   },
 

@@ -1,63 +1,37 @@
 import { Search, RefreshCw } from 'lucide-react';
 
-/**
- * MD3 Search / Filled Text Field style
- * Surface-container-low bg · Rounded top · Border-bottom focus
- */
-
 interface SearchBarProps {
   value: string;
   onChange: (value: string) => void;
   onRefresh?: () => void;
   placeholder?: string;
+  /** Ẩn placeholder trên UI — vẫn giữ aria-label cho accessibility */
+  hidePlaceholder?: boolean;
 }
 
-export default function SearchBar({ value, onChange, onRefresh, placeholder = 'Tìm kiếm...' }: SearchBarProps) {
+export default function SearchBar({
+  value,
+  onChange,
+  onRefresh,
+  placeholder = 'Tìm kiếm...',
+  hidePlaceholder = false,
+}: SearchBarProps) {
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px' }}>
+    <div className="search-bar">
       {onRefresh && (
-        <button
-          onClick={onRefresh}
-          title="Làm mới"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '40px',
-            height: '40px',
-            borderRadius: '9999px',
-            border: 'none',
-            background: 'transparent',
-            color: 'var(--md-on-surface-variant)',
-            cursor: 'pointer',
-            transition: 'background 200ms var(--md-easing)',
-            flexShrink: 0,
-          }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'var(--tint-primary-hover)'; }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
-        >
+        <button type="button" onClick={onRefresh} title="Làm mới" className="search-bar__refresh">
           <RefreshCw size={18} />
         </button>
       )}
-      <div style={{ position: 'relative', minWidth: '220px' }}>
-        <Search
-          style={{
-            position: 'absolute',
-            left: '12px',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            color: 'var(--md-on-surface-variant)',
-            pointerEvents: 'none',
-          }}
-          size={16}
-        />
+      <div className="search-bar__wrap">
+        <Search className="search-bar__icon" size={16} aria-hidden />
         <input
-          type="text"
+          type="search"
           value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          className="form-input-compact"
-          style={{ paddingLeft: '40px', width: '100%' }}
+          onChange={e => onChange(e.target.value)}
+          placeholder={hidePlaceholder ? '' : placeholder}
+          aria-label={placeholder}
+          className="search-bar__input form-input-compact"
         />
       </div>
     </div>
