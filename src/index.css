@@ -799,6 +799,7 @@
   .hrm-table .candidate-name,
   .hrm-table .member-name {
     transition: color var(--md-duration) var(--md-easing);
+    color: #008ece;
   }
   .hrm-table .candidate-name:hover,
   .hrm-table .member-name:hover {
@@ -1865,7 +1866,7 @@
     border-radius: 9999px; /* pill */
     font-family: 'Roboto', sans-serif;
     font-size: 12px;
-    font-weight: 500;
+    /* font-weight: 500; */
     color: var(--md-on-surface);
     cursor: pointer;
     transition: background-color 280ms var(--md-easing),
@@ -1885,7 +1886,7 @@
   .sidebar-item.active {
     background: var(--nv-sidebar-item-active-bg);
     color: var(--md-secondary);
-    font-weight: 500;
+    /* font-weight: 500; */
   }
   .dark .sidebar-item:hover {
     background: var(--nv-sidebar-item-hover);

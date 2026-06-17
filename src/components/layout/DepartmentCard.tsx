@@ -28,7 +28,7 @@ export default function DepartmentCard({ dept, onItemClick }: DepartmentCardProp
             >
               <div className="flex items-center gap-2 overflow-hidden">
                 <ItemIcon size={ICON_SIZE.dense} className="text-[var(--md-on-surface-variant)] flex-shrink-0" />
-                <span className="text-[12px] font-medium text-[var(--md-on-surface)] truncate">{item.label}</span>
+                <span className="text-[12px] text-[var(--md-on-surface)] truncate">{item.label}</span>
               </div>
               <ChevronRight size={12} className="text-[var(--md-on-surface-variant)] flex-shrink-0 ml-1 transition-transform duration-md ease-md group-hover:translate-x-0.5" />
             </button>

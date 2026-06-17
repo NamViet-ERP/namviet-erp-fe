@@ -18,7 +18,7 @@ export default function MembersSettingsPage() {
 
   return (
     <div className="animate-fade-in">
-      <PageHeader eyebrow="NHÂN VIÊN" title="THIẾT LẬP NHÂN SỰ" />
+      <PageHeader eyebrow="" title="THIẾT LẬP NHÂN SỰ" />
 
       <div className="max-w-xl">
         <div
@@ -34,7 +34,7 @@ export default function MembersSettingsPage() {
             </div>
             <div>
               <h3 className="font-bold text-base" style={{ color: 'var(--md-on-surface)' }}>
-                Form khai báo nhân viên công khai
+                Form khai báo thông tin nhân viên
               </h3>
               <p className="text-xs" style={{ color: 'var(--md-on-surface-variant)' }}>
                 Đường dẫn biểu mẫu dành cho nhân viên mới khai báo hồ sơ
@@ -43,8 +43,8 @@ export default function MembersSettingsPage() {
           </div>
 
           <p className="text-xs mb-4 leading-relaxed" style={{ color: 'var(--md-on-surface-variant)' }}>
-            Gửi liên kết này cho nhân viên mới (sau khi nhận việc) để họ tự điền thông tin cá nhân, liên hệ,
-            học vấn và ngân hàng. Dữ liệu sẽ được ghi nhận vào hệ thống quản lý nhân sự.
+            Gửi liên kết này cho nhân viên mới (sau nhận việc) để họ tự điền thông tin cá nhân, liên hệ,
+            học vấn và ngân hàng... Dữ liệu sẽ được ghi nhận vào hệ thống quản lý nhân sự.
           </p>
 
           <div

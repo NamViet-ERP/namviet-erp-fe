@@ -61,7 +61,7 @@ function IOSSwitch({ checked, disabled, onChange, title }: IOSSwitchProps) {
       onClick={() => !disabled && onChange(!checked)}
       disabled={disabled}
       className={`relative inline-flex h-5 w-9 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-        checked ? 'bg-[var(--md-primary)]' : 'bg-gray-400 dark:bg-gray-600'
+        checked ? 'bg-[var(--status-success)]' : 'bg-gray-400 dark:bg-gray-600'
       } ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
       role="switch"
       aria-checked={checked}
@@ -163,7 +163,7 @@ export default function AdminUsersPage() {
   return (
     <div className="hrm-page">
       <PageHeader
-        title="Quản lý người dùng"
+        title="QUẢN LÝ TÀI KHOẢN NGƯỜI DÙNG"
         subtitle="Đồng bộ từ quản lý nhân viên; có thể thêm tài khoản thủ công (admin, dịch vụ...)"
         actions={
           <button type="button" className="btn btn-primary flex items-center gap-2" onClick={() => setShowCreate(true)}>
@@ -210,7 +210,7 @@ export default function AdminUsersPage() {
                 filtered.map(user => (
                   <tr key={`${user.source}-${user.id}`} className="table-row">
                     <td className="table-cell font-mono text-sm text-[var(--md-primary)]">{user.employeeCode}</td>
-                    <td className="table-cell font-semibold">{user.fullName}</td>
+                    <td className="table-cell member-name">{user.fullName}</td>
                     <td className="table-cell">{user.email}</td>
                     <td className="table-cell whitespace-nowrap">{user.phone}</td>
                     <td className="table-cell">{user.department}</td>

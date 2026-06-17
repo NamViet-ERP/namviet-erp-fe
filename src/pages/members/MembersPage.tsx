@@ -60,7 +60,7 @@ export default function MembersPage() {
   return (
     <div className="hrm-page">
       <PageHeader
-        title="Hồ sơ nhân sự"
+        title="DATA TỔNG NHÂN VIÊN & HỒ SƠ NHÂN SỰ"
         subtitle="Quản lý danh sách nhân viên; HR có thể thêm hồ sơ thủ công hoặc nhận từ form khai báo công khai"
         actions={
           <button type="button" className="btn btn-primary flex items-center gap-2" onClick={() => navigate('/members/new')}>
@@ -122,7 +122,7 @@ export default function MembersPage() {
                     onClick={() => navigate(`/members/${emp.id}`)}
                   >
                     <td className="table-cell font-mono text-sm text-[var(--md-primary)] whitespace-nowrap">{emp.code || '—'}</td>
-                    <td className="table-cell font-semibold member-name">{emp.fullName}</td>
+                    <td className="table-cell member-name">{emp.fullName}</td>
                     <td className="table-cell">{emp.gender}</td>
                     <td className="table-cell whitespace-nowrap">{fmtDate(emp.birthDate)}</td>
                     <td className="table-cell">{emp.segment || '—'}</td>

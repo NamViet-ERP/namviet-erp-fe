@@ -66,7 +66,7 @@ export default function AdminSettingsPage() {
 
   return (
     <div className="animate-fade-in hrm-page">
-      <PageHeader eyebrow="ADMIN" title="Thiết lập vai trò" subtitle="Tạo và quản lý vai trò hệ thống dùng khi phân quyền người dùng" />
+      <PageHeader eyebrow="" title="THIẾT LẬP VAI TRÒ" subtitle="Tạo và quản lý vai trò hệ thống dùng khi phân quyền người dùng" />
 
       <div className="rounded-2xl p-6 shadow-card max-w-4xl" style={{ background: 'var(--md-surface-container)', border: '1px solid var(--md-outline-variant)' }}>
         <div className="flex items-center gap-3 mb-6">
@@ -96,7 +96,7 @@ export default function AdminSettingsPage() {
             className="hrm-field-input font-mono text-sm"
             disabled={createMutation.isPending}
           />
-          <button type="submit" className="btn btn-primary flex items-center justify-center gap-2 h-11 px-5" disabled={createMutation.isPending}>
+          <button type="submit" className="btn btn-primary flex items-center justify-center gap-2 px-5" disabled={createMutation.isPending}>
             <Plus size={18} />
             <span>Thêm</span>
           </button>
@@ -142,7 +142,7 @@ export default function AdminSettingsPage() {
                   <button
                     type="button"
                     onClick={() => handleToggle(role.code)}
-                    className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${role.isActive ? 'bg-[var(--md-primary)]' : 'bg-gray-400 dark:bg-gray-600'}`}
+                    className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${role.isActive ? 'bg-[var(--status-success)]' : 'bg-gray-400 dark:bg-gray-600'}`}
                     role="switch"
                     aria-checked={role.isActive}
                     title={role.isActive ? 'Đang bật' : 'Đang tắt'}
