@@ -125,9 +125,9 @@ export default function AdminUsersPage() {
   const totalCount = data?.totalCount ?? 0;
   const totalPages = data?.totalPages ?? 1;
 
-  useEffect(() => {
-    if (totalPages > 0 && page > totalPages) setPage(totalPages);
-  }, [page, totalPages]);
+  if (totalPages > 0 && page > totalPages) {
+    setPage(totalPages);
+  }
 
   const { data: roleOptions = [] } = useActiveRoleOptions();
   const toggleMutation = useToggleAdminUserStatus(listParams);

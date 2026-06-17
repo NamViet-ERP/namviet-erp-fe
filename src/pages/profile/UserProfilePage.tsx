@@ -1,115 +1,78 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Phone, Building, Calendar, ShieldCheck, CheckCircle, Key, ArrowLeft } from 'lucide-react';
+import { User, Mail, Phone, Building, Calendar, ShieldCheck, CheckCircle, Key, ArrowLeft, Loader2 } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
-import { getSessionUser } from '../../constants/systemUsers';
+import { getSessionUser, type SystemUser } from '../../constants/systemUsers';
+import { employeesService } from '../../services/employeesService';
+import type { Employee } from '../../types/hr';
 
-const profileByRole = {
-  admin: {
-    name: 'Nguyễn Minh Tuấn',
-    initials: 'AD',
-    role: 'Quản trị viên',
-    email: 'admin@namviet.vn',
-    phone: '0902.999.888',
-    dept: 'Ban giám đốc',
-    joined: '01/06/2019',
-    privileges: [
-      'Quản trị toàn bộ hệ thống WMS/SCM',
-      'Tạo mới và quản lý kho bãi, sơ đồ vị trí',
-      'Quản lý danh sách thành viên và phân quyền truy cập',
-      'Định cấu hình các định dạng mã chứng từ tự động',
-      'Xem tất cả báo cáo giá trị tồn kho và đối chiếu PO-GRN'
-    ]
-  },
-  accountant: {
-    name: 'Lê Thị Hồng',
-    initials: 'LH',
-    role: 'Kế toán trưởng',
-    email: 'hong.le@namviet.vn',
-    phone: '0912.345.678',
-    dept: 'Phòng Kế toán Tài vụ',
-    joined: '01/01/2020',
-    privileges: [
-      'Xem chi tiết giá trị tồn kho tài chính',
-      'Thực hiện đối chiếu chứng từ mua hàng PO với phiếu nhập GRN',
-      'Xem báo cáo chênh lệch đơn giá PO so với dự toán',
-      'Duyệt điều chỉnh số liệu chênh lệch sau kiểm kê',
-      'Quản lý dữ liệu lịch sử giá trị nhập xuất của từng dự án'
-    ]
-  },
-  procurement: {
-    name: 'Mỹ Chi',
-    initials: 'MC',
-    role: 'Phòng mua hàng',
-    email: 'chi.my@namviet.vn',
-    phone: '0934.567.890',
-    dept: 'Phòng Cung ứng Vật tư',
-    joined: '10/11/2023',
-    privileges: [
-      'Xem kế hoạch dự kiến nhập xuất và phân phối điều phối vật tư',
-      'Đánh giá và so sánh xếp hạng nhà cung cấp vật tư máy nén khí',
-      'Tạo yêu cầu nhập kho dựa theo PO mua hàng',
-      'Theo dõi tiến độ giao hàng của các nhà cung cấp',
-      'Xem định mức vật tư tiêu hao của từng công trình'
-    ]
-  },
-  pm: {
-    name: 'Nguyễn Văn Hùng',
-    initials: 'NH',
-    role: 'Quản lý dự án (PM)',
-    email: 'hung.nguyen@namviet.vn',
-    phone: '0988.765.432',
-    dept: 'Ban quản lý dự án',
-    joined: '15/07/2021',
-    privileges: [
-      'Duyệt phiếu nhập kho dự án chuyên biệt',
-      'Duyệt phiếu yêu cầu xuất kho thiết bị công trình theo BOM dự toán',
-      'Ký duyệt phiếu mượn/trả thiết bị giữa các dự án (Cross-project Loan)',
-      'Xem bảng ma trận tồn kho dự án chi tiết của công trình phụ trách',
-      'Xem cảnh báo vượt định mức vật tư dự án'
-    ]
-  },
-  storekeeper: {
-    name: 'Phan Văn Vỹ',
-    initials: 'VV',
-    role: 'Thủ kho (Storekeeper)',
-    email: 'vy.phan@namviet.vn',
-    phone: '0901.234.567',
-    joinedDate: '12/03/2022',
-    dept: 'Bộ phận Kho bãi',
-    joined: '12/03/2022',
-    privileges: [
-      'Thực hiện xác nhận nhập kho vật lý (GRN)',
-      'Thực hiện xác nhận xuất kho vật lý (GDN)',
-      'Quản lý vị trí lưu trữ hàng hóa và nhãn barcode 12 chữ số',
-      'Khởi tạo đợt kiểm kê kho và nhập số liệu đếm thực tế',
-      'Được ẩn các trường thông tin về đơn giá và tổng giá trị tài chính để đảm bảo bảo mật kho bãi'
-    ]
-  },
-  hr: {
-    name: 'Nguyễn Thị Lan',
-    initials: 'NL',
-    role: 'Nhân sự (HR)',
-    email: 'lan.nguyen@namviet.vn',
-    phone: '0903.456.789',
-    dept: 'Phòng Nhân sự',
-    joined: '01/03/2021',
-    privileges: [
-      'Quản lý danh sách ứng viên và quy trình tuyển dụng',
-      'Quản lý hồ sơ nhân viên toàn công ty',
-      'Gán mã nhân viên và cập nhật thông tin tổ chức',
-      'Theo dõi onboarding nhân viên mới',
-      'Xem và chỉnh sửa thông tin chi tiết ứng viên/nhân viên'
-    ]
-  }
-};
+interface ProfileData {
+  name: string;
+  initials: string;
+  role: string;
+  email: string;
+  phone?: string;
+  dept?: string;
+  position?: string;
+  joined?: string;
+}
+
+function buildProfileFromSession(user: SystemUser, employee?: Employee): ProfileData {
+  return {
+    name: user.name,
+    initials: user.initials,
+    role: user.roleLabel,
+    email: user.email,
+    phone: employee?.personalPhone ?? user.phone ?? undefined,
+    dept: employee?.department ?? user.department ?? undefined,
+    position: employee?.position ?? user.position ?? undefined,
+    joined: user.createdAt ?? undefined,
+  };
+}
 
 export default function UserProfilePage() {
   const navigate = useNavigate();
   const sessionUser = getSessionUser();
-  const template = profileByRole[sessionUser?.role as keyof typeof profileByRole] ?? profileByRole.storekeeper;
-  const user = sessionUser
-    ? { ...template, name: sessionUser.name, initials: sessionUser.initials, role: sessionUser.roleLabel, email: sessionUser.email }
-    : template;
+
+  const [profile, setProfile] = useState<ProfileData | null>(
+    sessionUser ? buildProfileFromSession(sessionUser) : null,
+  );
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!sessionUser?.employeeId) return;
+
+    let cancelled = false;
+    setLoading(true);
+
+    employeesService
+      .getById(sessionUser.employeeId)
+      .then((emp) => {
+        if (!cancelled) {
+          setProfile(buildProfileFromSession(sessionUser, emp));
+        }
+      })
+      .catch((e) => {
+        console.error('Failed to fetch employee profile:', e);
+        // keep session-only profile on error
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionUser?.employeeId]);
+
+  if (!profile) {
+    return (
+      <div className="animate-fade-in flex items-center justify-center min-h-[40vh]">
+        <p className="text-sm text-[var(--md-on-surface-variant)]">Không có phiên đăng nhập.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in">
@@ -145,11 +108,11 @@ export default function UserProfilePage() {
               color: 'var(--md-on-primary-container)'
             }}
           >
-            {user.initials}
+            {profile.initials}
           </div>
 
           <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--md-on-surface)' }}>
-            {user.name}
+            {profile.name}
           </h2>
           <p className="text-sm font-semibold mb-4 px-3 py-1 rounded-full"
             style={{
@@ -157,17 +120,17 @@ export default function UserProfilePage() {
               color: 'var(--md-on-secondary-container)'
             }}
           >
-            {user.role}
+            {profile.role}
           </p>
 
           <div className="w-full border-t border-[var(--md-outline-variant)] pt-4 mt-2 space-y-3 text-left">
             <div className="flex items-center gap-3 text-sm text-[var(--md-on-surface-variant)]">
               <Mail size={16} className="text-[var(--md-primary)]" />
-              <span className="truncate">{user.email}</span>
+              <span className="truncate">{profile.email}</span>
             </div>
             <div className="flex items-center gap-3 text-sm text-[var(--md-on-surface-variant)]">
               <Phone size={16} className="text-[var(--md-primary)]" />
-              <span>{user.phone}</span>
+              <span>{profile.phone || 'Chưa cập nhật'}</span>
             </div>
           </div>
         </div>
@@ -185,6 +148,7 @@ export default function UserProfilePage() {
             <h3 className="text-base font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--md-on-surface)' }}>
               <Key size={18} className="text-[var(--md-primary)]" />
               Thông tin tài khoản hệ thống
+              {loading && <Loader2 size={14} className="animate-spin text-[var(--md-outline)]" />}
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -192,7 +156,7 @@ export default function UserProfilePage() {
                 <span className="text-xs text-[var(--md-on-surface-variant)] block mb-1">Họ và tên</span>
                 <p className="text-sm font-semibold text-[var(--md-on-surface)] flex items-center gap-2">
                   <User size={14} className="text-[var(--md-outline)]" />
-                  {user.name}
+                  {profile.name}
                 </p>
               </div>
 
@@ -200,7 +164,7 @@ export default function UserProfilePage() {
                 <span className="text-xs text-[var(--md-on-surface-variant)] block mb-1">Phòng ban / Bộ phận</span>
                 <p className="text-sm font-semibold text-[var(--md-on-surface)] flex items-center gap-2">
                   <Building size={14} className="text-[var(--md-outline)]" />
-                  {user.dept}
+                  {profile.dept || 'Chưa cập nhật'}
                 </p>
               </div>
 
@@ -208,7 +172,7 @@ export default function UserProfilePage() {
                 <span className="text-xs text-[var(--md-on-surface-variant)] block mb-1">Ngày tham gia</span>
                 <p className="text-sm font-semibold text-[var(--md-on-surface)] flex items-center gap-2">
                   <Calendar size={14} className="text-[var(--md-outline)]" />
-                  {user.joined}
+                  {profile.joined || 'Chưa cập nhật'}
                 </p>
               </div>
 
@@ -236,26 +200,28 @@ export default function UserProfilePage() {
             </h3>
 
             <div className="space-y-3">
-              {user.privileges.map((priv, idx) => (
+              <div
+                className="flex items-start gap-3 p-3 rounded-xl transition-colors"
+                style={{ background: 'var(--md-surface-container-low)' }}
+              >
                 <div
-                  key={idx}
-                  className="flex items-start gap-3 p-3 rounded-xl transition-colors"
-                  style={{ background: 'var(--md-surface-container-low)' }}
+                  className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5"
+                  style={{
+                    background: 'var(--md-primary-container)',
+                    color: 'var(--md-on-primary-container)'
+                  }}
                 >
-                  <div
-                    className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5"
-                    style={{
-                      background: 'var(--md-primary-container)',
-                      color: 'var(--md-on-primary-container)'
-                    }}
-                  >
-                    {idx + 1}
-                  </div>
-                  <p className="text-sm text-[var(--md-on-surface-variant)] leading-relaxed">
-                    {priv}
+                  <ShieldCheck size={12} />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-[var(--md-on-surface)] mb-0.5">
+                    Vai trò: {profile.role}
+                  </p>
+                  <p className="text-xs text-[var(--md-on-surface-variant)]">
+                    Quyền hạn chi tiết sẽ được cấu hình qua hệ thống Phân quyền (RBAC).
                   </p>
                 </div>
-              ))}
+              </div>
             </div>
           </div>
         </div>

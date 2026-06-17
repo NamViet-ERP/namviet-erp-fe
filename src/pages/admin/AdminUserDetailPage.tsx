@@ -81,10 +81,12 @@ export default function AdminUserDetailPage() {
   const [resetError, setResetError] = useState('');
 
   const [selectedRole, setSelectedRole] = useState('');
+  const [prevRoleCode, setPrevRoleCode] = useState<string | undefined>(undefined);
 
-  useEffect(() => {
-    if (user?.roleCode) setSelectedRole(user.roleCode);
-  }, [user?.roleCode]);
+  if (user?.roleCode !== prevRoleCode) {
+    setPrevRoleCode(user?.roleCode);
+    setSelectedRole(user?.roleCode ?? '');
+  }
 
   if (isLoading) return <HrmLoadingState />;
   if (isError || !user) {

@@ -1,9 +1,9 @@
 import type { LucideIcon } from 'lucide-react';
 import {
-  Megaphone, HeartHandshake, ShoppingCart, CreditCard, FolderKanban,
-  FileSignature, Wrench, Factory, Users, Calendar, TrendingUp,
+  CreditCard,
+  Users,
   UserCheck, Package, PackagePlus, PackageMinus,
-  Activity, Warehouse, DollarSign, ShieldCheck, UserCog, LayoutDashboard,
+  Warehouse, ShieldCheck, UserCog, LayoutDashboard,
 } from 'lucide-react';
 
 export interface DepartmentSubItem {
@@ -18,12 +18,14 @@ export interface Department {
   items: DepartmentSubItem[];
 }
 
+const enableWms = import.meta.env.VITE_ENABLE_WMS === 'true';
+
 /**
  * Mega-menu structure shared by the global Header and the Dashboard launcher.
  * Single source of truth — do not duplicate this elsewhere.
  */
 export const departments: Department[] = [
-  {
+  ...(enableWms ? [{
     title: 'KHO MAYZER',
     icon: Warehouse,
     items: [
@@ -33,7 +35,7 @@ export const departments: Department[] = [
       { label: 'Nhập kho', icon: PackagePlus, path: '/warehouse/import' },
       { label: 'Xuất kho', icon: PackageMinus, path: '/warehouse/export' },
     ],
-  },
+  }] : []),
   {
     title: 'HRM',
     icon: Users,

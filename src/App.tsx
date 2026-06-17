@@ -1,9 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AppLayout from './components/layout/AppLayout';
 import { Agentation } from 'agentation';
+import { getDefaultRoute } from './utils/getDefaultRoute';
 
 // Warehouse pages
-import DashboardPage from './pages/warehouse/DashboardPage';
+import DashboardPage from './pages/DashboardPage';
 import DashboardWarehousePage from './pages/warehouse/DashboardWarehousePage';
 import WarehouseListPage from './pages/warehouse/WarehouseListPage';
 import TransferListPage from './pages/warehouse/TransferListPage';
@@ -36,6 +37,9 @@ import AdjustmentListPage from './pages/stocktake/AdjustmentListPage';
 import StocktakeSettingsPage from './pages/stocktake/StocktakeSettingsPage';
 
 export default function App() {
+  const enableWms = import.meta.env.VITE_ENABLE_WMS === 'true';
+  const role = localStorage.getItem('nv-user-role') || undefined;
+
   return (
     <BrowserRouter>
       <Routes>
@@ -43,22 +47,37 @@ export default function App() {
         <Route path="/recruitment/apply" element={<CandidateApplyPage />} />
         <Route path="/employee/onboarding" element={<EmployeeOnboardPage />} />
         <Route element={<AppLayout />}>
-          <Route path="/" element={<Navigate to="/warehouse/dashboard" replace />} />
+          <Route path="/" element={<Navigate to={getDefaultRoute(role)} replace />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
 
-          {/* Module 1: Kho hàng */}
-          <Route path="/warehouse/dashboard" element={<DashboardPage />} />
-          <Route path="/warehouse/dashboard-warehouse" element={<DashboardWarehousePage />} />
-          <Route path="/warehouse/list" element={<WarehouseListPage />} />
-          <Route path="/warehouse/locations" element={<WarehouseListPage />} />
-          <Route path="/warehouse/stock" element={<StockListPage />} />
-          <Route path="/warehouse/expected-imports" element={<ExpectedImportsPage />} />
-          <Route path="/warehouse/reconciliation" element={<ReconciliationPage />} />
-          <Route path="/warehouse/suppliers" element={<SuppliersPage />} />
-          <Route path="/warehouse/barcodes" element={<BarcodePage />} />
-          <Route path="/warehouse/transfer" element={<TransferListPage />} />
-          <Route path="/warehouse/import" element={<ImportListPage />} />
-          <Route path="/warehouse/export" element={<ExportListPage />} />
-          <Route path="/warehouse/settings" element={<SettingsPage />} />
+          {enableWms ? (
+            <>
+              {/* Module 1: Kho hàng */}
+              <Route path="/warehouse/dashboard" element={<DashboardPage />} />
+              <Route path="/warehouse/dashboard-warehouse" element={<DashboardWarehousePage />} />
+              <Route path="/warehouse/list" element={<WarehouseListPage />} />
+              <Route path="/warehouse/locations" element={<WarehouseListPage />} />
+              <Route path="/warehouse/stock" element={<StockListPage />} />
+              <Route path="/warehouse/expected-imports" element={<ExpectedImportsPage />} />
+              <Route path="/warehouse/reconciliation" element={<ReconciliationPage />} />
+              <Route path="/warehouse/suppliers" element={<SuppliersPage />} />
+              <Route path="/warehouse/barcodes" element={<BarcodePage />} />
+              <Route path="/warehouse/transfer" element={<TransferListPage />} />
+              <Route path="/warehouse/import" element={<ImportListPage />} />
+              <Route path="/warehouse/export" element={<ExportListPage />} />
+              <Route path="/warehouse/settings" element={<SettingsPage />} />
+
+              {/* Module 2: Kiểm kê */}
+              <Route path="/stocktake/list" element={<StocktakeListPage />} />
+              <Route path="/stocktake/adjustment" element={<AdjustmentListPage />} />
+              <Route path="/stocktake/settings" element={<StocktakeSettingsPage />} />
+            </>
+          ) : (
+            <>
+              <Route path="/warehouse/*" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/stocktake/*" element={<Navigate to="/dashboard" replace />} />
+            </>
+          )}
 
           {/* Module: Nhân viên */}
           <Route path="/members/list" element={<MembersPage />} />
@@ -81,12 +100,7 @@ export default function App() {
           <Route path="/admin/users/:id" element={<AdminUserDetailPage />} />
           <Route path="/admin/settings" element={<AdminSettingsPage />} />
 
-          {/* Module 2: Kiểm kê */}
-          <Route path="/stocktake/list" element={<StocktakeListPage />} />
-          <Route path="/stocktake/adjustment" element={<AdjustmentListPage />} />
-          <Route path="/stocktake/settings" element={<StocktakeSettingsPage />} />
-
-          <Route path="*" element={<Navigate to="/warehouse/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Route>
       </Routes>
       {import.meta.env.DEV && <Agentation />}

@@ -17,8 +17,8 @@ function readStore(): Employee[] {
       const parsed = JSON.parse(raw) as Employee[];
       if (Array.isArray(parsed) && parsed.length > 0) return parsed;
     }
-  } catch {
-    /* ignore */
+  } catch (e) {
+    console.error('Failed to read employee store from localStorage:', e);
   }
   localStorage.setItem(STORAGE_KEY, JSON.stringify(mockEmployees));
   return [...mockEmployees];
@@ -152,15 +152,21 @@ export const employeesService = {
 
   async listActive(): Promise<Employee[]> {
     if (USE_MOCK) return mockDelay(readStore().filter(isActiveEmployee));
-    const items = await apiClient.get<EmployeeApiDto[]>(ENDPOINT, { activeOnly: true });
-    return items.map(fromApi);
+    try {
+      const items = await apiClient.get<EmployeeApiDto[]>(ENDPOINT, { activeOnly: true });
+      return items.map(fromApi);
+    } catch (e) {
+      console.error('Failed to fetch active employees:', e);
+      return [];
+    }
   },
 
   async getByIdIfActive(id: string): Promise<Employee | undefined> {
     try {
       const emp = await this.getById(id);
       return isActiveEmployee(emp) ? emp : undefined;
-    } catch {
+    } catch (e) {
+      console.error('Failed to fetch active employee:', e);
       return undefined;
     }
   },

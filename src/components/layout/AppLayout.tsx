@@ -56,7 +56,7 @@ export default function AppLayout() {
     else if (module === 'admin') navigate('/admin/users');
   };
 
-  const hideSidebar = location.pathname === '/profile' || location.pathname === '/warehouse/dashboard';
+  const hideSidebar = location.pathname === '/profile' || location.pathname === '/warehouse/dashboard' || location.pathname === '/dashboard';
 
   const pageBackground =
     currentModule === 'members' || currentModule === 'recruitment' || currentModule === 'admin'

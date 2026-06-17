@@ -5,9 +5,9 @@ import {
   ChevronLeft, Gift, Settings,
 } from 'lucide-react';
 
-import { showToast } from '../../components/ui/Toast';
-import { departments, type DepartmentSubItem } from '../../constants/departments';
-import DepartmentCard from '../../components/layout/DepartmentCard';
+import { showToast } from '../components/ui/Toast';
+import { departments, type DepartmentSubItem } from '../constants/departments';
+import DepartmentCard from '../components/layout/DepartmentCard';
 
 // ── Design Tokens ──
 /*

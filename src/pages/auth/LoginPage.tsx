@@ -10,6 +10,7 @@ import { authService } from '../../services/authService';
 import { USE_MOCK } from '../../lib/mock';
 import { REMEMBER_KEY, SAVED_USER_KEY, setRememberMePreference } from '../../lib/authSession';
 import RoleSwitcher from '../../components/layout/RoleSwitcher';
+import { getDefaultRoute } from '../../utils/getDefaultRoute';
 
 const HAS_API = Boolean(import.meta.env.VITE_API_BASE_URL?.trim());
 /** Chạy frontend thuần — không cần Docker/PostgreSQL; dùng dữ liệu mô phỏng trong `src/data/*`. */
@@ -89,7 +90,8 @@ export default function LoginPage() {
         }
       }
       showToast('success', 'Chào mừng bạn quay trở lại hệ thống!', 'Đăng nhập thành công');
-      navigate('/warehouse/dashboard');
+      const role = localStorage.getItem('nv-user-role') || undefined;
+      navigate(getDefaultRoute(role));
     } catch (err) {
       setError(getApiErrorMessage(err, 'Đăng nhập thất bại'));
     } finally {

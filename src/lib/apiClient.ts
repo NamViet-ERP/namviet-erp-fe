@@ -46,7 +46,7 @@ function forceLogoutExpired(): void {
   window.location.assign('/login?expired=1');
 }
 
-function extractErrorMessage(data: unknown, fallback: string): string {
+export function parseApiError(data: unknown, fallback: string): string {
   if (data == null) return fallback;
 
   if (typeof data === 'string') {
@@ -54,7 +54,7 @@ function extractErrorMessage(data: unknown, fallback: string): string {
     if (!trimmed) return fallback;
     if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
       try {
-        return extractErrorMessage(JSON.parse(trimmed), fallback);
+        return parseApiError(JSON.parse(trimmed), fallback);
       } catch {
         return translateErrorMessage(trimmed);
       }
@@ -64,6 +64,13 @@ function extractErrorMessage(data: unknown, fallback: string): string {
 
   if (typeof data === 'object') {
     const obj = data as ProblemDetailsLike;
+    if (obj.errors && typeof obj.errors === 'object') {
+      const raw = Array.isArray(obj.errors)
+        ? obj.errors
+        : Object.values(obj.errors).flat();
+      const msgs = raw.filter(Boolean).map(item => translateErrorMessage(String(item)));
+      if (msgs.length) return msgs.join('; ');
+    }
     if (typeof obj.detail === 'string' && obj.detail.trim()) {
       return translateErrorMessage(obj.detail.trim());
     }
@@ -72,13 +79,6 @@ function extractErrorMessage(data: unknown, fallback: string): string {
     }
     if (typeof obj.title === 'string' && obj.title.trim()) {
       return translateErrorMessage(obj.title.trim());
-    }
-    if (obj.errors && typeof obj.errors === 'object') {
-      const raw = Array.isArray(obj.errors)
-        ? obj.errors
-        : Object.values(obj.errors).flat();
-      const msgs = raw.filter(Boolean).map(item => translateErrorMessage(String(item)));
-      if (msgs.length) return msgs.join('; ');
     }
   }
 
@@ -157,7 +157,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   }
 
   if (!response.ok) {
-    const message = extractErrorMessage(
+    const message = parseApiError(
       data,
       response.status === 401
         ? 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'
@@ -204,7 +204,7 @@ export const apiClient = {
       }
 
       if (!response.ok) {
-        const message = extractErrorMessage(
+        const message = parseApiError(
           data,
           response.status === 401
             ? 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'

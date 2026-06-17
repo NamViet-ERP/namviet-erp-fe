@@ -5,7 +5,6 @@ import { useEmployee, useUpdateEmployee } from '../../hooks/useEmployees';
 import { getSuggestedEmployeeCode } from '../../services/employeesService';
 import { employeeCodeNextHint } from '../../lib/hrm/suggestedEmployeeCode';
 import { useEditableForm } from '../../hooks/useEditableForm';
-import { getSystemUserByEmployeeId } from '../../constants/systemUsers';
 import { EMPLOYEE_STATUSES } from '../../constants/recruitment';
 import { calcSeniority } from '../../types/hr';
 import type { Employee } from '../../types/hr';
@@ -40,7 +39,8 @@ export default function EmployeeDetailPage() {
         const suggested = await getSuggestedEmployeeCode(id);
         setForm({ ...form, code: suggested });
         setCodeHint(employeeCodeNextHint(suggested));
-      } catch {
+      } catch (e) {
+        console.error('Failed to fetch suggested employee code:', e);
         setCodeHint('');
       }
     } else {
@@ -65,14 +65,14 @@ export default function EmployeeDetailPage() {
     if (!id || !form) return;
     setCodeError('');
     try {
-      const { id: _id, ...dto } = form;
+      const dto = { ...form } as Record<string, unknown>;
+      delete dto.id;
       await updateMutation.mutateAsync({ id, dto });
-      const linkedAccount = getSystemUserByEmployeeId(id);
       if (form.status === 'Nghỉ việc') {
         showToast(
           'warning',
-          linkedAccount
-            ? `Tài khoản ${linkedAccount.username} đã bị khóa. Nhân viên sẽ không xuất hiện trong các danh sách chọn.`
+          employee.linkedAccountStatus === 'active' || employee.linkedAccountStatus === 'locked'
+            ? 'Tài khoản hệ thống đã bị khóa. Nhân viên sẽ không xuất hiện trong các danh sách chọn.'
             : 'Nhân viên sẽ không xuất hiện trong các danh sách chọn liên quan.',
           'Đã cập nhật trạng thái nghỉ việc',
         );
@@ -265,17 +265,19 @@ export default function EmployeeDetailPage() {
         </DetailFieldGrid>
       </DetailSection>
 
-      <DetailSection title="BHXH trước khi vào làm">
-        <DetailFieldGrid layout="two">
+      <DetailSection title="BHXH & Thuế">
+        <DetailFieldGrid layout="three">
           {isEditing ? (
             <>
               <FieldSelect label="Đã tham gia BHXH" value={form.hadSocialInsurance ?? ''} onChange={v => setField('hadSocialInsurance', v)} options={['Đã từng tham gia', 'Chưa từng tham gia']} />
               <FieldInput label="Số BHXH" value={form.siNumber ?? ''} onChange={v => setField('siNumber', v)} />
+              <FieldInput label="Mã số thuế" value={form.taxCode ?? ''} onChange={v => setField('taxCode', v)} />
             </>
           ) : (
             <>
               <FieldView label="Đã tham gia BHXH" value={form.hadSocialInsurance} />
               <FieldView label="Số BHXH" value={form.siNumber} />
+              <FieldView label="Mã số thuế" value={form.taxCode} />
             </>
           )}
         </DetailFieldGrid>

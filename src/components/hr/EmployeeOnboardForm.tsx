@@ -39,6 +39,7 @@ const employeeSchema = z.object({
   bankBranch: z.string().min(2, 'Chi nhánh là bắt buộc'),
   hadSocialInsurance: z.enum(['Đã từng tham gia', 'Chưa từng tham gia'], { message: 'Vui lòng chọn' }),
   siNumber: z.string().optional(),
+  taxCode: z.string().optional(),
   code: z.string().optional(),
   segment: z.string().optional(),
   branch: z.string().optional(),
@@ -197,6 +198,7 @@ export default function EmployeeOnboardForm({ mode = 'public', onCreated }: Empl
         bankBranch: data.bankBranch,
         hadSocialInsurance: data.hadSocialInsurance,
         siNumber: data.siNumber,
+        taxCode: data.taxCode,
       };
 
       const created = isHr
@@ -422,7 +424,7 @@ export default function EmployeeOnboardForm({ mode = 'public', onCreated }: Empl
         </div>
       </div>
 
-      <FormSectionHeader step={isHr ? 8 : 7} title="BHXH" style={{ marginTop: '12px' }} />
+      <FormSectionHeader step={isHr ? 8 : 7} title="BHXH & Thuế" style={{ marginTop: '12px' }} />
       <div className="hrm-form-grid">
         <div>
           <label className="hrm-field__label">Đã tham gia BHXH chưa *</label>
@@ -439,6 +441,10 @@ export default function EmployeeOnboardForm({ mode = 'public', onCreated }: Empl
         <div>
           <label className="hrm-field__label">Số BHXH</label>
           <input className="hrm-field-input" {...register('siNumber')} />
+        </div>
+        <div>
+          <label className="hrm-field__label">Mã số thuế</label>
+          <input className="hrm-field-input" {...register('taxCode')} />
         </div>
       </div>
 

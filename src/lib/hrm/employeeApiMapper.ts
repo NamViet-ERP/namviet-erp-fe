@@ -40,6 +40,7 @@ export interface EmployeeApiDto {
   cccdFrontUrl?: string;
   cccdBackUrl?: string;
   degreePhotoUrl?: string;
+  linkedAccountStatus?: string;
 }
 
 function apiDateToInput(value?: string): string | undefined {
@@ -109,10 +110,12 @@ export function fromApi(dto: EmployeeApiDto): Employee {
     cccdIssueDate: apiDateToInput(dto.cccdIssueDate),
     cccdIssuePlace: dto.cccdIssuePlace,
     maritalStatus: dto.maritalStatus,
+    taxCode: dto.taxCode,
     profilePhoto: urlToAttachment(dto.photoUrl, 'profile'),
     cccdFront: urlToAttachment(dto.cccdFrontUrl, 'cccd-front'),
     cccdBack: urlToAttachment(dto.cccdBackUrl, 'cccd-back'),
     degreePhoto: urlToAttachment(dto.degreePhotoUrl, 'degree'),
+    linkedAccountStatus: (dto.linkedAccountStatus as Employee['linkedAccountStatus']) ?? undefined,
   };
 }
 
@@ -160,6 +163,7 @@ export function toApi(employee: CreateEmployeeDto | UpdateEmployeeDto, id = ''):
     cmndIssueDate: e.cmndIssueDate ? inputDateToApi(e.cmndIssueDate) : undefined,
     cmndIssuePlace: e.cmndIssuePlace,
     maritalStatus: e.maritalStatus,
+    taxCode: e.taxCode,
     photoUrl: toStoredUrl(e.profilePhoto?.previewUrl),
     cccdFrontUrl: toStoredUrl(e.cccdFront?.previewUrl),
     cccdBackUrl: toStoredUrl(e.cccdBack?.previewUrl),

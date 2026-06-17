@@ -97,6 +97,9 @@ export interface Employee {
   // BHXH
   hadSocialInsurance?: 'Đã từng tham gia' | 'Chưa từng tham gia' | '';
   siNumber?: string;
+  taxCode?: string;
+  // Account linkage (from Identity module via API)
+  linkedAccountStatus?: 'active' | 'locked' | 'none';
 }
 
 export interface Seniority {

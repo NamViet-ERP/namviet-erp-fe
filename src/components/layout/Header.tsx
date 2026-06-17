@@ -188,6 +188,7 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
   const currentUser = sessionUser ?? { name: 'User', initials: 'U', roleLabel: '', email: '' };
   const activeUserId = sessionUser?.id ?? 'admin';
 
+  const enableWms = import.meta.env.VITE_ENABLE_WMS === 'true';
   const [showModuleMenu, setShowModuleMenu] = useState(false);
   const [moduleMenuClosing, setModuleMenuClosing] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -395,15 +396,17 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
         <div style={{ width: '1px', height: '24px', background: 'var(--nv-header-border)', margin: '0 4px' }} />
 
         {/* Báo cáo button — MD3 Outlined Pill */}
-        <button
-          className="hidden lg:flex btn btn-outlined"
-          onClick={() => navigate('/warehouse/dashboard-warehouse')}
-          style={{ height: '36px', padding: '0 16px', fontSize: '0.8125rem', gap: '6px', color: 'var(--nv-header-on-bg)', borderColor: 'var(--nv-header-border)' }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'var(--nv-header-icon-active-bg)'; }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
-        >
-          <BarChart3 size={16} /> BÁO CÁO DASHBOARD
-        </button>
+        {enableWms && (
+          <button
+            className="hidden lg:flex btn btn-outlined"
+            onClick={() => navigate('/warehouse/dashboard-warehouse')}
+            style={{ height: '36px', padding: '0 16px', fontSize: '0.8125rem', gap: '6px', color: 'var(--nv-header-on-bg)', borderColor: 'var(--nv-header-border)' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--nv-header-icon-active-bg)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+          >
+            <BarChart3 size={16} /> BÁO CÁO DASHBOARD
+          </button>
+        )}
 
         <div style={{ width: '1px', height: '24px', background: 'var(--nv-header-border)', margin: '0 4px' }} />
 

@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom';
 import { Check, ChevronDown } from 'lucide-react';
 import { showToast } from '../ui/Toast';
 import { useUpdateEmployee } from '../../hooks/useEmployees';
-import { getSystemUserByEmployeeId } from '../../constants/systemUsers';
 import type { Employee, EmployeeStatus } from '../../types/hr';
 
 const STATUS_OPTIONS: EmployeeStatus[] = ['Đang làm', 'Nghỉ việc', 'Thai sản'];
@@ -86,19 +85,19 @@ export default function EmployeeStatusSwap({ employee }: EmployeeStatusSwapProps
     setOpen(false);
     try {
       await updateMutation.mutateAsync({ id: employee.id, dto: { status: next } });
-      const linkedAccount = getSystemUserByEmployeeId(employee.id);
+      const hasAccount = employee.linkedAccountStatus === 'active' || employee.linkedAccountStatus === 'locked';
       if (next === 'Nghỉ việc') {
         showToast(
           'warning',
-          linkedAccount
-            ? `Tài khoản ${linkedAccount.username} đã bị khóa.`
+          hasAccount
+            ? 'Tài khoản hệ thống đã bị khóa.'
             : `${employee.fullName} sẽ không hiện trong các danh sách chọn.`,
           'Đã cập nhật nghỉ việc'
         );
       } else if (employee.status === 'Nghỉ việc' && next === 'Đang làm') {
         showToast(
           'success',
-          linkedAccount ? `Tài khoản ${linkedAccount.username} đã được mở lại.` : 'Đã cập nhật trạng thái.',
+          hasAccount ? 'Tài khoản hệ thống đã được mở lại.' : 'Đã cập nhật trạng thái.',
           'Quay lại làm việc'
         );
       } else {

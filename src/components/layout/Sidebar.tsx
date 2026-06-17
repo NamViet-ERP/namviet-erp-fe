@@ -40,6 +40,11 @@ export default function Sidebar({ collapsed, onToggle, menuItems, currentModule 
   const hoverTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const itemRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
+  const enableWms = import.meta.env.VITE_ENABLE_WMS === 'true';
+  const filteredMenuItems = enableWms
+    ? menuItems
+    : menuItems.filter(item => !item.path?.startsWith('/warehouse') && !item.path?.startsWith('/stocktake'));
+
   const ModuleIcon = moduleIcons[currentModule] || WarehouseIcon;
   const isActive = (path: string) => location.pathname === path;
   const isParentActive = (item: SidebarMenuItem) =>
@@ -50,7 +55,7 @@ export default function Sidebar({ collapsed, onToggle, menuItems, currentModule 
     setExpandedItems(prev => {
       const next = { ...prev };
       let changed = false;
-      menuItems.forEach(item => {
+      filteredMenuItems.forEach(item => {
         if (item.children && isParentActive(item) && !userCollapsed.has(item.id) && !next[item.id]) {
           next[item.id] = true;
           changed = true;
@@ -69,7 +74,7 @@ export default function Sidebar({ collapsed, onToggle, menuItems, currentModule 
       setActivePopover(null);
     } else {
       const init: Record<string, boolean> = {};
-      menuItems.forEach(item => {
+      filteredMenuItems.forEach(item => {
         if (item.children && isParentActive(item)) init[item.id] = true;
       });
       setExpandedItems(init);
@@ -120,7 +125,7 @@ export default function Sidebar({ collapsed, onToggle, menuItems, currentModule 
   }, []);
 
   const popoverItemId = activePopover || hoveredItem;
-  const popoverItemRaw = collapsed && popoverItemId ? menuItems.find(i => i.id === popoverItemId) : null;
+  const popoverItemRaw = collapsed && popoverItemId ? filteredMenuItems.find(i => i.id === popoverItemId) : null;
   const popoverItem = (popoverItemRaw?.children?.length ?? 0) > 0 ? popoverItemRaw : null;
 
   const updateFlyoutPosition = useCallback(() => {
@@ -267,7 +272,7 @@ export default function Sidebar({ collapsed, onToggle, menuItems, currentModule 
         className="sidebar-nav-enter"
         style={{ flex: 1, overflowY: 'auto', padding: '6px' }}
       >
-        {menuItems.map((item) => {
+        {filteredMenuItems.map((item) => {
           const Icon = item.icon;
           const hasChildren = (item.children?.length ?? 0) > 0;
           const isExpanded = !!expandedItems[item.id];
