@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Phone, Building, Calendar, ShieldCheck, CheckCircle, Key, ArrowLeft, Loader2 } from 'lucide-react';
-import PageHeader from '../../components/ui/PageHeader';
+import {
+  User, Mail, Phone, Building, Calendar, ShieldCheck, CheckCircle,
+  Key, Loader2, Briefcase, Settings,
+} from 'lucide-react';
+import { HrmDetailHeader } from '../../components/hr/HrmPageChrome';
+import { showToast } from '../../components/ui/Toast';
 import { getSessionUser, type SystemUser } from '../../constants/systemUsers';
 import { employeesService } from '../../services/employeesService';
 import type { Employee } from '../../types/hr';
@@ -30,6 +34,25 @@ function buildProfileFromSession(user: SystemUser, employee?: Employee): Profile
   };
 }
 
+interface ProfileFieldProps {
+  label: string;
+  icon: typeof User;
+  value: string;
+  empty?: boolean;
+}
+
+function ProfileField({ label, icon: Icon, value, empty }: ProfileFieldProps) {
+  return (
+    <div className="rounded-xl border border-[var(--md-outline-variant)] bg-[var(--md-surface-container-high)] p-4">
+      <dt className="text-xs text-[var(--md-on-surface-variant)] mb-1.5">{label}</dt>
+      <dd className={`text-sm font-semibold flex items-center gap-2 ${empty ? 'text-[var(--md-on-surface-variant)] font-medium' : 'text-[var(--md-on-surface)]'}`}>
+        <Icon size={14} className="text-[var(--md-secondary)] shrink-0" aria-hidden />
+        <span className="text-pretty">{value}</span>
+      </dd>
+    </div>
+  );
+}
+
 export default function UserProfilePage() {
   const navigate = useNavigate();
   const sessionUser = getSessionUser();
@@ -54,7 +77,6 @@ export default function UserProfilePage() {
       })
       .catch((e) => {
         console.error('Failed to fetch employee profile:', e);
-        // keep session-only profile on error
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -68,162 +90,123 @@ export default function UserProfilePage() {
 
   if (!profile) {
     return (
-      <div className="animate-fade-in flex items-center justify-center min-h-[40vh]">
+      <div className="animate-fade-in flex items-center justify-center min-h-[40dvh]">
         <p className="text-sm text-[var(--md-on-surface-variant)]">Không có phiên đăng nhập.</p>
       </div>
     );
   }
 
   return (
-    <div className="animate-fade-in">
-      <PageHeader
-        eyebrow="TÀI KHOẢN"
-        title="THÔNG TIN CÁ NHÂN"
+    <div className="animate-fade-in max-w-5xl mx-auto hrm-page w-full">
+      <HrmDetailHeader
+        onBack={() => navigate(-1)}
+        title="Thông tin cá nhân"
+        subtitle="Xem thông tin đăng nhập và quyền truy cập của bạn trong hệ thống."
         actions={
           <button
-            onClick={() => navigate(-1)}
-            className="btn btn-outline flex items-center gap-1.5 text-xs py-2"
+            type="button"
+            onClick={() => showToast('info', 'Phân hệ "Cài đặt" đang được phát triển.', 'Chức năng giả lập')}
+            className="hrm-header-btn flex items-center gap-1.5"
           >
-            <ArrowLeft size={14} />
-            Quay lại
+            <Settings size={14} aria-hidden />
+            Cài đặt
           </button>
         }
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: Avatar & Quick Info */}
-        <div
-          className="rounded-2xl p-6 shadow-card flex flex-col items-center text-center justify-center"
-          style={{
-            background: 'var(--md-surface-container)',
-            border: '1px solid var(--md-outline-variant)',
-            minHeight: '320px'
-          }}
-        >
-          {/* Large Avatar Circle */}
+      <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] gap-5 mt-6">
+        {/* Sidebar summary */}
+        <aside className="rounded-2xl border border-[var(--md-outline-variant02)] bg-[var(--md-surface-container)] p-6 shadow-sm flex flex-col items-center text-center lg:sticky lg:top-[calc(64px+20px)] lg:self-start">
           <div
-            className="w-24 h-24 rounded-full flex items-center justify-center font-bold text-3xl mb-4 shadow-inner"
+            className="size-24 rounded-full flex items-center justify-center font-bold text-3xl mb-4 border-2 border-[color-mix(in_srgb,var(--md-secondary)_30%,transparent)]"
             style={{
               background: 'var(--md-primary-container)',
-              color: 'var(--md-on-primary-container)'
+              color: 'var(--md-on-primary-container)',
             }}
           >
             {profile.initials}
           </div>
 
-          <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--md-on-surface)' }}>
+          <h2 className="text-lg font-bold text-[var(--md-on-surface)] text-balance leading-tight">
             {profile.name}
           </h2>
-          <p className="text-sm font-semibold mb-4 px-3 py-1 rounded-full"
-            style={{
-              background: 'var(--md-secondary-container)',
-              color: 'var(--md-on-secondary-container)'
-            }}
-          >
+          <span className="mt-2 inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-[var(--md-secondary-container)] text-[var(--md-on-secondary-container)]">
             {profile.role}
-          </p>
+          </span>
 
-          <div className="w-full border-t border-[var(--md-outline-variant)] pt-4 mt-2 space-y-3 text-left">
-            <div className="flex items-center gap-3 text-sm text-[var(--md-on-surface-variant)]">
-              <Mail size={16} className="text-[var(--md-primary)]" />
+          <div className="w-full mt-5 pt-5 border-t border-[var(--md-outline-variant)] space-y-3 text-left">
+            <div className="flex items-center gap-3 text-sm text-[var(--md-on-surface)]">
+              <Mail size={15} className="text-[var(--md-secondary)] shrink-0" aria-hidden />
               <span className="truncate">{profile.email}</span>
             </div>
-            <div className="flex items-center gap-3 text-sm text-[var(--md-on-surface-variant)]">
-              <Phone size={16} className="text-[var(--md-primary)]" />
-              <span>{profile.phone || 'Chưa cập nhật'}</span>
+            <div className="flex items-center gap-3 text-sm text-[var(--md-on-surface)]">
+              <Phone size={15} className="text-[var(--md-secondary)] shrink-0" aria-hidden />
+              <span className={profile.phone ? '' : 'text-[var(--md-on-surface-variant)]'}>
+                {profile.phone || 'Chưa cập nhật'}
+              </span>
             </div>
           </div>
-        </div>
+        </aside>
 
-        {/* Right Column: Detailed account info & permissions */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Account Detail Card */}
-          <div
-            className="rounded-2xl p-6 shadow-card"
-            style={{
-              background: 'var(--md-surface-container)',
-              border: '1px solid var(--md-outline-variant)'
-            }}
-          >
-            <h3 className="text-base font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--md-on-surface)' }}>
-              <Key size={18} className="text-[var(--md-primary)]" />
+        {/* Detail panels */}
+        <div className="space-y-5">
+          <section className="rounded-2xl border border-[var(--md-outline-variant02)] bg-[var(--md-surface-container)] p-5 shadow-sm">
+            <h3 className="text-base font-bold mb-4 flex items-center gap-2 text-[var(--md-on-surface)] text-balance">
+              <Key size={18} className="text-[var(--md-secondary)] shrink-0" aria-hidden />
               Thông tin tài khoản hệ thống
-              {loading && <Loader2 size={14} className="animate-spin text-[var(--md-outline)]" />}
+              {loading && <Loader2 size={14} className="animate-spin text-[var(--md-outline)]" aria-label="Đang tải" />}
             </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <span className="text-xs text-[var(--md-on-surface-variant)] block mb-1">Họ và tên</span>
-                <p className="text-sm font-semibold text-[var(--md-on-surface)] flex items-center gap-2">
-                  <User size={14} className="text-[var(--md-outline)]" />
-                  {profile.name}
-                </p>
-              </div>
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <ProfileField label="Họ và tên" icon={User} value={profile.name} />
+              <ProfileField
+                label="Phòng ban / Bộ phận"
+                icon={Building}
+                value={profile.dept || 'Chưa cập nhật'}
+                empty={!profile.dept}
+              />
+              <ProfileField
+                label="Chức danh"
+                icon={Briefcase}
+                value={profile.position || 'Chưa cập nhật'}
+                empty={!profile.position}
+              />
+              <ProfileField
+                label="Ngày tham gia"
+                icon={Calendar}
+                value={profile.joined || 'Chưa cập nhật'}
+                empty={!profile.joined}
+              />
+            </dl>
 
-              <div>
-                <span className="text-xs text-[var(--md-on-surface-variant)] block mb-1">Phòng ban / Bộ phận</span>
-                <p className="text-sm font-semibold text-[var(--md-on-surface)] flex items-center gap-2">
-                  <Building size={14} className="text-[var(--md-outline)]" />
-                  {profile.dept || 'Chưa cập nhật'}
-                </p>
-              </div>
+            <div className="mt-4 flex items-center gap-2 rounded-xl border border-[color-mix(in_srgb,var(--md-success)_25%,var(--md-outline-variant))] bg-[var(--md-success-container)] px-4 py-3">
+              <CheckCircle size={16} className="text-[var(--md-success)] shrink-0" aria-hidden />
+              <p className="text-sm font-medium text-[var(--md-on-success-container)]">
+                Tài khoản đang hoạt động và đã xác minh
+              </p>
+            </div>
+          </section>
 
-              <div>
-                <span className="text-xs text-[var(--md-on-surface-variant)] block mb-1">Ngày tham gia</span>
-                <p className="text-sm font-semibold text-[var(--md-on-surface)] flex items-center gap-2">
-                  <Calendar size={14} className="text-[var(--md-outline)]" />
-                  {profile.joined || 'Chưa cập nhật'}
-                </p>
-              </div>
+          <section className="rounded-2xl border border-[var(--md-outline-variant02)] bg-[var(--md-surface-container)] p-5 shadow-sm">
+            <h3 className="text-base font-bold mb-4 flex items-center gap-2 text-[var(--md-on-surface)] text-balance">
+              <ShieldCheck size={18} className="text-[var(--md-secondary)] shrink-0" aria-hidden />
+              Quyền hạn & nghiệp vụ
+            </h3>
 
+            <div className="rounded-xl border border-[var(--md-outline-variant)] bg-[var(--md-surface-container-high)] p-4 flex items-start gap-3">
+              <div className="size-9 rounded-xl flex items-center justify-center shrink-0 bg-[var(--md-primary-container)] text-[var(--md-primary)]">
+                <ShieldCheck size={16} aria-hidden />
+              </div>
               <div>
-                <span className="text-xs text-[var(--md-on-surface-variant)] block mb-1">Trạng thái tài khoản</span>
-                <p className="text-sm font-semibold text-[var(--md-on-surface)] flex items-center gap-2">
-                  <CheckCircle size={14} className="text-green-500" />
-                  Hoạt động (Đã xác minh)
+                <p className="text-sm font-semibold text-[var(--md-on-surface)] mb-1">
+                  Vai trò: {profile.role}
+                </p>
+                <p className="text-xs text-[var(--md-on-surface-variant)] text-pretty leading-relaxed">
+                  Quyền hạn chi tiết được cấu hình qua hệ thống phân quyền (RBAC). Liên hệ quản trị viên nếu cần thay đổi.
                 </p>
               </div>
             </div>
-          </div>
-
-          {/* Permissions / Privileges Card */}
-          <div
-            className="rounded-2xl p-6 shadow-card"
-            style={{
-              background: 'var(--md-surface-container)',
-              border: '1px solid var(--md-outline-variant)'
-            }}
-          >
-            <h3 className="text-base font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--md-on-surface)' }}>
-              <ShieldCheck size={18} className="text-[var(--md-primary)]" />
-              Quyền hạn & Nghiệp vụ được phân quyền
-            </h3>
-
-            <div className="space-y-3">
-              <div
-                className="flex items-start gap-3 p-3 rounded-xl transition-colors"
-                style={{ background: 'var(--md-surface-container-low)' }}
-              >
-                <div
-                  className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5"
-                  style={{
-                    background: 'var(--md-primary-container)',
-                    color: 'var(--md-on-primary-container)'
-                  }}
-                >
-                  <ShieldCheck size={12} />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-[var(--md-on-surface)] mb-0.5">
-                    Vai trò: {profile.role}
-                  </p>
-                  <p className="text-xs text-[var(--md-on-surface-variant)]">
-                    Quyền hạn chi tiết sẽ được cấu hình qua hệ thống Phân quyền (RBAC).
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          </section>
         </div>
       </div>
     </div>

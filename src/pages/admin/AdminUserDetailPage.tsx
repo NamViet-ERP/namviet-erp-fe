@@ -28,32 +28,25 @@ function parseSource(value: string | null): AdminUserSource {
   return value === 'manual' ? 'manual' : 'employee';
 }
 
-interface IOSSwitchProps {
+interface AccountSwitchProps {
   checked: boolean;
   disabled?: boolean;
   onChange: (next: boolean) => void;
   title?: string;
 }
 
-function IOSSwitch({ checked, disabled, onChange, title }: IOSSwitchProps) {
+function AccountSwitch({ checked, disabled, onChange, title }: AccountSwitchProps) {
   return (
     <button
       type="button"
       onClick={() => { if (!disabled) onChange(!checked); }}
       disabled={disabled}
-      className={`relative inline-flex h-5 w-9 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-        checked ? 'bg-[var(--md-primary)]' : 'switch-track-off bg-[var(--md-outline)]'
-      } ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+      className={`hrm-toggle-switch${checked ? ' hrm-toggle-switch--on' : ''}`}
       role="switch"
       aria-checked={checked}
       title={title}
     >
-      <span
-        aria-hidden="true"
-        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full switch-thumb bg-white shadow ring-0 transition duration-200 ease-in-out ${
-          checked ? 'translate-x-4' : 'translate-x-0'
-        }`}
-      />
+      <span className="hrm-toggle-switch__thumb" aria-hidden />
     </button>
   );
 }
@@ -193,13 +186,21 @@ export default function AdminUserDetailPage() {
         actions={
           <div className="flex flex-wrap gap-2">
             {user.canProvision && (
-              <button type="button" className="btn btn-primary flex items-center gap-2" onClick={() => setShowProvision(true)}>
+              <button
+                type="button"
+                className="btn btn-primary flex items-center gap-2 rounded-full px-5"
+                onClick={() => setShowProvision(true)}
+              >
                 <UserPlus size={16} />
                 Cấp tài khoản
               </button>
             )}
             {user.hasAccount && user.accountUserId && (
-              <button type="button" className="btn btn-outline flex items-center gap-2" onClick={() => setShowReset(true)}>
+              <button
+                type="button"
+                className="btn btn-outline flex items-center gap-2 rounded-full px-5"
+                onClick={() => setShowReset(true)}
+              >
                 <KeyRound size={16} />
                 Đặt lại MK
               </button>
@@ -220,7 +221,7 @@ export default function AdminUserDetailPage() {
           <div className="col-span-full flex items-center gap-3 pt-1">
             <span className="text-sm text-[var(--md-on-surface-variant)]">Bật/Tắt tài khoản</span>
             {user.hasAccount ? (
-              <IOSSwitch
+              <AccountSwitch
                 checked={user.isActive}
                 disabled={toggleMutation.isPending || !user.canToggle}
                 onChange={handleToggle}

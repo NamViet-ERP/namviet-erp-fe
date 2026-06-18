@@ -11,26 +11,28 @@ interface DepartmentCardProps {
 export default function DepartmentCard({ dept, onItemClick }: DepartmentCardProps) {
   const DeptIcon = dept.icon;
   return (
-    <div className="bg-[var(--md-surface-container)] rounded-lg border border-[var(--md-outline-variant)] p-3 shadow-sm">
-      <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-[var(--md-outline-variant)]">
-        <DeptIcon size={ICON_SIZE.base} className="text-[var(--md-secondary)]" />
-        <h3 className="text-[16px] font-bold text-[var(--md-primary)]">{dept.title}</h3>
+    <div className="bg-[var(--md-surface-container)] rounded-2xl border border-[var(--md-outline-variant02)] p-4 shadow-sm h-full">
+      <div className="flex items-center gap-2.5 mb-3 pb-2 border-b border-[var(--md-outline-variant)]">
+        <div className="size-8 shrink-0 flex items-center justify-center rounded-xl bg-[var(--md-secondary-container)]">
+          <DeptIcon size={ICON_SIZE.base} className="text-[var(--md-secondary)]" />
+        </div>
+        <h3 className="text-sm font-bold text-[var(--md-primary)] text-balance leading-tight">{dept.title}</h3>
       </div>
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-2">
         {dept.items.map((item) => {
           const ItemIcon = item.icon;
           return (
             <button
               key={item.label}
               onClick={() => onItemClick(item, dept)}
-              className="mega-menu-item group flex items-center justify-between w-full p-2 bg-[var(--md-surface-container-low)] hover:bg-[var(--nv-sidebar-item-hover)] border border-[var(--md-outline-variant)] hover:border-[var(--md-secondary)] rounded transition-[background-color,border-color,color,transform] duration-md ease-md hover:translate-x-0.5 active:scale-[0.99] text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--md-secondary)]"
+              className="mega-menu-item group flex items-center justify-between w-full px-3 py-2.5 bg-[var(--md-surface-container-high)] hover:bg-[var(--nv-sidebar-item-hover)] border border-[var(--md-outline-variant)] hover:border-[var(--md-secondary)] rounded-xl transition-[background-color,border-color,transform] duration-150 ease-out hover:translate-x-0.5 active:scale-[0.99] text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--md-secondary)]"
               style={{ outlineOffset: '2px', cursor: 'pointer' }}
             >
-              <div className="flex items-center gap-2 overflow-hidden">
-                <ItemIcon size={ICON_SIZE.dense} className="text-[var(--md-on-surface-variant)] flex-shrink-0" />
-                <span className="text-[12px] text-[var(--md-on-surface)] truncate">{item.label}</span>
+              <div className="flex items-center gap-2.5 overflow-hidden min-w-0">
+                <ItemIcon size={ICON_SIZE.dense} className="text-[var(--md-on-surface-variant)] shrink-0" />
+                <span className="text-[13px] text-[var(--md-on-surface)] truncate text-pretty">{item.label}</span>
               </div>
-              <ChevronRight size={12} className="text-[var(--md-on-surface-variant)] flex-shrink-0 ml-1 transition-transform duration-md ease-md group-hover:translate-x-0.5" />
+              <ChevronRight size={14} className="text-[var(--md-on-surface-variant)] shrink-0 ml-2 transition-transform duration-150 ease-out group-hover:translate-x-0.5 group-hover:text-[var(--md-secondary)]" />
             </button>
           );
         })}

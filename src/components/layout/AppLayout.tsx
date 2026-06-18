@@ -63,10 +63,12 @@ export default function AppLayout() {
       ? 'var(--md-surface-container)'
       : 'var(--md-surface)';
 
+  const isPortalDashboard = hideSidebar;
+
   return (
     <div
       style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: pageBackground,
         color: 'var(--md-on-surface)',
         transition: 'background var(--md-duration) var(--md-easing), color var(--md-duration) var(--md-easing)',
@@ -83,13 +85,19 @@ export default function AppLayout() {
       )}
       <main
         style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           paddingTop: '64px',
           marginLeft: hideSidebar ? '0px' : (sidebarCollapsed ? '48px' : '180px'),
           transition: `margin-left 300ms var(--md-easing)`,
         }}
       >
-        <div style={{ padding: '16px 20px' }}>
+        <div
+          style={{
+            padding: isPortalDashboard ? '20px 24px 32px' : '16px 20px',
+            maxWidth: isPortalDashboard ? '1400px' : undefined,
+            margin: isPortalDashboard ? '0 auto' : undefined,
+          }}
+        >
           <Outlet />
         </div>
       </main>
