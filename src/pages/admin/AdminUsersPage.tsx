@@ -79,11 +79,7 @@ function IOSSwitch({ checked, disabled, onChange, title }: IOSSwitchProps) {
       }}
       disabled={disabled}
       className={`relative inline-flex h-5 w-9 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-<<<<<<< HEAD
-        checked ? 'bg-[var(--status-success)]' : 'bg-gray-400 dark:bg-gray-600'
-=======
         checked ? 'bg-[var(--md-primary)]' : 'switch-track-off bg-[var(--md-outline)]'
->>>>>>> 24364d692a977485bbce6e3b20337e8824dab84e
       } ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
       role="switch"
       aria-checked={checked}
@@ -292,13 +288,8 @@ export default function AdminUsersPage() {
   return (
     <div className="hrm-page">
       <PageHeader
-<<<<<<< HEAD
         title="QUẢN LÝ TÀI KHOẢN NGƯỜI DÙNG"
         subtitle="Đồng bộ từ quản lý nhân viên; có thể thêm tài khoản thủ công (admin, dịch vụ...)"
-=======
-        title="Quản lý người dùng"
-        subtitle="Bấm dòng để xem chi tiết và quản lý tài khoản trong phạm vi Admin"
->>>>>>> 24364d692a977485bbce6e3b20337e8824dab84e
         actions={
           <button type="button" className="btn btn-primary flex items-center gap-2" onClick={() => setShowCreate(true)}>
             <Plus size={16} />
