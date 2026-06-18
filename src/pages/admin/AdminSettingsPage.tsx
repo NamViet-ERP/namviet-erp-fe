@@ -134,11 +134,7 @@ export default function AdminSettingsPage() {
                   <button
                     type="button"
                     onClick={() => handleToggle(role.code)}
-<<<<<<< HEAD
-                    className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${role.isActive ? 'bg-[var(--status-success)]' : 'bg-gray-400 dark:bg-gray-600'}`}
-=======
                     className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${role.isActive ? 'bg-[var(--md-primary)]' : 'switch-track-off bg-[var(--md-outline)]'}`}
->>>>>>> 24364d692a977485bbce6e3b20337e8824dab84e
                     role="switch"
                     aria-checked={role.isActive}
                     title={role.isActive ? 'Đang bật' : 'Đang tắt'}

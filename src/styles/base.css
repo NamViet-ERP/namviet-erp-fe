@@ -1,0 +1,58 @@
+/* ═══════════════════════════════════════════════════════════
+   BASE LAYER
+   ═══════════════════════════════════════════════════════════ */
+@layer base {
+  *, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* Single source of truth for icon stroke weight (overrides Lucide's
+     default attribute, so every icon stays visually consistent). */
+  svg.lucide {
+    stroke-width: var(--icon-stroke);
+  }
+
+  body {
+    font-family: 'Roboto', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: var(--md-surface);
+    color: var(--md-on-surface);
+    line-height: 18.5714px;
+    font-size: 13px;
+    transition: background-color var(--md-duration) var(--md-easing),
+                color var(--md-duration) var(--md-easing);
+  }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--md-outline-variant);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--md-outline); }
+
+  :focus-visible {
+    outline: 2px solid var(--md-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: rgba(14, 48, 99, 0.2);
+    color: var(--md-on-surface);
+  }
+
+  .dark ::selection {
+    background: rgba(0, 142, 206, 0.35);
+    color: var(--md-on-surface);
+  }
+}
