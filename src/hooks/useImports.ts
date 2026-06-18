@@ -23,7 +23,11 @@ export function useCreateImport() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (dto: CreateImportDto) => importsService.create(dto),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.imports.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.imports.all });
+      qc.invalidateQueries({ queryKey: queryKeys.stock.matrix });
+      qc.invalidateQueries({ queryKey: queryKeys.projects.all });
+    },
   });
 }
 
@@ -46,6 +50,8 @@ export function useApproveImport() {
     onSuccess: (_data, id) => {
       qc.invalidateQueries({ queryKey: queryKeys.imports.all });
       qc.invalidateQueries({ queryKey: queryKeys.imports.detail(id) });
+      qc.invalidateQueries({ queryKey: queryKeys.stock.matrix });
+      qc.invalidateQueries({ queryKey: queryKeys.projects.all });
     },
   });
 }

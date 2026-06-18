@@ -49,4 +49,19 @@ export const queryKeys = {
   roles: {
     all: ['roles'] as const,
   },
+  stock: {
+    matrix: ['stock', 'matrix'] as const,
+  },
+  categories: {
+    tree: ['categories', 'tree'] as const,
+  },
+  projects: {
+    all: ['projects'] as const,
+    detail: (code: string) => ['projects', code] as const,
+    inventory: (code: string) => ['projects', code, 'inventory'] as const,
+  },
+  materials: {
+    all: ['materials'] as const,
+    detail: (code: string) => ['materials', code] as const,
+  },
 } as const;

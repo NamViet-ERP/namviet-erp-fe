@@ -1,0 +1,426 @@
+import { useState } from 'react';
+import { Plus, RotateCcw } from 'lucide-react';
+import SearchBar from '../../components/ui/SearchBar';
+import Pagination from '../../components/ui/Pagination';
+import EmptyState from '../../components/ui/EmptyState';
+import PageHeader from '../../components/ui/PageHeader';
+import Modal from '../../components/ui/Modal';
+import { showToast } from '../../components/ui/Toast';
+import { getApiErrorMessage } from '../../lib/apiClient';
+import { useMaterials, useCreateMaterial } from '../../hooks/useMaterials';
+import { useCategoryCascade } from '../../hooks/useCategories';
+import MaterialDetailView from './MaterialDetailView';
+import {
+  MATERIAL_CATEGORY_LEVELS,
+  MATERIAL_CREATE_REQUIRED_LEVELS,
+  MATERIAL_TABLE_COLUMNS,
+} from '../../constants/materialCategoryLevels';
+import { categoryLevel, resolveLeafCategoryId } from '../../lib/wms/materialCategoryTree';
+import type { MaterialApiDto } from '../../types/wms';
+
+const emptySelection: Array<number | ''> = ['', '', '', '', ''];
+
+function pathCell(m: MaterialApiDto, key: keyof MaterialApiDto['categoryPath']) {
+  return m.categoryPath?.[key]?.trim() || '—';
+}
+
+function isRequiredOnCreate(level: number) {
+  return (MATERIAL_CREATE_REQUIRED_LEVELS as readonly number[]).includes(level);
+}
+
+export default function MaterialsPage() {
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(15);
+  const [filterSelection, setFilterSelection] = useState<Array<number | ''>>([...emptySelection]);
+  const [detailCode, setDetailCode] = useState<string | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
+  const [showInactive, setShowInactive] = useState(false);
+
+  const [createSelection, setCreateSelection] = useState<Array<number | ''>>([...emptySelection]);
+  const [createForm, setCreateForm] = useState({
+    materialCode: '',
+    materialName: '',
+    unit: 'Cái',
+    technicalSpec: '',
+    qualityStandard: '',
+  });
+  const [createErrors, setCreateErrors] = useState<Record<string, string>>({});
+
+  const { optionsByLevel: filterOptions, isLoading: categoriesLoading } =
+    useCategoryCascade(filterSelection);
+  const { categories, optionsByLevel: createOptions, isLoading: createCategoriesLoading } =
+    useCategoryCascade(createSelection);
+  const createMutation = useCreateMaterial();
+
+  const filterCategoryId = resolveLeafCategoryId(filterSelection);
+
+  const listParams = {
+    page,
+    pageSize,
+    search: search || undefined,
+    categoryId: filterCategoryId,
+    includeInactive: showInactive || undefined,
+  };
+
+  const { data, isLoading, isError } = useMaterials(listParams);
+
+  const items = data?.items ?? [];
+  const totalCount = data?.totalCount ?? 0;
+  const totalPages = data?.totalPages ?? 1;
+
+  const setFilterLevel = (levelIndex: number, value: number | '') => {
+    setFilterSelection(prev => {
+      const next = [...prev];
+      next[levelIndex] = value;
+      for (let i = levelIndex + 1; i < 5; i++) next[i] = '';
+      return next;
+    });
+    setPage(1);
+  };
+
+  const resetFilters = () => {
+    setFilterSelection([...emptySelection]);
+    setSearch('');
+    setPage(1);
+  };
+
+  const resetCreateForm = () => {
+    setCreateSelection([...emptySelection]);
+    setCreateForm({
+      materialCode: '',
+      materialName: '',
+      unit: 'Cái',
+      technicalSpec: '',
+      qualityStandard: '',
+    });
+    setCreateErrors({});
+  };
+
+  const setCreateLevel = (levelIndex: number, value: number | '') => {
+    setCreateSelection(prev => {
+      const next = [...prev];
+      next[levelIndex] = value;
+      for (let i = levelIndex + 1; i < 5; i++) next[i] = '';
+      return next;
+    });
+  };
+
+  const validateCreate = (): boolean => {
+    const errors: Record<string, string> = {};
+    for (const lvl of MATERIAL_CREATE_REQUIRED_LEVELS) {
+      if (createSelection[lvl - 1] === '') {
+        const label = MATERIAL_CATEGORY_LEVELS[lvl - 1].label;
+        errors[`level${lvl}`] = `${label} là bắt buộc`;
+      }
+    }
+    if (!createForm.materialCode.trim()) errors.materialCode = 'Mã vật tư là bắt buộc';
+    if (!createForm.materialName.trim()) errors.materialName = 'Tên là bắt buộc';
+    if (!createForm.unit.trim()) errors.unit = 'Đơn vị tính là bắt buộc';
+
+    const categoryId = resolveLeafCategoryId(createSelection);
+    if (categoryId && categoryLevel(categories, categoryId)! < 3) {
+      errors.level3 = 'Phải chọn tối thiểu đến cấp Loại vật tư';
+    }
+
+    setCreateErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleCreate = async () => {
+    if (!validateCreate()) return;
+    const categoryId = resolveLeafCategoryId(createSelection);
+    if (!categoryId) return;
+
+    try {
+      await createMutation.mutateAsync({
+        materialCode: createForm.materialCode.trim(),
+        materialName: createForm.materialName.trim(),
+        categoryId,
+        unit: createForm.unit.trim(),
+        technicalSpec: createForm.technicalSpec.trim() || null,
+        qualityStandard: createForm.qualityStandard.trim() || null,
+      });
+      showToast('success', 'Đã tạo mã vật tư mới');
+      setShowCreate(false);
+      resetCreateForm();
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không thể tạo vật tư'));
+    }
+  };
+
+  if (detailCode) {
+    return (
+      <MaterialDetailView
+        code={detailCode}
+        onBack={() => setDetailCode(null)}
+      />
+    );
+  }
+
+  return (
+    <div className="animate-fade-in space-y-6">
+      <PageHeader
+        eyebrow="Kho hàng"
+        title="Danh mục vật tư"
+        actions={
+          <button
+            type="button"
+            className="btn btn-primary flex items-center gap-2"
+            onClick={() => { resetCreateForm(); setShowCreate(true); }}
+          >
+            <Plus size={16} />
+            Tạo mã vật tư
+          </button>
+        }
+      />
+
+      <p className="text-xs text-[var(--md-on-surface-variant)] max-w-4xl">
+        Lọc theo cây danh mục — chọn Danh mục trước, các cấp sau hiện theo nhánh đã chọn (không bắt buộc).
+        Khi tạo mã vật tư: ba cấp đầu, mã và tên là bắt buộc.
+      </p>
+
+      <div
+        className="rounded-2xl shadow-card p-4 space-y-4"
+        style={{ background: 'var(--md-surface-container)', border: '1px solid var(--md-outline-variant)' }}
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          {MATERIAL_CATEGORY_LEVELS.map((lvl, idx) => (
+            <label key={lvl.key} className="text-xs space-y-1">
+              <span className="font-semibold text-[var(--md-on-surface-variant)]">{lvl.label}</span>
+              <select
+                className="form-select w-full text-sm"
+                disabled={categoriesLoading || (idx > 0 && filterSelection[idx - 1] === '')}
+                value={filterSelection[idx]}
+                onChange={e => {
+                  const v = e.target.value;
+                  setFilterLevel(idx, v === '' ? '' : Number(v));
+                }}
+              >
+                <option value="">— Tất cả —</option>
+                {filterOptions[idx]
+                  ?.filter(c => idx > 0 || c.code !== 'UNCATEGORIZED')
+                  .map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+              </select>
+            </label>
+          ))}
+        </div>
+        <div className="hrm-filter-bar">
+          <div className="hrm-filter-bar__search flex-1 min-w-[220px]">
+            <SearchBar
+              value={search}
+              onChange={v => { setSearch(v); setPage(1); }}
+              placeholder="Tìm mã vật tư, tên vật tư..."
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => { setShowInactive(v => !v); setPage(1); }}
+            className={`h-10 px-3 flex items-center gap-2 rounded whitespace-nowrap text-sm font-semibold border ${
+              showInactive
+                ? 'bg-[var(--md-secondary-container)] border-[var(--md-outline)] text-[var(--md-on-secondary-container)]'
+                : 'border-[var(--md-outline-variant)] text-[var(--md-on-surface-variant)]'
+            }`}
+          >
+            {showInactive ? 'Đang hiện cả ngừng SD' : 'Chỉ đang dùng'}
+          </button>
+          <button
+            type="button"
+            onClick={resetFilters}
+            className="h-10 px-3 flex items-center gap-2 rounded bg-[#fc2d42] text-white whitespace-nowrap btn-clear-filters"
+            title="Đặt lại bộ lọc"
+          >
+            <RotateCcw size={15} />
+            <span className="hidden sm:inline">XÓA BỘ LỌC</span>
+          </button>
+        </div>
+      </div>
+
+      <div
+        className="rounded-2xl shadow-card overflow-hidden"
+        style={{ background: 'var(--md-surface-container)', border: '1px solid var(--md-outline-variant)' }}
+      >
+        {isLoading ? (
+          <div className="p-8 text-center text-sm text-[var(--md-on-surface-variant)]">Đang tải...</div>
+        ) : isError ? (
+          <EmptyState message="Không thể tải danh sách vật tư." />
+        ) : items.length === 0 ? (
+          <EmptyState message="Không tìm thấy vật tư phù hợp." />
+        ) : (
+          <div className="overflow-x-auto table-scroll">
+            <table className="w-full text-xs" style={{ minWidth: '1400px' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--md-outline-variant)' }}>
+                  {MATERIAL_TABLE_COLUMNS.map(col => (
+                    <th key={col.key} className="table-header-cell text-left whitespace-nowrap">
+                      {col.label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {items.map(m => (
+                  <tr
+                    key={m.materialCode}
+                    className="table-row border-b border-[var(--md-outline-variant)] cursor-pointer hover:bg-[var(--md-surface-container-high)]"
+                    onClick={() => setDetailCode(m.materialCode)}
+                  >
+                    <td className="table-cell">{pathCell(m, 'danhMuc')}</td>
+                    <td className="table-cell">{pathCell(m, 'nhomVatTu')}</td>
+                    <td className="table-cell">{pathCell(m, 'loaiVatTu')}</td>
+                    <td className="table-cell">{pathCell(m, 'phanLoai')}</td>
+                    <td className="table-cell">{pathCell(m, 'kieu')}</td>
+                    <td className="table-cell font-mono font-bold text-[var(--md-primary)]">
+                      {m.materialCode}
+                      {m.isActive === false && (
+                        <span className="ml-2 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">
+                          Ngừng SD
+                        </span>
+                      )}
+                    </td>
+                    <td className="table-cell font-semibold">{m.materialName}</td>
+                    <td className="table-cell">{m.technicalSpec ?? '—'}</td>
+                    <td className="table-cell">{m.qualityStandard ?? '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        {totalCount > 0 && (
+          <div className="px-4 pb-4 mt-2 border-t pt-3" style={{ borderColor: 'var(--md-outline-variant)' }}>
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+              pageSize={pageSize}
+              onPageSizeChange={s => { setPageSize(s); setPage(1); }}
+              totalItems={totalCount}
+            />
+          </div>
+        )}
+      </div>
+
+      <Modal
+        isOpen={showCreate}
+        onClose={() => { setShowCreate(false); resetCreateForm(); }}
+        title="Tạo mã vật tư mới"
+        size="xl"
+        footer={
+          <>
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={() => { setShowCreate(false); resetCreateForm(); }}
+            >
+              Hủy bỏ
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={createMutation.isPending}
+              onClick={() => void handleCreate()}
+            >
+              {createMutation.isPending ? 'Đang lưu...' : 'Tạo mới'}
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          {!createCategoriesLoading && (createOptions[0]?.length ?? 0) === 0 && (
+            <p className="text-xs text-[var(--md-error)] rounded-lg p-3" style={{ background: 'var(--md-error-container)' }}>
+              Chưa có dữ liệu cây vật tư. Vào <strong>Thiết lập → Cây vật tư</strong> hoặc khởi động lại API để tự nạp dữ liệu từ Excel.
+            </p>
+          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            {MATERIAL_CATEGORY_LEVELS.map((lvl, idx) => (
+              <label key={lvl.key} className="text-xs space-y-1">
+                <span className="font-semibold text-[var(--md-on-surface-variant)]">
+                  {lvl.label}
+                  {isRequiredOnCreate(lvl.level) && (
+                    <span className="text-[var(--md-error)]"> *</span>
+                  )}
+                </span>
+                <select
+                  className="form-select w-full text-sm"
+                  disabled={createCategoriesLoading || (idx > 0 && createSelection[idx - 1] === '')}
+                  value={createSelection[idx]}
+                  onChange={e => {
+                    const v = e.target.value;
+                    setCreateLevel(idx, v === '' ? '' : Number(v));
+                  }}
+                >
+                  <option value="">— Chọn —</option>
+                  {createOptions[idx]
+                    ?.filter(c => idx > 0 || c.code !== 'UNCATEGORIZED')
+                    .map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                </select>
+                {createErrors[`level${lvl.level}`] && (
+                  <span className="text-[var(--md-error)] text-[10px]">{createErrors[`level${lvl.level}`]}</span>
+                )}
+              </label>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label className="text-xs space-y-1">
+              <span className="font-semibold text-[var(--md-on-surface-variant)]">
+                Mã vật tư <span className="text-[var(--md-error)]">*</span>
+              </span>
+              <input
+                className="form-input w-full text-sm"
+                value={createForm.materialCode}
+                onChange={e => setCreateForm(f => ({ ...f, materialCode: e.target.value }))}
+                placeholder="VD: TE-PLT-012-SA516"
+              />
+              {createErrors.materialCode && (
+                <span className="text-[var(--md-error)] text-[10px]">{createErrors.materialCode}</span>
+              )}
+            </label>
+            <label className="text-xs space-y-1">
+              <span className="font-semibold text-[var(--md-on-surface-variant)]">
+                Tên <span className="text-[var(--md-error)]">*</span>
+              </span>
+              <input
+                className="form-input w-full text-sm"
+                value={createForm.materialName}
+                onChange={e => setCreateForm(f => ({ ...f, materialName: e.target.value }))}
+              />
+              {createErrors.materialName && (
+                <span className="text-[var(--md-error)] text-[10px]">{createErrors.materialName}</span>
+              )}
+            </label>
+            <label className="text-xs space-y-1">
+              <span className="font-semibold text-[var(--md-on-surface-variant)]">Đơn vị tính</span>
+              <input
+                className="form-input w-full text-sm"
+                value={createForm.unit}
+                onChange={e => setCreateForm(f => ({ ...f, unit: e.target.value }))}
+              />
+            </label>
+            <label className="text-xs space-y-1">
+              <span className="font-semibold text-[var(--md-on-surface-variant)]">Quy cách</span>
+              <input
+                className="form-input w-full text-sm"
+                value={createForm.technicalSpec}
+                onChange={e => setCreateForm(f => ({ ...f, technicalSpec: e.target.value }))}
+              />
+            </label>
+            <label className="text-xs space-y-1 sm:col-span-2">
+              <span className="font-semibold text-[var(--md-on-surface-variant)]">Tiêu chuẩn chất lượng</span>
+              <input
+                className="form-input w-full text-sm"
+                value={createForm.qualityStandard}
+                onChange={e => setCreateForm(f => ({ ...f, qualityStandard: e.target.value }))}
+              />
+            </label>
+          </div>
+        </div>
+      </Modal>
+    </div>
+  );
+}

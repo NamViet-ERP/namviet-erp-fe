@@ -92,7 +92,7 @@ export default function WarehouseListPage() {
 
   const handleDelete = (item: Warehouse) => {
     if (item.totalStock > 0) {
-      showToast('error', `Không thể xóa kho "${item.name}" vì vẫn còn ${formatCurrency(item.totalStock)} sản phẩm trong kho.`, 'Không thể xóa');
+      showToast('error', `Không thể xóa kho "${item.name}" vì vẫn còn ${formatCurrency(item.totalStock)} vật tư trong kho.`, 'Không thể xóa');
       return;
     }
     setWarehouseList(prev => prev.filter(w => w.id !== item.id));
@@ -102,9 +102,9 @@ export default function WarehouseListPage() {
   return (
     <div className="animate-fade-in">
       <PageHeader
-        eyebrow="KHO HÀNG"
-        title="KHO HÀNG"
-        actions={<button onClick={openCreate} className="btn btn-filled"><Plus size={16} /> TẠO MỚI</button>}
+        eyebrow="Kho hàng"
+        title="Danh sách kho"
+        actions={<button onClick={openCreate} className="btn btn-filled"><Plus size={16} /> Tạo mới</button>}
       />
 
       <div className="rounded-2xl shadow-card overflow-hidden" style={{ background: 'var(--md-surface-container)' }}>
@@ -169,7 +169,7 @@ export default function WarehouseListPage() {
 
       {/* Create/Edit modal */}
       <Modal isOpen={showModal} onClose={() => { setShowModal(false); setErrors({}); }}
-        title={editingItem ? 'CHỈNH SỬA KHO HÀNG' : 'TẠO KHO HÀNG MỚI'} size="lg"
+        title={editingItem ? 'Chỉnh sửa kho' : 'Tạo kho mới'} size="lg"
         footer={<>
           <button onClick={() => { setShowModal(false); setErrors({}); }} className="btn btn-outline">Hủy bỏ</button>
           <button onClick={handleSave} className="btn btn-primary">{editingItem ? 'Cập nhật' : 'Tạo mới'}</button>
@@ -220,7 +220,7 @@ export default function WarehouseListPage() {
 
       {/* Detail modal */}
       <Modal isOpen={showDetail} onClose={() => setShowDetail(false)}
-        title={`CHI TIẾT KHO — ${detailItem?.code || ''}`} size="lg"
+        title={`Chi tiết kho — ${detailItem?.code || ''}`} size="lg"
         footer={<>
           <button className="btn btn-outline" onClick={() => { setShowDetail(false); if (detailItem) openEdit(detailItem); }}>
             <Edit size={14} /> Chỉnh sửa
@@ -248,7 +248,7 @@ export default function WarehouseListPage() {
               <div className="mt-1"><Badge status={detailItem.status} /></div>
             </div>
             <div className="rounded-xl p-4 border" style={{ background: 'var(--md-success-container)', borderColor: 'var(--md-outline-variant)' }}>
-              <span className="text-xs block opacity-80" style={{ color: 'var(--md-on-success-container)' }}>Tổng sản phẩm tồn kho</span>
+              <span className="text-xs block opacity-80" style={{ color: 'var(--md-on-success-container)' }}>Tổng vật tư tồn kho</span>
               <p className="text-2xl font-bold" style={{ color: 'var(--md-on-success-container)' }}>{formatCurrency(detailItem.totalStock)}</p>
             </div>
             <div className="rounded-xl p-4 border" style={{ background: 'var(--md-primary-container)', borderColor: 'var(--md-outline-variant)' }}>

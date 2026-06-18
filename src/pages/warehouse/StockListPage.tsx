@@ -1,5 +1,7 @@
 import { useState, Fragment } from 'react';
 import { Download, Layers, ClipboardList, Plus, AlertTriangle, CheckCircle } from 'lucide-react';
+import { USE_MOCK } from '../../lib/mock';
+import ApiStockMatrixView from './ApiStockMatrixView';
 import { products } from '../../data/products';
 import { projects, initialProjectStocks, initialConsumablesQuotas, ProjectStockCell, ConsumableQuota } from '../../data/projects';
 import SearchBar from '../../components/ui/SearchBar';
@@ -189,16 +191,16 @@ export default function StockListPage() {
   return (
     <div className="animate-fade-in space-y-6">
       <PageHeader
-        eyebrow="KHO VT CHÍNH MAYZER"
-        title="MA TRẬN TỒN KHO DỰ ÁN & ĐỊNH MỨC"
+        eyebrow="Kho hàng"
+        title="Tồn kho dự án & định mức"
         actions={
           <div className="flex gap-2">
             <button className="btn btn-outline text-xs">
-              <Download size={14} /> XUẤT EXCEL MATRIX
+              <Download size={14} /> Xuất Excel
             </button>
             {activeTab === 'consumables' && (
               <button className="btn btn-filled text-xs" onClick={handleOpenIssueModal}>
-                <Plus size={14} /> CẤP PHÁT ĐỊNH MỨC
+                <Plus size={14} /> Cấp phát định mức
               </button>
             )}
           </div>
@@ -215,7 +217,7 @@ export default function StockListPage() {
               : 'border-transparent text-[var(--md-on-surface-variant)] hover:text-[var(--md-on-surface)]'
           }`}
         >
-          <Layers size={16} /> MA TRẬN TỒN KHO CÔNG TRÌNH
+          <Layers size={16} /> Tồn kho theo công trình
         </button>
         <button
           onClick={() => { setActiveTab('consumables'); setSearch(''); setSelectedProjectFilter('all'); }}
@@ -225,7 +227,7 @@ export default function StockListPage() {
               : 'border-transparent text-[var(--md-on-surface-variant)] hover:text-[var(--md-on-surface)]'
           }`}
         >
-          <ClipboardList size={16} /> ĐỊNH MỨC VẬT TƯ TIÊU HAO
+          <ClipboardList size={16} /> Định mức vật tư tiêu hao
         </button>
       </div>
 
@@ -248,13 +250,16 @@ export default function StockListPage() {
           <SearchBar
             value={search}
             onChange={e => { setSearch(e); setMatrixPage(1); setConsPage(1); }}
-            placeholder={activeTab === 'matrix' ? 'Tìm mã SKU, tên vật tư máy nén khí...' : 'Tìm kiếm găng tay, que hàn, đá cắt...'}
+            placeholder={activeTab === 'matrix' ? 'Tìm mã vật tư, tên vật tư...' : 'Tìm găng tay, que hàn, đá cắt...'}
           />
         </div>
       </div>
 
       {activeTab === 'matrix' ? (
-        /* TAB 1: PROJECT STOCK MATRIX */
+        !USE_MOCK ? (
+          <ApiStockMatrixView />
+        ) : (
+        /* TAB 1: PROJECT STOCK MATRIX (mock) */
         <div className="rounded-2xl shadow-card overflow-hidden" style={{ background: 'var(--md-surface-container)', border: '1px solid var(--md-outline-variant)' }}>
           {filteredMatrix.length === 0 ? (
             <EmptyState message="Không tìm thấy dữ liệu tồn kho phù hợp!" />
@@ -264,10 +269,10 @@ export default function StockListPage() {
                 <thead>
                   <tr style={{ borderBottom: '2px solid var(--md-outline-variant)' }}>
                     <th className="table-header-cell text-left py-3 w-10"></th>
-                    <th className="table-header-cell text-left font-bold">MÃ SKU</th>
+                    <th className="table-header-cell text-left font-bold">Mã vật tư</th>
                     <th className="table-header-cell text-left font-bold">TÊN VẬT TƯ / MÁY</th>
                     <th className="table-header-cell text-center font-bold">ĐVT</th>
-                    <th className="table-header-cell text-right font-bold">KHO TỔNG</th>
+                    <th className="table-header-cell text-right font-bold">Kho tổng</th>
                     {displayedProjects.map(proj => {
                       const shortName = getProjectShortName(proj.name);
                       return (
@@ -315,7 +320,7 @@ export default function StockListPage() {
                               <div className="rounded-xl p-4 border border-[var(--md-outline-variant)] bg-[var(--md-surface-container-low)] space-y-3">
                                 <h4 className="font-bold text-[var(--md-primary)] text-xs uppercase tracking-wider flex items-center gap-1.5">
                                   <ClipboardList size={14} />
-                                  SỔ THẺ KHO DỰ ÁN CHI TIẾT (SCM Ledger): {p.name}
+                                  Sổ thẻ kho dự án: {p.name}
                                 </h4>
                                 
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-4">
@@ -324,7 +329,7 @@ export default function StockListPage() {
                                     const cell = projectStocks.find(s => s.productId === p.id && s.projectId === 'general');
                                     return (
                                       <div className="p-3 rounded-lg border border-[var(--md-outline-variant)] bg-[var(--md-surface-container)] text-center">
-                                        <div className="text-[10px] font-bold text-[var(--md-primary)] uppercase">KHO TỔNG</div>
+                                        <div className="text-[10px] font-bold text-[var(--md-primary)] uppercase">Kho tổng</div>
                                         <div className="grid grid-cols-2 gap-x-1 mt-2 text-[10px] text-left">
                                           <div>Đầu kì:</div><div className="font-bold text-right">{cell?.openingQty || 0}</div>
                                           <div>Nhập:</div><div className="font-bold text-right text-green-600">+{cell?.importQty || 0}</div>
@@ -375,6 +380,7 @@ export default function StockListPage() {
             />
           </div>
         </div>
+        )
       ) : (
         /* TAB 2: CONSUMABLES QUOTAS */
         <div className="rounded-2xl shadow-card overflow-hidden" style={{ background: 'var(--md-surface-container)', border: '1px solid var(--md-outline-variant)' }}>
@@ -386,11 +392,11 @@ export default function StockListPage() {
                 <thead>
                   <tr style={{ borderBottom: '2px solid var(--md-outline-variant)' }}>
                     <th className="table-header-cell text-left font-bold py-3 pl-4">DỰ ÁN / CÔNG TRÌNH</th>
-                    <th className="table-header-cell text-left font-bold">MÃ SKU</th>
+                    <th className="table-header-cell text-left font-bold">Mã vật tư</th>
                     <th className="table-header-cell text-left font-bold">VẬT TƯ TIÊU HAO</th>
                     <th className="table-header-cell text-center font-bold">ĐVT</th>
-                    <th className="table-header-cell text-right font-bold">ĐỊNH MỨC DỰ TOÁN</th>
-                    <th className="table-header-cell text-right font-bold">CẤP PHÁT THỰC TẾ</th>
+                    <th className="table-header-cell text-right font-bold">Định mức dự toán</th>
+                    <th className="table-header-cell text-right font-bold">Cấp phát thực tế</th>
                     <th className="table-header-cell text-right font-bold">CÒN LẠI</th>
                     <th className="table-header-cell text-center font-bold">TRẠNG THÁI</th>
                   </tr>
@@ -410,7 +416,7 @@ export default function StockListPage() {
                       <td className="table-cell text-center">
                         {c.isExceeded ? (
                           <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold bg-[var(--md-error-container)] text-[var(--md-on-error-container)] border border-[var(--md-error)]">
-                            <AlertTriangle size={10} /> VƯỢT ĐỊNH MỨC
+                            <AlertTriangle size={10} /> Vượt định mức
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold bg-[var(--md-success-container)] text-[var(--md-on-success-container)]">
@@ -441,12 +447,12 @@ export default function StockListPage() {
       <Modal
         isOpen={showIssueModal}
         onClose={() => setShowIssueModal(false)}
-        title="CẤP PHÁT VẬT TƯ TIÊU HAO THEO ĐỊNH MỨC"
+        title="Cấp phát vật tư tiêu hao"
         size="md"
         footer={
           <>
             <button className="btn btn-outline" onClick={() => setShowIssueModal(false)}>HỦY BỎ</button>
-            <button className="btn btn-primary" onClick={handleIssueSubmit}>XÁC NHẬN CẤP PHÁT</button>
+            <button className="btn btn-primary" onClick={handleIssueSubmit}>Xác nhận cấp phát</button>
           </>
         }
       >

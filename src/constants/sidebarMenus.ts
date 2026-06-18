@@ -2,15 +2,20 @@ import type { SidebarMenuItem } from '../types';
 import {
   LayoutDashboard, Warehouse, Package,
   PackagePlus, PackageMinus, Settings,
-  ClipboardCheck, SlidersHorizontal, Users, UserCheck, UserCog
+  ClipboardCheck, SlidersHorizontal, Users, UserCheck, UserCog,
+  Layers, FolderKanban, ArrowLeftRight
 } from 'lucide-react';
 
 export const warehouseMenu: SidebarMenuItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/warehouse/dashboard-warehouse' },
-  { id: 'warehouse', label: 'Kho hàng', icon: Warehouse, path: '/warehouse/list' },
-  { id: 'materials', label: 'Vật tư', icon: Package, path: '/warehouse/stock' },
+  { id: 'dashboard', label: 'Tổng quan', icon: LayoutDashboard, path: '/warehouse/dashboard-warehouse' },
+  { id: 'projects', label: 'Dự án', icon: FolderKanban, path: '/warehouse/projects' },
+  { id: 'materials', label: 'Danh mục vật tư', icon: Package, path: '/warehouse/materials' },
+  { id: 'stock', label: 'Tồn kho dự án', icon: Layers, path: '/warehouse/stock' },
   { id: 'import', label: 'Nhập kho', icon: PackagePlus, path: '/warehouse/import' },
   { id: 'export', label: 'Xuất kho', icon: PackageMinus, path: '/warehouse/export' },
+  { id: 'transfer', label: 'Chuyển kho', icon: ArrowLeftRight, path: '/warehouse/transfer' },
+  { id: 'warehouse', label: 'Danh sách kho', icon: Warehouse, path: '/warehouse/list' },
+  { id: 'settings', label: 'Thiết lập', icon: Settings, path: '/warehouse/settings' },
 ];
 
 export const stocktakeMenu: SidebarMenuItem[] = [

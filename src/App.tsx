@@ -29,10 +29,12 @@ export default function App() {
                 <Route path="/warehouse/list" element={<Pages.WarehouseListPage />} />
                 <Route path="/warehouse/locations" element={<Pages.WarehouseListPage />} />
                 <Route path="/warehouse/stock" element={<Pages.StockListPage />} />
+                <Route path="/warehouse/materials" element={<Pages.MaterialsPage />} />
+                <Route path="/warehouse/projects" element={<Pages.ProjectsPage />} />
+                <Route path="/warehouse/projects/:code" element={<Pages.ProjectDetailPage />} />
                 <Route path="/warehouse/expected-imports" element={<Pages.ExpectedImportsPage />} />
                 <Route path="/warehouse/reconciliation" element={<Pages.ReconciliationPage />} />
                 <Route path="/warehouse/suppliers" element={<Pages.SuppliersPage />} />
-                <Route path="/warehouse/barcodes" element={<Pages.BarcodePage />} />
                 <Route path="/warehouse/transfer" element={<Pages.TransferListPage />} />
                 <Route path="/warehouse/import" element={<Pages.ImportListPage />} />
                 <Route path="/warehouse/export" element={<Pages.ExportListPage />} />

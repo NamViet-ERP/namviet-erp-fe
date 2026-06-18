@@ -66,11 +66,11 @@ interface ActivityItem {
 }
 
 const recentActivity: ActivityItem[] = [
-  { type: 'import',   label: 'Nhập kho #NK-2026089', value: '+240 sản phẩm', time: '8 phút trước',   accent: 'var(--status-success)' },
-  { type: 'export',   label: 'Xuất kho #XK-2026043', value: '-85 sản phẩm',  time: '32 phút trước',  accent: 'var(--status-error)' },
-  { type: 'import',   label: 'Nhập kho #NK-2026088', value: '+120 sản phẩm', time: '1 giờ trước',    accent: 'var(--status-success)' },
-  { type: 'transfer', label: 'Chuyển kho #CK-001',   value: '60 sản phẩm',  time: '2 giờ trước',    accent: 'var(--status-warning)' },
-  { type: 'stocktake',label: 'Kiểm kê Kho HN-01',    value: '1,905 SKU',    time: '5 giờ trước',    accent: 'var(--chart-5)' },
+  { type: 'import',   label: 'Nhập kho #NK-2026089', value: '+240 vật tư', time: '8 phút trước',   accent: 'var(--status-success)' },
+  { type: 'export',   label: 'Xuất kho #XK-2026043', value: '-85 vật tư',  time: '32 phút trước',  accent: 'var(--status-error)' },
+  { type: 'import',   label: 'Nhập kho #NK-2026088', value: '+120 vật tư', time: '1 giờ trước',    accent: 'var(--status-success)' },
+  { type: 'transfer', label: 'Chuyển kho #CK-001',   value: '60 vật tư',  time: '2 giờ trước',    accent: 'var(--status-warning)' },
+  { type: 'stocktake',label: 'Kiểm kê Kho HN-01',    value: '1.905 mã VT', time: '5 giờ trước',    accent: 'var(--chart-5)' },
 ];
 
 /* ── MD3 Custom Tooltip ── */
@@ -249,7 +249,7 @@ export default function DashboardWarehousePage() {
               marginBottom: '4px',
             }}
           >
-            TỔNG QUAN
+            Tổng quan
           </p>
           <h1
             style={{
@@ -260,7 +260,7 @@ export default function DashboardWarehousePage() {
               letterSpacing: '-0.01em',
             }}
           >
-            Dashboard Kho hàng
+            Tổng quan kho hàng
           </h1>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontFamily: "'Roboto', sans-serif", fontSize: '12px', color: 'var(--md-on-surface-variant)' }}>
@@ -272,16 +272,16 @@ export default function DashboardWarehousePage() {
       {/* ── KPI Cards ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px', position: 'relative', zIndex: 1 }}>
         <Card
-          title="Tổng Tồn Kho"
+          title="Tổng tồn kho"
           value={formatCurrency(totalStock)}
-          subtitle="sản phẩm trong tất cả kho"
+          subtitle="vật tư trong tất cả kho"
           accent="amber"
           icon={Package}
           trend={12.4}
           trendLabel="so tháng trước"
         />
         <Card
-          title="Tổng Giá Trị"
+          title="Tổng giá trị"
           value={formatCurrencyShort(totalValue)}
           subtitle="giá trị hàng tồn kho"
           accent="blue"
@@ -290,7 +290,7 @@ export default function DashboardWarehousePage() {
           trendLabel="so tháng trước"
         />
         <Card
-          title="Tổng Kho Hoạt Động"
+          title="Kho đang hoạt động"
           value={totalWarehouses}
           subtitle="kho đang hoạt động"
           accent="teal"
@@ -459,7 +459,7 @@ export default function DashboardWarehousePage() {
           { label: 'Nhập hôm nay', value: '47 phiếu',   color: 'var(--status-success)', icon: TrendingUp },
           { label: 'Xuất hôm nay', value: '31 phiếu',   color: 'var(--status-warning)', icon: ArrowUpRight },
           { label: 'Chờ duyệt',    value: '12 phiếu',   color: 'var(--status-error)',   icon: Activity },
-          { label: 'SKU sắp hết',  value: '8 mặt hàng', color: 'var(--chart-5)',        icon: Package },
+          { label: 'Mã vật tư sắp hết', value: '8 mặt hàng', color: 'var(--chart-5)', icon: Package },
         ] as MiniStat[]).map(s => (
           <div
             key={s.label}
