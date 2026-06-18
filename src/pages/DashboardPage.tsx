@@ -9,45 +9,6 @@ import { showToast } from '../components/ui/Toast';
 import { departments, type DepartmentSubItem } from '../constants/departments';
 import DepartmentCard from '../components/layout/DepartmentCard';
 
-// ── Design Tokens ──
-/*
-const tokens = {
-  text: {
-    primary: 'var(--md-on-surface-variant)',
-    secondary: 'var(--md-on-surface)',
-    tertiary: 'var(--md-secondary)',
-  },
-  surface: {
-    muted: 'var(--md-surface-container)',
-    base: 'var(--md-surface)',
-    raised: 'var(--md-surface-container-low)',
-    strong: 'var(--md-secondary-container)',
-  },
-  border: {
-    strong: 'var(--md-outline-variant)',
-  },
-  space: {
-    1: '4px',
-    2: '5px',
-    3: '6px',
-    4: '8px',
-    5: '12px',
-    6: '15px',
-    7: '20px',
-  },
-  radius: {
-    xs: '3px',
-    sm: '4px',
-  },
-  motion: {
-    duration: {
-      instant: '150ms',
-      fast: '200ms',
-    }
-  }
-};
-*/
-
 // ── Mock Birthdays Data ──
 interface BirthdayEvent {
   name: string;

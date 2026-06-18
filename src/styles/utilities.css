@@ -1,0 +1,286 @@
+/* ═══════════════════════════════════════════════════════════
+   UTILITY LAYER
+   ═══════════════════════════════════════════════════════════ */
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+
+  /* ── Semantic color utilities ── */
+  .text-md-primary   { color: var(--md-primary) !important; }
+  .text-md-secondary { color: var(--md-secondary) !important; }
+  .text-md-tertiary  { color: var(--md-tertiary) !important; }
+  .text-on-surface   { color: var(--md-on-surface) !important; }
+  .text-on-surface-variant { color: var(--md-on-surface-variant) !important; }
+
+  /* Legacy text aliases */
+  .text-primary   { color: var(--md-on-surface) !important; }
+  .text-secondary { color: var(--md-on-surface-variant) !important; }
+  .text-tertiary  { color: var(--md-on-surface-variant) !important; }
+  .text-muted     { color: var(--md-on-surface-variant) !important; }
+  .text-nv-accent { color: var(--md-primary) !important; }
+
+  /* ── Shadow utilities ── */
+  .shadow-md-1 { box-shadow: var(--md-shadow-1); }
+  .shadow-md-2 { box-shadow: var(--md-shadow-2); }
+  .shadow-md-3 { box-shadow: var(--md-shadow-3); }
+  .shadow-md-4 { box-shadow: var(--md-shadow-4); }
+  .shadow-nv-card { box-shadow: var(--md-shadow-1); }
+  .shadow-nv-md   { box-shadow: var(--md-shadow-2); }
+  .shadow-nv-lg   { box-shadow: var(--md-shadow-3); }
+  .shadow-card    { box-shadow: var(--md-shadow-1); }
+
+  /* ── Animation utilities ── */
+  .cinematic-fade { animation: mdFadeIn var(--md-duration-slow) var(--md-easing) forwards; }
+  .animate-fade-in  { animation: mdFadeIn var(--md-duration-slow) var(--md-easing) forwards; }
+  .animate-fade-out { animation: mdFadeOut var(--md-duration-slow) var(--md-easing) forwards; }
+  .animate-scale-in { animation: mdScaleIn var(--md-duration-slow) var(--md-easing) forwards; }
+  .animate-scale-out { animation: mdScaleOut var(--md-duration-slow) var(--md-easing) forwards; }
+  .animate-slide-up { animation: mdSlideUp var(--md-duration-slow) var(--md-easing) forwards; }
+
+  /* Page + sidebar nav — same motion language as mega menu (scale + fade) */
+  .animate-page-enter {
+    animation: pageEnterScale 320ms var(--md-easing) forwards;
+    transform-origin: top center;
+    will-change: opacity, transform;
+  }
+  .sidebar-nav-enter {
+    animation: sidebarNavEnter 320ms var(--md-easing) forwards;
+    transform-origin: top left;
+    will-change: opacity, transform;
+  }
+  .mega-menu-panel {
+    transform-origin: top center;
+    will-change: opacity, transform;
+  }
+  .mega-menu-scrim {
+    animation: mdFadeIn 320ms var(--md-easing) forwards;
+    will-change: opacity;
+  }
+  .mega-menu-scrim--out {
+    animation: mdFadeOut 280ms var(--md-easing) forwards;
+  }
+
+  @keyframes pageEnterScale {
+    from { opacity: 0; transform: scale(0.96); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  @keyframes sidebarNavEnter {
+    from { opacity: 0; transform: scale(0.96) translateX(-6px); }
+    to   { opacity: 1; transform: scale(1) translateX(0); }
+  }
+
+  @keyframes mdFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes mdFadeOut {
+    from { opacity: 1; }
+    to   { opacity: 0; }
+  }
+  @keyframes mdScaleIn {
+    from { opacity: 0; transform: scale(0.92); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  @keyframes mdScaleOut {
+    from { opacity: 1; transform: scale(1); }
+    to   { opacity: 0; transform: scale(0.96); }
+  }
+  @keyframes mdSlideUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Toast / snackbar motion (centralized — was previously JS-injected) */
+  @keyframes mdSlideInRight {
+    from { opacity: 0; transform: translateX(100%); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes mdSlideOutRight {
+    from { opacity: 1; transform: translateX(0); }
+    to   { opacity: 0; transform: translateX(100%); }
+  }
+  @keyframes toastProgress {
+    from { width: 100%; }
+    to   { width: 0%; }
+  }
+
+  /* Skeleton loading placeholder */
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background: var(--md-surface-container-high);
+    border-radius: 8px;
+  }
+  .skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--md-on-surface) 8%, transparent),
+      transparent
+    );
+    animation: skeletonShimmer 1.4s var(--md-easing) infinite;
+  }
+  @keyframes skeletonShimmer {
+    100% { transform: translateX(100%); }
+  }
+
+  /* ── State Layer utilities ── */
+  .state-layer-primary:hover { background: var(--tint-primary-hover); }
+  .state-layer-primary:active { background: var(--tint-primary-active); }
+  .glow-hover { transition: box-shadow var(--md-duration) var(--md-easing); }
+  .glow-hover:hover { box-shadow: var(--md-shadow-2); }
+  .glow-card { transition: box-shadow var(--md-duration) var(--md-easing), transform var(--md-duration) var(--md-easing); }
+  .glow-card:hover { box-shadow: var(--md-shadow-2); transform: scale(1.02); }
+
+  /* ── Surface bg utilities ── */
+  .bg-surface            { background: var(--md-surface) !important; }
+  .bg-surface-container  { background: var(--md-surface-container) !important; }
+  .bg-surface-variant    { background: var(--md-surface-variant) !important; }
+  .bg-white { background: var(--md-surface-container) !important; }
+  .bg-gray-50, .bg-slate-50 { background: var(--md-surface) !important; }
+  .bg-gray-100, .bg-slate-100 { background: var(--md-surface-container-low) !important; }
+  .bg-gray-200, .bg-slate-200, .bg-gray-300, .bg-slate-300 { background: var(--md-surface-container-high) !important; }
+
+  /* ── Premium button pattern ── */
+  .btn-premium { transition: all var(--md-duration) var(--md-easing); }
+  .btn-premium:hover { box-shadow: var(--md-shadow-2); }
+  .btn-premium:active { transform: scale(0.95); }
+
+  /* ── Reveal on scroll ── */
+  .reveal-on-scroll {
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity var(--md-duration-slow) var(--md-easing), transform var(--md-duration-slow) var(--md-easing);
+  }
+  .reveal-on-scroll.revealed { opacity: 1; transform: translateY(0); }
+
+  /* ── MD3 Surface tone overrides for legacy class names ── */
+  .text-gray-900, .text-slate-900, .text-zinc-900,
+  .text-gray-800, .text-slate-800, .text-zinc-800 { color: var(--md-on-surface) !important; }
+  .text-gray-700, .text-slate-700, .text-zinc-700,
+  .text-gray-600, .text-slate-600, .text-zinc-600 { color: var(--md-on-surface-variant) !important; }
+  .text-gray-500, .text-slate-500, .text-zinc-500,
+  .text-gray-400, .text-slate-400, .text-zinc-400 { color: var(--md-on-surface-variant) !important; }
+  .border-gray-100, .border-gray-200, .border-gray-300,
+  .border-slate-100, .border-slate-200 { border-color: var(--md-outline-variant) !important; }
+
+  /* ── Semantic palette safety net ──────────────────────────────
+     Any leftover raw Tailwind palette utility resolves to a status
+     token so it stays on-brand and adapts to dark mode. New code
+     should prefer text-status-* / the badge classes instead. */
+  .text-green-400, .text-green-500, .text-green-600, .text-green-700,
+  .text-emerald-500, .text-emerald-600, .text-lime-600 { color: var(--status-success) !important; }
+  .text-amber-500, .text-amber-600, .text-amber-700, .text-amber-800,
+  .text-yellow-500, .text-yellow-600, .text-orange-500, .text-orange-600 { color: var(--status-warning) !important; }
+  .text-red-500, .text-red-600, .text-red-700,
+  .text-rose-500, .text-rose-600 { color: var(--status-error) !important; }
+  .text-blue-500, .text-blue-600, .text-sky-500, .text-cyan-600, .text-indigo-600 { color: var(--status-info) !important; }
+
+  .fill-amber-500, .fill-yellow-500 { fill: var(--status-warning) !important; }
+  .fill-green-500, .fill-emerald-500 { fill: var(--status-success) !important; }
+  .fill-rose-500, .fill-red-500 { fill: var(--status-error) !important; }
+
+  .bg-green-50, .bg-green-100, .bg-emerald-50 { background-color: var(--md-success-container) !important; }
+  .bg-amber-50, .bg-amber-100, .bg-yellow-50 { background-color: var(--md-warning-container) !important; }
+  .bg-rose-50, .bg-rose-100, .bg-red-50, .bg-red-100 { background-color: var(--md-error-container) !important; }
+  .bg-blue-50, .bg-blue-100, .bg-sky-50 { background-color: var(--md-info-container) !important; }
+
+  /* On-container text for badge-like pairings (bg-*-100 text-*-800) */
+  .text-green-800 { color: var(--md-on-success-container) !important; }
+  .text-rose-800, .text-red-800 { color: var(--md-on-error-container) !important; }
+  .text-amber-900 { color: var(--md-on-warning-container) !important; }
+
+  .border-green-300, .border-emerald-300 { border-color: var(--status-success) !important; }
+  .border-amber-300, .border-yellow-300 { border-color: var(--status-warning) !important; }
+  .border-rose-300, .border-red-300 { border-color: var(--status-error) !important; }
+
+  /* Input placeholder */
+  input::placeholder, textarea::placeholder {
+    color: var(--md-on-surface-variant) !important;
+    opacity: 0.7 !important;
+  }
+
+  /* ── Gradient text ── */
+  .text-gradient-gold {
+    background: linear-gradient(135deg, var(--md-primary), var(--md-tertiary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+  }
+
+  /* ── Form table styling (compact layout for data entry inside modals) ── */
+  .form-table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+
+  .form-table th {
+    background: var(--nv-table-header-bg) !important;
+    color: var(--nv-table-header-text) !important;
+    font-weight: 700 !important;
+    font-size: 0.75rem !important; /* text-xs */
+    padding: 8px 10px !important;
+    border: 1px solid var(--md-outline-variant) !important;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  .form-table td {
+    padding: 6px 8px !important;
+    border: 1px solid var(--md-outline-variant) !important;
+    vertical-align: middle !important;
+  }
+
+  /* Compact controls inside form-table cells */
+  .form-table .form-input,
+  .form-table .form-select {
+    height: 32px !important;
+    padding: 0 8px !important;
+    font-family: 'Roboto', sans-serif !important;
+    font-size: 0.75rem !important; /* text-xs */
+    background: var(--md-surface-container-low) !important;
+    border: 1px solid var(--md-outline-variant) !important;
+    border-radius: 4px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    color: var(--md-on-surface) !important;
+    outline: none !important;
+    transition: border-color 200ms var(--md-easing) !important;
+  }
+
+  .form-table .form-input:focus,
+  .form-table .form-select:focus {
+    border: 1.5px solid var(--md-primary) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 1px var(--md-primary) !important;
+    padding-bottom: 0 !important; /* keep height constant */
+  }
+
+  /* Custom SVG dropdown arrow for select elements inside form-table to prevent overlap */
+  .form-table select.form-select {
+    appearance: none !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23374151' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5' /%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 8px center !important;
+    background-size: 14px !important;
+    padding-right: 28px !important;
+    cursor: pointer !important;
+  }
+
+  .dark .form-table select.form-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5' /%3E%3C/svg%3E") !important;
+  }
+
+  /* ── Reduced motion ── */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+

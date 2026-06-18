@@ -11,6 +11,8 @@ import { USE_MOCK } from '../../lib/mock';
 import { REMEMBER_KEY, SAVED_USER_KEY, setRememberMePreference } from '../../lib/authSession';
 import RoleSwitcher from '../../components/layout/RoleSwitcher';
 import { getDefaultRoute } from '../../utils/getDefaultRoute';
+import { getActiveRole } from '../../lib/getActiveRole';
+import namvietGroupLogo from '../../assets/NamVietGroup.png';
 
 const HAS_API = Boolean(import.meta.env.VITE_API_BASE_URL?.trim());
 /** Chạy frontend thuần — không cần Docker/PostgreSQL; dùng dữ liệu mô phỏng trong `src/data/*`. */
@@ -90,7 +92,7 @@ export default function LoginPage() {
         }
       }
       showToast('success', 'Chào mừng bạn quay trở lại hệ thống!', 'Đăng nhập thành công');
-      const role = localStorage.getItem('nv-user-role') || undefined;
+      const role = getActiveRole();
       navigate(getDefaultRoute(role));
     } catch (err) {
       setError(getApiErrorMessage(err, 'Đăng nhập thất bại'));
@@ -107,8 +109,8 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-[420px] animate-scale-in">
         <div className="login-card">
           <div className="text-center mb-7">
-            <div className="inline-block rounded-xl overflow-hidden">
-              <img src="/nam viet group-bac.png" alt="NamViet Group" className="h-28 object-contain" />
+            <div className="login-brand">
+              <img src={namvietGroupLogo} alt="NamViet Group" className="login-brand__logo" />
             </div>
             <h2 className="text-2xl font-bold text-[var(--md-on-surface)]">
               Nam Việt <span className="text-[var(--md-primary)]">ERP</span>
@@ -243,9 +245,6 @@ export default function LoginPage() {
                 Quên mật khẩu?
               </button>
             </div>
-            <p className="text-xs text-[var(--md-on-surface-variant)] -mt-2">
-              Bật: giữ phiên 30 ngày, tự làm mới khi làm việc. Tắt: đóng trình duyệt sẽ cần đăng nhập lại.
-            </p>
 
             <button
               type="submit"

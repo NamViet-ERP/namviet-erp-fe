@@ -1,4 +1,5 @@
 import { apiClient } from '../lib/apiClient';
+import { createMockLocalStore } from '../lib/mockLocalStore';
 import { sortVi, sortViBy } from '../lib/sortVi';
 import { USE_MOCK, mockDelay } from '../lib/mock';
 import { RECRUITMENT_POSITIONS } from '../constants/recruitment';
@@ -8,27 +9,14 @@ export interface RecruitmentPosition {
   isActive: boolean;
 }
 
-const STORAGE_KEY = 'nv-recruitment-positions-v2';
 const ENDPOINT = '/api/recruitment/positions';
 
-function readStore(): RecruitmentPosition[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw) as RecruitmentPosition[];
-  } catch {
-    /* ignore */
-  }
-  const initial: RecruitmentPosition[] = RECRUITMENT_POSITIONS.map(name => ({
-    name,
-    isActive: true,
-  }));
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
-  return initial;
-}
+const initial: RecruitmentPosition[] = RECRUITMENT_POSITIONS.map(name => ({
+  name,
+  isActive: true,
+}));
 
-function writeStore(items: RecruitmentPosition[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-}
+const { readStore, writeStore } = createMockLocalStore('nv-recruitment-positions-v2', initial);
 
 export const positionsService = {
   async list(): Promise<RecruitmentPosition[]> {

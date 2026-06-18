@@ -1,6 +1,7 @@
 import { apiClient } from '../lib/apiClient';
 import { fromApi, toApi, type EmployeeApiDto } from '../lib/hrm/employeeApiMapper';
 import { suggestNextEmployeeCode } from '../lib/hrm/suggestedEmployeeCode';
+import { createMockLocalStore } from '../lib/mockLocalStore';
 import { USE_MOCK, mockDelay } from '../lib/mock';
 import type { CreateEmployeeDto, Employee, UpdateEmployeeDto } from '../types/hr';
 import { isActiveEmployee } from '../types/hr';
@@ -8,25 +9,8 @@ import { getEmployeeLockReason, isActiveEmployeeStatus } from '../constants/empl
 import { mockEmployees } from '../data/employees';
 
 const ENDPOINT = '/api/employees';
-const STORAGE_KEY = 'nv-employee-data';
 
-function readStore(): Employee[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw) as Employee[];
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    }
-  } catch (e) {
-    console.error('Failed to read employee store from localStorage:', e);
-  }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(mockEmployees));
-  return [...mockEmployees];
-}
-
-function writeStore(items: Employee[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-}
+const { readStore, writeStore } = createMockLocalStore('nv-employee-data', mockEmployees);
 
 export function cacheEmployeeStatus(employeeId: string, status: string): void {
   localStorage.setItem(`nv-emp-status-${employeeId}`, status);

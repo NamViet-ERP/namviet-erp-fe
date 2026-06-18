@@ -1,12 +1,12 @@
 import { apiClient } from '../lib/apiClient';
 import { getStoredToken } from '../lib/authSession';
 import { fromApi, toApi, compareCandidateAppliedAtNewestFirst, type CandidateApiDto } from '../lib/hrm/candidateApiMapper';
+import { createMockLocalStore } from '../lib/mockLocalStore';
 import { USE_MOCK, mockDelay } from '../lib/mock';
 import type { Candidate, CreateCandidateDto, UpdateCandidateDto } from '../types/hr';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
 const ENDPOINT = '/api/candidates';
-const STORAGE_KEY = 'nv-candidate-data';
 
 const MOCK_INITIAL: Candidate[] = [
   {
@@ -49,20 +49,7 @@ const MOCK_INITIAL: Candidate[] = [
   },
 ];
 
-function readStore(): Candidate[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw) as Candidate[];
-  } catch {
-    /* ignore */
-  }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(MOCK_INITIAL));
-  return [...MOCK_INITIAL];
-}
-
-function writeStore(items: Candidate[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-}
+const { readStore, writeStore } = createMockLocalStore('nv-candidate-data', MOCK_INITIAL);
 
 export interface CandidateListParams {
   page?: number;
