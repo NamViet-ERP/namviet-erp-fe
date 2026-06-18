@@ -1,108 +1,75 @@
+import { Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AppLayout from './components/layout/AppLayout';
+import PageLoader from './components/ui/PageLoader';
 import { Agentation } from 'agentation';
 import { getDefaultRoute } from './utils/getDefaultRoute';
-
-// Warehouse pages
-import DashboardPage from './pages/DashboardPage';
-import DashboardWarehousePage from './pages/warehouse/DashboardWarehousePage';
-import WarehouseListPage from './pages/warehouse/WarehouseListPage';
-import TransferListPage from './pages/warehouse/TransferListPage';
-import ImportListPage from './pages/warehouse/ImportListPage';
-import ExportListPage from './pages/warehouse/ExportListPage';
-import SettingsPage from './pages/warehouse/SettingsPage';
-import ExpectedImportsPage from './pages/warehouse/ExpectedImportsPage';
-import ReconciliationPage from './pages/warehouse/ReconciliationPage';
-import SuppliersPage from './pages/warehouse/SuppliersPage';
-import BarcodePage from './pages/warehouse/BarcodePage';
-import StockListPage from './pages/warehouse/StockListPage';
-import MembersPage from './pages/members/MembersPage';
-import EmployeeCreatePage from './pages/members/EmployeeCreatePage';
-import EmployeeDetailPage from './pages/members/EmployeeDetailPage';
-import MembersSettingsPage from './pages/members/MembersSettingsPage';
-import UserProfilePage from './pages/profile/UserProfilePage';
-import LoginPage from './pages/auth/LoginPage';
-import CandidateApplyPage from './pages/public/CandidateApplyPage';
-import EmployeeOnboardPage from './pages/public/EmployeeOnboardPage';
-import CandidateListPage from './pages/recruitment/CandidateListPage';
-import CandidateDetailPage from './pages/recruitment/CandidateDetailPage';
-import RecruitmentSettingsPage from './pages/recruitment/RecruitmentSettingsPage';
-import AdminUsersPage from './pages/admin/AdminUsersPage';
-import AdminUserDetailPage from './pages/admin/AdminUserDetailPage';
-import AdminSettingsPage from './pages/admin/AdminSettingsPage';
-
-// Stocktake pages
-import StocktakeListPage from './pages/stocktake/StocktakeListPage';
-import AdjustmentListPage from './pages/stocktake/AdjustmentListPage';
-import StocktakeSettingsPage from './pages/stocktake/StocktakeSettingsPage';
+import { getActiveRole } from './lib/getActiveRole';
+import * as Pages from './routes/lazyPages';
 
 export default function App() {
   const enableWms = import.meta.env.VITE_ENABLE_WMS === 'true';
-  const role = localStorage.getItem('nv-user-role') || undefined;
+  const role = getActiveRole();
 
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/recruitment/apply" element={<CandidateApplyPage />} />
-        <Route path="/employee/onboarding" element={<EmployeeOnboardPage />} />
-        <Route element={<AppLayout />}>
-          <Route path="/" element={<Navigate to={getDefaultRoute(role)} replace />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/login" element={<Pages.LoginPage />} />
+          <Route path="/recruitment/apply" element={<Pages.CandidateApplyPage />} />
+          <Route path="/employee/onboarding" element={<Pages.EmployeeOnboardPage />} />
+          <Route element={<AppLayout />}>
+            <Route path="/" element={<Navigate to={getDefaultRoute(role)} replace />} />
+            <Route path="/dashboard" element={<Pages.DashboardPage />} />
 
-          {enableWms ? (
-            <>
-              {/* Module 1: Kho hàng */}
-              <Route path="/warehouse/dashboard" element={<DashboardPage />} />
-              <Route path="/warehouse/dashboard-warehouse" element={<DashboardWarehousePage />} />
-              <Route path="/warehouse/list" element={<WarehouseListPage />} />
-              <Route path="/warehouse/locations" element={<WarehouseListPage />} />
-              <Route path="/warehouse/stock" element={<StockListPage />} />
-              <Route path="/warehouse/expected-imports" element={<ExpectedImportsPage />} />
-              <Route path="/warehouse/reconciliation" element={<ReconciliationPage />} />
-              <Route path="/warehouse/suppliers" element={<SuppliersPage />} />
-              <Route path="/warehouse/barcodes" element={<BarcodePage />} />
-              <Route path="/warehouse/transfer" element={<TransferListPage />} />
-              <Route path="/warehouse/import" element={<ImportListPage />} />
-              <Route path="/warehouse/export" element={<ExportListPage />} />
-              <Route path="/warehouse/settings" element={<SettingsPage />} />
+            {enableWms ? (
+              <>
+                <Route path="/warehouse/dashboard" element={<Pages.DashboardPage />} />
+                <Route path="/warehouse/dashboard-warehouse" element={<Pages.DashboardWarehousePage />} />
+                <Route path="/warehouse/list" element={<Pages.WarehouseListPage />} />
+                <Route path="/warehouse/locations" element={<Pages.WarehouseListPage />} />
+                <Route path="/warehouse/stock" element={<Pages.StockListPage />} />
+                <Route path="/warehouse/expected-imports" element={<Pages.ExpectedImportsPage />} />
+                <Route path="/warehouse/reconciliation" element={<Pages.ReconciliationPage />} />
+                <Route path="/warehouse/suppliers" element={<Pages.SuppliersPage />} />
+                <Route path="/warehouse/barcodes" element={<Pages.BarcodePage />} />
+                <Route path="/warehouse/transfer" element={<Pages.TransferListPage />} />
+                <Route path="/warehouse/import" element={<Pages.ImportListPage />} />
+                <Route path="/warehouse/export" element={<Pages.ExportListPage />} />
+                <Route path="/warehouse/settings" element={<Pages.SettingsPage />} />
 
-              {/* Module 2: Kiểm kê */}
-              <Route path="/stocktake/list" element={<StocktakeListPage />} />
-              <Route path="/stocktake/adjustment" element={<AdjustmentListPage />} />
-              <Route path="/stocktake/settings" element={<StocktakeSettingsPage />} />
-            </>
-          ) : (
-            <>
-              <Route path="/warehouse/*" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/stocktake/*" element={<Navigate to="/dashboard" replace />} />
-            </>
-          )}
+                <Route path="/stocktake/list" element={<Pages.StocktakeListPage />} />
+                <Route path="/stocktake/adjustment" element={<Pages.AdjustmentListPage />} />
+                <Route path="/stocktake/settings" element={<Pages.StocktakeSettingsPage />} />
+              </>
+            ) : (
+              <>
+                <Route path="/warehouse/*" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/stocktake/*" element={<Navigate to="/dashboard" replace />} />
+              </>
+            )}
 
-          {/* Module: Nhân viên */}
-          <Route path="/members/list" element={<MembersPage />} />
-          <Route path="/members/settings" element={<MembersSettingsPage />} />
-          <Route path="/members/new" element={<EmployeeCreatePage />} />
-          <Route path="/members/:id" element={<EmployeeDetailPage />} />
+            <Route path="/members/list" element={<Pages.MembersPage />} />
+            <Route path="/members/settings" element={<Pages.MembersSettingsPage />} />
+            <Route path="/members/new" element={<Pages.EmployeeCreatePage />} />
+            <Route path="/members/:id" element={<Pages.EmployeeDetailPage />} />
 
-          {/* Module: Tuyển dụng */}
-          <Route path="/recruitment/candidates" element={<CandidateListPage />} />
-          <Route path="/recruitment/candidates/:id" element={<CandidateDetailPage />} />
-          <Route path="/recruitment/settings" element={<RecruitmentSettingsPage />} />
+            <Route path="/recruitment/candidates" element={<Pages.CandidateListPage />} />
+            <Route path="/recruitment/candidates/:id" element={<Pages.CandidateDetailPage />} />
+            <Route path="/recruitment/settings" element={<Pages.RecruitmentSettingsPage />} />
 
-          {/* Legacy redirect */}
-          <Route path="/members/recruits" element={<Navigate to="/recruitment/candidates" replace />} />
+            <Route path="/members/recruits" element={<Navigate to="/recruitment/candidates" replace />} />
 
-          <Route path="/profile" element={<UserProfilePage />} />
+            <Route path="/profile" element={<Pages.UserProfilePage />} />
 
-          {/* Module: Admin */}
-          <Route path="/admin/users" element={<AdminUsersPage />} />
-          <Route path="/admin/users/:id" element={<AdminUserDetailPage />} />
-          <Route path="/admin/settings" element={<AdminSettingsPage />} />
+            <Route path="/admin/users" element={<Pages.AdminUsersPage />} />
+            <Route path="/admin/users/:id" element={<Pages.AdminUserDetailPage />} />
+            <Route path="/admin/settings" element={<Pages.AdminSettingsPage />} />
 
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Route>
-      </Routes>
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Route>
+        </Routes>
+      </Suspense>
       {import.meta.env.DEV && <Agentation />}
     </BrowserRouter>
   );

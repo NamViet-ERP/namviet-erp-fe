@@ -1,4 +1,5 @@
 import { apiClient } from '../lib/apiClient';
+import { createMockLocalStore } from '../lib/mockLocalStore';
 import { mockDelay, USE_MOCK } from '../lib/mock';
 
 export interface SystemRole {
@@ -7,7 +8,6 @@ export interface SystemRole {
   isActive: boolean;
 }
 
-const STORAGE_KEY = 'nv-system-roles';
 const ROLES_ENDPOINT = '/api/admin/roles';
 
 const SEED_ROLES: SystemRole[] = [
@@ -19,20 +19,7 @@ const SEED_ROLES: SystemRole[] = [
   { code: 'hr', label: 'Nhân sự (HR)', isActive: true },
 ];
 
-function readStore(): SystemRole[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw) as SystemRole[];
-  } catch {
-    /* ignore */
-  }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED_ROLES));
-  return [...SEED_ROLES];
-}
-
-function writeStore(items: SystemRole[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-}
+const { readStore, writeStore } = createMockLocalStore('nv-system-roles', SEED_ROLES);
 
 function slugifyCode(label: string): string {
   return label

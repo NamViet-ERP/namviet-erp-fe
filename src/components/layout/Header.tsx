@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import namvietGroupLogo from '../../assets/NamViet Group.png';
+import namvietGroupLogo from '../../assets/NamVietGroup.png';
 import {
   Search, Grid3X3, Settings, BarChart3, Bell, ChevronDown,
   User, LogOut, X, Check, AlertTriangle, Package, FileText, Moon, Sun,
@@ -283,6 +283,7 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
         <img
           src={namvietGroupLogo}
           alt="NamViet Group"
+          className="header-brand-logo"
           style={{
             height: '56px',
             objectFit: 'contain',
