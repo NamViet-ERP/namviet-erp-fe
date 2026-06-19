@@ -128,7 +128,13 @@ export const employeesService = {
       writeStore(items);
       return mockDelay(items[idx]);
     }
-    const payload = toApi({ ...dto, fullName: dto.fullName ?? '' } as CreateEmployeeDto, id);
+    const current = await this.getById(id);
+    const merged: Employee = { ...current, ...dto };
+    if (merged.status === 'Nghỉ việc' && !merged.resignDate) {
+      merged.resignDate = new Date().toISOString().slice(0, 10);
+    }
+    if (merged.status === 'Đang làm') merged.resignDate = undefined;
+    const payload = toApi(merged, id);
     const res = await apiClient.put<EmployeeApiDto>(`${ENDPOINT}/${id}`, payload);
     cacheEmployeeStatus(id, res.status);
     return fromApi(res);

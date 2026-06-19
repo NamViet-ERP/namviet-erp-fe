@@ -1,6 +1,9 @@
 import { useState } from 'react';
-import { Shield, Plus, Trash2, Search } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Shield, Plus, Trash2, UserCog } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
+import SearchBar from '../../components/ui/SearchBar';
+import HrmPanel from '../../components/hr/HrmPanel';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { showToast } from '../../components/ui/Toast';
 import { useRoles, useCreateRole, useDeleteRole, useToggleRoleStatus } from '../../hooks/useRoles';
@@ -59,110 +62,135 @@ export default function AdminSettingsPage() {
     }
   };
 
-  const filtered = roles;
-
   return (
-    <div className="animate-fade-in hrm-page">
-      <PageHeader eyebrow="" title="THIẾT LẬP VAI TRÒ" subtitle="Tạo và quản lý vai trò hệ thống dùng khi phân quyền người dùng" />
+    <div className="hrm-page">
+      <PageHeader
+        eyebrow="Admin"
+        title="Thiết lập vai trò"
+        subtitle="Tạo và quản lý vai trò hệ thống dùng khi phân quyền người dùng."
+      />
 
-      <div className="rounded-2xl p-6 shadow-card max-w-4xl" style={{ background: 'var(--md-surface-container)', border: '1px solid var(--md-outline-variant)' }}>
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--md-primary-container)', border: '1px solid var(--md-outline-variant)' }}>
-            <Shield size={20} style={{ color: 'var(--md-primary)' }} />
+      <div className="hrm-settings-grid hrm-settings-grid--recruitment">
+        <HrmPanel className="hrm-settings-card hrm-settings-card--featured">
+          <div className="hrm-settings-card__head">
+            <div className="hrm-settings-card__icon hrm-settings-card__icon--primary">
+              <Shield size={20} />
+            </div>
+            <div>
+              <h2 className="hrm-settings-card__title">Danh sách vai trò</h2>
+              <p className="hrm-settings-card__desc">
+                Bật/tắt hoặc xóa vai trò — vai trò tắt sẽ không hiện khi cấp tài khoản.
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="font-bold text-lg" style={{ color: 'var(--md-on-surface)' }}>Danh sách vai trò</h3>
-            <p className="text-xs" style={{ color: 'var(--md-on-surface-variant)' }}>Bật/tắt hoặc xóa vai trò — vai trò tắt sẽ không hiện khi thêm người dùng</p>
+
+          <form onSubmit={handleAdd} className="hrm-recruitment-add-form hrm-admin-role-add-form">
+            <input
+              type="text"
+              value={label}
+              onChange={e => setLabel(e.target.value)}
+              placeholder="Tên vai trò (VD: Trưởng phòng Kho)"
+              className="hrm-field-input flex-1"
+              disabled={createMutation.isPending}
+            />
+            <input
+              type="text"
+              value={code}
+              onChange={e => setCode(e.target.value)}
+              placeholder="Mã (tùy chọn)"
+              className="hrm-field-input font-mono text-sm w-[160px] shrink-0"
+              disabled={createMutation.isPending}
+            />
+            <button
+              type="submit"
+              className="btn btn-primary flex items-center gap-2 rounded-xl px-4 h-10 shrink-0"
+              disabled={createMutation.isPending}
+            >
+              <Plus size={18} />
+              Thêm
+            </button>
+          </form>
+
+          <div className="hrm-recruitment-position-search">
+            <SearchBar
+              value={searchTerm}
+              onChange={setSearchTerm}
+              placeholder="Tìm theo tên hoặc mã vai trò..."
+            />
           </div>
-        </div>
 
-        <form onSubmit={handleAdd} className="grid grid-cols-1 md:grid-cols-[1fr_180px_auto] gap-2 mb-6">
-          <input
-            type="text"
-            value={label}
-            onChange={e => setLabel(e.target.value)}
-            placeholder="Tên vai trò (vd. Trưởng phòng Kho)"
-            className="hrm-field-input"
-            disabled={createMutation.isPending}
-          />
-          <input
-            type="text"
-            value={code}
-            onChange={e => setCode(e.target.value)}
-            placeholder="Mã (tùy chọn)"
-            className="hrm-field-input font-mono text-sm"
-            disabled={createMutation.isPending}
-          />
-          <button type="submit" className="btn btn-primary flex items-center justify-center gap-2 px-5" disabled={createMutation.isPending}>
-            <Plus size={18} />
-            <span>Thêm</span>
-          </button>
-        </form>
-
-        <div className="relative mb-4">
-          <span className="absolute inset-y-0 left-3 flex items-center text-[var(--md-on-surface-variant)]">
-            <Search size={16} />
-          </span>
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            placeholder="Tìm theo tên hoặc mã vai trò..."
-            className="hrm-field-input pl-10"
-          />
-        </div>
-
-        {isLoading ? (
-          <div className="text-center py-8 text-sm" style={{ color: 'var(--md-on-surface-variant)' }}>Đang tải...</div>
-        ) : filtered.length === 0 ? (
-          <div className="text-center py-8 text-sm" style={{ color: 'var(--md-on-surface-variant)' }}>
-            {searchTerm ? 'Không tìm thấy vai trò phù hợp.' : 'Chưa có vai trò nào.'}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[480px] overflow-y-auto pr-1">
-            {filtered.map(role => (
-              <div
-                key={role.code}
-                className={`admin-role-card flex items-center justify-between p-3 transition-all ${role.isActive ? '' : 'admin-role-card--inactive'}`}
-              >
-                <div className="min-w-0 pr-3">
-                  <p className="text-sm font-medium truncate" style={{ color: 'var(--md-on-surface)' }}>{role.label}</p>
-                  <p className="text-xs font-mono truncate" style={{ color: 'var(--md-on-surface-variant)' }}>{role.code}</p>
+          {isLoading ? (
+            <div className="hrm-recruitment-positions-empty">Đang tải danh sách vai trò...</div>
+          ) : roles.length === 0 ? (
+            <div className="hrm-recruitment-positions-empty">
+              {searchTerm ? 'Không tìm thấy vai trò phù hợp.' : 'Chưa có vai trò nào.'}
+            </div>
+          ) : (
+            <div className="hrm-recruitment-positions-grid">
+              {roles.map(role => (
+                <div
+                  key={role.code}
+                  className={`hrm-recruitment-position-card hrm-admin-role-card${role.isActive ? '' : ' hrm-recruitment-position-card--inactive'}`}
+                >
+                  <div className="hrm-admin-role-card__text min-w-0">
+                    <span className="hrm-recruitment-position-card__name" title={role.label}>
+                      {role.label}
+                    </span>
+                    <span className="hrm-admin-role-card__code">{role.code}</span>
+                  </div>
+                  <div className="hrm-recruitment-position-card__actions">
+                    <button
+                      type="button"
+                      onClick={() => handleToggle(role.code)}
+                      className={`hrm-toggle-switch${role.isActive ? ' hrm-toggle-switch--on' : ''}`}
+                      role="switch"
+                      aria-checked={role.isActive}
+                      title={role.isActive ? 'Đang bật' : 'Đang tắt'}
+                    >
+                      <span className="hrm-toggle-switch__thumb" aria-hidden />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDeleteTarget({ code: role.code, label: role.label })}
+                      className="hrm-recruitment-position-card__delete"
+                      title="Xóa vai trò"
+                      aria-label={`Xóa vai trò ${role.label}`}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
+              ))}
+            </div>
+          )}
 
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => handleToggle(role.code)}
-                    className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${role.isActive ? 'bg-[var(--md-primary)]' : 'switch-track-off bg-[var(--md-outline)]'}`}
-                    role="switch"
-                    aria-checked={role.isActive}
-                    title={role.isActive ? 'Đang bật' : 'Đang tắt'}
-                  >
-                    <span
-                      aria-hidden="true"
-                      className={`pointer-events-none inline-block h-4 w-4 transform rounded-full switch-thumb bg-white shadow ring-0 transition duration-200 ease-in-out ${role.isActive ? 'translate-x-4' : 'translate-x-0'}`}
-                    />
-                  </button>
+          <p className="hrm-recruitment-positions-meta">
+            Tổng <strong>{roles.length}</strong> vai trò
+            {searchTerm && (
+              <> · Đang lọc theo &ldquo;{searchTerm}&rdquo;</>
+            )}
+          </p>
+        </HrmPanel>
 
-                  <button
-                    type="button"
-                    onClick={() => setDeleteTarget({ code: role.code, label: role.label })}
-                    className="text-[var(--md-error)] p-1 rounded-lg hover:bg-[var(--md-error-container)] transition-colors"
-                    title="Xóa vai trò"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-            ))}
+        <HrmPanel className="hrm-settings-card">
+          <div className="hrm-settings-card__head">
+            <div className="hrm-settings-card__icon hrm-settings-card__icon--neutral">
+              <UserCog size={20} />
+            </div>
+            <div>
+              <h2 className="hrm-settings-card__title">Hướng dẫn vận hành</h2>
+            </div>
           </div>
-        )}
-
-        <div className="mt-4 pt-3 flex justify-between items-center text-xs" style={{ borderTop: '1px solid var(--md-outline-variant)', color: 'var(--md-on-surface-variant)' }}>
-          <span>Tổng số: <strong>{roles.length}</strong> vai trò</span>
-          {searchTerm && <span>Tìm thấy: <strong>{filtered.length}</strong></span>}
-        </div>
+          <ul className="hrm-settings-list">
+            <li><strong>Bật:</strong> Vai trò hiển thị khi cấp tài khoản hoặc đổi quyền.</li>
+            <li><strong>Tắt:</strong> Ẩn khỏi danh sách chọn — không xóa người dùng đang dùng vai trò đó.</li>
+            <li><strong>Xóa:</strong> Gỡ vai trò khỏi hệ thống; chỉ thực hiện khi không còn gán cho ai.</li>
+          </ul>
+          <Link to="/admin/users" className="hrm-settings-link">
+            <UserCog size={15} />
+            Đi tới quản lý người dùng
+          </Link>
+        </HrmPanel>
       </div>
 
       <ConfirmDialog

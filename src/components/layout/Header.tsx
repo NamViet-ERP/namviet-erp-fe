@@ -64,55 +64,15 @@ interface IconBtnProps {
 function IconBtn({ children, title, active, onClick, badge }: IconBtnProps) {
   return (
     <button
+      type="button"
       onClick={onClick}
       title={title}
-      style={{
-        position: 'relative',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '40px',
-        height: '40px',
-        borderRadius: '9999px',
-        border: 'none',
-        background: active ? 'var(--nv-header-icon-active-bg)' : 'transparent',
-        color: active ? 'var(--nv-header-icon-active)' : 'var(--nv-header-icon)',
-        cursor: 'pointer',
-        transition: 'background 200ms var(--md-easing), color 200ms var(--md-easing)',
-        flexShrink: 0,
-      }}
-      onMouseEnter={e => {
-        if (!active) {
-          e.currentTarget.style.background = 'var(--nv-header-icon-active-bg)';
-          e.currentTarget.style.color = 'var(--nv-header-icon-hover)';
-        }
-      }}
-      onMouseLeave={e => {
-        if (!active) {
-          e.currentTarget.style.background = 'transparent';
-          e.currentTarget.style.color = 'var(--nv-header-icon)';
-        }
-      }}
+      aria-label={title}
+      className={`nv-header-icon-btn${active ? ' nv-header-icon-btn--active' : ''}`}
     >
       {children}
       {badge !== undefined && badge > 0 && (
-        <span
-          style={{
-            position: 'absolute',
-            top: '4px', right: '4px',
-            minWidth: '16px', height: '16px',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            borderRadius: '9999px',
-            fontFamily: "'Roboto', sans-serif",
-            fontSize: '10px', fontWeight: 700,
-            padding: '0 4px',
-            background: 'var(--md-error)',
-            color: 'var(--md-on-error)',
-            boxShadow: '0 0 0 2px var(--md-surface-container)',
-          }}
-        >
-          {badge}
-        </span>
+        <span className="nv-header-icon-btn__badge">{badge}</span>
       )}
     </button>
   );
@@ -129,32 +89,11 @@ interface MenuBtnProps {
 function MenuBtn({ icon: Icon, label, onClick, danger }: MenuBtnProps) {
   return (
     <button
+      type="button"
       onClick={onClick}
-      style={{
-        width: '100%',
-        textAlign: 'left',
-        padding: '10px 16px',
-        fontFamily: "'Roboto', sans-serif",
-        fontSize: '0.875rem',
-        fontWeight: 400,
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
-        border: 'none',
-        background: 'transparent',
-        color: danger ? 'var(--md-error)' : 'var(--md-on-surface)',
-        cursor: 'pointer',
-        transition: 'background 200ms var(--md-easing)',
-        letterSpacing: '0.01em',
-      }}
-      onMouseEnter={e => {
-        e.currentTarget.style.background = danger
-          ? 'color-mix(in srgb, var(--md-error) 8%, transparent)'
-          : 'var(--nv-surface-hover)';
-      }}
-      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+      className={`user-menu-panel__menu-btn${danger ? ' user-menu-panel__menu-btn--danger' : ''}`}
     >
-      <Icon size={18} style={{ color: danger ? 'var(--md-error)' : 'var(--md-on-surface-variant)', flexShrink: 0 }} />
+      <Icon size={18} className="user-menu-panel__menu-btn-icon" />
       {label}
     </button>
   );
@@ -252,6 +191,11 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
   const markAllRead = () => setNotifications(p => p.map(n => ({ ...n, read: true })));
   const markAsRead = (id: number) => setNotifications(p => p.map(n => n.id === id ? { ...n, read: true } : n));
 
+  const handleSettingsClick = () => {
+    showToast('info', 'Phân hệ "Cài đặt" đang được phát triển.', 'Chức năng giả lập');
+    setShowUserMenu(false);
+  };
+
   return (
     <header
       style={{
@@ -273,53 +217,35 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
     >
       {/* ── Left: Logo ── */}
       <div
-        style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', flexShrink: 0 }}
+        className="flex items-center gap-2.5 shrink-0 cursor-pointer"
         onClick={() => navigate('/warehouse/dashboard')}
         role="button"
         tabIndex={0}
         onKeyDown={e => { if (e.key === 'Enter') navigate('/warehouse/dashboard'); }}
+        aria-label="Về trang chủ"
       >
-        {/* Mayzer Logo */}
         <img
           src={namvietGroupLogo}
-          alt="NamViet Group"
-          className="header-brand-logo"
-          style={{
-            height: '56px',
-            objectFit: 'contain',
-            borderRadius: '6px',
-          }}
+          alt="Nam Viet Group"
+          className="header-brand-logo h-14 w-auto object-contain"
         />
       </div>
 
-      {/* ── Center: Search — MD3 Filled ── */}
-      <div style={{ flex: 1, maxWidth: '480px', margin: '0 24px' }}>
-        <div style={{ position: 'relative' }}>
-          <Search
-            style={{
-              position: 'absolute',
-              left: '12px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: searchFocused ? 'var(--md-primary)' : 'var(--nv-header-search-placeholder)',
-              pointerEvents: 'none',
-              transition: 'color 200ms var(--md-easing)',
-            }}
-            size={16}
-          />
-          <input
-            type="text"
-            placeholder="Tìm kiếm chứng từ, sản phẩm..."
-            className="form-input-compact"
-            style={{ paddingLeft: '40px', width: '100%', borderRadius: '24px', border: 'none', background: 'var(--nv-header-search-bg)', color: 'var(--nv-header-search-text)', height: '40px' }}
-            onFocus={() => setSearchFocused(true)}
-            onBlur={() => setSearchFocused(false)}
-          />
-        </div>
+      {/* ── Center: Search ── */}
+      <div className={`nv-header-search hidden sm:block${searchFocused ? ' nv-header-search--focused' : ''}`}>
+        <Search className="nv-header-search__icon" size={16} aria-hidden />
+        <input
+          type="search"
+          placeholder="Tìm kiếm chứng từ, sản phẩm..."
+          className="nv-header-search__input"
+          aria-label="Tìm kiếm chứng từ, sản phẩm"
+          onFocus={() => setSearchFocused(true)}
+          onBlur={() => setSearchFocused(false)}
+        />
       </div>
 
       {/* ── Right: Actions ── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+      <div className="flex items-center gap-1.5 shrink-0">
 
         {/* Module switcher */}
         <div style={{ position: 'relative' }} ref={moduleMenuRef}>
@@ -349,39 +275,33 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
                 style={{
                   position: 'fixed',
                   top: '72px',
-                  left: '20px',
-                  right: '20px',
-                  maxHeight: 'calc(100vh - 100px)',
-                  background: 'var(--md-surface-container-high)',
-                  border: '1px solid var(--md-outline-variant)',
-                  borderRadius: '24px',
+                  left: '16px',
+                  right: '16px',
+                  maxHeight: 'calc(100dvh - 96px)',
+                  background: 'var(--md-surface-container)',
+                  border: '1px solid var(--md-outline-variant02)',
+                  borderRadius: '20px',
                   boxShadow: 'var(--md-shadow-3)',
                   zIndex: 100,
                   overflowY: 'auto',
-                  padding: '24px',
-                  maxWidth: '1280px',
+                  padding: '20px 24px 24px',
+                  maxWidth: '960px',
                   margin: '0 auto',
                 }}
               >
-                {/* 5 columns grid */}
-                <div
-                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3"
-                  style={{ width: '100%' }}
-                >
-                  {/* Columns 1-5: department cards (shared DepartmentCard component) */}
-                  {([[0, 1], [1, 2], [2, 3], [3, 4], [4, 5]] as const).map(([start, end]) => (
-                    <div key={start} className="flex flex-col gap-3">
-                      {departments.slice(start, end).map((dept) => (
-                        <DepartmentCard
-                          key={dept.title}
-                          dept={dept}
-                          onItemClick={(item) => handleModuleItemClick(item, dept.title)}
-                        />
-                      ))}
-                    </div>
+                <div className="mega-menu-panel__header">
+                  <h2 className="mega-menu-panel__title">Truy cập phân hệ</h2>
+                  <p className="mega-menu-panel__subtitle">Chọn module để điều hướng nhanh trong hệ thống</p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {departments.map((dept) => (
+                    <DepartmentCard
+                      key={dept.title}
+                      dept={dept}
+                      onItemClick={(item) => handleModuleItemClick(item, dept.title)}
+                    />
                   ))}
-
-
                 </div>
               </div>
             </>
@@ -394,22 +314,21 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
         </IconBtn>
 
         {/* Divider */}
-        <div style={{ width: '1px', height: '24px', background: 'var(--nv-header-border)', margin: '0 4px' }} />
+        <div className="hidden lg:block w-px h-6 bg-[var(--nv-header-border)] mx-1" aria-hidden />
 
-        {/* Báo cáo button — MD3 Outlined Pill */}
+        {/* Báo cáo */}
         {enableWms && (
           <button
-            className="hidden lg:flex btn btn-outlined"
+            type="button"
+            className="hidden lg:inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full border border-white/20 text-white/90 text-sm font-medium hover:bg-white/10 active:scale-[0.98] transition-all duration-150"
             onClick={() => navigate('/warehouse/dashboard-warehouse')}
-            style={{ height: '36px', padding: '0 16px', fontSize: '0.8125rem', gap: '6px', color: 'var(--nv-header-on-bg)', borderColor: 'var(--nv-header-border)' }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'var(--nv-header-icon-active-bg)'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
           >
-            <BarChart3 size={16} /> BÁO CÁO DASHBOARD
+            <BarChart3 size={15} aria-hidden />
+            Báo cáo kho
           </button>
         )}
 
-        <div style={{ width: '1px', height: '24px', background: 'var(--nv-header-border)', margin: '0 4px' }} />
+        <div className="hidden lg:block w-px h-6 bg-[var(--nv-header-border)] mx-1" aria-hidden />
 
         {/* Notifications */}
         <div style={{ position: 'relative' }} ref={notifRef}>
@@ -424,90 +343,86 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
 
           {showNotifications && (
             <div
-              className="animate-scale-in"
+              className="animate-scale-in rounded-2xl overflow-hidden"
               style={{
                 position: 'absolute',
                 right: 0,
                 top: 'calc(100% + 8px)',
-                width: '380px',
+                width: 'min(380px, calc(100vw - 24px))',
                 background: 'var(--md-surface-container)',
-                borderRadius: '16px',
+                border: '1px solid var(--md-outline-variant02)',
                 boxShadow: 'var(--md-shadow-3)',
                 zIndex: 60,
-                overflow: 'hidden',
               }}
             >
               {/* Header */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 16px 12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontFamily: "'Roboto', sans-serif", fontSize: '1rem', fontWeight: 700, color: 'var(--md-on-surface)' }}>
+              <div className="flex items-center justify-between px-4 pt-4 pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-base font-bold text-[var(--md-on-surface)] text-balance">
                     Thông báo
                   </span>
                   {unreadCount > 0 && (
-                    <span style={{ padding: '2px 8px', borderRadius: '9999px', fontFamily: "'Roboto', sans-serif", fontSize: '0.75rem', fontWeight: 700, background: 'var(--md-error-container)', color: 'var(--md-error)' }}>
+                    <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[var(--md-error-container)] text-[var(--md-error)] tabular-nums">
                       {unreadCount} mới
                     </span>
                   )}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div className="flex items-center gap-1">
                   {unreadCount > 0 && (
                     <button
+                      type="button"
                       onClick={markAllRead}
-                      style={{ fontFamily: "'Roboto', sans-serif", fontSize: '0.8125rem', color: 'var(--md-primary)', fontWeight: 500, border: 'none', background: 'transparent', cursor: 'pointer', padding: '4px 8px', borderRadius: '9999px' }}
+                      className="text-[13px] text-[var(--md-primary)] font-medium px-2 py-1 rounded-lg hover:bg-[var(--nv-surface-hover)] transition-colors duration-150"
                     >
                       Đọc tất cả
                     </button>
                   )}
                   <button
+                    type="button"
                     onClick={() => setShowNotifications(false)}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '9999px', border: 'none', background: 'transparent', color: 'var(--md-on-surface-variant)', cursor: 'pointer' }}
-                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--nv-surface-hover)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                    className="size-8 flex items-center justify-center rounded-full hover:bg-[var(--nv-surface-hover)] text-[var(--md-on-surface-variant)] transition-colors duration-150"
+                    aria-label="Đóng thông báo"
                   >
                     <X size={16} />
                   </button>
                 </div>
               </div>
 
-              <div style={{ height: '1px', background: 'var(--md-outline-variant)' }} />
+              <div className="h-px bg-[var(--md-outline-variant)]" />
 
               {/* List */}
-              <div style={{ maxHeight: '340px', overflowY: 'auto' }}>
+              <div className="max-h-[340px] overflow-y-auto">
                 {notifications.map(n => {
                   const NIcon = n.icon;
                   const c = notifContainers[n.type] || notifContainers.info;
                   return (
-                    <button key={n.id} onClick={() => markAsRead(n.id)}
-                      style={{
-                        width: '100%',
-                        textAlign: 'left',
-                        padding: '12px 16px',
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        gap: '12px',
-                        border: 'none',
-                        borderBottom: '1px solid var(--md-outline-variant)',
-                        background: !n.read ? 'color-mix(in srgb, var(--md-primary) 4%, transparent)' : 'transparent',
-                        cursor: 'pointer',
-                        transition: 'background 200ms var(--md-easing)',
-                      }}
-                      onMouseEnter={e => { e.currentTarget.style.background = 'var(--nv-surface-hover)'; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = !n.read ? 'color-mix(in srgb, var(--md-primary) 4%, transparent)' : 'transparent'; }}
+                    <button
+                      key={n.id}
+                      type="button"
+                      onClick={() => markAsRead(n.id)}
+                      className={`w-full text-left px-4 py-3 flex items-start gap-3 border-b border-[var(--md-outline-variant)] last:border-b-0 transition-colors duration-150 hover:bg-[var(--nv-surface-hover)] ${
+                        !n.read ? 'bg-[color-mix(in_srgb,var(--md-primary)_4%,transparent)]' : ''
+                      }`}
                     >
-                      <div style={{ width: '36px', height: '36px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: c.bg, color: c.color }}>
+                      <div
+                        className="size-9 rounded-xl flex items-center justify-center shrink-0"
+                        style={{ background: c.bg, color: c.color }}
+                      >
                         <NIcon size={16} />
                       </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <p style={{ fontFamily: "'Roboto', sans-serif", fontSize: '0.875rem', color: 'var(--md-on-surface)', fontWeight: !n.read ? 500 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className={`text-sm text-[var(--md-on-surface)] truncate ${!n.read ? 'font-semibold' : 'font-normal'}`}>
                             {n.title}
                           </p>
-                          {!n.read && <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--md-primary)', flexShrink: 0 }} />}
+                          {!n.read && (
+                            <span className="size-2 rounded-full bg-[var(--md-secondary)] shrink-0" aria-hidden />
+                          )}
                         </div>
-                        <p style={{ fontFamily: "'Roboto', sans-serif", fontSize: '0.8125rem', color: 'var(--md-on-surface-variant)', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <p className="text-[13px] text-[var(--md-on-surface-variant)] mt-0.5 line-clamp-2 text-pretty">
                           {n.message}
                         </p>
-                        <p style={{ fontFamily: "'Roboto', sans-serif", fontSize: '0.75rem', color: 'var(--md-on-surface-variant)', marginTop: '2px', opacity: 0.7 }}>
+                        <p className="text-xs text-[var(--md-on-surface-variant)] mt-1 opacity-80">
                           {n.time}
                         </p>
                       </div>
@@ -516,12 +431,10 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
                 })}
               </div>
 
-              {/* Footer */}
-              <div style={{ padding: '12px 16px' }}>
+              <div className="p-3 border-t border-[var(--md-outline-variant)]">
                 <button
-                  style={{ width: '100%', textAlign: 'center', fontFamily: "'Roboto', sans-serif", fontSize: '0.875rem', fontWeight: 500, color: 'var(--md-primary)', border: 'none', background: 'transparent', cursor: 'pointer', padding: '8px', borderRadius: '9999px' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--nv-surface-hover)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                  type="button"
+                  className="w-full text-center text-sm font-medium text-[var(--md-primary)] py-2 rounded-xl hover:bg-[var(--nv-surface-hover)] transition-colors duration-150"
                 >
                   Xem tất cả thông báo
                 </button>
@@ -531,44 +444,27 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
         </div>
 
         {/* User avatar */}
-        <div style={{ position: 'relative' }} ref={userMenuRef}>
+        <div className="relative" ref={userMenuRef}>
           <button
+            type="button"
             onClick={() => { setShowUserMenu(p => !p); setShowNotifications(false); }}
-            style={{
-              marginLeft: '4px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '4px',
-              borderRadius: '9999px',
-              border: 'none',
-              background: showUserMenu ? 'var(--nv-header-icon-active-bg)' : 'transparent',
-              cursor: 'pointer',
-              transition: 'background 200ms var(--md-easing)',
-            }}
-            onMouseEnter={e => { if (!showUserMenu) e.currentTarget.style.background = 'var(--nv-header-icon-active-bg)'; }}
-            onMouseLeave={e => { if (!showUserMenu) e.currentTarget.style.background = 'transparent'; }}
+            className={`nv-header-user-trigger${showUserMenu ? ' nv-header-user-trigger--open' : ''}`}
+            aria-expanded={showUserMenu}
+            aria-haspopup="menu"
+            aria-label="Menu tài khoản"
           >
-            <div
-              style={{
-                width: '32px', height: '32px',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontFamily: "'Roboto', sans-serif", fontWeight: 700, fontSize: '13px',
-                background: 'var(--md-primary-container)',
-                color: 'var(--md-on-primary-container)',
-                borderRadius: '9999px',
-              }}
-            >
-              {currentUser.initials}
-            </div>
-            <ChevronDown size={14} style={{ color: 'var(--nv-header-icon)', transform: showUserMenu ? 'rotate(180deg)' : 'none', transition: 'transform 200ms var(--md-easing)' }} />
+            <div className="nv-header-user-trigger__avatar">{currentUser.initials}</div>
+            <span className="nv-header-user-trigger__name hidden xl:block">
+              {currentUser.name}
+            </span>
+            <ChevronDown size={14} className="nv-header-user-trigger__chevron hidden sm:block" />
           </button>
 
           {showUserMenu && (
-            <div className="user-menu-panel animate-scale-in">
+            <div className="user-menu-panel animate-scale-in" role="menu">
               <div className="user-menu-panel__profile">
                 <div className="user-menu-panel__avatar">{currentUser.initials}</div>
-                <div style={{ minWidth: 0 }}>
+                <div className="min-w-0">
                   <p className="user-menu-panel__name">{currentUser.name}</p>
                   <p className="user-menu-panel__email">{currentUser.email}</p>
                   {'roleLabel' in currentUser && currentUser.roleLabel && (
@@ -587,11 +483,11 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
                 />
               )}
 
-              <div style={{ padding: '4px 0' }}>
+              <div className="user-menu-panel__section">
                 <MenuBtn icon={User} label="Thông tin tài khoản" onClick={() => { navigate('/profile'); setShowUserMenu(false); }} />
-                <MenuBtn icon={Settings} label="Cài đặt" onClick={() => { navigate('/warehouse/settings'); setShowUserMenu(false); }} />
+                <MenuBtn icon={Settings} label="Cài đặt" onClick={handleSettingsClick} />
               </div>
-              <div style={{ borderTop: '1px solid var(--md-outline-variant)', padding: '4px 0' }}>
+              <div className="user-menu-panel__section user-menu-panel__section--bordered">
                 <MenuBtn icon={LogOut} label="Đăng xuất" danger onClick={() => {
                   authService.logout();
                   clearSessionUser();

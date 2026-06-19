@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Package, Activity, Wrench, ChevronRight,
-  ChevronLeft, Gift, Settings,
+  ChevronLeft, Gift, Settings, ClipboardList,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 import { showToast } from '../components/ui/Toast';
 import { departments, type DepartmentSubItem } from '../constants/departments';
 import DepartmentCard from '../components/layout/DepartmentCard';
+import { getSessionUser } from '../constants/systemUsers';
 
 // ── Mock Birthdays Data ──
 interface BirthdayEvent {
@@ -18,22 +20,25 @@ interface BirthdayEvent {
 const birthdaysData: Record<number, BirthdayEvent[]> = {
   9: [
     { name: 'Nguyễn Hoàng Nam', role: 'Nhân viên' },
-    { name: 'Công ty TNHH Mayzer Việt Nam', role: 'Khách hàng' }
+    { name: 'Công ty TNHH Mayzer Việt Nam', role: 'Khách hàng' },
   ],
-  15: [
-    { name: 'Trần Bích Thủy', role: 'Nhân viên' }
-  ],
+  15: [{ name: 'Trần Bích Thủy', role: 'Nhân viên' }],
+  18: [{ name: 'Phạm Văn Tuấn', role: 'Nhân viên' }],
   22: [
     { name: 'Lê Minh Đức', role: 'Nhân viên' },
-    { name: 'Đoàn Quốc Bảo', role: 'Khách hàng' }
+    { name: 'Đoàn Quốc Bảo', role: 'Khách hàng' },
   ],
-  29: [
-    { name: 'Phan Thanh Hải', role: 'Nhân viên' }
-  ]
+  29: [{ name: 'Phan Thanh Hải', role: 'Nhân viên' }],
 };
 
-// ── Top Products & Materials Data ──
-const topProducts = [
+interface TopRow {
+  imageIcon: LucideIcon;
+  code: string;
+  name: string;
+  qty: number;
+}
+
+const topProducts: TopRow[] = [
   { imageIcon: Wrench, code: '2102205001', name: 'Bảo trì máy, thay vật tư, kiểm tra tổng thể, vệ sinh máy', qty: 57 },
   { imageIcon: Settings, code: 'LD-ONG', name: 'Lắp đặt đường ống cụm máy', qty: 14 },
   { imageIcon: Activity, code: 'KPF50-T', name: 'Bộ lọc thô King Power', qty: 5 },
@@ -41,7 +46,7 @@ const topProducts = [
   { imageIcon: Package, code: 'MZ1000-8', name: 'Bình chứa khí nén', qty: 5 },
 ];
 
-const topMaterials = [
+const topMaterials: TopRow[] = [
   { imageIcon: Activity, code: '101615004', name: 'King Power Air Compressor Oil (18L)', qty: 63 },
   { imageIcon: Settings, code: '2101602002', name: 'King Power oil filter', qty: 48 },
   { imageIcon: Activity, code: '2101605005', name: 'Motor grease GSR NO.2', qty: 19 },
@@ -49,9 +54,124 @@ const topMaterials = [
   { imageIcon: Settings, code: '2101610002', name: 'King Power oil filter', qty: 18 },
 ];
 
+const WEEKDAY_LABELS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'] as const;
+const MONTH_NAMES = [
+  'tháng 1', 'tháng 2', 'tháng 3', 'tháng 4', 'tháng 5', 'tháng 6',
+  'tháng 7', 'tháng 8', 'tháng 9', 'tháng 10', 'tháng 11', 'tháng 12',
+] as const;
+
+interface CalendarCell {
+  day: number;
+  isCurrentMonth: boolean;
+}
+
+function buildCalendarCells(year: number, month: number): CalendarCell[] {
+  const firstWeekday = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const daysInPrevMonth = new Date(year, month, 0).getDate();
+  const cells: CalendarCell[] = [];
+
+  for (let i = firstWeekday - 1; i >= 0; i -= 1) {
+    cells.push({ day: daysInPrevMonth - i, isCurrentMonth: false });
+  }
+  for (let day = 1; day <= daysInMonth; day += 1) {
+    cells.push({ day, isCurrentMonth: true });
+  }
+  let nextMonthDay = 1;
+  while (cells.length % 7 !== 0) {
+    cells.push({ day: nextMonthDay, isCurrentMonth: false });
+    nextMonthDay += 1;
+  }
+  return cells;
+}
+
+function countMonthBirthdays(data: Record<number, BirthdayEvent[]>) {
+  let employees = 0;
+  let customers = 0;
+  Object.values(data).forEach((events) => {
+    events.forEach((event) => {
+      if (event.role === 'Nhân viên') employees += 1;
+      else customers += 1;
+    });
+  });
+  return { employees, customers };
+}
+
+interface TopSalesTableProps {
+  title: string;
+  rows: TopRow[];
+  codeLabel?: string;
+}
+
+function TopSalesTable({ title, rows, codeLabel = 'Mã thành phẩm' }: TopSalesTableProps) {
+  return (
+    <section className="bg-[var(--md-surface-container)] rounded-2xl border border-[var(--md-outline-variant02)] shadow-sm overflow-hidden">
+      <header className="bg-[var(--nv-table-header-bg)] text-[var(--nv-table-header-text)] px-4 py-2.5">
+        <h3 className="text-[13px] font-semibold text-balance leading-snug">{title}</h3>
+      </header>
+      <div className="overflow-x-auto table-scroll">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="border-b border-[var(--md-outline-variant)] bg-[var(--md-surface-container-high)]">
+              <th className="px-3 py-2 text-[11px] font-semibold text-[var(--md-on-surface-variant)] w-10 text-center">#</th>
+              <th className="px-3 py-2 text-[11px] font-semibold text-[var(--md-on-surface-variant)] w-16 text-center">Ảnh</th>
+              <th className="px-3 py-2 text-[11px] font-semibold text-[var(--md-on-surface-variant)] w-[108px]">{codeLabel}</th>
+              <th className="px-3 py-2 text-[11px] font-semibold text-[var(--md-on-surface-variant)]">Tên</th>
+              <th className="px-3 py-2 text-[11px] font-semibold text-[var(--md-on-surface-variant)] w-20 text-right">SL</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, index) => {
+              const RowIcon = row.imageIcon;
+              return (
+                <tr
+                  key={row.code}
+                  className="border-b border-[var(--md-outline-variant)] last:border-b-0 hover:bg-[var(--nv-surface-hover)] transition-colors duration-150"
+                >
+                  <td className="px-3 py-2.5 text-center">
+                    <span className="inline-flex size-6 items-center justify-center rounded-full bg-[var(--md-primary-container)] text-[11px] font-bold text-[var(--md-primary)] tabular-nums">
+                      {index + 1}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2.5 text-center">
+                    <div className="size-8 rounded-xl mx-auto flex items-center justify-center bg-[var(--md-surface-container-high)] border border-[var(--md-outline-variant)]">
+                      <RowIcon size={14} className="text-[var(--md-secondary)]" />
+                    </div>
+                  </td>
+                  <td className="px-3 py-2.5 text-[12px] font-semibold text-[var(--md-on-surface)] tabular-nums">{row.code}</td>
+                  <td className="px-3 py-2.5 text-[12px] text-[var(--md-on-surface)] font-medium leading-snug">
+                    <span className="line-clamp-2 text-pretty" title={row.name}>{row.name}</span>
+                  </td>
+                  <td className="px-3 py-2.5 text-[13px] font-bold text-[var(--md-primary)] text-right tabular-nums pr-4">{row.qty}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+const PENDING_TASKS = 0;
+
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const [selectedDay, setSelectedDay] = useState<number>(9); // Default today (June 9)
+  const now = useMemo(() => new Date(), []);
+  const viewYear = now.getFullYear();
+  const viewMonth = now.getMonth();
+  const today = now.getDate();
+
+  const [selectedDay, setSelectedDay] = useState<number>(today);
+
+  const calendarCells = useMemo(
+    () => buildCalendarCells(viewYear, viewMonth),
+    [viewYear, viewMonth],
+  );
+
+  const birthdayStats = useMemo(() => countMonthBirthdays(birthdaysData), []);
+  const sessionUser = getSessionUser();
+  const displayName = sessionUser?.name?.split(' ').slice(-1)[0] ?? 'bạn';
 
   const handleItemClick = (item: DepartmentSubItem, deptTitle: string) => {
     if (item.path) {
@@ -61,278 +181,146 @@ export default function DashboardPage() {
     }
   };
 
-  // ── Render Birthday Cake SVG ──
-  const renderCake = () => (
-    <svg width="100" height="100" viewBox="0 0 120 120" className="mx-auto block" style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.06))' }}>
-      {/* Stand */}
-      <path d="M20,95 L100,95 A3,3 0 0,1 100,98 L20,98 A3,3 0 0,1 20,95 Z" fill="var(--md-outline)" />
-      <path d="M48,98 L72,98 L68,106 L52,106 Z" fill="var(--md-outline-variant)" />
-      
-      {/* Bottom tier */}
-      <rect x="25" y="65" width="70" height="30" rx="4" fill="var(--md-primary)" opacity="0.85" />
-      <path d="M25,75 Q60,82 95,75" fill="none" stroke="var(--md-primary-container)" strokeWidth="2" />
-      <circle cx="35" cy="73" r="2.5" fill="var(--chart-6)" />
-      <circle cx="48" cy="73" r="2.5" fill="var(--chart-4)" />
-      <circle cx="60" cy="73" r="2.5" fill="var(--chart-3)" />
-      <circle cx="72" cy="73" r="2.5" fill="var(--chart-6)" />
-      <circle cx="85" cy="73" r="2.5" fill="var(--chart-4)" />
-
-      {/* Top tier */}
-      <rect x="35" y="42" width="50" height="23" rx="4" fill="var(--md-secondary)" />
-      <path d="M35,49 Q60,55 85,49" fill="none" stroke="var(--md-secondary-container)" strokeWidth="2" />
-      <circle cx="43" cy="47" r="2" fill="var(--chart-4)" />
-      <circle cx="51" cy="47" r="2" fill="var(--chart-6)" />
-      <circle cx="60" cy="47" r="2" fill="var(--chart-3)" />
-      <circle cx="69" cy="47" r="2" fill="var(--chart-4)" />
-      <circle cx="77" cy="47" r="2" fill="var(--chart-6)" />
-
-      {/* Candles */}
-      <rect x="44" y="28" width="2" height="14" fill="var(--chart-4)" />
-      <path d="M45,23 C46,25 45,28 45,28 C44,28 43,25 45,23 Z" fill="var(--chart-6)" className="animate-pulse" />
-
-      <rect x="59" y="24" width="2" height="18" fill="var(--chart-5)" />
-      <path d="M60,18 C61,21 60,24 60,24 C59,24 58,21 60,18 Z" fill="var(--chart-4)" className="animate-pulse" />
-
-      <rect x="74" y="28" width="2" height="14" fill="var(--chart-4)" />
-      <path d="M75,23 C76,25 75,28 75,28 C74,28 73,25 75,23 Z" fill="var(--chart-6)" className="animate-pulse" />
-
-      <ellipse cx="60" cy="42" rx="4" ry="2" fill="var(--md-surface-container-high)" />
-      <circle cx="60" cy="40" r="1.5" fill="var(--chart-6)" />
-    </svg>
-  );
-
-  // ── June 2026 Calendar Grid Generation ──
-  // Column 1 is Sunday.
-  // Row 1 starts Sunday May 31.
-  const calendarCells = [
-    { day: 31, isCurrentMonth: false }, // Sunday May 31
-    { day: 1, isCurrentMonth: true },
-    { day: 2, isCurrentMonth: true },
-    { day: 3, isCurrentMonth: true },
-    { day: 4, isCurrentMonth: true },
-    { day: 5, isCurrentMonth: true },
-    { day: 6, isCurrentMonth: true },
-    { day: 7, isCurrentMonth: true },
-    { day: 8, isCurrentMonth: true },
-    { day: 9, isCurrentMonth: true }, // Today
-    { day: 10, isCurrentMonth: true },
-    { day: 11, isCurrentMonth: true },
-    { day: 12, isCurrentMonth: true },
-    { day: 13, isCurrentMonth: true },
-    { day: 14, isCurrentMonth: true },
-    { day: 15, isCurrentMonth: true },
-    { day: 16, isCurrentMonth: true },
-    { day: 17, isCurrentMonth: true },
-    { day: 18, isCurrentMonth: true },
-    { day: 19, isCurrentMonth: true },
-    { day: 20, isCurrentMonth: true },
-    { day: 21, isCurrentMonth: true },
-    { day: 22, isCurrentMonth: true },
-    { day: 23, isCurrentMonth: true },
-    { day: 24, isCurrentMonth: true },
-    { day: 25, isCurrentMonth: true },
-    { day: 26, isCurrentMonth: true },
-    { day: 27, isCurrentMonth: true },
-    { day: 28, isCurrentMonth: true },
-    { day: 29, isCurrentMonth: true },
-    { day: 30, isCurrentMonth: true },
-    { day: 1, isCurrentMonth: false }, // July 1
-    { day: 2, isCurrentMonth: false },
-    { day: 3, isCurrentMonth: false },
-    { day: 4, isCurrentMonth: false },
-  ];
+  const openTasks = () => {
+    showToast(
+      'info',
+      PENDING_TASKS === 0
+        ? 'Bạn không có công việc nào chưa hoàn thiện.'
+        : `Bạn có ${PENDING_TASKS} công việc chưa hoàn thiện.`,
+      'Công việc',
+    );
+  };
 
   return (
-    <div className="relative flex flex-col gap-5 animate-fade-in pb-10">
-      
-      {/* ── Page Header ── */}
-      <div className="flex items-end justify-between relative z-10">
-        <div className="flex items-center gap-1.5 text-xs text-[var(--md-on-surface-variant)]">
-          <Activity size={13} className="text-[var(--md-primary)]" />
-          Cập nhật lúc: {new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+    <div className="relative flex flex-col gap-6 animate-fade-in pb-6">
+      {/* ── Greeting strip ── */}
+      <header className="flex flex-wrap items-end justify-between gap-3 relative z-10">
+        <div>
+          <h1 className="text-xl font-bold text-[var(--md-on-surface)] text-balance leading-tight">
+            Xin chào, {displayName}
+          </h1>
+          <p className="mt-1 text-sm text-[var(--md-on-surface-variant)] text-pretty">
+            Chọn phân hệ để bắt đầu hoặc xem tổng quan bán hàng tháng này.
+          </p>
         </div>
-      </div>
+        <p className="flex items-center gap-1.5 text-xs text-[var(--md-on-surface-variant)] shrink-0">
+          <Activity size={13} className="text-[var(--md-secondary)]" aria-hidden />
+          Cập nhật {now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+        </p>
+      </header>
 
-      {/* ── Grid Row 1: Functional Department cards (6 columns) ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 relative z-10">
-        
-        {/* Columns 1-5: department cards grouped to balance the 6-col layout */}
-        {([[0, 1], [1, 2], [2, 3], [3, 4], [4, 5]] as const).map(([start, end]) => (
-          <div key={start} className="flex flex-col gap-3">
-            {departments.slice(start, end).map((dept) => (
-              <DepartmentCard
-                key={dept.title}
-                dept={dept}
-                onItemClick={(item) => handleItemClick(item, dept.title)}
-              />
-            ))}
-          </div>
-        ))}
+      {/* ── Main layout: modules + sidebar widgets ── */}
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_280px] gap-5 relative z-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr">
+          {departments.map((dept) => (
+            <DepartmentCard
+              key={dept.title}
+              dept={dept}
+              onItemClick={(item) => handleItemClick(item, dept.title)}
+            />
+          ))}
+        </div>
 
-        {/* Column 6: Right Side Cards */}
-        <div className="flex flex-col gap-3">
-          {/* Card 1: Pending tasks */}
-          <div 
-            className="rounded-lg p-3 text-white flex items-center justify-between cursor-pointer transition-transform duration-150 hover:scale-[1.02] shadow-sm select-none focus-visible:ring focus-visible:ring-[var(--md-secondary)]"
-            style={{
-              background: 'linear-gradient(135deg, var(--md-secondary), var(--md-primary))'
-            }}
-            tabIndex={0}
-            onClick={() => showToast('info', 'Bạn không có công việc nào chưa hoàn thiện!', 'Công việc')}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') showToast('info', 'Bạn không có công việc nào chưa hoàn thiện!', 'Công việc'); }}
-            aria-label="0 công việc chưa hoàn thiện"
+        <aside className="flex flex-col gap-4 xl:sticky xl:top-[calc(64px+20px)] xl:self-start">
+          {/* Pending tasks */}
+          <button
+            type="button"
+            className={`rounded-2xl p-4 flex items-center justify-between text-left transition-[transform,background-color,border-color] duration-150 ease-out hover:scale-[1.01] active:scale-[0.99] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--md-secondary)] ${
+              PENDING_TASKS > 0
+                ? 'bg-[var(--md-secondary)] text-white shadow-sm'
+                : 'bg-[var(--md-surface-container)] border border-[var(--md-outline-variant02)] text-[var(--md-on-surface)]'
+            }`}
+            onClick={openTasks}
+            aria-label={`${PENDING_TASKS} công việc chưa hoàn thiện`}
           >
-            <div className="flex items-center gap-4">
-              <span className="text-4xl font-extrabold tracking-tight">0</span>
+            <div className="flex items-center gap-3">
+              <div
+                className={`size-10 shrink-0 flex items-center justify-center rounded-xl ${
+                  PENDING_TASKS > 0 ? 'bg-white/15' : 'bg-[var(--md-secondary-container)]'
+                }`}
+              >
+                <ClipboardList
+                  size={18}
+                  className={PENDING_TASKS > 0 ? 'text-white' : 'text-[var(--md-secondary)]'}
+                />
+              </div>
               <div className="leading-tight">
-                <p className="text-[13px] font-bold text-white">Công việc</p>
-                <p className="text-[11px] text-[var(--md-primary-container)] font-medium">chưa hoàn thiện</p>
+                <p className={`text-2xl font-bold tabular-nums ${PENDING_TASKS > 0 ? 'text-white' : 'text-[var(--md-primary)]'}`}>
+                  {PENDING_TASKS}
+                </p>
+                <p className={`text-[13px] font-medium ${PENDING_TASKS > 0 ? 'text-white/90' : 'text-[var(--md-on-surface-variant)]'}`}>
+                  Công việc chưa hoàn thiện
+                </p>
               </div>
             </div>
-            <ChevronRight size={16} className="text-white opacity-80" />
-          </div>
+            <ChevronRight
+              size={16}
+              className={PENDING_TASKS > 0 ? 'text-white/80' : 'text-[var(--md-on-surface-variant)]'}
+            />
+          </button>
 
-          {/* Card 2: Birthday Month */}
-          <div className="bg-[var(--md-surface-container)] rounded-lg border border-[var(--md-outline-variant)] p-3 shadow-sm flex-1 flex flex-col justify-between">
-            <div>
-              <h4 className="text-[13px] font-bold text-[var(--md-primary)] flex items-center gap-1.5">
-                <Gift size={14} className="text-[var(--md-secondary)]" />
-                Sinh nhật tháng 6
-              </h4>
-              <div className="flex items-center gap-3 mt-1.5 text-[11.5px] text-[var(--md-on-surface)] font-medium">
-                <span>Nhân viên: <strong className="text-[var(--md-secondary)] font-bold">9</strong></span>
-                <span className="h-3 w-[1px] bg-[var(--md-outline-variant)]" />
-                <span>Khách hàng: <strong className="text-[var(--md-primary)] font-bold">3</strong></span>
+          {/* Birthday summary */}
+          <div className="bg-[var(--md-surface-container)] rounded-2xl border border-[var(--md-outline-variant02)] p-4 shadow-sm flex flex-col gap-3">
+            <div className="flex items-start justify-between gap-2">
+              <h2 className="text-sm font-bold text-[var(--md-primary)] flex items-center gap-1.5 text-balance">
+                <Gift size={15} className="text-[var(--md-secondary)] shrink-0" aria-hidden />
+                Sinh nhật {MONTH_NAMES[viewMonth]}
+              </h2>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-xl bg-[var(--md-surface-container-high)] px-3 py-2 border border-[var(--md-outline-variant)]">
+                <p className="text-[11px] text-[var(--md-on-surface-variant)]">Nhân viên</p>
+                <p className="text-lg font-bold text-[var(--md-secondary)] tabular-nums">{birthdayStats.employees}</p>
+              </div>
+              <div className="rounded-xl bg-[var(--md-surface-container-high)] px-3 py-2 border border-[var(--md-outline-variant)]">
+                <p className="text-[11px] text-[var(--md-on-surface-variant)]">Khách hàng</p>
+                <p className="text-lg font-bold text-[var(--md-primary)] tabular-nums">{birthdayStats.customers}</p>
               </div>
             </div>
-            <div className="my-2">
-              {renderCake()}
-            </div>
-            <p className="text-[11px] text-center text-[var(--md-on-surface-variant)] italic">
-              Chúc mừng sinh nhật các thành viên tháng 6!
+            <p className="text-xs text-center text-[var(--md-on-surface-variant)] text-pretty">
+              Chúc mừng sinh nhật các thành viên trong tháng!
             </p>
           </div>
-        </div>
-
+        </aside>
       </div>
 
-      {/* ── Grid Row 2: Tables & Interactive Calendar ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 mt-1 relative z-10">
-        
-        {/* Left Columns (3/5 width): Top 5 Tables */}
-        <div className="lg:col-span-3 flex flex-col gap-4">
-          
-          {/* Table 1: Top 5 Products */}
-          <div className="bg-[var(--md-surface-container)] rounded-lg border border-[var(--md-outline-variant)] shadow-sm overflow-hidden">
-            <div className="bg-[var(--nv-table-header-bg)] text-[var(--nv-table-header-text)] px-3.5 py-2">
-              <h3 className="text-xs font-bold uppercase tracking-wider">
-                TOP 5 SẢN PHẨM ĐƯỢC BÁN NHIỀU NHẤT TRONG THÁNG
-              </h3>
-            </div>
-            <div className="overflow-x-auto table-scroll">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-[var(--md-outline-variant)] bg-[var(--md-surface-container-high)]">
-                    <th className="p-2 text-[11px] font-bold text-[var(--md-on-surface-variant)] w-[70px] text-center">Hình ảnh</th>
-                    <th className="p-2 text-[11px] font-bold text-[var(--md-on-surface-variant)] w-[110px]">Mã thành phẩm</th>
-                    <th className="p-2 text-[11px] font-bold text-[var(--md-on-surface-variant)]">Tên thành phẩm</th>
-                    <th className="p-2 text-[11px] font-bold text-[var(--md-on-surface-variant)] w-[80px] text-right">Số lượng</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {topProducts.map((p, i) => {
-                    const ProductIcon = p.imageIcon;
-                    return (
-                      <tr 
-                        key={i} 
-                        className="border-b border-[var(--md-outline-variant)] hover:bg-[var(--nv-surface-hover)] transition-colors duration-150"
-                      >
-                        <td className="p-2 text-center">
-                          <div 
-                            className="w-8 h-8 rounded-full mx-auto flex items-center justify-center bg-[var(--nv-sidebar-item-hover)]"
-                          >
-                            <ProductIcon size={14} className="text-[var(--md-primary)]" />
-                          </div>
-                        </td>
-                        <td className="p-2 text-[12px] font-semibold text-[var(--md-on-surface)]">{p.code}</td>
-                        <td className="p-2 text-[12px] text-[var(--md-on-surface)] font-medium leading-tight">{p.name}</td>
-                        <td className="p-2 text-[12px] font-bold text-[var(--md-primary)] text-right pr-4">{p.qty}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Table 2: Top 5 Tools/Materials */}
-          <div className="bg-[var(--md-surface-container)] rounded-lg border border-[var(--md-outline-variant)] shadow-sm overflow-hidden">
-            <div className="bg-[var(--nv-table-header-bg)] text-[var(--nv-table-header-text)] px-3.5 py-2">
-              <h3 className="text-xs font-bold uppercase tracking-wider">
-                TOP 5 CÔNG CỤ VẬT TƯ ĐƯỢC BÁN NHIỀU NHẤT TRONG THÁNG
-              </h3>
-            </div>
-            <div className="overflow-x-auto table-scroll">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-[var(--md-outline-variant)] bg-[var(--md-surface-container-high)]">
-                    <th className="p-2 text-[11px] font-bold text-[var(--md-on-surface-variant)] w-[70px] text-center">Hình ảnh</th>
-                    <th className="p-2 text-[11px] font-bold text-[var(--md-on-surface-variant)] w-[110px]">Mã thành phẩm</th>
-                    <th className="p-2 text-[11px] font-bold text-[var(--md-on-surface-variant)]">Tên thành phẩm</th>
-                    <th className="p-2 text-[11px] font-bold text-[var(--md-on-surface-variant)] w-[80px] text-right">Số lượng</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {topMaterials.map((m, i) => {
-                    const MaterialIcon = m.imageIcon;
-                    return (
-                      <tr 
-                        key={i} 
-                        className="border-b border-[var(--md-outline-variant)] hover:bg-[var(--nv-surface-hover)] transition-colors duration-150"
-                      >
-                        <td className="p-2 text-center">
-                          <div 
-                            className="w-8 h-8 rounded-full mx-auto flex items-center justify-center bg-[var(--nv-sidebar-item-hover)]"
-                          >
-                            <MaterialIcon size={14} className="text-[var(--md-primary)]" />
-                          </div>
-                        </td>
-                        <td className="p-2 text-[12px] font-semibold text-[var(--md-on-surface)]">{m.code}</td>
-                        <td className="p-2 text-[12px] text-[var(--md-on-surface)] font-medium leading-tight">{m.name}</td>
-                        <td className="p-2 text-[12px] font-bold text-[var(--md-primary)] text-right pr-4">{m.qty}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
+      {/* ── Tables + calendar ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 relative z-10">
+        <div className="lg:col-span-3 flex flex-col gap-5">
+          <TopSalesTable
+            title="Top 5 sản phẩm bán chạy trong tháng"
+            rows={topProducts}
+          />
+          <TopSalesTable
+            title="Top 5 công cụ vật tư bán chạy trong tháng"
+            rows={topMaterials}
+            codeLabel="Mã vật tư"
+          />
         </div>
 
-        {/* Right Column (2/5 width): Calendar Card */}
         <div className="lg:col-span-2">
-          <div className="bg-[var(--md-surface-container)] rounded-lg border border-[var(--md-outline-variant)] shadow-sm overflow-hidden h-full flex flex-col">
-            <div className="bg-[var(--nv-table-header-bg)] text-[var(--nv-table-header-text)] px-3.5 py-2">
-              <h3 className="text-xs font-bold uppercase tracking-wider">
-                LỊCH SINH NHẬT NHÂN VIÊN
-              </h3>
-            </div>
-            
-            {/* Calendar Controls */}
+          <section className="bg-[var(--md-surface-container)] rounded-2xl border border-[var(--md-outline-variant02)] shadow-sm overflow-hidden h-full flex flex-col">
+            <header className="bg-[var(--nv-table-header-bg)] text-[var(--nv-table-header-text)] px-4 py-2.5">
+              <h3 className="text-[13px] font-semibold text-balance">Lịch sinh nhật nhân viên</h3>
+            </header>
+
             <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--md-outline-variant)] bg-[var(--md-surface-container-high)]">
-              <span className="text-[12.5px] font-bold text-[var(--md-on-surface)] uppercase">tháng 6 2026</span>
+              <span className="text-sm font-semibold text-[var(--md-on-surface)] capitalize">
+                {MONTH_NAMES[viewMonth]} {viewYear}
+              </span>
               <div className="flex items-center gap-1">
-                <button 
-                  onClick={() => showToast('info', 'Lịch được đặt cố định ở tháng 6/2026', 'Thông báo')}
-                  className="p-1 hover:bg-[var(--md-surface-container)] rounded border border-transparent hover:border-[var(--md-outline-variant)] transition-colors"
+                <button
+                  type="button"
+                  onClick={() => showToast('info', 'Lịch hiển thị tháng hiện tại.', 'Thông báo')}
+                  className="size-7 flex items-center justify-center hover:bg-[var(--md-surface-container)] rounded-lg border border-transparent hover:border-[var(--md-outline-variant)] transition-colors duration-150"
                   aria-label="Tháng trước"
                 >
                   <ChevronLeft size={14} className="text-[var(--md-on-surface)]" />
                 </button>
-                <button 
-                  onClick={() => showToast('info', 'Lịch được đặt cố định ở tháng 6/2026', 'Thông báo')}
-                  className="p-1 hover:bg-[var(--md-surface-container)] rounded border border-transparent hover:border-[var(--md-outline-variant)] transition-colors"
+                <button
+                  type="button"
+                  onClick={() => showToast('info', 'Lịch hiển thị tháng hiện tại.', 'Thông báo')}
+                  className="size-7 flex items-center justify-center hover:bg-[var(--md-surface-container)] rounded-lg border border-transparent hover:border-[var(--md-outline-variant)] transition-colors duration-150"
                   aria-label="Tháng sau"
                 >
                   <ChevronRight size={14} className="text-[var(--md-on-surface)]" />
@@ -340,88 +328,90 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Calendar Grid */}
-            <div className="p-3 flex-1 flex flex-col justify-between">
-              <div>
-                {/* Days of the week */}
-                <div className="grid grid-cols-7 text-center mb-1 text-[11px] font-bold text-[var(--md-on-surface-variant)]">
-                  <div>CN</div>
-                  <div>T2</div>
-                  <div>T3</div>
-                  <div>T4</div>
-                  <div>T5</div>
-                  <div>T6</div>
-                  <div>T7</div>
-                </div>
-
-                {/* Days of the month */}
-                <div className="grid grid-cols-7 gap-1">
-                  {calendarCells.map((cell, idx) => {
-                    const isToday = cell.isCurrentMonth && cell.day === 9;
-                    const hasBirthday = cell.isCurrentMonth && birthdaysData[cell.day];
-                    const isSelected = cell.isCurrentMonth && selectedDay === cell.day;
-                    
-                    return (
-                      <button
-                        key={idx}
-                        onClick={() => {
-                          if (cell.isCurrentMonth) {
-                            setSelectedDay(cell.day);
-                          }
-                        }}
-                        className={`relative aspect-square flex flex-col items-center justify-center rounded-full text-xs font-semibold border-none cursor-pointer transition-all duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--md-secondary)]
-                          ${!cell.isCurrentMonth ? 'text-[var(--md-outline)] cursor-default' : 'text-[var(--md-on-surface)] hover:bg-[var(--nv-sidebar-item-hover)]'}
-                          ${isToday ? 'bg-[var(--md-secondary-container)] text-[var(--md-secondary)]' : ''}
-                          ${isSelected && !isToday ? 'bg-[var(--nv-sidebar-item-hover)]' : ''}
-                        `}
-                        disabled={!cell.isCurrentMonth}
-                        style={{ outlineOffset: '-1px' }}
-                      >
-                        {/* Day number */}
-                        <span className={isToday ? 'font-bold' : ''}>{cell.day}</span>
-                        
-                        {/* Birthday dot indicator */}
-                        {hasBirthday && (
-                          <span 
-                            className={`absolute bottom-1 w-1.5 h-1.5 rounded-full ${isToday ? 'bg-[var(--md-secondary)]' : 'bg-[var(--chart-5)]'}`}
-                            title="Có sinh nhật"
-                          />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
+            <div className="p-4 flex-1 flex flex-col">
+              <div className="grid grid-cols-7 text-center mb-2 text-[11px] font-semibold text-[var(--md-on-surface-variant)]">
+                {WEEKDAY_LABELS.map((label) => (
+                  <div key={label}>{label}</div>
+                ))}
               </div>
 
-              {/* Selected Day Birthday Details */}
-              <div className="mt-4 p-3 bg-[var(--nv-sidebar-item-hover)] border border-[var(--md-outline-variant)] rounded-lg">
-                <h4 className="text-[11.5px] font-bold text-[var(--md-primary)] mb-1.5 flex items-center gap-1.5">
-                  <Gift size={12} className="text-[var(--md-secondary)]" />
-                  Chi tiết sinh nhật ngày {selectedDay}/06/2026:
+              <div className="grid grid-cols-7 gap-1">
+                {calendarCells.map((cell, idx) => {
+                  const isToday = cell.isCurrentMonth && cell.day === today;
+                  const hasBirthday = cell.isCurrentMonth && Boolean(birthdaysData[cell.day]);
+                  const isSelected = cell.isCurrentMonth && selectedDay === cell.day;
+
+                  return (
+                    <button
+                      key={`${cell.isCurrentMonth ? 'in' : 'out'}-${cell.day}-${idx}`}
+                      type="button"
+                      onClick={() => {
+                        if (cell.isCurrentMonth) setSelectedDay(cell.day);
+                      }}
+                      disabled={!cell.isCurrentMonth}
+                      className={`relative aspect-square flex items-center justify-center rounded-full text-xs font-semibold border-none transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--md-secondary)] ${
+                        !cell.isCurrentMonth
+                          ? 'text-[var(--md-outline)] cursor-default'
+                          : 'text-[var(--md-on-surface)] hover:bg-[var(--nv-sidebar-item-hover)] cursor-pointer'
+                      } ${
+                        isToday
+                          ? 'bg-[var(--md-secondary)] text-white font-bold'
+                          : isSelected
+                            ? 'bg-[var(--md-secondary-container)] text-[var(--md-secondary)]'
+                            : ''
+                      }`}
+                      style={{ outlineOffset: '-1px' }}
+                      aria-label={
+                        cell.isCurrentMonth
+                          ? `Ngày ${cell.day}${hasBirthday ? ', có sinh nhật' : ''}${isToday ? ', hôm nay' : ''}`
+                          : undefined
+                      }
+                      aria-pressed={cell.isCurrentMonth ? isSelected : undefined}
+                    >
+                      <span className="tabular-nums">{cell.day}</span>
+                      {hasBirthday && (
+                        <span
+                          className={`absolute bottom-1 size-1.5 rounded-full ${
+                            isToday ? 'bg-white' : 'bg-[var(--chart-5)]'
+                          }`}
+                          aria-hidden
+                        />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="mt-4 p-3 bg-[var(--md-surface-container-high)] border border-[var(--md-outline-variant)] rounded-xl">
+                <h4 className="text-xs font-semibold text-[var(--md-primary)] mb-2 flex items-center gap-1.5">
+                  <Gift size={12} className="text-[var(--md-secondary)]" aria-hidden />
+                  Ngày {selectedDay}/{String(viewMonth + 1).padStart(2, '0')}/{viewYear}
                 </h4>
                 {birthdaysData[selectedDay] ? (
-                  <div className="flex flex-col gap-1">
-                    {birthdaysData[selectedDay].map((b, i) => (
-                      <div key={i} className="text-[12px] text-[var(--md-on-surface)] font-medium flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--chart-5)]" />
-                        <strong>{b.name}</strong> 
-                        <span className="text-[var(--md-on-surface-variant)] text-[11px]">({b.role})</span>
-                      </div>
+                  <ul className="flex flex-col gap-1.5">
+                    {birthdaysData[selectedDay].map((person) => (
+                      <li
+                        key={person.name}
+                        className="text-[12px] text-[var(--md-on-surface)] font-medium flex items-start gap-2"
+                      >
+                        <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[var(--chart-5)]" aria-hidden />
+                        <span className="text-pretty">
+                          <strong>{person.name}</strong>
+                          <span className="text-[var(--md-on-surface-variant)] text-[11px] ml-1">({person.role})</span>
+                        </span>
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 ) : (
-                  <p className="text-[12px] text-[var(--md-on-surface-variant)] italic">
-                    Không có sinh nhật nào trong ngày này.
+                  <p className="text-[12px] text-[var(--md-on-surface-variant)] text-pretty">
+                    Không có sinh nhật trong ngày này.
                   </p>
                 )}
               </div>
             </div>
-
-          </div>
+          </section>
         </div>
-
       </div>
-
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { Users, UserCheck, UserX, Baby, Plus } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import SearchBar from '../../components/ui/SearchBar';
 import Pagination from '../../components/ui/Pagination';
+import EmptyState from '../../components/ui/EmptyState';
 import HrmPanel from '../../components/hr/HrmPanel';
 import HrmStatCard from '../../components/hr/HrmStatCard';
 import EmployeeStatusSwap from '../../components/hr/EmployeeStatusSwap';
@@ -12,10 +13,34 @@ import { EMPLOYEE_STATUSES } from '../../constants/recruitment';
 import type { EmployeeStatus } from '../../types/hr';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { compareEmployeeCodeNewestFirst } from '../../lib/hrm/suggestedEmployeeCode';
+import { formatDateCell } from '../../lib/hrm/formatters';
 
-function fmtDate(d?: string) {
-  if (!d) return '—';
-  return new Date(d).toLocaleDateString('vi-VN');
+function memberInitials(name: string) {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .slice(-2)
+    .map(w => w[0])
+    .join('')
+    .toUpperCase();
+}
+
+function MemberAvatar({ name, photoUrl }: { name: string; photoUrl?: string }) {
+  if (photoUrl) {
+    return <img src={photoUrl} alt="" className="hrm-member-avatar" />;
+  }
+  return (
+    <span className="hrm-member-avatar hrm-member-avatar--fallback" aria-hidden>
+      {memberInitials(name)}
+    </span>
+  );
+}
+
+function EmptyCell({ value }: { value?: string }) {
+  if (!value || value === '—') {
+    return <span className="hrm-empty-cell">—</span>;
+  }
+  return <>{value}</>;
 }
 
 export default function MembersPage() {
@@ -40,10 +65,11 @@ export default function MembersPage() {
   }), [employeeList]);
 
   const filtered = useMemo(() => {
-    const q = search.toLowerCase();
+    const q = search.toLowerCase().trim();
     return employeeList
       .filter(e => {
         const matchSearch =
+          !q ||
           e.fullName.toLowerCase().includes(q) ||
           (e.code?.toLowerCase().includes(q) ?? false) ||
           (e.department?.toLowerCase().includes(q) ?? false);
@@ -56,14 +82,19 @@ export default function MembersPage() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
   const loading = isPending || (isFetching && employeeList.length === 0);
+  const hasFilters = Boolean(search.trim() || statusFilter);
 
   return (
     <div className="hrm-page">
       <PageHeader
-        title="DATA TỔNG NHÂN VIÊN & HỒ SƠ NHÂN SỰ"
-        subtitle="Quản lý danh sách nhân viên; HR có thể thêm hồ sơ thủ công hoặc nhận từ form khai báo công khai"
+        title="Danh sách nhân viên"
+        subtitle="Quản lý hồ sơ nhân sự — thêm thủ công hoặc nhận từ form khai báo công khai."
         actions={
-          <button type="button" className="btn btn-primary flex items-center gap-2" onClick={() => navigate('/members/new')}>
+          <button
+            type="button"
+            className="btn btn-primary flex items-center gap-2 rounded-full px-5"
+            onClick={() => navigate('/members/new')}
+          >
             <Plus size={16} />
             Thêm nhân viên
           </button>
@@ -77,24 +108,29 @@ export default function MembersPage() {
         <HrmStatCard label="Thai sản" value={stats.maternity} icon={Baby} tone="neutral" />
       </div>
 
-      <HrmPanel>
-        <div className="hrm-filter-bar">
-          <div className="flex-1 min-w-[220px]">
-            <SearchBar value={search} onChange={v => { setSearch(v); setPage(1); }} placeholder="Tìm theo tên, mã NV, bộ phận..." />
-          </div>
-          <select
-            className="form-select h-10 min-w-[150px]"
-            value={statusFilter}
-            onChange={e => { setStatusFilter(e.target.value as EmployeeStatus | ''); setPage(1); }}
-          >
-            <option value="">Tất cả trạng thái</option>
-            {EMPLOYEE_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
-        </div>
-      </HrmPanel>
-
       <HrmPanel noPadding>
-        <div className="overflow-x-auto table-scroll">
+        <div className="hrm-list-toolbar">
+          <div className="hrm-list-toolbar__filters">
+            <SearchBar
+              value={search}
+              onChange={v => { setSearch(v); setPage(1); }}
+              placeholder="Tìm theo tên, mã NV, bộ phận..."
+            />
+            <div className="hrm-filter-select-wrap">
+              <select
+                className="hrm-filter-select"
+                value={statusFilter}
+                onChange={e => { setStatusFilter(e.target.value as EmployeeStatus | ''); setPage(1); }}
+                aria-label="Lọc trạng thái"
+              >
+                <option value="">Tất cả trạng thái</option>
+                {EMPLOYEE_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto table-scroll hrm-table-wrap">
           <table className="w-full min-w-max border-collapse hrm-table">
             <thead>
               <tr>
@@ -105,54 +141,77 @@ export default function MembersPage() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={12} className="hrm-empty">Đang tải...</td></tr>
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="hrm-table-skeleton-row" aria-hidden>
+                    <td colSpan={12}><div className="hrm-table-skeleton" /></td>
+                  </tr>
+                ))
               ) : isError ? (
                 <tr>
-                  <td colSpan={12} className="hrm-empty text-[var(--md-error)]">
-                    Không tải được danh sách nhân viên: {getApiErrorMessage(error)}
+                  <td colSpan={12}>
+                    <EmptyState
+                      message={`Không tải được danh sách: ${getApiErrorMessage(error)}`}
+                      icon={UserX}
+                    />
                   </td>
                 </tr>
               ) : paginated.length === 0 ? (
-                <tr><td colSpan={12} className="hrm-empty">Không có nhân viên phù hợp.</td></tr>
+                <tr>
+                  <td colSpan={12}>
+                    <EmptyState
+                      message={hasFilters ? 'Không có nhân viên phù hợp bộ lọc.' : 'Chưa có nhân viên nào.'}
+                      icon={Users}
+                    />
+                  </td>
+                </tr>
               ) : (
                 paginated.map(emp => (
                   <tr
                     key={emp.id}
-                    className="table-row cursor-pointer"
+                    className="table-row hrm-table-row--interactive"
                     onClick={() => navigate(`/members/${emp.id}`)}
                   >
-                    <td className="table-cell font-mono text-sm text-[var(--md-primary)] whitespace-nowrap">{emp.code || '—'}</td>
-                    <td className="table-cell member-name">{emp.fullName}</td>
+                    <td className="table-cell font-mono text-sm text-[var(--md-primary)] whitespace-nowrap tabular-nums hrm-table-sticky-col">
+                      {emp.code || '—'}
+                    </td>
+                    <td className="table-cell member-name hrm-table-sticky-col hrm-table-sticky-col--name">
+                      <div className="hrm-member-cell">
+                        <MemberAvatar name={emp.fullName} photoUrl={emp.profilePhoto?.previewUrl} />
+                        <span className="truncate max-w-[180px]" title={emp.fullName}>{emp.fullName}</span>
+                      </div>
+                    </td>
                     <td className="table-cell">{emp.gender}</td>
-                    <td className="table-cell whitespace-nowrap">{fmtDate(emp.birthDate)}</td>
-                    <td className="table-cell">{emp.segment || '—'}</td>
-                    <td className="table-cell">{emp.branch || '—'}</td>
-                    <td className="table-cell">{emp.department || '—'}</td>
-                    <td className="table-cell">{emp.position || '—'}</td>
-                    <td className="table-cell whitespace-nowrap">{fmtDate(emp.joinDate)}</td>
-                    <td className="table-cell whitespace-nowrap">{fmtDate(emp.officialDate)}</td>
-                    <td className="table-cell text-center">
+                    <td className="table-cell whitespace-nowrap tabular-nums">{formatDateCell(emp.birthDate)}</td>
+                    <td className="table-cell"><EmptyCell value={emp.segment} /></td>
+                    <td className="table-cell"><EmptyCell value={emp.branch} /></td>
+                    <td className="table-cell">{emp.department || <span className="hrm-empty-cell">—</span>}</td>
+                    <td className="table-cell"><EmptyCell value={emp.position} /></td>
+                    <td className="table-cell whitespace-nowrap tabular-nums">{formatDateCell(emp.joinDate)}</td>
+                    <td className="table-cell whitespace-nowrap tabular-nums">{formatDateCell(emp.officialDate)}</td>
+                    <td className="table-cell text-center" onClick={e => e.stopPropagation()}>
                       <EmployeeStatusSwap employee={emp} />
                     </td>
-                    <td className="table-cell whitespace-nowrap">{fmtDate(emp.resignDate)}</td>
+                    <td className="table-cell whitespace-nowrap tabular-nums">{formatDateCell(emp.resignDate)}</td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
         </div>
-      </HrmPanel>
 
-      {filtered.length > 0 && (
-        <Pagination
-          currentPage={page}
-          totalPages={totalPages}
-          pageSize={pageSize}
-          totalItems={filtered.length}
-          onPageChange={setPage}
-          onPageSizeChange={s => { setPageSize(s); setPage(1); }}
-        />
-      )}
+        {filtered.length > 0 && !loading && (
+          <Pagination
+            embedded
+            itemLabel="nhân viên"
+            currentPage={page}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            totalItems={filtered.length}
+            onPageChange={setPage}
+            onPageSizeChange={s => { setPageSize(s); setPage(1); }}
+          />
+        )}
+      </HrmPanel>
     </div>
   );
 }

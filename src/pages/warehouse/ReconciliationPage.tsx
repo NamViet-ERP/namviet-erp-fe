@@ -85,7 +85,7 @@ export default function ReconciliationPage() {
           </div>
           <div className="space-y-2">
             <h3 className="text-base font-bold uppercase tracking-wider text-[var(--md-on-surface)]">
-              TRUY CẬP BỊ TỪ CHỐI
+              Truy cập bị từ chối
             </h3>
             <p className="text-xs text-[var(--md-on-surface-variant)] leading-relaxed">
               Bạn đang đăng nhập với vai trò **Thủ kho**. Phân hệ đối chiếu đơn giá PO-GRN chứa dữ liệu tài chính nhạy cảm và bị chặn truy cập.
@@ -133,8 +133,8 @@ export default function ReconciliationPage() {
   return (
     <div className="animate-fade-in space-y-6">
       <PageHeader
-        eyebrow="TỰ ĐỘNG ĐỐI CHIẾU"
-        title="ĐỐI CHIẾU PO - GRN (SO GIÁ)"
+        eyebrow="Kho hàng"
+        title="Đối chiếu đơn giá nhập"
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -210,7 +210,7 @@ export default function ReconciliationPage() {
                 </p>
                 <div className="mt-3">
                   <button onClick={handleRequestApproval} className="btn btn-danger text-[10px] py-1.5 px-4 font-bold">
-                    PHÊ DUYỆT GIÁ VƯỢT HẠN MỨC
+                    Phê duyệt giá vượt hạn mức
                   </button>
                 </div>
               </div>
@@ -240,7 +240,7 @@ export default function ReconciliationPage() {
               <table className="w-full text-xs text-left" style={{ minWidth: '850px' }}>
                 <thead>
                   <tr>
-                    <th className="table-header-cell">Vật tư / SKU</th>
+                    <th className="table-header-cell">Vật tư</th>
                     <th className="table-header-cell text-right">Đơn giá dự toán</th>
                     <th className="table-header-cell text-right">Đơn giá thực tế (PO)</th>
                     <th className="table-header-cell text-center">Khối lượng</th>
@@ -275,11 +275,11 @@ export default function ReconciliationPage() {
                       <td className="table-cell text-center">
                         {item.exceedLimit && !isApproved ? (
                           <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-rose-100 text-rose-800 border border-rose-300">
-                            VƯỢT ĐỊNH MỨC
+                            Vượt định mức
                           </span>
                         ) : (
                           <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-green-100 text-green-800">
-                            HỢP LỆ
+                            Hợp lệ
                           </span>
                         )}
                       </td>
@@ -295,12 +295,12 @@ export default function ReconciliationPage() {
       <Modal
         isOpen={showApprovalModal}
         onClose={() => setShowApprovalModal(false)}
-        title={`PHÊ DUYỆT ĐƠN GIÁ VƯỢT HẠN MỨC — ${selectedPoCode}`}
+        title={`Phê duyệt đơn giá vượt hạn mức — ${selectedPoCode}`}
         size="md"
         footer={
           <>
-            <button className="btn btn-outline text-xs" onClick={() => setShowApprovalModal(false)}>HỦY BỎ</button>
-            <button className="btn btn-filled text-xs" onClick={handleConfirmApproval}>DUYỆT ĐẶC CÁCH</button>
+            <button className="btn btn-outline text-xs" onClick={() => setShowApprovalModal(false)}>Hủy</button>
+            <button className="btn btn-filled text-xs" onClick={handleConfirmApproval}>Duyệt đặc cách</button>
           </>
         }
       >
@@ -308,7 +308,7 @@ export default function ReconciliationPage() {
           <div className="p-4 rounded-xl flex gap-3 text-xs border" style={{ background: 'var(--md-error-container)', color: 'var(--md-on-error-container)', borderColor: 'var(--md-error)' }}>
             <AlertTriangle size={18} className="flex-shrink-0" />
             <p>
-              **CẢNH BÁO AN TOÀN**: Hành động này sẽ mở khóa ghi sổ kế toán cho phiếu nhập tương ứng với PO giá cao này. Lịch sử duyệt sẽ được ghi lại vĩnh viễn dưới tên bạn.
+              **Cảnh báo**: Hành động này sẽ mở khóa ghi sổ kế toán cho phiếu nhập tương ứng với PO giá cao này. Lịch sử duyệt sẽ được ghi lại vĩnh viễn dưới tên bạn.
             </p>
           </div>
 

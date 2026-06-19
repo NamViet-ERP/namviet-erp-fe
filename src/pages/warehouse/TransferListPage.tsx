@@ -83,7 +83,7 @@ export default function TransferListPage() {
   const tabs = [
     { id: 'internal', label: 'Chuyển kho nội bộ', count: transfers.length },
     { id: 'loans', label: 'Mượn - Trả liên dự án', count: loans.filter(l => l.status !== 'returned').length },
-    { id: 'consolidation', label: 'Kết chuyển tồn dư thừa', count: 1 },
+    { id: 'consolidation', label: 'Thu hồi tồn về kho tổng', count: 1 },
   ];
 
   // Filters
@@ -152,7 +152,7 @@ export default function TransferListPage() {
       return l;
     }));
     if (loanCode) {
-      showToast('success', `Đã hoàn trả thành công vật tư cho phiếu ${loanCode}. Ghi nhận thẻ kho SCM.`, 'Hoàn trả thành công');
+      showToast('success', `Đã hoàn trả thành công vật tư cho phiếu ${loanCode}. Đã ghi nhận thẻ kho.`, 'Hoàn trả thành công');
     }
   };
 
@@ -178,7 +178,7 @@ export default function TransferListPage() {
       errs.toWarehouseId = 'Kho đích phải khác kho nguồn';
     }
     const validItems = transferForm.items.filter(it => it.productId);
-    if (validItems.length === 0) errs.items = 'Phải có ít nhất 1 sản phẩm';
+    if (validItems.length === 0) errs.items = 'Phải có ít nhất 1 vật tư';
     transferForm.items.forEach((it, i) => {
       if (it.productId && (!it.qty || Number(it.qty) <= 0)) {
         errs[`item_qty_${i}`] = 'Số lượng phải > 0';
@@ -260,18 +260,18 @@ export default function TransferListPage() {
   return (
     <div className="animate-fade-in space-y-6">
       <PageHeader
-        eyebrow="ĐIỀU PHỐI VẬT TƯ"
-        title="ĐIỀU PHỐI & CHUYỂN KHO DỰ ÁN"
+        eyebrow="Kho hàng"
+        title="Chuyển kho & mượn trả dự án"
         actions={
           <div className="flex gap-2">
             {activeTab === 'internal' && (
               <button className="btn btn-filled text-xs" onClick={() => setShowCreateTransfer(true)}>
-                <Plus size={14} /> TẠO PHIẾU CHUYỂN
+                <Plus size={14} /> Tạo phiếu chuyển
               </button>
             )}
             {activeTab === 'loans' && (
               <button className="btn btn-filled text-xs" onClick={() => setShowCreateLoan(true)}>
-                <Plus size={14} /> YÊU CẦU MƯỢN HÀNG
+                <Plus size={14} /> Yêu cầu mượn hàng
               </button>
             )}
           </div>
@@ -283,7 +283,7 @@ export default function TransferListPage() {
       {/* SEARCH BAR FOR LISTS */}
       {activeTab !== 'consolidation' && (
         <div className="rounded-2xl shadow-card p-4 flex justify-between items-center page-filter-bar" style={{ background: 'var(--md-surface-container)', border: '1px solid var(--md-outline-variant)' }}>
-          <SearchBar value={search} onChange={setSearch} placeholder="Tìm kiếm chứng từ, tên dự án, sản phẩm..." />
+          <SearchBar value={search} onChange={setSearch} placeholder="Tìm chứng từ, dự án, vật tư..." />
         </div>
       )}
 
@@ -348,12 +348,12 @@ export default function TransferListPage() {
               <div className="flex-1">
                 <h4 className="text-xs font-bold uppercase tracking-wider">Gợi ý hoàn trả tự động (Smart suggestions)</h4>
                 <p className="text-[11px] mt-1">
-                  Mayzer SCM phát hiện: Lô hàng **Máy nén khí trục vít 15HP** của **Dự án Sabeco** nhập theo phiếu **NK-002144** vừa được duyệt nhập kho thành công.
+                  Hệ thống phát hiện: Lô hàng **Máy nén khí trục vít 15HP** của **Dự án Sabeco** nhập theo phiếu **NK-002144** vừa được duyệt nhập kho thành công.
                   Hệ thống đề xuất hoàn trả ngay vật tư mượn tạm từ **Dự án Sữa Vinamilk Củ Chi** (Phiếu mượn **ML-00241**).
                 </p>
                 <div className="mt-3 flex gap-2">
                   <button onClick={handleAutoReturnSuggestion} className="btn btn-filled text-[10px] py-1.5 px-3">
-                    XÁC NHẬN HOÀN TRẢ NGAY
+                    Xác nhận hoàn trả
                   </button>
                   <button onClick={() => setShowSuggestion(false)} className="btn btn-outline text-[10px] py-1.5 px-3">
                     BỎ QUA
@@ -438,7 +438,7 @@ export default function TransferListPage() {
                                 onClick={(e) => { e.stopPropagation(); handleReturnLoan(l.id); }}
                                 className="btn btn-outlined text-[9px] py-1 px-2.5 font-bold hover:bg-[var(--md-primary)] hover:text-white"
                               >
-                                HOÀN TRẢ
+                                Hoàn trả
                               </button>
                             ) : (
                               <span className="text-gray-400 font-mono">—</span>
@@ -478,7 +478,7 @@ export default function TransferListPage() {
                 onClick={handleConsolidate}
                 className={`btn btn-filled text-xs py-3 w-full flex items-center justify-center gap-2 ${consCompleted ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                <Check size={16} /> THỰC HIỆN KẾT CHUYỂN VỀ KHO TỔNG
+                <Check size={16} /> Thực hiện kết chuyển về kho tổng
               </button>
             </div>
           </div>
@@ -491,7 +491,7 @@ export default function TransferListPage() {
             {consCompleted ? (
               <div className="p-8 text-center bg-[var(--md-success-container)] text-[var(--md-on-success-container)] rounded-xl border border-[var(--md-success)] flex flex-col items-center">
                 <ShieldCheck size={48} className="text-[var(--md-success)] mb-2" />
-                <h4 className="font-bold text-sm uppercase tracking-wide">KẾT CHUYỂN HOÀN TẤT</h4>
+                <h4 className="font-bold text-sm uppercase tracking-wide">Kết chuyển hoàn tất</h4>
                 <p className="text-xs mt-1 max-w-md">
                   Toàn bộ vật tư dư thừa đã được thu hồi và cộng tăng trực tiếp vào tồn kho khả dụng của **Kho VT Chính Mayzer (Kho tổng)**. Mã chứng từ kết chuyển phát sinh tự động **KC-20260609**.
                 </p>
@@ -502,7 +502,7 @@ export default function TransferListPage() {
                 <thead>
                   <tr style={{ background: 'var(--md-surface-container-high)', borderBottom: '1px solid var(--md-outline-variant)' }}>
                     <th className="py-2 text-left pl-3">Sản phẩm vật tư</th>
-                    <th className="py-2 text-center w-24">Mã SKU</th>
+                    <th className="py-2 text-center w-24">Mã vật tư</th>
                     <th className="py-2 text-center w-24">ĐVT</th>
                     <th className="py-2 text-right w-32 pl-4">Khối lượng tồn công trình</th>
                     <th className="py-2 text-center w-40">Trạng thái vật lý</th>
@@ -561,10 +561,10 @@ export default function TransferListPage() {
 
       {/* CREATE TRANSFER TICKET MODAL */}
       <Modal isOpen={showCreateTransfer} onClose={() => { setShowCreateTransfer(false); setErrors({}); }}
-        title="TẠO PHIẾU CHUYỂN KHO NỘI BỘ" size="full"
+        title="Tạo phiếu chuyển kho" size="full"
         footer={<>
           <button className="btn btn-outline text-xs" onClick={() => { setShowCreateTransfer(false); setErrors({}); }}>HỦY BỎ</button>
-          <button className="btn btn-filled text-xs" onClick={handleCreateTransferSubmit}>TẠO PHIẾU CHUYỂN</button>
+          <button className="btn btn-filled text-xs" onClick={handleCreateTransferSubmit}>Tạo phiếu chuyển</button>
         </>}
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -620,7 +620,7 @@ export default function TransferListPage() {
                         items[i].productId = e.target.value;
                         setTransferForm({ ...transferForm, items });
                       }}>
-                      <option value="">-- Chọn sản phẩm --</option>
+                      <option value="">-- Chọn vật tư --</option>
                       {products.map(p => <option key={p.id} value={p.id}>{p.sku} — {p.name}</option>)}
                     </select>
                   </td>
@@ -649,10 +649,10 @@ export default function TransferListPage() {
 
       {/* CREATE LOAN REQUEST MODAL */}
       <Modal isOpen={showCreateLoan} onClose={() => setShowCreateLoan(false)}
-        title="YÊU CẦU MƯỢN VẬT TƯ LIÊN DỰ ÁN KHẨN CẤP" size="md"
+        title="Phiếu mượn vật tư liên dự án" size="md"
         footer={<>
           <button className="btn btn-outline text-xs" onClick={() => setShowCreateLoan(false)}>HỦY BỎ</button>
-          <button className="btn btn-filled text-xs" onClick={handleCreateLoanSubmit}>GỬI YÊU CẦU MƯỢN</button>
+          <button className="btn btn-filled text-xs" onClick={handleCreateLoanSubmit}>Gửi yêu cầu mượn</button>
         </>}
       >
         <div className="space-y-4">
@@ -701,7 +701,7 @@ export default function TransferListPage() {
           <div className="bg-[var(--tint-primary-soft)] p-3 rounded-lg border text-[11px] text-[var(--md-on-surface-variant)] flex items-start gap-2">
             <AlertTriangle size={14} className="text-[var(--md-primary)] flex-shrink-0 mt-0.5" />
             <p>
-              **BẢO MẬT & ĐỐI CHIẾU PM**: Yêu cầu mượn vật tư sau khi tạo sẽ ở trạng thái **Chờ duyệt PM**. Bắt buộc PM của cả 2 dự án phải thực hiện ký số xác nhận thì vật tư mới được luân chuyển thực tế.
+              **Bảo mật & duyệt PM**: Yêu cầu mượn vật tư sau khi tạo sẽ ở trạng thái **Chờ duyệt PM**. Bắt buộc PM của cả 2 dự án phải thực hiện ký số xác nhận thì vật tư mới được luân chuyển thực tế.
             </p>
           </div>
         </div>
@@ -712,9 +712,9 @@ export default function TransferListPage() {
         <Modal
           isOpen={showDetail}
           onClose={() => setShowDetail(false)}
-          title={`CHI TIẾT PHIẾU CHUYỂN KHO — ${selectedTransfer.voucherCode}`}
+          title={`Chi tiết phiếu chuyển — ${selectedTransfer.voucherCode}`}
           size="lg"
-          footer={<button className="btn btn-outline text-xs" onClick={() => setShowDetail(false)}>ĐÓNG</button>}
+          footer={<button className="btn btn-outline text-xs" onClick={() => setShowDetail(false)}>Đóng</button>}
         >
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4 text-xs p-4 rounded-xl" style={{ background: 'var(--md-surface-container-low)', border: '1px solid var(--md-outline-variant)' }}>
@@ -750,7 +750,7 @@ export default function TransferListPage() {
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b" style={{ borderColor: 'var(--md-outline-variant)' }}>
-                  <th className="py-2 text-left font-semibold">Tên hàng / SKU</th>
+                  <th className="py-2 text-left font-semibold">Tên vật tư</th>
                   <th className="py-2 text-center font-semibold w-24">ĐVT</th>
                   <th className="py-2 text-right font-semibold w-24">Số lượng</th>
                 </tr>
@@ -777,9 +777,9 @@ export default function TransferListPage() {
         <Modal
           isOpen={showLoanDetail}
           onClose={() => setShowLoanDetail(false)}
-          title={`CHI TIẾT PHIẾU MƯỢN VẬT TƯ — ${selectedLoan.voucherCode}`}
+          title={`Chi tiết phiếu mượn — ${selectedLoan.voucherCode}`}
           size="md"
-          footer={<button className="btn btn-outline text-xs" onClick={() => setShowLoanDetail(false)}>ĐÓNG</button>}
+          footer={<button className="btn btn-outline text-xs" onClick={() => setShowLoanDetail(false)}>Đóng</button>}
         >
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4 text-xs p-4 rounded-xl" style={{ background: 'var(--md-surface-container-low)', border: '1px solid var(--md-outline-variant)' }}>
@@ -830,7 +830,7 @@ export default function TransferListPage() {
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b" style={{ borderColor: 'var(--md-outline-variant)' }}>
-                  <th className="py-2 text-left font-semibold">Tên hàng / SKU</th>
+                  <th className="py-2 text-left font-semibold">Tên vật tư</th>
                   <th className="py-2 text-center font-semibold w-24">ĐVT</th>
                   <th className="py-2 text-right font-semibold w-24">Số lượng</th>
                 </tr>

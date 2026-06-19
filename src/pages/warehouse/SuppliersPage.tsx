@@ -123,11 +123,11 @@ export default function SuppliersPage() {
   return (
     <div className="animate-fade-in space-y-6">
       <PageHeader
-        eyebrow="ĐỐI TÁC CUNG ỨNG"
-        title="ĐỀ XUẤT NHÀ CUNG CẤP TỐI ƯU"
+        eyebrow="Đối tác cung ứng"
+        title="Gợi ý nhà cung cấp"
         actions={<>
           <button className="btn btn-outline text-xs"><Filter size={14} /> BỘ LỌC TỐI ƯU</button>
-          <button className="btn btn-filled" onClick={handleCreateSupplier}><Plus size={16} /> THÊM MỚI</button>
+          <button className="btn btn-filled" onClick={handleCreateSupplier}><Plus size={16} /> Thêm mới</button>
         </>}
       />
 
@@ -140,7 +140,7 @@ export default function SuppliersPage() {
           <div className="rounded-2xl p-5 shadow-card space-y-4"
             style={{ background: 'var(--md-surface-container)', border: '1px solid var(--md-outline-variant)' }}>
             <h3 className="font-bold text-[var(--md-on-surface)] text-xs tracking-wider uppercase flex items-center gap-1.5">
-              <Sliders size={15} /> THIẾT LẬP MỨC ĐỘ ƯU TIÊN SCM ĐẶT HÀNG
+              <Sliders size={15} /> Thiết lập ưu tiên đặt hàng
             </h3>
             <p className="text-[11px] text-[var(--md-on-surface-variant)]">
               Kéo các thanh trượt dưới đây để điều chỉnh trọng số ưu tiên của phòng Mua hàng. Hệ thống sẽ tự động chấm điểm và đề xuất nhà cung cấp phù hợp nhất cho dự án.
@@ -253,7 +253,7 @@ export default function SuppliersPage() {
                         <h4 className="font-bold text-[var(--md-on-surface)] text-xs uppercase leading-tight line-clamp-2">{s.name}</h4>
                         {idx === 0 && (
                           <span className="inline-block text-[9px] font-bold bg-[var(--md-success-container)] text-[var(--md-on-success-container)] px-1.5 py-0.5 rounded mt-1">
-                            GỢI Ý TỐT NHẤT (WMS SCM)
+                            Gợi ý tốt nhất
                           </span>
                         )}
                       </div>
@@ -291,7 +291,7 @@ export default function SuppliersPage() {
                     className={`w-full btn text-xs mt-4 flex items-center justify-center gap-2 ${idx === 0 ? 'btn-filled' : 'btn-outline'}`}
                   >
                     <PhoneCall size={12} />
-                    LIÊN HỆ ĐẶT HÀNG NGAY
+                    Liên hệ đặt hàng
                   </button>
                 </div>
               ))}

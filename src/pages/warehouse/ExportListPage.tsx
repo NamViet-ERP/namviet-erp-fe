@@ -133,7 +133,7 @@ export default function ExportListPage() {
     if (!form.warehouseId) errs.warehouseId = 'Vui lòng chọn kho xuất';
     
     const validItems = form.items.filter(it => it.productId);
-    if (validItems.length === 0) errs.items = 'Phải có ít nhất 1 sản phẩm';
+    if (validItems.length === 0) errs.items = 'Phải có ít nhất 1 vật tư';
     
     form.items.forEach((it, i) => {
       if (it.productId && (!it.qty || Number(it.qty) <= 0)) {
@@ -144,7 +144,7 @@ export default function ExportListPage() {
       if (form.projectId && it.productId && it.qty) {
         const quota = getBomQuota(form.projectId, it.productId);
         if (quota !== null && Number(it.qty) > quota) {
-          errs[`qty_${i}`] = `Vượt quá định mức định biên BOM cho phép (Định mức tối đa: ${quota} Cái)`;
+          errs[`qty_${i}`] = `Vượt quá định mức cho phép (tối đa: ${quota} Cái)`;
         }
       }
     });
@@ -241,18 +241,18 @@ export default function ExportListPage() {
   return (
     <div className="animate-fade-in">
       <PageHeader
-        eyebrow="KHO HÀNG"
-        title="XUẤT KHO THI CÔNG DỰ ÁN"
+        eyebrow="Kho hàng"
+        title="Xuất kho dự án"
         actions={<>
-          <button className="btn btn-outline text-xs"><Download size={14} /> XUẤT BÁO CÁO</button>
-          <button className="btn btn-filled" onClick={() => setShowCreate(true)}><Plus size={16} /> TẠO PHIẾU XUẤT</button>
+          <button className="btn btn-outline text-xs"><Download size={14} /> Xuất báo cáo</button>
+          <button className="btn btn-filled" onClick={() => setShowCreate(true)}><Plus size={16} /> Tạo phiếu xuất</button>
         </>}
       />
 
       {isStorekeeper && (
         <div className="mb-4 bg-[var(--tint-primary-soft)] border border-[var(--md-outline-variant)] text-[var(--md-primary)] rounded-2xl p-4 text-xs font-semibold flex items-center gap-2">
           <ShieldAlert size={16} />
-          <span>VAI TRÒ THỦ KHO: Đơn giá và trị giá xuất kho được bảo mật, ẩn hoàn toàn.</span>
+          <span>Thủ kho: Đơn giá và trị giá xuất kho được bảo mật, ẩn hoàn toàn.</span>
         </div>
       )}
 
@@ -308,10 +308,10 @@ export default function ExportListPage() {
 
       {/* Create modal */}
       <Modal isOpen={showCreate} onClose={() => { setShowCreate(false); setErrors({}); }}
-        title="TẠO YÊU CẦU XUẤT KHO VẬT TƯ DỰ ÁN" size="full"
+        title="Tạo phiếu xuất kho" size="full"
         footer={<>
           <button className="btn btn-outline text-xs" onClick={() => { setShowCreate(false); setErrors({}); }}>HỦY BỎ</button>
-          <button className="btn btn-filled text-xs" onClick={handleSubmit}>TẠO PHIẾU XUẤT</button>
+          <button className="btn btn-filled text-xs" onClick={handleSubmit}>Tạo phiếu xuất</button>
         </>}
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -358,7 +358,7 @@ export default function ExportListPage() {
           <div className="bg-[var(--tint-primary-weak)] border border-[var(--md-outline-variant)] rounded-xl p-3 text-xs mb-4">
             <h5 className="font-bold text-[var(--md-primary)] uppercase mb-1.5 flex items-center gap-1">
               <AlertTriangle size={13} />
-              ĐỊNH BIÊN DỰ TOÁN BOM CHO DỰ ÁN ĐÃ CHỌN:
+              Định mức vật tư dự án đã chọn:
             </h5>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
               {Object.entries(mockProjectBoms[form.projectId] || {}).map(([prodId, limit]) => {
@@ -397,7 +397,7 @@ export default function ExportListPage() {
                   <td className="table-cell text-center">{i + 1}</td>
                   <td className="table-cell">
                     <select className="form-select text-xs" value={it.productId} onChange={e => updateItem(i, 'productId', e.target.value)}>
-                      <option value="">-- Chọn sản phẩm --</option>
+                      <option value="">-- Chọn vật tư --</option>
                       {products.map(p => (
                         <option key={p.id} value={p.id}>{p.sku} — {p.name}</option>
                       ))}
@@ -431,9 +431,9 @@ export default function ExportListPage() {
         <Modal
           isOpen={showDetail}
           onClose={() => setShowDetail(false)}
-          title={`CHI TIẾT CHỨNG TỪ XUẤT KHO — ${selectedItem.voucherCode}`}
+          title={`Chi tiết phiếu xuất — ${selectedItem.voucherCode}`}
           size="lg"
-          footer={<button className="btn btn-outline text-xs" onClick={() => setShowDetail(false)}>ĐÓNG</button>}
+          footer={<button className="btn btn-outline text-xs" onClick={() => setShowDetail(false)}>Đóng</button>}
         >
           <div className="space-y-4">
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs p-4 rounded-xl" style={{ background: 'var(--md-surface-container-low)', border: '1px solid var(--md-outline-variant)' }}>
@@ -477,7 +477,7 @@ export default function ExportListPage() {
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b" style={{ borderColor: 'var(--md-outline-variant)' }}>
-                  <th className="py-2 text-left font-semibold">Tên hàng / SKU</th>
+                  <th className="py-2 text-left font-semibold">Tên vật tư</th>
                   <th className="py-2 text-center font-semibold w-20">ĐVT</th>
                   <th className="py-2 text-center font-semibold w-24">Linh kiện</th>
                   <th className="py-2 text-right font-semibold w-20">Số lượng xuất</th>

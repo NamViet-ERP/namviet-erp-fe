@@ -2,8 +2,8 @@ import type { LucideIcon } from 'lucide-react';
 import {
   CreditCard,
   Users,
-  UserCheck, Package, PackagePlus, PackageMinus,
-  Warehouse, ShieldCheck, UserCog, LayoutDashboard,
+  UserCheck,
+  Warehouse, ShieldCheck, UserCog, ClipboardCheck,
 } from 'lucide-react';
 
 export interface DepartmentSubItem {
@@ -29,11 +29,8 @@ export const departments: Department[] = [
     title: 'KHO MAYZER',
     icon: Warehouse,
     items: [
-      { label: 'Dashboard', icon: LayoutDashboard, path: '/warehouse/dashboard-warehouse' },
-      { label: 'Kho hàng', icon: Warehouse, path: '/warehouse/list' },
-      { label: 'Vật tư', icon: Package, path: '/warehouse/stock' },
-      { label: 'Nhập kho', icon: PackagePlus, path: '/warehouse/import' },
-      { label: 'Xuất kho', icon: PackageMinus, path: '/warehouse/export' },
+      { label: 'Kho hàng', icon: Warehouse, path: '/warehouse/dashboard-warehouse' },
+      { label: 'Kiểm kê', icon: ClipboardCheck, path: '/stocktake/list' },
     ],
   }] : []),
   {

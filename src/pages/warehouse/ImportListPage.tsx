@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Plus, Eye, FileText, Download, Check, XCircle, Trash2, ShieldAlert } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { USE_MOCK } from '../../lib/mock';
+import ImportListPageApi from './ImportListPageApi';
 import { imports as initialImports } from '../../data/imports';
 import { warehouses } from '../../data/warehouses';
 import { products } from '../../data/products';
@@ -81,6 +83,11 @@ const generateUniqueImportId = () => `im-${Date.now()}`;
 const getLocaleDateString = () => new Date().toLocaleDateString('vi-VN');
 
 export default function ImportListPage() {
+  if (!USE_MOCK) return <ImportListPageApi />;
+  return <ImportListPageMock />;
+}
+
+function ImportListPageMock() {
   const [data, setData] = useState<ImportRow[]>(decoratedImports);
   const [activeTab, setActiveTab] = useState('all');
   const [search, setSearch] = useState('');
@@ -132,7 +139,7 @@ export default function ImportListPage() {
     if (!form.dnttNumber.trim()) errs.dnttNumber = 'Vui lòng nhập số DNTT';
     
     const validItems = form.items.filter(it => it.productId);
-    if (validItems.length === 0) errs.items = 'Phải có ít nhất 1 sản phẩm';
+    if (validItems.length === 0) errs.items = 'Phải có ít nhất 1 vật tư';
     
     form.items.forEach((it, i) => {
       if (it.productId && (!it.qty || Number(it.qty) <= 0)) errs[`qty_${i}`] = 'Số lượng phải > 0';
@@ -251,18 +258,18 @@ export default function ImportListPage() {
   return (
     <div className="animate-fade-in">
       <PageHeader
-        eyebrow="KHO HÀNG"
-        title="NHẬP KHO"
+        eyebrow="Kho hàng"
+        title="Nhập kho"
         actions={<>
-          <button className="btn btn-outline text-xs"><Download size={14} /> XUẤT RA</button>
-          <button className="btn btn-filled" onClick={() => setShowCreate(true)}><Plus size={16} /> TẠO MỚI</button>
+          <button className="btn btn-outline text-xs"><Download size={14} /> Xuất Excel</button>
+          <button className="btn btn-filled" onClick={() => setShowCreate(true)}><Plus size={16} /> Tạo mới</button>
         </>}
       />
 
       {isStorekeeper && (
         <div className="mb-4 bg-[var(--tint-primary-soft)] border border-[var(--md-outline-variant)] text-[var(--md-primary)] rounded-2xl p-4 text-xs font-semibold flex items-center gap-2">
           <ShieldAlert size={16} />
-          <span>VAI TRÒ THỦ KHO: Đơn giá và tổng giá trị tài chính đã được ẩn để bảo mật 100%.</span>
+          <span>Thủ kho: Đơn giá và tổng giá trị tài chính đã được ẩn để bảo mật.</span>
         </div>
       )}
 
@@ -304,7 +311,7 @@ export default function ImportListPage() {
                       <div>{imp.voucherCode}</div>
                       {imp.isDirectProcurement && (
                         <span className="inline-block text-[9px] font-bold bg-[var(--tint-warning-soft)] text-[var(--md-warning)] px-2 py-0.5 rounded-full border border-[var(--tint-warning-border)] mt-0.5">
-                          MUA TRỰC TIẾP DỰ ÁN
+                          Mua trực tiếp dự án
                         </span>
                       )}
                     </td>
@@ -365,7 +372,7 @@ export default function ImportListPage() {
 
       {/* Create modal */}
       <Modal isOpen={showCreate} onClose={() => { setShowCreate(false); setErrors({}); }}
-        title="TẠO PHIẾU NHẬP KHO CHUYÊN BIỆT DỰ ÁN" size="full"
+        title="Tạo phiếu nhập kho" size="full"
         footer={<>
           {!isStorekeeper && (
             <div className="flex-1 text-left">
@@ -374,7 +381,7 @@ export default function ImportListPage() {
             </div>
           )}
           <button className="btn btn-outline text-xs" onClick={() => { setShowCreate(false); setErrors({}); }}>HỦY BỎ</button>
-          <button className="btn btn-primary text-xs" onClick={handleSubmit}>TẠO PHIẾU</button>
+          <button className="btn btn-primary text-xs" onClick={handleSubmit}>Tạo phiếu</button>
         </>}
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -479,7 +486,7 @@ export default function ImportListPage() {
                     <td className="table-cell text-center">{i + 1}</td>
                     <td className="table-cell">
                       <select className="form-select text-xs" value={it.productId} onChange={e => updateItem(i, 'productId', e.target.value)}>
-                        <option value="">-- Chọn sản phẩm --</option>
+                        <option value="">-- Chọn vật tư --</option>
                         {products.map(p => <option key={p.id} value={p.id}>{p.sku} — {p.name}</option>)}
                       </select>
                     </td>
@@ -520,9 +527,9 @@ export default function ImportListPage() {
         <Modal
           isOpen={showDetail}
           onClose={() => setShowDetail(false)}
-          title={`CHI TIẾT CHỨNG TỪ NHẬP KHO — ${selectedItem.voucherCode}`}
+          title={`Chi tiết phiếu nhập — ${selectedItem.voucherCode}`}
           size="lg"
-          footer={<button className="btn btn-outline text-xs" onClick={() => setShowDetail(false)}>ĐÓNG</button>}
+          footer={<button className="btn btn-outline text-xs" onClick={() => setShowDetail(false)}>Đóng</button>}
         >
           <div className="space-y-4">
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs p-4 rounded-xl" style={{ background: 'var(--md-surface-container-low)', border: '1px solid var(--md-outline-variant)' }}>
@@ -579,7 +586,7 @@ export default function ImportListPage() {
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b" style={{ borderColor: 'var(--md-outline-variant)' }}>
-                  <th className="py-2 text-left font-semibold">Tên hàng / SKU</th>
+                  <th className="py-2 text-left font-semibold">Tên vật tư</th>
                   <th className="py-2 text-center font-semibold w-20">ĐVT</th>
                   <th className="py-2 text-center font-semibold w-24">Linh kiện</th>
                   <th className="py-2 text-right font-semibold w-20">Số lượng</th>

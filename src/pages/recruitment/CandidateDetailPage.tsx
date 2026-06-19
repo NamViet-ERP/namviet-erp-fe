@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Edit, Save, X, FileText, Download } from 'lucide-react';
+import { FileText, Download } from 'lucide-react';
 import { showToast } from '../../components/ui/Toast';
 import { useCandidate, useUpdateCandidate } from '../../hooks/useCandidates';
 import { useHrStaffSelectOptions } from '../../hooks/useHrStaff';
@@ -11,6 +11,8 @@ import { getApiErrorMessage } from '../../lib/apiClient';
 import DetailSection from '../../components/hr/DetailSection';
 import { FieldView, FieldInput, FieldSelect } from '../../components/hr/DetailFields';
 import { HrmDetailHeader } from '../../components/hr/HrmPageChrome';
+import HrmEditActions from '../../components/hr/HrmEditActions';
+import HrmNotFound, { HrmLoadingState } from '../../components/hr/HrmNotFound';
 import { formatCandidateAppliedAt } from '../../lib/hrm/candidateApiMapper';
 import type { Candidate } from '../../types/hr';
 
@@ -26,13 +28,13 @@ export default function CandidateDetailPage() {
   const positionOptions = usePositionSelectOptions(form?.position ?? candidate?.position);
   const hrStaffOptions = useHrStaffSelectOptions(form?.hrResponsible ?? candidate?.hrResponsible);
 
-  if (isLoading) return <div className="hrm-empty">Đang tải...</div>;
+  if (isLoading) return <HrmLoadingState />;
   if (isError || !candidate || !form) {
     return (
-      <div className="hrm-empty">
-        <p className="mb-4">Không tìm thấy ứng viên.</p>
-        <button type="button" className="btn btn-outline" onClick={() => navigate('/recruitment/candidates')}>Quay lại</button>
-      </div>
+      <HrmNotFound
+        message="Không tìm thấy ứng viên."
+        onBack={() => navigate('/recruitment/candidates')}
+      />
     );
   }
 
@@ -77,19 +79,14 @@ export default function CandidateDetailPage() {
     }
   };
 
-  const editActions = !isEditing ? (
-    <button type="button" onClick={handleStartEditing} className="btn btn-primary rounded-full px-5 flex items-center gap-2">
-      <Edit size={16} /> Chỉnh sửa
-    </button>
-  ) : (
-    <>
-      <button type="button" onClick={handleCancel} className="btn btn-outline rounded-full px-5 flex items-center gap-2">
-        <X size={16} /> Hủy
-      </button>
-      <button type="button" onClick={handleSave} disabled={updateMutation.isPending} className="btn btn-primary rounded-full px-5 flex items-center gap-2">
-        <Save size={16} /> Lưu
-      </button>
-    </>
+  const editActions = (
+    <HrmEditActions
+      isEditing={isEditing}
+      isSaving={updateMutation.isPending}
+      onEdit={handleStartEditing}
+      onCancel={handleCancel}
+      onSave={handleSave}
+    />
   );
 
   return (

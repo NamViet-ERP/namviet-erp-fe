@@ -178,6 +178,8 @@
   --nv-chrome-text:      var(--md-on-surface);
   --nv-chrome-bg-hover:  rgba(14, 48, 99, 0.08);
   --sidebar-bg:          var(--md-surface-container);
+  --nv-scrollbar-thumb:  #84bed0;
+  --nv-scrollbar-thumb-hover: #6ba8bd;
 }
 
 /* ── Dark Mode Token Overrides ── */
@@ -203,38 +205,41 @@
   --nv-header-search-placeholder:var(--md-on-surface-variant);
   --nv-header-border:            rgba(255, 255, 255, 0.12);
 
-  --md-primary:                  #7FD0FF;
-  --md-on-primary:               #003547;
-  --md-primary-container:        #0E3063;
-  --md-on-primary-container:     #D2E4FF;
-  --md-secondary:                #5BC4F0;
-  --md-on-secondary:             #003547;
-  --md-secondary-container:      #004157;
-  --md-on-secondary-container:   #C5E9FF;
+  --md-primary:                  #7EC8F5;
+  --md-on-primary:               #042A42;
+  --md-primary-container:        #1A3D5C;
+  --md-on-primary-container:     #C5E8FF;
+  --md-secondary:                #56B8E8;
+  --md-on-secondary:             #042A42;
+  --md-secondary-container:      #1E4A66;
+  --md-on-secondary-container:   #B8E4F8;
   --md-tertiary:                 #5BC4F0;
   --md-on-tertiary:              #003547;
   --md-tertiary-container:       #004157;
   --md-on-tertiary-container:    #C5E9FF;
-  --md-surface:                  #0B1220;
-  --md-on-surface:               #EFF5FB;
-  --md-surface-variant:          #2A3A4F;
-  --md-on-surface-variant:       #C5D6E8;
-  --md-surface-container:        #141E32;
-  --md-surface-container-low:    #101828;
-  --md-surface-container-high:   #1C2D45;
-  --md-inverse-surface:          #E3EDF7;
-  --md-inverse-on-surface:       #1A2838;
-  --md-outline:                  #6B8199;
-  --md-outline-variant:          #2A3A4F;
-  --md-outline-variant02:        #3D5268;
+  --md-surface:                  #0A0F18;
+  --md-on-surface:               #E8EFF7;
+  --md-surface-variant:          #243247;
+  --md-on-surface-variant:       #A3B4C8;
+  --md-surface-container:        #182233;
+  --md-surface-container-low:    #121A28;
+  --md-surface-container-high:   #212E42;
+  --md-inverse-surface:          #DCE8F4;
+  --md-inverse-on-surface:       #162030;
+  --md-outline:                  #506278;
+  --md-outline-variant:          #2A3A4E;
+  --md-outline-variant02:        #364B62;
   --md-error:                    #F2B8B5;
   --md-on-error:                 #601410;
   --md-error-container:          #8C1D18;
   --md-on-error-container:       #F9DEDC;
+  --md-success:                  #8FCE6E;
   --md-success-container:        #1A4006;
   --md-on-success-container:     #C4EFA4;
+  --md-warning:                  #F0C060;
   --md-warning-container:        #3D2800;
   --md-on-warning-container:     #FFDEA1;
+  --md-info:                     #6EB8F0;
   --md-info-container:           #00306B;
   --md-on-info-container:        #D5E3FF;
 
@@ -270,10 +275,13 @@
   --chart-5: #008ece;
   --chart-6: #4DA8DA;
 
-  --md-shadow-1: 0 1px 2px 0 rgba(0,0,0,0.3), 0 1px 3px 1px rgba(0,0,0,0.2);
-  --md-shadow-2: 0 1px 2px 0 rgba(0,0,0,0.3), 0 2px 6px 2px rgba(0,0,0,0.2);
-  --md-shadow-3: 0 4px 8px 3px rgba(0,0,0,0.3), 0 1px 3px 0 rgba(0,0,0,0.2);
-  --md-shadow-4: 0 6px 10px 4px rgba(0,0,0,0.3), 0 2px 3px 0 rgba(0,0,0,0.2);
+  --md-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.42), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --md-shadow-2: 0 2px 6px rgba(0, 0, 0, 0.38), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --md-shadow-3: 0 6px 16px rgba(0, 0, 0, 0.42), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  --md-shadow-4: 0 10px 24px rgba(0, 0, 0, 0.48), 0 0 0 1px rgba(255, 255, 255, 0.05);
+
+  --nv-scrollbar-thumb:          #3A5268;
+  --nv-scrollbar-thumb-hover:    #4D6780;
 
   --nv-surface-hover:            rgba(0, 142, 206, 0.08);
   --nv-sidebar-bg:               var(--md-surface-container-low);

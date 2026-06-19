@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { Plus, UserCog, UserCheck, UserX, UserPlus, KeyRound } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import SearchBar from '../../components/ui/SearchBar';
 import Pagination from '../../components/ui/Pagination';
+import EmptyState from '../../components/ui/EmptyState';
 import HrmPanel from '../../components/hr/HrmPanel';
 import HrmStatCard from '../../components/hr/HrmStatCard';
 import Modal from '../../components/ui/Modal';
@@ -62,14 +63,14 @@ function statusBadgeClass(user: AdminUserRow): string {
   return user.isActive ? 'hrm-badge hrm-badge--success' : 'hrm-badge hrm-badge--warning';
 }
 
-interface IOSSwitchProps {
+interface AccountSwitchProps {
   checked: boolean;
   disabled?: boolean;
   onChange: (next: boolean) => void;
   title?: string;
 }
 
-function IOSSwitch({ checked, disabled, onChange, title }: IOSSwitchProps) {
+function AccountSwitch({ checked, disabled, onChange, title }: AccountSwitchProps) {
   return (
     <button
       type="button"
@@ -78,19 +79,12 @@ function IOSSwitch({ checked, disabled, onChange, title }: IOSSwitchProps) {
         if (!disabled) onChange(!checked);
       }}
       disabled={disabled}
-      className={`relative inline-flex h-5 w-9 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-        checked ? 'bg-[var(--md-primary)]' : 'switch-track-off bg-[var(--md-outline)]'
-      } ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+      className={`hrm-toggle-switch${checked ? ' hrm-toggle-switch--on' : ''}`}
       role="switch"
       aria-checked={checked}
       title={title ?? (checked ? 'Đang bật' : 'Đang tắt')}
     >
-      <span
-        aria-hidden="true"
-        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full switch-thumb bg-white shadow ring-0 transition duration-200 ease-in-out ${
-          checked ? 'translate-x-4' : 'translate-x-0'
-        }`}
-      />
+      <span className="hrm-toggle-switch__thumb" aria-hidden />
     </button>
   );
 }
@@ -125,9 +119,22 @@ export default function AdminUsersPage() {
   const totalCount = data?.totalCount ?? 0;
   const totalPages = data?.totalPages ?? 1;
 
-  if (totalPages > 0 && page > totalPages) {
-    setPage(totalPages);
-  }
+  useEffect(() => {
+    if (totalPages > 0 && page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
+
+  const hasFilters = Boolean(
+    search || departmentFilter || accountStatusFilter || sourceFilter || quickFilter !== 'all',
+  );
+
+  const resetFilters = () => {
+    setSearch('');
+    setDepartmentFilter('');
+    setAccountStatusFilter('');
+    setSourceFilter('');
+    setQuickFilter('all');
+    setPage(1);
+  };
 
   const { data: roleOptions = [] } = useActiveRoleOptions();
   const toggleMutation = useToggleAdminUserStatus(listParams);
@@ -288,10 +295,14 @@ export default function AdminUsersPage() {
   return (
     <div className="hrm-page">
       <PageHeader
-        title="QUẢN LÝ TÀI KHOẢN NGƯỜI DÙNG"
-        subtitle="Đồng bộ từ quản lý nhân viên; có thể thêm tài khoản thủ công (admin, dịch vụ...)"
+        title="Quản lý tài khoản người dùng"
+        subtitle="Bấm dòng để xem chi tiết và quản lý tài khoản trong phạm vi Admin."
         actions={
-          <button type="button" className="btn btn-primary flex items-center gap-2" onClick={() => setShowCreate(true)}>
+          <button
+            type="button"
+            className="btn btn-primary flex items-center gap-2 rounded-full px-5"
+            onClick={() => setShowCreate(true)}
+          >
             <Plus size={16} />
             Thêm tài khoản hệ thống
           </button>
@@ -305,61 +316,73 @@ export default function AdminUsersPage() {
         <HrmStatCard label="Đã khóa" value={summary?.inactive ?? 0} icon={UserX} tone="warning" />
       </div>
 
-      <HrmPanel>
-        <div className="hrm-filter-bar overflow-x-auto">
-          <div className="hrm-filter-bar__search">
+      <HrmPanel noPadding>
+        <div className="hrm-list-toolbar">
+          <div className="hrm-list-toolbar__filters">
             <SearchBar
               value={search}
               onChange={v => { setSearch(v); resetPaging(); }}
               placeholder="Tìm theo tên, mã NV, email..."
             />
-          </div>
-          <input
-            className="hrm-filter-input w-[150px] flex-shrink-0"
-            value={departmentFilter}
-            onChange={e => { setDepartmentFilter(e.target.value); resetPaging(); }}
-            placeholder="Lọc bộ phận..."
-          />
-          <select
-            className="form-select w-[170px] flex-shrink-0"
-            value={accountStatusFilter}
-            onChange={e => { setAccountStatusFilter(e.target.value as AccountStatusFilter); resetPaging(); }}
-          >
-            <option value="">Tất cả trạng thái TK</option>
-            <option value="pending">Chưa cấp tài khoản</option>
-            <option value="active">Đang hoạt động</option>
-            <option value="locked">Đã khóa</option>
-          </select>
-          <select
-            className="form-select w-[160px] flex-shrink-0"
-            value={sourceFilter}
-            onChange={e => { setSourceFilter(e.target.value as SourceFilter); resetPaging(); }}
-          >
-            <option value="">Tất cả nguồn</option>
-            <option value="employee">Nhân viên HR</option>
-            <option value="manual">Tài khoản hệ thống</option>
-          </select>
-          <div className="hrm-filter-bar__actions">
-            <button
-              type="button"
-              className={`btn btn-sm ${quickFilter === 'all' ? 'btn-primary' : 'btn-outline'}`}
-              onClick={() => { setQuickFilter('all'); resetPaging(); }}
-            >
-              Tất cả
-            </button>
-            <button
-              type="button"
-              className={`btn btn-sm ${quickFilter === 'pending' ? 'btn-primary' : 'btn-outline'}`}
-              onClick={() => { setQuickFilter('pending'); resetPaging(); }}
-            >
-              Chờ cấp tài khoản
-            </button>
+            <div className="hrm-list-toolbar__filters-right">
+              <input
+                className="hrm-filter-input-inline"
+                value={departmentFilter}
+                onChange={e => { setDepartmentFilter(e.target.value); resetPaging(); }}
+                placeholder="Bộ phận"
+                aria-label="Lọc bộ phận"
+              />
+              <div className="hrm-filter-select-wrap">
+                <select
+                  className="hrm-filter-select"
+                  value={accountStatusFilter}
+                  onChange={e => { setAccountStatusFilter(e.target.value as AccountStatusFilter); resetPaging(); }}
+                  aria-label="Lọc trạng thái tài khoản"
+                >
+                  <option value="">Tất cả trạng thái TK</option>
+                  <option value="pending">Chưa cấp tài khoản</option>
+                  <option value="active">Đang hoạt động</option>
+                  <option value="locked">Đã khóa</option>
+                </select>
+              </div>
+              <div className="hrm-filter-select-wrap">
+                <select
+                  className="hrm-filter-select"
+                  value={sourceFilter}
+                  onChange={e => { setSourceFilter(e.target.value as SourceFilter); resetPaging(); }}
+                  aria-label="Lọc nguồn"
+                >
+                  <option value="">Tất cả nguồn</option>
+                  <option value="employee">Nhân viên HR</option>
+                  <option value="manual">Tài khoản hệ thống</option>
+                </select>
+              </div>
+              <div className="hrm-filter-quick-chips" role="group" aria-label="Lọc nhanh">
+                <button
+                  type="button"
+                  className={`hrm-status-chip${quickFilter === 'all' ? ' hrm-status-chip--active' : ''}`}
+                  onClick={() => { setQuickFilter('all'); resetPaging(); }}
+                >
+                  Tất cả
+                </button>
+                <button
+                  type="button"
+                  className={`hrm-status-chip${quickFilter === 'pending' ? ' hrm-status-chip--active' : ''}`}
+                  onClick={() => { setQuickFilter('pending'); resetPaging(); }}
+                >
+                  Chờ cấp TK
+                </button>
+              </div>
+              {hasFilters && (
+                <button type="button" onClick={resetFilters} className="hrm-filter-reset">
+                  Xóa bộ lọc
+                </button>
+              )}
+            </div>
           </div>
         </div>
-      </HrmPanel>
 
-      <HrmPanel noPadding>
-        <div className="overflow-x-auto table-scroll">
+        <div className="overflow-x-auto table-scroll hrm-table-wrap">
           <table className="w-full min-w-max border-collapse hrm-table">
             <thead>
               <tr>
@@ -370,20 +393,31 @@ export default function AdminUsersPage() {
             </thead>
             <tbody>
               {isLoading ? (
-                <tr><td colSpan={TABLE_HEADERS.length} className="hrm-empty">Đang tải...</td></tr>
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="hrm-table-skeleton-row" aria-hidden>
+                    <td colSpan={TABLE_HEADERS.length}><div className="hrm-table-skeleton" /></td>
+                  </tr>
+                ))
               ) : isError ? (
                 <tr>
-                  <td colSpan={TABLE_HEADERS.length} className="hrm-empty text-[var(--md-error)]">
-                    Không tải được danh sách: {getApiErrorMessage(error)}
+                  <td colSpan={TABLE_HEADERS.length}>
+                    <EmptyState message={`Không tải được danh sách: ${getApiErrorMessage(error)}`} icon={UserX} />
                   </td>
                 </tr>
               ) : users.length === 0 ? (
-                <tr><td colSpan={TABLE_HEADERS.length} className="hrm-empty">Không có dữ liệu phù hợp.</td></tr>
+                <tr>
+                  <td colSpan={TABLE_HEADERS.length}>
+                    <EmptyState
+                      message={hasFilters ? 'Không có tài khoản phù hợp bộ lọc.' : 'Chưa có dữ liệu người dùng.'}
+                      icon={UserCog}
+                    />
+                  </td>
+                </tr>
               ) : (
                 users.map(user => (
                   <tr
                     key={`${user.source}-${user.id}`}
-                    className="table-row cursor-pointer hover:bg-[var(--md-surface-container-high)]"
+                    className="table-row hrm-table-row--interactive"
                     onClick={() => handleRowClick(user)}
                     title="Xem chi tiết"
                   >
@@ -400,7 +434,7 @@ export default function AdminUsersPage() {
                     <td className="table-cell whitespace-nowrap">{formatAdminDateCell(user.createdAt)}</td>
                     <td className="table-cell text-center" onClick={e => e.stopPropagation()}>
                       {user.hasAccount ? (
-                        <IOSSwitch
+                        <AccountSwitch
                           checked={user.isActive}
                           disabled={toggleMutation.isPending || !user.canToggle}
                           onChange={n => handleToggle(user.toggleId, user.source, n, user.canToggle, user.hasAccount)}
@@ -441,18 +475,20 @@ export default function AdminUsersPage() {
             </tbody>
           </table>
         </div>
-      </HrmPanel>
 
-      {totalCount > 0 && (
-        <Pagination
-          currentPage={page}
-          totalPages={totalPages}
-          pageSize={pageSize}
-          totalItems={totalCount}
-          onPageChange={setPage}
-          onPageSizeChange={s => { setPageSize(s); setPage(1); }}
-        />
-      )}
+        {totalCount > 0 && !isLoading && (
+          <Pagination
+            embedded
+            itemLabel="tài khoản"
+            currentPage={page}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            totalItems={totalCount}
+            onPageChange={setPage}
+            onPageSizeChange={s => { setPageSize(s); setPage(1); }}
+          />
+        )}
+      </HrmPanel>
 
       <Modal
         isOpen={!!provisionTarget}

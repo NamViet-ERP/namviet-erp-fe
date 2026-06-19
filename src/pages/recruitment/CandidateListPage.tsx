@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RotateCcw, FileText, Download, Users, Filter, Briefcase } from 'lucide-react';
+import PageHeader from '../../components/ui/PageHeader';
 import SearchBar from '../../components/ui/SearchBar';
 import Pagination from '../../components/ui/Pagination';
+import EmptyState from '../../components/ui/EmptyState';
 import HrmPanel from '../../components/hr/HrmPanel';
 import HrmStatCard from '../../components/hr/HrmStatCard';
 import { showToast } from '../../components/ui/Toast';
@@ -17,6 +19,11 @@ import { getApiErrorMessage } from '../../lib/apiClient';
 function birthYear(date: string) {
   const y = new Date(date).getFullYear();
   return Number.isNaN(y) ? '—' : y;
+}
+
+function EmptyCell({ value }: { value?: string }) {
+  if (!value || value === '—') return <span className="hrm-empty-cell">—</span>;
+  return <>{value}</>;
 }
 
 export default function CandidateListPage() {
@@ -66,10 +73,15 @@ export default function CandidateListPage() {
     setPage(1);
   };
 
-  const hasFilters = searchQuery || selectedPosition || selectedSource || selectedHr;
+  const hasFilters = Boolean(searchQuery || selectedPosition || selectedSource || selectedHr);
 
   return (
     <div className="hrm-page">
+      <PageHeader
+        title="Danh sách ứng viên"
+        subtitle="Hồ sơ từ cổng ứng tuyển công khai — lọc theo vị trí, nguồn và HR phụ trách."
+      />
+
       <div className="hrm-stat-grid">
         <HrmStatCard label="Tổng hồ sơ" value={totalUnfiltered} icon={Users} tone="primary" />
         <HrmStatCard
@@ -82,53 +94,59 @@ export default function CandidateListPage() {
         <HrmStatCard label="Vị trí khác nhau" value={uniquePositions} icon={Briefcase} tone="success" />
       </div>
 
-      <HrmPanel>
-        <div className="hrm-filter-bar">
-          <div className="flex-1 min-w-[220px]">
+      <HrmPanel noPadding>
+        <div className="hrm-list-toolbar">
+          <div className="hrm-list-toolbar__filters">
             <SearchBar
               value={searchQuery}
               onChange={v => { setSearchQuery(v); setPage(1); }}
               placeholder="Tìm theo tên, email, SĐT..."
             />
+            <div className="hrm-list-toolbar__filters-right">
+              <div className="hrm-filter-select-wrap">
+                <select
+                  className="hrm-filter-select"
+                  value={selectedPosition}
+                  onChange={e => { setSelectedPosition(e.target.value); setPage(1); }}
+                  aria-label="Lọc vị trí"
+                >
+                  <option value="">Tất cả vị trí</option>
+                  {positionFilterOptions.map(name => <option key={name} value={name}>{name}</option>)}
+                </select>
+              </div>
+              <div className="hrm-filter-select-wrap">
+                <select
+                  className="hrm-filter-select"
+                  value={selectedSource}
+                  onChange={e => { setSelectedSource(e.target.value); setPage(1); }}
+                  aria-label="Lọc nguồn"
+                >
+                  <option value="">Tất cả nguồn</option>
+                  {RECRUITMENT_SOURCES.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div className="hrm-filter-select-wrap">
+                <select
+                  className="hrm-filter-select"
+                  value={selectedHr}
+                  onChange={e => { setSelectedHr(e.target.value); setPage(1); }}
+                  aria-label="Lọc HR phụ trách"
+                >
+                  <option value="">Tất cả HR</option>
+                  {hrStaffFilterOptions.map(name => <option key={name} value={name}>{name}</option>)}
+                </select>
+              </div>
+              {hasFilters && (
+                <button type="button" onClick={resetFilters} className="hrm-filter-reset">
+                  <RotateCcw size={14} />
+                  Xóa bộ lọc
+                </button>
+              )}
+            </div>
           </div>
-          <select
-            className="form-select h-10 min-w-[160px]"
-            value={selectedPosition}
-            onChange={e => { setSelectedPosition(e.target.value); setPage(1); }}
-          >
-            <option value="">Tất cả vị trí</option>
-            {positionFilterOptions.map(name => <option key={name} value={name}>{name}</option>)}
-          </select>
-          <select
-            className="form-select h-10 min-w-[140px]"
-            value={selectedSource}
-            onChange={e => { setSelectedSource(e.target.value); setPage(1); }}
-          >
-            <option value="">Tất cả nguồn</option>
-            {RECRUITMENT_SOURCES.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
-          <select
-            className="form-select h-10 min-w-[160px]"
-            value={selectedHr}
-            onChange={e => { setSelectedHr(e.target.value); setPage(1); }}
-          >
-            <option value="">Tất cả HR</option>
-            {hrStaffFilterOptions.map(name => <option key={name} value={name}>{name}</option>)}
-          </select>
-          <button
-            type="button"
-            onClick={resetFilters}
-            className="h-10 px-3 flex items-center gap-2 rounded bg-[#fc2d42] text-white whitespace-nowrap btn-clear-filters"
-            title="Đặt lại bộ lọc"
-          >
-            <RotateCcw size={15} />
-            <span className="hidden sm:inline">XÓA BỘ LỌC</span>
-          </button>
         </div>
-      </HrmPanel>
 
-      <HrmPanel noPadding>
-        <div className="overflow-x-auto table-scroll">
+        <div className="overflow-x-auto table-scroll hrm-table-wrap">
           <table className="w-full min-w-max border-collapse hrm-table">
             <thead>
               <tr>
@@ -139,61 +157,81 @@ export default function CandidateListPage() {
             </thead>
             <tbody>
               {isLoading ? (
-                <tr><td colSpan={15} className="hrm-empty">Đang tải...</td></tr>
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="hrm-table-skeleton-row" aria-hidden>
+                    <td colSpan={15}><div className="hrm-table-skeleton" /></td>
+                  </tr>
+                ))
               ) : isError ? (
                 <tr>
-                  <td colSpan={15} className="hrm-empty text-[var(--md-error)]">
-                    Không tải được danh sách ứng viên: {getApiErrorMessage(error)}
+                  <td colSpan={15}>
+                    <EmptyState
+                      message={`Không tải được danh sách: ${getApiErrorMessage(error)}`}
+                      icon={Users}
+                    />
                   </td>
                 </tr>
               ) : candidates.length === 0 ? (
-                <tr><td colSpan={15} className="hrm-empty">Không tìm thấy ứng viên phù hợp.</td></tr>
+                <tr>
+                  <td colSpan={15}>
+                    <EmptyState
+                      message={hasFilters ? 'Không có ứng viên phù hợp bộ lọc.' : 'Chưa có hồ sơ ứng viên.'}
+                      icon={Users}
+                    />
+                  </td>
+                </tr>
               ) : (
                 candidates.map(cand => (
                   <tr
                     key={cand.id}
-                    className="table-row cursor-pointer"
+                    className="table-row hrm-table-row--interactive"
                     onClick={() => navigate(`/recruitment/candidates/${cand.id}`)}
                   >
-                    <td className="table-cell text-xs whitespace-nowrap text-center">{formatCandidateAppliedAt(cand.appliedAt)}</td>
+                    <td className="table-cell text-xs whitespace-nowrap tabular-nums text-center">
+                      {formatCandidateAppliedAt(cand.appliedAt)}
+                    </td>
                     <td className="table-cell whitespace-nowrap candidate-name">{cand.fullName}</td>
-                    <td className="table-cell">{cand.phone}</td>
-                    <td className="table-cell text-sm">{cand.email}</td>
+                    <td className="table-cell tabular-nums">{cand.phone}</td>
+                    <td className="table-cell text-sm max-w-[180px] truncate" title={cand.email}>{cand.email}</td>
                     <td className="table-cell text-center">{cand.gender}</td>
                     <td className="table-cell max-w-[140px] truncate" title={cand.address}>{cand.address}</td>
-                    <td className="table-cell text-center">{birthYear(cand.birthDate)}</td>
+                    <td className="table-cell text-center tabular-nums">{birthYear(cand.birthDate)}</td>
                     <td className="table-cell text-center">{cand.education}</td>
-                    <td className="table-cell">{cand.school || '—'}</td>
-                    <td className="table-cell">{cand.major || '—'}</td>
-                    <td className="table-cell text-[var(--md-primary)] font-medium max-w-[140px] truncate" title={cand.position}>{cand.position}</td>
-                    <td className="table-cell whitespace-nowrap text-center">{cand.experience}</td>
+                    <td className="table-cell"><EmptyCell value={cand.school} /></td>
+                    <td className="table-cell"><EmptyCell value={cand.major} /></td>
+                    <td className="table-cell text-[var(--md-primary)] font-medium max-w-[140px] truncate" title={cand.position}>
+                      {cand.position}
+                    </td>
+                    <td className="table-cell whitespace-nowrap text-center tabular-nums">{cand.experience}</td>
                     <td className="table-cell whitespace-nowrap text-center">{cand.source}</td>
                     <td className="table-cell" onClick={e => e.stopPropagation()}>
                       <button type="button" onClick={e => handleDownloadCV(cand, e)} className="hrm-cv-chip">
                         <FileText size={13} />
-                        <span className="max-w-[72px] truncate">{cand.cvFileName}</span>
+                        <span className="max-w-[72px] truncate">{cand.cvFileName || '—'}</span>
                         <Download size={12} />
                       </button>
                     </td>
-                    <td className="table-cell whitespace-nowrap">{cand.hrResponsible || '—'}</td>
+                    <td className="table-cell whitespace-nowrap"><EmptyCell value={cand.hrResponsible} /></td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
         </div>
-      </HrmPanel>
 
-      {totalCount > 0 && (
-        <Pagination
-          currentPage={page}
-          totalPages={totalPages}
-          pageSize={pageSize}
-          totalItems={totalCount}
-          onPageChange={setPage}
-          onPageSizeChange={s => { setPageSize(s); setPage(1); }}
-        />
-      )}
+        {totalCount > 0 && !isLoading && (
+          <Pagination
+            embedded
+            itemLabel="ứng viên"
+            currentPage={page}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            totalItems={totalCount}
+            onPageChange={setPage}
+            onPageSizeChange={s => { setPageSize(s); setPage(1); }}
+          />
+        )}
+      </HrmPanel>
     </div>
   );
 }

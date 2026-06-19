@@ -15,7 +15,7 @@ const moduleIcons: Record<Module, LucideIcon> = {
   admin: ShieldCheck,
 };
 const moduleLabels: Record<Module, string> = { 
-  warehouse: 'KHO HÀNG', 
+  warehouse: 'Kho hàng', 
   stocktake: 'KIỂM KÊ',
   members: 'NHÂN VIÊN',
   recruitment: 'TUYỂN DỤNG',

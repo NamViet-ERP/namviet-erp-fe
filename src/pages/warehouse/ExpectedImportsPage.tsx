@@ -144,7 +144,7 @@ export default function ExpectedImportsPage() {
     <div className="animate-fade-in">
       <PageHeader
         eyebrow="Cung ứng liên dự án"
-        title="Dự kiến nhập & Điều phối vật tư thừa"
+        title="Dự kiến nhập & điều phối tồn dư"
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -154,7 +154,7 @@ export default function ExpectedImportsPage() {
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: 'var(--md-on-surface)' }}>Dự kiến vật tư sắp nhập (Dự án 1 - 4)</h2>
               <span className="px-2 py-0.5 rounded text-[11px] font-bold" style={{ background: 'var(--md-primary-container)', color: 'var(--md-on-primary-container)' }}>
-                SCM CHỦ ĐỘNG
+                Điều phối tồn dư
               </span>
             </div>
 
@@ -163,7 +163,7 @@ export default function ExpectedImportsPage() {
                 <thead>
                   <tr>
                     <th className="table-header-cell w-[22%]">Dự án yêu cầu</th>
-                    <th className="table-header-cell w-[30%]">Vật tư / SKU</th>
+                    <th className="table-header-cell w-[30%]">Vật tư</th>
                     <th className="table-header-cell w-[10%] text-right">Dự kiến</th>
                     <th className="table-header-cell w-[14%] text-center">Lượng thừa (Surplus)</th>
                     <th className="table-header-cell w-[8%] text-center">ĐVT</th>
@@ -238,12 +238,12 @@ export default function ExpectedImportsPage() {
                 {isScanning ? (
                   <>
                     <RefreshCw className="animate-spin" size={16} />
-                    ĐANG QUÉT VẬT TƯ DƯ THỪA...
+                    Đang quét vật tư dư thừa...
                   </>
                 ) : (
                   <>
                     <Search size={16} />
-                    KIỂM TRA VẬT TƯ DƯ THỪA
+                    Kiểm tra vật tư dư thừa
                   </>
                 )}
               </button>
@@ -257,7 +257,7 @@ export default function ExpectedImportsPage() {
                   <div className="absolute inset-2 rounded-full border-4 border-[var(--tint-warning-soft)] border-b-[var(--status-warning)] animate-spin-reverse" style={{ animationDirection: 'reverse', animationDuration: '1s' }} />
                 </div>
                 <div className="text-center">
-                  <p className="text-xs font-bold text-amber-500 tracking-widest animate-pulse">SCM SCANNERS RUNNING</p>
+                  <p className="text-xs font-bold text-amber-500 tracking-widest animate-pulse">Đang quét tồn dư...</p>
                   <p className="text-[10px] text-gray-400 mt-1">Đang quét mức dư dự án 1-4...</p>
                 </div>
               </div>
@@ -297,7 +297,7 @@ export default function ExpectedImportsPage() {
                 className="w-full btn btn-filled flex items-center justify-center gap-2"
               >
                 <Send size={15} />
-                TẠO LỆNH ĐIỀU PHỐI NHANH
+                Tạo lệnh điều phối
               </button>
             </div>
           )}

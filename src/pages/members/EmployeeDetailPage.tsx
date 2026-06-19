@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { Clock } from 'lucide-react';
 import { showToast } from '../../components/ui/Toast';
 import { useEmployee, useUpdateEmployee } from '../../hooks/useEmployees';
 import { getSuggestedEmployeeCode } from '../../services/employeesService';
@@ -7,11 +8,22 @@ import { employeeCodeNextHint } from '../../lib/hrm/suggestedEmployeeCode';
 import { useEditableForm } from '../../hooks/useEditableForm';
 import { EMPLOYEE_STATUSES } from '../../constants/recruitment';
 import { calcSeniority } from '../../types/hr';
-import type { Employee } from '../../types/hr';
+import type { Employee, FileAttachment } from '../../types/hr';
 import { formatDateVi } from '../../lib/hrm/formatters';
+import { toFileAttachment } from '../../lib/hrm/attachments';
+import type { LocalFileState } from '../../components/hr/HrmImageUpload';
+import { USE_MOCK } from '../../lib/mock';
+import { filesService, type UploadCategory } from '../../services/filesService';
 import DetailSection from '../../components/hr/DetailSection';
 import DetailFieldGrid from '../../components/hr/DetailFieldGrid';
-import { FieldView, FieldInput, FieldSelect, ImagePreview } from '../../components/hr/DetailFields';
+import {
+  FieldView,
+  FieldInput,
+  FieldSelect,
+  MaskedFieldView,
+  SecureImagePreview,
+  EditableImageField,
+} from '../../components/hr/DetailFields';
 import { HrmDetailHeader } from '../../components/hr/HrmPageChrome';
 import HrmEditActions from '../../components/hr/HrmEditActions';
 import HrmNotFound, { HrmLoadingState } from '../../components/hr/HrmNotFound';
@@ -25,6 +37,17 @@ export default function EmployeeDetailPage() {
   const [codeError, setCodeError] = useState('');
   const [codeHint, setCodeHint] = useState('');
   const [prevEmployeeId, setPrevEmployeeId] = useState(employee?.id);
+  const [pendingProfile, setPendingProfile] = useState<LocalFileState | null>(null);
+  const [pendingCccdFront, setPendingCccdFront] = useState<LocalFileState | null>(null);
+  const [pendingCccdBack, setPendingCccdBack] = useState<LocalFileState | null>(null);
+  const [pendingDegree, setPendingDegree] = useState<LocalFileState | null>(null);
+
+  const resetPendingUploads = () => {
+    setPendingProfile(null);
+    setPendingCccdFront(null);
+    setPendingCccdBack(null);
+    setPendingDegree(null);
+  };
 
   if (employee?.id !== prevEmployeeId) {
     setPrevEmployeeId(employee?.id);
@@ -65,9 +88,32 @@ export default function EmployeeDetailPage() {
     if (!id || !form) return;
     setCodeError('');
     try {
-      const dto = { ...form } as Record<string, unknown>;
+      const uploadIfNeeded = async (
+        pending: LocalFileState | null,
+        category: UploadCategory,
+        existing?: FileAttachment,
+      ): Promise<FileAttachment | undefined> => {
+        if (!pending) return existing;
+        if (USE_MOCK) return toFileAttachment(pending);
+        const result = await filesService.upload(pending.file, category, { employeeId: id });
+        return {
+          fileName: result.fileName,
+          fileSize: `${Math.round(result.fileSize / 1024)} KB`,
+          previewUrl: result.url,
+        };
+      };
+
+      const [profilePhoto, cccdFront, cccdBack, degreePhoto] = await Promise.all([
+        uploadIfNeeded(pendingProfile, 'profile', form.profilePhoto),
+        uploadIfNeeded(pendingCccdFront, 'cccd-front', form.cccdFront),
+        uploadIfNeeded(pendingCccdBack, 'cccd-back', form.cccdBack),
+        uploadIfNeeded(pendingDegree, 'degree', form.degreePhoto),
+      ]);
+
+      const dto = { ...form, profilePhoto, cccdFront, cccdBack, degreePhoto } as Record<string, unknown>;
       delete dto.id;
       await updateMutation.mutateAsync({ id, dto });
+      resetPendingUploads();
       if (form.status === 'Nghỉ việc') {
         showToast(
           'warning',
@@ -98,21 +144,39 @@ export default function EmployeeDetailPage() {
             isEditing={isEditing}
             isSaving={updateMutation.isPending}
             onEdit={handleEdit}
-            onCancel={() => { cancelEdit(); setCodeError(''); setCodeHint(''); }}
+            onCancel={() => { cancelEdit(); resetPendingUploads(); setCodeError(''); setCodeHint(''); }}
             onSave={handleSave}
           />
         }
       />
 
-      {form.profilePhoto?.previewUrl && (
-        <div className="hrm-profile-strip">
-          <img src={form.profilePhoto.previewUrl} alt="Ảnh hồ sơ" />
-          <div>
-            <p className="font-bold text-lg text-[var(--md-on-surface)]">{form.fullName}</p>
-            <p className="text-sm text-[var(--md-on-surface-variant)]">{form.position || 'Chưa có chức vụ'}</p>
+      <div className="hrm-profile-strip">
+        {isEditing ? (
+          <div className="w-full max-w-xs shrink-0">
+            <EditableImageField
+              label="Ảnh hồ sơ"
+              attachment={form.profilePhoto}
+              pending={pendingProfile}
+              onFile={setPendingProfile}
+              onRemove={() => { setPendingProfile(null); setField('profilePhoto', undefined); }}
+              onError={msg => showToast('error', msg)}
+            />
           </div>
+        ) : form.profilePhoto?.previewUrl ? (
+          <img src={form.profilePhoto.previewUrl} alt="Ảnh hồ sơ" />
+        ) : (
+          <div className="hrm-profile-avatar-fallback" aria-hidden>
+            {form.fullName.split(' ').slice(-2).map(w => w[0]).join('').toUpperCase()}
+          </div>
+        )}
+        <div>
+          <p className="font-bold text-lg text-[var(--md-on-surface)]">{form.fullName}</p>
+          <p className="text-sm text-[var(--md-on-surface-variant)]">{form.position || 'Chưa có chức vụ'}</p>
+          {isEditing && (
+            <p className="text-xs text-[var(--md-on-surface-variant)] mt-1">Nhấn &quot;Thay ảnh&quot; để cập nhật ảnh hồ sơ</p>
+          )}
         </div>
-      )}
+      </div>
 
       <DetailSection title="Thông tin HR (Mã NV, Tổ chức)">
         {form.status === 'Nghỉ việc' && !isEditing && (
@@ -169,12 +233,22 @@ export default function EmployeeDetailPage() {
           )}
         </DetailFieldGrid>
         <div className="hrm-info-card mt-4">
-          <p className="hrm-info-card__label">⏳Thâm niên</p>
-          <p className="hrm-info-card__value" style={{ color: '#399918' }}>{seniority.years} năm {seniority.months} tháng {seniority.days} ngày</p>
+          <p className="hrm-info-card__label flex items-center gap-1.5">
+            <Clock size={14} aria-hidden />
+            Thâm niên
+          </p>
+          <p className="hrm-info-card__value hrm-info-card__value--success">
+            {seniority.years} năm {seniority.months} tháng {seniority.days} ngày
+          </p>
         </div>
       </DetailSection>
 
       <DetailSection title="CMND / CCCD">
+        {!isEditing && (form.cccdFront?.previewUrl || form.cccdNumber) && (
+          <p className="hrm-alert hrm-alert--info mb-4">
+            Thông tin nhạy cảm được che mặc định. Nhấn biểu tượng mắt hoặc &quot;Xem ảnh&quot; để hiện đầy đủ khi cần.
+          </p>
+        )}
         <DetailFieldGrid layout="three">
           {isEditing ? (
             <>
@@ -187,18 +261,43 @@ export default function EmployeeDetailPage() {
             </>
           ) : (
             <>
-              <FieldView label="Số CMND" value={form.cmndNumber} />
+              <MaskedFieldView label="Số CMND" value={form.cmndNumber} />
               <FieldView label="Ngày cấp CMND" value={formatDateVi(form.cmndIssueDate)} />
               <FieldView label="Nơi cấp CMND" value={form.cmndIssuePlace} />
-              <FieldView label="Số CCCD" value={form.cccdNumber} />
+              <MaskedFieldView label="Số CCCD" value={form.cccdNumber} />
               <FieldView label="Ngày cấp CCCD" value={formatDateVi(form.cccdIssueDate)} />
               <FieldView label="Nơi cấp CCCD" value={form.cccdIssuePlace} />
             </>
           )}
         </DetailFieldGrid>
         <DetailFieldGrid layout="two" className="mt-4">
-          <ImagePreview label="CCCD mặt trước" url={form.cccdFront?.previewUrl} fileName={form.cccdFront?.fileName} document />
-          <ImagePreview label="CCCD mặt sau" url={form.cccdBack?.previewUrl} fileName={form.cccdBack?.fileName} document />
+          {isEditing ? (
+            <>
+              <EditableImageField
+                label="CCCD mặt trước"
+                attachment={form.cccdFront}
+                pending={pendingCccdFront}
+                onFile={setPendingCccdFront}
+                onRemove={() => { setPendingCccdFront(null); setField('cccdFront', undefined); }}
+                onError={msg => showToast('error', msg)}
+                document
+              />
+              <EditableImageField
+                label="CCCD mặt sau"
+                attachment={form.cccdBack}
+                pending={pendingCccdBack}
+                onFile={setPendingCccdBack}
+                onRemove={() => { setPendingCccdBack(null); setField('cccdBack', undefined); }}
+                onError={msg => showToast('error', msg)}
+                document
+              />
+            </>
+          ) : (
+            <>
+              <SecureImagePreview label="CCCD mặt trước" url={form.cccdFront?.previewUrl} fileName={form.cccdFront?.fileName} document />
+              <SecureImagePreview label="CCCD mặt sau" url={form.cccdBack?.previewUrl} fileName={form.cccdBack?.fileName} document />
+            </>
+          )}
         </DetailFieldGrid>
       </DetailSection>
 
@@ -241,7 +340,19 @@ export default function EmployeeDetailPage() {
           )}
         </DetailFieldGrid>
         <div className="mt-4">
-          <ImagePreview label="Ảnh bằng cấp" url={form.degreePhoto?.previewUrl} fileName={form.degreePhoto?.fileName} document />
+          {isEditing ? (
+            <EditableImageField
+              label="Ảnh bằng cấp"
+              attachment={form.degreePhoto}
+              pending={pendingDegree}
+              onFile={setPendingDegree}
+              onRemove={() => { setPendingDegree(null); setField('degreePhoto', undefined); }}
+              onError={msg => showToast('error', msg)}
+              document
+            />
+          ) : (
+            <SecureImagePreview label="Ảnh bằng cấp" url={form.degreePhoto?.previewUrl} fileName={form.degreePhoto?.fileName} document />
+          )}
         </div>
       </DetailSection>
 
@@ -257,7 +368,7 @@ export default function EmployeeDetailPage() {
           ) : (
             <>
               <FieldView label="Tên chủ TK" value={form.bankAccountName} />
-              <FieldView label="Số tài khoản" value={form.bankAccountNumber} />
+              <MaskedFieldView label="Số tài khoản" value={form.bankAccountNumber} />
               <FieldView label="Tên ngân hàng" value={form.bankName} />
               <FieldView label="Chi nhánh" value={form.bankBranch} />
             </>
@@ -276,8 +387,8 @@ export default function EmployeeDetailPage() {
           ) : (
             <>
               <FieldView label="Đã tham gia BHXH" value={form.hadSocialInsurance} />
-              <FieldView label="Số BHXH" value={form.siNumber} />
-              <FieldView label="Mã số thuế" value={form.taxCode} />
+              <MaskedFieldView label="Số BHXH" value={form.siNumber} />
+              <MaskedFieldView label="Mã số thuế" value={form.taxCode} />
             </>
           )}
         </DetailFieldGrid>

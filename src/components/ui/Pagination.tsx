@@ -6,37 +6,17 @@ interface PageBtnProps {
   onClick: () => void;
   active?: boolean;
   disabled?: boolean;
+  ariaLabel?: string;
 }
 
-function PageBtn({ children, onClick, active, disabled }: PageBtnProps) {
+function PageBtn({ children, onClick, active, disabled, ariaLabel }: PageBtnProps) {
   return (
     <button
+      type="button"
       onClick={onClick}
       disabled={disabled}
-      style={{
-        minWidth: '36px',
-        height: '36px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: '9999px',
-        border: 'none',
-        background: active ? 'var(--md-secondary-container)' : 'transparent',
-        color: active ? 'var(--md-on-secondary-container)' : 'var(--md-on-surface-variant)',
-        fontFamily: "'Roboto', sans-serif",
-        fontSize: '0.875rem',
-        fontWeight: active ? 700 : 400,
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: disabled ? 0.38 : 1,
-        transition: 'background 200ms var(--md-easing), color 200ms var(--md-easing)',
-        padding: '0 6px',
-      }}
-      onMouseEnter={e => {
-        if (!disabled && !active) e.currentTarget.style.background = 'var(--tint-primary-hover)';
-      }}
-      onMouseLeave={e => {
-        if (!active) e.currentTarget.style.background = 'transparent';
-      }}
+      aria-label={ariaLabel}
+      className={`pagination-bar__btn${active ? ' pagination-bar__btn--active' : ''}`}
     >
       {children}
     </button>
@@ -50,9 +30,22 @@ interface PaginationProps {
   pageSize: number;
   onPageSizeChange?: (size: number) => void;
   totalItems: number;
+  /** Nhãn đếm bản ghi, mặc định "bản ghi" */
+  itemLabel?: string;
+  /** Gắn trong panel bảng — không margin ngoài */
+  embedded?: boolean;
 }
 
-export default function Pagination({ currentPage, totalPages, onPageChange, pageSize, onPageSizeChange, totalItems }: PaginationProps) {
+export default function Pagination({
+  currentPage,
+  totalPages,
+  onPageChange,
+  pageSize,
+  onPageSizeChange,
+  totalItems,
+  itemLabel = 'bản ghi',
+  embedded = false,
+}: PaginationProps) {
   const pages: number[] = [];
   const maxVisible = 5;
   let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
@@ -60,71 +53,74 @@ export default function Pagination({ currentPage, totalPages, onPageChange, page
   if (end - start < maxVisible - 1) start = Math.max(1, end - maxVisible + 1);
   for (let i = start; i <= end; i++) pages.push(i);
 
+  const rangeStart = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const rangeEnd = Math.min(currentPage * pageSize, totalItems);
+
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginTop: '16px',
-        paddingTop: '12px',
-      }}
-    >
-      {/* Left: page size */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+    <div className={`pagination-bar${embedded ? ' pagination-bar--embedded' : ''}`}>
+      <div className="pagination-bar__meta">
+        <label className="pagination-bar__size-label" htmlFor="pagination-page-size">
+          Hiển thị
+        </label>
         <select
+          id="pagination-page-size"
           value={pageSize}
-          onChange={(e) => onPageSizeChange?.(Number(e.target.value))}
-          className="form-select"
-          style={{ width: '72px', height: '36px', fontSize: '0.8125rem' }}
+          onChange={e => onPageSizeChange?.(Number(e.target.value))}
+          className="pagination-bar__size-select"
         >
-          {[10, 15, 25, 50].map(n => <option key={n} value={n}>{n}</option>)}
+          {[10, 15, 25, 50].map(n => (
+            <option key={n} value={n}>{n}</option>
+          ))}
         </select>
-        <span
-          style={{
-            fontFamily: "'Roboto', sans-serif",
-            fontSize: '0.8125rem',
-            color: 'var(--md-on-surface-variant)',
-          }}
-        >
-          Hiển thị {totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, totalItems)} / {totalItems} bản ghi
+        <span className="pagination-bar__count tabular-nums">
+          {rangeStart}–{rangeEnd} / {totalItems} {itemLabel}
         </span>
       </div>
 
-      {/* Right: page navigation */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-        <PageBtn onClick={() => onPageChange(currentPage - 1)} disabled={currentPage <= 1}>
+      <nav className="pagination-bar__nav" aria-label="Phân trang">
+        <PageBtn
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage <= 1}
+          ariaLabel="Trang trước"
+        >
           <ChevronLeft size={18} />
         </PageBtn>
 
         {start > 1 && (
           <>
             <PageBtn onClick={() => onPageChange(1)}>1</PageBtn>
-            {start > 2 && (
-              <span style={{ padding: '0 4px', color: 'var(--md-on-surface-variant)', fontSize: '0.875rem' }}>···</span>
-            )}
+            {start > 2 && <span className="pagination-bar__ellipsis">···</span>}
           </>
         )}
 
         {pages.map(page => (
-          <PageBtn key={page} onClick={() => onPageChange(page)} active={page === currentPage}>
+          <PageBtn
+            key={page}
+            onClick={() => onPageChange(page)}
+            active={page === currentPage}
+            ariaLabel={`Trang ${page}`}
+          >
             {page}
           </PageBtn>
         ))}
 
         {end < totalPages && (
           <>
-            {end < totalPages - 1 && (
-              <span style={{ padding: '0 4px', color: 'var(--md-on-surface-variant)', fontSize: '0.875rem' }}>···</span>
-            )}
-            <PageBtn onClick={() => onPageChange(totalPages)}>{totalPages}</PageBtn>
+            {end < totalPages - 1 && <span className="pagination-bar__ellipsis">···</span>}
+            <PageBtn onClick={() => onPageChange(totalPages)} ariaLabel={`Trang ${totalPages}`}>
+              {totalPages}
+            </PageBtn>
           </>
         )}
 
-        <PageBtn onClick={() => onPageChange(currentPage + 1)} disabled={currentPage >= totalPages}>
+        <PageBtn
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage >= totalPages}
+          ariaLabel="Trang sau"
+        >
           <ChevronRight size={18} />
         </PageBtn>
-      </div>
+      </nav>
     </div>
   );
 }
