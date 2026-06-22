@@ -1,11 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 import type { CardAccent } from '../../types';
 
-/* ─────────────────────────────────────────────────────────
-   Material Design 3 — KPI Card Component
-   Surface Container bg · 24px radius · Tonal elevation
-   ───────────────────────────────────────────────────────── */
-
 interface AccentStyle {
   containerBg: string;
   iconColor: string;
@@ -15,28 +10,28 @@ interface AccentStyle {
 
 const accentMap: Record<CardAccent, AccentStyle> = {
   amber: {
-    containerBg:  'var(--md-warning-container)',
-    iconColor:    'var(--md-on-warning-container)',
-    blurColor:    'color-mix(in srgb, var(--md-warning) 14%, transparent)',
-    valueSuffix:  '⬆',
+    containerBg: 'var(--md-warning-container)',
+    iconColor: 'var(--md-on-warning-container)',
+    blurColor: 'color-mix(in srgb, var(--md-warning) 14%, transparent)',
+    valueSuffix: '⬆',
   },
   blue: {
-    containerBg:  'var(--md-primary-container)',
-    iconColor:    'var(--md-on-primary-container)',
-    blurColor:    'color-mix(in srgb, var(--md-primary) 14%, transparent)',
-    valueSuffix:  '',
+    containerBg: 'var(--md-primary-container)',
+    iconColor: 'var(--md-on-primary-container)',
+    blurColor: 'color-mix(in srgb, var(--md-primary) 14%, transparent)',
+    valueSuffix: '',
   },
   teal: {
-    containerBg:  'var(--md-secondary-container)',
-    iconColor:    'var(--md-on-secondary-container)',
-    blurColor:    'color-mix(in srgb, var(--md-secondary) 14%, transparent)',
-    valueSuffix:  '',
+    containerBg: 'var(--md-secondary-container)',
+    iconColor: 'var(--md-on-secondary-container)',
+    blurColor: 'color-mix(in srgb, var(--md-secondary) 14%, transparent)',
+    valueSuffix: '',
   },
   purple: {
-    containerBg:  'var(--md-primary-container)',
-    iconColor:    'var(--md-on-primary-container)',
-    blurColor:    'color-mix(in srgb, var(--md-primary) 14%, transparent)',
-    valueSuffix:  '',
+    containerBg: 'var(--md-primary-container)',
+    iconColor: 'var(--md-on-primary-container)',
+    blurColor: 'color-mix(in srgb, var(--md-primary) 14%, transparent)',
+    valueSuffix: '',
   },
 };
 
@@ -63,132 +58,34 @@ export default function Card({
 }: CardProps) {
   const c = accentMap[accent] || accentMap.blue;
 
-  const trendBg    = trend !== undefined && trend > 0 ? 'var(--md-success-container)'
-                   : trend !== undefined && trend < 0 ? 'var(--md-error-container)'
-                   : 'var(--md-surface-variant)';
-  const trendColor = trend !== undefined && trend > 0 ? 'var(--md-success)'
-                   : trend !== undefined && trend < 0 ? 'var(--md-error)'
-                   : 'var(--md-on-surface-variant)';
-  const trendIcon  = trend !== undefined && trend > 0 ? '↑' : trend !== undefined && trend < 0 ? '↓' : '—';
+  const trendClass =
+    trend !== undefined && trend > 0 ? 'badge-md-success'
+      : trend !== undefined && trend < 0 ? 'badge-md-error'
+        : 'badge-md-neutral';
+  const trendIcon = trend !== undefined && trend > 0 ? '↑' : trend !== undefined && trend < 0 ? '↓' : '—';
 
   return (
-    <div
-      className={`card-md card-md-interactive cursor-default select-none ${className}`}
-      style={{ overflow: 'visible' }}
-    >
-      {/* Ambient blur shape — behind card */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          top: '-20px',
-          right: '-20px',
-          width: '120px',
-          height: '120px',
-          borderRadius: '50%',
-          background: c.blurColor,
-          filter: 'blur(32px)',
-          pointerEvents: 'none',
-          zIndex: 0,
-        }}
-      />
-
-      <div style={{ position: 'relative', zIndex: 1 }}>
-        {/* Header: label + icon */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px' }}>
-          <p
-            style={{
-              fontFamily: "'Roboto', sans-serif",
-              fontSize: '0.75rem',
-              fontWeight: 500,
-              letterSpacing: '0.04em',
-              color: 'var(--md-on-surface-variant)',
-              textTransform: 'uppercase',
-            }}
-          >
-            {title}
-          </p>
+    <div className={`card-md card-md-interactive kpi-card kpi-card--accent-${accent} cursor-default select-none ${className}`}>
+      <div className="kpi-card__ambient" aria-hidden />
+      <div className="kpi-card__body">
+        <div className="kpi-card__head">
+          <p className="kpi-card__label">{title}</p>
           {Icon && (
-            <div
-              style={{
-                width: '40px',
-                height: '40px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: '12px',
-                background: c.containerBg,
-                color: c.iconColor,
-                flexShrink: 0,
-              }}
-            >
+            <div className="kpi-card__icon">
               <Icon size={20} />
             </div>
           )}
         </div>
-
-        {/* Value */}
-        <p
-          style={{
-            fontFamily: "'Roboto', sans-serif",
-            fontSize: '2rem',
-            fontWeight: 700,
-            lineHeight: 1.2,
-            color: 'var(--md-on-surface)',
-            letterSpacing: '-0.01em',
-            marginBottom: subtitle ? '4px' : '12px',
-          }}
-        >
-          {value}
+        <p className={`kpi-card__value ${subtitle ? 'kpi-card__value--spaced' : 'kpi-card__value--tight'}`}>
+          {value}{c.valueSuffix}
         </p>
-
-        {/* Subtitle */}
-        {subtitle && (
-          <p
-            style={{
-              fontFamily: "'Roboto', sans-serif",
-              fontSize: '0.875rem',
-              fontWeight: 400,
-              color: 'var(--md-on-surface-variant)',
-              marginBottom: '12px',
-              lineHeight: 1.4,
-            }}
-          >
-            {subtitle}
-          </p>
-        )}
-
-        {/* Trend badge */}
+        {subtitle && <p className="kpi-card__subtitle">{subtitle}</p>}
         {trend !== undefined && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px',
-                padding: '3px 10px',
-                borderRadius: '9999px',
-                background: trendBg,
-                color: trendColor,
-                fontFamily: "'Roboto', sans-serif",
-                fontSize: '0.75rem',
-                fontWeight: 500,
-                letterSpacing: '0.02em',
-              }}
-            >
+          <div className="kpi-card__trend-row">
+            <span className={`kpi-card__trend badge ${trendClass}`}>
               {trendIcon} {trend !== 0 ? `${Math.abs(trend)}%` : '0%'}
             </span>
-            {trendLabel && (
-              <span
-                style={{
-                  fontFamily: "'Roboto', sans-serif",
-                  fontSize: '0.75rem',
-                  color: 'var(--md-on-surface-variant)',
-                }}
-              >
-                {trendLabel}
-              </span>
-            )}
+            {trendLabel && <span className="kpi-card__trend-label">{trendLabel}</span>}
           </div>
         )}
       </div>

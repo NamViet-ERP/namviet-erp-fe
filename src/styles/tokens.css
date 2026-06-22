@@ -143,6 +143,12 @@
   --primary:            var(--md-primary);
   --on-primary:         var(--md-on-primary);
 
+  /* ── Z-index scale ── */
+  --z-dropdown: 40;
+  --z-sidebar-flyout: 50;
+  --z-modal: 1000;
+  --z-toast: 1100;
+
   /* Legacy shims — prevents broken styles during migration */
   --nv-surface-page:     var(--md-surface);
   --nv-surface-card:     var(--md-surface-container);

@@ -1,13 +1,38 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import SearchBar from '../../components/ui/SearchBar';
 import Pagination from '../../components/ui/Pagination';
 import EmptyState from '../../components/ui/EmptyState';
+import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
+import StockMaterialProjectModal from '../../components/warehouse/StockMaterialProjectModal';
 import { useStockMatrix } from '../../hooks/useStockMatrix';
+import { WMS_EMPTY, WMS_ERROR } from '../../lib/wms/messages';
 import type { StockMatrixRowApiDto } from '../../types/wms';
+import { formatCurrency } from '../../utils/formatCurrency';
 
-function getProjectShortName(name: string) {
-  const cleaned = name.replace(/Dự án |Nhà máy |Sữa |Bia /g, '');
-  return cleaned.length > 18 ? `${cleaned.slice(0, 16)}…` : cleaned;
+function sumProjectActual(row: StockMatrixRowApiDto) {
+  return row.projects.reduce((sum, p) => sum + p.actualQty, 0);
+}
+
+/** Tổng vật tư có thể dùng = phần kho tổng chưa giữ + tồn thực tế tại các dự án. */
+function totalUsableQty(row: StockMatrixRowApiDto) {
+  const generalFree = Math.max(0, row.generalActualQty - row.generalReservedQty);
+  return generalFree + sumProjectActual(row);
+}
+
+function sumProjectPlanned(row: StockMatrixRowApiDto) {
+  return row.projects.reduce((sum, p) => sum + p.plannedQty, 0);
+}
+
+function countActiveProjects(row: StockMatrixRowApiDto) {
+  return row.projects.filter(
+    p => p.actualQty !== 0 || p.plannedQty !== 0 || p.reservedQty !== 0,
+  ).length;
+}
+
+function fmtPlanned(n: number) {
+  if (n === 0) return '—';
+  return n > 0 ? `+${n}` : String(n);
 }
 
 export default function ApiStockMatrixView() {
@@ -16,6 +41,7 @@ export default function ApiStockMatrixView() {
   const [projectFilter, setProjectFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(15);
+  const [selectedRow, setSelectedRow] = useState<StockMatrixRowApiDto | null>(null);
 
   const projects = rows[0]?.projects ?? [];
 
@@ -27,36 +53,26 @@ export default function ApiStockMatrixView() {
       row.materialName.toLowerCase().includes(q);
     if (!matchesSearch) return false;
     if (projectFilter === 'all') return true;
-    if (projectFilter === 'general') return row.generalActualQty > 0;
+    if (projectFilter === 'general') return row.generalActualQty > 0 || row.generalReservedQty > 0;
     const col = row.projects.find(p => p.projectCode === projectFilter);
-    return (col?.actualQty ?? 0) > 0 || (col?.plannedQty ?? 0) > 0;
+    return (col?.actualQty ?? 0) !== 0 || (col?.plannedQty ?? 0) !== 0 || (col?.reservedQty ?? 0) !== 0;
   });
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
-
-  const displayedProjects =
-    projectFilter === 'all' ? projects : projects.filter(p => p.projectCode === projectFilter);
-
-  if (isLoading) {
-    return <div className="p-8 text-center text-sm text-[var(--md-on-surface-variant)]">Đang tải tồn kho...</div>;
-  }
-
-  if (isError) {
-    return <EmptyState message="Không thể tải dữ liệu tồn kho." />;
-  }
+  const stockColSpan = 10;
 
   return (
     <>
-      <div className="rounded-2xl shadow-card p-4 mb-4" style={{ background: 'var(--md-surface-container)', border: '1px solid var(--md-outline-variant)' }}>
+      <div className="surface-panel surface-panel--rounded-xl p-4 mb-4 shadow-card">
         <div className="flex flex-col md:flex-row gap-4 items-center justify-between page-filter-bar">
           <select
-            className="form-select w-full md:w-64 text-sm"
+            className="form-select w-full md:w-72 text-sm"
             value={projectFilter}
             onChange={e => { setProjectFilter(e.target.value); setPage(1); }}
           >
-            <option value="all">Tất cả dự án & Kho tổng</option>
-            <option value="general">Kho tổng</option>
+            <option value="all">Tất cả vật tư</option>
+            <option value="general">Chỉ còn tại kho tổng</option>
             {projects.map(p => (
               <option key={p.projectCode} value={p.projectCode}>{p.projectName}</option>
             ))}
@@ -67,69 +83,121 @@ export default function ApiStockMatrixView() {
             placeholder="Tìm mã vật tư, tên vật tư..."
           />
         </div>
+        <p className="text-[11px] text-[var(--md-on-surface-variant)] mt-3 text-pretty">
+          Nhấn dòng vật tư để mở chi tiết phân bổ theo dự án. Khả dụng = (Kho tổng − Giữ kho) + Tồn dự án thực tế.
+          Giá BQ = đơn giá bình quân gia quyền (WAC) từ các phiếu nhập đã duyệt.
+        </p>
       </div>
 
-      <div className="rounded-2xl shadow-card overflow-hidden" style={{ background: 'var(--md-surface-container)', border: '1px solid var(--md-outline-variant)' }}>
-        {filtered.length === 0 ? (
-          <EmptyState message="Không có dữ liệu tồn kho." />
-        ) : (
-          <div className="overflow-x-auto table-scroll">
-            <table className="w-full text-xs" style={{ minWidth: '1100px' }}>
-              <thead>
-                <tr style={{ borderBottom: '2px solid var(--md-outline-variant)' }}>
-                  <th className="table-header-cell text-left">Mã VT</th>
-                  <th className="table-header-cell text-left">Tên vật tư</th>
-                  <th className="table-header-cell text-center">ĐVT</th>
-                  <th className="table-header-cell text-right">Kho tổng</th>
-                  <th className="table-header-cell text-right">KHẢ DỤNG</th>
-                  <th className="table-header-cell text-right">GIỮ KHO</th>
-                  {displayedProjects.map(p => (
-                    <th key={p.projectCode} className="table-header-cell text-right whitespace-nowrap">
-                      {getProjectShortName(p.projectName)}
-                    </th>
-                  ))}
+      <div className="surface-panel surface-panel--rounded-xl surface-panel--table shadow-card stock-matrix-panel">
+        <div className="overflow-x-auto wms-inventory-table-wrap wms-inventory-table-wrap--flush-top">
+          <table className="wms-inventory-table stock-matrix-table">
+            <thead>
+              <tr>
+                <th className="table-header-cell text-left stock-col-code">Mã VT</th>
+                <th className="table-header-cell text-left stock-col-name">Tên vật tư</th>
+                <th className="table-header-cell text-center w-14">ĐVT</th>
+                <th className="table-header-cell text-right w-20">Kho tổng</th>
+                <th className="table-header-cell text-right w-20" title="(Kho tổng − Giữ kho) + Tồn dự án thực tế">Khả dụng</th>
+                <th className="table-header-cell text-right w-20">Giữ kho</th>
+                <th className="table-header-cell text-right stock-col-project">
+                  <span className="stock-matrix-th-stack">Tồn dự án<br />thực tế</span>
+                </th>
+                <th className="table-header-cell text-right stock-col-project">
+                  <span className="stock-matrix-th-stack">Tồn dự án<br />dự kiến</span>
+                </th>
+                <th
+                  className="table-header-cell text-right w-24"
+                  title="Weighted Average Cost (WAC) — đơn giá bình quân gia quyền từ các phiếu nhập đã duyệt (IAS 2)"
+                >
+                  Giá BQ
+                </th>
+                <th className="table-header-cell text-center w-14">Dự án</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <TableSkeletonRows colSpan={stockColSpan} />
+              ) : isError ? (
+                <tr>
+                  <td colSpan={stockColSpan}>
+                    <EmptyState message={WMS_ERROR.loadStock} />
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {paginated.map((row: StockMatrixRowApiDto) => (
-                  <tr key={row.materialCode} className="table-row border-b border-[var(--md-outline-variant)]">
-                    <td className="table-cell font-mono font-bold text-[var(--md-primary)]">{row.materialCode}</td>
-                    <td className="table-cell font-semibold">
-                      {row.materialName}
-                      {row.isActive === false && (
-                        <span className="ml-2 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">
-                          Ngừng SD
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={stockColSpan}>
+                    <EmptyState message={WMS_EMPTY.noStock} />
+                  </td>
+                </tr>
+              ) : (
+                paginated.map((row: StockMatrixRowApiDto) => {
+                  const projectActual = sumProjectActual(row);
+                  const projectPlanned = sumProjectPlanned(row);
+                  const activeCount = countActiveProjects(row);
+                  const usableQty = totalUsableQty(row);
+
+                  return (
+                    <tr
+                      key={row.materialCode}
+                      onClick={() => setSelectedRow(row)}
+                      className="wms-inventory-row--interactive stock-matrix-row table-row border-b border-[var(--md-outline-variant)] cursor-pointer"
+                    >
+                      <td className="table-cell font-mono font-bold stock-col-code" onClick={e => e.stopPropagation()}>
+                        <Link
+                          to="/warehouse/materials"
+                          state={{ highlightCode: row.materialCode }}
+                          className="text-[var(--md-primary)] hover:underline stock-cell-truncate"
+                          title={row.materialCode}
+                        >
+                          {row.materialCode}
+                        </Link>
+                      </td>
+                      <td className="table-cell stock-col-name">
+                        <span className="font-semibold stock-cell-truncate block" title={row.materialName}>
+                          {row.materialName}
                         </span>
-                      )}
-                    </td>
-                    <td className="table-cell text-center">{row.unit}</td>
-                    <td className="table-cell text-right font-bold" style={{ background: 'var(--tint-primary-weak)' }}>
-                      {row.generalActualQty}
-                    </td>
-                    <td className="table-cell text-right font-bold text-[var(--md-success)]">{row.generalAvailableQty}</td>
-                    <td className="table-cell text-right text-rose-500">{row.generalReservedQty}</td>
-                    {displayedProjects.map(p => {
-                      const col = row.projects.find(c => c.projectCode === p.projectCode);
-                      return (
-                        <td key={p.projectCode} className="table-cell text-right">
-                          <div className="font-bold">{col?.actualQty ?? 0}</div>
-                          {(col?.plannedQty ?? 0) !== 0 && (
-                            <div className="text-[10px] text-amber-600">+{col?.plannedQty}</div>
-                          )}
-                          {(col?.reservedQty ?? 0) !== 0 && (
-                            <div className="text-[10px] text-rose-500">−{col?.reservedQty}</div>
-                          )}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-        {filtered.length > 0 && (
-          <div className="px-4 pb-4 mt-2 border-t pt-3" style={{ borderColor: 'var(--md-outline-variant)' }}>
+                        {row.isActive === false && (
+                          <span className="wms-badge-inactive">Ngừng SD</span>
+                        )}
+                      </td>
+                      <td className="table-cell text-center">{row.unit}</td>
+                      <td className="table-cell text-right font-bold tabular-nums stock-cell-general">
+                        {row.generalActualQty}
+                      </td>
+                      <td className="table-cell text-right font-bold tabular-nums text-[var(--md-success)]">
+                        {usableQty}
+                      </td>
+                      <td className="table-cell text-right tabular-nums stock-qty--reserved">
+                        {row.generalReservedQty > 0 ? row.generalReservedQty : '—'}
+                      </td>
+                      <td className="table-cell text-right font-bold tabular-nums">
+                        {projectActual}
+                      </td>
+                      <td className="table-cell text-right tabular-nums stock-qty--pending">
+                        {fmtPlanned(projectPlanned)}
+                      </td>
+                      <td className="table-cell text-right tabular-nums text-[var(--md-on-surface)]">
+                        {row.weightedAverageUnitCost > 0
+                          ? formatCurrency(row.weightedAverageUnitCost)
+                          : '—'}
+                      </td>
+                      <td className="table-cell text-center">
+                        {activeCount > 0 ? (
+                          <span className="stock-project-badge tabular-nums">{activeCount}</span>
+                        ) : (
+                          <span className="text-[var(--md-on-surface-variant)]">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+        {!isLoading && filtered.length > 0 && (
+          <div className="surface-panel__footer px-4 pb-4">
             <Pagination
               currentPage={page}
               totalPages={totalPages}
@@ -141,6 +209,8 @@ export default function ApiStockMatrixView() {
           </div>
         )}
       </div>
+
+      <StockMaterialProjectModal row={selectedRow} onClose={() => setSelectedRow(null)} />
     </>
   );
 }

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, type CSSProperties } from 'react';
 import { useForm, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -427,7 +427,7 @@ export default function CandidateForm() {
         </select>
         {errors.hrResponsible && <p className="hrm-field__error">{errors.hrResponsible.message}</p>}
       </div>
-      <div className="candidate-upload-header" style={{ marginTop: '16px' }}>
+      <div className="candidate-upload-header">
         <FormSectionHeader step={3} title="Tải lên CV" />
       </div>
       <div ref={cvSectionRef}>
@@ -468,7 +468,10 @@ export default function CandidateForm() {
                 </p>
                 {(isUploading || uploadProgress < 100) && (
                   <div className="hrm-upload-file__progress">
-                    <div className="hrm-upload-file__progress-bar" style={{ width: `${uploadProgress}%` }} />
+                  <div
+                    className="hrm-upload-file__progress-bar"
+                    style={{ '--upload-progress': `${uploadProgress}%` } as CSSProperties}
+                  />
                   </div>
                 )}
               </div>

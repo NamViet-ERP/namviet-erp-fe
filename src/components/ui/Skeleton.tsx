@@ -40,8 +40,8 @@ export default function Skeleton({
         {Array.from({ length: count }).map((_, i) => (
           <div
             key={i}
-            className={`skeleton ${className}`}
-            style={{ ...baseStyle, width: i === count - 1 ? '70%' : baseStyle.width }}
+            className={`skeleton ${i === count - 1 ? 'skeleton-line--short' : ''} ${className}`.trim()}
+            style={baseStyle}
           />
         ))}
       </div>

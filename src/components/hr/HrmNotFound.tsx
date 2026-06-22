@@ -1,3 +1,5 @@
+import { UI_LOADING } from '../../lib/uiMessages';
+
 interface HrmNotFoundProps {
   message: string;
   backLabel?: string;
@@ -15,6 +17,6 @@ export default function HrmNotFound({ message, backLabel = 'Quay lại', onBack 
   );
 }
 
-export function HrmLoadingState({ message = 'Đang tải...' }: { message?: string }) {
+export function HrmLoadingState({ message = UI_LOADING.default }: { message?: string }) {
   return <div className="hrm-empty">{message}</div>;
 }

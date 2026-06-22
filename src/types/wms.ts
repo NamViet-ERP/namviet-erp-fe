@@ -41,6 +41,21 @@ export interface WarehouseProjectApiDto {
   endDate: string | null;
   materialBudget: number;
   status: string;
+  stockActualQty?: number;
+  stockPlannedQty?: number;
+  stockReservedQty?: number;
+  stockMaterialCount?: number;
+}
+
+export interface CreateWarehouseProjectRequest {
+  projectCode: string;
+  projectName: string;
+  projectType: 'Project' | 'Factory';
+  pmId: string;
+  pmName: string;
+  startDate: string;
+  endDate?: string | null;
+  materialBudget?: number;
 }
 
 export interface WarehouseProjectInventoryApiDto {
@@ -55,6 +70,18 @@ export interface WarehouseProjectInventoryApiDto {
   actualInventoryQty: number;
   plannedInventoryQty: number;
   reservedQty: number;
+}
+
+export type ProjectLedgerKind = 'import' | 'export' | 'transfer';
+
+export interface WarehouseProjectLedgerEntryApiDto {
+  id: string;
+  kind: ProjectLedgerKind;
+  voucherCode: string;
+  date: string;
+  status: 'draft' | 'pending' | 'approved' | 'rejected' | 'completed';
+  itemQty: number;
+  totalValue: number | null;
 }
 
 export interface StockMatrixProjectColumnApiDto {
@@ -74,6 +101,8 @@ export interface StockMatrixRowApiDto {
   generalActualQty: number;
   generalReservedQty: number;
   generalAvailableQty: number;
+  /** WAC — weighted average unit cost from approved imports (IAS 2). */
+  weightedAverageUnitCost: number;
   projects: StockMatrixProjectColumnApiDto[];
 }
 

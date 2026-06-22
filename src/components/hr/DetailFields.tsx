@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Eye, EyeOff, ImageIcon } from 'lucide-react';
 import HrmDatePicker from './HrmDatePicker';
 import HrmImageUpload, { type LocalFileState } from './HrmImageUpload';
@@ -121,7 +121,7 @@ export function SecureImagePreview({ label, url, fileName, document }: {
         />
         {!revealed && (
           <div className="hrm-secure-image__overlay">
-            <ImageIcon size={22} className="text-white/90" aria-hidden />
+            <ImageIcon size={22} className="hrm-secure-image__overlay-icon" aria-hidden />
             <button
               type="button"
               className="hrm-secure-image__reveal-btn"
@@ -165,8 +165,13 @@ export function EditableImageField({
 }) {
   const replaceRef = useRef<HTMLInputElement>(null);
   const preview = pending?.preview ?? attachment?.previewUrl;
+  const [previewBroken, setPreviewBroken] = useState(false);
 
-  if (!preview) {
+  useEffect(() => {
+    setPreviewBroken(false);
+  }, [preview]);
+
+  if (!preview || previewBroken) {
     return (
       <HrmImageUpload
         label={label}
@@ -186,6 +191,10 @@ export function EditableImageField({
           src={preview}
           alt={label}
           className={`hrm-field-image${document ? ' hrm-field-image--document' : ''}`}
+          onError={() => {
+            setPreviewBroken(true);
+            if (attachment?.previewUrl && !pending) onRemove();
+          }}
         />
         <div className="hrm-editable-image__actions">
           <button type="button" className="btn btn-outline btn-sm rounded-full" onClick={() => replaceRef.current?.click()}>

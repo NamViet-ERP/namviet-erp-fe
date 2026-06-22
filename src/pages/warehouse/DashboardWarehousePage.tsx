@@ -1,11 +1,16 @@
 import { Package, DollarSign, Warehouse, TrendingUp, ArrowUpRight, Activity } from 'lucide-react';
+import type { CSSProperties } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend,
   AreaChart, Area, XAxis, YAxis, CartesianGrid, BarChart, Bar,
 } from 'recharts';
 
+import { USE_MOCK } from '../../lib/mock';
 import Card from '../../components/ui/Card';
+import EmptyState from '../../components/ui/EmptyState';
+import { WMS_EMPTY } from '../../lib/wms/messages';
+import PageHeader from '../../components/ui/PageHeader';
 import { warehouses } from '../../data/warehouses';
 import { formatCurrency, formatCurrencyShort } from '../../utils/formatCurrency';
 import { showToast } from '../../components/ui/Toast';
@@ -82,28 +87,16 @@ interface CustomTooltipInternalProps {
 const CustomTooltip = ({ active, payload, label }: CustomTooltipInternalProps) => {
   if (!active || !payload?.length) return null;
   return (
-    <div
-      style={{
-        padding: '12px 16px',
-        background: 'var(--md-surface-container-high)',
-        border: '1px solid var(--md-outline-variant)',
-        borderRadius: '12px',
-        boxShadow: 'var(--md-shadow-2)',
-        fontFamily: "'Roboto', sans-serif",
-        fontSize: '13px',
-        color: 'var(--md-on-surface)',
-      }}
-    >
-      {label && (
-        <p style={{ fontWeight: 500, fontSize: '11px', color: 'var(--md-on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
-          {label}
-        </p>
-      )}
+    <div className="chart-tooltip">
+      {label && <p className="chart-tooltip__label">{label}</p>}
       {(payload as Array<{ name?: string; value?: number; color?: string; fill?: string }>).map((p, i) => (
-        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: i > 0 ? '4px' : 0 }}>
-          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: p.color || p.fill, flexShrink: 0 }} />
-          <span style={{ color: 'var(--md-on-surface-variant)' }}>{p.name}:</span>
-          <span style={{ fontWeight: 700, color: 'var(--md-on-surface)' }}>
+        <div key={i} className="chart-tooltip__row">
+          <span
+            className="chart-tooltip__dot"
+            style={{ '--chart-dot-color': p.color || p.fill } as CSSProperties}
+          />
+          <span className="chart-tooltip__name">{p.name}:</span>
+          <span className="chart-tooltip__value">
             {typeof p.value === 'number' ? formatCurrency(p.value) : p.value}
           </span>
         </div>
@@ -145,50 +138,20 @@ interface SectionHeadingProps {
 
 function SectionHeading({ children, sub }: SectionHeadingProps) {
   return (
-    <div style={{ marginBottom: '16px' }}>
-      <h2
-        style={{
-          fontFamily: "'Roboto', sans-serif",
-          fontSize: '18px',
-          fontWeight: 500,
-          color: 'var(--md-on-surface)',
-        }}
-      >
-        {children}
-      </h2>
-      {sub && (
-        <p style={{ fontFamily: "'Roboto', sans-serif", fontSize: '12px', color: 'var(--md-on-surface-variant)', marginTop: '2px' }}>
-          {sub}
-        </p>
-      )}
+    <div className="section-heading">
+      <h2 className="section-heading__title">{children}</h2>
+      {sub && <p className="section-heading__sub">{sub}</p>}
     </div>
   );
 }
 
-/* ── Bento card — MD3 style ── */
 interface BentoCardProps {
   children: React.ReactNode;
   className?: string;
-  style?: React.CSSProperties;
 }
 
-function BentoCard({ children, className = '', style = {} }: BentoCardProps) {
-  return (
-    <div
-      className={className}
-      style={{
-        background: 'var(--md-surface-container)',
-        borderRadius: '24px',
-        boxShadow: 'var(--md-shadow-1)',
-        padding: '24px',
-        position: 'relative',
-        transition: 'all 300ms var(--md-easing)',
-        ...style,
-      }}
-    >
-      {children}
-    </div>
-  );
+function BentoCard({ children, className = '' }: BentoCardProps) {
+  return <div className={`bento-card${className ? ` ${className}` : ''}`}>{children}</div>;
 }
 
 /* ── Mini stat item type ── */
@@ -200,77 +163,38 @@ interface MiniStat {
 }
 
 export default function DashboardWarehousePage() {
-  return (
-    <div className="relative animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      
-      {/* ── Ambient Blur Shapes ── */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          top: '-10%',
-          left: '-5%',
-          width: '400px',
-          height: '400px',
-          borderRadius: '50%',
-          background: 'color-mix(in srgb, var(--md-primary) 6%, transparent)',
-          filter: 'blur(100px)',
-          pointerEvents: 'none',
-          zIndex: 0,
-        }}
-      />
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          bottom: '20%',
-          right: '-5%',
-          width: '350px',
-          height: '350px',
-          borderRadius: '50%',
-          background: 'color-mix(in srgb, var(--md-secondary) 6%, transparent)',
-          filter: 'blur(90px)',
-          pointerEvents: 'none',
-          zIndex: 0,
-        }}
-      />
+  if (!USE_MOCK) {
+    return (
+      <div className="page-stack">
+        <PageHeader title="Tổng quan kho" subtitle="Theo dõi hoạt động và tình hình kho hàng" />
+        <EmptyState message={WMS_EMPTY.dashboardPending} />
+      </div>
+    );
+  }
+  return <DashboardWarehousePageMock />;
+}
 
-      {/* ── Page Header ── */}
-      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
-        <div>
-          <p
-            style={{
-              fontFamily: "'Roboto', sans-serif",
-              fontSize: '11px',
-              fontWeight: 500,
-              textTransform: 'uppercase',
-              letterSpacing: '0.08em',
-              color: 'var(--md-primary)',
-              marginBottom: '4px',
-            }}
-          >
-            Tổng quan
-          </p>
-          <h1
-            style={{
-              fontFamily: "'Roboto', sans-serif",
-              fontSize: '28px',
-              fontWeight: 700,
-              color: 'var(--md-on-surface)',
-              letterSpacing: '-0.01em',
-            }}
-          >
-            Tổng quan kho hàng
-          </h1>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontFamily: "'Roboto', sans-serif", fontSize: '12px', color: 'var(--md-on-surface-variant)' }}>
-          <Activity size={13} style={{ color: 'var(--md-primary)' }} />
-          Cập nhật lúc: {new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
-        </div>
+function DashboardWarehousePageMock() {
+  return (
+    <div className="page-stack relative">
+      <div className="dashboard-ambient dashboard-ambient--tl" aria-hidden />
+      <div className="dashboard-ambient dashboard-ambient--br" aria-hidden />
+
+      <div className="relative z-10">
+        <PageHeader
+          eyebrow="Tổng quan"
+          title="Tổng quan kho hàng"
+          actions={
+            <p className="flex items-center gap-1.5 text-xs text-[var(--md-on-surface-variant)] shrink-0">
+              <Activity size={13} className="text-[var(--md-secondary)]" aria-hidden />
+              Cập nhật lúc: {new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+            </p>
+          }
+        />
       </div>
 
       {/* ── KPI Cards ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px', position: 'relative', zIndex: 1 }}>
+      <div className="grid gap-4 relative z-10 grid-cols-[repeat(auto-fill,minmax(260px,1fr))]">
         <Card
           title="Tổng tồn kho"
           value={formatCurrency(totalStock)}
@@ -301,10 +225,8 @@ export default function DashboardWarehousePage() {
       </div>
 
       {/* ── Main charts row ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', position: 'relative', zIndex: 1 }} className="lg:grid-cols-[3fr_2fr]">
-        
-        {/* Area chart + Pie in a row */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }} className="md:grid-cols-2 lg:col-span-2">
+      <div className="dashboard-grid-row dashboard-grid-row--split">
+        <div className="dashboard-grid-charts lg:col-span-2">
 
           {/* Area chart */}
           <BentoCard>
@@ -330,7 +252,7 @@ export default function DashboardWarehousePage() {
                 <Area type="monotone" dataKey="exports" name="Xuất kho"
                   stroke="var(--md-secondary)" strokeWidth={2} fill="url(#gradExport)" dot={false} activeDot={{ r: 5, fill: 'var(--md-secondary)', stroke: 'var(--md-surface)', strokeWidth: 1.5 }} />
                 <Legend iconType="circle" iconSize={8}
-                  formatter={v => <span style={{ fontFamily: 'Roboto, sans-serif', color: 'var(--md-on-surface-variant)', fontSize: 12 }}>{v}</span>} />
+                  formatter={v => <span className="chart-legend-text">{v}</span>} />
               </AreaChart>
             </ResponsiveContainer>
           </BentoCard>
@@ -358,7 +280,7 @@ export default function DashboardWarehousePage() {
                 <Tooltip content={<CustomTooltip />} />
                 <Legend
                   verticalAlign="bottom" iconType="circle" iconSize={8}
-                  formatter={v => <span style={{ fontFamily: 'Roboto, sans-serif', color: 'var(--md-on-surface-variant)', fontSize: 11 }}>{v}</span>}
+                  formatter={v => <span className="chart-legend-text">{v}</span>}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -367,7 +289,7 @@ export default function DashboardWarehousePage() {
       </div>
 
       {/* ── Bottom row: bar chart + recent activity ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', position: 'relative', zIndex: 1 }} className="lg:grid-cols-[3fr_2fr]">
+      <div className="dashboard-grid-row dashboard-grid-row--split">
 
         {/* Bar chart */}
         <BentoCard>
@@ -394,32 +316,24 @@ export default function DashboardWarehousePage() {
           <SectionHeading sub="Hoạt động gần nhất">Nhật ký kho</SectionHeading>
           <div>
             {recentActivity.map((item, i) => (
-              <div
-                key={i}
-                style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '12px',
-                  paddingTop: '12px',
-                  paddingBottom: '12px',
-                  borderBottom: i < recentActivity.length - 1 ? '1px solid var(--md-outline-variant)' : 'none',
-                }}
-              >
-                {/* Dot + connector */}
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', alignSelf: 'stretch', flexShrink: 0 }}>
-                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: item.accent, marginTop: '4px', flexShrink: 0 }} />
-                  {i < recentActivity.length - 1 && (
-                    <div style={{ width: '1px', flex: 1, marginTop: '8px', background: 'var(--md-outline-variant)', opacity: 0.5 }} />
-                  )}
+              <div key={i} className="activity-feed__item">
+                <div className="activity-feed__rail">
+                  <div
+                    className="activity-feed__dot"
+                    style={{ '--activity-accent': item.accent } as CSSProperties}
+                  />
+                  {i < recentActivity.length - 1 && <div className="activity-feed__line" />}
                 </div>
-
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <p style={{ fontFamily: "'Roboto', sans-serif", fontSize: '13px', fontWeight: 500, color: 'var(--md-on-surface)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {item.label}
-                  </p>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}>
-                    <span style={{ fontFamily: "'Roboto', sans-serif", fontSize: '12px', fontWeight: 700, color: item.accent }}>{item.value}</span>
-                    <span style={{ fontFamily: "'Roboto', sans-serif", fontSize: '11px', color: 'var(--md-on-surface-variant)' }}>{item.time}</span>
+                <div className="activity-feed__body">
+                  <p className="activity-feed__label">{item.label}</p>
+                  <div className="activity-feed__meta">
+                    <span
+                      className="activity-feed__value activity-feed__value--accent"
+                      style={{ '--activity-accent': item.accent } as CSSProperties}
+                    >
+                      {item.value}
+                    </span>
+                    <span className="activity-feed__time">{item.time}</span>
                   </div>
                 </div>
               </div>
@@ -427,25 +341,8 @@ export default function DashboardWarehousePage() {
           </div>
 
           <button
-            style={{
-              marginTop: '16px',
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px',
-              height: '40px',
-              fontFamily: "'Roboto', sans-serif",
-              fontSize: '13px',
-              fontWeight: 500,
-              border: '1px solid var(--md-outline)',
-              borderRadius: '9999px',
-              background: 'transparent',
-              color: 'var(--md-primary)',
-              cursor: 'pointer',
-              transition: 'all 200ms var(--md-easing)',
-            }}
-            className="hover:bg-[var(--tint-primary-hover)] active:bg-[var(--tint-primary-active)]"
+            type="button"
+            className="btn btn-outlined btn-sm w-full mt-4 flex items-center justify-center gap-1.5"
             onClick={() => showToast('info', 'Hoạt động nhật ký đầy đủ đang được tải...', 'Nhật ký')}
           >
             Xem toàn bộ <ArrowUpRight size={14} />
@@ -454,46 +351,23 @@ export default function DashboardWarehousePage() {
       </div>
 
       {/* ── Mini stat bar (bottom) ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px', position: 'relative', zIndex: 1 }}>
+      <div className="mini-stat-grid">
         {([
           { label: 'Nhập hôm nay', value: '47 phiếu',   color: 'var(--status-success)', icon: TrendingUp },
           { label: 'Xuất hôm nay', value: '31 phiếu',   color: 'var(--status-warning)', icon: ArrowUpRight },
           { label: 'Chờ duyệt',    value: '12 phiếu',   color: 'var(--status-error)',   icon: Activity },
           { label: 'Mã vật tư sắp hết', value: '8 mặt hàng', color: 'var(--chart-5)', icon: Package },
         ] as MiniStat[]).map(s => (
-          <div
-            key={s.label}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              background: 'var(--md-surface-container)',
-              borderRadius: '16px',
-              padding: '12px 16px',
-              boxShadow: 'var(--md-shadow-1)',
-            }}
-          >
+          <div key={s.label} className="mini-stat-item">
             <div
-              style={{
-                width: '36px',
-                height: '36px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-                borderRadius: '8px',
-                background: `color-mix(in srgb, ${s.color} 12%, transparent)`,
-              }}
+              className="mini-stat-item__icon"
+              style={{ '--stat-color': s.color } as CSSProperties}
             >
-              <s.icon size={16} style={{ color: s.color }} />
+              <s.icon size={16} />
             </div>
             <div>
-              <p style={{ fontFamily: "'Roboto', sans-serif", fontSize: '16px', fontWeight: 700, color: 'var(--md-on-surface)', lineHeight: 1.2 }}>
-                {s.value}
-              </p>
-              <p style={{ fontFamily: "'Roboto', sans-serif", fontSize: '11px', color: 'var(--md-on-surface-variant)', marginTop: '2px' }}>
-                {s.label}
-              </p>
+              <p className="mini-stat-item__value">{s.value}</p>
+              <p className="mini-stat-item__label">{s.label}</p>
             </div>
           </div>
         ))}

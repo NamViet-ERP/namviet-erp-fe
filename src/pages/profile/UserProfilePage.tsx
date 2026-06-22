@@ -90,14 +90,14 @@ export default function UserProfilePage() {
 
   if (!profile) {
     return (
-      <div className="animate-fade-in flex items-center justify-center min-h-[40dvh]">
+      <div className="page-shell flex items-center justify-center min-h-[40dvh]">
         <p className="text-sm text-[var(--md-on-surface-variant)]">Không có phiên đăng nhập.</p>
       </div>
     );
   }
 
   return (
-    <div className="animate-fade-in max-w-5xl mx-auto hrm-page w-full">
+    <div className="max-w-5xl mx-auto hrm-page w-full">
       <HrmDetailHeader
         onBack={() => navigate(-1)}
         title="Thông tin cá nhân"
@@ -118,11 +118,7 @@ export default function UserProfilePage() {
         {/* Sidebar summary */}
         <aside className="rounded-2xl border border-[var(--md-outline-variant02)] bg-[var(--md-surface-container)] p-6 shadow-sm flex flex-col items-center text-center lg:sticky lg:top-[calc(64px+20px)] lg:self-start">
           <div
-            className="size-24 rounded-full flex items-center justify-center font-bold text-3xl mb-4 border-2 border-[color-mix(in_srgb,var(--md-secondary)_30%,transparent)]"
-            style={{
-              background: 'var(--md-primary-container)',
-              color: 'var(--md-on-primary-container)',
-            }}
+            className="size-24 rounded-full flex items-center justify-center font-bold text-3xl mb-4 border-2 border-[color-mix(in_srgb,var(--md-secondary)_30%,transparent)] profile-avatar-lg"
           >
             {profile.initials}
           </div>

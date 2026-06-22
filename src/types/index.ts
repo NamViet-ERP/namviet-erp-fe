@@ -101,6 +101,9 @@ export interface ImportItem {
   qty: number;
   unit: string;
   unitPrice: number;
+  /** NCC theo dòng — nếu trống dùng NCC mặc định của phiếu */
+  supplier?: string;
+  supplierId?: number;
   [key: string]: unknown;
 }
 
@@ -150,6 +153,8 @@ export interface Export {
   status: StatusKey;
   createdBy: string;
   note: string;
+  project?: string;
+  projectName?: string;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -178,6 +183,10 @@ export interface Transfer {
   createdBy: string;
   note: string;
   approvedBy?: string;
+  project?: string;
+  projectName?: string;
+  toProject?: string;
+  toProjectName?: string;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

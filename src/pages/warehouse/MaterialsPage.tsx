@@ -1,12 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Plus, RotateCcw } from 'lucide-react';
 import SearchBar from '../../components/ui/SearchBar';
 import Pagination from '../../components/ui/Pagination';
 import EmptyState from '../../components/ui/EmptyState';
+import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import PageHeader from '../../components/ui/PageHeader';
 import Modal from '../../components/ui/Modal';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
+import { WMS_EMPTY, WMS_ERROR } from '../../lib/wms/messages';
 import { useMaterials, useCreateMaterial } from '../../hooks/useMaterials';
 import { useCategoryCascade } from '../../hooks/useCategories';
 import MaterialDetailView from './MaterialDetailView';
@@ -29,6 +32,7 @@ function isRequiredOnCreate(level: number) {
 }
 
 export default function MaterialsPage() {
+  const location = useLocation();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(15);
@@ -46,6 +50,14 @@ export default function MaterialsPage() {
     qualityStandard: '',
   });
   const [createErrors, setCreateErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const code = (location.state as { highlightCode?: string } | null)?.highlightCode;
+    if (code) {
+      setDetailCode(code);
+      setSearch(code);
+    }
+  }, [location.state]);
 
   const { optionsByLevel: filterOptions, isLoading: categoriesLoading } =
     useCategoryCascade(filterSelection);
@@ -159,7 +171,7 @@ export default function MaterialsPage() {
   }
 
   return (
-    <div className="animate-fade-in space-y-6">
+    <div className="page-shell">
       <PageHeader
         eyebrow="Kho hàng"
         title="Danh mục vật tư"
@@ -180,10 +192,7 @@ export default function MaterialsPage() {
         Khi tạo mã vật tư: ba cấp đầu, mã và tên là bắt buộc.
       </p>
 
-      <div
-        className="rounded-2xl shadow-card p-4 space-y-4"
-        style={{ background: 'var(--md-surface-container)', border: '1px solid var(--md-outline-variant)' }}
-      >
+      <div className="surface-panel surface-panel--rounded-xl p-4 shadow-card space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           {MATERIAL_CATEGORY_LEVELS.map((lvl, idx) => (
             <label key={lvl.key} className="text-xs space-y-1">
@@ -229,7 +238,7 @@ export default function MaterialsPage() {
           <button
             type="button"
             onClick={resetFilters}
-            className="h-10 px-3 flex items-center gap-2 rounded bg-[#fc2d42] text-white whitespace-nowrap btn-clear-filters"
+            className="btn-clear-filters"
             title="Đặt lại bộ lọc"
           >
             <RotateCcw size={15} />
@@ -238,30 +247,35 @@ export default function MaterialsPage() {
         </div>
       </div>
 
-      <div
-        className="rounded-2xl shadow-card overflow-hidden"
-        style={{ background: 'var(--md-surface-container)', border: '1px solid var(--md-outline-variant)' }}
-      >
-        {isLoading ? (
-          <div className="p-8 text-center text-sm text-[var(--md-on-surface-variant)]">Đang tải...</div>
-        ) : isError ? (
-          <EmptyState message="Không thể tải danh sách vật tư." />
-        ) : items.length === 0 ? (
-          <EmptyState message="Không tìm thấy vật tư phù hợp." />
-        ) : (
-          <div className="overflow-x-auto table-scroll">
-            <table className="w-full text-xs" style={{ minWidth: '1400px' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid var(--md-outline-variant)' }}>
-                  {MATERIAL_TABLE_COLUMNS.map(col => (
-                    <th key={col.key} className="table-header-cell text-left whitespace-nowrap">
-                      {col.label}
-                    </th>
-                  ))}
+      <div className="surface-panel surface-panel--rounded-xl surface-panel--table shadow-card">
+        <div className="overflow-x-auto table-scroll">
+          <table className="w-full text-xs table-min-w--1400">
+            <thead>
+              <tr>
+                {MATERIAL_TABLE_COLUMNS.map(col => (
+                  <th key={col.key} className="table-header-cell text-left whitespace-nowrap">
+                    {col.label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <TableSkeletonRows colSpan={MATERIAL_TABLE_COLUMNS.length} />
+              ) : isError ? (
+                <tr>
+                  <td colSpan={MATERIAL_TABLE_COLUMNS.length}>
+                    <EmptyState message={WMS_ERROR.loadMaterials} />
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {items.map(m => (
+              ) : items.length === 0 ? (
+                <tr>
+                  <td colSpan={MATERIAL_TABLE_COLUMNS.length}>
+                    <EmptyState message={WMS_EMPTY.noMaterials} />
+                  </td>
+                </tr>
+              ) : (
+                items.map(m => (
                   <tr
                     key={m.materialCode}
                     className="table-row border-b border-[var(--md-outline-variant)] cursor-pointer hover:bg-[var(--md-surface-container-high)]"
@@ -275,22 +289,20 @@ export default function MaterialsPage() {
                     <td className="table-cell font-mono font-bold text-[var(--md-primary)]">
                       {m.materialCode}
                       {m.isActive === false && (
-                        <span className="ml-2 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">
-                          Ngừng SD
-                        </span>
+                        <span className="wms-badge-inactive">Ngừng SD</span>
                       )}
                     </td>
                     <td className="table-cell font-semibold">{m.materialName}</td>
                     <td className="table-cell">{m.technicalSpec ?? '—'}</td>
                     <td className="table-cell">{m.qualityStandard ?? '—'}</td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-        {totalCount > 0 && (
-          <div className="px-4 pb-4 mt-2 border-t pt-3" style={{ borderColor: 'var(--md-outline-variant)' }}>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+        {totalCount > 0 && !isLoading && (
+          <div className="surface-panel__footer px-4 pb-4">
             <Pagination
               currentPage={page}
               totalPages={totalPages}
@@ -330,8 +342,8 @@ export default function MaterialsPage() {
       >
         <div className="space-y-4">
           {!createCategoriesLoading && (createOptions[0]?.length ?? 0) === 0 && (
-            <p className="text-xs text-[var(--md-error)] rounded-lg p-3" style={{ background: 'var(--md-error-container)' }}>
-              Chưa có dữ liệu cây vật tư. Vào <strong>Thiết lập → Cây vật tư</strong> hoặc khởi động lại API để tự nạp dữ liệu từ Excel.
+            <p className="alert-banner alert-banner--error text-xs">
+              Chưa có dữ liệu cây vật tư. Vào <strong>Thiết lập → Cây vật tư</strong> để khai báo trước khi tạo vật tư mới.
             </p>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">

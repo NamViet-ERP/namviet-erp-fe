@@ -164,9 +164,9 @@ export function toApi(employee: CreateEmployeeDto | UpdateEmployeeDto, id = ''):
     cmndIssuePlace: e.cmndIssuePlace,
     maritalStatus: e.maritalStatus,
     taxCode: e.taxCode,
-    photoUrl: toStoredUrl(e.profilePhoto?.previewUrl),
-    cccdFrontUrl: toStoredUrl(e.cccdFront?.previewUrl),
-    cccdBackUrl: toStoredUrl(e.cccdBack?.previewUrl),
-    degreePhotoUrl: toStoredUrl(e.degreePhoto?.previewUrl),
+    photoUrl: e.profilePhoto?.previewUrl ? toStoredUrl(e.profilePhoto.previewUrl) ?? null : null,
+    cccdFrontUrl: e.cccdFront?.previewUrl ? toStoredUrl(e.cccdFront.previewUrl) ?? null : null,
+    cccdBackUrl: e.cccdBack?.previewUrl ? toStoredUrl(e.cccdBack.previewUrl) ?? null : null,
+    degreePhotoUrl: e.degreePhoto?.previewUrl ? toStoredUrl(e.degreePhoto.previewUrl) ?? null : null,
   };
 }

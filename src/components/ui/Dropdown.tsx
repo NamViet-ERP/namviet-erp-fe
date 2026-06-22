@@ -6,7 +6,7 @@ import type { ReactNode } from 'react';
 
 /**
  * MD3 Menu / Dropdown
- * Trigger: Tonal button · Menu: surface-container, 28px radius, shadow-3
+ * Trigger: Tonal button · Menu: surface-container, shadow-3
  */
 
 interface DropdownProps {
@@ -69,76 +69,35 @@ export default function Dropdown({ trigger, items, className = '' }: DropdownPro
   return (
     <div className={`relative inline-block ${className}`} ref={ref}>
       <button
+        type="button"
         onClick={handleToggle}
-        className="btn btn-tonal"
-        style={{ gap: '6px', fontSize: '0.8125rem', height: '36px', padding: '0 16px' }}
+        className="btn btn-tonal nv-dropdown__trigger"
       >
         {trigger || 'TÁC VỤ'}
         <ChevronDown
           size={16}
-          style={{
-            transition: 'transform 200ms var(--md-easing)',
-            transform: open ? 'rotate(180deg)' : 'none',
-          }}
+          className={`nv-dropdown__chevron${open ? ' nv-dropdown__chevron--open' : ''}`}
         />
       </button>
 
       {open && createPortal(
         <div
           ref={menuRef}
-          style={{
-            ...menuStyle,
-            background: 'var(--md-surface-container)',
-            borderRadius: '4px',
-            boxShadow: 'var(--md-shadow-3)',
-            padding: '4px 0',
-            overflow: 'hidden',
-          }}
-          className="animate-scale-in"
+          style={menuStyle}
+          className="nv-dropdown__menu animate-scale-in"
         >
           {items.map((item, i) => (
             item.divider ? (
-              <div
-                key={i}
-                style={{
-                  height: '1px',
-                  background: 'var(--md-outline-variant)',
-                  margin: '4px 0',
-                }}
-              />
+              <div key={i} className="nv-dropdown__divider" />
             ) : (
               <button
                 key={i}
+                type="button"
                 onClick={() => { item.onClick?.(); setOpen(false); }}
-                style={{
-                  width: '100%',
-                  textAlign: 'left',
-                  padding: '12px 16px',
-                  fontFamily: "'Roboto', sans-serif",
-                  fontSize: '0.875rem',
-                  fontWeight: 400,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  border: 'none',
-                  background: 'transparent',
-                  color: item.danger ? 'var(--md-error)' : 'var(--md-on-surface)',
-                  cursor: 'pointer',
-                  transition: 'background 200ms var(--md-easing)',
-                  letterSpacing: '0.01em',
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.background = item.danger
-                    ? 'var(--tint-error-soft)'
-                    : 'var(--tint-primary-hover)';
-                }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                className={`nv-dropdown__item${item.danger ? ' nv-dropdown__item--danger' : ''}`}
               >
                 {item.icon && (
-                  <item.icon
-                    size={18}
-                    style={{ color: item.danger ? 'var(--md-error)' : 'var(--md-on-surface-variant)' }}
-                  />
+                  <item.icon size={18} className="nv-dropdown__item-icon" />
                 )}
                 {item.label}
               </button>

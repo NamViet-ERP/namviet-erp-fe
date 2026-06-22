@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, type CSSProperties } from 'react';
 import { Upload, FileText, Trash2 } from 'lucide-react';
 import { MAX_HRM_UPLOAD_BYTES } from '../../lib/hrm/attachments';
 import { FormFieldError } from './form/FormFields';
@@ -109,7 +109,10 @@ export default function HrmCvUpload({
               </p>
               {(isUploading || uploadProgress < 100) && (
                 <div className="hrm-upload-file__progress">
-                  <div className="hrm-upload-file__progress-bar" style={{ width: `${uploadProgress}%` }} />
+                  <div
+                    className="hrm-upload-file__progress-bar"
+                    style={{ '--upload-progress': `${uploadProgress}%` } as CSSProperties}
+                  />
                 </div>
               )}
             </div>

@@ -1,9 +1,14 @@
 import { useMemo, useState } from 'react';
-import { Package, Plus, Trash2 } from 'lucide-react';
-import ConfirmDialog from '../../components/ui/ConfirmDialog';
+import { Package, Plus, Trash2, RotateCcw } from 'lucide-react';
+import IOSSwitch from '../../components/ui/IOSSwitch';
 import SearchBar from '../../components/ui/SearchBar';
+import Pagination from '../../components/ui/Pagination';
+import EmptyState from '../../components/ui/EmptyState';
+import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
+import { WMS_ERROR } from '../../lib/wms/messages';
+import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
 import {
   useCategoryTree,
   useCreateCategory,
@@ -29,6 +34,8 @@ export default function MaterialCategoriesSettingsPanel() {
   const [parentId, setParentId] = useState<number | ''>('');
   const [newName, setNewName] = useState('');
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_LIST_PAGE_SIZE);
   const [deleteTarget, setDeleteTarget] = useState<MaterialCategoryApiDto | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState('');
@@ -54,6 +61,18 @@ export default function MaterialCategoriesSettingsPanel() {
     }
     return items.sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name, 'vi'));
   }, [categories, activeLevel, parentId, search]);
+
+  const totalPages = Math.max(1, Math.ceil(visibleItems.length / pageSize));
+  const paginatedItems = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return visibleItems.slice(start, start + pageSize);
+  }, [visibleItems, page, pageSize]);
+
+  const resetFilters = () => {
+    setSearch('');
+    setParentId('');
+    setPage(1);
+  };
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,24 +166,28 @@ export default function MaterialCategoriesSettingsPanel() {
     c => c.level === activeLevel && c.code !== 'UNCATEGORIZED',
   ).length;
 
+  const categoryColSpan = activeLevel > 1 ? 4 : 3;
+  const emptyCategoryMessage =
+    activeLevel > 1 && parentId === ''
+      ? `Chọn ${MATERIAL_CATEGORY_LEVELS[activeLevel - 2].label} cha để xem danh sách.`
+      : search
+        ? 'Không tìm thấy.'
+        : `Chưa có ${levelLabel.toLowerCase()} nào.`;
+
   return (
     <div
-      className="rounded-2xl p-6 shadow-card"
-      style={{ background: 'var(--md-surface-container)', border: '1px solid var(--md-outline-variant)' }}
+      className="surface-panel surface-panel--rounded-xl p-6 shadow-card"
     >
       <div className="flex items-center gap-3 mb-4">
-        <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center"
-          style={{ background: 'var(--md-primary-container)', border: '1px solid var(--md-outline-variant)' }}
-        >
-          <Package size={20} style={{ color: 'var(--md-primary)' }} />
+        <div className="wms-settings-hero__icon">
+          <Package size={20} />
         </div>
         <div>
-          <h3 className="font-bold text-lg uppercase" style={{ color: 'var(--md-on-surface)' }}>
+          <h3 className="wms-settings-hero__title">
             CÂY VẬT TƯ
           </h3>
-          <p className="text-xs" style={{ color: 'var(--md-on-surface-variant)' }}>
-            Quản lý 5 cấp: Danh mục → Nhóm → Loại → Phân loại → Kiểu (một bảng <code>material_categories</code>)
+          <p className="wms-settings-hero__sub">
+            Quản lý 5 cấp: Danh mục → Nhóm → Loại → Phân loại → Kiểu
           </p>
         </div>
       </div>
@@ -175,7 +198,7 @@ export default function MaterialCategoriesSettingsPanel() {
             key={lvl.level}
             type="button"
             className={`btn btn-sm ${activeLevel === lvl.level ? 'btn-primary' : 'btn-outline'}`}
-            onClick={() => { setActiveLevel(lvl.level); setParentId(''); setSearch(''); }}
+            onClick={() => { setActiveLevel(lvl.level); setParentId(''); setSearch(''); setPage(1); }}
           >
             {lvl.label}
           </button>
@@ -190,7 +213,7 @@ export default function MaterialCategoriesSettingsPanel() {
           <select
             className="form-select w-full mt-1 text-sm"
             value={parentId}
-            onChange={e => setParentId(e.target.value === '' ? '' : Number(e.target.value))}
+            onChange={e => { setParentId(e.target.value === '' ? '' : Number(e.target.value)); setPage(1); }}
           >
             <option value="">— Chọn {MATERIAL_CATEGORY_LEVELS[activeLevel - 2].label} —</option>
             {parentCandidates.map(p => (
@@ -219,114 +242,148 @@ export default function MaterialCategoriesSettingsPanel() {
         </button>
       </form>
 
-      <div className="mb-4">
-        <SearchBar
-          value={search}
-          onChange={setSearch}
-          placeholder={`Tìm ${levelLabel.toLowerCase()}...`}
-        />
+      <div className="hrm-filter-bar mb-4">
+        <div className="hrm-filter-bar__search flex-1 min-w-[220px]">
+          <SearchBar
+            value={search}
+            onChange={v => { setSearch(v); setPage(1); }}
+            placeholder={`Tìm ${levelLabel.toLowerCase()}...`}
+          />
+        </div>
+        <button
+          type="button"
+          onClick={resetFilters}
+          className="btn-clear-filters"
+          title="Đặt lại bộ lọc"
+        >
+          <RotateCcw size={15} />
+          <span className="hidden sm:inline">XÓA BỘ LỌC</span>
+        </button>
       </div>
 
-      {isLoading ? (
-        <div className="text-center py-8 text-sm text-[var(--md-on-surface-variant)]">Đang tải...</div>
-      ) : isError ? (
-        <div className="text-center py-8 text-sm text-[var(--md-error)]">
-          Không tải được cây vật tư. Kiểm tra API và khởi động lại backend.
-        </div>
-      ) : visibleItems.length === 0 ? (
-        <div className="text-center py-8 text-sm text-[var(--md-on-surface-variant)]">
-          {activeLevel > 1 && parentId === ''
-            ? `Chọn ${MATERIAL_CATEGORY_LEVELS[activeLevel - 2].label} cha để xem danh sách.`
-            : search
-              ? 'Không tìm thấy.'
-              : `Chưa có ${levelLabel.toLowerCase()} nào.`}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[420px] overflow-y-auto pr-1">
-          {visibleItems.map(item => (
-            <div
-              key={item.id}
-              className="flex items-center justify-between gap-2 p-3 rounded-xl"
-              style={{
-                background: item.isActive ? 'var(--md-surface-container-low)' : 'rgba(0,0,0,0.05)',
-                border: '1px solid var(--md-outline-variant)',
-                opacity: item.isActive ? 1 : 0.65,
-              }}
-            >
-              <div className="min-w-0 flex-1">
-                {editingId === item.id ? (
-                  <input
-                    className="hrm-field-input w-full text-sm"
-                    value={editName}
-                    onChange={e => setEditName(e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') void saveEdit(item);
-                      if (e.key === 'Escape') setEditingId(null);
-                    }}
-                    autoFocus
-                  />
-                ) : (
-                  <>
-                    <div className="text-sm font-medium truncate">{item.name}</div>
+      <div className="overflow-x-auto table-scroll rounded-lg border border-[var(--md-outline-variant)]">
+        <table className="w-full text-xs">
+          <thead>
+            <tr>
+              <th className="table-header-cell text-left">Tên {levelLabel.toLowerCase()}</th>
+              {activeLevel > 1 && (
+                <th className="table-header-cell text-left">Thuộc</th>
+              )}
+              <th className="table-header-cell text-center">Trạng thái</th>
+              <th className="table-header-cell text-center w-36">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading ? (
+              <TableSkeletonRows colSpan={categoryColSpan} />
+            ) : isError ? (
+              <tr>
+                <td colSpan={categoryColSpan}>
+                  <EmptyState message={WMS_ERROR.loadCategories} />
+                </td>
+              </tr>
+            ) : visibleItems.length === 0 ? (
+              <tr>
+                <td colSpan={categoryColSpan}>
+                  <EmptyState message={emptyCategoryMessage} />
+                </td>
+              </tr>
+            ) : (
+              paginatedItems.map(item => (
+                  <tr key={item.id} className="table-row border-b border-[var(--md-outline-variant)]">
+                    <td className="table-cell">
+                      {editingId === item.id ? (
+                        <input
+                          className="hrm-field-input w-full text-sm"
+                          value={editName}
+                          onChange={e => setEditName(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') void saveEdit(item);
+                            if (e.key === 'Escape') setEditingId(null);
+                          }}
+                          autoFocus
+                        />
+                      ) : (
+                        <span className={`font-medium ${!item.isActive ? 'opacity-60' : ''}`}>
+                          {item.name}
+                        </span>
+                      )}
+                    </td>
                     {activeLevel > 1 && (
-                      <div className="text-[10px] text-[var(--md-on-surface-variant)] truncate">
-                        Thuộc: {parentName(categories, item.parentId)}
-                      </div>
+                      <td className="table-cell text-[var(--md-on-surface-variant)]">
+                        {parentName(categories, item.parentId)}
+                      </td>
                     )}
-                  </>
-                )}
-              </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                {editingId === item.id ? (
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-primary"
-                    onClick={() => void saveEdit(item)}
-                  >
-                    Lưu
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-outline"
-                    onClick={() => startEdit(item)}
-                  >
-                    Sửa
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => void handleToggle(item)}
-                  className={`relative inline-flex h-5 w-9 flex-shrink-0 rounded-full border-2 border-transparent transition-colors ${
-                    item.isActive ? 'bg-[var(--md-primary)]' : 'bg-gray-400'
-                  }`}
-                  role="switch"
-                  aria-checked={item.isActive}
-                  title={item.isActive ? 'Đang bật' : 'Đang tắt'}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition ${
-                      item.isActive ? 'translate-x-4' : 'translate-x-0'
-                    }`}
-                  />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDeleteTarget(item)}
-                  className="text-[var(--md-error)] p-1 rounded-lg hover:bg-[var(--md-error-container)]"
-                  title="Xóa"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            </div>
-          ))}
+                    <td className="table-cell text-center">
+                      <span
+                        className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded ${
+                          item.isActive
+                            ? 'bg-[var(--md-surface-container-high)] text-[var(--md-on-surface)]'
+                            : 'bg-[var(--md-error-container)] text-[var(--md-on-error-container)]'
+                        }`}
+                      >
+                        {item.isActive ? 'Đang dùng' : 'Tắt'}
+                      </span>
+                    </td>
+                    <td className="table-cell">
+                      <div className="flex items-center justify-center gap-1">
+                        {editingId === item.id ? (
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-primary"
+                            onClick={() => void saveEdit(item)}
+                          >
+                            Lưu
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-outline"
+                            onClick={() => startEdit(item)}
+                          >
+                            Sửa
+                          </button>
+                        )}
+                        <IOSSwitch
+                          checked={item.isActive}
+                          onChange={() => void handleToggle(item)}
+                          title={item.isActive ? 'Đang bật' : 'Đang tắt'}
+                          stopPropagation
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setDeleteTarget(item)}
+                          className="text-[var(--md-error)] p-1 rounded-lg hover:bg-[var(--md-error-container)]"
+                          title="Xóa"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {!isLoading && visibleItems.length > 0 && (
+        <div className="mt-3 wms-settings-divider pt-3">
+          <Pagination
+            embedded
+            itemLabel="mục"
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            pageSize={pageSize}
+            onPageSizeChange={s => { setPageSize(s); setPage(1); }}
+            totalItems={visibleItems.length}
+          />
         </div>
       )}
 
       <div
-        className="mt-4 pt-3 flex justify-between text-xs text-[var(--md-on-surface-variant)]"
-        style={{ borderTop: '1px solid var(--md-outline-variant)' }}
+        className="mt-4 pt-3 flex justify-between text-xs text-[var(--md-on-surface-variant)] wms-settings-divider"
       >
         <span>Tổng {levelLabel}: <strong>{totalAtLevel}</strong></span>
         <span>Đang hiển thị: <strong>{visibleItems.length}</strong></span>

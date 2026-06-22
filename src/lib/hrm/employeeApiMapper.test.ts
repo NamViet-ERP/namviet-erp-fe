@@ -114,6 +114,18 @@ describe('employeeApiMapper', () => {
       expect(dto.taxCode).toBe('MST-22222');
     });
 
+    it('should send null photoUrl when profile photo was removed', () => {
+      const dto = toApi({
+        fullName: 'Test Onboard',
+        birthDate: '2026-06-16',
+        joinDate: '2026-06-16',
+        gender: 'Nam',
+        status: 'Đang làm',
+      });
+
+      expect(dto.photoUrl).toBeNull();
+    });
+
     it('should keep DD/MM/YYYY dates unchanged if already in that format', () => {
       const employee = {
         fullName: 'Test A',

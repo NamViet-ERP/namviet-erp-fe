@@ -22,14 +22,14 @@ export default class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-6 text-center">
-          <h1 className="text-xl font-semibold text-gray-900">Đã xảy ra lỗi</h1>
-          <p className="max-w-md text-sm text-gray-600">
+        <div className="error-fallback-page">
+          <h1 className="error-fallback-page__title">Đã xảy ra lỗi</h1>
+          <p className="error-fallback-page__message">
             Ứng dụng gặp sự cố không mong muốn. Vui lòng tải lại trang hoặc thử lại sau.
           </p>
           <button
             type="button"
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className="btn btn-filled"
             onClick={() => window.location.reload()}
           >
             Tải lại trang

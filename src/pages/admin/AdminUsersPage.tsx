@@ -28,6 +28,8 @@ import {
 import { useActiveRoleOptions } from '../../hooks/useRoles';
 import { formatAdminDateCell } from '../../lib/hrm/formatters';
 import { getApiErrorMessage } from '../../lib/apiClient';
+import { UI_ERROR } from '../../lib/uiMessages';
+import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
 import type { AdminUserListParams, AdminUserRow, AdminUserSource } from '../../services/adminUsersService';
 
 const TABLE_HEADERS = [
@@ -98,7 +100,7 @@ export default function AdminUsersPage() {
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>('');
   const [departmentFilter, setDepartmentFilter] = useState('');
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(DEFAULT_LIST_PAGE_SIZE);
 
   const resetPaging = () => setPage(1);
 
@@ -112,7 +114,7 @@ export default function AdminUsersPage() {
     department: departmentFilter || undefined,
   }), [page, pageSize, search, quickFilter, accountStatusFilter, sourceFilter, departmentFilter]);
 
-  const { data, isLoading, isError, error } = useAdminUsers(listParams);
+  const { data, isPending, isError, error } = useAdminUsers(listParams);
 
   const users = data?.items ?? [];
   const summary = data?.summary;
@@ -392,7 +394,7 @@ export default function AdminUsersPage() {
               </tr>
             </thead>
             <tbody>
-              {isLoading ? (
+              {isPending ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="hrm-table-skeleton-row" aria-hidden>
                     <td colSpan={TABLE_HEADERS.length}><div className="hrm-table-skeleton" /></td>
@@ -401,7 +403,7 @@ export default function AdminUsersPage() {
               ) : isError ? (
                 <tr>
                   <td colSpan={TABLE_HEADERS.length}>
-                    <EmptyState message={`Không tải được danh sách: ${getApiErrorMessage(error)}`} icon={UserX} />
+                    <EmptyState message={getApiErrorMessage(error, UI_ERROR.loadUsers)} icon={UserX} />
                   </td>
                 </tr>
               ) : users.length === 0 ? (
@@ -476,7 +478,7 @@ export default function AdminUsersPage() {
           </table>
         </div>
 
-        {totalCount > 0 && !isLoading && (
+        {totalCount > 0 && !isPending && (
           <Pagination
             embedded
             itemLabel="tài khoản"

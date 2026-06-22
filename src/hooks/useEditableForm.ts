@@ -8,7 +8,9 @@ export function useEditableForm<T>(source: T | undefined) {
 
   if (source !== prevSource) {
     setPrevSource(source);
-    setForm(source ? { ...source } : null);
+    if (!isEditing) {
+      setForm(source ? { ...source } : null);
+    }
   }
 
   const setField = useCallback(<K extends keyof T>(key: K, value: T[K]) => {

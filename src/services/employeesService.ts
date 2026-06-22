@@ -130,6 +130,7 @@ export const employeesService = {
     }
     const current = await this.getById(id);
     const merged: Employee = { ...current, ...dto };
+    if (dto.profilePhoto === undefined) merged.profilePhoto = undefined;
     if (merged.status === 'Nghỉ việc' && !merged.resignDate) {
       merged.resignDate = new Date().toISOString().slice(0, 10);
     }

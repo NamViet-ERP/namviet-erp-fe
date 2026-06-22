@@ -278,26 +278,10 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
 
       {!isEditing && (
         <section
-          className="hrm-detail-section"
-          style={{
-            borderColor: isActive
-              ? 'color-mix(in srgb, var(--md-error) 35%, var(--md-outline-variant02))'
-              : 'color-mix(in srgb, var(--md-tertiary) 35%, var(--md-outline-variant02))',
-          }}
+          className={`hrm-detail-section ${isActive ? 'hrm-detail-section--status-active' : 'hrm-detail-section--status-inactive'}`}
         >
-          <div
-            className="hrm-detail-section__head"
-            style={{
-              borderBottomColor: 'color-mix(in srgb, var(--md-outline-variant) 80%, transparent)',
-              background: isActive
-                ? 'color-mix(in srgb, var(--md-error) 6%, var(--md-surface-container-high))'
-                : 'color-mix(in srgb, var(--md-tertiary) 6%, var(--md-surface-container-high))',
-            }}
-          >
-            <h3
-              className="hrm-detail-section__title"
-              style={{ color: isActive ? 'var(--md-error)' : 'var(--md-tertiary)' }}
-            >
+          <div className="hrm-detail-section__head">
+            <h3 className="hrm-detail-section__title">
               {isActive ? 'Ngừng sử dụng' : 'Kích hoạt lại'}
             </h3>
             <p className="hrm-detail-section__desc">
@@ -351,12 +335,12 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
         message={
           <>
             Ngừng sử dụng{' '}
-            <strong style={{ color: 'var(--md-on-surface)' }}>
+            <strong className="text-[var(--md-on-surface)]">
               &ldquo;{material.materialCode} — {material.materialName}&rdquo;
             </strong>
             ?
             <br />
-            <span style={{ fontSize: '0.8125rem', opacity: 0.85 }}>
+            <span className="text-sm opacity-85">
               Tồn kho và phiếu cũ vẫn giữ nguyên. Không thể chọn mã này trong phiếu mới.
             </span>
           </>

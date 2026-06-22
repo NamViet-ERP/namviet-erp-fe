@@ -8,6 +8,7 @@ import { RECRUITMENT_SOURCES, EDUCATION_LEVELS } from '../../constants/recruitme
 import { usePositionSelectOptions } from '../../hooks/usePositions';
 import { candidatesService } from '../../services/candidatesService';
 import { getApiErrorMessage } from '../../lib/apiClient';
+import { UI_ERROR } from '../../lib/uiMessages';
 import DetailSection from '../../components/hr/DetailSection';
 import { FieldView, FieldInput, FieldSelect } from '../../components/hr/DetailFields';
 import { HrmDetailHeader } from '../../components/hr/HrmPageChrome';
@@ -73,7 +74,7 @@ export default function CandidateDetailPage() {
     try {
       await candidatesService.downloadCv(id, form.cvFileName);
     } catch (err) {
-      showToast('error', getApiErrorMessage(err, 'Không thể tải CV'));
+      showToast('error', getApiErrorMessage(err, UI_ERROR.loadCv));
     } finally {
       downloadingCvRef.current = false;
     }

@@ -44,12 +44,12 @@ const mockNotifications: Notification[] = [
   { id: 5, type: 'import',  title: 'Phiếu nhập #NK-2026000', message: 'Nhập kho thành công 150 sản phẩm',          time: '3 giờ trước',   read: true,  icon: Package },
 ];
 
-/* MD3 tonal containers for notification types */
-const notifContainers: Record<NotifType, { bg: string; color: string }> = {
-  warning: { bg: 'var(--md-warning-container)',        color: 'var(--md-on-warning-container)' },
-  import:  { bg: 'var(--md-primary-container)',         color: 'var(--md-on-primary-container)' },
-  export:  { bg: 'var(--md-secondary-container)',       color: 'var(--md-on-secondary-container)' },
-  info:    { bg: 'var(--md-surface-container-low)',     color: 'var(--md-on-surface-variant)' },
+/* MD3 tonal containers for notification types — use CSS classes notif-icon--* */
+const notifIconClass: Record<NotifType, string> = {
+  warning: 'notif-icon--warning',
+  import: 'notif-icon--import',
+  export: 'notif-icon--export',
+  info: 'notif-icon--info',
 };
 
 /* ── Shared Icon Button ── */
@@ -127,7 +127,6 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
   const currentUser = sessionUser ?? { name: 'User', initials: 'U', roleLabel: '', email: '' };
   const activeUserId = sessionUser?.id ?? 'admin';
 
-  const enableWms = import.meta.env.VITE_ENABLE_WMS === 'true';
   const [showModuleMenu, setShowModuleMenu] = useState(false);
   const [moduleMenuClosing, setModuleMenuClosing] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -197,24 +196,7 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
   };
 
   return (
-    <header
-      style={{
-        position: 'fixed',
-        top: 0, left: 0, right: 0,
-        zIndex: 50,
-        height: '64px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 16px',
-        background: 'var(--nv-header-bg)',
-        borderBottom: '1px solid var(--nv-header-border)',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
-        boxShadow: 'var(--md-shadow-1)',
-        transition: 'background var(--md-duration) var(--md-easing)',
-      }}
-    >
+    <header className="nv-header">
       {/* ── Left: Logo ── */}
       <div
         className="flex items-center gap-2.5 shrink-0 cursor-pointer"
@@ -248,46 +230,19 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
       <div className="flex items-center gap-1.5 shrink-0">
 
         {/* Module switcher */}
-        <div style={{ position: 'relative' }} ref={moduleMenuRef}>
+        <div className="nv-header-anchor" ref={moduleMenuRef}>
           <IconBtn title="Chuyển module" active={moduleMenuOpen} onClick={toggleModuleMenu}>
             <Grid3X3 size={20} />
           </IconBtn>
           {moduleMenuOpen && (
             <>
-              {/* Backdrop */}
               <div
-                className={moduleMenuClosing ? 'mega-menu-scrim--out' : 'mega-menu-scrim'}
-                style={{
-                  position: 'fixed',
-                  top: '64px',
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  background: 'rgba(0, 0, 0, 0.4)',
-                  backdropFilter: 'blur(4px)',
-                  zIndex: 90,
-                }}
+                className={moduleMenuClosing ? 'mega-menu-scrim mega-menu-scrim--out' : 'mega-menu-scrim'}
                 onClick={closeModuleMenu}
+                aria-hidden
               />
-              {/* Mega Menu Dropdown */}
               <div
                 className={`mega-menu-panel ${moduleMenuClosing ? 'animate-scale-out' : 'animate-scale-in'}`}
-                style={{
-                  position: 'fixed',
-                  top: '72px',
-                  left: '16px',
-                  right: '16px',
-                  maxHeight: 'calc(100dvh - 96px)',
-                  background: 'var(--md-surface-container)',
-                  border: '1px solid var(--md-outline-variant02)',
-                  borderRadius: '20px',
-                  boxShadow: 'var(--md-shadow-3)',
-                  zIndex: 100,
-                  overflowY: 'auto',
-                  padding: '20px 24px 24px',
-                  maxWidth: '960px',
-                  margin: '0 auto',
-                }}
               >
                 <div className="mega-menu-panel__header">
                   <h2 className="mega-menu-panel__title">Truy cập phân hệ</h2>
@@ -317,21 +272,19 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
         <div className="hidden lg:block w-px h-6 bg-[var(--nv-header-border)] mx-1" aria-hidden />
 
         {/* Báo cáo */}
-        {enableWms && (
-          <button
-            type="button"
-            className="hidden lg:inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full border border-white/20 text-white/90 text-sm font-medium hover:bg-white/10 active:scale-[0.98] transition-all duration-150"
-            onClick={() => navigate('/warehouse/dashboard-warehouse')}
-          >
-            <BarChart3 size={15} aria-hidden />
-            Báo cáo kho
-          </button>
-        )}
+        <button
+          type="button"
+          className="nv-header-report-btn"
+          onClick={() => navigate('/warehouse/dashboard-warehouse')}
+        >
+          <BarChart3 size={15} aria-hidden />
+          Báo cáo kho
+        </button>
 
         <div className="hidden lg:block w-px h-6 bg-[var(--nv-header-border)] mx-1" aria-hidden />
 
         {/* Notifications */}
-        <div style={{ position: 'relative' }} ref={notifRef}>
+        <div className="nv-header-anchor" ref={notifRef}>
           <IconBtn
             title="Thông báo"
             active={showNotifications}
@@ -342,19 +295,7 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
           </IconBtn>
 
           {showNotifications && (
-            <div
-              className="animate-scale-in rounded-2xl overflow-hidden"
-              style={{
-                position: 'absolute',
-                right: 0,
-                top: 'calc(100% + 8px)',
-                width: 'min(380px, calc(100vw - 24px))',
-                background: 'var(--md-surface-container)',
-                border: '1px solid var(--md-outline-variant02)',
-                boxShadow: 'var(--md-shadow-3)',
-                zIndex: 60,
-              }}
-            >
+            <div className="nv-notif-panel animate-scale-in">
               {/* Header */}
               <div className="flex items-center justify-between px-4 pt-4 pb-3">
                 <div className="flex items-center gap-2">
@@ -394,7 +335,6 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
               <div className="max-h-[340px] overflow-y-auto">
                 {notifications.map(n => {
                   const NIcon = n.icon;
-                  const c = notifContainers[n.type] || notifContainers.info;
                   return (
                     <button
                       key={n.id}
@@ -404,10 +344,7 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
                         !n.read ? 'bg-[color-mix(in_srgb,var(--md-primary)_4%,transparent)]' : ''
                       }`}
                     >
-                      <div
-                        className="size-9 rounded-xl flex items-center justify-center shrink-0"
-                        style={{ background: c.bg, color: c.color }}
-                      >
+                      <div className={`notif-icon ${notifIconClass[n.type] || notifIconClass.info}`}>
                         <NIcon size={16} />
                       </div>
                       <div className="flex-1 min-w-0">

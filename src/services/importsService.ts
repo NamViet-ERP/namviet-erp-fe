@@ -1,23 +1,18 @@
 import type { Import } from '../types';
 import { apiClient } from '../lib/apiClient';
 import { USE_MOCK, mockDelay, mockId } from '../lib/mock';
-import { imports as mockImports } from '../data/imports';
-
-/**
- * Imports (Nhập kho) data service.
- *
- * Every page/hook depends on THIS interface, never on the mock array or the
- * apiClient directly. Today it serves mock data; switch VITE_USE_MOCK to 'false'
- * and the same calls hit the .NET Core API — no page changes required.
- */
+import { MOCK_IMPORTS } from '../data/wmsMockSeed';
 
 export type CreateImportDto = Omit<Import, 'id'>;
 export type UpdateImportDto = Partial<CreateImportDto>;
 
 const ENDPOINT = '/api/imports';
 
-// In-memory store so mock create/update/delete feel real within a session.
-let store: Import[] = [...mockImports];
+let store: Import[] = [...MOCK_IMPORTS];
+
+function nextVoucherCode(prefix: string, seq: number) {
+  return `${prefix}-${String(seq).padStart(6, '0')}`;
+}
 
 export const importsService = {
   async list(): Promise<Import[]> {
@@ -36,7 +31,11 @@ export const importsService = {
 
   async create(dto: CreateImportDto): Promise<Import> {
     if (USE_MOCK) {
-      const created: Import = { ...dto, id: mockId('im') };
+      const created: Import = {
+        ...dto,
+        id: mockId('im'),
+        voucherCode: dto.voucherCode?.trim() || nextVoucherCode('NK', 260010 + store.length),
+      };
       store = [created, ...store];
       return mockDelay(created);
     }
@@ -55,9 +54,16 @@ export const importsService = {
 
   async approve(id: string): Promise<Import> {
     if (USE_MOCK) {
-      return this.update(id, { status: 'approved' });
+      return this.update(id, { status: 'approved', warehouseApproval: 'approved' });
     }
     return apiClient.post<Import>(`${ENDPOINT}/${id}/approve`);
+  },
+
+  async submit(id: string): Promise<Import> {
+    if (USE_MOCK) {
+      return this.update(id, { status: 'pending' });
+    }
+    return apiClient.post<Import>(`${ENDPOINT}/${id}/submit`);
   },
 
   async remove(id: string): Promise<void> {

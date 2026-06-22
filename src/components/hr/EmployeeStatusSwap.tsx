@@ -7,25 +7,16 @@ import type { Employee, EmployeeStatus } from '../../types/hr';
 
 const STATUS_OPTIONS: EmployeeStatus[] = ['Đang làm', 'Nghỉ việc', 'Thai sản'];
 
-const statusMeta: Record<EmployeeStatus, { dot: string; pillBg: string; pillText: string; pillBorder: string }> = {
-  'Đang làm': {
-    dot: 'var(--status-success)',
-    pillBg: 'color-mix(in srgb, var(--md-success-container) 55%, var(--md-surface-container-high))',
-    pillText: 'var(--md-on-success-container)',
-    pillBorder: 'color-mix(in srgb, var(--status-success) 28%, transparent)',
-  },
-  'Nghỉ việc': {
-    dot: 'var(--status-error)',
-    pillBg: 'color-mix(in srgb, var(--md-error-container) 55%, var(--md-surface-container-high))',
-    pillText: 'var(--md-on-error-container)',
-    pillBorder: 'color-mix(in srgb, var(--status-error) 28%, transparent)',
-  },
-  'Thai sản': {
-    dot: 'var(--md-surface-variant_purple)',
-    pillBg: 'color-mix(in srgb, var(--md-surface-variant_purple) 55%, var(--md-surface-container-high))',
-    pillText: 'var(--md-on-warning-container)',
-    pillBorder: 'color-mix(in srgb, var(--md-surface-variant_purple) 28%, transparent)',
-  },
+const STATUS_PILL_CLASS: Record<EmployeeStatus, string> = {
+  'Đang làm': 'hrm-status-pill--working',
+  'Nghỉ việc': 'hrm-status-pill--leaved',
+  'Thai sản': 'hrm-status-pill--maternity',
+};
+
+const STATUS_DOT_CLASS: Record<EmployeeStatus, string> = {
+  'Đang làm': 'hrm-status-menu__dot--working',
+  'Nghỉ việc': 'hrm-status-menu__dot--leaved',
+  'Thai sản': 'hrm-status-menu__dot--maternity',
 };
 
 interface EmployeeStatusSwapProps {
@@ -39,7 +30,7 @@ export default function EmployeeStatusSwap({ employee }: EmployeeStatusSwapProps
   const rootRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const meta = statusMeta[employee.status] ?? statusMeta['Đang làm'];
+  const pillClass = STATUS_PILL_CLASS[employee.status] ?? STATUS_PILL_CLASS['Đang làm'];
 
   const calculatePosition = useCallback(() => {
     if (!rootRef.current) return;
@@ -123,53 +114,21 @@ export default function EmployeeStatusSwap({ employee }: EmployeeStatusSwapProps
           if (!open) calculatePosition();
           setOpen(v => !v);
         }}
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '6px',
-          padding: '5px 10px 5px 12px',
-          borderRadius: '9999px',
-          border: `1px solid ${meta.pillBorder}`,
-          background: meta.pillBg,
-          color: meta.pillText,
-          fontFamily: "'Roboto', sans-serif",
-          fontSize: '0.75rem',
-          fontWeight: 600,
-          letterSpacing: '0.02em',
-          cursor: updateMutation.isPending ? 'wait' : 'pointer',
-          opacity: updateMutation.isPending ? 0.65 : 1,
-          transition: 'box-shadow 200ms var(--md-easing), transform 150ms var(--md-easing)',
-          boxShadow: open ? 'var(--md-shadow-2)' : 'none',
-          whiteSpace: 'nowrap',
-        }}
-        onMouseEnter={e => { if (!open) e.currentTarget.style.boxShadow = 'var(--md-shadow-1)'; }}
-        onMouseLeave={e => { if (!open) e.currentTarget.style.boxShadow = 'none'; }}
+        className={`hrm-status-pill ${pillClass}${open ? ' hrm-status-pill--open' : ''}`}
       >
-        <span
-          style={{
-            width: 7,
-            height: 7,
-            borderRadius: '50%',
-            background: meta.dot,
-            flexShrink: 0,
-          }}
-        />
+        <span className="hrm-status-pill__dot" aria-hidden />
         {employee.status}
         <ChevronDown
           size={14}
-          style={{
-            opacity: 0.75,
-            transition: 'transform 200ms var(--md-easing)',
-            transform: open ? 'rotate(180deg)' : 'none',
-          }}
+          className={`hrm-status-pill__chevron${open ? ' hrm-status-pill__chevron--open' : ''}`}
         />
       </button>
 
       {open && createPortal(
         <div ref={menuRef} className="hrm-status-menu animate-scale-in" style={menuStyle}>
           {STATUS_OPTIONS.map(option => {
-            const opt = statusMeta[option];
             const selected = option === employee.status;
+            const dotClass = STATUS_DOT_CLASS[option];
             return (
               <button
                 key={option}
@@ -177,16 +136,8 @@ export default function EmployeeStatusSwap({ employee }: EmployeeStatusSwapProps
                 onClick={() => void handleChange(option)}
                 className={`hrm-status-menu__item${selected ? ' hrm-status-menu__item--selected' : ''}`}
               >
-                <span
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: '50%',
-                    background: opt.dot,
-                    flexShrink: 0,
-                  }}
-                />
-                <span style={{ flex: 1 }}>{option}</span>
+                <span className={`hrm-status-menu__dot ${dotClass}`} aria-hidden />
+                <span className="hrm-status-menu__label">{option}</span>
                 {selected && <Check size={15} strokeWidth={2.5} />}
               </button>
             );

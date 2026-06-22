@@ -77,21 +77,20 @@ export default function ReconciliationPage() {
 
   if (isStorekeeper) {
     return (
-      <div className="animate-fade-in py-12 flex flex-col items-center justify-center min-h-[500px]">
-        <div className="rounded-3xl p-8 max-w-md text-center border shadow-card space-y-6"
-          style={{ background: 'var(--md-surface-container)', borderColor: 'var(--md-error)' }}>
-          <div className="w-16 h-16 rounded-full bg-[var(--tint-error-strong)] text-[var(--md-error)] mx-auto flex items-center justify-center">
+      <div className="page-shell flex flex-col items-center justify-center min-h-[500px] py-12">
+        <div className="access-denied-card access-denied-card--error space-y-6">
+          <div className="access-denied-card__icon">
             <ShieldAlert size={36} />
           </div>
           <div className="space-y-2">
             <h3 className="text-base font-bold uppercase tracking-wider text-[var(--md-on-surface)]">
               Truy cập bị từ chối
             </h3>
-            <p className="text-xs text-[var(--md-on-surface-variant)] leading-relaxed">
-              Bạn đang đăng nhập với vai trò **Thủ kho**. Phân hệ đối chiếu đơn giá PO-GRN chứa dữ liệu tài chính nhạy cảm và bị chặn truy cập.
+            <p className="text-xs text-[var(--md-on-surface-variant)] leading-relaxed text-pretty">
+              Bạn đang đăng nhập với vai trò Thủ kho. Phân hệ đối chiếu đơn giá PO-GRN chứa dữ liệu tài chính nhạy cảm và bị chặn truy cập.
             </p>
           </div>
-          <div className="bg-[var(--md-surface-container-low)] p-3 rounded-lg border text-[10px] text-gray-500 font-mono">
+          <div className="rounded-lg border border-[var(--md-outline-variant)] bg-[var(--md-surface-container-low)] p-3 text-[10px] text-[var(--md-on-surface-variant)] font-mono">
             Security Policy: Mask Financial Data (BR-SEC-01)
           </div>
         </div>
@@ -131,7 +130,7 @@ export default function ReconciliationPage() {
   };
 
   return (
-    <div className="animate-fade-in space-y-6">
+    <div className="page-shell">
       <PageHeader
         eyebrow="Kho hàng"
         title="Đối chiếu đơn giá nhập"
@@ -139,12 +138,12 @@ export default function ReconciliationPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <div className="lg:col-span-1 space-y-4">
-          <div className="rounded-2xl p-5 shadow-card" style={{ background: 'var(--md-surface-container)', border: '1px solid var(--md-outline-variant)' }}>
-            <h2 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-4">Chọn chứng từ PO</h2>
+          <div className="wms-side-panel">
+            <h2 className="wms-side-panel__title">Chọn chứng từ PO</h2>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-[10px] font-semibold text-gray-500 uppercase mb-1.5">Mã đơn mua hàng (PO)</label>
+                <label className="block text-[10px] font-semibold text-[var(--md-on-surface-variant)] uppercase mb-1.5">Mã đơn mua hàng (PO)</label>
                 <select
                   className="form-select w-full text-xs"
                   value={selectedPoCode}
@@ -158,37 +157,37 @@ export default function ReconciliationPage() {
 
               <div className="pt-4 border-t border-[var(--md-outline-variant)] space-y-3 text-xs">
                 <div>
-                  <span className="block text-[10px]" style={{ color: 'var(--md-on-surface-variant)' }}>Dự án thụ hưởng:</span>
-                  <span className="font-bold block mt-0.5" style={{ color: 'var(--md-on-surface)' }}>{currentPo.project}</span>
+                  <span className="wms-meta-label">Dự án thụ hưởng:</span>
+                  <span className="wms-meta-value">{currentPo.project}</span>
                 </div>
                 <div>
-                  <span className="block text-[10px]" style={{ color: 'var(--md-on-surface-variant)' }}>Nhà cung cấp:</span>
-                  <span className="font-bold block mt-0.5" style={{ color: 'var(--md-on-surface)' }}>{currentPo.supplier}</span>
+                  <span className="wms-meta-label">Nhà cung cấp:</span>
+                  <span className="wms-meta-value">{currentPo.supplier}</span>
                 </div>
                 <div>
-                  <span className="block text-[10px]" style={{ color: 'var(--md-on-surface-variant)' }}>Ngày đặt hàng:</span>
-                  <span className="font-bold block mt-0.5" style={{ color: 'var(--md-on-surface)' }}>{currentPo.date}</span>
+                  <span className="wms-meta-label">Ngày đặt hàng:</span>
+                  <span className="wms-meta-value">{currentPo.date}</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="rounded-2xl p-5 shadow-card space-y-4" style={{ background: 'var(--md-surface-container)', border: '1px solid var(--md-outline-variant)' }}>
-            <h2 className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--md-on-surface-variant)' }}>Tổng quan đối chiếu</h2>
+          <div className="wms-side-panel space-y-4">
+            <h2 className="wms-side-panel__title">Tổng quan đối chiếu</h2>
 
             <div className="space-y-3 text-xs">
-              <div className="p-3 rounded-xl border" style={{ background: 'var(--md-surface-container-low)', borderColor: 'var(--md-outline-variant)' }}>
-                <span className="text-[10px] block uppercase font-medium" style={{ color: 'var(--md-on-surface-variant)' }}>Tổng Giá Dự Toán</span>
-                <span className="text-sm font-bold mt-0.5 block" style={{ color: 'var(--md-on-surface)' }}>{formatCurrency(totalEstSum)} đ</span>
+              <div className="wms-stat-mini">
+                <span className="wms-stat-mini__label">Tổng Giá Dự Toán</span>
+                <span className="wms-stat-mini__value">{formatCurrency(totalEstSum)} đ</span>
               </div>
 
-              <div className="p-3 rounded-xl border" style={{ background: 'var(--md-surface-container-low)', borderColor: 'var(--md-outline-variant)' }}>
-                <span className="text-[10px] block uppercase font-medium" style={{ color: 'var(--md-on-surface-variant)' }}>Tổng Giá Thực Tế (PO)</span>
-                <span className="text-sm font-bold mt-0.5 block" style={{ color: 'var(--md-on-surface)' }}>{formatCurrency(totalPoSum)} đ</span>
+              <div className="wms-stat-mini">
+                <span className="wms-stat-mini__label">Tổng Giá Thực Tế (PO)</span>
+                <span className="wms-stat-mini__value">{formatCurrency(totalPoSum)} đ</span>
               </div>
 
               <div className="flex justify-between items-center px-1">
-                <span style={{ color: 'var(--md-on-surface-variant)' }}>Chênh lệch toàn đơn:</span>
+                <span className="text-[var(--md-on-surface-variant)]">Chênh lệch toàn đơn:</span>
                 <span className={`font-bold ${overallDiffPct > 0 ? 'text-[var(--md-error)]' : 'text-[var(--md-success)]'}`}>
                   {overallDiffPct > 0 ? `+${overallDiffPct.toFixed(2)}%` : `${overallDiffPct.toFixed(2)}%`}
                 </span>
@@ -199,8 +198,8 @@ export default function ReconciliationPage() {
 
         <div className="lg:col-span-3 space-y-6">
           {hasExceedLimit && (
-            <div className="rounded-2xl p-4 flex items-start gap-4 animate-slide-in border" style={{ background: 'var(--md-error-container)', color: 'var(--md-on-error-container)', borderColor: 'var(--md-error)' }}>
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'var(--tint-error-strong)', color: 'var(--md-error)' }}>
+            <div className="status-banner status-banner--error animate-slide-up">
+              <div className="status-banner__icon">
                 <AlertTriangle size={20} />
               </div>
               <div className="flex-1">
@@ -218,8 +217,8 @@ export default function ReconciliationPage() {
           )}
 
           {isApproved && (
-            <div className="rounded-2xl p-4 flex items-center gap-4 animate-scale-in border" style={{ background: 'var(--md-success-container)', color: 'var(--md-on-success-container)', borderColor: 'var(--md-success)' }}>
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'var(--tint-success-soft)', color: 'var(--md-success)' }}>
+            <div className="status-banner status-banner--success animate-scale-in">
+              <div className="status-banner__icon">
                 <ShieldCheck size={20} />
               </div>
               <div>
@@ -231,13 +230,13 @@ export default function ReconciliationPage() {
             </div>
           )}
 
-          <div className="rounded-2xl p-5 shadow-card" style={{ background: 'var(--md-surface-container)', border: '1px solid var(--md-outline-variant)' }}>
+          <div className="wms-side-panel">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--md-on-surface)' }}>Bảng so sánh đơn giá chi tiết</h2>
+              <h2 className="wms-side-panel__title mb-0">Bảng so sánh đơn giá chi tiết</h2>
             </div>
 
             <div className="overflow-x-auto table-scroll">
-              <table className="w-full text-xs text-left" style={{ minWidth: '850px' }}>
+              <table className="w-full text-xs text-left table-min-w--850">
                 <thead>
                   <tr>
                     <th className="table-header-cell">Vật tư</th>
@@ -259,26 +258,26 @@ export default function ReconciliationPage() {
                     >
                       <td className="table-cell">
                         <div className="font-bold">{item.name}</div>
-                        <div className="text-[10px] text-gray-500 font-mono">{item.sku}</div>
+                        <div className="text-[10px] text-[var(--md-on-surface-variant)] font-mono">{item.sku}</div>
                       </td>
                       <td className="table-cell text-right">{formatCurrency(item.estPrice)}</td>
                       <td className="table-cell text-right font-bold">{formatCurrency(item.poPrice)}</td>
                       <td className="table-cell text-center">
-                        {item.received} <span className="text-[10px] text-gray-500">{item.unit}</span>
+                        {item.received} <span className="text-[10px] text-[var(--md-on-surface-variant)]">{item.unit}</span>
                       </td>
                       <td className={`table-cell text-right font-bold ${
-                        item.diffPct > 5 ? 'text-[var(--md-error)]' : item.diffPct > 0 ? 'text-amber-600' : 'text-[var(--md-success)]'
+                        item.diffPct > 5 ? 'text-[var(--md-error)]' : item.diffPct > 0 ? 'text-[var(--status-warning)]' : 'text-[var(--md-success)]'
                       }`}>
                         {item.diffPct > 0 ? `+${item.diffPct.toFixed(1)}%` : `${item.diffPct.toFixed(1)}%`}
                       </td>
                       <td className="table-cell text-right font-bold">{formatCurrency(item.totalPo)}</td>
                       <td className="table-cell text-center">
                         {item.exceedLimit && !isApproved ? (
-                          <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-rose-100 text-rose-800 border border-rose-300">
+                          <span className="badge badge-error text-[9px] py-0.5 px-2">
                             Vượt định mức
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-green-100 text-green-800">
+                          <span className="badge badge-success text-[9px] py-0.5 px-2">
                             Hợp lệ
                           </span>
                         )}
@@ -305,8 +304,8 @@ export default function ReconciliationPage() {
         }
       >
         <div className="space-y-4">
-          <div className="p-4 rounded-xl flex gap-3 text-xs border" style={{ background: 'var(--md-error-container)', color: 'var(--md-on-error-container)', borderColor: 'var(--md-error)' }}>
-            <AlertTriangle size={18} className="flex-shrink-0" />
+          <div className="alert-banner alert-banner--error text-xs">
+            <AlertTriangle size={18} className="alert-banner__icon" />
             <p>
               **Cảnh báo**: Hành động này sẽ mở khóa ghi sổ kế toán cho phiếu nhập tương ứng với PO giá cao này. Lịch sử duyệt sẽ được ghi lại vĩnh viễn dưới tên bạn.
             </p>
@@ -314,25 +313,24 @@ export default function ReconciliationPage() {
 
           <div className="space-y-2 text-xs">
             <div>
-              <span style={{ color: 'var(--md-on-surface-variant)' }}>Chứng từ mua hàng:</span>
-              <span className="font-bold ml-2" style={{ color: 'var(--md-on-surface)' }}>{selectedPoCode}</span>
+              <span className="text-[var(--md-on-surface-variant)]">Chứng từ mua hàng:</span>
+              <span className="font-bold ml-2 text-[var(--md-on-surface)]">{selectedPoCode}</span>
             </div>
             <div>
-              <span style={{ color: 'var(--md-on-surface-variant)' }}>Tổng chênh lệch vượt định mức:</span>
-              <span className="font-bold ml-2" style={{ color: 'var(--md-error)' }}>
+              <span className="text-[var(--md-on-surface-variant)]">Tổng chênh lệch vượt định mức:</span>
+              <span className="font-bold ml-2 wms-meta-value--error">
                 +{formatCurrency(totalPoSum - totalEstSum)} đ ({overallDiffPct.toFixed(1)}%)
               </span>
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase mb-2" style={{ color: 'var(--md-on-surface-variant)' }}>Lý do duyệt đặc cách (Bắt buộc)</label>
+            <label className="wms-side-panel__title mb-2">Lý do duyệt đặc cách (Bắt buộc)</label>
             <textarea
               rows={3}
               value={approvalNote}
               onChange={(e) => setApprovalNote(e.target.value)}
-              className="w-full text-xs p-3 rounded-lg border"
-              style={{ background: 'var(--md-surface-container-low)', color: 'var(--md-on-surface)', borderColor: 'var(--md-outline-variant)' }}
+              className="form-input w-full text-xs min-h-[80px] resize-y"
               placeholder="Nhập lý do chi tiết..."
             />
           </div>

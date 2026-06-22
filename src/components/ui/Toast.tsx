@@ -1,27 +1,20 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, type CSSProperties } from 'react';
 import { CheckCircle, XCircle, AlertTriangle, Info, X } from 'lucide-react';
 import type { Toast, ToastType } from '../../types';
 import type { LucideIcon } from 'lucide-react';
 
 const icons: Record<ToastType, LucideIcon> = {
   success: CheckCircle,
-  error:   XCircle,
+  error: XCircle,
   warning: AlertTriangle,
-  info:    Info,
+  info: Info,
 };
 
-/* MD3 Snackbar uses inverse-surface for high contrast */
-const snackbarStyle: React.CSSProperties = {
-  background:  'var(--md-inverse-surface)',
-  color:       'var(--md-inverse-on-surface)',
-};
-
-/* Status accents tuned for the inverse-surface background (adapts to dark mode) */
-const iconColors: Record<ToastType, string> = {
-  success: 'var(--status-success-on-inverse)',
-  error:   'var(--status-error-on-inverse)',
-  warning: 'var(--status-warning-on-inverse)',
-  info:    'var(--status-info-on-inverse)',
+const iconClass: Record<ToastType, string> = {
+  success: 'nv-snackbar__icon--success',
+  error: 'nv-snackbar__icon--error',
+  warning: 'nv-snackbar__icon--warning',
+  info: 'nv-snackbar__icon--info',
 };
 
 interface ToastItemProps {
@@ -41,97 +34,29 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
     return () => clearTimeout(timer);
   }, [toast.id, toast.duration, onDismiss]);
 
-  const animationName = exiting ? 'mdSlideOutRight' : 'mdSlideInRight';
-
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
-        padding: '12px 16px 14px',
-        minWidth: '320px',
-        maxWidth: '440px',
-        borderRadius: '8px',
-        ...snackbarStyle,
-        boxShadow: 'var(--md-shadow-3)',
-        position: 'relative',
-        overflow: 'hidden',
-        animation: `${animationName} 250ms var(--md-easing) forwards`,
-      }}
-    >
-      <Icon
-        size={18}
-        style={{ color: iconColors[toast.type] || iconColors.info, flexShrink: 0 }}
-      />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        {toast.title && (
-          <p
-            style={{
-              fontFamily: "'Roboto', sans-serif",
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              color: 'var(--md-inverse-on-surface)',
-              marginBottom: '1px',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}
-          >
-            {toast.title}
-          </p>
-        )}
-        <p
-          style={{
-            fontFamily: "'Roboto', sans-serif",
-            fontSize: '0.875rem',
-            fontWeight: 400,
-            color: 'var(--md-inverse-on-surface)',
-            lineHeight: 1.4,
-          }}
-        >
-          {toast.message}
-        </p>
+    <div className={`nv-snackbar ${exiting ? 'nv-snackbar--out' : 'nv-snackbar--in'}`}>
+      <Icon size={18} className={`nv-snackbar__icon ${iconClass[toast.type] ?? iconClass.info}`} />
+      <div className="nv-snackbar__content">
+        {toast.title && <p className="nv-snackbar__title">{toast.title}</p>}
+        <p className="nv-snackbar__message">{toast.message}</p>
       </div>
       <button
+        type="button"
+        className="nv-snackbar__close"
+        aria-label="Đóng thông báo"
         onClick={() => { setExiting(true); setTimeout(() => onDismiss(toast.id), 280); }}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '32px',
-          height: '32px',
-          borderRadius: '9999px',
-          border: 'none',
-          background: 'transparent',
-          color: 'var(--md-inverse-on-surface)',
-          cursor: 'pointer',
-          flexShrink: 0,
-          opacity: 0.7,
-          transition: 'opacity 200ms, background 200ms',
-        }}
-        onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.background = 'color-mix(in srgb, var(--md-inverse-on-surface) 14%, transparent)'; }}
-        onMouseLeave={e => { e.currentTarget.style.opacity = '0.7'; e.currentTarget.style.background = 'transparent'; }}
       >
         <X size={16} />
       </button>
-
-      {/* Countdown progress line */}
       <div
-        style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          height: '3px',
-          background: iconColors[toast.type] || iconColors.info,
-          animation: `toastProgress ${toast.duration || 2500}ms linear forwards`,
-        }}
+        className={`nv-snackbar__progress nv-snackbar__progress--${toast.type}`}
+        style={{ '--toast-duration': `${toast.duration || 2500}ms` } as CSSProperties}
       />
     </div>
   );
 }
 
-/* ─── Global toast state ─── */
 let toastListeners: Array<(toast: Toast) => void> = [];
 let toastId = 0;
 
@@ -153,18 +78,7 @@ export default function ToastContainer() {
   const dismiss = useCallback((id: number) => setToasts(prev => prev.filter(t => t.id !== id)), []);
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        top: '80px',
-        right: '24px',
-        zIndex: 9999,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '8px',
-        alignItems: 'flex-end',
-      }}
-    >
+    <div className="nv-snackbar-stack">
       {toasts.map(t => <ToastItem key={t.id} toast={t} onDismiss={dismiss} />)}
     </div>
   );

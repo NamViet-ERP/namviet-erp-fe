@@ -19,24 +19,14 @@ export default function FormField({ label, required, error, children, className 
       {label && (
         <label className="form-label">
           {required && (
-            <span style={{ color: 'var(--md-error)', marginRight: '2px' }}>*</span>
+            <span className="form-label__required" aria-hidden>*</span>
           )}
           {label}
         </label>
       )}
       {children}
       {error && (
-        <p
-          style={{
-            fontFamily: "'Roboto', sans-serif",
-            fontSize: '0.75rem',
-            fontWeight: 400,
-            color: 'var(--md-error)',
-            marginTop: '4px',
-            lineHeight: 1.4,
-          }}
-          className="animate-fade-in"
-        >
+        <p className="form-field__error animate-fade-in" role="alert">
           {error}
         </p>
       )}

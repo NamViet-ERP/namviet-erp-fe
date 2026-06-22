@@ -59,9 +59,13 @@ export const queryKeys = {
     all: ['projects'] as const,
     detail: (code: string) => ['projects', code] as const,
     inventory: (code: string) => ['projects', code, 'inventory'] as const,
+    ledger: (code: string) => ['projects', code, 'ledger'] as const,
   },
   materials: {
     all: ['materials'] as const,
     detail: (code: string) => ['materials', code] as const,
+  },
+  suppliers: {
+    all: ['suppliers'] as const,
   },
 } as const;

@@ -1,4 +1,5 @@
 import { apiClient } from '../lib/apiClient';
+import { UI_ERROR } from '../lib/uiMessages';
 import { getStoredToken } from '../lib/authSession';
 import { fromApi, toApi, compareCandidateAppliedAtNewestFirst, type CandidateApiDto } from '../lib/hrm/candidateApiMapper';
 import { createMockLocalStore } from '../lib/mockLocalStore';
@@ -194,7 +195,7 @@ export const candidatesService = {
   async downloadCv(id: string, fileName?: string): Promise<void> {
     if (USE_MOCK) {
       await mockDelay(null);
-      throw new Error('Tải CV chỉ khả dụng khi kết nối API');
+      throw new Error(UI_ERROR.loadCv);
     }
 
     const token = getStoredToken();

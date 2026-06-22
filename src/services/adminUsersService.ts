@@ -262,7 +262,7 @@ export const adminUsersService = {
       });
     }
 
-    return mockDelay(mockList(params));
+    return mockList(params);
   },
 
   async getById(id: string, source: AdminUserSource): Promise<AdminUserRow> {
