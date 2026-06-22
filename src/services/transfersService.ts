@@ -1,82 +1,69 @@
 import type { Transfer } from '../types';
 import { apiClient } from '../lib/apiClient';
-import { USE_MOCK, mockDelay, mockId } from '../lib/mock';
-import { MOCK_TRANSFERS, projectNameByCode } from '../data/wmsMockSeed';
+import { USE_MOCK } from '../lib/mock';
 
 export type CreateTransferDto = Omit<Transfer, 'id'>;
 export type UpdateTransferDto = Partial<CreateTransferDto>;
 
 const ENDPOINT = '/api/transfers';
 
-let store: Transfer[] = [...MOCK_TRANSFERS];
-
-function nextVoucherCode(prefix: string, seq: number) {
-  return `${prefix}-${String(seq).padStart(6, '0')}`;
-}
-
 export const transfersService = {
   async list(): Promise<Transfer[]> {
-    if (USE_MOCK) return mockDelay(store);
+    if (USE_MOCK) {
+      const mock = await import('./mocks/transfersService.mock');
+      return mock.listTransfersMock();
+    }
     return apiClient.get<Transfer[]>(ENDPOINT);
   },
 
   async getById(id: string): Promise<Transfer> {
     if (USE_MOCK) {
-      const found = store.find((x) => x.id === id);
-      if (!found) throw new Error(`Không tìm thấy phiếu chuyển ${id}`);
-      return mockDelay(found);
+      const mock = await import('./mocks/transfersService.mock');
+      return mock.getTransferMock(id);
     }
     return apiClient.get<Transfer>(`${ENDPOINT}/${id}`);
   },
 
   async create(dto: CreateTransferDto): Promise<Transfer> {
     if (USE_MOCK) {
-      const fromName = projectNameByCode(dto.project);
-      const toName = dto.toProject ? projectNameByCode(dto.toProject) : 'Kho tổng';
-      const created: Transfer = {
-        ...dto,
-        id: mockId('tf'),
-        voucherCode: dto.voucherCode?.trim() || nextVoucherCode('CK', 260210 + store.length),
-        fromWarehouseName: fromName,
-        projectName: fromName,
-        toWarehouseName: toName,
-        toProjectName: dto.toProject ? toName : undefined,
-      };
-      store = [created, ...store];
-      return mockDelay(created);
+      const mock = await import('./mocks/transfersService.mock');
+      return mock.createTransferMock(dto);
     }
     return apiClient.post<Transfer>(ENDPOINT, dto);
   },
 
   async update(id: string, dto: UpdateTransferDto): Promise<Transfer> {
     if (USE_MOCK) {
-      store = store.map((x) => (x.id === id ? { ...x, ...dto } : x));
-      const updated = store.find((x) => x.id === id);
-      if (!updated) throw new Error(`Không tìm thấy phiếu chuyển ${id}`);
-      return mockDelay(updated);
+      const mock = await import('./mocks/transfersService.mock');
+      return mock.updateTransferMock(id, dto);
     }
     return apiClient.put<Transfer>(`${ENDPOINT}/${id}`, dto);
   },
 
   async approve(id: string): Promise<Transfer> {
     if (USE_MOCK) {
-      return this.update(id, { status: 'approved' });
+      const mock = await import('./mocks/transfersService.mock');
+      return mock.updateTransferMock(id, {
+        status: 'approved',
+        approvedBy: 'Lê Thị Hồng',
+        approvedAt: new Date().toISOString(),
+      });
     }
     return apiClient.post<Transfer>(`${ENDPOINT}/${id}/approve`);
   },
 
   async submit(id: string): Promise<Transfer> {
     if (USE_MOCK) {
-      return this.update(id, { status: 'pending' });
+      const mock = await import('./mocks/transfersService.mock');
+      return mock.updateTransferMock(id, { status: 'pending' });
     }
     return apiClient.post<Transfer>(`${ENDPOINT}/${id}/submit`);
   },
 
   async remove(id: string): Promise<void> {
     if (USE_MOCK) {
-      store = store.filter((x) => x.id !== id);
-      await mockDelay(null);
-      return;
+      const mock = await import('./mocks/transfersService.mock');
+      return mock.removeTransferMock(id);
     }
     await apiClient.delete<void>(`${ENDPOINT}/${id}`);
   },

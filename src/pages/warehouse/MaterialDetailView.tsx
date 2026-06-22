@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Ban, RotateCcw } from 'lucide-react';
 import DetailSection from '../../components/hr/DetailSection';
 import DetailFieldGrid from '../../components/hr/DetailFieldGrid';
@@ -57,17 +57,6 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
 
   const { optionsByLevel: editOptions, isLoading: editCategoriesLoading } =
     useCategoryCascade(editSelection);
-
-  useEffect(() => {
-    if (!material || categories.length === 0 || isEditing) return;
-    setEditSelection(selectionFromCategoryId(categories, material.categoryId));
-    setEditForm({
-      materialName: material.materialName,
-      unit: material.unit,
-      technicalSpec: material.technicalSpec ?? '',
-      qualityStandard: material.qualityStandard ?? '',
-    });
-  }, [material, categories, isEditing]);
 
   if (isLoading) return <HrmLoadingState />;
   if (isError || !material) {

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Eye, EyeOff, ImageIcon } from 'lucide-react';
 import HrmDatePicker from './HrmDatePicker';
 import HrmImageUpload, { type LocalFileState } from './HrmImageUpload';
@@ -167,10 +167,6 @@ export function EditableImageField({
   const preview = pending?.preview ?? attachment?.previewUrl;
   const [previewBroken, setPreviewBroken] = useState(false);
 
-  useEffect(() => {
-    setPreviewBroken(false);
-  }, [preview]);
-
   if (!preview || previewBroken) {
     return (
       <HrmImageUpload
@@ -188,6 +184,7 @@ export function EditableImageField({
       <span className="hrm-field__label">{label}</span>
       <div className="hrm-editable-image">
         <img
+          key={preview}
           src={preview}
           alt={label}
           className={`hrm-field-image${document ? ' hrm-field-image--document' : ''}`}

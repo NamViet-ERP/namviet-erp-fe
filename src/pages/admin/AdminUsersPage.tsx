@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { Plus, UserCog, UserCheck, UserX, UserPlus, KeyRound } from 'lucide-react';
@@ -120,10 +120,7 @@ export default function AdminUsersPage() {
   const summary = data?.summary;
   const totalCount = data?.totalCount ?? 0;
   const totalPages = data?.totalPages ?? 1;
-
-  useEffect(() => {
-    if (totalPages > 0 && page > totalPages) setPage(totalPages);
-  }, [page, totalPages]);
+  const displayPage = totalPages > 0 ? Math.min(page, totalPages) : page;
 
   const hasFilters = Boolean(
     search || departmentFilter || accountStatusFilter || sourceFilter || quickFilter !== 'all',
@@ -482,7 +479,7 @@ export default function AdminUsersPage() {
           <Pagination
             embedded
             itemLabel="tài khoản"
-            currentPage={page}
+            currentPage={displayPage}
             totalPages={totalPages}
             pageSize={pageSize}
             totalItems={totalCount}

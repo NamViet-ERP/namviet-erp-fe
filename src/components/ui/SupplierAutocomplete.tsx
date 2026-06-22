@@ -29,25 +29,21 @@ export default function SupplierAutocomplete({
   disabled = false,
 }: SupplierAutocompleteProps) {
   const [open, setOpen] = useState(false);
-  const [text, setText] = useState('');
+  const [draft, setDraft] = useState('');
   const [highlight, setHighlight] = useState(0);
   const [panelStyle, setPanelStyle] = useState<React.CSSProperties>({});
   const [placement, setPlacement] = useState<'below' | 'above'>('below');
-  const [panelShown, setPanelShown] = useState(false);
+  const [panelReady, setPanelReady] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const panelRef = useRef<HTMLElement>(null);
   const listId = useId();
 
   const selected = useMemo(() => findSupplierByName(suppliers, value), [suppliers, value]);
-
-  useEffect(() => {
-    if (!open) {
-      setText(selected?.supplierName ?? '');
-    }
-  }, [open, selected]);
+  const closedLabel = selected?.supplierName ?? '';
+  const inputValue = open ? draft : closedLabel;
 
   const filtered = useMemo(() => {
-    const q = normalizeComboboxQuery(text);
+    const q = normalizeComboboxQuery(inputValue);
     const list = q
       ? suppliers.filter(
           s =>
@@ -56,7 +52,10 @@ export default function SupplierAutocomplete({
         )
       : suppliers;
     return list.slice(0, COMBOBOX_MAX_SUGGESTIONS);
-  }, [text, suppliers]);
+  }, [inputValue, suppliers]);
+
+  const safeHighlight =
+    filtered.length === 0 ? 0 : Math.min(highlight, filtered.length - 1);
 
   const updatePanelPosition = useCallback(() => {
     const el = inputRef.current;
@@ -75,21 +74,25 @@ export default function SupplierAutocomplete({
     setPanelStyle(next.style);
   }, [compact]);
 
+  const openPanel = () => {
+    setDraft(closedLabel);
+    setHighlight(0);
+    setOpen(true);
+    updatePanelPosition();
+  };
+
   const selectSupplier = (supplier: SupplierApiDto) => {
     onChange(supplier.supplierName);
-    setText(supplier.supplierName);
+    setDraft(supplier.supplierName);
     setOpen(false);
     inputRef.current?.blur();
   };
 
   useEffect(() => {
-    if (!open) {
-      setPanelShown(false);
-      return;
-    }
+    if (!open) return;
 
     updatePanelPosition();
-    const raf = requestAnimationFrame(() => setPanelShown(true));
+    const raf = requestAnimationFrame(() => setPanelReady(true));
 
     const onReposition = () => {
       const el = inputRef.current;
@@ -109,6 +112,7 @@ export default function SupplierAutocomplete({
 
     return () => {
       cancelAnimationFrame(raf);
+      setPanelReady(false);
       window.removeEventListener('resize', onReposition);
       window.removeEventListener('scroll', onReposition, true);
       document.removeEventListener('scroll', onReposition, true);
@@ -128,26 +132,22 @@ export default function SupplierAutocomplete({
     return () => document.removeEventListener('mousedown', onPointerDown);
   }, [open]);
 
-  useEffect(() => {
-    setHighlight(0);
-  }, [text, open]);
-
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      if (!open) setOpen(true);
+      if (!open) openPanel();
       setHighlight(i => Math.min(i + 1, Math.max(0, filtered.length - 1)));
       return;
     }
     if (e.key === 'ArrowUp') {
       e.preventDefault();
-      if (!open) setOpen(true);
+      if (!open) openPanel();
       setHighlight(i => Math.max(i - 1, 0));
       return;
     }
-    if (e.key === 'Enter' && open && filtered[highlight]) {
+    if (e.key === 'Enter' && open && filtered[safeHighlight]) {
       e.preventDefault();
-      selectSupplier(filtered[highlight]);
+      selectSupplier(filtered[safeHighlight]);
       return;
     }
     if (e.key === 'Escape') {
@@ -155,13 +155,13 @@ export default function SupplierAutocomplete({
     }
   };
 
-  const showEmpty = open && normalizeComboboxQuery(text).length > 0 && filtered.length === 0;
+  const showEmpty = open && normalizeComboboxQuery(inputValue).length > 0 && filtered.length === 0;
   const showList = open && filtered.length > 0;
   const chevronOpenClass =
     open && placement === 'below' ? 'search-autocomplete__chevron-icon--open' : '';
 
   const panelClass = `search-autocomplete__panel search-autocomplete__panel--${placement}${
-    panelShown ? ' is-visible' : ''
+    open && panelReady ? ' is-visible' : ''
   }`;
 
   const panel = showList ? (
@@ -176,8 +176,8 @@ export default function SupplierAutocomplete({
         <li
           key={s.id}
           role="option"
-          aria-selected={i === highlight}
-          className={`search-autocomplete__option${i === highlight ? ' is-active' : ''}`}
+          aria-selected={i === safeHighlight}
+          className={`search-autocomplete__option${i === safeHighlight ? ' is-active' : ''}`}
           onMouseEnter={() => setHighlight(i)}
           onMouseDown={e => {
             e.preventDefault();
@@ -215,17 +215,15 @@ export default function SupplierAutocomplete({
           aria-autocomplete="list"
           disabled={disabled}
           className="form-input search-autocomplete__input"
-          value={text}
+          value={inputValue}
           placeholder={placeholder}
           onChange={e => {
-            setText(e.target.value);
+            setDraft(e.target.value);
+            setHighlight(0);
             if (!e.target.value.trim()) onChange('');
             setOpen(true);
           }}
-          onFocus={() => {
-            setOpen(true);
-            updatePanelPosition();
-          }}
+          onFocus={openPanel}
           onKeyDown={onKeyDown}
         />
         <button
@@ -237,8 +235,8 @@ export default function SupplierAutocomplete({
           onMouseDown={e => e.preventDefault()}
           onClick={() => {
             if (disabled) return;
-            setOpen(prev => !prev);
-            updatePanelPosition();
+            if (open) setOpen(false);
+            else openPanel();
             inputRef.current?.focus();
           }}
         >

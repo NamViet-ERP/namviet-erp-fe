@@ -1,79 +1,69 @@
 import type { Export } from '../types';
 import { apiClient } from '../lib/apiClient';
-import { USE_MOCK, mockDelay, mockId } from '../lib/mock';
-import { MOCK_EXPORTS, projectNameByCode } from '../data/wmsMockSeed';
+import { USE_MOCK } from '../lib/mock';
 
 export type CreateExportDto = Omit<Export, 'id'>;
 export type UpdateExportDto = Partial<CreateExportDto>;
 
 const ENDPOINT = '/api/exports';
 
-let store: Export[] = [...MOCK_EXPORTS];
-
-function nextVoucherCode(prefix: string, seq: number) {
-  return `${prefix}-${String(seq).padStart(6, '0')}`;
-}
-
 export const exportsService = {
   async list(): Promise<Export[]> {
-    if (USE_MOCK) return mockDelay(store);
+    if (USE_MOCK) {
+      const mock = await import('./mocks/exportsService.mock');
+      return mock.listExportsMock();
+    }
     return apiClient.get<Export[]>(ENDPOINT);
   },
 
   async getById(id: string): Promise<Export> {
     if (USE_MOCK) {
-      const found = store.find((x) => x.id === id);
-      if (!found) throw new Error(`Không tìm thấy phiếu xuất ${id}`);
-      return mockDelay(found);
+      const mock = await import('./mocks/exportsService.mock');
+      return mock.getExportMock(id);
     }
     return apiClient.get<Export>(`${ENDPOINT}/${id}`);
   },
 
   async create(dto: CreateExportDto): Promise<Export> {
     if (USE_MOCK) {
-      const name = projectNameByCode(dto.project);
-      const created: Export = {
-        ...dto,
-        id: mockId('ex'),
-        voucherCode: dto.voucherCode?.trim() || nextVoucherCode('XK', 260110 + store.length),
-        projectName: name,
-        warehouseName: name,
-      };
-      store = [created, ...store];
-      return mockDelay(created);
+      const mock = await import('./mocks/exportsService.mock');
+      return mock.createExportMock(dto);
     }
     return apiClient.post<Export>(ENDPOINT, dto);
   },
 
   async update(id: string, dto: UpdateExportDto): Promise<Export> {
     if (USE_MOCK) {
-      store = store.map((x) => (x.id === id ? { ...x, ...dto } : x));
-      const updated = store.find((x) => x.id === id);
-      if (!updated) throw new Error(`Không tìm thấy phiếu xuất ${id}`);
-      return mockDelay(updated);
+      const mock = await import('./mocks/exportsService.mock');
+      return mock.updateExportMock(id, dto);
     }
     return apiClient.put<Export>(`${ENDPOINT}/${id}`, dto);
   },
 
   async approve(id: string): Promise<Export> {
     if (USE_MOCK) {
-      return this.update(id, { status: 'approved' });
+      const mock = await import('./mocks/exportsService.mock');
+      return mock.updateExportMock(id, {
+        status: 'approved',
+        approvedBy: 'Lê Thị Hồng',
+        approvedAt: new Date().toISOString(),
+      });
     }
     return apiClient.post<Export>(`${ENDPOINT}/${id}/approve`);
   },
 
   async submit(id: string): Promise<Export> {
     if (USE_MOCK) {
-      return this.update(id, { status: 'pending' });
+      const mock = await import('./mocks/exportsService.mock');
+      return mock.updateExportMock(id, { status: 'pending' });
     }
     return apiClient.post<Export>(`${ENDPOINT}/${id}/submit`);
   },
 
   async remove(id: string): Promise<void> {
     if (USE_MOCK) {
-      store = store.filter((x) => x.id !== id);
-      await mockDelay(null);
-      return;
+      const mock = await import('./mocks/exportsService.mock');
+      return mock.removeExportMock(id);
     }
     await apiClient.delete<void>(`${ENDPOINT}/${id}`);
   },

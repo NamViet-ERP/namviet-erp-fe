@@ -1,14 +1,5 @@
-import { useEffect, useState } from 'react';
-
-export function profileInitials(name: string): string {
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .slice(-2)
-    .map(w => w[0])
-    .join('')
-    .toUpperCase();
-}
+import { useState } from 'react';
+import { profileInitials } from '../../lib/hrm/profileInitials';
 
 type HrmProfileAvatarProps = {
   name: string;
@@ -26,10 +17,6 @@ export default function HrmProfileAvatar({
 }: HrmProfileAvatarProps) {
   const [broken, setBroken] = useState(false);
 
-  useEffect(() => {
-    setBroken(false);
-  }, [photoUrl]);
-
   if (!photoUrl || broken) {
     const fallbackClass =
       variant === 'profile'
@@ -45,6 +32,7 @@ export default function HrmProfileAvatar({
   if (variant === 'profile') {
     return (
       <img
+        key={photoUrl}
         src={photoUrl}
         alt=""
         className={className}
@@ -55,6 +43,7 @@ export default function HrmProfileAvatar({
 
   return (
     <img
+      key={photoUrl}
       src={photoUrl}
       alt=""
       className={['hrm-member-avatar', className].filter(Boolean).join(' ')}

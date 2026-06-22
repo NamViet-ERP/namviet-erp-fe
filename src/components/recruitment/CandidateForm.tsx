@@ -1,5 +1,5 @@
 import { useState, useRef, type CSSProperties } from 'react';
-import { useForm, type FieldErrors } from 'react-hook-form';
+import { useForm, useWatch, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Upload, FileText, Trash2, CheckCircle2, ChevronRight } from 'lucide-react';
@@ -79,7 +79,7 @@ export default function CandidateForm() {
     register,
     handleSubmit,
     setValue,
-    watch,
+    control,
     formState: { errors, isSubmitting },
     reset
   } = useForm<CandidateFormValues>({
@@ -94,9 +94,10 @@ export default function CandidateForm() {
     }
   });
 
-  const selectedGender = watch('gender');
-  const selectedEducation = watch('education');
-  const selectedSource = watch('source');
+  const selectedGender = useWatch({ control, name: 'gender' });
+  const selectedEducation = useWatch({ control, name: 'education' });
+  const selectedSource = useWatch({ control, name: 'source' });
+  const birthDate = useWatch({ control, name: 'birthDate' }) ?? '';
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -258,7 +259,7 @@ export default function CandidateForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit, onInvalid)} noValidate className="candidate-apply-form space-y-1">
+    <form onSubmit={e => { void handleSubmit(onSubmit, onInvalid)(e); }} noValidate className="candidate-apply-form space-y-1">
       <FormSectionHeader step={1} title="Thông tin ứng viên" />
 
       <div className="hrm-form-grid">
@@ -275,7 +276,7 @@ export default function CandidateForm() {
         <div data-form-field="birthDate">
           <label className="hrm-field__label">Năm sinh *</label>
           <HrmDatePicker
-            value={watch('birthDate') ?? ''}
+            value={birthDate}
             onChange={v => setValue('birthDate', v, { shouldValidate: true })}
             error={Boolean(errors.birthDate)}
             max={new Date().toISOString().slice(0, 10)}

@@ -35,7 +35,7 @@ export default function MembersPage() {
     isError,
     error,
   } = useEmployees();
-  const employeeList = employees ?? [];
+  const employeeList = useMemo(() => employees ?? [], [employees]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<EmployeeStatus | ''>('');
   const [page, setPage] = useState(1);

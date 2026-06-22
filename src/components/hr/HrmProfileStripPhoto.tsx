@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Camera, Upload, X } from 'lucide-react';
 import HrmProfileAvatar from './HrmProfileAvatar';
 import { readProfileImageFile, type LocalFileState } from '../../lib/hrm/attachments';
@@ -25,11 +25,6 @@ export default function HrmProfileStripPhoto({
   const inputRef = useRef<HTMLInputElement>(null);
   const preview = pending?.preview ?? photoUrl;
   const [broken, setBroken] = useState(false);
-
-  useEffect(() => {
-    setBroken(false);
-  }, [preview]);
-
   const hasPreview = !!preview && !broken;
 
   const openPicker = () => inputRef.current?.click();
@@ -53,6 +48,7 @@ export default function HrmProfileStripPhoto({
                 aria-label="Chọn ảnh hồ sơ"
               >
                 <img
+                  key={preview}
                   src={preview}
                   alt=""
                   className="hrm-profile-strip__photo-img"

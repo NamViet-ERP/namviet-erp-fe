@@ -13,7 +13,7 @@ import { REMEMBER_KEY, SAVED_USER_KEY, setRememberMePreference } from '../../lib
 import RoleSwitcher from '../../components/layout/RoleSwitcher';
 import { getDefaultRoute } from '../../utils/getDefaultRoute';
 import { getActiveRole } from '../../lib/getActiveRole';
-import namvietGroupLogo from '../../assets/NamVietGroup.png';
+import { NAMVIET_GROUP_LOGO_URL } from '../../constants/branding';
 
 const HAS_API = Boolean(import.meta.env.VITE_API_BASE_URL?.trim());
 /** Chạy frontend thuần — không cần Docker/PostgreSQL; dùng dữ liệu mô phỏng trong `src/data/*`. */
@@ -111,7 +111,7 @@ export default function LoginPage() {
         <div className="login-card">
           <div className="text-center mb-7">
             <div className="login-brand">
-              <img src={namvietGroupLogo} alt="NamViet Group" className="login-brand__logo" />
+              <img src={NAMVIET_GROUP_LOGO_URL} alt="NamViet Group" className="login-brand__logo" />
             </div>
             <h2 className="text-2xl font-bold text-[var(--md-on-surface)]">
               Nam Việt <span className="text-[var(--md-primary)]">ERP</span>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { PackagePlus, PackageMinus, PackageX, Boxes, Package, UserRound, CalendarDays, ArrowRightLeft } from 'lucide-react';
 import { HrmDetailHeader } from '../../components/hr/HrmPageChrome';
@@ -33,7 +33,7 @@ export default function ProjectDetailPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<DetailTab>('stock');
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
-  const [stockPage, setStockPage] = useState(1);
+  const [stockPageRaw, setStockPage] = useState(1);
   const [stockPageSize, setStockPageSize] = useState(DEFAULT_LIST_PAGE_SIZE);
   const { data: project, isLoading, isError } = useProject(code);
   const { data: inventory = [], isLoading: invLoading } = useProjectInventory(code);
@@ -64,20 +64,11 @@ export default function ProjectDetailPage() {
   );
   const totalActualQty = actualStockLines.reduce((s, r) => s + r.actualInventoryQty, 0);
   const stockTotalPages = Math.max(1, Math.ceil(stockWithQty.length / stockPageSize));
+  const stockPage = Math.min(stockPageRaw, stockTotalPages);
   const paginatedStock = stockWithQty.slice(
     (stockPage - 1) * stockPageSize,
     stockPage * stockPageSize,
   );
-
-  useEffect(() => {
-    setStockPage(1);
-  }, [code]);
-
-  useEffect(() => {
-    if (stockPage > stockTotalPages) {
-      setStockPage(stockTotalPages);
-    }
-  }, [stockPage, stockTotalPages]);
 
   if (isLoading) {
     return (

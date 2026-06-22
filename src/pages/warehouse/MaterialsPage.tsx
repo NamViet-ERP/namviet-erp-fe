@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Plus, RotateCcw } from 'lucide-react';
 import SearchBar from '../../components/ui/SearchBar';
@@ -31,13 +31,18 @@ function isRequiredOnCreate(level: number) {
   return (MATERIAL_CREATE_REQUIRED_LEVELS as readonly number[]).includes(level);
 }
 
-export default function MaterialsPage() {
+export default function MaterialsPageRoute() {
   const location = useLocation();
-  const [search, setSearch] = useState('');
+  const initialHighlight = (location.state as { highlightCode?: string } | null)?.highlightCode;
+  return <MaterialsPage key={location.key} initialHighlight={initialHighlight} />;
+}
+
+function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
+  const [search, setSearch] = useState(initialHighlight ?? '');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(15);
   const [filterSelection, setFilterSelection] = useState<Array<number | ''>>([...emptySelection]);
-  const [detailCode, setDetailCode] = useState<string | null>(null);
+  const [detailCode, setDetailCode] = useState<string | null>(initialHighlight ?? null);
   const [showCreate, setShowCreate] = useState(false);
   const [showInactive, setShowInactive] = useState(false);
 
@@ -50,14 +55,6 @@ export default function MaterialsPage() {
     qualityStandard: '',
   });
   const [createErrors, setCreateErrors] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    const code = (location.state as { highlightCode?: string } | null)?.highlightCode;
-    if (code) {
-      setDetailCode(code);
-      setSearch(code);
-    }
-  }, [location.state]);
 
   const { optionsByLevel: filterOptions, isLoading: categoriesLoading } =
     useCategoryCascade(filterSelection);

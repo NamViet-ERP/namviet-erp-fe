@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import namvietGroupLogo from '../../assets/NamVietGroup.png';
+import { NAMVIET_GROUP_LOGO_URL } from '../../constants/branding';
 import {
   Search, Grid3X3, Settings, BarChart3, Bell, ChevronDown,
   User, LogOut, X, Check, AlertTriangle, Package, FileText, Moon, Sun,
@@ -207,7 +207,7 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
         aria-label="Về trang chủ"
       >
         <img
-          src={namvietGroupLogo}
+          src={NAMVIET_GROUP_LOGO_URL}
           alt="Nam Viet Group"
           className="header-brand-logo h-14 w-auto object-contain"
         />

@@ -1,56 +1,12 @@
 import { apiClient } from '../lib/apiClient';
 import { UI_ERROR } from '../lib/uiMessages';
 import { getStoredToken } from '../lib/authSession';
-import { fromApi, toApi, compareCandidateAppliedAtNewestFirst, type CandidateApiDto } from '../lib/hrm/candidateApiMapper';
-import { createMockLocalStore } from '../lib/mockLocalStore';
+import { fromApi, toApi, type CandidateApiDto } from '../lib/hrm/candidateApiMapper';
 import { USE_MOCK, mockDelay } from '../lib/mock';
 import type { Candidate, CreateCandidateDto, UpdateCandidateDto } from '../types/hr';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
 const ENDPOINT = '/api/candidates';
-
-const MOCK_INITIAL: Candidate[] = [
-  {
-    id: 'cand_1',
-    fullName: 'Nguyễn Văn An',
-    phone: '0987654321',
-    email: 'an.nguyen@gmail.com',
-    gender: 'Nam',
-    address: 'Q. Ninh Kiều, Cần Thơ',
-    birthDate: '1998-05-15',
-    education: 'Đại học',
-    school: 'ĐH Cần Thơ',
-    major: 'Quản trị kinh doanh',
-    position: 'Kế toán',
-    experience: '3 năm',
-    source: 'TopCV',
-    hrResponsible: 'Thùy Dương',
-    cvFileName: 'CV_NguyenVanAn.pdf',
-    cvFileSize: '1.85 MB',
-    appliedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: 'cand_2',
-    fullName: 'Lê Thị Bình',
-    phone: '0912345678',
-    email: 'binh.le@outlook.com',
-    gender: 'Nữ',
-    address: 'Hải Châu, Đà Nẵng',
-    birthDate: '1995-10-24',
-    education: 'Đại học',
-    school: 'ĐH Kinh tế Đà Nẵng',
-    major: 'Kế toán',
-    position: 'Kế toán',
-    experience: '5 năm',
-    source: 'Facebook',
-    hrResponsible: 'Phương Thảo',
-    cvFileName: 'CV_LeThiBinh.docx',
-    cvFileSize: '2.12 MB',
-    appliedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-  },
-];
-
-const { readStore, writeStore } = createMockLocalStore('nv-candidate-data', MOCK_INITIAL);
 
 export interface CandidateListParams {
   page?: number;
@@ -82,45 +38,12 @@ interface CandidatePagedApiDto {
   uniquePositionCount: number;
 }
 
-function mockList(params: CandidateListParams): CandidatePagedResult {
-  const page = Math.max(1, params.page ?? 1);
-  const pageSize = Math.max(1, params.pageSize ?? 10);
-  const all = readStore();
-  const totalUnfiltered = all.length;
-  const uniquePositionCount = new Set(all.map(c => c.position?.trim()).filter(Boolean)).size;
-
-  let filtered = all;
-  const q = params.search?.trim();
-  if (q) {
-    const lower = q.toLowerCase();
-    filtered = filtered.filter(c =>
-      c.fullName.toLowerCase().includes(lower) ||
-      c.email.toLowerCase().includes(lower) ||
-      c.phone.includes(q),
-    );
-  }
-  if (params.position) filtered = filtered.filter(c => c.position === params.position);
-  if (params.source) filtered = filtered.filter(c => c.source === params.source);
-  if (params.hrResponsible) filtered = filtered.filter(c => c.hrResponsible === params.hrResponsible);
-
-  filtered = [...filtered].sort(compareCandidateAppliedAtNewestFirst);
-  const totalCount = filtered.length;
-  const items = filtered.slice((page - 1) * pageSize, page * pageSize);
-
-  return {
-    items,
-    totalCount,
-    page,
-    pageSize,
-    totalPages: Math.max(1, Math.ceil(totalCount / pageSize)),
-    totalUnfiltered,
-    uniquePositionCount,
-  };
-}
-
 export const candidatesService = {
   async list(params: CandidateListParams = {}): Promise<CandidatePagedResult> {
-    if (USE_MOCK) return mockDelay(mockList(params));
+    if (USE_MOCK) {
+      const mock = await import('./mocks/candidatesService.mock');
+      return mock.listCandidatesMock(params);
+    }
     const res = await apiClient.get<CandidatePagedApiDto>(ENDPOINT, {
       page: params.page ?? 1,
       pageSize: params.pageSize ?? 20,
@@ -143,9 +66,8 @@ export const candidatesService = {
 
   async getById(id: string): Promise<Candidate> {
     if (USE_MOCK) {
-      const found = readStore().find(c => c.id === id);
-      if (!found) throw new Error(`Không tìm thấy ứng viên ${id}`);
-      return mockDelay(found);
+      const mock = await import('./mocks/candidatesService.mock');
+      return mock.getCandidateMock(id);
     }
     const dto = await apiClient.get<CandidateApiDto>(`${ENDPOINT}/${id}`);
     return fromApi(dto);
@@ -153,15 +75,8 @@ export const candidatesService = {
 
   async create(dto: CreateCandidateDto): Promise<Candidate> {
     if (USE_MOCK) {
-      const created: Candidate = {
-        ...dto,
-        id: 'cand_' + Date.now(),
-        appliedAt: new Date().toISOString(),
-      };
-      const items = readStore();
-      items.unshift(created);
-      writeStore(items);
-      return mockDelay(created);
+      const mock = await import('./mocks/candidatesService.mock');
+      return mock.createCandidateMock(dto);
     }
     const payload = toApi(dto);
     const res = await apiClient.post<CandidateApiDto>(ENDPOINT, payload);
@@ -170,13 +85,8 @@ export const candidatesService = {
 
   async update(id: string, dto: UpdateCandidateDto): Promise<Candidate> {
     if (USE_MOCK) {
-      const items = readStore();
-      const idx = items.findIndex(c => c.id === id);
-      if (idx === -1) throw new Error(`Không tìm thấy ứng viên ${id}`);
-      const { appliedAt: _ignored, ...patch } = dto;
-      items[idx] = { ...items[idx], ...patch, appliedAt: items[idx].appliedAt };
-      writeStore(items);
-      return mockDelay(items[idx]);
+      const mock = await import('./mocks/candidatesService.mock');
+      return mock.updateCandidateMock(id, dto);
     }
     const payload = toApi({ ...dto, fullName: dto.fullName ?? '' } as CreateCandidateDto, id);
     const res = await apiClient.put<CandidateApiDto>(`${ENDPOINT}/${id}`, payload);
@@ -185,9 +95,8 @@ export const candidatesService = {
 
   async remove(id: string): Promise<void> {
     if (USE_MOCK) {
-      writeStore(readStore().filter(c => c.id !== id));
-      await mockDelay(null);
-      return;
+      const mock = await import('./mocks/candidatesService.mock');
+      return mock.removeCandidateMock(id);
     }
     await apiClient.delete<void>(`${ENDPOINT}/${id}`);
   },

@@ -167,10 +167,10 @@ describe('employeeApiMapper', () => {
         birthDate: '1990-01-01',
         joinDate: '01/01/2020',
         status: 'Đang làm',
-        taxCode: null as any,
-      };
+        taxCode: null,
+      } as EmployeeApiDto;
 
-      const employee = fromApi(dto as any);
+      const employee = fromApi(dto);
       expect(employee.taxCode).toBeNull(); // It is preserved as null at runtime
 
       const resultDto = toApi(employee, 'emp-null-tax');
@@ -221,8 +221,8 @@ describe('employeeApiMapper', () => {
         birthDate: '1990-01-01',
         joinDate: '01/01/2020',
         status: 'Đang làm',
-        taxCode: null as any,
-      };
+        taxCode: null,
+      } as EmployeeApiDto;
 
       const empNull = fromApi(dtoNull);
       expect(empNull.taxCode).toBeNull();
@@ -283,8 +283,8 @@ describe('employeeApiMapper', () => {
         birthDate: '1990-01-01',
         joinDate: '01/01/2020',
         status: 'Đang làm',
-        taxCode: 123456789 as any,
-      };
+        taxCode: 123456789,
+      } as EmployeeApiDto;
 
       const employee = fromApi(dtoNumber);
       expect(employee.taxCode).toBe(123456789); // remains a number!

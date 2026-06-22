@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Upload, Trash2, CheckCircle2, ChevronRight } from 'lucide-react';
@@ -105,7 +105,7 @@ export default function EmployeeOnboardForm({ mode = 'public', onCreated }: Empl
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [codeHint, setCodeHint] = useState('');
 
-  const { register, handleSubmit, setValue, watch, formState: { errors, isSubmitting }, reset } = useForm<FormValues>({
+  const { register, handleSubmit, setValue, control, formState: { errors, isSubmitting }, reset } = useForm<FormValues>({
     resolver: zodResolver(employeeSchema),
     defaultValues: { gender: undefined, maritalStatus: undefined, hadSocialInsurance: undefined },
   });
@@ -125,10 +125,14 @@ export default function EmployeeOnboardForm({ mode = 'public', onCreated }: Empl
     return () => { cancelled = true; };
   }, [isHr, setValue]);
 
-  const gender = watch('gender');
-  const maritalStatus = watch('maritalStatus');
-  const hadSi = watch('hadSocialInsurance');
-  const bankAccountName = watch('bankAccountName') ?? '';
+  const gender = useWatch({ control, name: 'gender' });
+  const maritalStatus = useWatch({ control, name: 'maritalStatus' });
+  const hadSi = useWatch({ control, name: 'hadSocialInsurance' });
+  const bankAccountName = useWatch({ control, name: 'bankAccountName' }) ?? '';
+  const birthDate = useWatch({ control, name: 'birthDate' }) ?? '';
+  const joinDate = useWatch({ control, name: 'joinDate' }) ?? '';
+  const cmndIssueDate = useWatch({ control, name: 'cmndIssueDate' }) ?? '';
+  const cccdIssueDate = useWatch({ control, name: 'cccdIssueDate' }) ?? '';
 
   const toAttachment = (f: FileState | null) =>
     f ? { fileName: f.file.name, fileSize: (f.file.size / 1024).toFixed(0) + ' KB', previewUrl: f.preview } : undefined;
@@ -294,7 +298,7 @@ export default function EmployeeOnboardForm({ mode = 'public', onCreated }: Empl
         <div>
           <label className="hrm-field__label">Ngày sinh *</label>
           <HrmDatePicker
-            value={watch('birthDate') ?? ''}
+            value={birthDate}
             onChange={v => setValue('birthDate', v, { shouldValidate: true })}
             error={Boolean(errors.birthDate)}
             max={new Date().toISOString().slice(0, 10)}
@@ -305,7 +309,7 @@ export default function EmployeeOnboardForm({ mode = 'public', onCreated }: Empl
         <div>
           <label className="hrm-field__label">Ngày vào làm *</label>
           <HrmDatePicker
-            value={watch('joinDate') ?? ''}
+            value={joinDate}
             onChange={v => setValue('joinDate', v, { shouldValidate: true })}
             error={Boolean(errors.joinDate)}
           />
@@ -317,7 +321,7 @@ export default function EmployeeOnboardForm({ mode = 'public', onCreated }: Empl
       <FormSectionHeader step={isHr ? 3 : 2} title="CMND (nếu có)" className="hrm-form-section-header--spaced" />
       <div className="hrm-form-grid hrm-form-grid--3">
         <div><label className="hrm-field__label">Số CMND</label><input className="hrm-field-input" {...register('cmndNumber')} /></div>
-        <div><label className="hrm-field__label">Ngày cấp</label><HrmDatePicker value={watch('cmndIssueDate') ?? ''} onChange={v => setValue('cmndIssueDate', v)} /></div>
+        <div><label className="hrm-field__label">Ngày cấp</label><HrmDatePicker value={cmndIssueDate} onChange={v => setValue('cmndIssueDate', v)} /></div>
         <div><label className="hrm-field__label">Nơi cấp</label><input className="hrm-field-input" {...register('cmndIssuePlace')} /></div>
       </div>
 
@@ -331,7 +335,7 @@ export default function EmployeeOnboardForm({ mode = 'public', onCreated }: Empl
         <div>
           <label className="hrm-field__label">Ngày cấp *</label>
           <HrmDatePicker
-            value={watch('cccdIssueDate') ?? ''}
+            value={cccdIssueDate}
             onChange={v => setValue('cccdIssueDate', v, { shouldValidate: true })}
             error={Boolean(errors.cccdIssueDate)}
           />

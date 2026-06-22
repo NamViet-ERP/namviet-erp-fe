@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Package, Plus, Trash2, RotateCcw } from 'lucide-react';
 import IOSSwitch from '../../components/ui/IOSSwitch';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import SearchBar from '../../components/ui/SearchBar';
 import Pagination from '../../components/ui/Pagination';
 import EmptyState from '../../components/ui/EmptyState';

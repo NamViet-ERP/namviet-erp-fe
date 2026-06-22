@@ -181,6 +181,7 @@ export const MOCK_IMPORTS: Import[] = [
     status: 'approved',
     warehouseApproval: 'approved',
     approvedBy: 'Lê Thị Hồng',
+    approvedAt: '2026-06-18T14:30:00.000Z',
     warehouseKeeper: 'Lê Thị Hồng',
     items: [
       {
@@ -266,6 +267,7 @@ export const MOCK_IMPORTS: Import[] = [
     status: 'approved',
     warehouseApproval: 'approved',
     approvedBy: 'Lê Thị Hồng',
+    approvedAt: '2026-06-18T14:30:00.000Z',
     warehouseKeeper: 'Lê Thị Hồng',
     items: [
       {
@@ -334,6 +336,8 @@ export const MOCK_EXPORTS: Export[] = [
     ],
     status: 'approved',
     createdBy: 'Nguyễn Văn Hùng',
+    approvedBy: 'Lê Thị Hồng',
+    approvedAt: '2026-06-19T10:15:00.000Z',
     note: 'Xuất lắp đặt cụm xyclo tầng 2',
     project: 'DA-SABECO',
     projectName: 'Dự án Sabeco Bình Dương',
@@ -409,6 +413,7 @@ export const MOCK_TRANSFERS: Transfer[] = [
     createdBy: 'Nguyễn Văn Hùng',
     note: 'Hoàn trả dầu thừa sau nghiệm thu',
     approvedBy: 'Lê Thị Hồng',
+    approvedAt: '2026-06-19T16:45:00.000Z',
     project: 'DA-SABECO',
     projectName: 'Dự án Sabeco Bình Dương',
   },
@@ -483,6 +488,7 @@ export const MOCK_TRANSFERS: Transfer[] = [
     createdBy: 'Phạm Minh Chính',
     note: 'Điều chuyển theo kế hoạch PM',
     approvedBy: 'Lê Thị Hồng',
+    approvedAt: '2026-06-16T11:20:00.000Z',
     project: 'DA-HOAPHAT',
     projectName: 'Dự án Thép Hòa Phát Dung Quất',
     toProject: 'DA-SABECO',
