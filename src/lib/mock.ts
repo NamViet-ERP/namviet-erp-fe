@@ -1,7 +1,7 @@
 /**
- * Mock-mode helpers. When `VITE_USE_MOCK === 'true'` (default in dev), the
- * domain services serve bundled data from `src/data/*` instead of calling the
- * API — so the app runs with no backend. Flip the env var to hit the real API.
+ * Mock-mode helpers.
+ * - VITE_USE_MOCK=true (or unset) → serve bundled data from `src/data/*`
+ * - VITE_USE_MOCK=false → call the real API at VITE_API_BASE_URL
  */
 
 export const USE_MOCK = import.meta.env.VITE_USE_MOCK !== 'false';

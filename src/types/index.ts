@@ -101,6 +101,9 @@ export interface ImportItem {
   qty: number;
   unit: string;
   unitPrice: number;
+  /** NCC theo dòng — nếu trống dùng NCC mặc định của phiếu */
+  supplier?: string;
+  supplierId?: number;
   [key: string]: unknown;
 }
 
@@ -114,6 +117,7 @@ export interface Import {
   status: StatusKey;
   warehouseApproval: StatusKey;
   approvedBy: string;
+  approvedAt?: string;
   warehouseKeeper: string;
   items: ImportItem[];
   createdBy: string;
@@ -150,6 +154,10 @@ export interface Export {
   status: StatusKey;
   createdBy: string;
   note: string;
+  approvedBy?: string;
+  approvedAt?: string;
+  project?: string;
+  projectName?: string;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -178,6 +186,11 @@ export interface Transfer {
   createdBy: string;
   note: string;
   approvedBy?: string;
+  approvedAt?: string;
+  project?: string;
+  projectName?: string;
+  toProject?: string;
+  toProjectName?: string;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -346,3 +359,5 @@ export interface StockQuantities {
   held: number;
   available: number;
 }
+
+export type { ToastType, ModalSize, CardAccent } from './ui';

@@ -12,29 +12,12 @@ import { useEmployees } from '../../hooks/useEmployees';
 import { EMPLOYEE_STATUSES } from '../../constants/recruitment';
 import type { EmployeeStatus } from '../../types/hr';
 import { getApiErrorMessage } from '../../lib/apiClient';
+import { UI_ERROR } from '../../lib/uiMessages';
 import { compareEmployeeCodeNewestFirst } from '../../lib/hrm/suggestedEmployeeCode';
 import { formatDateCell } from '../../lib/hrm/formatters';
 
-function memberInitials(name: string) {
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .slice(-2)
-    .map(w => w[0])
-    .join('')
-    .toUpperCase();
-}
-
-function MemberAvatar({ name, photoUrl }: { name: string; photoUrl?: string }) {
-  if (photoUrl) {
-    return <img src={photoUrl} alt="" className="hrm-member-avatar" />;
-  }
-  return (
-    <span className="hrm-member-avatar hrm-member-avatar--fallback" aria-hidden>
-      {memberInitials(name)}
-    </span>
-  );
-}
+import HrmProfileAvatar from '../../components/hr/HrmProfileAvatar';
+import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
 
 function EmptyCell({ value }: { value?: string }) {
   if (!value || value === '—') {
@@ -52,11 +35,11 @@ export default function MembersPage() {
     isError,
     error,
   } = useEmployees();
-  const employeeList = employees ?? [];
+  const employeeList = useMemo(() => employees ?? [], [employees]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<EmployeeStatus | ''>('');
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(DEFAULT_LIST_PAGE_SIZE);
 
   const stats = useMemo(() => ({
     active: employeeList.filter(e => e.status === 'Đang làm').length,
@@ -150,7 +133,7 @@ export default function MembersPage() {
                 <tr>
                   <td colSpan={12}>
                     <EmptyState
-                      message={`Không tải được danh sách: ${getApiErrorMessage(error)}`}
+                      message={getApiErrorMessage(error, UI_ERROR.loadMembers)}
                       icon={UserX}
                     />
                   </td>
@@ -176,7 +159,7 @@ export default function MembersPage() {
                     </td>
                     <td className="table-cell member-name hrm-table-sticky-col hrm-table-sticky-col--name">
                       <div className="hrm-member-cell">
-                        <MemberAvatar name={emp.fullName} photoUrl={emp.profilePhoto?.previewUrl} />
+                        <HrmProfileAvatar name={emp.fullName} photoUrl={emp.profilePhoto?.previewUrl} />
                         <span className="truncate max-w-[180px]" title={emp.fullName}>{emp.fullName}</span>
                       </div>
                     </td>

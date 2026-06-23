@@ -1,6 +1,12 @@
-/** Format ISO date string for Vietnamese locale display. */
+/** Format ISO / API date string for Vietnamese locale (dd/MM/yyyy). */
 export function formatDateVi(iso?: string): string | undefined {
   if (!iso) return undefined;
+  const trimmed = iso.trim();
+  const ymd = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (ymd) {
+    return `${ymd[3]}/${ymd[2]}/${ymd[1]}`;
+  }
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(trimmed)) return trimmed;
   const d = new Date(iso);
   return Number.isNaN(d.getTime()) ? undefined : d.toLocaleDateString('vi-VN');
 }

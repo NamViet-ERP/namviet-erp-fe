@@ -15,13 +15,13 @@ export default function PublicFormLayout({ eyebrow, eyebrowAsTitle = false, titl
   const navigate = useNavigate();
 
   return (
-    <div className="hrm-public-page">
+    <div className="hrm-public-page page-route-enter">
       <div className={`mx-auto ${wide ? 'max-w-3xl' : 'max-w-2xl'}`}>
         <div className="flex justify-end mb-6">
           <button
             type="button"
             onClick={() => navigate('/login')}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-[var(--md-outline-variant)] bg-[var(--md-surface-container-high)] text-sm font-semibold text-[var(--md-primary)] shadow-sm hover:bg-[var(--nv-surface-hover)] hover:border-[var(--md-primary)] transition-all duration-200"
+            className="btn btn-outlined btn-sm w-full flex items-center justify-center gap-2"
           >
             <LogIn size={16} />
             Đăng nhập hệ thống

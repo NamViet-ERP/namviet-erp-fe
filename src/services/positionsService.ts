@@ -1,8 +1,6 @@
 import { apiClient } from '../lib/apiClient';
-import { createMockLocalStore } from '../lib/mockLocalStore';
 import { sortVi, sortViBy } from '../lib/sortVi';
-import { USE_MOCK, mockDelay } from '../lib/mock';
-import { RECRUITMENT_POSITIONS } from '../constants/recruitment';
+import { USE_MOCK } from '../lib/mock';
 
 export interface RecruitmentPosition {
   name: string;
@@ -11,16 +9,12 @@ export interface RecruitmentPosition {
 
 const ENDPOINT = '/api/recruitment/positions';
 
-const initial: RecruitmentPosition[] = RECRUITMENT_POSITIONS.map(name => ({
-  name,
-  isActive: true,
-}));
-
-const { readStore, writeStore } = createMockLocalStore('nv-recruitment-positions-v2', initial);
-
 export const positionsService = {
   async list(): Promise<RecruitmentPosition[]> {
-    if (USE_MOCK) return mockDelay(sortViBy(readStore(), p => p.name));
+    if (USE_MOCK) {
+      const mock = await import('./mocks/positionsService.mock');
+      return mock.listPositionsMock();
+    }
     const items = await apiClient.get<RecruitmentPosition[]>(ENDPOINT);
     return sortViBy(items, p => p.name);
   },
@@ -35,14 +29,8 @@ export const positionsService = {
     if (!trimmed) throw new Error('Tên vị trí không được để trống');
 
     if (USE_MOCK) {
-      const items = readStore();
-      if (items.some(item => item.name.toLowerCase() === trimmed.toLowerCase())) {
-        throw new Error('Vị trí này đã tồn tại');
-      }
-      const created: RecruitmentPosition = { name: trimmed, isActive: true };
-      items.push(created);
-      writeStore(items);
-      return mockDelay(created);
+      const mock = await import('./mocks/positionsService.mock');
+      return mock.createPositionMock(trimmed);
     }
 
     return apiClient.post<RecruitmentPosition>(ENDPOINT, { name: trimmed, isActive: true });
@@ -50,12 +38,8 @@ export const positionsService = {
 
   async toggleStatus(name: string): Promise<RecruitmentPosition> {
     if (USE_MOCK) {
-      const items = readStore();
-      const idx = items.findIndex(item => item.name === name);
-      if (idx === -1) throw new Error(`Không tìm thấy vị trí "${name}"`);
-      items[idx].isActive = !items[idx].isActive;
-      writeStore(items);
-      return mockDelay(items[idx]);
+      const mock = await import('./mocks/positionsService.mock');
+      return mock.togglePositionStatusMock(name);
     }
 
     await apiClient.patch<void>(`${ENDPOINT}/${encodeURIComponent(name)}/toggle`);
@@ -67,9 +51,8 @@ export const positionsService = {
 
   async remove(name: string): Promise<void> {
     if (USE_MOCK) {
-      writeStore(readStore().filter(item => item.name !== name));
-      await mockDelay(undefined);
-      return;
+      const mock = await import('./mocks/positionsService.mock');
+      return mock.removePositionMock(name);
     }
     await apiClient.delete<void>(`${ENDPOINT}/${encodeURIComponent(name)}`);
   },

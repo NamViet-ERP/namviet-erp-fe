@@ -8,7 +8,8 @@
 
 import { clearAuthSession } from './authSession';
 import { refreshAccessToken } from './authRefresh';
-import { translateErrorMessage } from './translateErrorMessage';
+import { UI_ERROR } from './uiMessages';
+import { isTechnicalUserMessage, translateErrorMessage } from './translateErrorMessage';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
 
@@ -32,11 +33,13 @@ interface ProblemDetailsLike {
   errors?: Record<string, string[]> | string[];
 }
 
-/** User-facing message from any caught error (never raw JSON). */
-export function getApiErrorMessage(err: unknown, fallback = 'Đã xảy ra lỗi'): string {
-  if (err instanceof ApiError) return translateErrorMessage(err.message);
-  if (err instanceof Error && err.message.trim()) return translateErrorMessage(err.message.trim());
-  return fallback;
+/** User-facing message from any caught error (never raw JSON or technical jargon). */
+export function getApiErrorMessage(err: unknown, fallback = UI_ERROR.generic): string {
+  let msg = fallback;
+  if (err instanceof ApiError) msg = translateErrorMessage(err.message);
+  else if (err instanceof Error && err.message.trim()) msg = translateErrorMessage(err.message.trim());
+  if (!msg.trim() || isTechnicalUserMessage(msg)) return fallback;
+  return msg;
 }
 
 function forceLogoutExpired(): void {
@@ -138,6 +141,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
   const response = await fetch(buildUrl(path, params), {
     ...rest,
+    signal: AbortSignal.timeout(20_000),
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/json',
@@ -163,7 +167,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
         ? 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'
         : response.status === 403
           ? 'Bạn không có quyền truy cập chức năng này.'
-          : `Yêu cầu thất bại (HTTP ${response.status})`,
+          : 'Yêu cầu không thành công. Vui lòng thử lại.',
     );
     if (response.status === 401) forceLogoutExpired();
     throw new ApiError(message, response.status, data);
@@ -190,6 +194,7 @@ export const apiClient = {
       const url = buildUrl(path);
       const response = await fetch(url, {
         method: 'POST',
+        signal: AbortSignal.timeout(20_000),
         headers: {
           Accept: 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -210,7 +215,7 @@ export const apiClient = {
             ? 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'
             : response.status === 403
               ? 'Bạn không có quyền truy cập chức năng này.'
-              : `Yêu cầu thất bại (HTTP ${response.status})`,
+              : 'Yêu cầu không thành công. Vui lòng thử lại.',
         );
         if (response.status === 401) forceLogoutExpired();
         throw new ApiError(message, response.status, data);

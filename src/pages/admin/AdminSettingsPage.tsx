@@ -6,6 +6,8 @@ import SearchBar from '../../components/ui/SearchBar';
 import HrmPanel from '../../components/hr/HrmPanel';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { showToast } from '../../components/ui/Toast';
+import { getApiErrorMessage } from '../../lib/apiClient';
+import { UI_LOADING } from '../../lib/uiMessages';
 import { useRoles, useCreateRole, useDeleteRole, useToggleRoleStatus } from '../../hooks/useRoles';
 
 export default function AdminSettingsPage() {
@@ -36,8 +38,7 @@ export default function AdminSettingsPage() {
       setLabel('');
       setCode('');
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Không thể thêm vai trò';
-      showToast('error', message);
+      showToast('error', getApiErrorMessage(err, 'Không thể thêm vai trò'));
     }
   };
 
@@ -45,8 +46,7 @@ export default function AdminSettingsPage() {
     try {
       await toggleMutation.mutateAsync(roleCode);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Không thể thay đổi trạng thái';
-      showToast('error', message);
+      showToast('error', getApiErrorMessage(err, 'Không thể thay đổi trạng thái'));
     }
   };
 
@@ -57,8 +57,7 @@ export default function AdminSettingsPage() {
       showToast('success', `Đã xóa vai trò "${deleteTarget.label}"`);
       setDeleteTarget(null);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Không thể xóa vai trò';
-      showToast('error', message);
+      showToast('error', getApiErrorMessage(err, 'Không thể xóa vai trò'));
     }
   };
 
@@ -120,7 +119,7 @@ export default function AdminSettingsPage() {
           </div>
 
           {isLoading ? (
-            <div className="hrm-recruitment-positions-empty">Đang tải danh sách vai trò...</div>
+            <div className="hrm-recruitment-positions-empty">{UI_LOADING.roles}</div>
           ) : roles.length === 0 ? (
             <div className="hrm-recruitment-positions-empty">
               {searchTerm ? 'Không tìm thấy vai trò phù hợp.' : 'Chưa có vai trò nào.'}
@@ -201,9 +200,9 @@ export default function AdminSettingsPage() {
         message={
           <>
             Bạn có chắc muốn xóa vai trò{' '}
-            <strong style={{ color: 'var(--md-on-surface)' }}>&ldquo;{deleteTarget?.label}&rdquo;</strong>?
+            <strong className="confirm-dialog__emphasis">&ldquo;{deleteTarget?.label}&rdquo;</strong>?
             <br />
-            <span style={{ fontSize: '0.8125rem', opacity: 0.85 }}>Hành động này không thể hoàn tác.</span>
+            <span className="confirm-dialog__subtext">Hành động này không thể hoàn tác.</span>
           </>
         }
         confirmLabel="Xóa vĩnh viễn"

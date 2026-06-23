@@ -59,6 +59,17 @@
     animation: mdFadeOut 280ms var(--md-easing) forwards;
   }
 
+  /* Route transition — applied in AppLayout on pathname change */
+  .page-route-enter {
+    animation: pageRouteEnter 280ms var(--md-easing) forwards;
+    transform-origin: top center;
+    will-change: opacity, transform;
+  }
+  @keyframes pageRouteEnter {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
   @keyframes pageEnterScale {
     from { opacity: 0; transform: scale(0.96); }
     to   { opacity: 1; transform: scale(1); }
@@ -87,6 +98,39 @@
   @keyframes mdSlideUp {
     from { opacity: 0; transform: translateY(8px); }
     to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Stagger direct children (stat grids, panel stacks) */
+  .stagger-children > * {
+    animation: mdSlideUp 320ms var(--md-easing) backwards;
+  }
+  .stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+  .stagger-children > *:nth-child(2) { animation-delay: 45ms; }
+  .stagger-children > *:nth-child(3) { animation-delay: 90ms; }
+  .stagger-children > *:nth-child(4) { animation-delay: 135ms; }
+  .stagger-children > *:nth-child(5) { animation-delay: 180ms; }
+  .stagger-children > *:nth-child(6) { animation-delay: 225ms; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .page-route-enter,
+    .animate-page-enter,
+    .animate-fade-in,
+    .animate-scale-in,
+    .animate-slide-up,
+    .sidebar-nav-enter,
+    .stagger-children > *,
+    .page-shell > *,
+    .hrm-page > * {
+      animation: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+    }
+    .skeleton::after {
+      animation: none !important;
+    }
+    html {
+      scroll-behavior: auto;
+    }
   }
 
   /* Toast / snackbar motion (centralized — was previously JS-injected) */
@@ -192,6 +236,16 @@
   .text-green-800 { color: var(--md-on-success-container) !important; }
   .text-rose-800, .text-red-800 { color: var(--md-on-error-container) !important; }
   .text-amber-900 { color: var(--md-on-warning-container) !important; }
+  .text-amber-800 { color: var(--md-on-warning-container) !important; }
+
+  /* Semantic status (prefer in new code over Tailwind palette) */
+  .text-status-success { color: var(--status-success); }
+  .text-status-warning { color: var(--status-warning); }
+  .text-status-error { color: var(--status-error); }
+  .text-status-info { color: var(--status-info); }
+
+  .bg-blue-600, .hover\:bg-blue-700:hover { background-color: var(--md-primary) !important; }
+  .bg-blue-600.text-white, .bg-blue-600 .text-white { color: var(--md-on-primary) !important; }
 
   .border-green-300, .border-emerald-300 { border-color: var(--status-success) !important; }
   .border-amber-300, .border-yellow-300 { border-color: var(--status-warning) !important; }
@@ -235,6 +289,49 @@
     vertical-align: middle !important;
   }
 
+  .form-table.import-items-table {
+    table-layout: fixed !important;
+  }
+
+  .form-table.import-items-table td {
+    overflow: hidden !important;
+    vertical-align: top !important;
+  }
+
+  .form-table.import-items-table .import-cell-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .form-table.import-items-table .import-cell-placeholder {
+    display: flex;
+    align-items: center;
+    height: 32px;
+    color: var(--md-on-surface-variant);
+  }
+
+  .form-table .search-autocomplete,
+  .form-table .supplier-autocomplete {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .form-table .search-autocomplete__control,
+  .form-table .supplier-autocomplete__control {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .form-table .search-autocomplete--compact .search-autocomplete__input,
+  .form-table .supplier-autocomplete--compact .supplier-autocomplete__input {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
   /* Compact controls inside form-table cells */
   .form-table .form-input,
   .form-table .form-select {
@@ -273,6 +370,91 @@
 
   .dark .form-table select.form-select {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5' /%3E%3C/svg%3E") !important;
+  }
+
+  .form-table th.text-right,
+  .form-table td.text-right {
+    text-align: right !important;
+  }
+
+  .form-table th.text-center,
+  .form-table td.text-center {
+    text-align: center !important;
+  }
+
+  .form-table .qty-stepper {
+    display: inline-flex;
+    align-items: stretch;
+    width: 100%;
+    max-width: 112px;
+    margin-left: auto;
+    margin-right: 0;
+    vertical-align: top;
+    border: 1px solid var(--md-outline-variant);
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--md-surface);
+  }
+
+  .form-table .qty-stepper__btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    flex-shrink: 0;
+    border: none;
+    background: var(--md-surface-container-low);
+    color: var(--md-on-surface);
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 150ms ease-out;
+  }
+
+  .form-table .qty-stepper__btn:hover:not(:disabled) {
+    background: var(--tint-primary-hover);
+  }
+
+  .form-table .qty-stepper__btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .form-table .qty-stepper__input {
+    width: 0;
+    flex: 1;
+    min-width: 40px;
+    height: 32px !important;
+    border: none !important;
+    border-left: 1px solid var(--md-outline-variant) !important;
+    border-right: 1px solid var(--md-outline-variant) !important;
+    border-radius: 0 !important;
+    text-align: center !important;
+    font-variant-numeric: tabular-nums;
+    padding: 0 4px !important;
+    -moz-appearance: textfield;
+    background: var(--md-surface) !important;
+  }
+
+  .form-table .qty-stepper__input:focus {
+    box-shadow: inset 0 0 0 1px var(--md-primary) !important;
+    outline: none !important;
+  }
+
+  .form-table .qty-stepper__input::-webkit-outer-spin-button,
+  .form-table .qty-stepper__input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .form-table .input-no-spinner::-webkit-outer-spin-button,
+  .form-table .input-no-spinner::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .form-table .input-no-spinner {
+    -moz-appearance: textfield;
   }
 
   /* ── Reduced motion ── */

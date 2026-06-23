@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { LIST_PAGE_SIZE_OPTIONS } from '../../constants/pagination';
 
 interface PageBtnProps {
   children: ReactNode;
@@ -68,7 +69,7 @@ export default function Pagination({
           onChange={e => onPageSizeChange?.(Number(e.target.value))}
           className="pagination-bar__size-select"
         >
-          {[10, 15, 25, 50].map(n => (
+          {LIST_PAGE_SIZE_OPTIONS.map(n => (
             <option key={n} value={n}>{n}</option>
           ))}
         </select>

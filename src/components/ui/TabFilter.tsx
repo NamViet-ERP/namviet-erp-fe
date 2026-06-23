@@ -14,72 +14,19 @@ interface TabFilterProps {
 
 export default function TabFilter({ tabs, activeTab, onChange }: TabFilterProps) {
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'flex-end',
-        borderBottom: '1px solid var(--md-outline-variant)',
-        marginBottom: '16px',
-        overflowX: 'auto',
-        scrollbarWidth: 'none',
-      }}
-    >
+    <div className="tab-filter">
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
         return (
           <button
             key={tab.id}
+            type="button"
             onClick={() => onChange(tab.id)}
-            style={{
-              position: 'relative',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '12px 16px',
-              border: 'none',
-              borderBottom: `2px solid ${isActive ? 'var(--md-primary)' : 'transparent'}`,
-              marginBottom: '-1px',
-              background: 'transparent',
-              color: isActive ? 'var(--md-primary)' : 'var(--md-on-surface-variant)',
-              fontFamily: "'Roboto', sans-serif",
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              letterSpacing: '0.01em',
-              cursor: 'pointer',
-              transition: 'color 280ms var(--md-easing), background 280ms var(--md-easing), border-color 280ms var(--md-easing)',
-              borderRadius: '0',
-              whiteSpace: 'nowrap',
-              flexShrink: 0,
-            }}
-            onMouseEnter={e => {
-              if (!isActive) {
-                e.currentTarget.style.background = 'var(--tint-primary-hover)';
-                e.currentTarget.style.color = 'var(--md-on-surface)';
-              }
-            }}
-            onMouseLeave={e => {
-              if (!isActive) {
-                e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.color = 'var(--md-on-surface-variant)';
-              }
-            }}
+            className={`tab-filter__tab${isActive ? ' tab-filter__tab--active' : ''}`}
           >
             {tab.label}
             {tab.count !== undefined && (
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  padding: '1px 7px',
-                  borderRadius: '9999px',
-                  background: isActive ? 'var(--md-secondary-container)' : 'var(--md-surface-variant)',
-                  color: isActive ? 'var(--md-on-secondary-container)' : 'var(--md-on-surface-variant)',
-                  fontFamily: "'Roboto', sans-serif",
-                  fontSize: '0.6875rem',
-                  fontWeight: 500,
-                  transition: 'background 280ms var(--md-easing), color 280ms var(--md-easing)',
-                }}
-              >
+              <span className={`tab-filter__count${isActive ? ' tab-filter__count--active' : ''}`}>
                 {tab.count}
               </span>
             )}

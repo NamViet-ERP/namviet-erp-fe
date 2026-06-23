@@ -4,6 +4,8 @@ import { Clock } from 'lucide-react';
 import { showToast } from '../../components/ui/Toast';
 import { useEmployee, useUpdateEmployee } from '../../hooks/useEmployees';
 import { getSuggestedEmployeeCode } from '../../services/employeesService';
+import { getApiErrorMessage } from '../../lib/apiClient';
+import { UI_ERROR } from '../../lib/uiMessages';
 import { employeeCodeNextHint } from '../../lib/hrm/suggestedEmployeeCode';
 import { useEditableForm } from '../../hooks/useEditableForm';
 import { EMPLOYEE_STATUSES } from '../../constants/recruitment';
@@ -27,6 +29,7 @@ import {
 import { HrmDetailHeader } from '../../components/hr/HrmPageChrome';
 import HrmEditActions from '../../components/hr/HrmEditActions';
 import HrmNotFound, { HrmLoadingState } from '../../components/hr/HrmNotFound';
+import HrmProfileStripPhoto from '../../components/hr/HrmProfileStripPhoto';
 
 export default function EmployeeDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -41,12 +44,14 @@ export default function EmployeeDetailPage() {
   const [pendingCccdFront, setPendingCccdFront] = useState<LocalFileState | null>(null);
   const [pendingCccdBack, setPendingCccdBack] = useState<LocalFileState | null>(null);
   const [pendingDegree, setPendingDegree] = useState<LocalFileState | null>(null);
+  const [profileRemoved, setProfileRemoved] = useState(false);
 
   const resetPendingUploads = () => {
     setPendingProfile(null);
     setPendingCccdFront(null);
     setPendingCccdBack(null);
     setPendingDegree(null);
+    setProfileRemoved(false);
   };
 
   if (employee?.id !== prevEmployeeId) {
@@ -103,8 +108,16 @@ export default function EmployeeDetailPage() {
         };
       };
 
-      const [profilePhoto, cccdFront, cccdBack, degreePhoto] = await Promise.all([
-        uploadIfNeeded(pendingProfile, 'profile', form.profilePhoto),
+      let profilePhoto: FileAttachment | undefined;
+      if (profileRemoved && !pendingProfile) {
+        profilePhoto = undefined;
+      } else if (pendingProfile) {
+        profilePhoto = await uploadIfNeeded(pendingProfile, 'profile', undefined);
+      } else {
+        profilePhoto = form.profilePhoto;
+      }
+
+      const [cccdFront, cccdBack, degreePhoto] = await Promise.all([
         uploadIfNeeded(pendingCccdFront, 'cccd-front', form.cccdFront),
         uploadIfNeeded(pendingCccdBack, 'cccd-back', form.cccdBack),
         uploadIfNeeded(pendingDegree, 'degree', form.degreePhoto),
@@ -112,7 +125,8 @@ export default function EmployeeDetailPage() {
 
       const dto = { ...form, profilePhoto, cccdFront, cccdBack, degreePhoto } as Record<string, unknown>;
       delete dto.id;
-      await updateMutation.mutateAsync({ id, dto });
+      const updated = await updateMutation.mutateAsync({ id, dto });
+      setForm({ ...updated });
       resetPendingUploads();
       if (form.status === 'Nghỉ việc') {
         showToast(
@@ -127,7 +141,7 @@ export default function EmployeeDetailPage() {
       }
       setIsEditing(false);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Không thể lưu';
+      const msg = getApiErrorMessage(e, UI_ERROR.saveFailed);
       if (msg.includes('Mã nhân viên')) setCodeError(msg);
       showToast('error', msg);
     }
@@ -151,29 +165,20 @@ export default function EmployeeDetailPage() {
       />
 
       <div className="hrm-profile-strip">
-        {isEditing ? (
-          <div className="w-full max-w-xs shrink-0">
-            <EditableImageField
-              label="Ảnh hồ sơ"
-              attachment={form.profilePhoto}
-              pending={pendingProfile}
-              onFile={setPendingProfile}
-              onRemove={() => { setPendingProfile(null); setField('profilePhoto', undefined); }}
-              onError={msg => showToast('error', msg)}
-            />
-          </div>
-        ) : form.profilePhoto?.previewUrl ? (
-          <img src={form.profilePhoto.previewUrl} alt="Ảnh hồ sơ" />
-        ) : (
-          <div className="hrm-profile-avatar-fallback" aria-hidden>
-            {form.fullName.split(' ').slice(-2).map(w => w[0]).join('').toUpperCase()}
-          </div>
-        )}
+        <HrmProfileStripPhoto
+          name={form.fullName}
+          photoUrl={form.profilePhoto?.previewUrl}
+          pending={pendingProfile}
+          isEditing={isEditing}
+          onFile={file => { setPendingProfile(file); setProfileRemoved(false); }}
+          onRemove={() => { setPendingProfile(null); setField('profilePhoto', undefined); setProfileRemoved(true); }}
+          onError={msg => showToast('error', msg)}
+        />
         <div>
           <p className="font-bold text-lg text-[var(--md-on-surface)]">{form.fullName}</p>
           <p className="text-sm text-[var(--md-on-surface-variant)]">{form.position || 'Chưa có chức vụ'}</p>
           {isEditing && (
-            <p className="text-xs text-[var(--md-on-surface-variant)] mt-1">Nhấn &quot;Thay ảnh&quot; để cập nhật ảnh hồ sơ</p>
+            <p className="text-xs text-[var(--md-on-surface-variant)] mt-1">Nhấn ảnh để chọn hoặc cập nhật ảnh hồ sơ</p>
           )}
         </div>
       </div>

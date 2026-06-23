@@ -18,7 +18,11 @@ export function useCreateExport() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (dto: CreateExportDto) => exportsService.create(dto),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.exports.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.exports.all });
+      qc.invalidateQueries({ queryKey: queryKeys.stock.matrix });
+      qc.invalidateQueries({ queryKey: queryKeys.projects.all });
+    },
   });
 }
 
@@ -27,6 +31,30 @@ export function useUpdateExport() {
   return useMutation({
     mutationFn: ({ id, dto }: { id: string; dto: UpdateExportDto }) => exportsService.update(id, dto),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.exports.all }),
+  });
+}
+
+export function useApproveExport() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => exportsService.approve(id),
+    onSuccess: (_data, id) => {
+      qc.invalidateQueries({ queryKey: queryKeys.exports.all });
+      qc.invalidateQueries({ queryKey: queryKeys.exports.detail(id) });
+      qc.invalidateQueries({ queryKey: queryKeys.stock.matrix });
+      qc.invalidateQueries({ queryKey: queryKeys.projects.all });
+    },
+  });
+}
+
+export function useSubmitExport() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => exportsService.submit(id),
+    onSuccess: (_data, id) => {
+      qc.invalidateQueries({ queryKey: queryKeys.exports.all });
+      qc.invalidateQueries({ queryKey: queryKeys.exports.detail(id) });
+    },
   });
 }
 

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
-import { ChevronDown, ChevronsLeft, Warehouse as WarehouseIcon, ClipboardCheck, Users, UserCheck, ShieldCheck } from 'lucide-react';
+import { ChevronDown, ChevronsLeft, ChevronLeft, Warehouse as WarehouseIcon, ClipboardCheck, Users, UserCheck, ShieldCheck, Settings } from 'lucide-react';
 import type { SidebarMenuItem } from '../../types';
 import type { LucideIcon } from 'lucide-react';
 
@@ -27,9 +27,11 @@ interface SidebarProps {
   onToggle: () => void;
   menuItems: SidebarMenuItem[];
   currentModule: Module;
+  contextLabel?: string;
+  onBack?: () => void;
 }
 
-export default function Sidebar({ collapsed, onToggle, menuItems, currentModule }: SidebarProps) {
+export default function Sidebar({ collapsed, onToggle, menuItems, currentModule, contextLabel, onBack }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
@@ -40,22 +42,28 @@ export default function Sidebar({ collapsed, onToggle, menuItems, currentModule 
   const hoverTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const itemRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  const enableWms = import.meta.env.VITE_ENABLE_WMS === 'true';
-  const filteredMenuItems = enableWms
-    ? menuItems
-    : menuItems.filter(item => !item.path?.startsWith('/warehouse') && !item.path?.startsWith('/stocktake'));
+  const ModuleIcon = onBack ? Settings : (moduleIcons[currentModule] || WarehouseIcon);
+  const headerLabel = contextLabel ?? moduleLabels[currentModule];
 
-  const ModuleIcon = moduleIcons[currentModule] || WarehouseIcon;
-  const isActive = (path: string) => location.pathname === path;
+  const isPathActive = (menuPath: string, pathname: string) => {
+    if (!menuPath) return false;
+    if (pathname === menuPath) return true;
+    if (menuPath === '/warehouse/projects' && pathname.startsWith('/warehouse/projects/')) return true;
+    return false;
+  };
+
+  const isActive = (path: string) => isPathActive(path, location.pathname);
   const isParentActive = (item: SidebarMenuItem) =>
-    item.children ? item.children.some(c => location.pathname === c.path) : location.pathname === item.path;
+    item.children
+      ? item.children.some(c => isPathActive(c.path, location.pathname))
+      : isPathActive(item.path, location.pathname);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setExpandedItems(prev => {
       const next = { ...prev };
       let changed = false;
-      filteredMenuItems.forEach(item => {
+      menuItems.forEach(item => {
         if (item.children && isParentActive(item) && !userCollapsed.has(item.id) && !next[item.id]) {
           next[item.id] = true;
           changed = true;
@@ -74,7 +82,7 @@ export default function Sidebar({ collapsed, onToggle, menuItems, currentModule 
       setActivePopover(null);
     } else {
       const init: Record<string, boolean> = {};
-      filteredMenuItems.forEach(item => {
+      menuItems.forEach(item => {
         if (item.children && isParentActive(item)) init[item.id] = true;
       });
       setExpandedItems(init);
@@ -125,7 +133,7 @@ export default function Sidebar({ collapsed, onToggle, menuItems, currentModule 
   }, []);
 
   const popoverItemId = activePopover || hoveredItem;
-  const popoverItemRaw = collapsed && popoverItemId ? filteredMenuItems.find(i => i.id === popoverItemId) : null;
+  const popoverItemRaw = collapsed && popoverItemId ? menuItems.find(i => i.id === popoverItemId) : null;
   const popoverItem = (popoverItemRaw?.children?.length ?? 0) > 0 ? popoverItemRaw : null;
 
   const updateFlyoutPosition = useCallback(() => {
@@ -152,113 +160,46 @@ export default function Sidebar({ collapsed, onToggle, menuItems, currentModule 
     }
   }, [popoverItem, updateFlyoutPosition]);
 
-  const sidebarBackground =
-    currentModule === 'members' || currentModule === 'recruitment' || currentModule === 'admin'
-      ? 'var(--nv-sidebar-bg-alt)'
-      : 'var(--nv-sidebar-bg)';
+  const isModuleAlt =
+    currentModule === 'members' || currentModule === 'recruitment' || currentModule === 'admin';
 
   return (
     <aside
-      style={{
-        position: 'fixed',
-        left: 0,
-        bottom: 0,
-        zIndex: 40,
-        display: 'flex',
-        flexDirection: 'column',
-        top: '64px',
-        width: collapsed ? '48px' : '180px',
-        background: 'var(--md-inverse-on-surface)',
-        borderRight: '1px solid var(--md-outline-variant)',
-        transition: 'width 300ms var(--md-easing), background 300ms var(--md-easing)',
-      }}
+      className={`app-sidebar${collapsed ? ' app-sidebar--collapsed' : ''}${isModuleAlt ? ' app-sidebar--module-alt' : ''}`}
     >
-      {/* ── Sidebar Header ── */}
-      <div
-        style={{
-          height: '48px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: collapsed ? 'center' : 'space-between',
-          padding: collapsed ? '0' : '0 8px 0 12px',
-          borderBottom: '1px solid var(--md-outline-variant)',
-          flexShrink: 0,
-          transition: 'padding 300ms var(--md-easing)',
-        }}
-      >
+      <div className="sidebar-header">
         {collapsed ? (
           <button
+            type="button"
             onClick={onToggle}
             title="Mở rộng"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '32px',
-              height: '32px',
-              borderRadius: '6px',
-              background: 'var(--md-secondary)',
-              color: 'var(--md-on-secondary)',
-              border: 'none',
-              cursor: 'pointer',
-              transition: 'transform 200ms var(--md-easing)',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.05)'; }}
-            onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+            className="sidebar-module-btn sidebar-module-btn--expand"
           >
             <ModuleIcon size={16} />
           </button>
         ) : (
           <>
-            <div style={{ display: 'flex', alignItems: 'center', overflow: 'hidden', flex: 1 }}>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '6px',
-                  background: 'var(--md-secondary)',
-                  color: 'var(--md-on-secondary)',
-                  flexShrink: 0,
-                  marginRight: '8px',
-                }}
-              >
+            <div className="sidebar-header__main">
+              {onBack && (
+                <button
+                  type="button"
+                  onClick={onBack}
+                  title="Quay lại Kho hàng"
+                  className="sidebar-module-btn sidebar-module-btn--back"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+              )}
+              <div className="sidebar-module-icon">
                 <ModuleIcon size={16} />
               </div>
-              <span
-                style={{
-                  fontFamily: "'Roboto', sans-serif",
-                  fontSize: '13px',
-                  fontWeight: 700,
-                  color: 'var(--md-secondary)',
-                  overflow: 'hidden',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {moduleLabels[currentModule]}
-              </span>
+              <span className="sidebar-module-label">{headerLabel}</span>
             </div>
             <button
+              type="button"
               onClick={onToggle}
               title="Thu gọn"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '28px',
-                height: '28px',
-                borderRadius: '9999px',
-                border: 'none',
-                background: 'transparent',
-                color: 'var(--md-secondary)',
-                cursor: 'pointer',
-                flexShrink: 0,
-                transition: 'background 200ms var(--md-easing)',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'var(--nv-sidebar-item-hover)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+              className="sidebar-module-btn sidebar-module-btn--collapse"
             >
               <ChevronsLeft size={16} />
             </button>
@@ -266,13 +207,8 @@ export default function Sidebar({ collapsed, onToggle, menuItems, currentModule 
         )}
       </div>
 
-      {/* ── Nav items ── */}
-      <nav
-        key={currentModule}
-        className="sidebar-nav-enter"
-        style={{ flex: 1, overflowY: 'auto', padding: '6px' }}
-      >
-        {filteredMenuItems.map((item) => {
+      <nav key={currentModule} className="sidebar-nav sidebar-nav-enter">
+        {menuItems.map((item) => {
           const Icon = item.icon;
           const hasChildren = (item.children?.length ?? 0) > 0;
           const isExpanded = !!expandedItems[item.id];
@@ -283,12 +219,12 @@ export default function Sidebar({ collapsed, onToggle, menuItems, currentModule 
             <div
               key={item.id}
               ref={el => { itemRefs.current[item.id] = el; }}
-              style={{ marginBottom: '2px', position: 'relative' }}
               className="sidebar-item-container"
               onMouseEnter={() => handleItemMouseEnter(item)}
               onMouseLeave={handleItemMouseLeave}
             >
               <button
+                type="button"
                 onClick={() => {
                   if (collapsed) {
                     if (!hasChildren) navigate(item.path);
@@ -303,88 +239,31 @@ export default function Sidebar({ collapsed, onToggle, menuItems, currentModule 
                     }
                   }
                 }}
-                className={`sidebar-item ${active ? 'active' : ''}`}
-                style={{
-                  justifyContent: collapsed ? 'center' : 'flex-start',
-                  padding: collapsed ? '6px' : '5px 10px',
-                  gap: collapsed ? '0' : '6px',
-                  transition: 'padding 300ms var(--md-easing), gap 300ms var(--md-easing)',
-                  width: '100%',
-                }}
+                className={`sidebar-item${active ? ' active' : ''}`}
                 title={collapsed ? item.label : undefined}
               >
-                <Icon
-                  size={18}
-                  style={{
-                    flexShrink: 0,
-                    color: active ? 'var(--md-secondary)' : 'var(--md-on-surface)',
-                    transition: 'color 280ms var(--md-easing)',
-                  }}
-                />
-                <span
-                  className={`sidebar-label flex-1 text-left ${collapsed ? 'collapsed' : ''}`}
-                  style={{ fontFamily: "'Roboto', sans-serif", fontSize: '12px' }}
-                >
+                <Icon size={18} className="sidebar-item__icon" />
+                <span className={`sidebar-item__label sidebar-label flex-1 text-left${collapsed ? ' collapsed' : ''}`}>
                   {item.label}
                 </span>
                 {hasChildren && !collapsed && (
                   <ChevronDown
                     size={12}
-                    style={{
-                      color: 'var(--md-on-surface)',
-                      transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                      opacity: collapsed ? 0 : 1,
-                      transition: 'transform 300ms var(--md-easing), opacity 200ms var(--md-easing)',
-                      flexShrink: 0,
-                    }}
+                    className={`sidebar-item__chevron${isExpanded ? ' sidebar-item__chevron--open' : ''}`}
                   />
                 )}
               </button>
 
-              {/* Expanded sub-items — MD3 style */}
               {hasChildren && !collapsed && (
                 <div className={`submenu-wrapper ${isExpanded ? 'expanded' : ''}`}>
                   <div className="submenu-content">
-                    <div
-                      style={{
-                        marginLeft: '14px',
-                        paddingLeft: '6px',
-                        marginTop: '2px',
-                        marginBottom: '4px',
-                        borderLeft: '2px solid var(--md-outline-variant)',
-                      }}
-                    >
+                    <div className="sidebar-subnav">
                       {item.children!.map(c => (
                         <button
                           key={c.id}
+                          type="button"
                           onClick={() => navigate(c.path)}
-                          style={{
-                            width: '100%',
-                            textAlign: 'left',
-                            padding: '4px 8px',
-                            fontFamily: "'Roboto', sans-serif",
-                            fontSize: '11px',
-                            fontWeight: 500,
-                            borderRadius: '9999px',
-                            border: 'none',
-                            background: isActive(c.path) ? 'var(--md-secondary-container)' : 'transparent',
-                            color: isActive(c.path) ? 'var(--md-on-secondary-container)' : 'var(--md-on-surface)',
-                            cursor: 'pointer',
-                            transition: 'background 280ms var(--md-easing), color 280ms var(--md-easing)',
-                            display: 'block',
-                          }}
-                          onMouseEnter={e => {
-                            if (!isActive(c.path)) {
-                              e.currentTarget.style.background = 'var(--tint-primary-hover)';
-                              e.currentTarget.style.color = 'var(--md-on-surface)';
-                            }
-                          }}
-                          onMouseLeave={e => {
-                            if (!isActive(c.path)) {
-                              e.currentTarget.style.background = 'transparent';
-                              e.currentTarget.style.color = 'var(--md-on-surface)';
-                            }
-                          }}
+                          className={`sidebar-subitem${isActive(c.path) ? ' sidebar-subitem--active' : ''}`}
                         >
                           {c.label}
                         </button>
@@ -403,73 +282,24 @@ export default function Sidebar({ collapsed, onToggle, menuItems, currentModule 
         <div
           onMouseEnter={handlePopoverEnter}
           onMouseLeave={handlePopoverLeave}
-          style={{ ...flyoutStyle }}
+          style={flyoutStyle}
           className="animate-scale-in"
         >
-          {/* Hover bridge */}
-          <div style={{ position: 'absolute', top: 0, bottom: 0, left: '-10px', width: '10px' }} />
-
-          <div style={{ position: 'relative' }}>
-            <div
-              style={{
-                position: 'relative',
-                background: 'var(--md-surface-container)',
-                borderRadius: '4px',
-                boxShadow: 'var(--md-shadow-3)',
-                overflow: 'hidden',
-              }}
-            >
-              <div
-                style={{
-                  fontFamily: "'Roboto', sans-serif",
-                  fontSize: '0.75rem',
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.08em',
-                  color: 'var(--md-on-surface-variant)',
-                  padding: '12px 16px 8px',
-                  borderBottom: '1px solid var(--md-outline-variant)',
-                }}
-              >
-                {popoverItem.label}
-              </div>
-              <div style={{ padding: '4px 0' }}>
-                {popoverItem.children!.map(c => (
-                  <button
-                    key={c.id}
-                    onClick={() => { navigate(c.path); setHoveredItem(null); setActivePopover(null); }}
-                    style={{
-                      width: '100%',
-                      textAlign: 'left',
-                      padding: '10px 16px',
-                      fontFamily: "'Roboto', sans-serif",
-                      fontSize: '0.875rem',
-                      fontWeight: isActive(c.path) ? 500 : 400,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '10px',
-                      border: 'none',
-                      background: isActive(c.path) ? 'var(--md-secondary-container)' : 'transparent',
-                      color: isActive(c.path) ? 'var(--md-on-secondary-container)' : 'var(--md-on-surface)',
-                      cursor: 'pointer',
-                      transition: 'background 200ms var(--md-easing)',
-                    }}
-                    onMouseEnter={e => { if (!isActive(c.path)) e.currentTarget.style.background = 'var(--tint-primary-hover)'; }}
-                    onMouseLeave={e => { if (!isActive(c.path)) e.currentTarget.style.background = 'transparent'; }}
-                  >
-                    <div
-                      style={{
-                        width: '6px',
-                        height: '6px',
-                        borderRadius: '50%',
-                        background: isActive(c.path) ? 'var(--md-primary)' : 'var(--md-outline)',
-                        flexShrink: 0,
-                      }}
-                    />
-                    {c.label}
-                  </button>
-                ))}
-              </div>
+          <div className="sidebar-flyout-bridge" />
+          <div className="sidebar-flyout-panel">
+            <div className="sidebar-flyout-panel__title">{popoverItem.label}</div>
+            <div className="sidebar-flyout-panel__list">
+              {popoverItem.children!.map(c => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => { navigate(c.path); setHoveredItem(null); setActivePopover(null); }}
+                  className={`sidebar-flyout-item${isActive(c.path) ? ' sidebar-flyout-item--active' : ''}`}
+                >
+                  <span className="sidebar-flyout-item__dot" aria-hidden />
+                  {c.label}
+                </button>
+              ))}
             </div>
           </div>
         </div>,

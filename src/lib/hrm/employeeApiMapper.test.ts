@@ -114,6 +114,18 @@ describe('employeeApiMapper', () => {
       expect(dto.taxCode).toBe('MST-22222');
     });
 
+    it('should send null photoUrl when profile photo was removed', () => {
+      const dto = toApi({
+        fullName: 'Test Onboard',
+        birthDate: '2026-06-16',
+        joinDate: '2026-06-16',
+        gender: 'Nam',
+        status: 'Đang làm',
+      });
+
+      expect(dto.photoUrl).toBeNull();
+    });
+
     it('should keep DD/MM/YYYY dates unchanged if already in that format', () => {
       const employee = {
         fullName: 'Test A',
@@ -155,10 +167,10 @@ describe('employeeApiMapper', () => {
         birthDate: '1990-01-01',
         joinDate: '01/01/2020',
         status: 'Đang làm',
-        taxCode: null as any,
-      };
+        taxCode: null,
+      } as EmployeeApiDto;
 
-      const employee = fromApi(dto as any);
+      const employee = fromApi(dto);
       expect(employee.taxCode).toBeNull(); // It is preserved as null at runtime
 
       const resultDto = toApi(employee, 'emp-null-tax');
@@ -209,8 +221,8 @@ describe('employeeApiMapper', () => {
         birthDate: '1990-01-01',
         joinDate: '01/01/2020',
         status: 'Đang làm',
-        taxCode: null as any,
-      };
+        taxCode: null,
+      } as EmployeeApiDto;
 
       const empNull = fromApi(dtoNull);
       expect(empNull.taxCode).toBeNull();
@@ -271,8 +283,8 @@ describe('employeeApiMapper', () => {
         birthDate: '1990-01-01',
         joinDate: '01/01/2020',
         status: 'Đang làm',
-        taxCode: 123456789 as any,
-      };
+        taxCode: 123456789,
+      } as EmployeeApiDto;
 
       const employee = fromApi(dtoNumber);
       expect(employee.taxCode).toBe(123456789); // remains a number!

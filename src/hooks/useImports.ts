@@ -56,6 +56,17 @@ export function useApproveImport() {
   });
 }
 
+export function useSubmitImport() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => importsService.submit(id),
+    onSuccess: (_data, id) => {
+      qc.invalidateQueries({ queryKey: queryKeys.imports.all });
+      qc.invalidateQueries({ queryKey: queryKeys.imports.detail(id) });
+    },
+  });
+}
+
 export function useDeleteImport() {
   const qc = useQueryClient();
   return useMutation({

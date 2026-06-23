@@ -7,6 +7,7 @@ import HrmPanel from '../../components/hr/HrmPanel';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { usePositions, useCreatePosition, useDeletePosition, useTogglePositionStatus } from '../../hooks/usePositions';
 import { getApiErrorMessage } from '../../lib/apiClient';
+import { UI_LOADING } from '../../lib/uiMessages';
 import { showToast } from '../../components/ui/Toast';
 
 const APPLY_PATH = '/recruitment/apply';
@@ -124,7 +125,7 @@ export default function RecruitmentSettingsPage() {
           </div>
 
           {isLoading ? (
-            <div className="hrm-recruitment-positions-empty">Đang tải danh sách vị trí...</div>
+            <div className="hrm-recruitment-positions-empty">{UI_LOADING.positions}</div>
           ) : filteredPositions.length === 0 ? (
             <div className="hrm-recruitment-positions-empty">
               {searchTerm ? 'Không tìm thấy vị trí phù hợp.' : 'Chưa có vị trí tuyển dụng nào.'}
@@ -251,9 +252,9 @@ export default function RecruitmentSettingsPage() {
         message={
           <>
             Bạn có chắc chắn muốn xóa vĩnh viễn vị trí{' '}
-            <strong style={{ color: 'var(--md-on-surface)' }}>&ldquo;{deleteTarget}&rdquo;</strong>?
+            <strong className="confirm-dialog__emphasis">&ldquo;{deleteTarget}&rdquo;</strong>?
             <br />
-            <span style={{ fontSize: '0.8125rem', opacity: 0.85 }}>Hành động này không thể hoàn tác.</span>
+            <span className="confirm-dialog__subtext">Hành động này không thể hoàn tác.</span>
           </>
         }
         confirmLabel="Xóa vĩnh viễn"

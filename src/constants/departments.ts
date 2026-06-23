@@ -18,21 +18,19 @@ export interface Department {
   items: DepartmentSubItem[];
 }
 
-const enableWms = import.meta.env.VITE_ENABLE_WMS === 'true';
-
 /**
  * Mega-menu structure shared by the global Header and the Dashboard launcher.
  * Single source of truth — do not duplicate this elsewhere.
  */
 export const departments: Department[] = [
-  ...(enableWms ? [{
+  {
     title: 'KHO MAYZER',
     icon: Warehouse,
     items: [
       { label: 'Kho hàng', icon: Warehouse, path: '/warehouse/dashboard-warehouse' },
       { label: 'Kiểm kê', icon: ClipboardCheck, path: '/stocktake/list' },
     ],
-  }] : []),
+  },
   {
     title: 'HRM',
     icon: Users,

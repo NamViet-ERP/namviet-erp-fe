@@ -1,21 +1,27 @@
 import type { SidebarMenuItem } from '../types';
 import {
-  LayoutDashboard, Warehouse, Package,
+  LayoutDashboard, Package,
   PackagePlus, PackageMinus, Settings,
   ClipboardCheck, SlidersHorizontal, Users, UserCheck, UserCog,
-  Layers, FolderKanban, ArrowLeftRight
+  Layers, FolderKanban, ArrowLeftRight, Building2,
 } from 'lucide-react';
 
+/** Thứ tự theo luồng nghiệp vụ: kho dự án → tồn → nhập/xuất/chuyển → danh mục */
 export const warehouseMenu: SidebarMenuItem[] = [
   { id: 'dashboard', label: 'Tổng quan', icon: LayoutDashboard, path: '/warehouse/dashboard-warehouse' },
-  { id: 'projects', label: 'Dự án', icon: FolderKanban, path: '/warehouse/projects' },
-  { id: 'materials', label: 'Danh mục vật tư', icon: Package, path: '/warehouse/materials' },
-  { id: 'stock', label: 'Tồn kho dự án', icon: Layers, path: '/warehouse/stock' },
+  { id: 'projects', label: 'Kho dự án', icon: FolderKanban, path: '/warehouse/projects' },
+  { id: 'stock', label: 'Tồn kho', icon: Layers, path: '/warehouse/stock' },
   { id: 'import', label: 'Nhập kho', icon: PackagePlus, path: '/warehouse/import' },
   { id: 'export', label: 'Xuất kho', icon: PackageMinus, path: '/warehouse/export' },
   { id: 'transfer', label: 'Chuyển kho', icon: ArrowLeftRight, path: '/warehouse/transfer' },
-  { id: 'warehouse', label: 'Danh sách kho', icon: Warehouse, path: '/warehouse/list' },
+  { id: 'materials', label: 'Danh mục vật tư', icon: Package, path: '/warehouse/materials' },
   { id: 'settings', label: 'Thiết lập', icon: Settings, path: '/warehouse/settings' },
+];
+
+/** Sidebar khi đang trong Thiết lập kho hàng */
+export const warehouseSettingsMenu: SidebarMenuItem[] = [
+  { id: 'wh-settings-categories', label: 'Cây vật tư', icon: Package, path: '/warehouse/settings/material-categories' },
+  { id: 'wh-settings-suppliers', label: 'Danh mục NCC', icon: Building2, path: '/warehouse/settings/suppliers' },
 ];
 
 export const stocktakeMenu: SidebarMenuItem[] = [

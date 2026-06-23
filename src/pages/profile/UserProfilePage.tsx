@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import {
   User, Mail, Phone, Building, Calendar, ShieldCheck, CheckCircle,
   Key, Loader2, Briefcase, Settings,
@@ -57,47 +57,24 @@ export default function UserProfilePage() {
   const navigate = useNavigate();
   const sessionUser = getSessionUser();
 
-  const [profile, setProfile] = useState<ProfileData | null>(
-    sessionUser ? buildProfileFromSession(sessionUser) : null,
-  );
-  const [loading, setLoading] = useState(false);
+  const { data: employee, isLoading } = useQuery({
+    queryKey: ['employees', 'profile', sessionUser?.employeeId],
+    queryFn: () => employeesService.getById(sessionUser!.employeeId!),
+    enabled: Boolean(sessionUser?.employeeId),
+  });
 
-  useEffect(() => {
-    if (!sessionUser?.employeeId) return;
-
-    let cancelled = false;
-    setLoading(true);
-
-    employeesService
-      .getById(sessionUser.employeeId)
-      .then((emp) => {
-        if (!cancelled) {
-          setProfile(buildProfileFromSession(sessionUser, emp));
-        }
-      })
-      .catch((e) => {
-        console.error('Failed to fetch employee profile:', e);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionUser?.employeeId]);
+  const profile = sessionUser ? buildProfileFromSession(sessionUser, employee) : null;
 
   if (!profile) {
     return (
-      <div className="animate-fade-in flex items-center justify-center min-h-[40dvh]">
+      <div className="page-shell flex items-center justify-center min-h-[40dvh]">
         <p className="text-sm text-[var(--md-on-surface-variant)]">Không có phiên đăng nhập.</p>
       </div>
     );
   }
 
   return (
-    <div className="animate-fade-in max-w-5xl mx-auto hrm-page w-full">
+    <div className="max-w-5xl mx-auto hrm-page w-full">
       <HrmDetailHeader
         onBack={() => navigate(-1)}
         title="Thông tin cá nhân"
@@ -115,14 +92,9 @@ export default function UserProfilePage() {
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] gap-5 mt-6">
-        {/* Sidebar summary */}
         <aside className="rounded-2xl border border-[var(--md-outline-variant02)] bg-[var(--md-surface-container)] p-6 shadow-sm flex flex-col items-center text-center lg:sticky lg:top-[calc(64px+20px)] lg:self-start">
           <div
-            className="size-24 rounded-full flex items-center justify-center font-bold text-3xl mb-4 border-2 border-[color-mix(in_srgb,var(--md-secondary)_30%,transparent)]"
-            style={{
-              background: 'var(--md-primary-container)',
-              color: 'var(--md-on-primary-container)',
-            }}
+            className="size-24 rounded-full flex items-center justify-center font-bold text-3xl mb-4 border-2 border-[color-mix(in_srgb,var(--md-secondary)_30%,transparent)] profile-avatar-lg"
           >
             {profile.initials}
           </div>
@@ -148,13 +120,12 @@ export default function UserProfilePage() {
           </div>
         </aside>
 
-        {/* Detail panels */}
         <div className="space-y-5">
           <section className="rounded-2xl border border-[var(--md-outline-variant02)] bg-[var(--md-surface-container)] p-5 shadow-sm">
             <h3 className="text-base font-bold mb-4 flex items-center gap-2 text-[var(--md-on-surface)] text-balance">
               <Key size={18} className="text-[var(--md-secondary)] shrink-0" aria-hidden />
               Thông tin tài khoản hệ thống
-              {loading && <Loader2 size={14} className="animate-spin text-[var(--md-outline)]" aria-label="Đang tải" />}
+              {isLoading && <Loader2 size={14} className="animate-spin text-[var(--md-outline)]" aria-label="Đang tải" />}
             </h3>
 
             <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3">

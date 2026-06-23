@@ -4,45 +4,21 @@ import type { LucideIcon } from 'lucide-react';
 interface EmptyStateProps {
   message?: string;
   icon?: LucideIcon;
+  action?: React.ReactNode;
 }
 
-export default function EmptyState({ message = 'Không tìm thấy dữ liệu nào!', icon: Icon = PackageSearch }: EmptyStateProps) {
+export default function EmptyState({
+  message = 'Không có dữ liệu.',
+  icon: Icon = PackageSearch,
+  action,
+}: EmptyStateProps) {
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '64px 24px',
-        gap: '16px',
-      }}
-    >
-      <div
-        style={{
-          width: '80px',
-          height: '80px',
-          borderRadius: '24px',
-          background: 'var(--md-secondary-container)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Icon size={36} style={{ color: 'var(--md-on-secondary-container)' }} />
+    <div className="empty-state">
+      <div className="empty-state__icon-wrap" aria-hidden>
+        <Icon size={36} className="empty-state__icon" />
       </div>
-      <p
-        style={{
-          fontFamily: "'Roboto', sans-serif",
-          fontSize: '1rem',
-          fontWeight: 500,
-          color: 'var(--md-on-surface-variant)',
-          textAlign: 'center',
-          maxWidth: '320px',
-        }}
-      >
-        {message}
-      </p>
+      <p className="empty-state__message">{message}</p>
+      {action && <div className="empty-state__action">{action}</div>}
     </div>
   );
 }

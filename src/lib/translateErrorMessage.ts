@@ -1,4 +1,6 @@
-/** Chuyển thông báo lỗi API (Identity, ASP.NET…) sang tiếng Việt cho UI. */
+import { WMS_ERROR } from './wms/messages';
+
+/** Chuyển thông báo lỗi kỹ thuật sang tiếng Việt cho người dùng. */
 export function translateErrorMessage(message: string): string {
   const trimmed = message.trim();
   if (!trimmed) return trimmed;
@@ -12,6 +14,16 @@ export function translateErrorMessage(message: string): string {
   }
 
   const lower = trimmed.toLowerCase();
+
+  if (/failed to fetch|networkerror|network request failed|load failed/i.test(trimmed)) {
+    return WMS_ERROR.network;
+  }
+  if (/aborterror|the operation was aborted|signal timed out|timeout/i.test(lower)) {
+    return WMS_ERROR.timeout;
+  }
+  if (/^typeerror:/i.test(trimmed) && lower.includes('fetch')) {
+    return WMS_ERROR.network;
+  }
 
   if (lower.includes('passwords must have at least one lowercase')) {
     return 'Mật khẩu cần có ít nhất một chữ thường';
@@ -42,6 +54,19 @@ export function translateErrorMessage(message: string): string {
   }
 
   return trimmed;
+}
+
+/** Ẩn thông báo kỹ thuật (fetch, API, backend…) khỏi UI người dùng. */
+export function isTechnicalUserMessage(message: string): boolean {
+  const lower = message.trim().toLowerCase();
+  if (!lower) return true;
+  return (
+    /failed to fetch|networkerror|fetch failed|load failed/i.test(lower) ||
+    /\bbackend\b/.test(lower) ||
+    /\bvite_/.test(lower) ||
+    /\/api\//.test(lower) ||
+    (/\bapi\b/.test(lower) && /(error|check|restart|khởi động)/i.test(lower))
+  );
 }
 
 export const PASSWORD_HINT = 'Tối thiểu 8 ký tự, có chữ hoa, chữ thường và số';

@@ -26,7 +26,6 @@ export default function DepartmentCard({ dept, onItemClick }: DepartmentCardProp
               key={item.label}
               onClick={() => onItemClick(item, dept)}
               className="mega-menu-item group flex items-center justify-between w-full px-3 py-2.5 bg-[var(--md-surface-container-high)] hover:bg-[var(--nv-sidebar-item-hover)] border border-[var(--md-outline-variant)] hover:border-[var(--md-secondary)] rounded-xl transition-[background-color,border-color,transform] duration-150 ease-out hover:translate-x-0.5 active:scale-[0.99] text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--md-secondary)]"
-              style={{ outlineOffset: '2px', cursor: 'pointer' }}
             >
               <div className="flex items-center gap-2.5 overflow-hidden min-w-0">
                 <ItemIcon size={ICON_SIZE.dense} className="text-[var(--md-on-surface-variant)] shrink-0" />

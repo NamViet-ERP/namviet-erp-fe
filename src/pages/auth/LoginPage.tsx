@@ -6,13 +6,14 @@ import ToastContainer from '../../components/ui/Toast';
 import { getUserById, canUserLogin, setSessionUser, findUserByLogin } from '../../constants/systemUsers';
 import { getAccountLockReason } from '../../services/employeesService';
 import { getApiErrorMessage } from '../../lib/apiClient';
+import { UI_ERROR } from '../../lib/uiMessages';
 import { authService } from '../../services/authService';
 import { USE_MOCK } from '../../lib/mock';
 import { REMEMBER_KEY, SAVED_USER_KEY, setRememberMePreference } from '../../lib/authSession';
 import RoleSwitcher from '../../components/layout/RoleSwitcher';
 import { getDefaultRoute } from '../../utils/getDefaultRoute';
 import { getActiveRole } from '../../lib/getActiveRole';
-import namvietGroupLogo from '../../assets/NamVietGroup.png';
+import { NAMVIET_GROUP_LOGO_URL } from '../../constants/branding';
 
 const HAS_API = Boolean(import.meta.env.VITE_API_BASE_URL?.trim());
 /** Chạy frontend thuần — không cần Docker/PostgreSQL; dùng dữ liệu mô phỏng trong `src/data/*`. */
@@ -79,7 +80,7 @@ export default function LoginPage() {
           localStorage.setItem('nv-logged-in', 'true');
           setSessionUser(user);
         } else {
-          setError('Chưa cấu hình API. Thêm VITE_API_BASE_URL=http://localhost:8080 vào file .env');
+          setError(UI_ERROR.serverUnavailable);
           return;
         }
       }
@@ -95,7 +96,7 @@ export default function LoginPage() {
       const role = getActiveRole();
       navigate(getDefaultRoute(role));
     } catch (err) {
-      setError(getApiErrorMessage(err, 'Đăng nhập thất bại'));
+      setError(getApiErrorMessage(err, UI_ERROR.loginFailed));
     } finally {
       setLoading(false);
     }
@@ -110,7 +111,7 @@ export default function LoginPage() {
         <div className="login-card">
           <div className="text-center mb-7">
             <div className="login-brand">
-              <img src={namvietGroupLogo} alt="NamViet Group" className="login-brand__logo" />
+              <img src={NAMVIET_GROUP_LOGO_URL} alt="NamViet Group" className="login-brand__logo" />
             </div>
             <h2 className="text-2xl font-bold text-[var(--md-on-surface)]">
               Nam Việt <span className="text-[var(--md-primary)]">ERP</span>
@@ -121,21 +122,15 @@ export default function LoginPage() {
           </div>
 
           {sessionExpired && !error && (
-            <div
-              className="flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm mb-4 border border-[var(--md-outline-variant)]"
-              style={{ background: 'var(--md-warning-container, #fff8e1)', color: 'var(--md-on-surface)' }}
-            >
-              <ShieldAlert size={16} className="shrink-0" />
+            <div className="alert-banner alert-banner--warning mb-4">
+              <ShieldAlert size={16} className="alert-banner__icon" />
               <span>Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.</span>
             </div>
           )}
 
           {error && (
-            <div
-              className="flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm mb-4 border border-[var(--md-outline-variant)]"
-              style={{ background: 'var(--md-error-container)', color: 'var(--md-on-error-container)' }}
-            >
-              <ShieldAlert size={16} className="shrink-0" />
+            <div className="alert-banner alert-banner--error mb-4">
+              <ShieldAlert size={16} className="alert-banner__icon" />
               <span>{error}</span>
             </div>
           )}
@@ -193,7 +188,7 @@ export default function LoginPage() {
               </div>
             )}
 
-            {USE_MOCK && HAS_API && (
+            {import.meta.env.DEV && USE_MOCK && HAS_API && (
               <>
                 <label className="flex items-center gap-2 cursor-pointer text-sm">
                   <input
@@ -203,10 +198,10 @@ export default function LoginPage() {
                       setUseMockQuickLogin(e.target.checked);
                       if (!e.target.checked) setMockUserId('');
                     }}
-                    style={{ accentColor: 'var(--md-primary)' }}
+                    className="form-checkbox-accent"
                   />
                   <span className="text-[var(--md-on-surface-variant)] font-medium">
-                    Đăng nhập nhanh theo vai trò mô phỏng (bỏ qua API)
+                    Đăng nhập nhanh theo vai trò mô phỏng
                   </span>
                 </label>
 
@@ -233,7 +228,7 @@ export default function LoginPage() {
                   type="checkbox"
                   checked={rememberMe}
                   onChange={e => setRememberMe(e.target.checked)}
-                  style={{ accentColor: 'var(--md-primary)' }}
+                  className="form-checkbox-accent"
                 />
                 <span className="text-[var(--md-on-surface-variant)] font-medium">Ghi nhớ đăng nhập</span>
               </label>
@@ -269,11 +264,11 @@ export default function LoginPage() {
             </button>
           </div>
 
-          {PURE_MOCK_DEV && (
+          {import.meta.env.DEV && PURE_MOCK_DEV && (
             <p className="text-center mt-4 text-xs text-[var(--md-on-surface-variant)] leading-relaxed">
-              Chế độ dev: không cần backend — chọn vai trò rồi bấm Đăng nhập.
+              Chế độ thử nghiệm: chọn vai trò rồi bấm Đăng nhập.
               <br />
-              Hoặc nhập email/tên đăng nhập mock (mật khẩu bất kỳ).
+              Hoặc nhập email/tên đăng nhập mô phỏng (mật khẩu bất kỳ).
             </p>
           )}
 

@@ -100,15 +100,15 @@ export default function WarehouseListPage() {
   };
 
   return (
-    <div className="animate-fade-in">
+    <div className="page-shell">
       <PageHeader
         eyebrow="Kho hàng"
         title="Danh sách kho"
         actions={<button onClick={openCreate} className="btn btn-filled"><Plus size={16} /> Tạo mới</button>}
       />
 
-      <div className="rounded-2xl shadow-card overflow-hidden" style={{ background: 'var(--md-surface-container)' }}>
-        <div className="p-4 flex items-center justify-between page-filter-bar" style={{ borderBottom: '1px solid var(--md-outline-variant)' }}>
+      <div className="surface-panel surface-panel--rounded-xl surface-panel--table shadow-card">
+        <div className="surface-panel__filter-bar page-filter-bar">
           <div className="flex items-center gap-2">
             <select className="form-select w-24 text-xs py-1.5" value={pageSize}
               onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }}>
@@ -121,7 +121,7 @@ export default function WarehouseListPage() {
 
         {filtered.length === 0 ? <EmptyState message="Không tìm thấy kho hàng nào!" /> : (
           <div className="overflow-x-auto table-scroll">
-            <table className="w-full text-xs" style={{ minWidth: '950px' }}>
+            <table className="w-full text-xs table-min-w--950">
               <thead><tr>
                 <th className="table-header-cell">Mã kho</th>
                 <th className="table-header-cell">Tên kho</th>
@@ -230,30 +230,30 @@ export default function WarehouseListPage() {
       >
         {detailItem && (
           <div className="grid grid-cols-2 gap-6">
-            <div className="rounded-xl p-4" style={{ background: 'var(--md-surface-container-low)' }}>
-              <span className="text-xs text-[var(--md-on-surface-variant)]">Mã kho</span>
-              <p className="font-bold text-[var(--md-primary)] text-lg">{detailItem.code}</p>
+            <div className="wms-detail-tile">
+              <span className="wms-detail-tile__label">Mã kho</span>
+              <p className="wms-detail-tile__value wms-detail-tile__value--lg">{detailItem.code}</p>
             </div>
-            <div className="rounded-xl p-4" style={{ background: 'var(--md-surface-container-low)' }}>
-              <span className="text-xs text-[var(--md-on-surface-variant)]">Tên kho</span>
-              <p className="font-semibold text-[var(--md-on-surface)]">{detailItem.name}</p>
+            <div className="wms-detail-tile">
+              <span className="wms-detail-tile__label">Tên kho</span>
+              <p className="wms-detail-tile__value">{detailItem.name}</p>
             </div>
-            <div><span className="text-xs text-[var(--md-on-surface-variant)]">Nhóm kho</span><p className="font-medium text-[var(--md-on-surface)]">{detailItem.group}</p></div>
-            <div><span className="text-xs text-[var(--md-on-surface-variant)]">Chi nhánh</span><p className="font-medium text-[var(--md-on-surface)]">{detailItem.branch}</p></div>
-            <div className="col-span-2"><span className="text-xs text-[var(--md-on-surface-variant)]">Địa chỉ</span>
+            <div><span className="wms-detail-tile__label">Nhóm kho</span><p className="wms-detail-tile__value">{detailItem.group}</p></div>
+            <div><span className="wms-detail-tile__label">Chi nhánh</span><p className="wms-detail-tile__value">{detailItem.branch}</p></div>
+            <div className="col-span-2"><span className="wms-detail-tile__label">Địa chỉ</span>
               <p className="text-sm flex items-center gap-2 text-[var(--md-on-surface)]"><MapPin size={14} className="text-[var(--md-outline)]" />{detailItem.address}</p>
             </div>
-            <div><span className="text-xs text-[var(--md-on-surface-variant)]">Người phụ trách</span><p className="font-medium text-[var(--md-on-surface)]">{detailItem.manager}</p></div>
-            <div><span className="text-xs text-[var(--md-on-surface-variant)]">Trạng thái</span>
+            <div><span className="wms-detail-tile__label">Người phụ trách</span><p className="wms-detail-tile__value">{detailItem.manager}</p></div>
+            <div><span className="wms-detail-tile__label">Trạng thái</span>
               <div className="mt-1"><Badge status={detailItem.status} /></div>
             </div>
-            <div className="rounded-xl p-4 border" style={{ background: 'var(--md-success-container)', borderColor: 'var(--md-outline-variant)' }}>
-              <span className="text-xs block opacity-80" style={{ color: 'var(--md-on-success-container)' }}>Tổng vật tư tồn kho</span>
-              <p className="text-2xl font-bold" style={{ color: 'var(--md-on-success-container)' }}>{formatCurrency(detailItem.totalStock)}</p>
+            <div className="wms-detail-tile wms-detail-tile--success">
+              <span className="wms-detail-tile__label">Tổng vật tư tồn kho</span>
+              <p className="wms-detail-tile__value">{formatCurrency(detailItem.totalStock)}</p>
             </div>
-            <div className="rounded-xl p-4 border" style={{ background: 'var(--md-primary-container)', borderColor: 'var(--md-outline-variant)' }}>
-              <span className="text-xs block opacity-80" style={{ color: 'var(--md-on-primary-container)' }}>Tổng giá trị hàng tồn</span>
-              <p className="text-2xl font-bold" style={{ color: 'var(--md-on-primary-container)' }}>{formatCurrency(detailItem.totalValue)} đ</p>
+            <div className="wms-detail-tile wms-detail-tile--primary">
+              <span className="wms-detail-tile__label">Tổng giá trị hàng tồn</span>
+              <p className="wms-detail-tile__value">{formatCurrency(detailItem.totalValue)} đ</p>
             </div>
           </div>
         )}

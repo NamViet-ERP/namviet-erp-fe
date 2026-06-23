@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Upload, Trash2, CheckCircle2, ChevronRight } from 'lucide-react';
@@ -13,6 +13,7 @@ import FormSectionHeader from './FormSectionHeader';
 import HrmDatePicker from './HrmDatePicker';
 import { EDUCATION_LEVELS } from '../../constants/recruitment';
 import type { Employee } from '../../types/hr';
+import { readProfileImageFile } from '../../lib/hrm/attachments';
 
 const employeeSchema = z.object({
   fullName: z.string().min(2, 'Họ và tên phải có ít nhất 2 ký tự'),
@@ -59,12 +60,17 @@ interface FileState {
   preview?: string;
 }
 
-function ImageUpload({ label, file, onFile, onRemove }: {
+function ImageUpload({ label, file, onFile, onRemove, cropProfile = false }: {
   label: string; file: FileState | null;
   onFile: (f: FileState) => void; onRemove: () => void;
+  cropProfile?: boolean;
 }) {
   const ref = useRef<HTMLInputElement>(null);
   const pick = (f: File) => {
+    if (cropProfile) {
+      void readProfileImageFile(f, onFile, msg => showToast('error', msg));
+      return;
+    }
     if (f.size > 5 * 1024 * 1024) { showToast('error', 'File vượt quá 5MB'); return; }
     const reader = new FileReader();
     reader.onload = () => onFile({ file: f, preview: reader.result as string });
@@ -99,7 +105,7 @@ export default function EmployeeOnboardForm({ mode = 'public', onCreated }: Empl
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [codeHint, setCodeHint] = useState('');
 
-  const { register, handleSubmit, setValue, watch, formState: { errors, isSubmitting }, reset } = useForm<FormValues>({
+  const { register, handleSubmit, setValue, control, formState: { errors, isSubmitting }, reset } = useForm<FormValues>({
     resolver: zodResolver(employeeSchema),
     defaultValues: { gender: undefined, maritalStatus: undefined, hadSocialInsurance: undefined },
   });
@@ -119,10 +125,14 @@ export default function EmployeeOnboardForm({ mode = 'public', onCreated }: Empl
     return () => { cancelled = true; };
   }, [isHr, setValue]);
 
-  const gender = watch('gender');
-  const maritalStatus = watch('maritalStatus');
-  const hadSi = watch('hadSocialInsurance');
-  const bankAccountName = watch('bankAccountName') ?? '';
+  const gender = useWatch({ control, name: 'gender' });
+  const maritalStatus = useWatch({ control, name: 'maritalStatus' });
+  const hadSi = useWatch({ control, name: 'hadSocialInsurance' });
+  const bankAccountName = useWatch({ control, name: 'bankAccountName' }) ?? '';
+  const birthDate = useWatch({ control, name: 'birthDate' }) ?? '';
+  const joinDate = useWatch({ control, name: 'joinDate' }) ?? '';
+  const cmndIssueDate = useWatch({ control, name: 'cmndIssueDate' }) ?? '';
+  const cccdIssueDate = useWatch({ control, name: 'cccdIssueDate' }) ?? '';
 
   const toAttachment = (f: FileState | null) =>
     f ? { fileName: f.file.name, fileSize: (f.file.size / 1024).toFixed(0) + ' KB', previewUrl: f.preview } : undefined;
@@ -288,7 +298,7 @@ export default function EmployeeOnboardForm({ mode = 'public', onCreated }: Empl
         <div>
           <label className="hrm-field__label">Ngày sinh *</label>
           <HrmDatePicker
-            value={watch('birthDate') ?? ''}
+            value={birthDate}
             onChange={v => setValue('birthDate', v, { shouldValidate: true })}
             error={Boolean(errors.birthDate)}
             max={new Date().toISOString().slice(0, 10)}
@@ -299,23 +309,23 @@ export default function EmployeeOnboardForm({ mode = 'public', onCreated }: Empl
         <div>
           <label className="hrm-field__label">Ngày vào làm *</label>
           <HrmDatePicker
-            value={watch('joinDate') ?? ''}
+            value={joinDate}
             onChange={v => setValue('joinDate', v, { shouldValidate: true })}
             error={Boolean(errors.joinDate)}
           />
           {errors.joinDate && <p className="hrm-field__error">{errors.joinDate.message}</p>}
         </div>
       </div>
-      <ImageUpload label="Ảnh hồ sơ *" file={profilePhoto} onFile={setProfilePhoto} onRemove={() => setProfilePhoto(null)} />
+      <ImageUpload label="Ảnh hồ sơ *" file={profilePhoto} onFile={setProfilePhoto} onRemove={() => setProfilePhoto(null)} cropProfile />
 
-      <FormSectionHeader step={isHr ? 3 : 2} title="CMND (nếu có)" style={{ marginTop: '12px' }} />
+      <FormSectionHeader step={isHr ? 3 : 2} title="CMND (nếu có)" className="hrm-form-section-header--spaced" />
       <div className="hrm-form-grid hrm-form-grid--3">
         <div><label className="hrm-field__label">Số CMND</label><input className="hrm-field-input" {...register('cmndNumber')} /></div>
-        <div><label className="hrm-field__label">Ngày cấp</label><HrmDatePicker value={watch('cmndIssueDate') ?? ''} onChange={v => setValue('cmndIssueDate', v)} /></div>
+        <div><label className="hrm-field__label">Ngày cấp</label><HrmDatePicker value={cmndIssueDate} onChange={v => setValue('cmndIssueDate', v)} /></div>
         <div><label className="hrm-field__label">Nơi cấp</label><input className="hrm-field-input" {...register('cmndIssuePlace')} /></div>
       </div>
 
-      <FormSectionHeader step={isHr ? 4 : 3} title="CCCD" style={{ marginTop: '12px' }} />
+      <FormSectionHeader step={isHr ? 4 : 3} title="CCCD" className="hrm-form-section-header--spaced" />
       <div className="hrm-form-grid hrm-form-grid--3">
         <div>
           <label className="hrm-field__label">Số CCCD *</label>
@@ -325,7 +335,7 @@ export default function EmployeeOnboardForm({ mode = 'public', onCreated }: Empl
         <div>
           <label className="hrm-field__label">Ngày cấp *</label>
           <HrmDatePicker
-            value={watch('cccdIssueDate') ?? ''}
+            value={cccdIssueDate}
             onChange={v => setValue('cccdIssueDate', v, { shouldValidate: true })}
             error={Boolean(errors.cccdIssueDate)}
           />
@@ -342,7 +352,7 @@ export default function EmployeeOnboardForm({ mode = 'public', onCreated }: Empl
         <ImageUpload label="Ảnh CCCD mặt sau *" file={cccdBack} onFile={setCccdBack} onRemove={() => setCccdBack(null)} />
       </div>
 
-      <FormSectionHeader step={isHr ? 5 : 4} title="Liên hệ" style={{ marginTop: '12px' }} />
+      <FormSectionHeader step={isHr ? 5 : 4} title="Liên hệ" className="hrm-form-section-header--spaced" />
       <div className="hrm-form-grid">
         <div>
           <label className="hrm-field__label">Email cá nhân *</label>
@@ -365,7 +375,7 @@ export default function EmployeeOnboardForm({ mode = 'public', onCreated }: Empl
         </div>
       </div>
 
-      <FormSectionHeader step={isHr ? 6 : 5} title="Học vấn" style={{ marginTop: '12px' }} />
+      <FormSectionHeader step={isHr ? 6 : 5} title="Học vấn" className="hrm-form-section-header--spaced" />
       <div className="hrm-form-grid">
         <div>
           <label className="hrm-field__label">Trình độ *</label>
@@ -396,7 +406,7 @@ export default function EmployeeOnboardForm({ mode = 'public', onCreated }: Empl
       </div>
       <ImageUpload label="Ảnh bằng cấp đính kèm" file={degreePhoto} onFile={setDegreePhoto} onRemove={() => setDegreePhoto(null)} />
 
-      <FormSectionHeader step={isHr ? 7 : 6} title="Ngân hàng" style={{ marginTop: '12px' }} />
+      <FormSectionHeader step={isHr ? 7 : 6} title="Ngân hàng" className="hrm-form-section-header--spaced" />
       <div className="hrm-form-grid">
         <div>
           <label className="hrm-field__label">Tên chủ tài khoản (IN HOA KHÔNG DẤU) *</label>
@@ -424,7 +434,7 @@ export default function EmployeeOnboardForm({ mode = 'public', onCreated }: Empl
         </div>
       </div>
 
-      <FormSectionHeader step={isHr ? 8 : 7} title="BHXH & Thuế" style={{ marginTop: '12px' }} />
+      <FormSectionHeader step={isHr ? 8 : 7} title="BHXH & Thuế" className="hrm-form-section-header--spaced" />
       <div className="hrm-form-grid">
         <div>
           <label className="hrm-field__label">Đã tham gia BHXH chưa *</label>
@@ -448,7 +458,7 @@ export default function EmployeeOnboardForm({ mode = 'public', onCreated }: Empl
         </div>
       </div>
 
-      <button type="submit" disabled={isSubmitting} className="btn btn-primary w-full h-12 rounded-full font-bold flex items-center justify-center gap-2" style={{ marginTop: '24px' }}>
+      <button type="submit" disabled={isSubmitting} className="btn btn-primary w-full h-12 rounded-full font-bold flex items-center justify-center gap-2 hrm-form-submit-spaced">
         {isSubmitting
           ? (isHr ? 'ĐANG LƯU...' : 'ĐANG GỬI...')
           : (isHr ? 'LƯU NHÂN VIÊN' : 'GỬI THÔNG TIN')}

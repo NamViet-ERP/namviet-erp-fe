@@ -1,119 +1,362 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye } from 'lucide-react';
+import { Plus, FolderKanban, CheckCircle2, Archive, X, Warehouse } from 'lucide-react';
 import SearchBar from '../../components/ui/SearchBar';
 import Pagination from '../../components/ui/Pagination';
 import EmptyState from '../../components/ui/EmptyState';
 import PageHeader from '../../components/ui/PageHeader';
+import Modal from '../../components/ui/Modal';
+import FormField from '../../components/ui/FormField';
 import Badge from '../../components/ui/Badge';
-import { useProjects } from '../../hooks/useProjects';
+import HrmPanel from '../../components/hr/HrmPanel';
+import HrmStatCard from '../../components/hr/HrmStatCard';
+import { showToast } from '../../components/ui/Toast';
+import { getApiErrorMessage } from '../../lib/apiClient';
+import { WMS_ERROR } from '../../lib/wms/messages';
+import { formatDateCell } from '../../lib/hrm/formatters';
+import { fmtStockQty, fmtStockPlanned } from '../../lib/wms/stockQtyFormat';
+import { useProjects, useCreateProject } from '../../hooks/useProjects';
+import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
+import type { WarehouseProjectApiDto } from '../../types/wms';
+
+const EMPTY_PM_ID = '00000000-0000-0000-0000-000000000000';
+
+function todayIso() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function suggestProjectCode() {
+  const n = String(Math.floor(Math.random() * 900) + 100);
+  return `DA-${new Date().getFullYear()}-${n}`;
+}
+
+function emptyListMessage(search: string, statusFilter: string) {
+  if (search.trim()) {
+    return `Không tìm thấy kho dự án phù hợp với "${search.trim()}".`;
+  }
+  if (statusFilter === 'Closed') {
+    return 'Chưa có kho dự án nào đã đóng. Kho đóng sẽ xuất hiện ở đây sau khi bạn thực hiện thao tác Đóng kho.';
+  }
+  if (statusFilter === 'Active') {
+    return 'Chưa có kho dự án đang hoạt động.';
+  }
+  return 'Chưa có kho dự án nào. Nhấn Tạo kho dự án để bắt đầu.';
+}
+
+function ProjectStockCells({ project }: { project: WarehouseProjectApiDto }) {
+  const actual = project.stockActualQty ?? 0;
+  const planned = project.stockPlannedQty ?? 0;
+  const reserved = project.stockReservedQty ?? 0;
+  const materialCount = project.stockMaterialCount ?? 0;
+
+  return (
+    <>
+      <td className="table-cell text-right font-semibold tabular-nums project-col-qty">
+        {fmtStockQty(actual)}
+      </td>
+      <td className="table-cell text-right tabular-nums stock-qty--pending project-col-qty">
+        {fmtStockPlanned(planned)}
+      </td>
+      <td className="table-cell text-right tabular-nums stock-qty--reserved project-col-qty">
+        {reserved !== 0 ? fmtStockQty(reserved) : <span className="hrm-empty-cell">—</span>}
+      </td>
+      <td className="table-cell text-right tabular-nums project-col-count">
+        {materialCount}
+      </td>
+    </>
+  );
+}
 
 export default function ProjectsPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(15);
+  const [pageSize, setPageSize] = useState(DEFAULT_LIST_PAGE_SIZE);
   const [statusFilter, setStatusFilter] = useState('');
+  const [showCreate, setShowCreate] = useState(false);
+  const [form, setForm] = useState({
+    projectCode: '',
+    projectName: '',
+    pmName: '',
+    startDate: todayIso(),
+    materialBudget: '',
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const { data, isLoading, isError } = useProjects({
+  const { data, isLoading, isError, error } = useProjects({
     page,
     pageSize,
     search: search || undefined,
     status: statusFilter || undefined,
   });
+  const { data: statsAll } = useProjects({ page: 1, pageSize: 1 });
+  const { data: statsActive } = useProjects({ page: 1, pageSize: 1, status: 'Active' });
+  const { data: statsClosed } = useProjects({ page: 1, pageSize: 1, status: 'Closed' });
+  const createMutation = useCreateProject();
 
   const items = data?.items ?? [];
   const totalCount = data?.totalCount ?? 0;
   const totalPages = data?.totalPages ?? 1;
+  const hasFilters = Boolean(search.trim() || statusFilter);
+
+  const resetFilters = () => {
+    setSearch('');
+    setStatusFilter('');
+    setPage(1);
+  };
+
+  const openCreate = () => {
+    setForm({
+      projectCode: suggestProjectCode(),
+      projectName: '',
+      pmName: '',
+      startDate: todayIso(),
+      materialBudget: '',
+    });
+    setErrors({});
+    setShowCreate(true);
+  };
+
+  const validate = () => {
+    const errs: Record<string, string> = {};
+    if (!form.projectCode.trim()) errs.projectCode = 'Vui lòng nhập mã kho dự án';
+    if (!form.projectName.trim()) errs.projectName = 'Vui lòng nhập tên công trình';
+    if (!form.startDate) errs.startDate = 'Vui lòng chọn ngày bắt đầu';
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const handleCreate = async () => {
+    if (!validate()) return;
+    try {
+      const created = await createMutation.mutateAsync({
+        projectCode: form.projectCode.trim().toUpperCase(),
+        projectName: form.projectName.trim(),
+        projectType: 'Project',
+        pmId: EMPTY_PM_ID,
+        pmName: form.pmName.trim() || '—',
+        startDate: form.startDate,
+        materialBudget: form.materialBudget ? Number(form.materialBudget) : 0,
+      });
+      showToast('success', `Đã tạo kho dự án ${created.projectCode}.`);
+      setShowCreate(false);
+      navigate(`/warehouse/projects/${encodeURIComponent(created.projectCode)}`);
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không thể tạo kho dự án'));
+    }
+  };
 
   return (
-    <div className="animate-fade-in space-y-6">
-      <PageHeader eyebrow="Kho hàng" title="Dự án & công trình" />
-
-      <div className="rounded-2xl shadow-card p-4" style={{ background: 'var(--md-surface-container)', border: '1px solid var(--md-outline-variant)' }}>
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between page-filter-bar">
-          <select
-            className="form-select w-full md:w-48 text-sm"
-            value={statusFilter}
-            onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
+    <div className="hrm-page">
+      <PageHeader
+        title="Kho dự án"
+        subtitle="Mỗi công trình là một kho riêng — cấp vật tư qua Nhập kho, tiêu hao qua Xuất kho, hoàn dư qua Chuyển kho."
+        actions={
+          <button
+            type="button"
+            className="btn btn-primary flex items-center gap-2 rounded-full px-5"
+            onClick={openCreate}
           >
-            <option value="">Tất cả trạng thái</option>
-            <option value="Active">Đang hoạt động</option>
-            <option value="Closed">Đã đóng kho</option>
-          </select>
-          <SearchBar
-            value={search}
-            onChange={v => { setSearch(v); setPage(1); }}
-            placeholder="Tìm mã dự án, tên công trình..."
-          />
-        </div>
+            <Plus size={16} />
+            Tạo kho dự án
+          </button>
+        }
+      />
+
+      <div className="hrm-stat-grid">
+        <HrmStatCard
+          label="Tổng kho dự án"
+          value={statsAll?.totalCount ?? '—'}
+          icon={FolderKanban}
+          tone="primary"
+        />
+        <HrmStatCard
+          label="Đang hoạt động"
+          value={statsActive?.totalCount ?? '—'}
+          icon={CheckCircle2}
+          tone="success"
+        />
+        <HrmStatCard
+          label="Đã đóng kho"
+          value={statsClosed?.totalCount ?? '—'}
+          icon={Archive}
+          tone="neutral"
+        />
       </div>
 
-      <div className="rounded-2xl shadow-card overflow-hidden" style={{ background: 'var(--md-surface-container)', border: '1px solid var(--md-outline-variant)' }}>
-        {isLoading ? (
-          <div className="p-8 text-center text-sm text-[var(--md-on-surface-variant)]">Đang tải...</div>
-        ) : isError ? (
-          <EmptyState message="Không thể tải danh sách dự án." />
-        ) : items.length === 0 ? (
-          <EmptyState message="Không tìm thấy dự án phù hợp." />
-        ) : (
-          <div className="overflow-x-auto table-scroll">
-            <table className="w-full text-xs">
-              <thead>
-                <tr style={{ borderBottom: '1px solid var(--md-outline-variant)' }}>
-                  <th className="table-header-cell text-left">Mã dự án</th>
-                  <th className="table-header-cell text-left">Tên công trình</th>
-                  <th className="table-header-cell text-left">PM</th>
-                  <th className="table-header-cell text-left">Ngày bắt đầu</th>
-                  <th className="table-header-cell text-center">Trạng thái</th>
-                  <th className="table-header-cell text-center">Tác vụ</th>
+      <HrmPanel noPadding>
+        <div className="hrm-list-toolbar">
+          <div className="hrm-list-toolbar__filters">
+            <SearchBar
+              value={search}
+              onChange={v => { setSearch(v); setPage(1); }}
+              placeholder="Tìm mã dự án, tên công trình..."
+            />
+            <div className="hrm-filter-select-wrap">
+              <select
+                className="hrm-filter-select"
+                value={statusFilter}
+                onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
+                aria-label="Lọc trạng thái"
+              >
+                <option value="">Tất cả trạng thái</option>
+                <option value="Active">Đang hoạt động</option>
+                <option value="Closed">Đã đóng kho</option>
+              </select>
+            </div>
+            {hasFilters && (
+              <button type="button" onClick={resetFilters} className="hrm-filter-reset">
+                <X size={14} />
+                Xóa lọc
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="overflow-x-auto table-scroll wms-inventory-table-wrap">
+          <table className="wms-inventory-table project-warehouse-table">
+            <thead>
+              <tr>
+                <th className="table-header-cell whitespace-nowrap">Mã kho</th>
+                <th className="table-header-cell">Tên công trình</th>
+                <th className="table-header-cell project-col-pm">Người phụ trách</th>
+                <th className="table-header-cell project-col-date whitespace-nowrap">Ngày bắt đầu</th>
+                <th className="table-header-cell text-right project-col-qty">Tồn thực tế</th>
+                <th className="table-header-cell text-right project-col-qty">Dự kiến</th>
+                <th className="table-header-cell text-right project-col-qty">Giữ kho</th>
+                <th className="table-header-cell text-right project-col-count">Mặt hàng</th>
+                <th className="table-header-cell text-center project-col-status">Trạng thái</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="hrm-table-skeleton-row" aria-hidden>
+                    <td colSpan={9}><div className="hrm-table-skeleton" /></td>
+                  </tr>
+                ))
+              ) : isError ? (
+                <tr>
+                  <td colSpan={9}>
+                    <EmptyState message={getApiErrorMessage(error, WMS_ERROR.loadProjects)} icon={Warehouse} />
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {items.map(p => (
+              ) : items.length === 0 ? (
+                <tr>
+                  <td colSpan={9}>
+                    <EmptyState message={emptyListMessage(search, statusFilter)} icon={FolderKanban} />
+                  </td>
+                </tr>
+              ) : (
+                items.map(p => (
                   <tr
                     key={p.projectCode}
-                    className="table-row border-b border-[var(--md-outline-variant)] hover:bg-[var(--tint-primary-weak)] cursor-pointer"
+                    className="table-row wms-inventory-row--interactive"
                     onClick={() => navigate(`/warehouse/projects/${encodeURIComponent(p.projectCode)}`)}
                   >
-                    <td className="table-cell font-mono font-bold text-[var(--md-primary)]">{p.projectCode}</td>
-                    <td className="table-cell font-semibold">{p.projectName}</td>
-                    <td className="table-cell">{p.pmName}</td>
-                    <td className="table-cell">{p.startDate}</td>
-                    <td className="table-cell text-center">
+                    <td className="table-cell font-mono text-sm text-[var(--md-primary)] whitespace-nowrap">
+                      {p.projectCode}
+                    </td>
+                    <td className="table-cell font-semibold max-w-[260px]">
+                      <span className="line-clamp-2" title={p.projectName}>{p.projectName}</span>
+                    </td>
+                    <td className="table-cell project-col-pm">
+                      {p.pmName && p.pmName !== '—'
+                        ? p.pmName
+                        : <span className="hrm-empty-cell">—</span>}
+                    </td>
+                    <td className="table-cell project-col-date whitespace-nowrap tabular-nums">
+                      {formatDateCell(p.startDate)}
+                    </td>
+                    <ProjectStockCells project={p} />
+                    <td className="table-cell text-center project-col-status">
                       <Badge status={p.status === 'Closed' ? 'completed' : 'active'} />
                     </td>
-                    <td className="table-cell text-center">
-                      <button
-                        type="button"
-                        className="btn btn-ghost btn-sm"
-                        onClick={e => {
-                          e.stopPropagation();
-                          navigate(`/warehouse/projects/${encodeURIComponent(p.projectCode)}`);
-                        }}
-                      >
-                        <Eye size={14} />
-                      </button>
-                    </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {totalCount > 0 && !isLoading && (
+          <Pagination
+            embedded
+            itemLabel="kho dự án"
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            pageSize={pageSize}
+            onPageSizeChange={s => { setPageSize(s); setPage(1); }}
+            totalItems={totalCount}
+          />
         )}
-        {totalCount > 0 && (
-          <div className="px-4 pb-4 mt-2 border-t pt-3" style={{ borderColor: 'var(--md-outline-variant)' }}>
-            <Pagination
-              currentPage={page}
-              totalPages={totalPages}
-              onPageChange={setPage}
-              pageSize={pageSize}
-              onPageSizeChange={s => { setPageSize(s); setPage(1); }}
-              totalItems={totalCount}
+      </HrmPanel>
+
+      <Modal
+        isOpen={showCreate}
+        onClose={() => setShowCreate(false)}
+        title="Tạo kho dự án"
+        footer={
+          <>
+            <button type="button" className="btn btn-outline" onClick={() => setShowCreate(false)}>Hủy</button>
+            <button
+              type="button"
+              className="btn btn-filled"
+              disabled={createMutation.isPending}
+              onClick={handleCreate}
+            >
+              Tạo kho
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <FormField label="Mã kho dự án" required error={errors.projectCode}>
+            <input
+              className="form-input font-mono"
+              value={form.projectCode}
+              onChange={e => setForm({ ...form, projectCode: e.target.value.toUpperCase() })}
+              placeholder="VD: DA-2026-101"
             />
+          </FormField>
+          <FormField label="Tên công trình" required error={errors.projectName}>
+            <input
+              className="form-input"
+              value={form.projectName}
+              onChange={e => setForm({ ...form, projectName: e.target.value })}
+              placeholder="VD: Dự án Nhiệt điện Long Phú 1"
+            />
+          </FormField>
+          <FormField label="Người phụ trách dự án">
+            <input
+              className="form-input"
+              value={form.pmName}
+              onChange={e => setForm({ ...form, pmName: e.target.value })}
+            />
+          </FormField>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label="Ngày bắt đầu" required error={errors.startDate}>
+              <input
+                type="date"
+                className="form-input"
+                value={form.startDate}
+                onChange={e => setForm({ ...form, startDate: e.target.value })}
+              />
+            </FormField>
+            <FormField label="Ngân sách VT (đ)">
+              <input
+                type="number"
+                min={0}
+                className="form-input"
+                value={form.materialBudget}
+                onChange={e => setForm({ ...form, materialBudget: e.target.value })}
+                placeholder="0"
+              />
+            </FormField>
           </div>
-        )}
-      </div>
+        </div>
+      </Modal>
     </div>
   );
 }

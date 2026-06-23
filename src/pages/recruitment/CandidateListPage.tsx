@@ -15,6 +15,8 @@ import { usePositionSelectOptions } from '../../hooks/usePositions';
 import { useHrStaffSelectOptions } from '../../hooks/useHrStaff';
 import { formatCandidateAppliedAt } from '../../lib/hrm/candidateApiMapper';
 import { getApiErrorMessage } from '../../lib/apiClient';
+import { UI_ERROR } from '../../lib/uiMessages';
+import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
 
 function birthYear(date: string) {
   const y = new Date(date).getFullYear();
@@ -35,7 +37,7 @@ export default function CandidateListPage() {
   const [selectedSource, setSelectedSource] = useState('');
   const [selectedHr, setSelectedHr] = useState('');
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(DEFAULT_LIST_PAGE_SIZE);
 
   const { data, isLoading, isError, error } = useCandidates({
     page,
@@ -61,7 +63,7 @@ export default function CandidateListPage() {
     try {
       await candidatesService.downloadCv(cand.id, cand.cvFileName);
     } catch (err) {
-      showToast('error', getApiErrorMessage(err, 'Không thể tải CV'));
+      showToast('error', getApiErrorMessage(err, UI_ERROR.loadCv));
     }
   };
 
@@ -166,7 +168,7 @@ export default function CandidateListPage() {
                 <tr>
                   <td colSpan={15}>
                     <EmptyState
-                      message={`Không tải được danh sách: ${getApiErrorMessage(error)}`}
+                      message={getApiErrorMessage(error, UI_ERROR.loadCandidates)}
                       icon={Users}
                     />
                   </td>

@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Eye, FileText, Download, Check, XCircle } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
-import { adjustments as initialAdjustments } from '../../data/adjustments';
 import { adjustmentTypeConfig } from '../../constants/statusConfig';
+import { useAdjustments, useUpdateAdjustment } from '../../hooks/useAdjustments';
+import { getApiErrorMessage } from '../../lib/apiClient';
+import { UI_ERROR } from '../../lib/uiMessages';
 import { showToast } from '../../components/ui/Toast';
 import TabFilter from '../../components/ui/TabFilter';
 import SearchBar from '../../components/ui/SearchBar';
@@ -10,11 +12,13 @@ import Pagination from '../../components/ui/Pagination';
 import Badge from '../../components/ui/Badge';
 import Dropdown from '../../components/ui/Dropdown';
 import EmptyState from '../../components/ui/EmptyState';
+import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import Modal from '../../components/ui/Modal';
 import type { Adjustment, DropdownItem } from '../../types';
 
 export default function AdjustmentListPage() {
-  const [data, setData] = useState<Adjustment[]>(initialAdjustments);
+  const { data: list = [], isLoading, isError, error } = useAdjustments();
+  const updateMutation = useUpdateAdjustment();
   const [activeTab, setActiveTab] = useState<string>('all');
   const [search, setSearch] = useState<string>('');
   const [page, setPage] = useState<number>(1);
@@ -23,12 +27,12 @@ export default function AdjustmentListPage() {
   const [selectedItem, setSelectedItem] = useState<Adjustment | null>(null);
 
   const tabs = [
-    { id: 'all', label: 'Tất cả', count: data.length },
-    { id: 'increase', label: 'Điều chỉnh tăng', count: data.filter(a => a.type === 'increase').length },
-    { id: 'decrease', label: 'Điều chỉnh giảm', count: data.filter(a => a.type === 'decrease').length },
+    { id: 'all', label: 'Tất cả', count: list.length },
+    { id: 'increase', label: 'Điều chỉnh tăng', count: list.filter(a => a.type === 'increase').length },
+    { id: 'decrease', label: 'Điều chỉnh giảm', count: list.filter(a => a.type === 'decrease').length },
   ];
 
-  let filtered = data;
+  let filtered = list;
   if (activeTab !== 'all') filtered = filtered.filter(a => a.type === activeTab);
   if (search) filtered = filtered.filter(a =>
     a.voucherCode.toLowerCase().includes(search.toLowerCase()) ||
@@ -39,22 +43,28 @@ export default function AdjustmentListPage() {
   const totalPages = Math.ceil(filtered.length / pageSize);
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
 
-  const handleApproveAdjustment = (item: Adjustment): void => {
-    if (item.condition === 'warehouse_approved') {
-      // Already approved - simulate export
-      setData(data.map(a => a.id === item.id ? { ...a, condition: 'exported' } : a));
-      showToast('success', `Đã xuất kho điều chỉnh ${item.voucherCode}. Tồn kho đã cập nhật.`, 'Xuất kho điều chỉnh');
-    } else {
-      // Approve the adjustment
-      setData(data.map(a => a.id === item.id ? { ...a, condition: 'warehouse_approved' } : a));
-      showToast('success', `Đã duyệt điều chỉnh ${item.voucherCode}`, 'Duyệt thành công');
+  const handleApproveAdjustment = async (item: Adjustment): Promise<void> => {
+    try {
+      if (item.condition === 'warehouse_approved') {
+        await updateMutation.mutateAsync({ id: item.id, dto: { condition: 'exported' } });
+        showToast('success', `Đã xuất kho điều chỉnh ${item.voucherCode}. Tồn kho đã cập nhật.`, 'Xuất kho điều chỉnh');
+      } else {
+        await updateMutation.mutateAsync({ id: item.id, dto: { condition: 'warehouse_approved' } });
+        showToast('success', `Đã duyệt điều chỉnh ${item.voucherCode}`, 'Duyệt thành công');
+      }
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không thể cập nhật phiếu điều chỉnh'));
     }
   };
 
-  const handleReject = (item: Adjustment): void => {
+  const handleReject = async (item: Adjustment): Promise<void> => {
     if (item.condition === 'exported') { showToast('error', 'Không thể hủy phiếu đã xuất kho'); return; }
-    setData(data.map(a => a.id === item.id ? { ...a, condition: 'rejected' } : a));
-    showToast('warning', `Đã từ chối điều chỉnh ${item.voucherCode}`);
+    try {
+      await updateMutation.mutateAsync({ id: item.id, dto: { condition: 'rejected' } });
+      showToast('warning', `Đã từ chối điều chỉnh ${item.voucherCode}`);
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không thể từ chối phiếu điều chỉnh'));
+    }
   };
 
   const getActions = (item: Adjustment): DropdownItem[] => {
@@ -74,7 +84,7 @@ export default function AdjustmentListPage() {
   };
 
   return (
-    <div className="animate-fade-in">
+    <div className="page-shell">
       <PageHeader
         eyebrow="KIỂM KÊ"
         title="ĐIỀU CHỈNH KHO"
@@ -83,9 +93,9 @@ export default function AdjustmentListPage() {
         }
       />
 
-      <div className="rounded-2xl shadow-card overflow-hidden" style={{ background: 'var(--md-surface-container)', border: '1px solid var(--md-outline-variant)' }}>
+      <div className="surface-panel surface-panel--rounded-xl surface-panel--table shadow-card">
         <div className="px-4 pt-4"><TabFilter tabs={tabs} activeTab={activeTab} onChange={(id) => { setActiveTab(id); setPage(1); }} /></div>
-        <div className="px-4 pb-3 flex items-center justify-between page-filter-bar">
+        <div className="surface-panel__filter-bar px-4 pb-3 page-filter-bar">
           <div className="flex items-center gap-2">
             <select className="form-select w-20 text-xs py-1.5" value={pageSize} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setPageSize(Number(e.target.value))}>
               {[10, 15, 25].map(n => <option key={n} value={n}>{n}</option>)}
@@ -94,45 +104,57 @@ export default function AdjustmentListPage() {
           <SearchBar value={search} onChange={setSearch} placeholder="Tìm kiếm..." />
         </div>
 
-        {paginated.length === 0 ? <EmptyState message="Không tìm thấy phiếu điều chỉnh nào!" /> : (
-          <div className="overflow-x-auto table-scroll">
-            <table className="w-full">
-              <thead><tr>
-                <th className="table-header-cell">Ngày chứng từ</th>
-                <th className="table-header-cell">Mã chứng từ</th>
-                <th className="table-header-cell">Mã phiếu kiểm kê</th>
-                <th className="table-header-cell">Loại điều chỉnh</th>
-                <th className="table-header-cell">Người tạo</th>
-                <th className="table-header-cell">Tình trạng</th>
-                <th className="table-header-cell">Kho hàng</th>
-                <th className="table-header-cell">Ghi chú</th>
-                <th className="table-header-cell text-center">Tác vụ</th>
-              </tr></thead>
-              <tbody>
-                {paginated.map((adj) => (
+        <div className="overflow-x-auto table-scroll">
+          <table className="w-full">
+            <thead><tr>
+              <th className="table-header-cell">Ngày chứng từ</th>
+              <th className="table-header-cell">Mã chứng từ</th>
+              <th className="table-header-cell">Mã phiếu kiểm kê</th>
+              <th className="table-header-cell">Loại điều chỉnh</th>
+              <th className="table-header-cell">Người tạo</th>
+              <th className="table-header-cell">Tình trạng</th>
+              <th className="table-header-cell">Kho hàng</th>
+              <th className="table-header-cell">Ghi chú</th>
+              <th className="table-header-cell text-center">Tác vụ</th>
+            </tr></thead>
+            <tbody>
+              {isLoading ? (
+                <TableSkeletonRows colSpan={9} />
+              ) : isError ? (
+                <tr>
+                  <td colSpan={9}>
+                    <EmptyState message={getApiErrorMessage(error, UI_ERROR.loadAdjustments)} />
+                  </td>
+                </tr>
+              ) : paginated.length === 0 ? (
+                <tr>
+                  <td colSpan={9}>
+                    <EmptyState message="Không tìm thấy phiếu điều chỉnh nào." />
+                  </td>
+                </tr>
+              ) : (
+                paginated.map((adj) => (
                   <tr key={adj.id} className="table-row">
                     <td className="table-cell">
                       <div>
                         {adj.date}
-                        {adj.isNew && <span className="ml-2 inline-block px-2 py-0.5 bg-[var(--md-error)] text-white text-[10px] font-bold rounded-full">new</span>}
+                        {adj.isNew && <span className="wms-badge-new">Mới</span>}
                       </div>
                     </td>
                     <td className="table-cell font-semibold text-[var(--md-primary)] cursor-pointer hover:underline"
                       onClick={() => { setSelectedItem(adj); setShowDetail(true); }}>{adj.voucherCode}</td>
                     <td className="table-cell">
-                      <span className="px-2 py-0.5 border rounded text-xs" style={{ background: 'var(--md-info-container)', color: 'var(--md-on-info-container)', borderColor: 'var(--md-outline-variant)' }}>{adj.stocktakeCode}</span>
+                      <span className="wms-token-chip wms-token-chip--info">{adj.stocktakeCode}</span>
                     </td>
                     <td className="table-cell">
-                      <span className="px-2 py-0.5 rounded text-xs border" style={
-                        adj.type === 'increase'
-                          ? { background: 'var(--md-info-container)', color: 'var(--md-on-info-container)', borderColor: 'var(--md-outline-variant)' }
-                          : { background: 'var(--md-error-container)', color: 'var(--md-on-error-container)', borderColor: 'var(--md-outline-variant)' }
-                      }>{adjustmentTypeConfig[adj.type]?.label || adj.type}</span>
+                      <span className={`wms-token-chip ${adj.type === 'increase' ? 'wms-token-chip--increase' : 'wms-token-chip--decrease'}`}>
+                        {adjustmentTypeConfig[adj.type]?.label || adj.type}
+                      </span>
                     </td>
                     <td className="table-cell">
                       <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
-                          <span className="text-[9px] text-white font-bold">{adj.createdBy.split(' ').map(w => w[0]).join('').slice(0, 2)}</span>
+                        <div className="table-user-avatar table-user-avatar--warm">
+                          <span>{adj.createdBy.split(' ').map(w => w[0]).join('').slice(0, 2)}</span>
                         </div>
                         <span>{adj.createdBy}</span>
                       </div>
@@ -142,14 +164,16 @@ export default function AdjustmentListPage() {
                     <td className="table-cell text-[var(--md-on-surface-variant)] max-w-[150px] truncate">{adj.note || '—'}</td>
                     <td className="table-cell text-center"><Dropdown items={getActions(adj)} /></td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+        {!isLoading && filtered.length > 0 && (
+          <div className="px-4 pb-4">
+            <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} pageSize={pageSize} onPageSizeChange={setPageSize} totalItems={filtered.length} />
           </div>
         )}
-        <div className="px-4 pb-4">
-          <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} pageSize={pageSize} onPageSizeChange={setPageSize} totalItems={filtered.length} />
-        </div>
       </div>
 
       {/* Detail modal */}
@@ -166,18 +190,18 @@ export default function AdjustmentListPage() {
       >
         {selectedItem && (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6 p-4 rounded-xl" style={{ background: 'var(--md-surface-container-low)' }}>
-              <div><span className="text-xs text-[var(--md-on-surface-variant)]">Mã chứng từ</span><p className="font-semibold text-[var(--md-primary)]">{selectedItem.voucherCode}</p></div>
-              <div><span className="text-xs text-[var(--md-on-surface-variant)]">Mã phiếu kiểm kê</span>
-                <span className="px-2 py-0.5 border rounded text-xs" style={{ background: 'var(--md-info-container)', color: 'var(--md-on-info-container)', borderColor: 'var(--md-outline-variant)' }}>{selectedItem.stocktakeCode}</span></div>
-              <div><span className="text-xs text-[var(--md-on-surface-variant)]">Loại</span>
+            <div className="wms-detail-summary">
+              <div><span className="wms-detail-tile__label">Mã chứng từ</span><p className="font-semibold text-[var(--md-primary)]">{selectedItem.voucherCode}</p></div>
+              <div><span className="wms-detail-tile__label">Mã phiếu kiểm kê</span>
+                <span className="wms-token-chip wms-token-chip--info">{selectedItem.stocktakeCode}</span></div>
+              <div><span className="wms-detail-tile__label">Loại</span>
                 <p className={`font-medium text-sm ${selectedItem.type === 'increase' ? 'text-[var(--md-success)]' : 'text-[var(--md-error)]'}`}>
                   {adjustmentTypeConfig[selectedItem.type]?.label}
                 </p>
               </div>
-              <div><span className="text-xs text-[var(--md-on-surface-variant)]">Kho hàng</span><p className="text-sm font-medium">{selectedItem.warehouseName}</p></div>
-              <div><span className="text-xs text-[var(--md-on-surface-variant)]">Người tạo</span><p className="text-sm">{selectedItem.createdBy}</p></div>
-              <div><span className="text-xs text-[var(--md-on-surface-variant)]">Tình trạng</span><div className="mt-0.5"><Badge status={selectedItem.condition} /></div></div>
+              <div><span className="wms-detail-tile__label">Kho hàng</span><p className="text-sm font-medium">{selectedItem.warehouseName}</p></div>
+              <div><span className="wms-detail-tile__label">Người tạo</span><p className="text-sm">{selectedItem.createdBy}</p></div>
+              <div><span className="wms-detail-tile__label">Tình trạng</span><div className="mt-0.5"><Badge status={selectedItem.condition} /></div></div>
             </div>
             {selectedItem.items?.length > 0 ? (
               <table className="w-full">

@@ -8,13 +8,14 @@ import { RECRUITMENT_SOURCES, EDUCATION_LEVELS } from '../../constants/recruitme
 import { usePositionSelectOptions } from '../../hooks/usePositions';
 import { candidatesService } from '../../services/candidatesService';
 import { getApiErrorMessage } from '../../lib/apiClient';
+import { UI_ERROR } from '../../lib/uiMessages';
 import DetailSection from '../../components/hr/DetailSection';
 import { FieldView, FieldInput, FieldSelect } from '../../components/hr/DetailFields';
 import { HrmDetailHeader } from '../../components/hr/HrmPageChrome';
 import HrmEditActions from '../../components/hr/HrmEditActions';
 import HrmNotFound, { HrmLoadingState } from '../../components/hr/HrmNotFound';
 import { formatCandidateAppliedAt } from '../../lib/hrm/candidateApiMapper';
-import type { Candidate } from '../../types/hr';
+import type { Candidate, UpdateCandidateDto } from '../../types/hr';
 
 export default function CandidateDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -43,7 +44,11 @@ export default function CandidateDetailPage() {
   const handleSave = async () => {
     if (!id || !form) return;
     try {
-      const { id: _id, appliedAt, ...dto } = form;
+      const dto: UpdateCandidateDto = (({ id: _id, appliedAt: _appliedAt, ...rest }) => {
+        void _id;
+        void _appliedAt;
+        return rest;
+      })(form);
       await updateMutation.mutateAsync({ id, dto });
       showToast('success', 'Đã lưu thông tin ứng viên');
       setDraft(null);
@@ -73,7 +78,7 @@ export default function CandidateDetailPage() {
     try {
       await candidatesService.downloadCv(id, form.cvFileName);
     } catch (err) {
-      showToast('error', getApiErrorMessage(err, 'Không thể tải CV'));
+      showToast('error', getApiErrorMessage(err, UI_ERROR.loadCv));
     } finally {
       downloadingCvRef.current = false;
     }
