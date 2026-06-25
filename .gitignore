@@ -31,10 +31,8 @@ dist-ssr
 # Local env (use .env.example)
 .env
 .env.production
+.env.test
 
-# Internal audit reports (local only)
-docs/code_audit_report.md
-
-# Local dev / agent artifacts (do not commit)
-.tmp-login.json
-.agents/
+# Local docs & one-off scripts (keep on disk, do not push)
+docs/
+scripts/
