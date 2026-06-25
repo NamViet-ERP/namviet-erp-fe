@@ -1,9 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { transfersService, type CreateTransferDto, type UpdateTransferDto } from '../services/transfersService';
 import { queryKeys } from '../services/queryKeys';
+import type { VoucherListParams } from '../lib/wms/voucherDateUtils';
 
-export function useTransfers() {
-  return useQuery({ queryKey: queryKeys.transfers.all, queryFn: () => transfersService.list() });
+export function useTransfers(params?: VoucherListParams) {
+  return useQuery({
+    queryKey: [...queryKeys.transfers.all, params?.dateFrom ?? '', params?.dateTo ?? ''],
+    queryFn: () => transfersService.list(params),
+  });
 }
 
 export function useTransfer(id: string | undefined) {

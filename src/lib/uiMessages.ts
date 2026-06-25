@@ -12,7 +12,6 @@ export const UI_ERROR = {
   loadCandidates: 'Không tải được danh sách ứng viên.',
   loadUsers: 'Không tải được danh sách tài khoản.',
   loadStocktakes: 'Không tải được danh sách phiếu kiểm kê.',
-  loadAdjustments: 'Không tải được danh sách phiếu điều chỉnh.',
   loadCv: 'Không tải được CV.',
   saveFailed: 'Không lưu được thông tin. Vui lòng thử lại.',
   loginFailed: 'Đăng nhập thất bại. Vui lòng thử lại.',

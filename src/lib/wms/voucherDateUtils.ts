@@ -3,6 +3,19 @@ export interface VoucherDateFields {
   date?: string;
 }
 
+export interface VoucherListParams {
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+export function appendVoucherDateQuery(path: string, params?: VoucherListParams): string {
+  if (!params?.dateFrom && !params?.dateTo) return path;
+  const qs = new URLSearchParams();
+  if (params.dateFrom) qs.set('dateFrom', params.dateFrom);
+  if (params.dateTo) qs.set('dateTo', params.dateTo);
+  return `${path}?${qs.toString()}`;
+}
+
 export function getVoucherCreatedAt(v: VoucherDateFields): Date | null {
   if (v.createdAt) {
     const parsed = new Date(v.createdAt);

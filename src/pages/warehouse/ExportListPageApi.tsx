@@ -26,8 +26,6 @@ import ExportTable from './export/ExportTable';
 import ExportCreateModal from './export/ExportCreateModal';
 import ExportDetailModal from './export/ExportDetailModal';
 import VoucherDateFilter from '../../components/warehouse/VoucherDateFilter';
-import { isVoucherInDateRange } from '../../lib/wms/voucherDateUtils';
-
 export default function ExportListPageRoute() {
   const location = useLocation();
   const initialProjectCode = (location.state as { projectCode?: string } | null)?.projectCode;
@@ -55,7 +53,10 @@ function ExportListPageApi({ initialProjectCode }: ExportListPageApiProps) {
   const [items, setItems] = useState<MaterialQtyLine[]>([{ ...emptyQtyLine }]);
   const [createErrors, setCreateErrors] = useState<ExportFormFieldErrors>({});
 
-  const { data: exports = [], isLoading, isError, error } = useExports();
+  const { data: exports = [], isLoading, isError, error } = useExports({
+    dateFrom: dateFrom || undefined,
+    dateTo: dateTo || undefined,
+  });
   const { data: materialsPage } = useMaterials({ pageSize: 200 });
   const { data: projectsPage } = useProjects({ pageSize: 100, status: 'Active' });
   const { data: projectInventory = [] } = useProjectInventory(projectCode || undefined);
@@ -96,11 +97,8 @@ function ExportListPageApi({ initialProjectCode }: ExportListPageApiProps) {
           e.soCode.toLowerCase().includes(q),
       );
     }
-    if (dateFrom || dateTo) {
-      list = list.filter(e => isVoucherInDateRange(e, dateFrom, dateTo));
-    }
     return list;
-  }, [exports, activeTab, search, dateFrom, dateTo]);
+  }, [exports, activeTab, search]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);

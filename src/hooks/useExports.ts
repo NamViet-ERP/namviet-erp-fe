@@ -1,9 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { exportsService, type CreateExportDto, type UpdateExportDto } from '../services/exportsService';
 import { queryKeys } from '../services/queryKeys';
+import type { VoucherListParams } from '../lib/wms/voucherDateUtils';
 
-export function useExports() {
-  return useQuery({ queryKey: queryKeys.exports.all, queryFn: () => exportsService.list() });
+export function useExports(params?: VoucherListParams) {
+  return useQuery({
+    queryKey: [...queryKeys.exports.all, params?.dateFrom ?? '', params?.dateTo ?? ''],
+    queryFn: () => exportsService.list(params),
+  });
 }
 
 export function useExport(id: string | undefined) {

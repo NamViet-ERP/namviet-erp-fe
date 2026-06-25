@@ -36,10 +36,6 @@ export const queryKeys = {
     all: ['stocktakes'] as const,
     detail: (id: string) => ['stocktakes', id] as const,
   },
-  adjustments: {
-    all: ['adjustments'] as const,
-    detail: (id: string) => ['adjustments', id] as const,
-  },
   positions: {
     all: ['positions'] as const,
   },

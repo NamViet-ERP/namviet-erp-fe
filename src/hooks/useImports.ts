@@ -1,12 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { importsService, type CreateImportDto, type UpdateImportDto } from '../services/importsService';
 import { queryKeys } from '../services/queryKeys';
+import type { VoucherListParams } from '../lib/wms/voucherDateUtils';
 
 /** List all import vouchers. */
-export function useImports() {
+export function useImports(params?: VoucherListParams) {
   return useQuery({
-    queryKey: queryKeys.imports.all,
-    queryFn: () => importsService.list(),
+    queryKey: [...queryKeys.imports.all, params?.dateFrom ?? '', params?.dateTo ?? ''],
+    queryFn: () => importsService.list(params),
   });
 }
 

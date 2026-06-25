@@ -89,8 +89,8 @@ export interface StockMatrixProjectColumnApiDto {
   projectId: string;
   projectName: string;
   actualQty: number;
-  plannedQty: number;
-  reservedQty: number;
+  plannedImportQty: number;
+  plannedExportQty: number;
 }
 
 export interface StockMatrixRowApiDto {

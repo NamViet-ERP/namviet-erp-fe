@@ -1,4 +1,4 @@
-import type { StatusKey, StatusConfigItem, AdjustmentType, AdjustmentTypeConfigItem } from '../types';
+import type { StatusKey, StatusConfigItem } from '../types';
 import { Check, Clock, AlertCircle, Package, X } from 'lucide-react';
 
 // Color comes from the `className` (MD3 badge tokens in index.css), which
@@ -21,9 +21,4 @@ export const statusConfig: Record<StatusKey, StatusConfigItem> = {
   returned:            { label: 'Đã hoàn trả',    className: 'badge-approved', icon: Check },
   active:              { label: 'Hoạt động',      className: 'badge-approved', icon: Check },
   inactive:            { label: 'Tạm khóa',       className: 'badge-error',    icon: X },
-};
-
-export const adjustmentTypeConfig: Record<AdjustmentType, AdjustmentTypeConfigItem> = {
-  increase: { label: 'Tăng', className: 'badge-exported' },
-  decrease: { label: 'Giảm', className: 'badge-error' },
 };

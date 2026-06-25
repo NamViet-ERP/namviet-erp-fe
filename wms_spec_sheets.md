@@ -207,7 +207,6 @@ Tạo yêu cầu xuất (Draft) ──► Kiểm tra Tồn khả dụng ──�
 - **Mục tiêu của trang**: Định kỳ đối chiếu số liệu tồn kho thực tế ngoài kho vật lý với số liệu đang ghi nhận trên hệ thống phần mềm WMS. Phát hiện kịp thời các chênh lệch thừa/thiếu, tìm nguyên nhân và thực hiện điều chỉnh số liệu hệ thống khớp với thực tế sau khi có phê duyệt từ Ban giám đốc.
 - **Ánh xạ giao diện Web (Web UI Routes & Components)**:
   - Danh sách phiếu kiểm kê: `/stocktake/list` (`StocktakeListPage.jsx`).
-  - Lịch sử phiếu điều chỉnh tồn: `/stocktake/adjustment` (`AdjustmentListPage.jsx`).
   - Thiết lập đợt kiểm kê: `/stocktake/settings` (`StocktakeSettingsPage.jsx` - quản lý chu kỳ kiểm kê).
 - **Các thành phần giao diện chính cần xây dựng**:
   - **Màn hình kiểm đếm (Counting Screen)**: Giao diện tối ưu cho thiết bị di động/máy tính bảng để thủ kho vừa đi đếm hàng vừa nhập trực tiếp số lượng thực tế.
@@ -248,20 +247,18 @@ Dưới đây là cấu trúc bảng chi tiết cho Kiểm kê:
                        - set is_frozen = True                  - Tính difference_qty
                        - Chặn Nhập/Xuất/Chuyển                          │
                                                                         ▼
-                                                             [Phê duyệt & Điều chỉnh]
+                                                             [Phê duyệt kết quả kiểm kê]
                                                              - Cập nhật actual_qty tồn kho
                                                              - set is_frozen = False
-                                                             - Tạo Phiếu Điều Chỉnh Tự Động
 ```
 1. **Bước 1: Lập kế hoạch**: Quản lý tạo phiếu kiểm kê dạng `draft`, chọn Kho cần kiểm kê và danh sách các nhóm hàng hoặc toàn bộ kho.
 2. **Bước 2: Khóa kho & Snapshot số liệu**: Khi bấm nút "Bắt đầu kiểm kê", trạng thái phiếu chuyển sang `counting`. Hệ thống lập tức thực hiện 2 hành động tự động:
    - Chụp lại số lượng tồn hiện tại của hệ thống ghi vào cột `system_qty`.
    - Chuyển `is_frozen = True` cho các sản phẩm/vị trí tương ứng để chặn mọi hoạt động xuất/nhập/chuyển phát sinh trong lúc đếm.
 3. **Bước 3: Kiểm đếm thực tế**: Tổ kiểm kê đi đếm hàng thực tế tại kho và nhập số lượng vào cột `actual_qty` trên phần mềm. Hệ thống tự động tính toán `difference_qty`. Sau khi đếm xong, bấm "Hoàn tất kiểm đếm", trạng thái chuyển sang `completed`.
-4. **Bước 4: Duyệt kết quả & Điều chỉnh tồn**: Quản lý kho và kế toán đối chiếu các dòng chênh lệch. Đối với dòng chênh lệch, bắt buộc nhập `handling_plan`. Sau đó, người có thẩm quyền nhấn "Duyệt điều chỉnh". Trạng thái chuyển sang `adjusted`. Hệ thống tự động:
+4. **Bước 4: Duyệt kết quả kiểm kê**: Quản lý kho và kế toán đối chiếu các dòng chênh lệch. Đối với dòng chênh lệch, bắt buộc nhập `handling_plan`. Sau đó, người có thẩm quyền nhấn "Duyệt". Trạng thái chuyển sang `adjusted`. Hệ thống tự động:
    - Cập nhật số lượng tồn kho `actual_qty` của hệ thống bằng đúng số lượng `actual_qty` kiểm kê thực tế.
    - Giải phóng trạng thái khóa kho (`is_frozen = False`).
-   - Tự động sinh ra một phiếu điều chỉnh tồn kho (`Stock Adjustment`) tương ứng để lưu vết sổ sách kế toán.
 
 ### 4.4. Các Quy tắc Nghiệp vụ Cốt lõi (Core Business Rules - BR)
 - **BR-STK-01 (Đóng băng dữ liệu tồn)**: Trong suốt thời gian phiếu kiểm kê ở trạng thái `counting` (Đang kiểm đếm), bất kỳ hành động nào cố gắng Nhập kho, Xuất kho hoặc Chuyển kho liên quan đến SKU và vị trí nằm trong phiếu kiểm kê đó đều phải bị hệ thống từ chối và báo lỗi: *"Sản phẩm tại vị trí này đang bị khóa để kiểm kê"*.

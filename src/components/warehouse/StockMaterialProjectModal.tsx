@@ -15,7 +15,7 @@ function StockMaterialProjectContent({ row, onClose }: { row: StockMatrixRowApiD
 
   const activeProjects = useMemo(() => {
     return row.projects
-      .filter(p => p.actualQty !== 0 || p.plannedQty !== 0 || p.reservedQty !== 0)
+      .filter(p => p.actualQty !== 0 || p.plannedImportQty !== 0 || p.plannedExportQty !== 0)
       .filter(p => {
         if (!q.trim()) return true;
         const needle = q.toLowerCase();
@@ -28,7 +28,7 @@ function StockMaterialProjectContent({ row, onClose }: { row: StockMatrixRowApiD
   }, [row, q]);
 
   const projectActualTotal = row.projects.reduce((s, p) => s + p.actualQty, 0);
-  const projectPlannedImportTotal = row.projects.reduce((s, p) => s + p.plannedQty, 0);
+  const projectPlannedImportTotal = row.projects.reduce((s, p) => s + p.plannedImportQty, 0);
   const usableQty = Math.max(0, row.generalActualQty - row.generalReservedQty) + projectActualTotal;
 
   return (
@@ -100,13 +100,13 @@ function StockMaterialProjectContent({ row, onClose }: { row: StockMatrixRowApiD
                   </td>
                   <td className="table-cell text-right font-bold tabular-nums">{p.actualQty}</td>
                   <td className="table-cell text-right tabular-nums stock-qty--pending">
-                    {fmtStockQtyOrDash(p.plannedQty)}
+                    {fmtStockQtyOrDash(p.plannedImportQty)}
                   </td>
                   <td className="table-cell text-right tabular-nums stock-qty--reserved">
-                    {fmtStockQtyOrDash(p.reservedQty)}
+                    {fmtStockQtyOrDash(p.plannedExportQty)}
                   </td>
                   <td className="table-cell text-right font-semibold tabular-nums pr-3">
-                    {fmtPlannedStock(p.actualQty, p.plannedQty)}
+                    {fmtPlannedStock(p.actualQty, p.plannedImportQty)}
                   </td>
                 </tr>
               ))}

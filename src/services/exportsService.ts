@@ -1,5 +1,6 @@
 import type { Export } from '../types';
 import { apiClient } from '../lib/apiClient';
+import { appendVoucherDateQuery, type VoucherListParams } from '../lib/wms/voucherDateUtils';
 import { resolveMock } from '../mocks';
 
 export type CreateExportDto = Omit<Export, 'id'>;
@@ -8,10 +9,10 @@ export type UpdateExportDto = Partial<CreateExportDto>;
 const ENDPOINT = '/api/exports';
 
 export const exportsService = {
-  async list(): Promise<Export[]> {
+  async list(params?: VoucherListParams): Promise<Export[]> {
     return resolveMock(
-      () => import('../mocks/services/exportsService.mock').then((m) => m.listExportsMock()),
-      () => apiClient.get<Export[]>(ENDPOINT),
+      () => import('../mocks/services/exportsService.mock').then((m) => m.listExportsMock(params)),
+      () => apiClient.get<Export[]>(appendVoucherDateQuery(ENDPOINT, params)),
     );
   },
 

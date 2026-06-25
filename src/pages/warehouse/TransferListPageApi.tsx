@@ -31,8 +31,6 @@ import TransferTable from './transfer/TransferTable';
 import TransferCreateModal from './transfer/TransferCreateModal';
 import TransferDetailModal from './transfer/TransferDetailModal';
 import VoucherDateFilter from '../../components/warehouse/VoucherDateFilter';
-import { isVoucherInDateRange } from '../../lib/wms/voucherDateUtils';
-
 export default function TransferListPageRoute() {
   const location = useLocation();
   const initialProjectCode = (location.state as { projectCode?: string } | null)?.projectCode;
@@ -61,7 +59,10 @@ function TransferListPageApi({ initialProjectCode }: TransferListPageApiProps) {
   const [items, setItems] = useState<MaterialQtyPhaseLine[]>([{ ...emptyQtyPhaseLine }]);
   const [createErrors, setCreateErrors] = useState<TransferFormFieldErrors>({});
 
-  const { data: transfers = [], isLoading, isError, error } = useTransfers();
+  const { data: transfers = [], isLoading, isError, error } = useTransfers({
+    dateFrom: dateFrom || undefined,
+    dateTo: dateTo || undefined,
+  });
   const { data: materialsPage } = useMaterials({ pageSize: 200 });
   const { data: projectsPage } = useProjects({ pageSize: 100, status: 'Active' });
   const { data: projectInventory = [] } = useProjectInventory(projectCode || undefined);
@@ -108,11 +109,8 @@ function TransferListPageApi({ initialProjectCode }: TransferListPageApiProps) {
           t.toWarehouseName.toLowerCase().includes(q),
       );
     }
-    if (dateFrom || dateTo) {
-      list = list.filter(t => isVoucherInDateRange(t, dateFrom, dateTo));
-    }
     return list;
-  }, [transfers, activeTab, search, dateFrom, dateTo]);
+  }, [transfers, activeTab, search]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);

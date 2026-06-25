@@ -514,15 +514,15 @@ export const MOCK_TRANSFERS: Transfer[] = [
 ];
 
 function matrixProjectCols(
-  rows: { code: string; actual: number; planned?: number; reserved?: number }[],
+  rows: { code: string; actual: number; plannedImport?: number; plannedExport?: number }[],
 ): StockMatrixRowApiDto['projects'] {
   return rows.map(r => ({
     projectCode: r.code,
     projectId: r.code,
     projectName: projectNameByCode(r.code),
     actualQty: r.actual,
-    plannedQty: r.planned ?? 0,
-    reservedQty: r.reserved ?? 0,
+    plannedImportQty: r.plannedImport ?? 0,
+    plannedExportQty: r.plannedExport ?? 0,
   }));
 }
 
@@ -537,9 +537,9 @@ export const MOCK_STOCK_MATRIX: StockMatrixRowApiDto[] = [
     generalAvailableQty: 10,
     weightedAverageUnitCost: 42_000_000,
     projects: matrixProjectCols([
-      { code: 'DA-SABECO', actual: 8, planned: 2 },
+      { code: 'DA-SABECO', actual: 8, plannedImport: 2 },
       { code: 'DA-VINAMILK', actual: 6 },
-      { code: 'DA-HOAPHAT', actual: 10, planned: 3 },
+      { code: 'DA-HOAPHAT', actual: 10, plannedImport: 3 },
     ]),
   },
   {
@@ -552,8 +552,8 @@ export const MOCK_STOCK_MATRIX: StockMatrixRowApiDto[] = [
     generalAvailableQty: 20,
     weightedAverageUnitCost: 8_000_000,
     projects: matrixProjectCols([
-      { code: 'DA-SABECO', actual: 12, planned: 0, reserved: 1 },
-      { code: 'DA-VINAMILK', actual: 8, planned: 2 },
+      { code: 'DA-SABECO', actual: 12, plannedImport: 0, plannedExport: 1 },
+      { code: 'DA-VINAMILK', actual: 8, plannedImport: 2 },
       { code: 'DA-VINHOMES', actual: 6 },
     ]),
   },
@@ -567,9 +567,9 @@ export const MOCK_STOCK_MATRIX: StockMatrixRowApiDto[] = [
     generalAvailableQty: 35,
     weightedAverageUnitCost: 3_200_000,
     projects: matrixProjectCols([
-      { code: 'DA-SABECO', actual: 24, planned: 4 },
+      { code: 'DA-SABECO', actual: 24, plannedImport: 4 },
       { code: 'DA-VINAMILK', actual: 15 },
-      { code: 'DA-NGHISON', actual: 11, planned: 2 },
+      { code: 'DA-NGHISON', actual: 11, plannedImport: 2 },
     ]),
   },
   {
@@ -582,8 +582,8 @@ export const MOCK_STOCK_MATRIX: StockMatrixRowApiDto[] = [
     generalAvailableQty: 60,
     weightedAverageUnitCost: 2_600_000,
     projects: matrixProjectCols([
-      { code: 'DA-SABECO', actual: 18, planned: 0, reserved: 2 },
-      { code: 'DA-HOAPHAT', actual: 22, planned: 5 },
+      { code: 'DA-SABECO', actual: 18, plannedImport: 0, plannedExport: 2 },
+      { code: 'DA-HOAPHAT', actual: 22, plannedImport: 5 },
       { code: 'DA-VINHOMES', actual: 5 },
     ]),
   },
@@ -597,8 +597,8 @@ export const MOCK_STOCK_MATRIX: StockMatrixRowApiDto[] = [
     generalAvailableQty: 4,
     weightedAverageUnitCost: 74_000_000,
     projects: matrixProjectCols([
-      { code: 'DA-SABECO', actual: 3, planned: 1 },
-      { code: 'DA-NGHISON', actual: 3, planned: 1 },
+      { code: 'DA-SABECO', actual: 3, plannedImport: 1 },
+      { code: 'DA-NGHISON', actual: 3, plannedImport: 1 },
     ]),
   },
   {
@@ -610,7 +610,7 @@ export const MOCK_STOCK_MATRIX: StockMatrixRowApiDto[] = [
     generalReservedQty: 0,
     generalAvailableQty: 2,
     weightedAverageUnitCost: 128_000_000,
-    projects: matrixProjectCols([{ code: 'DA-HOAPHAT', actual: 4, planned: 1 }]),
+    projects: matrixProjectCols([{ code: 'DA-HOAPHAT', actual: 4, plannedImport: 1 }]),
   },
   {
     materialCode: 'MNK-PT-3',
@@ -622,7 +622,7 @@ export const MOCK_STOCK_MATRIX: StockMatrixRowApiDto[] = [
     generalAvailableQty: 18,
     weightedAverageUnitCost: 11_500_000,
     projects: matrixProjectCols([
-      { code: 'DA-HOAPHAT', actual: 14, planned: 0, reserved: 2 },
+      { code: 'DA-HOAPHAT', actual: 14, plannedImport: 0, plannedExport: 2 },
       { code: 'DA-VINHOMES', actual: 4 },
     ]),
   },

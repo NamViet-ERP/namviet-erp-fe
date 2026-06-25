@@ -41,7 +41,6 @@ export default function App() {
             <Route path="/warehouse/settings/suppliers" element={<Pages.SettingsPage />} />
 
             <Route path="/stocktake/list" element={<Pages.StocktakeListPage />} />
-            <Route path="/stocktake/adjustment" element={<Navigate to="/stocktake/list" replace />} />
             <Route path="/stocktake/settings" element={<Pages.StocktakeSettingsPage />} />
 
             <Route path="/members/list" element={<Pages.MembersPage />} />

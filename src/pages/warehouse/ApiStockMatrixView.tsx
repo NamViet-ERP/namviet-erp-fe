@@ -22,12 +22,12 @@ function totalUsableQty(row: StockMatrixRowApiDto) {
 }
 
 function sumProjectPlannedImport(row: StockMatrixRowApiDto) {
-  return row.projects.reduce((sum, p) => sum + p.plannedQty, 0);
+  return row.projects.reduce((sum, p) => sum + p.plannedImportQty, 0);
 }
 
 function countActiveProjects(row: StockMatrixRowApiDto) {
   return row.projects.filter(
-    p => p.actualQty !== 0 || p.plannedQty !== 0 || p.reservedQty !== 0,
+    p => p.actualQty !== 0 || p.plannedImportQty !== 0 || p.plannedExportQty !== 0,
   ).length;
 }
 
@@ -51,7 +51,7 @@ export default function ApiStockMatrixView() {
     if (projectFilter === 'all') return true;
     if (projectFilter === 'general') return row.generalActualQty > 0 || row.generalReservedQty > 0;
     const col = row.projects.find(p => p.projectCode === projectFilter);
-    return (col?.actualQty ?? 0) !== 0 || (col?.plannedQty ?? 0) !== 0 || (col?.reservedQty ?? 0) !== 0;
+    return (col?.actualQty ?? 0) !== 0 || (col?.plannedImportQty ?? 0) !== 0 || (col?.plannedExportQty ?? 0) !== 0;
   });
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));

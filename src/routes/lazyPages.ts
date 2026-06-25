@@ -28,5 +28,4 @@ export const AdminUsersPage = lazy(() => import('../pages/admin/AdminUsersPage')
 export const AdminUserDetailPage = lazy(() => import('../pages/admin/AdminUserDetailPage'));
 export const AdminSettingsPage = lazy(() => import('../pages/admin/AdminSettingsPage'));
 export const StocktakeListPage = lazy(() => import('../pages/stocktake/StocktakeListPage'));
-export const AdjustmentListPage = lazy(() => import('../pages/stocktake/AdjustmentListPage'));
 export const StocktakeSettingsPage = lazy(() => import('../pages/stocktake/StocktakeSettingsPage'));

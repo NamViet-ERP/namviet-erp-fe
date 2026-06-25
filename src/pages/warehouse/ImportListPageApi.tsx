@@ -58,7 +58,6 @@ import ImportCreateModal from './import/ImportCreateModal';
 
 import ImportDetailModal from './import/ImportDetailModal';
 import VoucherDateFilter from '../../components/warehouse/VoucherDateFilter';
-import { isVoucherInDateRange } from '../../lib/wms/voucherDateUtils';
 
 export default function ImportListPageRoute() {
 
@@ -114,7 +113,10 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
   const [createErrors, setCreateErrors] = useState<ImportFormFieldErrors>({});
 
-  const { data: imports = [], isLoading, isError, error } = useImports();
+  const { data: imports = [], isLoading, isError, error } = useImports({
+    dateFrom: dateFrom || undefined,
+    dateTo: dateTo || undefined,
+  });
 
   const { data: materialsPage } = useMaterials({ pageSize: 200 });
 
@@ -178,13 +180,9 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
     }
 
-    if (dateFrom || dateTo) {
-      list = list.filter(i => isVoucherInDateRange(i, dateFrom, dateTo));
-    }
-
     return list;
 
-  }, [imports, activeTab, search, dateFrom, dateTo]);
+  }, [imports, activeTab, search]);
 
 
 

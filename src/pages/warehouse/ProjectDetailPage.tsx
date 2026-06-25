@@ -55,7 +55,7 @@ export default function ProjectDetailPage() {
   const stockWithQty = useMemo(
     () => inventory.filter(
       r => r.actualInventoryQty !== 0
-        || r.plannedInventoryQty !== 0
+        || r.plannedImportQty !== 0
         || r.plannedExportQty !== 0,
     ),
     [inventory],
@@ -240,13 +240,13 @@ export default function ProjectDetailPage() {
                         <td className="table-cell text-center">{row.unit}</td>
                         <td className="table-cell text-right font-semibold tabular-nums">{row.actualInventoryQty}</td>
                         <td className="table-cell text-right tabular-nums stock-qty--pending">
-                          {fmtStockQtyOrDash(row.plannedInventoryQty)}
+                          {fmtStockQtyOrDash(row.plannedImportQty)}
                         </td>
                         <td className="table-cell text-right tabular-nums stock-qty--reserved">
                           {fmtStockQtyOrDash(row.plannedExportQty)}
                         </td>
                         <td className="table-cell text-right font-semibold tabular-nums">
-                          {fmtPlannedStock(row.actualInventoryQty, row.plannedInventoryQty)}
+                          {fmtPlannedStock(row.actualInventoryQty, row.plannedImportQty)}
                         </td>
                       </tr>
                     ))}

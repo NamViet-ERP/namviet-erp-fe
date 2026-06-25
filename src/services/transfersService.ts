@@ -1,5 +1,6 @@
 import type { Transfer } from '../types';
 import { apiClient } from '../lib/apiClient';
+import { appendVoucherDateQuery, type VoucherListParams } from '../lib/wms/voucherDateUtils';
 import { resolveMock } from '../mocks';
 
 export type CreateTransferDto = Omit<Transfer, 'id'>;
@@ -8,10 +9,10 @@ export type UpdateTransferDto = Partial<CreateTransferDto>;
 const ENDPOINT = '/api/transfers';
 
 export const transfersService = {
-  async list(): Promise<Transfer[]> {
+  async list(params?: VoucherListParams): Promise<Transfer[]> {
     return resolveMock(
-      () => import('../mocks/services/transfersService.mock').then((m) => m.listTransfersMock()),
-      () => apiClient.get<Transfer[]>(ENDPOINT),
+      () => import('../mocks/services/transfersService.mock').then((m) => m.listTransfersMock(params)),
+      () => apiClient.get<Transfer[]>(appendVoucherDateQuery(ENDPOINT, params)),
     );
   },
 

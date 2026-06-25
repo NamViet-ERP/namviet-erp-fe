@@ -1,6 +1,7 @@
 import type { Import } from '../../types';
 import { mockDelay, mockId } from '../index';
 import { MOCK_IMPORTS } from '../data/wmsMockSeed';
+import { isVoucherInDateRange, type VoucherListParams } from '../../lib/wms/voucherDateUtils';
 
 let store: Import[] = [...MOCK_IMPORTS];
 
@@ -8,8 +9,9 @@ function nextVoucherCode(prefix: string, seq: number) {
   return `${prefix}-${String(seq).padStart(6, '0')}`;
 }
 
-export async function listImportsMock(): Promise<Import[]> {
-  return mockDelay(store);
+export async function listImportsMock(params?: VoucherListParams): Promise<Import[]> {
+  const filtered = store.filter(i => isVoucherInDateRange(i, params?.dateFrom, params?.dateTo));
+  return mockDelay(filtered);
 }
 
 export async function getImportMock(id: string): Promise<Import> {

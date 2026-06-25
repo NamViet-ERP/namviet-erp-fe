@@ -30,11 +30,7 @@ export type StatusKey =
   | 'active'
   | 'inactive';
 
-/** Adjustment type: increase or decrease */
-export type AdjustmentType = 'increase' | 'decrease';
-
-/** Valid prefix values for voucher code generation */
-export type VoucherPrefix = 'CK' | 'CDK' | 'NK' | 'XK' | 'KK' | 'ĐCT';
+export type VoucherPrefix = 'CK' | 'CDK' | 'NK' | 'XK' | 'KK';
 
 /** Card accent color options */
 export type CardAccent = 'amber' | 'blue' | 'teal' | 'purple';
@@ -53,11 +49,6 @@ export interface StatusConfigItem {
   label: string;
   className: string;
   icon: LucideIcon;
-}
-
-export interface AdjustmentTypeConfigItem {
-  label: string;
-  className: string;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -256,34 +247,6 @@ export interface Stocktake {
   isFrozen: boolean;
   note: string;
   items: StocktakeItem[];
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Adjustment (Điều chỉnh kho)
-// ─────────────────────────────────────────────────────────────────────────────
-
-export interface AdjustmentItem {
-  productId: string;
-  sku: string;
-  name: string;
-  adjustQty: number;
-  reason: string;
-  [key: string]: unknown;
-}
-
-export interface Adjustment {
-  id: string;
-  voucherCode: string;
-  date: string;
-  stocktakeCode: string;
-  type: AdjustmentType;
-  createdBy: string;
-  condition: StatusKey;
-  warehouseId: string;
-  warehouseName: string;
-  note: string;
-  isNew: boolean;
-  items: AdjustmentItem[];
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
