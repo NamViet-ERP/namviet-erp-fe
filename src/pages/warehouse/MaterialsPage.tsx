@@ -7,6 +7,8 @@ import EmptyState from '../../components/ui/EmptyState';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import PageHeader from '../../components/ui/PageHeader';
 import Modal from '../../components/ui/Modal';
+import FormField from '../../components/ui/FormField';
+import MaterialUnitSelect from '../../components/warehouse/MaterialUnitSelect';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { WMS_EMPTY, WMS_ERROR } from '../../lib/wms/messages';
@@ -16,7 +18,11 @@ import MaterialDetailView from './MaterialDetailView';
 import {
   MATERIAL_CATEGORY_LEVELS,
   MATERIAL_CREATE_REQUIRED_LEVELS,
+  MATERIAL_FIELD_PLACEHOLDERS,
+  MATERIAL_SELECT_PLACEHOLDER,
   MATERIAL_TABLE_COLUMNS,
+  materialInputError,
+  materialSelectError,
 } from '../../constants/materialCategoryLevels';
 import { categoryLevel, resolveLeafCategoryId } from '../../lib/wms/materialCategoryTree';
 import type { MaterialApiDto } from '../../types/wms';
@@ -50,7 +56,7 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
   const [createForm, setCreateForm] = useState({
     materialCode: '',
     materialName: '',
-    unit: 'Cái',
+    unit: '',
     technicalSpec: '',
     qualityStandard: '',
   });
@@ -99,7 +105,7 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
     setCreateForm({
       materialCode: '',
       materialName: '',
-      unit: 'Cái',
+      unit: '',
       technicalSpec: '',
       qualityStandard: '',
     });
@@ -120,16 +126,16 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
     for (const lvl of MATERIAL_CREATE_REQUIRED_LEVELS) {
       if (createSelection[lvl - 1] === '') {
         const label = MATERIAL_CATEGORY_LEVELS[lvl - 1].label;
-        errors[`level${lvl}`] = `${label} là bắt buộc`;
+        errors[`level${lvl}`] = materialSelectError(label);
       }
     }
-    if (!createForm.materialCode.trim()) errors.materialCode = 'Mã vật tư là bắt buộc';
-    if (!createForm.materialName.trim()) errors.materialName = 'Tên là bắt buộc';
-    if (!createForm.unit.trim()) errors.unit = 'Đơn vị tính là bắt buộc';
+    if (!createForm.materialCode.trim()) errors.materialCode = materialInputError('mã vật tư');
+    if (!createForm.materialName.trim()) errors.materialName = materialInputError('tên vật tư');
+    if (!createForm.unit.trim()) errors.unit = materialSelectError('đơn vị tính');
 
     const categoryId = resolveLeafCategoryId(createSelection);
     if (categoryId && categoryLevel(categories, categoryId)! < 3) {
-      errors.level3 = 'Phải chọn tối thiểu đến cấp Loại vật tư';
+      errors.level3 = 'Vui lòng chọn đến cấp Loại vật tư';
     }
 
     setCreateErrors(errors);
@@ -186,7 +192,7 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
 
       <p className="text-xs text-[var(--md-on-surface-variant)] max-w-4xl">
         Lọc theo cây danh mục — chọn Danh mục trước, các cấp sau hiện theo nhánh đã chọn (không bắt buộc).
-        Khi tạo mã vật tư: ba cấp đầu, mã và tên là bắt buộc.
+        Khi tạo mã vật tư: chọn ba cấp danh mục đầu và nhập mã, tên vật tư.
       </p>
 
       <div className="surface-panel surface-panel--rounded-xl p-4 shadow-card space-y-4">
@@ -337,7 +343,7 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
           </>
         }
       >
-        <div className="space-y-4">
+        <div className="space-y-4 modal-form-bordered">
           {!createCategoriesLoading && (createOptions[0]?.length ?? 0) === 0 && (
             <p className="alert-banner alert-banner--error text-xs">
               Chưa có dữ liệu cây vật tư. Vào <strong>Thiết lập → Cây vật tư</strong> để khai báo trước khi tạo vật tư mới.
@@ -345,13 +351,12 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             {MATERIAL_CATEGORY_LEVELS.map((lvl, idx) => (
-              <label key={lvl.key} className="text-xs space-y-1">
-                <span className="font-semibold text-[var(--md-on-surface-variant)]">
-                  {lvl.label}
-                  {isRequiredOnCreate(lvl.level) && (
-                    <span className="text-[var(--md-error)]"> *</span>
-                  )}
-                </span>
+              <FormField
+                key={lvl.key}
+                label={lvl.label}
+                required={isRequiredOnCreate(lvl.level)}
+                error={createErrors[`level${lvl.level}`]}
+              >
                 <select
                   className="form-select w-full text-sm"
                   disabled={createCategoriesLoading || (idx > 0 && createSelection[idx - 1] === '')}
@@ -361,72 +366,56 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
                     setCreateLevel(idx, v === '' ? '' : Number(v));
                   }}
                 >
-                  <option value="">— Chọn —</option>
+                  <option value="">{MATERIAL_SELECT_PLACEHOLDER}</option>
                   {createOptions[idx]
                     ?.filter(c => idx > 0 || c.code !== 'UNCATEGORIZED')
                     .map(c => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
                 </select>
-                {createErrors[`level${lvl.level}`] && (
-                  <span className="text-[var(--md-error)] text-[10px]">{createErrors[`level${lvl.level}`]}</span>
-                )}
-              </label>
+              </FormField>
             ))}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <label className="text-xs space-y-1">
-              <span className="font-semibold text-[var(--md-on-surface-variant)]">
-                Mã vật tư <span className="text-[var(--md-error)]">*</span>
-              </span>
+            <FormField label="Mã vật tư" required error={createErrors.materialCode}>
               <input
                 className="form-input w-full text-sm"
                 value={createForm.materialCode}
                 onChange={e => setCreateForm(f => ({ ...f, materialCode: e.target.value }))}
-                placeholder="VD: TE-PLT-012-SA516"
+                placeholder={MATERIAL_FIELD_PLACEHOLDERS.materialCode}
               />
-              {createErrors.materialCode && (
-                <span className="text-[var(--md-error)] text-[10px]">{createErrors.materialCode}</span>
-              )}
-            </label>
-            <label className="text-xs space-y-1">
-              <span className="font-semibold text-[var(--md-on-surface-variant)]">
-                Tên <span className="text-[var(--md-error)]">*</span>
-              </span>
+            </FormField>
+            <FormField label="Tên vật tư" required error={createErrors.materialName}>
               <input
                 className="form-input w-full text-sm"
                 value={createForm.materialName}
                 onChange={e => setCreateForm(f => ({ ...f, materialName: e.target.value }))}
+                placeholder={MATERIAL_FIELD_PLACEHOLDERS.materialName}
               />
-              {createErrors.materialName && (
-                <span className="text-[var(--md-error)] text-[10px]">{createErrors.materialName}</span>
-              )}
-            </label>
-            <label className="text-xs space-y-1">
-              <span className="font-semibold text-[var(--md-on-surface-variant)]">Đơn vị tính</span>
-              <input
-                className="form-input w-full text-sm"
-                value={createForm.unit}
-                onChange={e => setCreateForm(f => ({ ...f, unit: e.target.value }))}
-              />
-            </label>
-            <label className="text-xs space-y-1">
-              <span className="font-semibold text-[var(--md-on-surface-variant)]">Quy cách</span>
+            </FormField>
+            <MaterialUnitSelect
+              value={createForm.unit}
+              onChange={unit => setCreateForm(f => ({ ...f, unit }))}
+              required
+              error={createErrors.unit}
+            />
+            <FormField label="Quy cách">
               <input
                 className="form-input w-full text-sm"
                 value={createForm.technicalSpec}
                 onChange={e => setCreateForm(f => ({ ...f, technicalSpec: e.target.value }))}
+                placeholder={MATERIAL_FIELD_PLACEHOLDERS.technicalSpec}
               />
-            </label>
-            <label className="text-xs space-y-1 sm:col-span-2">
-              <span className="font-semibold text-[var(--md-on-surface-variant)]">Tiêu chuẩn chất lượng</span>
+            </FormField>
+            <FormField label="Tiêu chuẩn chất lượng" className="sm:col-span-2">
               <input
                 className="form-input w-full text-sm"
                 value={createForm.qualityStandard}
                 onChange={e => setCreateForm(f => ({ ...f, qualityStandard: e.target.value }))}
+                placeholder={MATERIAL_FIELD_PLACEHOLDERS.qualityStandard}
               />
-            </label>
+            </FormField>
           </div>
         </div>
       </Modal>

@@ -178,7 +178,7 @@ export default function AdjustmentListPage() {
 
       {/* Detail modal */}
       <Modal isOpen={showDetail} onClose={() => setShowDetail(false)}
-        title={`PHIẾU ĐIỀU CHỈNH — ${selectedItem?.voucherCode || ''}`} size="lg"
+        title={`PHIẾU ĐIỀU CHỈNH — ${selectedItem?.voucherCode || ''}`} size="xl"
         footer={<>
           {selectedItem && selectedItem.condition !== 'exported' && selectedItem.condition !== 'rejected' && (
             <button className="btn btn-filled" onClick={() => { handleApproveAdjustment(selectedItem); setShowDetail(false); }}>

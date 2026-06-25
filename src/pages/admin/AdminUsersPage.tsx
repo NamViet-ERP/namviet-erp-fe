@@ -10,6 +10,7 @@ import HrmPanel from '../../components/hr/HrmPanel';
 import HrmStatCard from '../../components/hr/HrmStatCard';
 import Modal from '../../components/ui/Modal';
 import FormField from '../../components/ui/FormField';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import AdminPasswordField from '../../components/admin/AdminPasswordField';
 import { validatePassword } from '../../lib/validatePassword';
 import { showToast } from '../../components/ui/Toast';
@@ -30,7 +31,9 @@ import { formatAdminDateCell } from '../../lib/hrm/formatters';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { UI_ERROR } from '../../lib/uiMessages';
 import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
-import type { AdminUserListParams, AdminUserRow, AdminUserSource } from '../../services/adminUsersService';
+import type { AdminUserListParams, AdminUserRow } from '../../services/adminUsersService';
+import { getSessionUser } from '../../constants/systemUsers';
+import { isCurrentAdminUserRow, adminUserToggleKey } from '../../lib/admin/isCurrentAdminUser';
 
 const TABLE_HEADERS = [
   'Mã nhân viên',
@@ -76,14 +79,16 @@ function AccountSwitch({ checked, disabled, onChange, title }: AccountSwitchProp
   return (
     <button
       type="button"
+      onMouseDown={e => e.stopPropagation()}
       onClick={e => {
         e.stopPropagation();
         if (!disabled) onChange(!checked);
       }}
       disabled={disabled}
-      className={`hrm-toggle-switch${checked ? ' hrm-toggle-switch--on' : ''}`}
+      className={`hrm-toggle-switch${checked ? ' hrm-toggle-switch--on' : ''}${disabled ? ' hrm-toggle-switch--disabled' : ''}`}
       role="switch"
       aria-checked={checked}
+      aria-disabled={disabled}
       title={title ?? (checked ? 'Đang bật' : 'Đang tắt')}
     >
       <span className="hrm-toggle-switch__thumb" aria-hidden />
@@ -155,6 +160,14 @@ export default function AdminUsersPage() {
   const [resetPassword, setResetPassword] = useState('');
   const [resetError, setResetError] = useState('');
 
+  const [lockConfirmTarget, setLockConfirmTarget] = useState<AdminUserRow | null>(null);
+
+  const sessionUser = getSessionUser();
+  const isSelfAccount = (user: AdminUserRow) => isCurrentAdminUserRow(sessionUser, user);
+  const togglingKey = toggleMutation.isPending && toggleMutation.variables
+    ? `${toggleMutation.variables.source}:${toggleMutation.variables.toggleId}`
+    : null;
+
   const validateManualForm = () => {
     const next: Record<string, string> = {};
     if (!form.name.trim()) next.name = 'Vui lòng nhập họ tên';
@@ -193,6 +206,12 @@ export default function AdminUsersPage() {
 
   const handleRowClick = (user: AdminUserRow) => {
     navigate(`/admin/users/${user.id}?source=${user.source}`);
+  };
+
+  const handleRowNavigate = (user: AdminUserRow, e: React.MouseEvent<HTMLTableRowElement>) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('button, a, input, select, textarea, [role="switch"]')) return;
+    handleRowClick(user);
   };
 
   const handleCreate = async (e?: React.FormEvent) => {
@@ -269,25 +288,42 @@ export default function AdminUsersPage() {
     }
   };
 
-  const handleToggle = async (
-    toggleId: string,
-    source: AdminUserSource,
-    next: boolean,
-    canToggle: boolean,
-    hasAccount: boolean,
-  ) => {
-    if (!hasAccount) return;
-    if (!canToggle) {
-      showToast('warning', 'Nhân viên đã nghỉ việc, không thể bật tài khoản');
-      return;
-    }
+  const executeToggle = async (user: AdminUserRow, next: boolean) => {
     try {
-      await toggleMutation.mutateAsync({ toggleId, enabled: next, source });
+      await toggleMutation.mutateAsync({ toggleId: user.toggleId, enabled: next, source: user.source });
       const updated = qc.getQueryData(adminUsersListQueryKey(listParams));
       if (updated?.page && updated.page !== page) setPage(updated.page);
       showToast('success', next ? 'Đã bật tài khoản' : 'Đã khóa tài khoản');
     } catch (err: unknown) {
       showToast('error', getApiErrorMessage(err, 'Không thể thay đổi trạng thái'));
+      throw err;
+    }
+  };
+
+  const requestToggle = (user: AdminUserRow, next: boolean) => {
+    if (!user.hasAccount) return;
+    if (!user.canToggle) {
+      showToast('warning', 'Nhân viên đã nghỉ việc, không thể bật tài khoản');
+      return;
+    }
+    if (!next && isSelfAccount(user)) {
+      showToast('warning', 'Không thể khóa tài khoản đang đăng nhập.');
+      return;
+    }
+    if (!next) {
+      setLockConfirmTarget(user);
+      return;
+    }
+    void executeToggle(user, true);
+  };
+
+  const handleLockConfirm = async () => {
+    if (!lockConfirmTarget) return;
+    try {
+      await executeToggle(lockConfirmTarget, false);
+      setLockConfirmTarget(null);
+    } catch {
+      /* toast shown in executeToggle */
     }
   };
 
@@ -417,7 +453,7 @@ export default function AdminUsersPage() {
                   <tr
                     key={`${user.source}-${user.id}`}
                     className="table-row hrm-table-row--interactive"
-                    onClick={() => handleRowClick(user)}
+                    onClick={e => handleRowNavigate(user, e)}
                     title="Xem chi tiết"
                   >
                     <td className="table-cell font-mono text-sm text-[var(--md-primary)]">{user.employeeCode}</td>
@@ -431,18 +467,27 @@ export default function AdminUsersPage() {
                       <span className={statusBadgeClass(user)}>{user.statusLabel}</span>
                     </td>
                     <td className="table-cell whitespace-nowrap">{formatAdminDateCell(user.createdAt)}</td>
-                    <td className="table-cell text-center" onClick={e => e.stopPropagation()}>
+                    <td
+                      className="table-cell text-center"
+                      onClick={e => e.stopPropagation()}
+                      onMouseDown={e => e.stopPropagation()}
+                    >
                       {user.hasAccount ? (
                         <AccountSwitch
                           checked={user.isActive}
-                          disabled={toggleMutation.isPending || !user.canToggle}
-                          onChange={n => handleToggle(user.toggleId, user.source, n, user.canToggle, user.hasAccount)}
-                          title={
+                          disabled={
                             !user.canToggle
-                              ? 'Nhân viên đã nghỉ việc'
-                              : user.isActive
-                                ? 'Khóa tài khoản'
-                                : 'Mở khóa tài khoản'
+                            || togglingKey === adminUserToggleKey(user)
+                          }
+                          onChange={n => requestToggle(user, n)}
+                          title={
+                            user.isActive && isSelfAccount(user)
+                              ? 'Không thể khóa tài khoản đang đăng nhập'
+                              : !user.canToggle
+                                ? 'Nhân viên đã nghỉ việc'
+                                : user.isActive
+                                  ? 'Khóa tài khoản'
+                                  : 'Mở khóa tài khoản'
                           }
                         />
                       ) : (
@@ -493,7 +538,7 @@ export default function AdminUsersPage() {
         isOpen={!!provisionTarget}
         onClose={closeProvision}
         title="Cấp tài khoản"
-        size="md"
+        size="xl"
         footer={
           <>
             <button type="button" className="btn btn-outline" onClick={closeProvision}>Hủy</button>
@@ -509,27 +554,27 @@ export default function AdminUsersPage() {
         }
       >
         {provisionTarget && (
-          <form id="admin-provision-form" onSubmit={handleProvision} className="space-y-4">
+          <form id="admin-provision-form" onSubmit={handleProvision} className="space-y-4 modal-form-bordered">
             <p className="text-sm text-[var(--md-on-surface-variant)]">
               Thông tin lấy từ hồ sơ HR — admin chỉ chọn vai trò và đặt mật khẩu ban đầu.
             </p>
             <FormField label="Họ tên">
-              <input className="form-input bg-[var(--md-surface-container-low)]" value={provisionTarget.fullName} readOnly />
+              <input className="form-input" value={provisionTarget.fullName} readOnly />
             </FormField>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField label="Mã nhân viên">
-                <input className="form-input bg-[var(--md-surface-container-low)]" value={provisionTarget.employeeCode} readOnly />
+                <input className="form-input" value={provisionTarget.employeeCode} readOnly />
               </FormField>
               <FormField label="Email">
-                <input className="form-input bg-[var(--md-surface-container-low)]" value={provisionTarget.email} readOnly />
+                <input className="form-input" value={provisionTarget.email} readOnly />
               </FormField>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField label="Bộ phận">
-                <input className="form-input bg-[var(--md-surface-container-low)]" value={provisionTarget.department} readOnly />
+                <input className="form-input" value={provisionTarget.department} readOnly />
               </FormField>
               <FormField label="Chức vụ">
-                <input className="form-input bg-[var(--md-surface-container-low)]" value={provisionTarget.position} readOnly />
+                <input className="form-input" value={provisionTarget.position} readOnly />
               </FormField>
             </div>
             <FormField label="Vai trò hệ thống" required>
@@ -572,7 +617,7 @@ export default function AdminUsersPage() {
         }
       >
         {resetTarget && (
-          <form id="admin-reset-password-form" onSubmit={handleResetPassword} className="space-y-4">
+          <form id="admin-reset-password-form" onSubmit={handleResetPassword} className="space-y-4 modal-form-bordered">
             <p className="text-sm text-[var(--md-on-surface-variant)]">
               Tài khoản: <strong>{resetTarget.fullName}</strong> ({resetTarget.email})
             </p>
@@ -590,7 +635,7 @@ export default function AdminUsersPage() {
         isOpen={showCreate}
         onClose={() => { setShowCreate(false); resetManualForm(); }}
         title="Thêm tài khoản hệ thống"
-        size="md"
+        size="xl"
         footer={
           <>
             <button type="button" className="btn btn-outline" onClick={() => { setShowCreate(false); resetManualForm(); }}>
@@ -607,7 +652,7 @@ export default function AdminUsersPage() {
           </>
         }
       >
-        <form id="admin-user-create-form" onSubmit={handleCreate} className="space-y-4">
+        <form id="admin-user-create-form" onSubmit={handleCreate} className="space-y-4 modal-form-bordered">
           <p className="text-sm text-[var(--md-on-surface-variant)]">
             Dùng cho tài khoản admin, dịch vụ… không gắn hồ sơ nhân viên HR.
           </p>
@@ -682,6 +727,24 @@ export default function AdminUsersPage() {
           />
         </form>
       </Modal>
+
+      <ConfirmDialog
+        isOpen={lockConfirmTarget !== null}
+        onClose={() => setLockConfirmTarget(null)}
+        onConfirm={() => void handleLockConfirm()}
+        title="Khóa tài khoản"
+        message={
+          <>
+            Bạn có chắc muốn khóa tài khoản{' '}
+            <strong className="confirm-dialog__emphasis">{lockConfirmTarget?.fullName}</strong>?
+            <br />
+            <span className="confirm-dialog__subtext">Người dùng sẽ không thể đăng nhập cho đến khi được mở khóa.</span>
+          </>
+        }
+        confirmLabel="Khóa tài khoản"
+        cancelLabel="Hủy"
+        isLoading={toggleMutation.isPending}
+      />
     </div>
   );
 }

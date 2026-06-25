@@ -20,7 +20,7 @@ import { showToast } from '../../components/ui/Toast';
 
 import { getApiErrorMessage } from '../../lib/apiClient';
 
-import { validateImportCreate } from '../../lib/wms/importFormSchema';
+import { validateImportCreate, getImportFormFieldErrors, type ImportFormFieldErrors } from '../../lib/wms/importFormSchema';
 
 import { parseCurrencyInput } from '../../utils/currencyInput';
 
@@ -57,8 +57,8 @@ import ImportTable from './import/ImportTable';
 import ImportCreateModal from './import/ImportCreateModal';
 
 import ImportDetailModal from './import/ImportDetailModal';
-
-
+import VoucherDateFilter from '../../components/warehouse/VoucherDateFilter';
+import { isVoucherInDateRange } from '../../lib/wms/voucherDateUtils';
 
 export default function ImportListPageRoute() {
 
@@ -86,6 +86,10 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
   const [search, setSearch] = useState('');
 
+  const [dateFrom, setDateFrom] = useState('');
+
+  const [dateTo, setDateTo] = useState('');
+
   const [page, setPage] = useState(1);
 
   const [pageSize, setPageSize] = useState(DEFAULT_LIST_PAGE_SIZE);
@@ -108,7 +112,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
   const [items, setItems] = useState<MaterialQtyPriceLine[]>([{ ...emptyQtyPriceLine }]);
 
-
+  const [createErrors, setCreateErrors] = useState<ImportFormFieldErrors>({});
 
   const { data: imports = [], isLoading, isError, error } = useImports();
 
@@ -174,9 +178,13 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
     }
 
+    if (dateFrom || dateTo) {
+      list = list.filter(i => isVoucherInDateRange(i, dateFrom, dateTo));
+    }
+
     return list;
 
-  }, [imports, activeTab, search]);
+  }, [imports, activeTab, search, dateFrom, dateTo]);
 
 
 
@@ -220,6 +228,8 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
     setItems([{ ...emptyQtyPriceLine }]);
 
+    setCreateErrors({});
+
   };
 
 
@@ -228,27 +238,33 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
     const validItems = items.filter(it => it.materialCode && Number(it.qty) > 0);
 
+    const supplierValid = Boolean(findSupplierByName(suppliers, defaultSupplier));
+
+    const fieldErrors = getImportFormFieldErrors(
+      projectCode,
+      referenceCode,
+      defaultSupplier,
+      supplierValid,
+      items,
+    );
+
+    if (Object.keys(fieldErrors).length > 0) {
+
+      setCreateErrors(fieldErrors);
+
+      showToast('error', 'Vui lòng kiểm tra lại các ô được đánh dấu.');
+
+      return null;
+
+    }
+
+    setCreateErrors({});
+
     const validation = validateImportCreate(projectCode.trim(), validItems);
 
     if (!validation.success) {
 
       showToast('error', validation.error.issues[0]?.message ?? 'Dữ liệu không hợp lệ');
-
-      return null;
-
-    }
-
-    if (!referenceCode.trim()) {
-
-      showToast('error', 'Vui lòng điền mã tham chiếu / PO.');
-
-      return null;
-
-    }
-
-    if (!findSupplierByName(suppliers, defaultSupplier)) {
-
-      showToast('error', 'Vui lòng chọn NCC từ danh mục (Thiết lập → Danh mục NCC).');
 
       return null;
 
@@ -344,7 +360,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
           ? `Phiếu nháp ${created.voucherCode} — đã ghi dự kiến nhập dự án.`
 
-          : `Phiếu ${created.voucherCode} đã chốt, chờ thủ kho duyệt.`,
+          : `Phiếu ${created.voucherCode} đã duyệt dự kiến, chờ thủ kho duyệt kho.`,
 
       );
 
@@ -368,7 +384,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
       await submitMutation.mutateAsync(imp.id);
 
-      showToast('success', `Đã chốt phiếu ${imp.voucherCode}`);
+      showToast('success', `Đã duyệt dự kiến phiếu ${imp.voucherCode}`);
 
     } catch (err) {
 
@@ -386,7 +402,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
       await approveMutation.mutateAsync(imp.id);
 
-      showToast('success', `Thủ kho đã duyệt phiếu ${imp.voucherCode}`);
+      showToast('success', `Thủ kho đã duyệt kho phiếu ${imp.voucherCode}`);
 
     } catch (err) {
 
@@ -460,6 +476,14 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
             <SearchBar value={search} onChange={v => { setSearch(v); setPage(1); }} placeholder="Tìm mã chứng từ, NCC, kho dự án..." />
 
+            <VoucherDateFilter
+              from={dateFrom}
+              to={dateTo}
+              onFromChange={v => { setDateFrom(v); setPage(1); }}
+              onToChange={v => { setDateTo(v); setPage(1); }}
+              onReset={() => { setDateFrom(''); setDateTo(''); setPage(1); }}
+            />
+
           </div>
 
         </div>
@@ -532,15 +556,24 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
         projectCode={projectCode}
 
-        onProjectCodeChange={setProjectCode}
+        onProjectCodeChange={code => {
+          setProjectCode(code);
+          setCreateErrors(e => ({ ...e, projectCode: undefined }));
+        }}
 
         defaultSupplier={defaultSupplier}
 
-        onDefaultSupplierChange={setDefaultSupplier}
+        onDefaultSupplierChange={name => {
+          setDefaultSupplier(name);
+          setCreateErrors(e => ({ ...e, defaultSupplier: undefined }));
+        }}
 
         referenceCode={referenceCode}
 
-        onReferenceCodeChange={setReferenceCode}
+        onReferenceCodeChange={code => {
+          setReferenceCode(code);
+          setCreateErrors(e => ({ ...e, referenceCode: undefined }));
+        }}
 
         note={note}
 
@@ -548,9 +581,14 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
         items={items}
 
-        onItemsChange={setItems}
+        onItemsChange={next => {
+          setItems(next);
+          setCreateErrors(e => ({ ...e, items: undefined }));
+        }}
 
         formGrandTotal={formGrandTotal}
+
+        errors={createErrors}
 
         onCreate={handleCreate}
 

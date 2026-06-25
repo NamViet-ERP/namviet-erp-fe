@@ -3,6 +3,7 @@ import { Copy, Check, Eye, EyeOff, RefreshCw } from 'lucide-react';
 import { showToast } from '../ui/Toast';
 import { generateTempPassword } from '../../lib/generatePassword';
 import { PASSWORD_HINT } from '../../lib/translateErrorMessage';
+import FormField from '../ui/FormField';
 
 interface AdminPasswordFieldProps {
   value: string;
@@ -42,16 +43,12 @@ export default function AdminPasswordField({
   };
 
   return (
-    <div>
-      <label className="hrm-field__label">
-        {label}
-        {required && <span className="text-[var(--md-error)]"> *</span>}
-      </label>
+    <FormField label={label} required={required} error={error}>
       <div className="flex gap-2">
-        <div className="relative flex-1">
+        <div className="relative flex-1 min-w-0">
           <input
             type={show ? 'text' : 'password'}
-            className="form-input pr-10"
+            className="form-input pr-10 w-full"
             value={value}
             onChange={e => onChange(e.target.value)}
             placeholder={PASSWORD_HINT}
@@ -83,7 +80,6 @@ export default function AdminPasswordField({
           {copied ? <Check size={16} /> : <Copy size={16} />}
         </button>
       </div>
-      {error && <p className="text-xs text-[var(--md-error)] mt-1">{error}</p>}
-    </div>
+    </FormField>
   );
 }

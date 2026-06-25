@@ -14,8 +14,10 @@ interface FormFieldProps {
 }
 
 export default function FormField({ label, required, error, children, className = '' }: FormFieldProps) {
+  const fieldClass = ['form-field', error ? 'form-field--error' : '', className].filter(Boolean).join(' ');
+
   return (
-    <div className={className}>
+    <div className={fieldClass}>
       {label && (
         <label className="form-label">
           {required && (
@@ -25,11 +27,13 @@ export default function FormField({ label, required, error, children, className 
         </label>
       )}
       {children}
-      {error && (
-        <p className="form-field__error animate-fade-in" role="alert">
-          {error}
-        </p>
-      )}
+      <p
+        className={`form-field__error${error ? '' : ' form-field__error--reserved'}`}
+        role={error ? 'alert' : undefined}
+        aria-live="polite"
+      >
+        {error || '\u00a0'}
+      </p>
     </div>
   );
 }

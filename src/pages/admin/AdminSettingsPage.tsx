@@ -1,23 +1,28 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, Plus, Trash2, UserCog } from 'lucide-react';
+import { Shield, Plus, Trash2, UserCog, Pencil } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import SearchBar from '../../components/ui/SearchBar';
 import HrmPanel from '../../components/hr/HrmPanel';
+import Modal from '../../components/ui/Modal';
+import FormField from '../../components/ui/FormField';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { UI_LOADING } from '../../lib/uiMessages';
-import { useRoles, useCreateRole, useDeleteRole, useToggleRoleStatus } from '../../hooks/useRoles';
+import type { SystemRole } from '../../services/rolesService';
+import { useRoles, useCreateRole, useDeleteRole, useToggleRoleStatus, useUpdateRole } from '../../hooks/useRoles';
 
 export default function AdminSettingsPage() {
   const [label, setLabel] = useState('');
-  const [code, setCode] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<{ code: string; label: string } | null>(null);
+  const [editTarget, setEditTarget] = useState<SystemRole | null>(null);
+  const [editLabel, setEditLabel] = useState('');
 
   const { data: roles = [], isLoading } = useRoles({ search: searchTerm || undefined });
   const createMutation = useCreateRole();
+  const updateMutation = useUpdateRole();
   const deleteMutation = useDeleteRole();
   const toggleMutation = useToggleRoleStatus();
 
@@ -30,13 +35,9 @@ export default function AdminSettingsPage() {
     }
 
     try {
-      await createMutation.mutateAsync({
-        label: val,
-        code: code.trim() || undefined,
-      });
+      await createMutation.mutateAsync({ label: val });
       showToast('success', `Đã thêm vai trò "${val}"`);
       setLabel('');
-      setCode('');
     } catch (err: unknown) {
       showToast('error', getApiErrorMessage(err, 'Không thể thêm vai trò'));
     }
@@ -61,6 +62,33 @@ export default function AdminSettingsPage() {
     }
   };
 
+  const openEdit = (role: SystemRole) => {
+    setEditTarget(role);
+    setEditLabel(role.label);
+  };
+
+  const handleEditSave = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!editTarget) return;
+    const val = editLabel.trim();
+    if (!val) {
+      showToast('warning', 'Vui lòng nhập tên vai trò');
+      return;
+    }
+    if (val === editTarget.label) {
+      setEditTarget(null);
+      return;
+    }
+
+    try {
+      await updateMutation.mutateAsync({ code: editTarget.code, label: val });
+      showToast('success', `Đã đổi tên vai trò thành "${val}"`);
+      setEditTarget(null);
+    } catch (err: unknown) {
+      showToast('error', getApiErrorMessage(err, 'Không thể đổi tên vai trò'));
+    }
+  };
+
   return (
     <div className="hrm-page">
       <PageHeader
@@ -78,7 +106,7 @@ export default function AdminSettingsPage() {
             <div>
               <h2 className="hrm-settings-card__title">Danh sách vai trò</h2>
               <p className="hrm-settings-card__desc">
-                Bật/tắt hoặc xóa vai trò — vai trò tắt sẽ không hiện khi cấp tài khoản.
+                Sửa tên, bật/tắt hoặc xóa vai trò — vai trò tắt sẽ không hiện khi cấp tài khoản.
               </p>
             </div>
           </div>
@@ -90,14 +118,6 @@ export default function AdminSettingsPage() {
               onChange={e => setLabel(e.target.value)}
               placeholder="Tên vai trò (VD: Trưởng phòng Kho)"
               className="hrm-field-input flex-1"
-              disabled={createMutation.isPending}
-            />
-            <input
-              type="text"
-              value={code}
-              onChange={e => setCode(e.target.value)}
-              placeholder="Mã (tùy chọn)"
-              className="hrm-field-input font-mono text-sm w-[160px] shrink-0"
               disabled={createMutation.isPending}
             />
             <button
@@ -114,7 +134,7 @@ export default function AdminSettingsPage() {
             <SearchBar
               value={searchTerm}
               onChange={setSearchTerm}
-              placeholder="Tìm theo tên hoặc mã vai trò..."
+              placeholder="Tìm theo tên vai trò..."
             />
           </div>
 
@@ -135,9 +155,17 @@ export default function AdminSettingsPage() {
                     <span className="hrm-recruitment-position-card__name" title={role.label}>
                       {role.label}
                     </span>
-                    <span className="hrm-admin-role-card__code">{role.code}</span>
                   </div>
                   <div className="hrm-recruitment-position-card__actions">
+                    <button
+                      type="button"
+                      onClick={() => openEdit(role)}
+                      className="hrm-recruitment-position-card__delete"
+                      title="Sửa tên vai trò"
+                      aria-label={`Sửa tên vai trò ${role.label}`}
+                    >
+                      <Pencil size={16} />
+                    </button>
                     <button
                       type="button"
                       onClick={() => handleToggle(role.code)}
@@ -181,6 +209,7 @@ export default function AdminSettingsPage() {
             </div>
           </div>
           <ul className="hrm-settings-list">
+            <li><strong>Sửa tên:</strong> Chỉ đổi tên hiển thị — quyền và người dùng đang gán không đổi.</li>
             <li><strong>Bật:</strong> Vai trò hiển thị khi cấp tài khoản hoặc đổi quyền.</li>
             <li><strong>Tắt:</strong> Ẩn khỏi danh sách chọn — không xóa người dùng đang dùng vai trò đó.</li>
             <li><strong>Xóa:</strong> Gỡ vai trò khỏi hệ thống; chỉ thực hiện khi không còn gán cho ai.</li>
@@ -191,6 +220,43 @@ export default function AdminSettingsPage() {
           </Link>
         </HrmPanel>
       </div>
+
+      <Modal
+        isOpen={editTarget !== null}
+        onClose={() => setEditTarget(null)}
+        title="Sửa tên vai trò"
+        size="sm"
+        footer={
+          <>
+            <button type="button" className="btn btn-outline" onClick={() => setEditTarget(null)}>Hủy</button>
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={updateMutation.isPending}
+              onClick={() => void handleEditSave()}
+            >
+              {updateMutation.isPending ? 'Đang lưu...' : 'Lưu'}
+            </button>
+          </>
+        }
+      >
+        {editTarget && (
+          <form id="admin-role-edit-form" onSubmit={handleEditSave} className="space-y-4 modal-form-bordered">
+            <FormField label="Tên vai trò" required>
+              <input
+                className="form-input"
+                value={editLabel}
+                onChange={e => setEditLabel(e.target.value)}
+                placeholder="VD: Admin"
+                autoFocus
+              />
+            </FormField>
+            <p className="text-xs text-[var(--md-on-surface-variant)]">
+              Chỉ đổi tên hiển thị. Quyền hệ thống và tài khoản đang dùng vai trò này không thay đổi.
+            </p>
+          </form>
+        )}
+      </Modal>
 
       <ConfirmDialog
         isOpen={deleteTarget !== null}

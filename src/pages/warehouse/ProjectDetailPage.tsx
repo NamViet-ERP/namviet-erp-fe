@@ -15,7 +15,7 @@ import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { formatDateCell } from '../../lib/hrm/formatters';
-import { fmtStockPlanned } from '../../lib/wms/stockQtyFormat';
+import { fmtPlannedStock, fmtStockQtyOrDash } from '../../lib/wms/stockQtyFormat';
 import { formatCurrencyFull } from '../../utils/formatCurrency';
 import { useProject, useProjectInventory, useCloseProject } from '../../hooks/useProjects';
 import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
@@ -54,7 +54,9 @@ export default function ProjectDetailPage() {
 
   const stockWithQty = useMemo(
     () => inventory.filter(
-      r => r.actualInventoryQty !== 0 || r.plannedInventoryQty !== 0 || r.reservedQty !== 0,
+      r => r.actualInventoryQty !== 0
+        || r.plannedInventoryQty !== 0
+        || r.plannedExportQty !== 0,
     ),
     [inventory],
   );
@@ -90,13 +92,14 @@ export default function ProjectDetailPage() {
                   <th className="table-header-cell">Mã vật tư</th>
                   <th className="table-header-cell">Tên vật tư</th>
                   <th className="table-header-cell text-right">Tồn thực tế</th>
-                  <th className="table-header-cell text-right">Dự kiến</th>
-                  <th className="table-header-cell text-right">Giữ kho</th>
+                  <th className="table-header-cell text-right">Nhập dự kiến</th>
+                  <th className="table-header-cell text-right">Xuất dự kiến</th>
+                  <th className="table-header-cell text-right">Tồn dự kiến</th>
                   <th className="table-header-cell text-right">Giá trị</th>
                 </tr>
               </thead>
               <tbody>
-                <TableSkeletonRows colSpan={6} />
+                <TableSkeletonRows colSpan={7} />
               </tbody>
             </table>
           </div>
@@ -182,7 +185,7 @@ export default function ProjectDetailPage() {
           tone="neutral"
         />
         <HrmStatCard
-          label="Ngân sách VT"
+          label="Ngân sách Vật tư"
           value={formatCurrencyFull(project.materialBudget)}
           hint={`Bắt đầu ${formatDateCell(project.startDate)}`}
           icon={CalendarDays}
@@ -202,7 +205,7 @@ export default function ProjectDetailPage() {
                 <tbody>
                   {Array.from({ length: 4 }).map((_, i) => (
                     <tr key={i} className="hrm-table-skeleton-row" aria-hidden>
-                      <td colSpan={6}><div className="hrm-table-skeleton" /></td>
+                      <td colSpan={7}><div className="hrm-table-skeleton" /></td>
                     </tr>
                   ))}
                 </tbody>
@@ -220,8 +223,9 @@ export default function ProjectDetailPage() {
                       <th className="table-header-cell">Tên vật tư</th>
                       <th className="table-header-cell text-center">ĐVT</th>
                       <th className="table-header-cell text-right">Tồn thực tế</th>
-                      <th className="table-header-cell text-right">Dự kiến</th>
-                      <th className="table-header-cell text-right">Giữ kho</th>
+                      <th className="table-header-cell text-right">Nhập dự kiến</th>
+                      <th className="table-header-cell text-right">Xuất dự kiến</th>
+                      <th className="table-header-cell text-right" title="Tồn thực tế + Nhập dự kiến">Tồn dự kiến</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -236,10 +240,13 @@ export default function ProjectDetailPage() {
                         <td className="table-cell text-center">{row.unit}</td>
                         <td className="table-cell text-right font-semibold tabular-nums">{row.actualInventoryQty}</td>
                         <td className="table-cell text-right tabular-nums stock-qty--pending">
-                          {fmtStockPlanned(row.plannedInventoryQty)}
+                          {fmtStockQtyOrDash(row.plannedInventoryQty)}
                         </td>
                         <td className="table-cell text-right tabular-nums stock-qty--reserved">
-                          {row.reservedQty !== 0 ? row.reservedQty : <span className="hrm-empty-cell">—</span>}
+                          {fmtStockQtyOrDash(row.plannedExportQty)}
+                        </td>
+                        <td className="table-cell text-right font-semibold tabular-nums">
+                          {fmtPlannedStock(row.actualInventoryQty, row.plannedInventoryQty)}
                         </td>
                       </tr>
                     ))}

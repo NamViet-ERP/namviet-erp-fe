@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Eye, EyeOff, ShieldAlert, FileText } from 'lucide-react';
+import { Eye, EyeOff, ShieldAlert, FileText, Loader2 } from 'lucide-react';
 import { showToast } from '../../components/ui/Toast';
 import ToastContainer from '../../components/ui/Toast';
 import { getUserById, canUserLogin, setSessionUser, findUserByLogin } from '../../constants/systemUsers';
@@ -8,7 +8,7 @@ import { getAccountLockReason } from '../../services/employeesService';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { UI_ERROR } from '../../lib/uiMessages';
 import { authService } from '../../services/authService';
-import { USE_MOCK } from '../../lib/mock';
+import { USE_MOCK } from '../../mocks';
 import { REMEMBER_KEY, SAVED_USER_KEY, setRememberMePreference } from '../../lib/authSession';
 import RoleSwitcher from '../../components/layout/RoleSwitcher';
 import { getDefaultRoute } from '../../utils/getDefaultRoute';
@@ -42,7 +42,6 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
 
     try {
       if (USE_MOCK && useMockQuickLogin && mockUserId) {
@@ -93,6 +92,7 @@ export default function LoginPage() {
         }
       }
       showToast('success', 'Chào mừng bạn quay trở lại hệ thống!', 'Đăng nhập thành công');
+      setError('');
       const role = getActiveRole();
       navigate(getDefaultRoute(role));
     } catch (err) {
@@ -102,12 +102,15 @@ export default function LoginPage() {
     }
   };
 
+  const alertMessage = error || (sessionExpired ? 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.' : '');
+  const alertVariant = error ? 'error' : 'warning';
+
   return (
     <div className="login-page">
       <div className="login-page__glow login-page__glow--tr" />
       <div className="login-page__glow login-page__glow--bl" />
 
-      <div className="relative z-10 w-full max-w-[420px] animate-scale-in">
+      <div className="relative z-10 w-full max-w-[420px]">
         <div className="login-card">
           <div className="text-center mb-7">
             <div className="login-brand">
@@ -121,19 +124,16 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {sessionExpired && !error && (
-            <div className="alert-banner alert-banner--warning mb-4">
-              <ShieldAlert size={16} className="alert-banner__icon" />
-              <span>Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.</span>
+          <div
+            className={`login-alert-slot${alertMessage ? ' login-alert-slot--visible' : ''}`}
+            role="alert"
+            aria-live="polite"
+          >
+            <div className={`alert-banner alert-banner--${alertVariant}`}>
+              <ShieldAlert size={16} className="alert-banner__icon" aria-hidden />
+              <span>{alertMessage || '\u00A0'}</span>
             </div>
-          )}
-
-          {error && (
-            <div className="alert-banner alert-banner--error mb-4">
-              <ShieldAlert size={16} className="alert-banner__icon" />
-              <span>{error}</span>
-            </div>
-          )}
+          </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
@@ -243,10 +243,14 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="btn btn-primary w-full py-3 text-sm font-bold rounded-full mt-2"
+              className="btn btn-primary login-submit-btn w-full py-3 text-sm font-bold rounded-full mt-2"
               disabled={loading}
+              aria-busy={loading}
             >
-              {loading ? 'ĐANG XỬ LÝ...' : 'ĐĂNG NHẬP'}
+              <span className="login-submit-btn__label">ĐĂNG NHẬP</span>
+              {loading && (
+                <Loader2 size={18} className="login-submit-btn__spinner" aria-hidden />
+              )}
             </button>
           </form>
 

@@ -111,6 +111,8 @@ export interface Import {
   id: string;
   voucherCode: string;
   date: string;
+  /** ISO datetime — thời điểm tạo phiếu */
+  createdAt?: string;
   supplier: string;
   referenceCode: string;
   totalValue: number;
@@ -146,6 +148,8 @@ export interface Export {
   id: string;
   voucherCode: string;
   date: string;
+  /** ISO datetime — thời điểm tạo phiếu */
+  createdAt?: string;
   soCode: string;
   customer: string;
   warehouseId: string;
@@ -177,6 +181,8 @@ export interface Transfer {
   id: string;
   voucherCode: string;
   date: string;
+  /** ISO datetime — thời điểm tạo phiếu */
+  createdAt?: string;
   fromWarehouseId: string;
   fromWarehouseName: string;
   toWarehouseId: string;
@@ -308,6 +314,8 @@ export interface Toast {
   message: string;
   title: string;
   duration: number;
+  /** Bumped to reset auto-dismiss timer without stacking toasts. */
+  revision: number;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

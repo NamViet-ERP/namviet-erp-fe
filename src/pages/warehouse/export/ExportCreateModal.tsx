@@ -7,7 +7,9 @@ import QtyStepper from '../../../components/ui/QtyStepper';
 import MaterialAutocomplete from '../../../components/ui/MaterialAutocomplete';
 import { fmtStockQty } from '../../../lib/wms/stockQtyFormat';
 import type { MaterialQtyLine } from '../voucher/voucherFormTypes';
+import { emptyQtyLine } from '../voucher/voucherFormTypes';
 import { availableExportQty } from './exportUtils';
+import type { ExportFormFieldErrors } from '../../../lib/wms/exportFormSchema';
 
 interface ExportCreateModalProps {
   isOpen: boolean;
@@ -24,6 +26,7 @@ interface ExportCreateModalProps {
   onNoteChange: (note: string) => void;
   items: MaterialQtyLine[];
   onItemsChange: (items: MaterialQtyLine[]) => void;
+  errors?: ExportFormFieldErrors;
   onCreate: (status: 'draft' | 'pending') => void;
   materialUnit: (code: string) => string;
 }
@@ -43,6 +46,7 @@ export default function ExportCreateModal({
   onNoteChange,
   items,
   onItemsChange,
+  errors,
   onCreate,
   materialUnit,
 }: ExportCreateModalProps) {
@@ -57,17 +61,19 @@ export default function ExportCreateModal({
       footer={
         <>
           <button type="button" className="btn btn-outline" onClick={onClose}>Hủy</button>
-          <button type="button" className="btn btn-outline" disabled={isPending} onClick={() => onCreate('draft')}>
-            Lưu nháp
-          </button>
-          <button type="button" className="btn btn-filled" disabled={isPending} onClick={() => onCreate('pending')}>
-            Chốt phiếu
-          </button>
+          <div className="md-dialog__footer-actions">
+            <button type="button" className="btn btn-outline" disabled={isPending} onClick={() => onCreate('draft')}>
+              Lưu nháp
+            </button>
+            <button type="button" className="btn btn-filled" disabled={isPending} onClick={() => onCreate('pending')}>
+              Chốt phiếu
+            </button>
+          </div>
         </>
       }
     >
       <div className="space-y-4 modal-form-bordered">
-        <FormField label="Kho dự án xuất vật tư" required>
+        <FormField label="Kho dự án xuất vật tư" required error={errors?.projectCode}>
           <select
             className="form-select"
             value={projectCode}
@@ -97,12 +103,15 @@ export default function ExportCreateModal({
             <button
               type="button"
               className="btn btn-outline btn-sm text-xs"
-              onClick={() => onItemsChange([...items, { materialCode: '', qty: '1' }])}
+              onClick={() => onItemsChange([...items, { ...emptyQtyLine }])}
               disabled={!projectCode}
             >
               <Plus size={12} /> Thêm vật tư
             </button>
           </div>
+          {errors?.items && (
+            <p className="text-xs text-[var(--md-error)]" role="alert">{errors.items}</p>
+          )}
           {!projectCode ? (
             <p className="text-[11px] text-[var(--md-on-surface-variant)]">Chọn kho dự án trước khi thêm vật tư.</p>
           ) : (

@@ -272,7 +272,7 @@ export default function SuppliersSettingsPanel() {
         isOpen={showForm}
         onClose={closeForm}
         title={editing ? 'Sửa nhà cung cấp' : 'Thêm nhà cung cấp'}
-        size="sm"
+        size="xl"
         footer={
           <>
             <button type="button" className="btn btn-outline" onClick={closeForm}>Hủy</button>
@@ -287,7 +287,7 @@ export default function SuppliersSettingsPanel() {
           </>
         }
       >
-        <form id="supplier-settings-form" className="space-y-3" onSubmit={handleSubmit}>
+        <form id="supplier-settings-form" className="space-y-3 modal-form-bordered" onSubmit={handleSubmit}>
           <FormField label="Mã NCC" required>
             <input
               className="form-input"

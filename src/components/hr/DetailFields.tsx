@@ -41,20 +41,37 @@ export function MaskedFieldView({ label, value }: { label: string; value?: strin
   );
 }
 
-export function FieldInput({ label, value, onChange, type = 'text', error }: {
+import HrmSelect from './HrmSelect';
+import { sanitizePhoneField, trimFieldValue } from '../../lib/hrm/sanitizeInput';
+
+export function FieldInput({ label, value, onChange, type = 'text', error, phone, trimOnBlur = true, placeholder, hint }: {
   label: string; value: string; onChange: (v: string) => void; type?: string; error?: string;
+  phone?: boolean; trimOnBlur?: boolean; placeholder?: string; hint?: string;
 }) {
+  const handleBlur = () => {
+    if (type === 'date') return;
+    let next = value;
+    if (phone) next = sanitizePhoneField(value);
+    else if (trimOnBlur) next = trimFieldValue(value);
+    if (next !== value) onChange(next);
+  };
+
   return (
     <div className="hrm-field">
       <label className="hrm-field__label">{label}</label>
+      {hint && (
+        <p className="text-[10px] text-[var(--md-on-surface-variant)] -mt-0.5 mb-1 leading-snug">{hint}</p>
+      )}
       {type === 'date' ? (
         <HrmDatePicker value={value} onChange={onChange} error={Boolean(error)} />
       ) : (
         <input
-          type={type}
+          type={phone ? 'tel' : type}
           className={`hrm-field-input ${error ? 'hrm-field-input--error' : ''}`}
           value={value}
           onChange={e => onChange(e.target.value)}
+          onBlur={handleBlur}
+          placeholder={placeholder}
         />
       )}
       {error && <p className="hrm-field__error">{error}</p>}
@@ -62,16 +79,18 @@ export function FieldInput({ label, value, onChange, type = 'text', error }: {
   );
 }
 
-export function FieldSelect({ label, value, onChange, options }: {
-  label: string; value: string; onChange: (v: string) => void; options: string[];
+export function FieldSelect({ label, value, onChange, options, placeholder = '—' }: {
+  label: string; value: string; onChange: (v: string) => void; options: string[]; placeholder?: string;
 }) {
   return (
     <div className="hrm-field">
       <label className="hrm-field__label">{label}</label>
-      <select className="hrm-field-select" value={value} onChange={e => onChange(e.target.value)}>
-        <option value="">—</option>
-        {options.map(o => <option key={o} value={o}>{o}</option>)}
-      </select>
+      <HrmSelect
+        value={value}
+        onChange={onChange}
+        options={options}
+        placeholder={placeholder}
+      />
     </div>
   );
 }

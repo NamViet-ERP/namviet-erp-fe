@@ -9,7 +9,7 @@ import PageHeader from '../../components/ui/PageHeader';
 import HrmPanel from '../../components/hr/HrmPanel';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
-import { validateExportCreate } from '../../lib/wms/exportFormSchema';
+import { validateExportCreate, getExportFormFieldErrors, type ExportFormFieldErrors } from '../../lib/wms/exportFormSchema';
 import {
   useExports,
   useCreateExport,
@@ -25,6 +25,8 @@ import { availableExportQty, inventoryRow } from './export/exportUtils';
 import ExportTable from './export/ExportTable';
 import ExportCreateModal from './export/ExportCreateModal';
 import ExportDetailModal from './export/ExportDetailModal';
+import VoucherDateFilter from '../../components/warehouse/VoucherDateFilter';
+import { isVoucherInDateRange } from '../../lib/wms/voucherDateUtils';
 
 export default function ExportListPageRoute() {
   const location = useLocation();
@@ -39,6 +41,8 @@ interface ExportListPageApiProps {
 function ExportListPageApi({ initialProjectCode }: ExportListPageApiProps) {
   const [activeTab, setActiveTab] = useState('all');
   const [search, setSearch] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_LIST_PAGE_SIZE);
   const [showCreate, setShowCreate] = useState(!!initialProjectCode);
@@ -49,6 +53,7 @@ function ExportListPageApi({ initialProjectCode }: ExportListPageApiProps) {
   const [referenceCode, setReferenceCode] = useState('');
   const [note, setNote] = useState('');
   const [items, setItems] = useState<MaterialQtyLine[]>([{ ...emptyQtyLine }]);
+  const [createErrors, setCreateErrors] = useState<ExportFormFieldErrors>({});
 
   const { data: exports = [], isLoading, isError, error } = useExports();
   const { data: materialsPage } = useMaterials({ pageSize: 200 });
@@ -91,8 +96,11 @@ function ExportListPageApi({ initialProjectCode }: ExportListPageApiProps) {
           e.soCode.toLowerCase().includes(q),
       );
     }
+    if (dateFrom || dateTo) {
+      list = list.filter(e => isVoucherInDateRange(e, dateFrom, dateTo));
+    }
     return list;
-  }, [exports, activeTab, search]);
+  }, [exports, activeTab, search, dateFrom, dateTo]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
@@ -108,22 +116,26 @@ function ExportListPageApi({ initialProjectCode }: ExportListPageApiProps) {
     setReferenceCode('');
     setNote('');
     setItems([{ ...emptyQtyLine }]);
+    setCreateErrors({});
   };
 
   const buildDto = (status: 'draft' | 'pending'): CreateExportDto | null => {
     const validItems = items.filter(it => it.materialCode && Number(it.qty) > 0);
-    const validation = validateExportCreate(projectCode.trim(), validItems);
-    if (!validation.success) {
-      showToast('error', validation.error.issues[0]?.message ?? 'Dữ liệu không hợp lệ');
-      return null;
-    }
-
     const overflow = validItems.some((it, idx) => {
       const max = availableExportQty(projectInventory, it.materialCode, items, idx);
       return Number(it.qty) > max;
     });
-    if (overflow) {
-      showToast('error', 'Số lượng xuất vượt tồn khả dụng tại kho dự án.');
+    const fieldErrors = getExportFormFieldErrors(projectCode, items, overflow);
+    if (Object.keys(fieldErrors).length > 0) {
+      setCreateErrors(fieldErrors);
+      showToast('error', 'Vui lòng kiểm tra lại các ô được đánh dấu.');
+      return null;
+    }
+    setCreateErrors({});
+
+    const validation = validateExportCreate(projectCode.trim(), validItems);
+    if (!validation.success) {
+      showToast('error', validation.error.issues[0]?.message ?? 'Dữ liệu không hợp lệ');
       return null;
     }
 
@@ -162,7 +174,7 @@ function ExportListPageApi({ initialProjectCode }: ExportListPageApiProps) {
         'success',
         status === 'draft'
           ? `Phiếu nháp ${created.voucherCode} — đã ghi dự kiến xuất.`
-          : `Phiếu ${created.voucherCode} đã chốt, chờ thủ kho duyệt.`,
+          : `Phiếu ${created.voucherCode} đã duyệt dự kiến, chờ thủ kho duyệt kho.`,
       );
       setShowCreate(false);
       resetForm();
@@ -174,7 +186,7 @@ function ExportListPageApi({ initialProjectCode }: ExportListPageApiProps) {
   const handleSubmit = async (exp: Export) => {
     try {
       await submitMutation.mutateAsync(exp.id);
-      showToast('success', `Đã chốt phiếu ${exp.voucherCode}`);
+      showToast('success', `Đã duyệt dự kiến phiếu ${exp.voucherCode}`);
     } catch (err) {
       showToast('error', getApiErrorMessage(err, 'Không thể chốt phiếu'));
     }
@@ -183,7 +195,7 @@ function ExportListPageApi({ initialProjectCode }: ExportListPageApiProps) {
   const handleApprove = async (exp: Export) => {
     try {
       await approveMutation.mutateAsync(exp.id);
-      showToast('success', `Thủ kho đã duyệt phiếu ${exp.voucherCode}`);
+      showToast('success', `Thủ kho đã duyệt kho phiếu ${exp.voucherCode}`);
     } catch (err) {
       showToast('error', getApiErrorMessage(err, 'Không thể duyệt phiếu'));
     }
@@ -220,6 +232,13 @@ function ExportListPageApi({ initialProjectCode }: ExportListPageApiProps) {
         <div className="hrm-list-toolbar">
           <div className="hrm-list-toolbar__filters">
             <SearchBar value={search} onChange={v => { setSearch(v); setPage(1); }} placeholder="Tìm mã chứng từ, kho dự án..." />
+            <VoucherDateFilter
+              from={dateFrom}
+              to={dateTo}
+              onFromChange={v => { setDateFrom(v); setPage(1); }}
+              onToChange={v => { setDateTo(v); setPage(1); }}
+              onReset={() => { setDateFrom(''); setDateTo(''); setPage(1); }}
+            />
           </div>
         </div>
 
@@ -255,13 +274,20 @@ function ExportListPageApi({ initialProjectCode }: ExportListPageApiProps) {
         stockMaterials={stockMaterials}
         projectInventory={projectInventory}
         projectCode={projectCode}
-        onProjectCodeChange={setProjectCode}
+        onProjectCodeChange={code => {
+          setProjectCode(code);
+          setCreateErrors(e => ({ ...e, projectCode: undefined }));
+        }}
         referenceCode={referenceCode}
         onReferenceCodeChange={setReferenceCode}
         note={note}
         onNoteChange={setNote}
         items={items}
-        onItemsChange={setItems}
+        onItemsChange={next => {
+          setItems(next);
+          setCreateErrors(e => ({ ...e, items: undefined }));
+        }}
+        errors={createErrors}
         onCreate={handleCreate}
         materialUnit={materialUnit}
       />

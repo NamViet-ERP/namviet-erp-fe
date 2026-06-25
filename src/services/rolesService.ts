@@ -1,6 +1,6 @@
 import { apiClient } from '../lib/apiClient';
-import { USE_MOCK } from '../lib/mock';
-import { readStore } from './mocks/rolesMockStore';
+import { resolveMock } from '../mocks';
+import { readStore } from '../mocks/services/rolesMockStore';
 
 export interface SystemRole {
   code: string;
@@ -9,10 +9,14 @@ export interface SystemRole {
 }
 
 const ROLES_ENDPOINT = '/api/admin/roles';
+const MOCK = () => import('../mocks/services/rolesService.mock');
 
 export interface CreateRoleDto {
   label: string;
-  code?: string;
+}
+
+export interface UpdateRoleDto {
+  label: string;
 }
 
 export interface RoleListParams {
@@ -26,61 +30,61 @@ export const rolesService = {
   },
 
   async listActiveOptions(): Promise<{ value: string; label: string }[]> {
-    if (USE_MOCK) {
-      const mock = await import('./mocks/rolesService.mock');
-      return mock.listActiveRoleOptionsMock();
-    }
-    const roles = await apiClient.get<SystemRole[]>(ROLES_ENDPOINT, { activeOnly: true });
-    return roles.map(r => ({ value: r.code, label: r.label }));
+    return resolveMock(
+      () => MOCK().then((m) => m.listActiveRoleOptionsMock()),
+      async () => {
+        const roles = await apiClient.get<SystemRole[]>(ROLES_ENDPOINT, { activeOnly: true });
+        return roles.map((r) => ({ value: r.code, label: r.label }));
+      },
+    );
   },
 
   getLabel(code: string): string | undefined {
-    return readStore().find(r => r.code === code)?.label;
+    return readStore().find((r) => r.code === code)?.label;
   },
 
   getActiveLabel(code: string): string | undefined {
-    const role = readStore().find(r => r.code === code);
+    const role = readStore().find((r) => r.code === code);
     return role?.isActive ? role.label : undefined;
   },
 
   async listAsync(params: RoleListParams = {}): Promise<SystemRole[]> {
-    if (USE_MOCK) {
-      const mock = await import('./mocks/rolesService.mock');
-      return mock.listRolesMock(params);
-    }
-    return apiClient.get<SystemRole[]>(ROLES_ENDPOINT, {
-      search: params.search?.trim() || undefined,
-      activeOnly: params.activeOnly ?? false,
-    });
+    return resolveMock(
+      () => MOCK().then((m) => m.listRolesMock(params)),
+      () => apiClient.get<SystemRole[]>(ROLES_ENDPOINT, {
+        search: params.search?.trim() || undefined,
+        activeOnly: params.activeOnly ?? false,
+      }),
+    );
   },
 
   async create(dto: CreateRoleDto): Promise<SystemRole> {
-    if (USE_MOCK) {
-      const mock = await import('./mocks/rolesService.mock');
-      return mock.createRoleMock(dto);
-    }
-
-    return apiClient.post<SystemRole>(ROLES_ENDPOINT, {
-      label: dto.label.trim(),
-      code: dto.code?.trim() || undefined,
-    });
+    return resolveMock(
+      () => MOCK().then((m) => m.createRoleMock(dto)),
+      () => apiClient.post<SystemRole>(ROLES_ENDPOINT, { label: dto.label.trim() }),
+    );
   },
 
   async toggleStatus(code: string): Promise<SystemRole> {
-    if (USE_MOCK) {
-      const mock = await import('./mocks/rolesService.mock');
-      return mock.toggleRoleStatusMock(code);
-    }
+    return resolveMock(
+      () => MOCK().then((m) => m.toggleRoleStatusMock(code)),
+      () => apiClient.patch<SystemRole>(`${ROLES_ENDPOINT}/${encodeURIComponent(code)}/toggle`),
+    );
+  },
 
-    return apiClient.patch<SystemRole>(`${ROLES_ENDPOINT}/${encodeURIComponent(code)}/toggle`);
+  async updateLabel(code: string, dto: UpdateRoleDto): Promise<SystemRole> {
+    return resolveMock(
+      () => MOCK().then((m) => m.updateRoleLabelMock(code, dto)),
+      () => apiClient.patch<SystemRole>(`${ROLES_ENDPOINT}/${encodeURIComponent(code)}`, {
+        label: dto.label.trim(),
+      }),
+    );
   },
 
   async remove(code: string): Promise<void> {
-    if (USE_MOCK) {
-      const mock = await import('./mocks/rolesService.mock');
-      return mock.removeRoleMock(code);
-    }
-
-    await apiClient.delete<void>(`${ROLES_ENDPOINT}/${encodeURIComponent(code)}`);
+    return resolveMock(
+      () => MOCK().then((m) => m.removeRoleMock(code)),
+      async () => { await apiClient.delete<void>(`${ROLES_ENDPOINT}/${encodeURIComponent(code)}`); },
+    );
   },
 };

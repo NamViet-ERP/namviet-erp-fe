@@ -1,5 +1,5 @@
 import { useState, useRef, type CSSProperties } from 'react';
-import { useForm, useWatch, type FieldErrors } from 'react-hook-form';
+import { useForm, useWatch, Controller, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Upload, FileText, Trash2, CheckCircle2, ChevronRight } from 'lucide-react';
@@ -8,26 +8,31 @@ import { candidatesService } from '../../services/candidatesService';
 import { filesService } from '../../services/filesService';
 import FormSectionHeader from '../hr/FormSectionHeader';
 import HrmDatePicker from '../hr/HrmDatePicker';
+import HrmFieldLabel, { hrmFieldClass } from '../hr/HrmFieldLabel';
+import HrmSelect from '../hr/HrmSelect';
 import { RECRUITMENT_SOURCES, EDUCATION_LEVELS } from '../../constants/recruitment';
 import { useActivePositions } from '../../hooks/usePositions';
 import { useHrStaffSelectOptions } from '../../hooks/useHrStaff';
+import { validateFullName } from '../../lib/hrm/validateFullName';
+import { zPhoneField, zTrimmedString } from '../../lib/hrm/sanitizeInput';
+import { registerHrmPhone, registerHrmText } from '../../lib/hrm/registerHrmField';
 
 const candidateSchema = z.object({
-  fullName: z.string().min(2, 'Họ và tên phải có ít nhất 2 ký tự'),
-  phone: z.string()
-    .min(10, 'Số điện thoại phải từ 10 số')
-    .max(11, 'Số điện thoại không quá 11 số')
-    .regex(/^(0|\+84)[3|5|7|8|9][0-9]{8}$/, 'Số điện thoại không đúng định dạng Việt Nam (ví dụ: 0912345678)'),
-  email: z.string().min(1, 'Email là bắt buộc').email('Email không đúng định dạng'),
+  fullName: zTrimmedString().superRefine((val, ctx) => {
+    const message = validateFullName(val);
+    if (message) ctx.addIssue({ code: 'custom', message });
+  }),
+  phone: zPhoneField(),
+  email: zTrimmedString().min(1, 'Vui lòng nhập email').email('Vui lòng nhập email hợp lệ'),
   gender: z.enum(['Nam', 'Nữ'], { message: 'Vui lòng chọn giới tính' }),
-  address: z.string().min(5, 'Địa chỉ hiện tại phải từ 5 ký tự'),
-  birthDate: z.string().min(1, 'Năm sinh là bắt buộc'),
+  address: zTrimmedString().min(5, 'Vui lòng nhập địa chỉ hiện tại'),
+  birthDate: z.string().min(1, 'Vui lòng chọn năm sinh'),
   education: z.enum(EDUCATION_LEVELS, { message: 'Vui lòng chọn trình độ học vấn' }),
   position: z.string().min(1, 'Vui lòng chọn vị trí ứng tuyển'),
-  experience: z.string().optional(),
+  experience: zTrimmedString().optional(),
   source: z.enum(RECRUITMENT_SOURCES, { message: 'Vui lòng chọn nguồn ứng tuyển' }),
-  school: z.string().min(2, 'Vui lòng nhập tên trường'),
-  major: z.string().min(2, 'Vui lòng nhập chuyên ngành'),
+  school: zTrimmedString().min(2, 'Vui lòng nhập tên trường'),
+  major: zTrimmedString().min(2, 'Vui lòng nhập chuyên ngành'),
   hrResponsible: z.string().min(1, 'Vui lòng chọn HR phụ trách'),
 });
 
@@ -264,17 +269,17 @@ export default function CandidateForm() {
 
       <div className="hrm-form-grid">
         <div data-form-field="fullName">
-          <label className="hrm-field__label">Họ và tên *</label>
+          <HrmFieldLabel required>Họ và tên</HrmFieldLabel>
           <input
             type="text"
-            className={`hrm-field-input${errors.fullName ? ' hrm-field-input--error' : ''}`}
+            className={hrmFieldClass(Boolean(errors.fullName))}
             placeholder="Nhập họ tên"
-            {...register('fullName')}
+            {...registerHrmText(register, setValue, 'fullName')}
           />
           {errors.fullName && <p className="hrm-field__error">{errors.fullName.message}</p>}
         </div>
         <div data-form-field="birthDate">
-          <label className="hrm-field__label">Năm sinh *</label>
+          <HrmFieldLabel required>Năm sinh</HrmFieldLabel>
           <HrmDatePicker
             value={birthDate}
             onChange={v => setValue('birthDate', v, { shouldValidate: true })}
@@ -288,29 +293,29 @@ export default function CandidateForm() {
 
       <div className="hrm-form-grid">
         <div data-form-field="phone">
-          <label className="hrm-field__label">Số điện thoại *</label>
+          <HrmFieldLabel required>Số điện thoại</HrmFieldLabel>
           <input
             type="tel"
-            className={`hrm-field-input${errors.phone ? ' hrm-field-input--error' : ''}`}
+            className={hrmFieldClass(Boolean(errors.phone))}
             placeholder="Nhập số điện thoại"
-            {...register('phone')}
+            {...registerHrmPhone(register, setValue, 'phone')}
           />
           {errors.phone && <p className="hrm-field__error">{errors.phone.message}</p>}
         </div>
         <div data-form-field="email">
-          <label className="hrm-field__label">Email *</label>
+          <HrmFieldLabel required>Email</HrmFieldLabel>
           <input
             type="text"
             inputMode="email"
             autoComplete="email"
-            className={`hrm-field-input${errors.email ? ' hrm-field-input--error' : ''}`}
+            className={hrmFieldClass(Boolean(errors.email))}
             placeholder="Nhập email"
-            {...register('email')}
+            {...registerHrmText(register, setValue, 'email')}
           />
           {errors.email && <p className="hrm-field__error">{errors.email.message}</p>}
         </div>
         <div data-form-field="gender">
-          <label className="hrm-field__label">Giới tính *</label>
+          <HrmFieldLabel required>Giới tính</HrmFieldLabel>
           <div className="hrm-radio-row">
             {(['Nam', 'Nữ'] as const).map(g => (
               <label key={g}>
@@ -326,12 +331,12 @@ export default function CandidateForm() {
           {errors.gender && <p className="hrm-field__error">{errors.gender.message}</p>}
         </div>
         <div data-form-field="address">
-          <label className="hrm-field__label">Địa chỉ hiện tại *</label>
+          <HrmFieldLabel required>Địa chỉ hiện tại</HrmFieldLabel>
           <input
             type="text"
-            className={`hrm-field-input${errors.address ? ' hrm-field-input--error' : ''}`}
+            className={hrmFieldClass(Boolean(errors.address))}
             placeholder="Xã/Phường, Quận/Huyện, Tỉnh/Thành..."
-            {...register('address')}
+            {...registerHrmText(register, setValue, 'address')}
           />
           {errors.address && <p className="hrm-field__error">{errors.address.message}</p>}
         </div>
@@ -341,7 +346,7 @@ export default function CandidateForm() {
 
       <div className="hrm-form-grid">
         <div data-form-field="education">
-          <label className="hrm-field__label">Trình độ học vấn *</label>
+          <HrmFieldLabel required>Trình độ học vấn</HrmFieldLabel>
           <div className="hrm-radio-row">
             {EDUCATION_LEVELS.map(edu => (
               <label key={edu}>
@@ -357,52 +362,61 @@ export default function CandidateForm() {
           {errors.education && <p className="hrm-field__error">{errors.education.message}</p>}
         </div>
         <div data-form-field="position">
-          <label className="hrm-field__label">Vị trí ứng tuyển *</label>
-          <select className={`hrm-field-select h-11${errors.position ? ' hrm-field-input--error' : ''}`} {...register('position')}>
-            <option value="">-- Chọn vị trí ứng tuyển --</option>
-            {positions.map(pos => (
-              <option key={pos} value={pos}>{pos}</option>
-            ))}
-          </select>
+          <HrmFieldLabel required>Vị trí ứng tuyển</HrmFieldLabel>
+          <Controller
+            name="position"
+            control={control}
+            render={({ field }) => (
+              <HrmSelect
+                className="h-11"
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                options={positions}
+                placeholder="-- Chọn vị trí ứng tuyển --"
+                error={Boolean(errors.position)}
+              />
+            )}
+          />
           {errors.position && <p className="hrm-field__error">{errors.position.message}</p>}
         </div>
       </div>
 
       <div className="hrm-form-grid">
         <div data-form-field="school">
-          <label className="hrm-field__label">Trường đào tạo *</label>
+          <HrmFieldLabel required>Trường đào tạo</HrmFieldLabel>
           <input
             type="text"
-            className={`hrm-field-input${errors.school ? ' hrm-field-input--error' : ''}`}
+            className={hrmFieldClass(Boolean(errors.school))}
             placeholder="Nhập tên trường"
-            {...register('school')}
+            {...registerHrmText(register, setValue, 'school')}
           />
           {errors.school && <p className="hrm-field__error">{errors.school.message}</p>}
         </div>
         <div data-form-field="major">
-          <label className="hrm-field__label">Chuyên ngành *</label>
+          <HrmFieldLabel required>Chuyên ngành</HrmFieldLabel>
           <input
             type="text"
-            className={`hrm-field-input${errors.major ? ' hrm-field-input--error' : ''}`}
+            className={hrmFieldClass(Boolean(errors.major))}
             placeholder="Nhập chuyên ngành"
-            {...register('major')}
+            {...registerHrmText(register, setValue, 'major')}
           />
           {errors.major && <p className="hrm-field__error">{errors.major.message}</p>}
         </div>
       </div>
 
       <div>
-        <label className="hrm-field__label">Số năm kinh nghiệm *</label>
+        <HrmFieldLabel required>Số năm kinh nghiệm</HrmFieldLabel>
         <input
           type="text"
           className="hrm-field-input"
           placeholder="Ví dụ: Chưa có, 2 năm, 5 năm..."
-          {...register('experience')}
+          {...registerHrmText(register, setValue, 'experience')}
         />
       </div>
 
       <div data-form-field="source">
-        <label className="hrm-field__label">Nguồn ứng tuyển *</label>
+        <HrmFieldLabel required>Nguồn ứng tuyển</HrmFieldLabel>
         <div className="hrm-radio-row">
           {RECRUITMENT_SOURCES.map(src => (
             <label key={src}>
@@ -419,20 +433,29 @@ export default function CandidateForm() {
       </div>
 
       <div data-form-field="hrResponsible">
-        <label className="hrm-field__label">HR phụ trách *</label>
-        <select className={`hrm-field-select h-11${errors.hrResponsible ? ' hrm-field-input--error' : ''}`} {...register('hrResponsible')}>
-          <option value="">-- Chọn HR phụ trách --</option>
-          {hrStaffOptions.map(name => (
-            <option key={name} value={name}>{name}</option>
-          ))}
-        </select>
+        <HrmFieldLabel required>HR phụ trách</HrmFieldLabel>
+        <Controller
+          name="hrResponsible"
+          control={control}
+          render={({ field }) => (
+            <HrmSelect
+              className="h-11"
+              value={field.value ?? ''}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              options={hrStaffOptions}
+              placeholder="-- Chọn HR phụ trách --"
+              error={Boolean(errors.hrResponsible)}
+            />
+          )}
+        />
         {errors.hrResponsible && <p className="hrm-field__error">{errors.hrResponsible.message}</p>}
       </div>
       <div className="candidate-upload-header">
         <FormSectionHeader step={3} title="Tải lên CV" />
       </div>
       <div ref={cvSectionRef}>
-        <label className="hrm-field__label">File CV *</label>
+        <HrmFieldLabel required>File CV</HrmFieldLabel>
 
         {!cvFile ? (
           <div

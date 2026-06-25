@@ -12,9 +12,10 @@ import { EMPLOYEE_STATUSES } from '../../constants/recruitment';
 import { calcSeniority } from '../../types/hr';
 import type { Employee, FileAttachment } from '../../types/hr';
 import { formatDateVi } from '../../lib/hrm/formatters';
+import { sanitizeEmployeeForSave } from '../../lib/hrm/sanitizeInput';
 import { toFileAttachment } from '../../lib/hrm/attachments';
 import type { LocalFileState } from '../../components/hr/HrmImageUpload';
-import { USE_MOCK } from '../../lib/mock';
+import { USE_MOCK } from '../../mocks';
 import { filesService, type UploadCategory } from '../../services/filesService';
 import DetailSection from '../../components/hr/DetailSection';
 import DetailFieldGrid from '../../components/hr/DetailFieldGrid';
@@ -123,7 +124,7 @@ export default function EmployeeDetailPage() {
         uploadIfNeeded(pendingDegree, 'degree', form.degreePhoto),
       ]);
 
-      const dto = { ...form, profilePhoto, cccdFront, cccdBack, degreePhoto } as Record<string, unknown>;
+      const dto = sanitizeEmployeeForSave({ ...form, profilePhoto, cccdFront, cccdBack, degreePhoto } as Record<string, unknown>);
       delete dto.id;
       const updated = await updateMutation.mutateAsync({ id, dto });
       setForm({ ...updated });
@@ -311,7 +312,7 @@ export default function EmployeeDetailPage() {
           {isEditing ? (
             <>
               <FieldInput label="Email cá nhân" value={form.personalEmail ?? ''} onChange={v => setField('personalEmail', v)} />
-              <FieldInput label="SĐT cá nhân" value={form.personalPhone ?? ''} onChange={v => setField('personalPhone', v)} />
+              <FieldInput label="SĐT cá nhân" value={form.personalPhone ?? ''} onChange={v => setField('personalPhone', v)} phone />
               <FieldInput label="Địa chỉ thường trú" value={form.permanentAddress ?? ''} onChange={v => setField('permanentAddress', v)} />
               <FieldInput label="Địa chỉ tạm trú" value={form.temporaryAddress ?? ''} onChange={v => setField('temporaryAddress', v)} />
             </>

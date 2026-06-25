@@ -16,7 +16,7 @@ export default function VoucherDetailFooter({
   isApprovePending,
 }: VoucherDetailFooterProps) {
   const canSubmit = status === 'draft' && onSubmit;
-  const canApprove = (status === 'draft' || status === 'pending') && onApprove;
+  const canApprove = status === 'pending' && onApprove;
 
   if (!canSubmit && !canApprove) return null;
 
@@ -29,7 +29,7 @@ export default function VoucherDetailFooter({
           disabled={isSubmitPending}
           onClick={onSubmit}
         >
-          Chốt phiếu
+          Duyệt dự kiến
         </button>
       )}
       {canApprove && (
@@ -39,7 +39,7 @@ export default function VoucherDetailFooter({
           disabled={isApprovePending}
           onClick={onApprove}
         >
-          Thủ kho duyệt
+          Duyệt kho
         </button>
       )}
     </>

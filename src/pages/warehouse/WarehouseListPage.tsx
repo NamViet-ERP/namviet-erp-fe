@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Plus, Edit, Trash2, MapPin, Eye } from 'lucide-react';
-import { warehouses as initialWarehouses, warehouseGroups, branches } from '../../data/warehouses';
+import { warehouses as initialWarehouses, warehouseGroups, branches } from '../../mocks/data/warehouses';
 import { showToast } from '../../components/ui/Toast';
 import Modal from '../../components/ui/Modal';
 import SearchBar from '../../components/ui/SearchBar';
@@ -169,13 +169,13 @@ export default function WarehouseListPage() {
 
       {/* Create/Edit modal */}
       <Modal isOpen={showModal} onClose={() => { setShowModal(false); setErrors({}); }}
-        title={editingItem ? 'Chỉnh sửa kho' : 'Tạo kho mới'} size="lg"
+        title={editingItem ? 'Chỉnh sửa kho' : 'Tạo kho mới'} size="xl"
         footer={<>
           <button onClick={() => { setShowModal(false); setErrors({}); }} className="btn btn-outline">Hủy bỏ</button>
           <button onClick={handleSave} className="btn btn-primary">{editingItem ? 'Cập nhật' : 'Tạo mới'}</button>
         </>}
       >
-        <div className="grid grid-cols-2 gap-4">
+        <div className="modal-form-bordered grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField label="Mã kho" required error={errors.code}>
             <input className="form-input" value={form.code}
               onChange={e => setForm({...form, code: e.target.value})} placeholder="VD: KHO-HCM"
@@ -203,7 +203,7 @@ export default function WarehouseListPage() {
           </FormField>
           <FormField label="Nhân viên phụ trách" required error={errors.manager} className="col-span-2">
             <select
-              className={`form-select ${errors.manager ? 'border-[var(--md-error)]' : ''}`}
+              className="form-select"
               value={form.manager}
               onChange={e => setForm({ ...form, manager: e.target.value })}
             >
@@ -220,7 +220,7 @@ export default function WarehouseListPage() {
 
       {/* Detail modal */}
       <Modal isOpen={showDetail} onClose={() => setShowDetail(false)}
-        title={`Chi tiết kho — ${detailItem?.code || ''}`} size="lg"
+        title={`Chi tiết kho — ${detailItem?.code || ''}`} size="xl"
         footer={<>
           <button className="btn btn-outline" onClick={() => { setShowDetail(false); if (detailItem) openEdit(detailItem); }}>
             <Edit size={14} /> Chỉnh sửa

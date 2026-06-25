@@ -21,6 +21,7 @@ export const WMS_ERROR = {
   loadSuppliers: 'Không tải được danh mục nhà cung cấp.',
   loadCategories: 'Không tải được cây vật tư.',
   loadMaterials: 'Không tải được danh sách vật tư.',
+  loadMaterialUnits: 'Không tải được danh sách đơn vị tính.',
   loadHistory: 'Không tải được lịch sử phiếu kho dự án.',
   network: 'Không kết nối được máy chủ. Kiểm tra kết nối mạng và thử lại.',
   timeout: 'Yêu cầu quá thời gian chờ. Vui lòng thử lại.',

@@ -37,10 +37,11 @@ export default function App() {
             <Route path="/warehouse/export" element={<Pages.ExportListPage />} />
             <Route path="/warehouse/settings" element={<Navigate to="/warehouse/settings/material-categories" replace />} />
             <Route path="/warehouse/settings/material-categories" element={<Pages.SettingsPage />} />
+            <Route path="/warehouse/settings/material-units" element={<Pages.SettingsPage />} />
             <Route path="/warehouse/settings/suppliers" element={<Pages.SettingsPage />} />
 
             <Route path="/stocktake/list" element={<Pages.StocktakeListPage />} />
-            <Route path="/stocktake/adjustment" element={<Pages.AdjustmentListPage />} />
+            <Route path="/stocktake/adjustment" element={<Navigate to="/stocktake/list" replace />} />
             <Route path="/stocktake/settings" element={<Pages.StocktakeSettingsPage />} />
 
             <Route path="/members/list" element={<Pages.MembersPage />} />

@@ -6,6 +6,7 @@ interface Props {
   className?: string;
   placeholder?: string;
   min?: number;
+  suffix?: string;
 }
 
 export default function CurrencyInput({
@@ -14,14 +15,15 @@ export default function CurrencyInput({
   className = 'form-input text-xs text-right input-no-spinner',
   placeholder = '0',
   min = 0,
+  suffix,
 }: Props) {
   const display = value === '' ? '' : formatCurrencyInput(parseCurrencyInput(value));
 
-  return (
+  const input = (
     <input
       type="text"
       inputMode="numeric"
-      className={className}
+      className={suffix ? `currency-input-group__input ${className}`.trim() : className}
       placeholder={placeholder}
       value={display}
       onChange={e => {
@@ -34,5 +36,16 @@ export default function CurrencyInput({
         onChange(numeric > 0 ? String(numeric) : '', numeric);
       }}
     />
+  );
+
+  if (!suffix) return input;
+
+  return (
+    <div className="currency-input-group">
+      {input}
+      <span className="currency-input-group__suffix" aria-hidden>
+        {suffix}
+      </span>
+    </div>
   );
 }

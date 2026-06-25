@@ -3,6 +3,8 @@ import VoucherDetailModal from '../../../components/warehouse/VoucherDetailModal
 import VoucherDetailFooter from '../../../components/warehouse/VoucherDetailFooter';
 import { displayValue } from '../../../components/warehouse/voucherDetailUtils';
 import { exportProjectLabel, exportStatusHint } from './exportUtils';
+import { formatDateTimeVi } from '../../../lib/hrm/formatters';
+import { getVoucherCreatedAt } from '../../../lib/wms/voucherDateUtils';
 
 interface ExportDetailModalProps {
   isOpen: boolean;
@@ -37,6 +39,10 @@ export default function ExportDetailModal({
       fields={[
         { label: 'Kho dự án', value: exportProjectLabel(selected) },
         { label: 'Mã tham chiếu', value: displayValue(selected.soCode) },
+        {
+          label: 'Tạo lúc',
+          value: displayValue(formatDateTimeVi(getVoucherCreatedAt(selected)?.toISOString())),
+        },
         { label: 'Người lập', value: displayValue(selected.createdBy) },
         { label: 'Ghi chú', value: displayValue(selected.note), wide: true },
       ]}

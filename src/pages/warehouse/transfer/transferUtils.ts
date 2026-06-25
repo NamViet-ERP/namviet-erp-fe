@@ -6,8 +6,8 @@ export type TransferMode = 'return' | 'cross-project';
 
 export function transferStatusHint(status: Transfer['status'], isCrossProject: boolean) {
   if (status === 'draft') return 'Nháp — giữ tồn khả dụng dự án';
-  if (status === 'pending') return 'Chờ thủ kho duyệt';
-  if (status === 'approved') return isCrossProject ? 'Đã chuyển sang kho dự án đích' : 'Đã hoàn về kho tổng';
+  if (status === 'pending') return 'Đã duyệt dự kiến — chờ thủ kho duyệt kho';
+  if (status === 'approved') return isCrossProject ? 'Đã duyệt kho — chuyển sang kho dự án đích' : 'Đã duyệt kho — hoàn về kho tổng';
   return '';
 }
 

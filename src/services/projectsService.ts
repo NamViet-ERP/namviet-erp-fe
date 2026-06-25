@@ -1,5 +1,5 @@
 import { apiClient } from '../lib/apiClient';
-import { USE_MOCK } from '../lib/mock';
+import { resolveMock } from '../mocks';
 import type {
   CreateWarehouseProjectRequest,
   PagedApiResult,
@@ -9,6 +9,7 @@ import type {
 } from '../types/wms';
 
 const ENDPOINT = '/api/warehouse/projects';
+const MOCK = () => import('../mocks/services/projectsService.mock');
 
 export interface ProjectListParams {
   page?: number;
@@ -19,61 +20,55 @@ export interface ProjectListParams {
 
 export const projectsService = {
   async list(params: ProjectListParams = {}): Promise<PagedApiResult<WarehouseProjectApiDto>> {
-    if (USE_MOCK) {
-      const mock = await import('./mocks/projectsService.mock');
-      return mock.listProjectsMock(params);
-    }
-    return apiClient.get<PagedApiResult<WarehouseProjectApiDto>>(ENDPOINT, {
-      page: params.page,
-      pageSize: params.pageSize,
-      search: params.search,
-      status: params.status,
-    });
+    return resolveMock(
+      () => MOCK().then((m) => m.listProjectsMock(params)),
+      () => apiClient.get<PagedApiResult<WarehouseProjectApiDto>>(ENDPOINT, {
+        page: params.page,
+        pageSize: params.pageSize,
+        search: params.search,
+        status: params.status,
+      }),
+    );
   },
 
   async getByCode(code: string): Promise<WarehouseProjectApiDto> {
-    if (USE_MOCK) {
-      const mock = await import('./mocks/projectsService.mock');
-      return mock.getProjectMock(code);
-    }
-    return apiClient.get<WarehouseProjectApiDto>(`${ENDPOINT}/${encodeURIComponent(code)}`);
+    return resolveMock(
+      () => MOCK().then((m) => m.getProjectMock(code)),
+      () => apiClient.get<WarehouseProjectApiDto>(`${ENDPOINT}/${encodeURIComponent(code)}`),
+    );
   },
 
   async getInventory(code: string): Promise<WarehouseProjectInventoryApiDto[]> {
-    if (USE_MOCK) {
-      const mock = await import('./mocks/projectsService.mock');
-      return mock.getProjectInventoryMock(code);
-    }
-    return apiClient.get<WarehouseProjectInventoryApiDto[]>(
-      `${ENDPOINT}/${encodeURIComponent(code)}/inventory`,
+    return resolveMock(
+      () => MOCK().then((m) => m.getProjectInventoryMock(code)),
+      () => apiClient.get<WarehouseProjectInventoryApiDto[]>(
+        `${ENDPOINT}/${encodeURIComponent(code)}/inventory`,
+      ),
     );
   },
 
   async create(body: CreateWarehouseProjectRequest): Promise<WarehouseProjectApiDto> {
-    if (USE_MOCK) {
-      const mock = await import('./mocks/projectsService.mock');
-      return mock.createProjectMock(body);
-    }
-    return apiClient.post<WarehouseProjectApiDto>(ENDPOINT, body);
+    return resolveMock(
+      () => MOCK().then((m) => m.createProjectMock(body)),
+      () => apiClient.post<WarehouseProjectApiDto>(ENDPOINT, body),
+    );
   },
 
   async getLedger(code: string): Promise<WarehouseProjectLedgerEntryApiDto[]> {
-    if (USE_MOCK) {
-      const mock = await import('./mocks/projectsService.mock');
-      return mock.getProjectLedgerMock(code);
-    }
-    return apiClient.get<WarehouseProjectLedgerEntryApiDto[]>(
-      `${ENDPOINT}/${encodeURIComponent(code)}/ledger`,
+    return resolveMock(
+      () => MOCK().then((m) => m.getProjectLedgerMock(code)),
+      () => apiClient.get<WarehouseProjectLedgerEntryApiDto[]>(
+        `${ENDPOINT}/${encodeURIComponent(code)}/ledger`,
+      ),
     );
   },
 
   async closeProject(code: string): Promise<{ projectCode: string; status: string }> {
-    if (USE_MOCK) {
-      const mock = await import('./mocks/projectsService.mock');
-      return mock.closeProjectMock(code);
-    }
-    return apiClient.post<{ projectCode: string; status: string }>(
-      `${ENDPOINT}/${encodeURIComponent(code)}/close`,
+    return resolveMock(
+      () => MOCK().then((m) => m.closeProjectMock(code)),
+      () => apiClient.post<{ projectCode: string; status: string }>(
+        `${ENDPOINT}/${encodeURIComponent(code)}/close`,
+      ),
     );
   },
 };

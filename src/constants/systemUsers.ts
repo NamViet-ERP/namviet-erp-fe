@@ -1,8 +1,7 @@
 import { isAccountActiveForEmployee } from '../services/employeesService';
 import { rolesService } from '../services/rolesService';
-import { USE_MOCK } from '../lib/mock';
-import { createMockLocalStore } from '../lib/mockLocalStore';
-import { SEED_SYSTEM_USERS } from '../data/systemUsersSeed';
+import { USE_MOCK, createMockLocalStore } from '../mocks';
+import { SEED_SYSTEM_USERS } from '../mocks/data/systemUsersSeed';
 import { isActiveEmployee, type Employee } from '../types/hr';
 import type { CreateSystemUserDto, SystemUser, SystemUserRole } from '../types/systemUser';
 

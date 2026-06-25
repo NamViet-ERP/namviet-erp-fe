@@ -22,7 +22,7 @@ export default function Dropdown({ trigger, items, className = '' }: DropdownPro
   const menuRef = useRef<HTMLDivElement>(null);
 
   const calculatePosition = useCallback(() => {
-    if (!ref.current || !open) return;
+    if (!ref.current) return;
     const rect = ref.current.getBoundingClientRect();
     const spaceBelow = window.innerHeight - rect.bottom;
     const menuHeight = Math.min(items.length * 48 + 16, 300);
@@ -36,11 +36,15 @@ export default function Dropdown({ trigger, items, className = '' }: DropdownPro
       minWidth: `${Math.max(rect.width, 200)}px`,
       zIndex: 99999,
     });
-  }, [open, items.length]);
+  }, [items.length]);
 
   const handleToggle = () => {
-    if (!open) calculatePosition();
-    setOpen(!open);
+    if (open) {
+      setOpen(false);
+      return;
+    }
+    calculatePosition();
+    setOpen(true);
   };
 
   useEffect(() => {

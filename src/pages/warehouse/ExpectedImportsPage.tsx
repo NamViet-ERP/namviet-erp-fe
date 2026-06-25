@@ -1,140 +1,20 @@
-import { useState } from 'react';
 import { Search, RefreshCw, Send, CheckCircle2, AlertTriangle } from 'lucide-react';
-import { showToast } from '../../components/ui/Toast';
 import PageHeader from '../../components/ui/PageHeader';
-
-// Mock data for Expected Imports of Projects 1-4
-interface ExpectedItem {
-  id: string;
-  project: string;
-  sku: string;
-  name: string;
-  qty: number;
-  surplus: number;
-  unit: string;
-  date: string;
-}
-
-interface Requirement {
-  sku: string;
-  name: string;
-  needed: number;
-}
-
-interface TargetProject {
-  id: string;
-  name: string;
-  requirements: Requirement[];
-}
-
-interface ScanSource {
-  project: string;
-  surplusAvailable: number;
-  id: string;
-}
-
-interface ScanResult {
-  sku: string;
-  name: string;
-  needed: number;
-  availableSurplus: number;
-  allocated: number;
-  sources: ScanSource[];
-}
-
-const initialExpectedData: ExpectedItem[] = [
-  { id: 'exp-1', project: 'Dự án 1 - Khách sạn Mường Thanh', sku: 'MNK-TV-20', name: 'Máy nén khí trục vít 20HP', qty: 10, surplus: 3, unit: 'Cái', date: '10/06/2026' },
-  { id: 'exp-2', project: 'Dự án 1 - Khách sạn Mường Thanh', sku: 'BCK-1000', name: 'Bình chứa khí 1000L', qty: 5, surplus: 1, unit: 'Cái', date: '12/06/2026' },
-  { id: 'exp-3', project: 'Dự án 2 - Nhà máy Dệt Nam Định', sku: 'MSK-TNL-30', name: 'Máy sấy khí tác nhân lạnh', qty: 8, surplus: 2, unit: 'Bộ', date: '08/06/2026' },
-  { id: 'exp-4', project: 'Dự án 3 - Hóa dầu Nghi Sơn', sku: 'PK-DO-01', name: 'Phụ kiện đường ống cao cấp', qty: 120, surplus: 35, unit: 'Mét', date: '15/06/2026' },
-  { id: 'exp-5', project: 'Dự án 4 - Nhà máy Bia Heineken', sku: 'MNK-TV-50', name: 'Máy nén khí trục vít 50HP', qty: 4, surplus: 0, unit: 'Cái', date: '18/06/2026' },
-  { id: 'exp-6', project: 'Dự án 4 - Nhà máy Bia Heineken', sku: 'LCK-02', name: 'Bộ lọc khí thô đường ống', qty: 30, surplus: 10, unit: 'Bộ', date: '18/06/2026' },
-];
-
-const targetProjects: TargetProject[] = [
-  { id: 'proj-5', name: 'Dự án 5 - Chung cư Vinhomes Grand Park', requirements: [
-    { sku: 'MNK-TV-20', name: 'Máy nén khí trục vít 20HP', needed: 2 },
-    { sku: 'BCK-1000', name: 'Bình chứa khí 1000L', needed: 1 },
-    { sku: 'PK-DO-01', name: 'Phụ kiện đường ống cao cấp', needed: 10 }
-  ] },
-  { id: 'proj-6', name: 'Dự án 6 - Sân bay Long Thành', requirements: [
-    { sku: 'MSK-TNL-30', name: 'Máy sấy khí tác nhân lạnh', needed: 1 },
-    { sku: 'LCK-02', name: 'Bộ lọc khí thô đường ống', needed: 5 },
-    { sku: 'PK-DO-01', name: 'Phụ kiện đường ống cao cấp', needed: 20 }
-  ] }
-];
+import { useExpectedImportsCoordination } from '../../hooks/warehouse/useExpectedImportsCoordination';
 
 export default function ExpectedImportsPage() {
-  const [expectedData, setExpectedData] = useState<ExpectedItem[]>(initialExpectedData);
-  const [selectedTargetProject, setSelectedTargetProject] = useState('');
-  const [isScanning, setIsScanning] = useState(false);
-  const [scanResults, setScanResults] = useState<ScanResult[] | null>(null);
-  const [coordinationSuccess, setCoordinationSuccess] = useState(false);
-
-  const handleStartScan = () => {
-    if (!selectedTargetProject) {
-      showToast('error', 'Vui lòng chọn Dự án thụ hưởng để kiểm tra', 'Thiếu thông tin');
-      return;
-    }
-    setIsScanning(true);
-    setScanResults(null);
-    setCoordinationSuccess(false);
-
-    setTimeout(() => {
-      const target = targetProjects.find(p => p.id === selectedTargetProject);
-      const matches: ScanResult[] = [];
-
-      target!.requirements.forEach(req => {
-        const suppliers = expectedData.filter(item => item.sku === req.sku && item.surplus > 0);
-        const totalSurplus = suppliers.reduce((sum, item) => sum + item.surplus, 0);
-
-        if (totalSurplus > 0) {
-          const qtyToAllocate = Math.min(req.needed, totalSurplus);
-          matches.push({
-            sku: req.sku,
-            name: req.name,
-            needed: req.needed,
-            availableSurplus: totalSurplus,
-            allocated: qtyToAllocate,
-            sources: suppliers.map(s => ({
-              project: s.project,
-              surplusAvailable: s.surplus,
-              id: s.id
-            }))
-          });
-        }
-      });
-
-      setScanResults(matches);
-      setIsScanning(false);
-      showToast('success', `Đã quét và tìm thấy ${matches.length} loại vật tư có thể điều phối!`, 'Quét hoàn tất');
-    }, 1500);
-  };
-
-  const handleCreateCoordination = () => {
-    if (!scanResults || scanResults.length === 0) return;
-
-    const updatedExpected = expectedData.map(item => {
-      let matchedAlloc = 0;
-      scanResults.forEach(res => {
-        const sourceMatch = res.sources.find(src => src.id === item.id);
-        if (sourceMatch) {
-          matchedAlloc = res.allocated;
-        }
-      });
-      return {
-        ...item,
-        surplus: Math.max(0, item.surplus - matchedAlloc)
-      };
-    });
-
-    setExpectedData(updatedExpected);
-    setCoordinationSuccess(true);
-    setScanResults(null);
-    showToast('success', 'Đã tự động tạo Phiếu chuyển kho liên dự án thành công!', 'Điều phối hoàn tất');
-  };
-
-  const selectedProjObj = targetProjects.find(p => p.id === selectedTargetProject);
+  const {
+    expectedData,
+    targetProjects,
+    selectedTargetProject,
+    selectedProjObj,
+    isScanning,
+    scanResults,
+    coordinationSuccess,
+    handleStartScan,
+    handleCreateCoordination,
+    handleSelectTargetProject,
+  } = useExpectedImportsCoordination();
 
   return (
     <div className="page-shell">
@@ -195,14 +75,10 @@ export default function ExpectedImportsPage() {
                 <select
                   className="form-select w-full"
                   value={selectedTargetProject}
-                  onChange={(e) => {
-                    setSelectedTargetProject(e.target.value);
-                    setScanResults(null);
-                    setCoordinationSuccess(false);
-                  }}
+                  onChange={(e) => handleSelectTargetProject(e.target.value)}
                 >
                   <option value="">-- Chọn dự án cần cấp vật tư --</option>
-                  {targetProjects.map(proj => (
+                  {targetProjects.map((proj) => (
                     <option key={proj.id} value={proj.id}>{proj.name}</option>
                   ))}
                 </select>
@@ -212,7 +88,7 @@ export default function ExpectedImportsPage() {
                 <div className="wms-inset-card space-y-2">
                   <h3 className="wms-section-heading text-xs">Danh sách vật tư đang thiếu:</h3>
                   <div className="wms-kv-list">
-                    {selectedProjObj.requirements.map(req => (
+                    {selectedProjObj.requirements.map((req) => (
                       <div key={req.sku} className="wms-kv-row">
                         <span className="wms-kv-row__label truncate max-w-[180px]">{req.name}</span>
                         <span className="wms-kv-row__value">Thiếu: {req.needed}</span>
@@ -264,7 +140,7 @@ export default function ExpectedImportsPage() {
               </div>
 
               <div className="space-y-3">
-                {scanResults.map(res => (
+                {scanResults.map((res) => (
                   <div key={res.sku} className="wms-inset-card">
                     <div className="wms-result-card__title">{res.name}</div>
                     <div className="wms-kv-row">

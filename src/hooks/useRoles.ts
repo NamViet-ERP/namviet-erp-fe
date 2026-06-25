@@ -36,6 +36,17 @@ export function useToggleRoleStatus() {
   });
 }
 
+export function useUpdateRole() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ code, label }: { code: string; label: string }) =>
+      rolesService.updateLabel(code, { label }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.roles.all });
+    },
+  });
+}
+
 export function useDeleteRole() {
   const qc = useQueryClient();
   return useMutation({

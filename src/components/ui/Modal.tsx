@@ -13,10 +13,13 @@ interface ModalProps {
 }
 
 const sizeClass: Record<ModalSize, string> = {
+  /** Xác nhận / mật khẩu — gọn */
   sm: 'md-dialog--sm',
   md: 'md-dialog--md',
   lg: 'md-dialog--lg',
+  /** Form tạo/sửa, chi tiết đọc — chuẩn ERP */
   xl: 'md-dialog--xl',
+  /** Phiếu chứng từ có bảng nhiều dòng */
   full: 'md-dialog--full',
 };
 

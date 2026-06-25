@@ -10,6 +10,9 @@ export default defineConfig(({ mode }) => {
     // Base public path. Override with VITE_BASE_PATH when hosting under a
     // sub-path (e.g. behind a .NET Core / IIS virtual directory).
     base: env.VITE_BASE_PATH || '/',
+    define: {
+      __USE_MOCK__: JSON.stringify(env.VITE_USE_MOCK !== 'false'),
+    },
     plugins: [react()],
     test: {
       globals: true,

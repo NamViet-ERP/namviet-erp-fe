@@ -2,8 +2,8 @@ import type { SidebarMenuItem } from '../types';
 import {
   LayoutDashboard, Package,
   PackagePlus, PackageMinus, Settings,
-  ClipboardCheck, SlidersHorizontal, Users, UserCheck, UserCog,
-  Layers, FolderKanban, ArrowLeftRight, Building2,
+  ClipboardCheck, Users, UserCheck, UserCog,
+  Layers, FolderKanban, ArrowLeftRight, Building2, Ruler,
 } from 'lucide-react';
 
 /** Thứ tự theo luồng nghiệp vụ: kho dự án → tồn → nhập/xuất/chuyển → danh mục */
@@ -21,12 +21,12 @@ export const warehouseMenu: SidebarMenuItem[] = [
 /** Sidebar khi đang trong Thiết lập kho hàng */
 export const warehouseSettingsMenu: SidebarMenuItem[] = [
   { id: 'wh-settings-categories', label: 'Cây vật tư', icon: Package, path: '/warehouse/settings/material-categories' },
+  { id: 'wh-settings-units', label: 'Đơn vị tính', icon: Ruler, path: '/warehouse/settings/material-units' },
   { id: 'wh-settings-suppliers', label: 'Danh mục NCC', icon: Building2, path: '/warehouse/settings/suppliers' },
 ];
 
 export const stocktakeMenu: SidebarMenuItem[] = [
   { id: 'stocktake', label: 'Kiểm kê kho', icon: ClipboardCheck, path: '/stocktake/list' },
-  { id: 'adjustment', label: 'Điều chỉnh kho', icon: SlidersHorizontal, path: '/stocktake/adjustment' },
   { id: 'st-settings', label: 'Thiết lập', icon: Settings, path: '/stocktake/settings' },
 ];
 

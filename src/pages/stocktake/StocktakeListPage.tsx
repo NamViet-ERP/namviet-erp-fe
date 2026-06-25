@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Plus, Eye, FileText, Download, Check, XCircle, Lock, Unlock } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
-import { warehouses } from '../../data/warehouses';
-import { products } from '../../data/products';
+import { warehouses } from '../../mocks/data/warehouses';
+import { products } from '../../mocks/data/products';
 import { generateCode } from '../../utils/generateCode';
 import { useStocktakes, useCreateStocktake, useUpdateStocktake } from '../../hooks/useStocktakes';
 import { getApiErrorMessage } from '../../lib/apiClient';
@@ -270,9 +270,10 @@ export default function StocktakeListPage() {
           <button className="btn btn-primary" onClick={handleSubmit}>Tạo phiếu kiểm kê</button>
         </>}
       >
+        <div className="space-y-4 modal-form-bordered">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <FormField label="Kho kiểm kê" required error={errors.warehouseId}>
-            <select className={`form-select ${errors.warehouseId ? 'border-[var(--md-error)]' : ''}`}
+            <select className="form-select"
               value={form.warehouseId} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setForm({ ...form, warehouseId: e.target.value })}>
               <option value="">-- Chọn kho --</option>
               {warehouses.map(w => <option key={w.id} value={w.id}>{w.name} ({w.branch})</option>)}
@@ -314,12 +315,12 @@ export default function StocktakeListPage() {
                       </select>
                     </td>
                     <td className="table-cell">
-                      <input type="number" min="0" className={`form-input text-sm text-right ${errors[`sysqty_${i}`] ? 'border-[var(--md-error)]' : ''}`}
+                      <input type="number" min="0" className={`form-input text-sm text-right${errors[`sysqty_${i}`] ? ' form-input--error' : ''}`}
                         value={it.systemQty} onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateItem(i, 'systemQty', e.target.value)} placeholder="0" />
                       {errors[`sysqty_${i}`] && <p className="text-[var(--md-error)] text-[10px]">{errors[`sysqty_${i}`]}</p>}
                     </td>
                     <td className="table-cell">
-                      <input type="number" min="0" className={`form-input text-sm text-right ${errors[`actqty_${i}`] ? 'border-[var(--md-error)]' : ''}`}
+                      <input type="number" min="0" className={`form-input text-sm text-right${errors[`actqty_${i}`] ? ' form-input--error' : ''}`}
                         value={it.actualQty} onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateItem(i, 'actualQty', e.target.value)} placeholder="0" />
                       {errors[`actqty_${i}`] && <p className="text-[var(--md-error)] text-[10px]">{errors[`actqty_${i}`]}</p>}
                     </td>
@@ -334,6 +335,7 @@ export default function StocktakeListPage() {
               })}
             </tbody>
           </table>
+        </div>
         </div>
       </Modal>
 

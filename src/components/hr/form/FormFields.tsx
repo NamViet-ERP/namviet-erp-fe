@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { FieldError, UseFormRegisterReturn } from 'react-hook-form';
+import HrmSelect from '../HrmSelect';
 
 export function FormTextField({
   label,
@@ -32,6 +33,7 @@ export function FormTextField({
 
 export function FormSelectField({
   label,
+  value,
   registration,
   error,
   options,
@@ -39,6 +41,7 @@ export function FormSelectField({
   className = '',
 }: {
   label: string;
+  value: string;
   registration: UseFormRegisterReturn;
   error?: FieldError;
   options: readonly string[] | string[];
@@ -48,15 +51,16 @@ export function FormSelectField({
   return (
     <div>
       <label className="hrm-field__label">{label}</label>
-      <select
-        className={`hrm-field-select h-11${error ? ' hrm-field-input--error' : ''}${className ? ` ${className}` : ''}`}
-        {...registration}
-      >
-        <option value="">{placeholder}</option>
-        {options.map(o => (
-          <option key={o} value={o}>{o}</option>
-        ))}
-      </select>
+      <HrmSelect
+        className={`h-11${className ? ` ${className}` : ''}`}
+        value={value}
+        onChange={v => registration.onChange({ target: { name: registration.name, value: v } })}
+        onBlur={registration.onBlur}
+        name={registration.name}
+        options={options}
+        placeholder={placeholder}
+        error={Boolean(error)}
+      />
       {error?.message && <p className="hrm-field__error">{error.message}</p>}
     </div>
   );
@@ -80,16 +84,14 @@ export function FormControlledSelect({
   return (
     <div>
       <label className="hrm-field__label">{label}</label>
-      <select
-        className={`hrm-field-select h-11${error ? ' hrm-field-input--error' : ''}`}
+      <HrmSelect
+        className="h-11"
         value={value}
-        onChange={e => onChange(e.target.value)}
-      >
-        <option value="">{placeholder}</option>
-        {options.map(o => (
-          <option key={o} value={o}>{o}</option>
-        ))}
-      </select>
+        onChange={onChange}
+        options={options}
+        placeholder={placeholder}
+        error={Boolean(error)}
+      />
       {error?.message && <p className="hrm-field__error">{error.message}</p>}
     </div>
   );

@@ -177,7 +177,7 @@ export function buildWarehouseDashboardData(
     transfer: { prefix: 'Chuyển kho', accent: 'var(--status-warning)', sign: '' },
   } as const;
 
-  const recentActivity: DashboardActivityItem[] = vouchers.slice(0, 5).map(v => {
+  const recentActivity: DashboardActivityItem[] = vouchers.slice(0, 20).map(v => {
     const meta = typeMeta[v.type];
     return {
       type: v.type,
@@ -222,5 +222,30 @@ export function buildWarehouseDashboardData(
     stockByWarehouse,
     recentActivity,
     miniStats,
+  };
+}
+
+/** Shell data when API fails — keeps dashboard sections renderable. */
+export function emptyWarehouseDashboardData(): WarehouseDashboardData {
+  const trendData = last6Months().map(({ label }) => ({
+    month: label,
+    imports: 0,
+    exports: 0,
+  }));
+
+  return {
+    totalStock: 0,
+    totalValue: 0,
+    activeProjects: 0,
+    trendData,
+    stockByCategory: [],
+    stockByWarehouse: [],
+    recentActivity: [],
+    miniStats: [
+      { label: 'Nhập hôm nay', value: '—', color: 'var(--status-success)' },
+      { label: 'Xuất hôm nay', value: '—', color: 'var(--status-warning)' },
+      { label: 'Chờ duyệt', value: '—', color: 'var(--status-error)' },
+      { label: 'Mã vật tư', value: '—', color: 'var(--chart-5)' },
+    ],
   };
 }

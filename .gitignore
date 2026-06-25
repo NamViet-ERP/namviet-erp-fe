@@ -31,6 +31,8 @@ dist-ssr
 # Local env (use .env.example)
 .env
 .env.production
+.env.test
 
-# Internal audit reports (local only)
-docs/code_audit_report.md
+# Local docs & one-off scripts (keep on disk, do not push)
+docs/
+scripts/

@@ -11,7 +11,7 @@ import { showToast } from '../ui/Toast';
 import { departments } from '../../constants/departments';
 import { getSessionUser, clearSessionUser } from '../../constants/systemUsers';
 import { authService } from '../../services/authService';
-import { USE_MOCK } from '../../lib/mock';
+import { USE_MOCK } from '../../mocks';
 import DepartmentCard from './DepartmentCard';
 import RoleSwitcher from './RoleSwitcher';
 
