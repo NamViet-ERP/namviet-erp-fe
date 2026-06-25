@@ -29,6 +29,7 @@ export async function createTransferMock(dto: Omit<Transfer, 'id'>): Promise<Tra
     projectName: fromName,
     toWarehouseName: toName,
     toProjectName: dto.toProject ? toName : undefined,
+    createdAt: dto.createdAt ?? new Date().toISOString(),
   };
   store = [created, ...store];
   return mockDelay(created);

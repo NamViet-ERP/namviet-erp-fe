@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type Dispatch, type SetStateAction } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, FolderKanban, CheckCircle2, Archive, X, Warehouse } from 'lucide-react';
 import SearchBar from '../../components/ui/SearchBar';
@@ -7,14 +7,15 @@ import EmptyState from '../../components/ui/EmptyState';
 import PageHeader from '../../components/ui/PageHeader';
 import Modal from '../../components/ui/Modal';
 import FormField from '../../components/ui/FormField';
+import CurrencyInput from '../../components/ui/CurrencyInput';
 import Badge from '../../components/ui/Badge';
 import HrmPanel from '../../components/hr/HrmPanel';
 import HrmStatCard from '../../components/hr/HrmStatCard';
 import { showToast } from '../../components/ui/Toast';
-import { getApiErrorMessage } from '../../lib/apiClient';
+import { getApiErrorMessage, getApiFieldErrors } from '../../lib/apiClient';
 import { WMS_ERROR } from '../../lib/wms/messages';
 import { formatDateCell } from '../../lib/hrm/formatters';
-import { fmtStockQty, fmtStockPlanned } from '../../lib/wms/stockQtyFormat';
+import { parseCurrencyInput } from '../../utils/currencyInput';
 import { useProjects, useCreateProject } from '../../hooks/useProjects';
 import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
 import type { WarehouseProjectApiDto } from '../../types/wms';
@@ -30,6 +31,34 @@ function suggestProjectCode() {
   return `DA-${new Date().getFullYear()}-${n}`;
 }
 
+function validateCreateForm(form: {
+  projectCode: string;
+  projectName: string;
+  startDate: string;
+  materialBudget: string;
+}): Record<string, string> {
+  const errs: Record<string, string> = {};
+  if (!form.projectCode.trim()) errs.projectCode = 'Vui lòng nhập mã kho dự án';
+  if (!form.projectName.trim()) errs.projectName = 'Vui lòng nhập tên công trình';
+  if (!form.startDate) errs.startDate = 'Vui lòng chọn ngày bắt đầu';
+  if (parseCurrencyInput(form.materialBudget) <= 0) {
+    errs.materialBudget = 'Vui lòng nhập ngân sách vật tư';
+  }
+  return errs;
+}
+
+function clearFieldError(
+  setErrors: Dispatch<SetStateAction<Record<string, string>>>,
+  field: string,
+) {
+  setErrors(prev => {
+    if (!prev[field]) return prev;
+    const next = { ...prev };
+    delete next[field];
+    return next;
+  });
+}
+
 function emptyListMessage(search: string, statusFilter: string) {
   if (search.trim()) {
     return `Không tìm thấy kho dự án phù hợp với "${search.trim()}".`;
@@ -43,27 +72,12 @@ function emptyListMessage(search: string, statusFilter: string) {
   return 'Chưa có kho dự án nào. Nhấn Tạo kho dự án để bắt đầu.';
 }
 
-function ProjectStockCells({ project }: { project: WarehouseProjectApiDto }) {
-  const actual = project.stockActualQty ?? 0;
-  const planned = project.stockPlannedQty ?? 0;
-  const reserved = project.stockReservedQty ?? 0;
+function ProjectMaterialCountCell({ project }: { project: WarehouseProjectApiDto }) {
   const materialCount = project.stockMaterialCount ?? 0;
-
   return (
-    <>
-      <td className="table-cell text-right font-semibold tabular-nums project-col-qty">
-        {fmtStockQty(actual)}
-      </td>
-      <td className="table-cell text-right tabular-nums stock-qty--pending project-col-qty">
-        {fmtStockPlanned(planned)}
-      </td>
-      <td className="table-cell text-right tabular-nums stock-qty--reserved project-col-qty">
-        {reserved !== 0 ? fmtStockQty(reserved) : <span className="hrm-empty-cell">—</span>}
-      </td>
-      <td className="table-cell text-right tabular-nums project-col-count">
-        {materialCount}
-      </td>
-    </>
+    <td className="table-cell text-right tabular-nums project-col-count">
+      {materialCount}
+    </td>
   );
 }
 
@@ -117,17 +131,15 @@ export default function ProjectsPage() {
     setShowCreate(true);
   };
 
-  const validate = () => {
-    const errs: Record<string, string> = {};
-    if (!form.projectCode.trim()) errs.projectCode = 'Vui lòng nhập mã kho dự án';
-    if (!form.projectName.trim()) errs.projectName = 'Vui lòng nhập tên công trình';
-    if (!form.startDate) errs.startDate = 'Vui lòng chọn ngày bắt đầu';
-    setErrors(errs);
-    return Object.keys(errs).length === 0;
-  };
-
   const handleCreate = async () => {
-    if (!validate()) return;
+    const clientErrors = validateCreateForm(form);
+    if (Object.keys(clientErrors).length > 0) {
+      setErrors(clientErrors);
+      showToast('error', 'Vui lòng kiểm tra lại các ô được đánh dấu.');
+      return;
+    }
+
+    setErrors({});
     try {
       const created = await createMutation.mutateAsync({
         projectCode: form.projectCode.trim().toUpperCase(),
@@ -136,13 +148,19 @@ export default function ProjectsPage() {
         pmId: EMPTY_PM_ID,
         pmName: form.pmName.trim() || '—',
         startDate: form.startDate,
-        materialBudget: form.materialBudget ? Number(form.materialBudget) : 0,
+        materialBudget: parseCurrencyInput(form.materialBudget),
       });
       showToast('success', `Đã tạo kho dự án ${created.projectCode}.`);
       setShowCreate(false);
       navigate(`/warehouse/projects/${encodeURIComponent(created.projectCode)}`);
     } catch (err) {
-      showToast('error', getApiErrorMessage(err, 'Không thể tạo kho dự án'));
+      const fieldErrors = getApiFieldErrors(err);
+      if (Object.keys(fieldErrors).length > 0) {
+        setErrors(fieldErrors);
+        showToast('error', 'Vui lòng kiểm tra lại các ô được đánh dấu.');
+      } else {
+        showToast('error', getApiErrorMessage(err, 'Không thể tạo kho dự án'));
+      }
     }
   };
 
@@ -221,9 +239,6 @@ export default function ProjectsPage() {
                 <th className="table-header-cell">Tên công trình</th>
                 <th className="table-header-cell project-col-pm">Người phụ trách</th>
                 <th className="table-header-cell project-col-date whitespace-nowrap">Ngày bắt đầu</th>
-                <th className="table-header-cell text-right project-col-qty">Tồn thực tế</th>
-                <th className="table-header-cell text-right project-col-qty">Dự kiến</th>
-                <th className="table-header-cell text-right project-col-qty">Giữ kho</th>
                 <th className="table-header-cell text-right project-col-count">Mặt hàng</th>
                 <th className="table-header-cell text-center project-col-status">Trạng thái</th>
               </tr>
@@ -232,18 +247,18 @@ export default function ProjectsPage() {
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="hrm-table-skeleton-row" aria-hidden>
-                    <td colSpan={9}><div className="hrm-table-skeleton" /></td>
+                    <td colSpan={6}><div className="hrm-table-skeleton" /></td>
                   </tr>
                 ))
               ) : isError ? (
                 <tr>
-                  <td colSpan={9}>
+                  <td colSpan={6}>
                     <EmptyState message={getApiErrorMessage(error, WMS_ERROR.loadProjects)} icon={Warehouse} />
                   </td>
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={9}>
+                  <td colSpan={6}>
                     <EmptyState message={emptyListMessage(search, statusFilter)} icon={FolderKanban} />
                   </td>
                 </tr>
@@ -268,7 +283,7 @@ export default function ProjectsPage() {
                     <td className="table-cell project-col-date whitespace-nowrap tabular-nums">
                       {formatDateCell(p.startDate)}
                     </td>
-                    <ProjectStockCells project={p} />
+                    <ProjectMaterialCountCell project={p} />
                     <td className="table-cell text-center project-col-status">
                       <Badge status={p.status === 'Closed' ? 'completed' : 'active'} />
                     </td>
@@ -297,6 +312,7 @@ export default function ProjectsPage() {
         isOpen={showCreate}
         onClose={() => setShowCreate(false)}
         title="Tạo kho dự án"
+        size="xl"
         footer={
           <>
             <button type="button" className="btn btn-outline" onClick={() => setShowCreate(false)}>Hủy</button>
@@ -311,12 +327,15 @@ export default function ProjectsPage() {
           </>
         }
       >
-        <div className="space-y-4">
+        <div className="space-y-4 modal-form-bordered">
           <FormField label="Mã kho dự án" required error={errors.projectCode}>
             <input
               className="form-input font-mono"
               value={form.projectCode}
-              onChange={e => setForm({ ...form, projectCode: e.target.value.toUpperCase() })}
+              onChange={e => {
+                setForm({ ...form, projectCode: e.target.value.toUpperCase() });
+                clearFieldError(setErrors, 'projectCode');
+              }}
               placeholder="VD: DA-2026-101"
             />
           </FormField>
@@ -324,7 +343,10 @@ export default function ProjectsPage() {
             <input
               className="form-input"
               value={form.projectName}
-              onChange={e => setForm({ ...form, projectName: e.target.value })}
+              onChange={e => {
+                setForm({ ...form, projectName: e.target.value });
+                clearFieldError(setErrors, 'projectName');
+              }}
               placeholder="VD: Dự án Nhiệt điện Long Phú 1"
             />
           </FormField>
@@ -333,24 +355,30 @@ export default function ProjectsPage() {
               className="form-input"
               value={form.pmName}
               onChange={e => setForm({ ...form, pmName: e.target.value })}
+              placeholder="Tên PM phụ trách"
             />
           </FormField>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField label="Ngày bắt đầu" required error={errors.startDate}>
               <input
                 type="date"
                 className="form-input"
                 value={form.startDate}
-                onChange={e => setForm({ ...form, startDate: e.target.value })}
+                onChange={e => {
+                  setForm({ ...form, startDate: e.target.value });
+                  clearFieldError(setErrors, 'startDate');
+                }}
               />
             </FormField>
-            <FormField label="Ngân sách VT (đ)">
-              <input
-                type="number"
-                min={0}
-                className="form-input"
+            <FormField label="Ngân sách Vật tư" required error={errors.materialBudget}>
+              <CurrencyInput
+                suffix="(VNĐ)"
+                className="tabular-nums"
                 value={form.materialBudget}
-                onChange={e => setForm({ ...form, materialBudget: e.target.value })}
+                onChange={(_raw, numeric) => {
+                  setForm({ ...form, materialBudget: numeric > 0 ? String(numeric) : '' });
+                  clearFieldError(setErrors, 'materialBudget');
+                }}
                 placeholder="0"
               />
             </FormField>

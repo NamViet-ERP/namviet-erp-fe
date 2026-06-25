@@ -1,5 +1,6 @@
-import { Package, DollarSign, Warehouse, TrendingUp, ArrowUpRight, Activity } from 'lucide-react';
+import { Package, DollarSign, Warehouse, TrendingUp, ArrowUpRight, Activity, AlertTriangle, RefreshCw, ChevronDown } from 'lucide-react';
 import type { CSSProperties } from 'react';
+import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip,
@@ -11,10 +12,10 @@ import EmptyState from '../../components/ui/EmptyState';
 import PageHeader from '../../components/ui/PageHeader';
 import PageLoader from '../../components/ui/PageLoader';
 import { dashboardChartTooltipProps } from '../../components/warehouse/dashboardChartTooltipProps';
+import { DashboardBarChartPortalTooltip } from '../../components/warehouse/DashboardChartTooltip';
 import { WMS_EMPTY, WMS_ERROR } from '../../lib/wms/messages';
 import { formatCurrency, formatCurrencyShort } from '../../utils/formatCurrency';
 import { fmtStockQty } from '../../lib/wms/stockQtyFormat';
-import { showToast } from '../../components/ui/Toast';
 import { useWarehouseDashboard } from '../../hooks/useWarehouseDashboard';
 import type {
   CategoryDataPoint,
@@ -22,22 +23,90 @@ import type {
   WarehouseDashboardData,
   TrendDataPoint,
 } from '../../lib/wms/warehouseDashboardData';
+import { emptyWarehouseDashboardData } from '../../lib/wms/warehouseDashboardData';
 
-function truncateChartLabel(value: string, maxLen = 28): string {
-  if (value.length <= maxLen) return value;
-  return `${value.slice(0, maxLen - 1)}…`;
+const ACTIVITY_PREVIEW_COUNT = 5;
+const CHART_AXIS_STROKE = 'var(--md-outline-variant)';
+const CHART_AXIS_TICK = {
+  fill: 'var(--md-on-surface-variant)',
+  fontSize: 11,
+  fontFamily: 'Roboto, sans-serif',
+} as const;
+
+const WAREHOUSE_BAR_Y_AXIS = {
+  title: 'Số lượng tồn',
+  unit: 'ĐVT theo từng mã vật tư',
+} as const;
+
+const WAREHOUSE_BAR_X_AXIS = {
+  title: 'Kho dự án',
+  unit: 'Đơn vị: STT (số thứ tự)',
+} as const;
+
+/** Round Y-axis to clean steps; always includes 0. */
+function buildStockBarYScale(values: number[]): { domainMax: number; ticks: number[] } {
+  const dataMax = Math.max(...values, 0);
+  if (dataMax === 0) {
+    return { domainMax: 4, ticks: [0, 1, 2, 3, 4] };
+  }
+
+  const targetTicks = 4;
+  const roughStep = (dataMax * 1.06) / targetTicks;
+  const magnitude = 10 ** Math.floor(Math.log10(roughStep));
+  const normalized = roughStep / magnitude;
+  const niceUnit = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10;
+  const step = niceUnit * magnitude;
+  const domainMax = step * targetTicks;
+  const ticks = Array.from({ length: targetTicks + 1 }, (_, i) => i * step);
+
+  return { domainMax, ticks };
 }
 
-/** Zoom Y-axis when values cluster (e.g. warehouse stock within a narrow band). */
-function tightNumericDomain(values: number[], padRatio = 0.12): [number, number] {
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  if (min === max) {
-    const base = Math.max(0, min);
-    return [Math.max(0, base - Math.max(1, base * 0.05)), base + Math.max(1, base * 0.05)];
-  }
-  const pad = Math.max((max - min) * padRatio, 1);
-  return [Math.max(0, Math.floor(min - pad)), Math.ceil(max + pad)];
+function warehouseBarChartHeight(): number {
+  return 280;
+}
+
+interface WarehouseBarXTickProps {
+  x?: number;
+  y?: number;
+  index?: number;
+}
+
+function WarehouseBarXTick({ x = 0, y = 0, index = 0 }: WarehouseBarXTickProps) {
+  return (
+    <text
+      x={x}
+      y={y}
+      dy={14}
+      fill={CHART_AXIS_TICK.fill}
+      fontSize={CHART_AXIS_TICK.fontSize}
+      fontFamily={CHART_AXIS_TICK.fontFamily}
+      textAnchor="middle"
+      fontWeight={600}
+    >
+      {index + 1}
+    </text>
+  );
+}
+
+function WarehouseBarLegend({ data }: { data: CategoryDataPoint[] }) {
+  return (
+    <div className="warehouse-bar-legend-wrap">
+      <p className="warehouse-bar-legend__heading">
+        {WAREHOUSE_BAR_X_AXIS.title} — {WAREHOUSE_BAR_X_AXIS.unit}. Tên đầy đủ:
+      </p>
+      <ul className="warehouse-bar-legend" aria-label="Danh sách kho dự án">
+        {data.map((item, index) => (
+          <li key={item.name} className="warehouse-bar-legend__row">
+            <span className="warehouse-bar-legend__index" aria-hidden>{index + 1}</span>
+            <span className="warehouse-bar-legend__dot" style={{ background: item.color }} aria-hidden />
+            <span className="warehouse-bar-legend__name">{item.name}</span>
+            <span className="warehouse-bar-legend__value">{fmtStockQty(item.value)}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
 function ChartLegendInline({ items }: { items: { color: string; label: string }[] }) {
@@ -117,25 +186,44 @@ function renderPiePercentLabel(props: PieSliceLabelProps) {
 }
 
 export default function DashboardWarehousePage() {
-  const { data, isLoading, isError } = useWarehouseDashboard();
+  const { data, isLoading, isError, refetch, isRefetching } = useWarehouseDashboard();
 
   if (isLoading) {
     return <PageLoader />;
   }
 
-  if (isError || !data) {
-    return (
-      <div className="page-stack">
-        <PageHeader title="Tổng quan kho" subtitle="Theo dõi hoạt động và tình hình kho hàng" />
-        <EmptyState message={WMS_ERROR.loadDefault} />
-      </div>
-    );
-  }
+  const hasLoadError = isError || !data;
+  const displayData = data ?? emptyWarehouseDashboardData();
 
-  return <DashboardWarehouseContent data={data} />;
+  return (
+    <DashboardWarehouseContent
+      data={displayData}
+      hasLoadError={hasLoadError}
+      onRetry={() => void refetch()}
+      isRetrying={isRefetching}
+    />
+  );
 }
 
-function DashboardWarehouseContent({ data }: { data: WarehouseDashboardData }) {
+interface DashboardWarehouseContentProps {
+  data: WarehouseDashboardData;
+  hasLoadError?: boolean;
+  onRetry?: () => void;
+  isRetrying?: boolean;
+}
+
+function DashboardWarehouseContent({
+  data,
+  hasLoadError = false,
+  onRetry,
+  isRetrying = false,
+}: DashboardWarehouseContentProps) {
+  const [activityExpanded, setActivityExpanded] = useState(false);
+  const activityItems = activityExpanded
+    ? data.recentActivity
+    : data.recentActivity.slice(0, ACTIVITY_PREVIEW_COUNT);
+  const hasMoreActivity = data.recentActivity.length > ACTIVITY_PREVIEW_COUNT;
+
   return (
     <div className="page-stack relative">
       <div className="dashboard-ambient dashboard-ambient--tl" aria-hidden />
@@ -154,24 +242,45 @@ function DashboardWarehouseContent({ data }: { data: WarehouseDashboardData }) {
         />
       </div>
 
+      {hasLoadError && (
+        <div className="alert-banner alert-banner--error dashboard-load-alert" role="alert">
+          <AlertTriangle size={18} className="alert-banner__icon" aria-hidden />
+          <div className="dashboard-load-alert__body">
+            <p className="dashboard-load-alert__message">{WMS_ERROR.loadDefault}</p>
+            <p className="dashboard-load-alert__hint">Các mục bên dưới hiển thị khung trống cho đến khi tải lại thành công.</p>
+          </div>
+          {onRetry && (
+            <button
+              type="button"
+              className="btn btn-outlined btn-sm dashboard-load-alert__retry"
+              onClick={onRetry}
+              disabled={isRetrying}
+            >
+              <RefreshCw size={14} className={isRetrying ? 'animate-spin' : ''} aria-hidden />
+              {isRetrying ? 'Đang tải…' : 'Thử lại'}
+            </button>
+          )}
+        </div>
+      )}
+
       <div className="dashboard-kpi-grid">
         <Card
           title="Tổng tồn kho"
-          value={formatCurrency(data.totalStock)}
+          value={hasLoadError ? '—' : formatCurrency(data.totalStock)}
           subtitle="vật tư trong tất cả kho dự án"
           accent="amber"
           icon={Package}
         />
         <Card
           title="Tổng giá trị"
-          value={formatCurrencyShort(data.totalValue)}
+          value={hasLoadError ? '—' : formatCurrencyShort(data.totalValue)}
           subtitle="ước tính từ giá bình quân"
           accent="blue"
           icon={DollarSign}
         />
         <Card
           title="Kho dự án hoạt động"
-          value={data.activeProjects}
+          value={hasLoadError ? '—' : data.activeProjects}
           subtitle="dự án chưa đóng"
           accent="teal"
           icon={Warehouse}
@@ -211,21 +320,31 @@ function DashboardWarehouseContent({ data }: { data: WarehouseDashboardData }) {
       </div>
 
       <div className="dashboard-grid-row dashboard-grid-row--split">
-        <BentoCard className="bento-card--chart">
+        <BentoCard className="bento-card--chart bento-card--chart-bar">
           <SectionHeading sub="Top kho dự án theo tồn thực tế">Phân bổ theo kho</SectionHeading>
           <WarehouseBarChart data={data.stockByWarehouse} />
         </BentoCard>
 
         <BentoCard>
           <SectionHeading sub="Phiếu gần đây">Nhật ký kho</SectionHeading>
-          <ActivityFeed items={data.recentActivity} />
-          <button
-            type="button"
-            className="btn btn-outlined btn-sm w-full mt-4 flex items-center justify-center gap-1.5"
-            onClick={() => showToast('info', 'Xem chi tiết tại các mục Nhập, Xuất, Chuyển kho.', 'Nhật ký')}
-          >
-            Xem toàn bộ <ArrowUpRight size={14} />
-          </button>
+          <div className={activityExpanded ? 'activity-feed-scroll' : undefined}>
+            <ActivityFeed items={activityItems} />
+          </div>
+          {hasMoreActivity && (
+            <button
+              type="button"
+              className="btn btn-outlined btn-sm w-full mt-4 flex items-center justify-center gap-1.5"
+              onClick={() => setActivityExpanded(prev => !prev)}
+            >
+              {activityExpanded
+                ? 'Thu gọn'
+                : `Xem thêm (${data.recentActivity.length - ACTIVITY_PREVIEW_COUNT})`}
+              <ChevronDown
+                size={14}
+                className={activityExpanded ? 'nv-dropdown__chevron--open' : ''}
+              />
+            </button>
+          )}
         </BentoCard>
       </div>
 
@@ -400,72 +519,94 @@ function CategoryPieChart({ data }: { data: CategoryDataPoint[] }) {
 }
 
 function WarehouseBarChart({ data }: { data: CategoryDataPoint[] }) {
+  const [chartRoot, setChartRoot] = useState<HTMLDivElement | null>(null);
+
   if (data.length === 0) {
     return <ChartEmpty message="Chưa có tồn kho theo kho dự án." />;
   }
 
   const values = data.map(item => item.value);
-  const yDomain = tightNumericDomain(values);
-  const domainSpan = yDomain[1] - yDomain[0];
-  const useTightAxis = domainSpan > 0 && yDomain[0] > 0;
+  const yScale = buildStockBarYScale(values);
+  const chartHeight = warehouseBarChartHeight();
 
   return (
-    <div className="chart-panel">
-      <div className="chart-panel__body chart-panel__body--compact">
-        <div className="chart-surface">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={data}
-              margin={{ top: 22, right: 4, left: -4, bottom: 56 }}
-              barCategoryGap="18%"
-            >
-              <CartesianGrid strokeDasharray="4 4" stroke="var(--md-outline-variant)" vertical={false} opacity={0.25} />
-              <XAxis
-                dataKey="name"
-                stroke="transparent"
-                tick={{ fill: 'var(--md-on-surface-variant)', fontSize: 10, fontFamily: 'Roboto, sans-serif' }}
-                angle={-28}
-                textAnchor="end"
-                height={52}
-                interval={0}
-                tickFormatter={(value: string) => truncateChartLabel(value, 14)}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                stroke="transparent"
-                tick={{ fill: 'var(--md-on-surface-variant)', fontSize: 10, fontFamily: 'Roboto, sans-serif' }}
-                allowDecimals={false}
-                width={40}
-                domain={yDomain}
-                tickFormatter={(v: number) => fmtStockQty(v)}
-                axisLine={false}
-                tickLine={false}
-              />
-              <Tooltip
-                {...dashboardChartTooltipProps}
-                cursor={{ fill: 'var(--tint-primary-weak)', opacity: 0.35 }}
-              />
-              <Bar dataKey="value" name="Tồn kho" radius={[5, 5, 0, 0]} maxBarSize={40}>
-                {data.map(entry => (
-                  <Cell key={entry.name} fill={entry.color} />
-                ))}
-                <LabelList
-                  dataKey="value"
-                  position="top"
-                  formatter={(value: number) => fmtStockQty(value)}
-                  className="chart-bar-label"
-                />
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+    <div className="chart-panel chart-panel--warehouse-bar">
+      <div
+        className="chart-panel__body chart-panel__body--compact chart-panel__body--bar"
+        style={{ minHeight: chartHeight }}
+      >
+        <div className="warehouse-bar-chart-frame">
+          <div className="chart-axis-y-caption" aria-hidden>
+            <span className="chart-axis-y-caption__title">{WAREHOUSE_BAR_Y_AXIS.title}</span>
+            <span className="chart-axis-y-caption__unit">{WAREHOUSE_BAR_Y_AXIS.unit}</span>
+          </div>
+          <div className="warehouse-bar-chart-frame__plot">
+            <div ref={setChartRoot} className="chart-surface chart-surface--bar chart-surface--framed">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={data}
+                  margin={{ top: 20, right: 16, left: 4, bottom: 8 }}
+                  barCategoryGap="18%"
+                >
+                  <CartesianGrid
+                    strokeDasharray="4 4"
+                    stroke={CHART_AXIS_STROKE}
+                    vertical={false}
+                    opacity={0.45}
+                  />
+                  <XAxis
+                    dataKey="name"
+                    stroke={CHART_AXIS_STROKE}
+                    tick={WarehouseBarXTick}
+                    tickLine={{ stroke: CHART_AXIS_STROKE }}
+                    axisLine={{ stroke: CHART_AXIS_STROKE }}
+                    height={28}
+                    interval={0}
+                  />
+                  <YAxis
+                    stroke={CHART_AXIS_STROKE}
+                    tick={CHART_AXIS_TICK}
+                    tickLine={{ stroke: CHART_AXIS_STROKE }}
+                    axisLine={{ stroke: CHART_AXIS_STROKE }}
+                    allowDecimals={false}
+                    width={56}
+                    domain={[0, yScale.domainMax]}
+                    ticks={yScale.ticks}
+                    tickFormatter={(v: number) => fmtStockQty(v)}
+                  />
+                  <Tooltip
+                    isAnimationActive={false}
+                    cursor={{ fill: 'var(--tint-primary-weak)', opacity: 0.35 }}
+                    content={(props) => (
+                      <DashboardBarChartPortalTooltip
+                        {...props}
+                        chartRoot={chartRoot}
+                      />
+                    )}
+                  />
+                  <Bar dataKey="value" name={WAREHOUSE_BAR_Y_AXIS.title} radius={[6, 6, 0, 0]} maxBarSize={48}>
+                    {data.map(entry => (
+                      <Cell key={entry.name} fill={entry.color} />
+                    ))}
+                    <LabelList
+                      dataKey="value"
+                      position="top"
+                      offset={8}
+                      formatter={(value: number) => fmtStockQty(value)}
+                      className="chart-bar-label"
+                    />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <p className="chart-axis-x-caption">
+              <span className="chart-axis-x-caption__title">{WAREHOUSE_BAR_X_AXIS.title}</span>
+              <span className="chart-axis-x-caption__unit">{WAREHOUSE_BAR_X_AXIS.unit}</span>
+            </p>
+          </div>
         </div>
       </div>
-      {useTightAxis && (
-        <p className="chart-bar-axis-note">
-          Trục Y zoom {fmtStockQty(yDomain[0])} – {fmtStockQty(yDomain[1])} để so sánh chênh lệch
-        </p>
-      )}
+      <WarehouseBarLegend data={data} />
     </div>
   );
 }

@@ -9,7 +9,7 @@
 import { clearAuthSession } from './authSession';
 import { refreshAccessToken } from './authRefresh';
 import { UI_ERROR } from './uiMessages';
-import { isTechnicalUserMessage, translateErrorMessage } from './translateErrorMessage';
+import { translateErrorMessage, isTechnicalUserMessage, formatUserMessages } from './translateErrorMessage';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
 
@@ -42,6 +42,24 @@ export function getApiErrorMessage(err: unknown, fallback = UI_ERROR.generic): s
   return msg;
 }
 
+/** Field-level validation errors from API payload (`errors: { field: string[] }`). */
+export function getApiFieldErrors(err: unknown): Record<string, string> {
+  if (!(err instanceof ApiError) || err.payload == null || typeof err.payload !== 'object') return {};
+
+  const obj = err.payload as ProblemDetailsLike;
+  if (!obj.errors || typeof obj.errors !== 'object' || Array.isArray(obj.errors)) return {};
+
+  const result: Record<string, string> = {};
+  for (const [key, msgs] of Object.entries(obj.errors)) {
+    if (['_form', 'request', '$'].includes(key)) continue;
+    const first = Array.isArray(msgs) ? msgs.find(Boolean) : undefined;
+    if (!first) continue;
+    const fieldKey = key.length ? key.charAt(0).toLowerCase() + key.slice(1) : key;
+    result[fieldKey] = translateErrorMessage(String(first));
+  }
+  return result;
+}
+
 function forceLogoutExpired(): void {
   if (typeof window === 'undefined') return;
   if (window.location.pathname.startsWith('/login')) return;
@@ -68,11 +86,20 @@ export function parseApiError(data: unknown, fallback: string): string {
   if (typeof data === 'object') {
     const obj = data as ProblemDetailsLike;
     if (obj.errors && typeof obj.errors === 'object') {
-      const raw = Array.isArray(obj.errors)
-        ? obj.errors
-        : Object.values(obj.errors).flat();
-      const msgs = raw.filter(Boolean).map(item => translateErrorMessage(String(item)));
-      if (msgs.length) return msgs.join('; ');
+      if (Array.isArray(obj.errors)) {
+        const msgs = obj.errors.filter(Boolean).map(item => String(item));
+        const formatted = formatUserMessages(msgs);
+        if (formatted) return formatted;
+      } else {
+        const entries = Object.entries(obj.errors);
+        const specific = entries.filter(([key]) => !['_form', 'request', '$'].includes(key));
+        const source = specific.length > 0 ? specific : entries;
+        const msgs = source.flatMap(([, value]) => (Array.isArray(value) ? value : [value]))
+          .filter(Boolean)
+          .map(item => String(item));
+        const formatted = formatUserMessages(msgs);
+        if (formatted) return formatted;
+      }
     }
     if (typeof obj.detail === 'string' && obj.detail.trim()) {
       return translateErrorMessage(obj.detail.trim());

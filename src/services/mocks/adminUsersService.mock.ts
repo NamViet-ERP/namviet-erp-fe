@@ -1,6 +1,8 @@
 import { mockDelay } from '../../lib/mock';
+import { compareEmployeeCodeNewestFirst } from '../../lib/hrm/suggestedEmployeeCode';
 import {
   createSystemUser,
+  getSessionUser,
   getSystemUserByEmployeeId,
   getSystemUsers,
   isEmployeeLoginActive,
@@ -9,6 +11,7 @@ import {
   setUserPassword,
   type SystemUser,
 } from '../../constants/systemUsers';
+import { isCurrentAdminUserRow } from '../../lib/admin/isCurrentAdminUser';
 import { employeesService } from '../employeesService';
 import type { Employee } from '../../types/hr';
 import type {
@@ -159,6 +162,10 @@ async function mockList(params: AdminUserListParams): Promise<AdminUserPagedResu
   const dept = params.department?.trim();
   if (dept) filtered = filtered.filter(u => u.department.toLowerCase().includes(dept.toLowerCase()));
 
+  filtered = [...filtered].sort((a, b) =>
+    compareEmployeeCodeNewestFirst({ code: a.employeeCode }, { code: b.employeeCode }),
+  );
+
   const totalCount = filtered.length;
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
   const page = Math.min(Math.max(1, params.page ?? 1), totalPages);
@@ -235,6 +242,32 @@ export async function toggleAdminUserStatusMock(
       throw new Error('Nhân viên chưa được cấp tài khoản');
     }
   }
+
+  if (!enabled) {
+    const session = getSessionUser();
+    if (session) {
+      const row =
+        source === 'employee'
+          ? {
+              id: toggleId,
+              accountUserId: getSystemUserByEmployeeId(toggleId)?.id,
+              source,
+              email: getSystemUserByEmployeeId(toggleId)?.email,
+              employeeCode: undefined,
+            }
+          : {
+              id: toggleId,
+              accountUserId: toggleId,
+              source,
+              email: getSystemUsers().find(u => u.id === toggleId)?.email,
+              employeeCode: getSystemUsers().find(u => u.id === toggleId)?.employeeCode,
+            };
+      if (isCurrentAdminUserRow(session, row)) {
+        throw new Error('Không thể khóa tài khoản đang đăng nhập.');
+      }
+    }
+  }
+
   setAccountEnabled(toggleId, enabled);
   return mockDelay(undefined);
 }

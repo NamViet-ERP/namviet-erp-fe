@@ -34,3 +34,7 @@ dist-ssr
 
 # Internal audit reports (local only)
 docs/code_audit_report.md
+
+# Local dev / agent artifacts (do not commit)
+.tmp-login.json
+.agents/

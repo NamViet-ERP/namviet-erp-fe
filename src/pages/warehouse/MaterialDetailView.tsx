@@ -11,9 +11,14 @@ import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { useMaterial, useUpdateMaterial, useDiscontinueMaterial, useReactivateMaterial } from '../../hooks/useMaterials';
 import { useCategoryCascade, useCategoryTree } from '../../hooks/useCategories';
+import MaterialUnitSelect from '../../components/warehouse/MaterialUnitSelect';
 import {
   MATERIAL_CATEGORY_LEVELS,
   MATERIAL_CREATE_REQUIRED_LEVELS,
+  MATERIAL_FIELD_PLACEHOLDERS,
+  MATERIAL_SELECT_PLACEHOLDER,
+  materialInputError,
+  materialSelectError,
 } from '../../constants/materialCategoryLevels';
 import {
   categoryLevel,
@@ -106,15 +111,15 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
     const errors: Record<string, string> = {};
     for (const lvl of MATERIAL_CREATE_REQUIRED_LEVELS) {
       if (editSelection[lvl - 1] === '') {
-        errors[`level${lvl}`] = `${MATERIAL_CATEGORY_LEVELS[lvl - 1].label} là bắt buộc`;
+        errors[`level${lvl}`] = materialSelectError(MATERIAL_CATEGORY_LEVELS[lvl - 1].label);
       }
     }
-    if (!editForm.materialName.trim()) errors.materialName = 'Tên là bắt buộc';
-    if (!editForm.unit.trim()) errors.unit = 'Đơn vị tính là bắt buộc';
+    if (!editForm.materialName.trim()) errors.materialName = materialInputError('tên vật tư');
+    if (!editForm.unit.trim()) errors.unit = materialSelectError('đơn vị tính');
 
     const categoryId = resolveLeafCategoryId(editSelection);
     if (categoryId && categoryLevel(categories, categoryId)! < 3) {
-      errors.level3 = 'Phải chọn tối thiểu đến cấp Loại vật tư';
+      errors.level3 = 'Vui lòng chọn đến cấp Loại vật tư';
     }
 
     setEditErrors(errors);
@@ -205,7 +210,7 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
                     setEditLevel(idx, v === '' ? '' : Number(v));
                   }}
                 >
-                  <option value="">— Chọn —</option>
+                  <option value="">{MATERIAL_SELECT_PLACEHOLDER}</option>
                   {editOptions[idx]
                     ?.filter(c => idx > 0 || c.code !== 'UNCATEGORIZED')
                     .map(c => (
@@ -232,26 +237,31 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
           <DetailFieldGrid layout="responsive">
             <FieldView label="Mã vật tư" value={material.materialCode} />
             <FieldInput
-              label="Tên *"
+              label="Tên vật tư *"
               value={editForm.materialName}
               onChange={v => setEditForm(f => ({ ...f, materialName: v }))}
               error={editErrors.materialName}
+              placeholder={MATERIAL_FIELD_PLACEHOLDERS.materialName}
             />
-            <FieldInput
-              label="Đơn vị tính"
+            <MaterialUnitSelect
               value={editForm.unit}
-              onChange={v => setEditForm(f => ({ ...f, unit: v }))}
+              onChange={unit => setEditForm(f => ({ ...f, unit }))}
+              required
               error={editErrors.unit}
+              preserveUnknownValue
+              variant="hrm"
             />
             <FieldInput
               label="Quy cách"
               value={editForm.technicalSpec}
               onChange={v => setEditForm(f => ({ ...f, technicalSpec: v }))}
+              placeholder={MATERIAL_FIELD_PLACEHOLDERS.technicalSpec}
             />
             <FieldInput
               label="Tiêu chuẩn chất lượng"
               value={editForm.qualityStandard}
               onChange={v => setEditForm(f => ({ ...f, qualityStandard: v }))}
+              placeholder={MATERIAL_FIELD_PLACEHOLDERS.qualityStandard}
             />
           </DetailFieldGrid>
         ) : (

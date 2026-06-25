@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useImports } from './useImports';
 import { useExports } from './useExports';
 import { useTransfers } from './useTransfers';
@@ -53,5 +53,26 @@ export function useWarehouseDashboard() {
     projectsQuery.data,
   ]);
 
-  return { data, isLoading, isError };
+  const refetch = useCallback(() => Promise.all([
+    importsQuery.refetch(),
+    exportsQuery.refetch(),
+    transfersQuery.refetch(),
+    matrixQuery.refetch(),
+    projectsQuery.refetch(),
+  ]), [
+    importsQuery.refetch,
+    exportsQuery.refetch,
+    transfersQuery.refetch,
+    matrixQuery.refetch,
+    projectsQuery.refetch,
+  ]);
+
+  const isRefetching =
+    importsQuery.isFetching
+    || exportsQuery.isFetching
+    || transfersQuery.isFetching
+    || matrixQuery.isFetching
+    || projectsQuery.isFetching;
+
+  return { data, isLoading, isError, refetch, isRefetching };
 }

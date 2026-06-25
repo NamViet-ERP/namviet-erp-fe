@@ -16,37 +16,35 @@ export default function PublicFormLayout({ eyebrow, eyebrowAsTitle = false, titl
 
   return (
     <div className="hrm-public-page page-route-enter">
-      <div className={`mx-auto ${wide ? 'max-w-3xl' : 'max-w-2xl'}`}>
-        <div className="flex justify-end mb-6">
+      <div className={`hrm-public-shell ${wide ? 'hrm-public-shell--wide' : ''}`}>
+        <header className="hrm-public-topbar">
           <button
             type="button"
             onClick={() => navigate('/login')}
-            className="btn btn-outlined btn-sm w-full flex items-center justify-center gap-2"
+            className="hrm-public-login-btn"
           >
-            <LogIn size={16} />
-            Đăng nhập hệ thống
+            <LogIn size={16} aria-hidden />
+            <span>Đăng nhập hệ thống</span>
           </button>
-        </div>
+        </header>
 
-        <div className="mb-5">
+        <div className="hrm-public-intro">
           {eyebrowAsTitle ? (
-            <h1 className="text-3xl font-bold text-[var(--md-primary)] uppercase text-center">{eyebrow ?? 'NAM VIỆT GROUP TUYỂN DỤNG'}</h1>
+            <h1 className="hrm-public-intro__title">{eyebrow ?? 'NAM VIỆT GROUP TUYỂN DỤNG'}</h1>
           ) : (
             eyebrow ? (
-              <p className="text-xs font-semibold uppercase tracking-widest text-[var(--md-primary)] mb-2 text-center">{eyebrow}</p>
+              <p className="hrm-public-intro__eyebrow">{eyebrow}</p>
             ) : null
           )}
 
           {title && (
-            <h2 className={`${eyebrowAsTitle ? 'text-xl font-semibold uppercase text-left' : 'text-3xl font-bold text-[var(--md-on-surface)] mb-2 text-center'}`}>
+            <h2 className={eyebrowAsTitle ? 'hrm-public-intro__subtitle' : 'hrm-public-intro__title'}>
               {title}
             </h2>
           )}
 
           {subtitle && (
-            <p className="text-sm text-[var(--md-on-surface-variant)] max-w-lg mx-auto leading-relaxed">
-              {subtitle}
-            </p>
+            <p className="hrm-public-intro__desc">{subtitle}</p>
           )}
         </div>
 
@@ -54,7 +52,7 @@ export default function PublicFormLayout({ eyebrow, eyebrowAsTitle = false, titl
           {children}
         </div>
 
-        <p className="text-center mt-6 text-xs text-[var(--md-on-surface-variant)]">
+        <p className="hrm-public-footer">
           © {new Date().getFullYear()} NamViet Group. Bảo mật thông tin hồ sơ.
         </p>
       </div>

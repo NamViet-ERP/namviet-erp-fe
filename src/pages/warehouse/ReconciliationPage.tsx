@@ -295,7 +295,7 @@ export default function ReconciliationPage() {
         isOpen={showApprovalModal}
         onClose={() => setShowApprovalModal(false)}
         title={`Phê duyệt đơn giá vượt hạn mức — ${selectedPoCode}`}
-        size="md"
+        size="lg"
         footer={
           <>
             <button className="btn btn-outline text-xs" onClick={() => setShowApprovalModal(false)}>Hủy</button>
@@ -303,7 +303,7 @@ export default function ReconciliationPage() {
           </>
         }
       >
-        <div className="space-y-4">
+        <div className="space-y-4 modal-form-bordered">
           <div className="alert-banner alert-banner--error text-xs">
             <AlertTriangle size={18} className="alert-banner__icon" />
             <p>

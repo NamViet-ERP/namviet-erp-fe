@@ -120,10 +120,16 @@
     .sidebar-nav-enter,
     .stagger-children > *,
     .page-shell > *,
-    .hrm-page > * {
+    .hrm-page > *,
+    .login-card,
+    .login-alert-slot,
+    .login-submit-btn__spinner {
       animation: none !important;
       opacity: 1 !important;
       transform: none !important;
+    }
+    .login-alert-slot {
+      transition: none !important;
     }
     .skeleton::after {
       animation: none !important;

@@ -9,7 +9,7 @@ import PageHeader from '../../components/ui/PageHeader';
 import HrmPanel from '../../components/hr/HrmPanel';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
-import { validateTransferCreate } from '../../lib/wms/transferFormSchema';
+import { validateTransferCreate, getTransferFormFieldErrors, type TransferFormFieldErrors } from '../../lib/wms/transferFormSchema';
 import {
   useTransfers,
   useCreateTransfer,
@@ -30,6 +30,8 @@ import {
 import TransferTable from './transfer/TransferTable';
 import TransferCreateModal from './transfer/TransferCreateModal';
 import TransferDetailModal from './transfer/TransferDetailModal';
+import VoucherDateFilter from '../../components/warehouse/VoucherDateFilter';
+import { isVoucherInDateRange } from '../../lib/wms/voucherDateUtils';
 
 export default function TransferListPageRoute() {
   const location = useLocation();
@@ -44,6 +46,8 @@ interface TransferListPageApiProps {
 function TransferListPageApi({ initialProjectCode }: TransferListPageApiProps) {
   const [activeTab, setActiveTab] = useState('all');
   const [search, setSearch] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_LIST_PAGE_SIZE);
   const [showCreate, setShowCreate] = useState(!!initialProjectCode);
@@ -55,6 +59,7 @@ function TransferListPageApi({ initialProjectCode }: TransferListPageApiProps) {
   const [transferMode, setTransferMode] = useState<TransferMode>('return');
   const [note, setNote] = useState('');
   const [items, setItems] = useState<MaterialQtyPhaseLine[]>([{ ...emptyQtyPhaseLine }]);
+  const [createErrors, setCreateErrors] = useState<TransferFormFieldErrors>({});
 
   const { data: transfers = [], isLoading, isError, error } = useTransfers();
   const { data: materialsPage } = useMaterials({ pageSize: 200 });
@@ -103,8 +108,11 @@ function TransferListPageApi({ initialProjectCode }: TransferListPageApiProps) {
           t.toWarehouseName.toLowerCase().includes(q),
       );
     }
+    if (dateFrom || dateTo) {
+      list = list.filter(t => isVoucherInDateRange(t, dateFrom, dateTo));
+    }
     return list;
-  }, [transfers, activeTab, search]);
+  }, [transfers, activeTab, search, dateFrom, dateTo]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
@@ -121,26 +129,32 @@ function TransferListPageApi({ initialProjectCode }: TransferListPageApiProps) {
     setTransferMode('return');
     setNote('');
     setItems([{ ...emptyQtyPhaseLine }]);
+    setCreateErrors({});
   };
 
   const buildDto = (status: 'draft' | 'pending'): CreateTransferDto | null => {
     const validItems = items.filter(it => it.materialCode && Number(it.qty) > 0);
-    const validation = validateTransferCreate(projectCode.trim(), validItems);
-    if (!validation.success) {
-      showToast('error', validation.error.issues[0]?.message ?? 'Dữ liệu không hợp lệ');
-      return null;
-    }
-    if (transferMode === 'cross-project' && !toProjectCode.trim()) {
-      showToast('error', 'Vui lòng chọn kho dự án đích.');
-      return null;
-    }
-
     const overflow = validItems.some((it, idx) => {
       const max = availableReturnQty(projectInventory, it.materialCode, items, idx);
       return Number(it.qty) > max;
     });
-    if (overflow) {
-      showToast('error', 'Số lượng chuyển vượt tồn khả dụng tại kho dự án nguồn.');
+    const fieldErrors = getTransferFormFieldErrors(
+      projectCode,
+      toProjectCode,
+      transferMode,
+      items,
+      overflow,
+    );
+    if (Object.keys(fieldErrors).length > 0) {
+      setCreateErrors(fieldErrors);
+      showToast('error', 'Vui lòng kiểm tra lại các ô được đánh dấu.');
+      return null;
+    }
+    setCreateErrors({});
+
+    const validation = validateTransferCreate(projectCode.trim(), validItems);
+    if (!validation.success) {
+      showToast('error', validation.error.issues[0]?.message ?? 'Dữ liệu không hợp lệ');
       return null;
     }
 
@@ -180,7 +194,7 @@ function TransferListPageApi({ initialProjectCode }: TransferListPageApiProps) {
         'success',
         status === 'draft'
           ? `Phiếu nháp ${created.voucherCode} — đã giữ tồn khả dụng.`
-          : `Phiếu ${created.voucherCode} đã chốt, chờ thủ kho duyệt.`,
+          : `Phiếu ${created.voucherCode} đã duyệt dự kiến, chờ thủ kho duyệt kho.`,
       );
       setShowCreate(false);
       resetForm();
@@ -192,7 +206,7 @@ function TransferListPageApi({ initialProjectCode }: TransferListPageApiProps) {
   const handleSubmit = async (tf: Transfer) => {
     try {
       await submitMutation.mutateAsync(tf.id);
-      showToast('success', `Đã chốt phiếu ${tf.voucherCode}`);
+      showToast('success', `Đã duyệt dự kiến phiếu ${tf.voucherCode}`);
     } catch (err) {
       showToast('error', getApiErrorMessage(err, 'Không thể chốt phiếu'));
     }
@@ -201,7 +215,7 @@ function TransferListPageApi({ initialProjectCode }: TransferListPageApiProps) {
   const handleApprove = async (tf: Transfer) => {
     try {
       await approveMutation.mutateAsync(tf.id);
-      showToast('success', `Thủ kho đã duyệt phiếu ${tf.voucherCode}.`);
+      showToast('success', `Thủ kho đã duyệt kho phiếu ${tf.voucherCode}.`);
     } catch (err) {
       showToast('error', getApiErrorMessage(err, 'Không thể duyệt phiếu'));
     }
@@ -238,6 +252,13 @@ function TransferListPageApi({ initialProjectCode }: TransferListPageApiProps) {
         <div className="hrm-list-toolbar">
           <div className="hrm-list-toolbar__filters">
             <SearchBar value={search} onChange={v => { setSearch(v); setPage(1); }} placeholder="Tìm mã chứng từ, kho dự án..." />
+            <VoucherDateFilter
+              from={dateFrom}
+              to={dateTo}
+              onFromChange={v => { setDateFrom(v); setPage(1); }}
+              onToChange={v => { setDateTo(v); setPage(1); }}
+              onReset={() => { setDateFrom(''); setDateTo(''); setPage(1); }}
+            />
           </div>
         </div>
 
@@ -276,13 +297,23 @@ function TransferListPageApi({ initialProjectCode }: TransferListPageApiProps) {
         transferMode={transferMode}
         onTransferModeChange={setTransferMode}
         projectCode={projectCode}
-        onProjectCodeChange={setProjectCode}
+        onProjectCodeChange={code => {
+          setProjectCode(code);
+          setCreateErrors(e => ({ ...e, projectCode: undefined }));
+        }}
         toProjectCode={toProjectCode}
-        onToProjectCodeChange={setToProjectCode}
+        onToProjectCodeChange={code => {
+          setToProjectCode(code);
+          setCreateErrors(e => ({ ...e, toProjectCode: undefined }));
+        }}
         note={note}
         onNoteChange={setNote}
         items={items}
-        onItemsChange={setItems}
+        onItemsChange={next => {
+          setItems(next);
+          setCreateErrors(e => ({ ...e, items: undefined }));
+        }}
+        errors={createErrors}
         onCreate={handleCreate}
         materialUnit={materialUnit}
       />

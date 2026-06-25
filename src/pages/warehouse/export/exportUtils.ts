@@ -4,8 +4,8 @@ import type { MaterialQtyLine } from '../voucher/voucherFormTypes';
 
 export function exportStatusHint(status: Export['status']) {
   if (status === 'draft') return 'Nháp — ghi dự kiến xuất dự án';
-  if (status === 'pending') return 'Chờ thủ kho duyệt';
-  if (status === 'approved') return 'Đã trừ tồn thực tế dự án';
+  if (status === 'pending') return 'Đã duyệt dự kiến — chờ thủ kho duyệt kho';
+  if (status === 'approved') return 'Đã duyệt kho — trừ tồn thực tế dự án';
   return '';
 }
 

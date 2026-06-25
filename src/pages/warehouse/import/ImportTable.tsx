@@ -1,6 +1,7 @@
 import { Eye, Check, Send } from 'lucide-react';
 import type { Import } from '../../../types';
 import VoucherStatusCell from '../../../components/warehouse/VoucherStatusCell';
+import VoucherCodeCell from '../../../components/warehouse/VoucherCodeCell';
 import Dropdown from '../../../components/ui/Dropdown';
 import EmptyState from '../../../components/ui/EmptyState';
 import TableSkeletonRows from '../../../components/ui/TableSkeletonRows';
@@ -65,8 +66,8 @@ export default function ImportTable({
                 className="table-row wms-inventory-row--interactive"
                 onClick={() => onOpenDetail(imp)}
               >
-                <td className="table-cell font-mono text-sm font-semibold text-[var(--md-primary)]">
-                  {imp.voucherCode}
+                <td className="table-cell">
+                  <VoucherCodeCell code={imp.voucherCode} voucher={imp} />
                 </td>
                 <td className="table-cell max-w-[200px]">
                   <span className="line-clamp-1" title={projectName(imp.project)}>
@@ -88,10 +89,10 @@ export default function ImportTable({
                     items={[
                       { label: 'Xem chi tiết', icon: Eye, onClick: () => onOpenDetail(imp) },
                       ...(imp.status === 'draft'
-                        ? [{ label: 'Chốt phiếu', icon: Send, onClick: () => onSubmit(imp) }]
+                        ? [{ label: 'Duyệt dự kiến', icon: Send, onClick: () => onSubmit(imp) }]
                         : []),
-                      ...(imp.status === 'draft' || imp.status === 'pending'
-                        ? [{ label: 'Thủ kho duyệt', icon: Check, onClick: () => onApprove(imp) }]
+                      ...(imp.status === 'pending'
+                        ? [{ label: 'Duyệt kho', icon: Check, onClick: () => onApprove(imp) }]
                         : []),
                     ]}
                   />

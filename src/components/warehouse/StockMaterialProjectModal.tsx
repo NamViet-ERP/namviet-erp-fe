@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import Modal from '../ui/Modal';
 import type { StockMatrixRowApiDto } from '../../types/wms';
+import { fmtPlannedStock, fmtStockQtyOrDash } from '../../lib/wms/stockQtyFormat';
 
 interface Props {
   row: StockMatrixRowApiDto | null;
@@ -27,7 +28,7 @@ function StockMaterialProjectContent({ row, onClose }: { row: StockMatrixRowApiD
   }, [row, q]);
 
   const projectActualTotal = row.projects.reduce((s, p) => s + p.actualQty, 0);
-  const projectPlannedTotal = row.projects.reduce((s, p) => s + p.plannedQty, 0);
+  const projectPlannedImportTotal = row.projects.reduce((s, p) => s + p.plannedQty, 0);
   const usableQty = Math.max(0, row.generalActualQty - row.generalReservedQty) + projectActualTotal;
 
   return (
@@ -42,7 +43,7 @@ function StockMaterialProjectContent({ row, onClose }: { row: StockMatrixRowApiD
           <span className="stock-modal-stat-value tabular-nums text-[var(--md-success)]">{usableQty}</span>
         </div>
         <div className="stock-modal-stat">
-          <span className="stock-modal-stat-label">Giữ kho</span>
+          <span className="stock-modal-stat-label">Xuất dự kiến</span>
           <span className="stock-modal-stat-value tabular-nums stock-qty--reserved">{row.generalReservedQty}</span>
         </div>
         <div className="stock-modal-stat">
@@ -50,9 +51,9 @@ function StockMaterialProjectContent({ row, onClose }: { row: StockMatrixRowApiD
           <span className="stock-modal-stat-value tabular-nums">{projectActualTotal}</span>
         </div>
         <div className="stock-modal-stat">
-          <span className="stock-modal-stat-label">Tồn dự án dự kiến</span>
-          <span className="stock-modal-stat-value tabular-nums stock-qty--pending">
-            {projectPlannedTotal > 0 ? `+${projectPlannedTotal}` : projectPlannedTotal !== 0 ? projectPlannedTotal : '—'}
+          <span className="stock-modal-stat-label">Tồn dự kiến</span>
+          <span className="stock-modal-stat-value tabular-nums">
+            {fmtPlannedStock(projectActualTotal, projectPlannedImportTotal)}
           </span>
         </div>
       </div>
@@ -79,8 +80,9 @@ function StockMaterialProjectContent({ row, onClose }: { row: StockMatrixRowApiD
               <tr className="border-b border-[var(--md-outline-variant)]">
                 <th className="table-header-cell text-left py-2.5 pl-3">Dự án / công trình</th>
                 <th className="table-header-cell text-right py-2.5 w-24">Tồn TT</th>
-                <th className="table-header-cell text-right py-2.5 w-24">Dự kiến</th>
-                <th className="table-header-cell text-right py-2.5 w-20 pr-3">Giữ</th>
+                <th className="table-header-cell text-right py-2.5 w-24">Nhập DK</th>
+                <th className="table-header-cell text-right py-2.5 w-24">Xuất DK</th>
+                <th className="table-header-cell text-right py-2.5 w-24 pr-3">Tồn DK</th>
               </tr>
             </thead>
             <tbody>
@@ -98,10 +100,13 @@ function StockMaterialProjectContent({ row, onClose }: { row: StockMatrixRowApiD
                   </td>
                   <td className="table-cell text-right font-bold tabular-nums">{p.actualQty}</td>
                   <td className="table-cell text-right tabular-nums stock-qty--pending">
-                    {p.plannedQty !== 0 ? (p.plannedQty > 0 ? `+${p.plannedQty}` : p.plannedQty) : '—'}
+                    {fmtStockQtyOrDash(p.plannedQty)}
                   </td>
-                  <td className="table-cell text-right tabular-nums stock-qty--reserved pr-3">
-                    {p.reservedQty !== 0 ? p.reservedQty : '—'}
+                  <td className="table-cell text-right tabular-nums stock-qty--reserved">
+                    {fmtStockQtyOrDash(p.reservedQty)}
+                  </td>
+                  <td className="table-cell text-right font-semibold tabular-nums pr-3">
+                    {fmtPlannedStock(p.actualQty, p.plannedQty)}
                   </td>
                 </tr>
               ))}
@@ -111,7 +116,7 @@ function StockMaterialProjectContent({ row, onClose }: { row: StockMatrixRowApiD
       )}
 
       <p className="text-[11px] text-[var(--md-on-surface-variant)]">
-        {activeProjects.length} dự án · Khả dụng = (Kho tổng − Giữ kho) + Tồn dự án thực tế · Dự kiến = phiếu chờ duyệt
+        {activeProjects.length} dự án · Khả dụng = (Kho tổng − Xuất dự kiến) + Tồn dự án thực tế · Tồn dự kiến = Tồn thực tế + Nhập dự kiến
       </p>
     </div>
   );

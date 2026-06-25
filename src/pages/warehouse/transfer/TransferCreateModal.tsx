@@ -7,7 +7,9 @@ import QtyStepper from '../../../components/ui/QtyStepper';
 import MaterialAutocomplete from '../../../components/ui/MaterialAutocomplete';
 import { fmtStockQty } from '../../../lib/wms/stockQtyFormat';
 import type { MaterialQtyPhaseLine } from '../voucher/voucherFormTypes';
+import { emptyQtyPhaseLine } from '../voucher/voucherFormTypes';
 import { availableReturnQty, type TransferMode } from './transferUtils';
+import type { TransferFormFieldErrors } from '../../../lib/wms/transferFormSchema';
 
 interface TransferCreateModalProps {
   isOpen: boolean;
@@ -27,6 +29,7 @@ interface TransferCreateModalProps {
   onNoteChange: (note: string) => void;
   items: MaterialQtyPhaseLine[];
   onItemsChange: (items: MaterialQtyPhaseLine[]) => void;
+  errors?: TransferFormFieldErrors;
   onCreate: (status: 'draft' | 'pending') => void;
   materialUnit: (code: string) => string;
 }
@@ -49,6 +52,7 @@ export default function TransferCreateModal({
   onNoteChange,
   items,
   onItemsChange,
+  errors,
   onCreate,
   materialUnit,
 }: TransferCreateModalProps) {
@@ -63,12 +67,14 @@ export default function TransferCreateModal({
       footer={
         <>
           <button type="button" className="btn btn-outline" onClick={onClose}>Hủy</button>
-          <button type="button" className="btn btn-outline" disabled={isPending} onClick={() => onCreate('draft')}>
-            Lưu nháp
-          </button>
-          <button type="button" className="btn btn-filled" disabled={isPending} onClick={() => onCreate('pending')}>
-            Chốt phiếu
-          </button>
+          <div className="md-dialog__footer-actions">
+            <button type="button" className="btn btn-outline" disabled={isPending} onClick={() => onCreate('draft')}>
+              Lưu nháp
+            </button>
+            <button type="button" className="btn btn-filled" disabled={isPending} onClick={() => onCreate('pending')}>
+              Chốt phiếu
+            </button>
+          </div>
         </>
       }
     >
@@ -89,7 +95,7 @@ export default function TransferCreateModal({
             Chuyển sang kho dự án khác
           </button>
         </div>
-        <FormField label="Kho dự án nguồn" required>
+        <FormField label="Kho dự án nguồn" required error={errors?.projectCode}>
           <select
             className="form-select"
             value={projectCode}
@@ -112,7 +118,7 @@ export default function TransferCreateModal({
             <input className="form-input bg-[var(--md-surface-variant)]" value="Kho tổng" readOnly disabled />
           </FormField>
         ) : (
-          <FormField label="Kho dự án đích" required>
+          <FormField label="Kho dự án đích" required error={errors?.toProjectCode}>
             <select
               className="form-select"
               value={toProjectCode}
@@ -138,12 +144,15 @@ export default function TransferCreateModal({
             <button
               type="button"
               className="btn btn-outline btn-sm text-xs"
-              onClick={() => onItemsChange([...items, { materialCode: '', qty: '1', constructionPhase: '' }])}
+              onClick={() => onItemsChange([...items, { ...emptyQtyPhaseLine }])}
               disabled={!projectCode}
             >
               <Plus size={12} /> Thêm vật tư
             </button>
           </div>
+          {errors?.items && (
+            <p className="text-xs text-[var(--md-error)]" role="alert">{errors.items}</p>
+          )}
           {!projectCode ? (
             <p className="text-[11px] text-[var(--md-on-surface-variant)]">Chọn kho dự án trước khi thêm vật tư.</p>
           ) : (

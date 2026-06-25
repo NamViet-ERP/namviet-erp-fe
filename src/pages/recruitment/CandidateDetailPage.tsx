@@ -15,6 +15,7 @@ import { HrmDetailHeader } from '../../components/hr/HrmPageChrome';
 import HrmEditActions from '../../components/hr/HrmEditActions';
 import HrmNotFound, { HrmLoadingState } from '../../components/hr/HrmNotFound';
 import { formatCandidateAppliedAt } from '../../lib/hrm/candidateApiMapper';
+import { sanitizeCandidateForSave } from '../../lib/hrm/sanitizeInput';
 import type { Candidate, UpdateCandidateDto } from '../../types/hr';
 
 export default function CandidateDetailPage() {
@@ -43,12 +44,13 @@ export default function CandidateDetailPage() {
 
   const handleSave = async () => {
     if (!id || !form) return;
+    const sanitized = sanitizeCandidateForSave(form);
     try {
       const dto: UpdateCandidateDto = (({ id: _id, appliedAt: _appliedAt, ...rest }) => {
         void _id;
         void _appliedAt;
         return rest;
-      })(form);
+      })(sanitized);
       await updateMutation.mutateAsync({ id, dto });
       showToast('success', 'Đã lưu thông tin ứng viên');
       setDraft(null);
@@ -108,7 +110,7 @@ export default function CandidateDetailPage() {
           {isEditing ? (
             <>
               <FieldInput label="Họ và tên" value={form.fullName} onChange={v => set('fullName', v)} />
-              <FieldInput label="Số điện thoại" value={form.phone} onChange={v => set('phone', v)} />
+              <FieldInput label="Số điện thoại" value={form.phone} onChange={v => set('phone', v)} phone />
               <FieldInput label="Email" value={form.email} onChange={v => set('email', v)} />
               <FieldSelect label="Giới tính" value={form.gender} onChange={v => set('gender', v)} options={['Nam', 'Nữ']} />
               <FieldInput label="Năm sinh" value={form.birthDate} onChange={v => set('birthDate', v)} type="date" />

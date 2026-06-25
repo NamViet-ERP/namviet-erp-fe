@@ -1,6 +1,7 @@
 import { Eye, Check, Send } from 'lucide-react';
 import type { Export } from '../../../types';
 import VoucherStatusCell from '../../../components/warehouse/VoucherStatusCell';
+import VoucherCodeCell from '../../../components/warehouse/VoucherCodeCell';
 import Dropdown from '../../../components/ui/Dropdown';
 import EmptyState from '../../../components/ui/EmptyState';
 import TableSkeletonRows from '../../../components/ui/TableSkeletonRows';
@@ -61,8 +62,8 @@ export default function ExportTable({
                 className="table-row wms-inventory-row--interactive"
                 onClick={() => onOpenDetail(exp)}
               >
-                <td className="table-cell font-mono text-sm font-semibold text-[var(--md-primary)]">
-                  {exp.voucherCode}
+                <td className="table-cell">
+                  <VoucherCodeCell code={exp.voucherCode} voucher={exp} />
                 </td>
                 <td className="table-cell max-w-[220px]">
                   <span className="line-clamp-1" title={exportProjectLabel(exp)}>
@@ -82,10 +83,10 @@ export default function ExportTable({
                     items={[
                       { label: 'Xem chi tiết', icon: Eye, onClick: () => onOpenDetail(exp) },
                       ...(exp.status === 'draft'
-                        ? [{ label: 'Chốt phiếu', icon: Send, onClick: () => onSubmit(exp) }]
+                        ? [{ label: 'Duyệt dự kiến', icon: Send, onClick: () => onSubmit(exp) }]
                         : []),
-                      ...(exp.status === 'draft' || exp.status === 'pending'
-                        ? [{ label: 'Thủ kho duyệt', icon: Check, onClick: () => onApprove(exp) }]
+                      ...(exp.status === 'pending'
+                        ? [{ label: 'Duyệt kho', icon: Check, onClick: () => onApprove(exp) }]
                         : []),
                     ]}
                   />

@@ -50,7 +50,7 @@ export interface WarehouseProjectApiDto {
 export interface CreateWarehouseProjectRequest {
   projectCode: string;
   projectName: string;
-  projectType: 'Project' | 'Factory';
+  projectType: 'Project' | 'GeneralWarehouse';
   pmId: string;
   pmName: string;
   startDate: string;
@@ -112,4 +112,11 @@ export interface PagedApiResult<T> {
   page: number;
   pageSize: number;
   totalPages: number;
+}
+
+export interface MaterialUnitApiDto {
+  id: number;
+  name: string;
+  sortOrder: number;
+  isActive: boolean;
 }

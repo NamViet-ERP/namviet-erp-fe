@@ -12,7 +12,10 @@ const ROLES_ENDPOINT = '/api/admin/roles';
 
 export interface CreateRoleDto {
   label: string;
-  code?: string;
+}
+
+export interface UpdateRoleDto {
+  label: string;
 }
 
 export interface RoleListParams {
@@ -62,7 +65,6 @@ export const rolesService = {
 
     return apiClient.post<SystemRole>(ROLES_ENDPOINT, {
       label: dto.label.trim(),
-      code: dto.code?.trim() || undefined,
     });
   },
 
@@ -73,6 +75,17 @@ export const rolesService = {
     }
 
     return apiClient.patch<SystemRole>(`${ROLES_ENDPOINT}/${encodeURIComponent(code)}/toggle`);
+  },
+
+  async updateLabel(code: string, dto: UpdateRoleDto): Promise<SystemRole> {
+    if (USE_MOCK) {
+      const mock = await import('./mocks/rolesService.mock');
+      return mock.updateRoleLabelMock(code, dto);
+    }
+
+    return apiClient.patch<SystemRole>(`${ROLES_ENDPOINT}/${encodeURIComponent(code)}`, {
+      label: dto.label.trim(),
+    });
   },
 
   async remove(code: string): Promise<void> {

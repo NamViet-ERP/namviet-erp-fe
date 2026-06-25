@@ -55,6 +55,9 @@ export const queryKeys = {
   categories: {
     tree: ['categories', 'tree'] as const,
   },
+  materialUnits: {
+    all: ['materialUnits'] as const,
+  },
   projects: {
     all: ['projects'] as const,
     detail: (code: string) => ['projects', code] as const,

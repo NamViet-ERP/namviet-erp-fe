@@ -10,7 +10,9 @@ import CurrencyInput from '../../../components/ui/CurrencyInput';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import type { WarehouseProjectApiDto } from '../../../types/wms';
 import type { MaterialQtyPriceLine } from '../voucher/voucherFormTypes';
+import { emptyQtyPriceLine } from '../voucher/voucherFormTypes';
 import { importLineTotal } from './importUtils';
+import type { ImportFormFieldErrors } from '../../../lib/wms/importFormSchema';
 
 interface ImportCreateModalProps {
   isOpen: boolean;
@@ -30,6 +32,7 @@ interface ImportCreateModalProps {
   items: MaterialQtyPriceLine[];
   onItemsChange: (items: MaterialQtyPriceLine[]) => void;
   formGrandTotal: number;
+  errors?: ImportFormFieldErrors;
   onCreate: (status: 'draft' | 'pending') => void;
   materialUnit: (code: string) => string;
 }
@@ -52,11 +55,14 @@ export default function ImportCreateModal({
   items,
   onItemsChange,
   formGrandTotal,
+  errors,
   onCreate,
   materialUnit,
 }: ImportCreateModalProps) {
+  const resetItems = () => onItemsChange([{ ...emptyQtyPriceLine }]);
+
   const addMaterialLine = () => {
-    onItemsChange([...items, { materialCode: '', qty: '1', unitPrice: '' }]);
+    onItemsChange([...items, { ...emptyQtyPriceLine }]);
   };
 
   return (
@@ -71,7 +77,7 @@ export default function ImportCreateModal({
             <span className="text-[var(--md-on-surface-variant)]">Tổng giá trị: </span>
             <span className="font-bold text-[var(--md-primary)] tabular-nums">{formatCurrency(formGrandTotal)} đ</span>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2 md-dialog__footer-actions">
             <button type="button" className="btn btn-outline" onClick={onClose}>Hủy</button>
             <button type="button" className="btn btn-outline" disabled={isPending} onClick={() => onCreate('draft')}>
               Lưu nháp
@@ -84,8 +90,15 @@ export default function ImportCreateModal({
       }
     >
       <div className="space-y-4 modal-form-bordered">
-        <FormField label="Kho dự án nhận vật tư" required>
-          <select className="form-select" value={projectCode} onChange={e => onProjectCodeChange(e.target.value)}>
+        <FormField label="Kho dự án nhận vật tư" required error={errors?.projectCode}>
+          <select
+            className="form-select"
+            value={projectCode}
+            onChange={e => {
+              onProjectCodeChange(e.target.value);
+              resetItems();
+            }}
+          >
             <option value="">— Chọn kho dự án —</option>
             {projects.map(p => (
               <option key={p.projectCode} value={p.projectCode}>
@@ -95,7 +108,7 @@ export default function ImportCreateModal({
           </select>
         </FormField>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField label="Nhà cung cấp (NCC)" required>
+          <FormField label="Nhà cung cấp (NCC)" required error={errors?.defaultSupplier}>
             <SupplierAutocomplete
               value={defaultSupplier}
               onChange={onDefaultSupplierChange}
@@ -103,10 +116,10 @@ export default function ImportCreateModal({
               placeholder="Chọn NCC từ danh mục…"
             />
             <p className="mt-1 text-[11px] text-[var(--md-on-surface-variant)] text-pretty">
-              Bắt buộc chọn từ danh mục. Áp dụng cho toàn bộ phiếu nhập.
+              Vui lòng chọn từ danh mục. Áp dụng cho toàn bộ phiếu nhập.
             </p>
           </FormField>
-          <FormField label="Mã tham chiếu / PO" required>
+          <FormField label="Mã tham chiếu / PO" required error={errors?.referenceCode}>
             <input className="form-input" value={referenceCode} onChange={e => onReferenceCodeChange(e.target.value)} />
           </FormField>
         </div>
@@ -117,10 +130,21 @@ export default function ImportCreateModal({
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-3">
             <div className="text-xs font-bold uppercase text-[var(--md-on-surface-variant)]">Chi tiết vật tư</div>
-            <button type="button" className="btn btn-outline btn-sm text-xs" onClick={addMaterialLine}>
+            <button
+              type="button"
+              className="btn btn-outline btn-sm text-xs"
+              onClick={addMaterialLine}
+              disabled={!projectCode}
+            >
               <Plus size={12} /> Thêm vật tư
             </button>
           </div>
+          {errors?.items && (
+            <p className="text-xs text-[var(--md-error)]" role="alert">{errors.items}</p>
+          )}
+          {!projectCode ? (
+            <p className="text-[11px] text-[var(--md-on-surface-variant)]">Chọn kho dự án trước khi thêm vật tư.</p>
+          ) : (
           <div className="overflow-x-auto table-scroll">
             <table className="form-table import-items-table import-items-table--import text-xs">
               <thead>
@@ -206,6 +230,7 @@ export default function ImportCreateModal({
               </tfoot>
             </table>
           </div>
+          )}
         </div>
       </div>
     </Modal>

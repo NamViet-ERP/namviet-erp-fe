@@ -8,6 +8,8 @@ import {
   transferProjectLabel,
   transferStatusHint,
 } from './transferUtils';
+import { formatDateTimeVi } from '../../../lib/hrm/formatters';
+import { getVoucherCreatedAt } from '../../../lib/wms/voucherDateUtils';
 
 interface TransferDetailModalProps {
   isOpen: boolean;
@@ -44,6 +46,10 @@ export default function TransferDetailModal({
       fields={[
         { label: 'Từ kho dự án', value: transferProjectLabel(selected) },
         { label: 'Đích', value: destinationLabel(selected) },
+        {
+          label: 'Tạo lúc',
+          value: displayValue(formatDateTimeVi(getVoucherCreatedAt(selected)?.toISOString())),
+        },
         { label: 'Người lập', value: displayValue(selected.createdBy) },
         { label: 'Ghi chú', value: displayValue(selected.note), wide: true },
       ]}

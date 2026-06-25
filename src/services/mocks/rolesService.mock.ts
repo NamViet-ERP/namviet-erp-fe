@@ -1,5 +1,5 @@
 import { mockDelay } from '../../lib/mock';
-import type { CreateRoleDto, RoleListParams, SystemRole } from '../rolesService';
+import type { CreateRoleDto, RoleListParams, SystemRole, UpdateRoleDto } from '../rolesService';
 import { readStore, writeStore } from './rolesMockStore';
 
 function slugifyCode(label: string): string {
@@ -35,13 +35,13 @@ export async function createRoleMock(dto: CreateRoleDto): Promise<SystemRole> {
   const label = dto.label.trim();
   if (!label) throw new Error('Tên vai trò không được để trống');
 
-  const code = (dto.code?.trim() || slugifyCode(label)).toLowerCase();
+  const code = slugifyCode(label);
   if (!/^[a-z][a-z0-9_]*$/.test(code)) {
-    throw new Error('Mã vai trò chỉ gồm chữ thường, số và dấu gạch dưới');
+    throw new Error('Tên vai trò không hợp lệ — vui lòng dùng chữ cái và khoảng trắng');
   }
 
   const items = readStore();
-  if (items.some(r => r.code === code)) throw new Error('Mã vai trò đã tồn tại');
+  if (items.some(r => r.code === code)) throw new Error('Vai trò tương tự đã tồn tại — hãy đặt tên khác');
   if (items.some(r => r.label.toLowerCase() === label.toLowerCase())) {
     throw new Error('Tên vai trò đã tồn tại');
   }
@@ -57,6 +57,22 @@ export async function toggleRoleStatusMock(code: string): Promise<SystemRole> {
   const idx = items.findIndex(r => r.code === code);
   if (idx === -1) throw new Error(`Không tìm thấy vai trò "${code}"`);
   items[idx].isActive = !items[idx].isActive;
+  writeStore(items);
+  return mockDelay(items[idx]);
+}
+
+export async function updateRoleLabelMock(code: string, dto: UpdateRoleDto): Promise<SystemRole> {
+  const label = dto.label.trim();
+  if (!label) throw new Error('Tên vai trò không được để trống');
+
+  const items = readStore();
+  const idx = items.findIndex(r => r.code === code);
+  if (idx === -1) throw new Error(`Không tìm thấy vai trò "${code}"`);
+  if (items.some((r, i) => i !== idx && r.label.toLowerCase() === label.toLowerCase())) {
+    throw new Error('Tên vai trò đã tồn tại');
+  }
+
+  items[idx].label = label;
   writeStore(items);
   return mockDelay(items[idx]);
 }

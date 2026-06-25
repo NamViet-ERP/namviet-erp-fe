@@ -4,6 +4,8 @@ import VoucherDetailModal from '../../../components/warehouse/VoucherDetailModal
 import VoucherDetailFooter from '../../../components/warehouse/VoucherDetailFooter';
 import { displayValue } from '../../../components/warehouse/voucherDetailUtils';
 import { importStatusHint } from './importUtils';
+import { formatDateTimeVi } from '../../../lib/hrm/formatters';
+import { getVoucherCreatedAt } from '../../../lib/wms/voucherDateUtils';
 
 interface ImportDetailModalProps {
   isOpen: boolean;
@@ -44,6 +46,10 @@ export default function ImportDetailModal({
         },
         { label: 'Nhà cung cấp', value: displayValue(selected.supplier) },
         { label: 'Mã tham chiếu', value: displayValue(selected.referenceCode) },
+        {
+          label: 'Tạo lúc',
+          value: displayValue(formatDateTimeVi(getVoucherCreatedAt(selected)?.toISOString())),
+        },
         { label: 'Người lập', value: displayValue(selected.createdBy) },
         { label: 'Ghi chú', value: displayValue(selected.note), wide: true },
       ]}

@@ -8,6 +8,7 @@ import { HrmDetailHeader } from '../../components/hr/HrmPageChrome';
 import HrmNotFound, { HrmLoadingState } from '../../components/hr/HrmNotFound';
 import Modal from '../../components/ui/Modal';
 import FormField from '../../components/ui/FormField';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import AdminPasswordField from '../../components/admin/AdminPasswordField';
 import { validatePassword } from '../../lib/validatePassword';
 import { showToast } from '../../components/ui/Toast';
@@ -23,6 +24,8 @@ import { formatAdminDateCell } from '../../lib/hrm/formatters';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import type { AdminUserSource } from '../../services/adminUsersService';
 import { type SystemUserRole } from '../../constants/systemUsers';
+import { getSessionUser } from '../../constants/systemUsers';
+import { isCurrentAdminUserRow } from '../../lib/admin/isCurrentAdminUser';
 
 function parseSource(value: string | null): AdminUserSource {
   return value === 'manual' ? 'manual' : 'employee';
@@ -39,11 +42,16 @@ function AccountSwitch({ checked, disabled, onChange, title }: AccountSwitchProp
   return (
     <button
       type="button"
-      onClick={() => { if (!disabled) onChange(!checked); }}
+      onMouseDown={e => e.stopPropagation()}
+      onClick={e => {
+        e.stopPropagation();
+        if (!disabled) onChange(!checked);
+      }}
       disabled={disabled}
-      className={`hrm-toggle-switch${checked ? ' hrm-toggle-switch--on' : ''}`}
+      className={`hrm-toggle-switch${checked ? ' hrm-toggle-switch--on' : ''}${disabled ? ' hrm-toggle-switch--disabled' : ''}`}
       role="switch"
       aria-checked={checked}
+      aria-disabled={disabled}
       title={title}
     >
       <span className="hrm-toggle-switch__thumb" aria-hidden />
@@ -76,6 +84,10 @@ export default function AdminUserDetailPage() {
   const [selectedRole, setSelectedRole] = useState('');
   const [prevRoleCode, setPrevRoleCode] = useState<string | undefined>(undefined);
 
+  const [lockConfirmOpen, setLockConfirmOpen] = useState(false);
+
+  const sessionUser = getSessionUser();
+
   if (user?.roleCode !== prevRoleCode) {
     setPrevRoleCode(user?.roleCode);
     setSelectedRole(user?.roleCode ?? '');
@@ -104,17 +116,41 @@ export default function AdminUserDetailPage() {
       showToast('warning', 'Nhân viên đã nghỉ việc, không thể bật tài khoản');
       return;
     }
+    if (!next && isCurrentAdminUserRow(sessionUser, user)) {
+      showToast('warning', 'Không thể khóa tài khoản đang đăng nhập.');
+      return;
+    }
+    if (!next) {
+      setLockConfirmOpen(true);
+      return;
+    }
     try {
       await toggleMutation.mutateAsync({
         toggleId: user.toggleId,
         enabled: next,
         source: user.source,
       });
-      showToast('success', next ? 'Đã bật tài khoản' : 'Đã khóa tài khoản');
+      showToast('success', 'Đã bật tài khoản');
     } catch (err) {
       showToast('error', getApiErrorMessage(err, 'Không thể thay đổi trạng thái'));
     }
   };
+
+  const handleLockConfirm = async () => {
+    try {
+      await toggleMutation.mutateAsync({
+        toggleId: user.toggleId,
+        enabled: false,
+        source: user.source,
+      });
+      showToast('success', 'Đã khóa tài khoản');
+      setLockConfirmOpen(false);
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không thể thay đổi trạng thái'));
+    }
+  };
+
+  const isSelfAccount = isCurrentAdminUserRow(sessionUser, user);
 
   const handleChangeRole = async () => {
     if (!user.hasAccount || !selectedRole || selectedRole === user.roleCode) return;
@@ -225,7 +261,15 @@ export default function AdminUserDetailPage() {
                 checked={user.isActive}
                 disabled={toggleMutation.isPending || !user.canToggle}
                 onChange={handleToggle}
-                title={!user.canToggle ? 'Nhân viên đã nghỉ việc' : undefined}
+                title={
+                  user.isActive && isSelfAccount
+                    ? 'Không thể khóa tài khoản đang đăng nhập'
+                    : !user.canToggle
+                      ? 'Nhân viên đã nghỉ việc'
+                      : user.isActive
+                        ? 'Khóa tài khoản'
+                        : 'Mở khóa tài khoản'
+                }
               />
             ) : (
               <span className="text-sm text-[var(--md-on-surface-variant)]">—</span>
@@ -262,7 +306,7 @@ export default function AdminUserDetailPage() {
         isOpen={showProvision}
         onClose={() => { setShowProvision(false); setProvisionPassword(''); setProvisionErrors({}); }}
         title="Cấp tài khoản"
-        size="md"
+        size="xl"
         footer={
           <>
             <button type="button" className="btn btn-outline" onClick={() => setShowProvision(false)}>Hủy</button>
@@ -272,7 +316,7 @@ export default function AdminUserDetailPage() {
           </>
         }
       >
-        <form id="admin-detail-provision-form" onSubmit={handleProvision} className="space-y-4">
+        <form id="admin-detail-provision-form" onSubmit={handleProvision} className="space-y-4 modal-form-bordered">
           <FormField label="Vai trò hệ thống" required>
             <select className="form-select" value={provisionRole} onChange={e => setProvisionRole(e.target.value as SystemUserRole)}>
               {roleOptions.map(opt => (
@@ -298,7 +342,7 @@ export default function AdminUserDetailPage() {
           </>
         }
       >
-        <form id="admin-detail-reset-form" onSubmit={handleReset} className="space-y-4">
+        <form id="admin-detail-reset-form" onSubmit={handleReset} className="space-y-4 modal-form-bordered">
           <AdminPasswordField
             value={resetPassword}
             onChange={v => { setResetPassword(v); setResetError(''); }}
@@ -307,6 +351,24 @@ export default function AdminUserDetailPage() {
           />
         </form>
       </Modal>
+
+      <ConfirmDialog
+        isOpen={lockConfirmOpen}
+        onClose={() => setLockConfirmOpen(false)}
+        onConfirm={() => void handleLockConfirm()}
+        title="Khóa tài khoản"
+        message={
+          <>
+            Bạn có chắc muốn khóa tài khoản{' '}
+            <strong className="confirm-dialog__emphasis">{user.fullName}</strong>?
+            <br />
+            <span className="confirm-dialog__subtext">Người dùng sẽ không thể đăng nhập cho đến khi được mở khóa.</span>
+          </>
+        }
+        confirmLabel="Khóa tài khoản"
+        cancelLabel="Hủy"
+        isLoading={toggleMutation.isPending}
+      />
     </div>
   );
 }

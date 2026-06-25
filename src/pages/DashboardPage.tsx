@@ -10,26 +10,53 @@ import { showToast } from '../components/ui/Toast';
 import { departments, type DepartmentSubItem } from '../constants/departments';
 import DepartmentCard from '../components/layout/DepartmentCard';
 import { getSessionUser } from '../constants/systemUsers';
+import { useEmployees } from '../hooks/useEmployees';
+import type { Employee } from '../types/hr';
 
-// ── Mock Birthdays Data ──
 interface BirthdayEvent {
   name: string;
   role: 'Nhân viên' | 'Khách hàng';
 }
 
-const birthdaysData: Record<number, BirthdayEvent[]> = {
-  9: [
-    { name: 'Nguyễn Hoàng Nam', role: 'Nhân viên' },
-    { name: 'Công ty TNHH Mayzer Việt Nam', role: 'Khách hàng' },
-  ],
-  15: [{ name: 'Trần Bích Thủy', role: 'Nhân viên' }],
-  18: [{ name: 'Phạm Văn Tuấn', role: 'Nhân viên' }],
-  22: [
-    { name: 'Lê Minh Đức', role: 'Nhân viên' },
-    { name: 'Đoàn Quốc Bảo', role: 'Khách hàng' },
-  ],
-  29: [{ name: 'Phan Thanh Hải', role: 'Nhân viên' }],
-};
+function parseBirthMonthDay(birthDate: string): { month: number; day: number } | null {
+  const raw = birthDate?.trim();
+  if (!raw) return null;
+
+  const iso = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return { month: Number(iso[2]) - 1, day: Number(iso[3]) };
+
+  const vn = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (vn) return { month: Number(vn[2]) - 1, day: Number(vn[1]) };
+
+  const parsed = new Date(raw);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return { month: parsed.getMonth(), day: parsed.getDate() };
+}
+
+function buildBirthdaysByDay(employees: Employee[], month: number): Record<number, BirthdayEvent[]> {
+  const map: Record<number, BirthdayEvent[]> = {};
+
+  for (const emp of employees) {
+    const md = parseBirthMonthDay(emp.birthDate);
+    if (!md || md.month !== month) continue;
+    if (!map[md.day]) map[md.day] = [];
+    map[md.day].push({ name: emp.fullName, role: 'Nhân viên' });
+  }
+
+  for (const day of Object.keys(map)) {
+    map[Number(day)].sort((a, b) => a.name.localeCompare(b.name, 'vi'));
+  }
+
+  return map;
+}
+
+function countMonthBirthdays(data: Record<number, BirthdayEvent[]>) {
+  let employees = 0;
+  Object.values(data).forEach((events) => {
+    employees += events.length;
+  });
+  return { employees, customers: 0 };
+}
 
 interface TopRow {
   imageIcon: LucideIcon;
@@ -83,18 +110,6 @@ function buildCalendarCells(year: number, month: number): CalendarCell[] {
     nextMonthDay += 1;
   }
   return cells;
-}
-
-function countMonthBirthdays(data: Record<number, BirthdayEvent[]>) {
-  let employees = 0;
-  let customers = 0;
-  Object.values(data).forEach((events) => {
-    events.forEach((event) => {
-      if (event.role === 'Nhân viên') employees += 1;
-      else customers += 1;
-    });
-  });
-  return { employees, customers };
 }
 
 interface TopSalesTableProps {
@@ -162,12 +177,19 @@ export default function DashboardPage() {
 
   const [selectedDay, setSelectedDay] = useState<number>(today);
 
+  const { data: employees = [] } = useEmployees();
+
+  const birthdaysByDay = useMemo(
+    () => buildBirthdaysByDay(employees, viewMonth),
+    [employees, viewMonth],
+  );
+
   const calendarCells = useMemo(
     () => buildCalendarCells(viewYear, viewMonth),
     [viewYear, viewMonth],
   );
 
-  const birthdayStats = useMemo(() => countMonthBirthdays(birthdaysData), []);
+  const birthdayStats = useMemo(() => countMonthBirthdays(birthdaysByDay), [birthdaysByDay]);
   const sessionUser = getSessionUser();
   const displayName = sessionUser?.name?.split(' ').slice(-1)[0] ?? 'bạn';
 
@@ -314,7 +336,7 @@ export default function DashboardPage() {
               <div className="portal-calendar-grid">
                 {calendarCells.map((cell, idx) => {
                   const isToday = cell.isCurrentMonth && cell.day === today;
-                  const hasBirthday = cell.isCurrentMonth && Boolean(birthdaysData[cell.day]);
+                  const hasBirthday = cell.isCurrentMonth && Boolean(birthdaysByDay[cell.day]);
                   const isSelected = cell.isCurrentMonth && selectedDay === cell.day;
 
                   return (
@@ -352,9 +374,9 @@ export default function DashboardPage() {
                   <Gift size={12} aria-hidden />
                   Ngày {selectedDay}/{String(viewMonth + 1).padStart(2, '0')}/{viewYear}
                 </h4>
-                {birthdaysData[selectedDay] ? (
+                {birthdaysByDay[selectedDay] ? (
                   <ul className="portal-calendar-detail__list">
-                    {birthdaysData[selectedDay].map((person) => (
+                    {birthdaysByDay[selectedDay].map((person) => (
                       <li key={person.name} className="portal-calendar-detail__item">
                         <span className="portal-calendar-detail__dot" aria-hidden />
                         <span className="text-pretty">

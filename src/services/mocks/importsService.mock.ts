@@ -23,6 +23,7 @@ export async function createImportMock(dto: Omit<Import, 'id'>): Promise<Import>
     ...dto,
     id: mockId('im'),
     voucherCode: dto.voucherCode?.trim() || nextVoucherCode('NK', 260010 + store.length),
+    createdAt: dto.createdAt ?? new Date().toISOString(),
   };
   store = [created, ...store];
   return mockDelay(created);

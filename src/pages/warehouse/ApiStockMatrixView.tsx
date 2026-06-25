@@ -6,6 +6,7 @@ import EmptyState from '../../components/ui/EmptyState';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import StockMaterialProjectModal from '../../components/warehouse/StockMaterialProjectModal';
 import { useStockMatrix } from '../../hooks/useStockMatrix';
+import { fmtPlannedStock, fmtStockQtyOrDash } from '../../lib/wms/stockQtyFormat';
 import { WMS_EMPTY, WMS_ERROR } from '../../lib/wms/messages';
 import type { StockMatrixRowApiDto } from '../../types/wms';
 import { formatCurrency } from '../../utils/formatCurrency';
@@ -20,7 +21,7 @@ function totalUsableQty(row: StockMatrixRowApiDto) {
   return generalFree + sumProjectActual(row);
 }
 
-function sumProjectPlanned(row: StockMatrixRowApiDto) {
+function sumProjectPlannedImport(row: StockMatrixRowApiDto) {
   return row.projects.reduce((sum, p) => sum + p.plannedQty, 0);
 }
 
@@ -28,11 +29,6 @@ function countActiveProjects(row: StockMatrixRowApiDto) {
   return row.projects.filter(
     p => p.actualQty !== 0 || p.plannedQty !== 0 || p.reservedQty !== 0,
   ).length;
-}
-
-function fmtPlanned(n: number) {
-  if (n === 0) return '—';
-  return n > 0 ? `+${n}` : String(n);
 }
 
 export default function ApiStockMatrixView() {
@@ -84,7 +80,8 @@ export default function ApiStockMatrixView() {
           />
         </div>
         <p className="text-[11px] text-[var(--md-on-surface-variant)] mt-3 text-pretty">
-          Nhấn dòng vật tư để mở chi tiết phân bổ theo dự án. Khả dụng = (Kho tổng − Giữ kho) + Tồn dự án thực tế.
+          Nhấn dòng vật tư để mở chi tiết phân bổ theo dự án. Khả dụng = (Kho tổng − Xuất dự kiến) + Tồn dự án thực tế.
+          Tồn dự kiến = Tồn dự án thực tế + Nhập dự kiến.
           Giá BQ = đơn giá bình quân gia quyền (WAC) từ các phiếu nhập đã duyệt.
         </p>
       </div>
@@ -98,13 +95,13 @@ export default function ApiStockMatrixView() {
                 <th className="table-header-cell text-left stock-col-name">Tên vật tư</th>
                 <th className="table-header-cell text-center w-14">ĐVT</th>
                 <th className="table-header-cell text-right w-20">Kho tổng</th>
-                <th className="table-header-cell text-right w-20" title="(Kho tổng − Giữ kho) + Tồn dự án thực tế">Khả dụng</th>
-                <th className="table-header-cell text-right w-20">Giữ kho</th>
+                <th className="table-header-cell text-right w-20" title="(Kho tổng − Xuất dự kiến) + Tồn dự án thực tế">Khả dụng</th>
+                <th className="table-header-cell text-right w-20">Xuất dự kiến</th>
                 <th className="table-header-cell text-right stock-col-project">
                   <span className="stock-matrix-th-stack">Tồn dự án<br />thực tế</span>
                 </th>
-                <th className="table-header-cell text-right stock-col-project">
-                  <span className="stock-matrix-th-stack">Tồn dự án<br />dự kiến</span>
+                <th className="table-header-cell text-right stock-col-project" title="Tồn dự án thực tế + Nhập dự kiến">
+                  <span className="stock-matrix-th-stack">Tồn<br />dự kiến</span>
                 </th>
                 <th
                   className="table-header-cell text-right w-24"
@@ -133,7 +130,6 @@ export default function ApiStockMatrixView() {
               ) : (
                 paginated.map((row: StockMatrixRowApiDto) => {
                   const projectActual = sumProjectActual(row);
-                  const projectPlanned = sumProjectPlanned(row);
                   const activeCount = countActiveProjects(row);
                   const usableQty = totalUsableQty(row);
 
@@ -169,13 +165,13 @@ export default function ApiStockMatrixView() {
                         {usableQty}
                       </td>
                       <td className="table-cell text-right tabular-nums stock-qty--reserved">
-                        {row.generalReservedQty > 0 ? row.generalReservedQty : '—'}
+                        {fmtStockQtyOrDash(row.generalReservedQty)}
                       </td>
                       <td className="table-cell text-right font-bold tabular-nums">
                         {projectActual}
                       </td>
-                      <td className="table-cell text-right tabular-nums stock-qty--pending">
-                        {fmtPlanned(projectPlanned)}
+                      <td className="table-cell text-right font-semibold tabular-nums">
+                        {fmtPlannedStock(projectActual, sumProjectPlannedImport(row))}
                       </td>
                       <td className="table-cell text-right tabular-nums text-[var(--md-on-surface)]">
                         {row.weightedAverageUnitCost > 0

@@ -9,6 +9,11 @@ import type {
   WarehouseProjectLedgerEntryApiDto,
 } from '../types/wms';
 
+function voucherCreatedAt(date: string, hour = 9): string {
+  const [d, m, y] = date.split('/');
+  return new Date(Number(y), Number(m) - 1, Number(d), hour, 0, 0).toISOString();
+}
+
 export const MOCK_WMS_PROJECTS: WarehouseProjectApiDto[] = [
   {
     projectCode: 'DA-SABECO',
@@ -88,7 +93,7 @@ export const MOCK_WMS_PROJECTS: WarehouseProjectApiDto[] = [
   {
     projectCode: 'DA-HEINEKEN',
     projectName: 'Nhà máy Bia Heineken Vũng Tàu',
-    projectType: 'Factory',
+    projectType: 'GeneralWarehouse',
     pmId: '00000000-0000-0000-0000-000000000006',
     pmName: 'Hoàng Trung Hải',
     startDate: '2025-06-01',
@@ -175,6 +180,7 @@ export const MOCK_IMPORTS: Import[] = [
     id: 'im-001',
     voucherCode: 'NK-260001',
     date: '18/06/2026',
+    createdAt: voucherCreatedAt('18/06/2026', 10),
     supplier: 'Công ty TNHH Thép Việt Nam',
     referenceCode: 'PO-2026-0142',
     totalValue: 90_000_000,
@@ -205,6 +211,7 @@ export const MOCK_IMPORTS: Import[] = [
     id: 'im-002',
     voucherCode: 'NK-260002',
     date: '17/06/2026',
+    createdAt: voucherCreatedAt('17/06/2026', 11),
     supplier: 'Hòa Phát Group',
     referenceCode: 'PO-2026-0138',
     totalValue: 17_000_000,
@@ -233,6 +240,7 @@ export const MOCK_IMPORTS: Import[] = [
     id: 'im-003',
     voucherCode: 'NK-260003',
     date: '16/06/2026',
+    createdAt: voucherCreatedAt('16/06/2026', 14),
     supplier: 'Siemens Vietnam',
     referenceCode: 'PO-2026-0135',
     totalValue: 84_000_000,
@@ -261,6 +269,7 @@ export const MOCK_IMPORTS: Import[] = [
     id: 'im-004',
     voucherCode: 'NK-260004',
     date: '15/06/2026',
+    createdAt: voucherCreatedAt('15/06/2026', 9),
     supplier: 'Công ty TNHH Thép Việt Nam',
     referenceCode: 'PO-2026-0129',
     totalValue: 84_000_000,
@@ -290,6 +299,7 @@ export const MOCK_IMPORTS: Import[] = [
     id: 'im-005',
     voucherCode: 'NK-260005',
     date: '14/06/2026',
+    createdAt: voucherCreatedAt('14/06/2026', 16),
     supplier: 'Hòa Phát Group',
     referenceCode: 'PO-2026-0120',
     totalValue: 56_000_000,
@@ -321,6 +331,7 @@ export const MOCK_EXPORTS: Export[] = [
     id: 'ex-001',
     voucherCode: 'XK-260101',
     date: '19/06/2026',
+    createdAt: voucherCreatedAt('19/06/2026', 8),
     soCode: 'WO-2026-0442',
     customer: '',
     warehouseId: '',
@@ -346,6 +357,7 @@ export const MOCK_EXPORTS: Export[] = [
     id: 'ex-002',
     voucherCode: 'XK-260102',
     date: '18/06/2026',
+    createdAt: voucherCreatedAt('18/06/2026', 13),
     soCode: 'WO-2026-0438',
     customer: '',
     warehouseId: '',
@@ -369,6 +381,7 @@ export const MOCK_EXPORTS: Export[] = [
     id: 'ex-003',
     voucherCode: 'XK-260103',
     date: '17/06/2026',
+    createdAt: voucherCreatedAt('17/06/2026', 10),
     soCode: 'WO-2026-0431',
     customer: '',
     warehouseId: '',
@@ -395,6 +408,7 @@ export const MOCK_TRANSFERS: Transfer[] = [
     id: 'tf-001',
     voucherCode: 'CK-260201',
     date: '19/06/2026',
+    createdAt: voucherCreatedAt('19/06/2026', 15),
     fromWarehouseId: '',
     fromWarehouseName: 'Dự án Sabeco Bình Dương',
     toWarehouseId: '',
@@ -421,6 +435,7 @@ export const MOCK_TRANSFERS: Transfer[] = [
     id: 'tf-002',
     voucherCode: 'CK-260202',
     date: '18/06/2026',
+    createdAt: voucherCreatedAt('18/06/2026', 11),
     fromWarehouseId: '',
     fromWarehouseName: 'Dự án Sabeco Bình Dương',
     toWarehouseId: '',
@@ -447,6 +462,7 @@ export const MOCK_TRANSFERS: Transfer[] = [
     id: 'tf-003',
     voucherCode: 'CK-260203',
     date: '17/06/2026',
+    createdAt: voucherCreatedAt('17/06/2026', 9),
     fromWarehouseId: '',
     fromWarehouseName: 'Dự án Sữa Vinamilk Củ Chi',
     toWarehouseId: '',
@@ -470,6 +486,7 @@ export const MOCK_TRANSFERS: Transfer[] = [
     id: 'tf-004',
     voucherCode: 'CK-260204',
     date: '16/06/2026',
+    createdAt: voucherCreatedAt('16/06/2026', 10),
     fromWarehouseId: '',
     fromWarehouseName: 'Dự án Thép Hòa Phát Dung Quất',
     toWarehouseId: '',

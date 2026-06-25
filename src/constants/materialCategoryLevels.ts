@@ -21,3 +21,25 @@ export const MATERIAL_TABLE_COLUMNS = [
   { key: 'technicalSpec', label: 'Quy cách' },
   { key: 'qualityStandard', label: 'Tiêu chuẩn chất lượng' },
 ] as const;
+
+/** Placeholder chung cho mọi dropdown trong form vật tư */
+export const MATERIAL_SELECT_PLACEHOLDER = '— Chọn —' as const;
+
+/**
+ * Gợi ý nhập liệu — cùng một ví dụ: tấm thép SA516 dày 12mm.
+ * Mã TE-PLT-012-SA516 ↔ tên ↔ quy cách ↔ tiêu chuẩn phải khớp nghĩa.
+ */
+export const MATERIAL_FIELD_PLACEHOLDERS = {
+  materialCode: 'VD: TE-PLT-012-SA516',
+  materialName: 'VD: Tấm thép SA516 Gr.70 dày 12mm',
+  technicalSpec: 'VD: 2000×6000×12mm',
+  qualityStandard: 'VD: ASTM A516 Gr.70',
+} as const;
+
+export function materialSelectError(label: string) {
+  return `Vui lòng chọn ${label.toLowerCase()}`;
+}
+
+export function materialInputError(label: string) {
+  return `Vui lòng nhập ${label.toLowerCase()}`;
+}

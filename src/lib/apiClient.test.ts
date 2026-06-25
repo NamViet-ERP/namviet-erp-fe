@@ -38,14 +38,14 @@ describe('parseApiError', () => {
 
       const result = parseApiError(payload, fallback);
       // It should join and translate the errors:
-      expect(result).toBe('Mật khẩu cần có ít nhất một chữ hoa; Mật khẩu tối thiểu 8 ký tự');
+      expect(result).toBe('Mật khẩu cần có ít nhất một chữ hoa. Mật khẩu tối thiểu 8 ký tự.');
     });
 
     it('should handle obj.errors when it is an array of strings', () => {
       const payload = {
         errors: ['incorrect password', 'invalid token'],
       };
-      expect(parseApiError(payload, fallback)).toBe('Mật khẩu không đúng; Mã xác thực không hợp lệ');
+      expect(parseApiError(payload, fallback)).toBe('Mật khẩu không đúng. Mã xác thực không hợp lệ.');
     });
 
     it('should fall back to detail if errors is missing or empty', () => {
@@ -87,7 +87,7 @@ describe('parseApiError', () => {
           errors: [{ message: 'First error' }, { msg: 'Second error' }]
         };
         // The implementation does String(item) which results in "[object Object]"
-        expect(parseApiError(payload, fallback)).toBe('[object Object]; [object Object]');
+        expect(parseApiError(payload, fallback)).toBe('[object Object]. [object Object].');
       });
 
       it('should handle errors as list of objects nested inside field keys', () => {

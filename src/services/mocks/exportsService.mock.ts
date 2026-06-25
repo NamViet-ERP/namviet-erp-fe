@@ -26,6 +26,7 @@ export async function createExportMock(dto: Omit<Export, 'id'>): Promise<Export>
     voucherCode: dto.voucherCode?.trim() || nextVoucherCode('XK', 260110 + store.length),
     projectName: name,
     warehouseName: name,
+    createdAt: dto.createdAt ?? new Date().toISOString(),
   };
   store = [created, ...store];
   return mockDelay(created);

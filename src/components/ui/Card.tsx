@@ -13,7 +13,7 @@ const accentMap: Record<CardAccent, AccentStyle> = {
     containerBg: 'var(--md-warning-container)',
     iconColor: 'var(--md-on-warning-container)',
     blurColor: 'color-mix(in srgb, var(--md-warning) 14%, transparent)',
-    valueSuffix: '⬆',
+    valueSuffix: '',
   },
   blue: {
     containerBg: 'var(--md-primary-container)',

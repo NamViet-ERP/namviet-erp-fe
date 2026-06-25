@@ -1,16 +1,50 @@
 import { WMS_ERROR } from './wms/messages';
 
+function normalizeMessageKey(message: string): string {
+  return message
+    .trim()
+    .toLowerCase()
+    .replace(/[.;!?]+$/g, '')
+    .replace(/\s+/g, ' ');
+}
+
+/** Gộp nhiều dòng lỗi thành một câu ngắn, bỏ trùng lặp. */
+export function formatUserMessages(messages: string[]): string {
+  const unique: string[] = [];
+
+  for (const raw of messages) {
+    const msg = translateErrorMessage(raw.trim());
+    if (!msg) continue;
+
+    const key = normalizeMessageKey(msg);
+    const isDuplicate = unique.some(existing => {
+      const existingKey = normalizeMessageKey(existing);
+      return existingKey === key || existingKey.includes(key) || key.includes(existingKey);
+    });
+    if (isDuplicate) continue;
+
+    unique.push(msg.replace(/[;]+$/g, '').trim());
+  }
+
+  if (unique.length === 0) return '';
+  if (unique.length === 1) return ensureSentence(unique[0]);
+
+  return unique.map(ensureSentence).join(' ');
+}
+
+function ensureSentence(message: string): string {
+  const trimmed = message.trim().replace(/[;]+$/g, '').replace(/\.+$/g, '');
+  if (!trimmed) return '';
+  return `${trimmed}.`;
+}
+
 /** Chuyển thông báo lỗi kỹ thuật sang tiếng Việt cho người dùng. */
 export function translateErrorMessage(message: string): string {
   const trimmed = message.trim();
   if (!trimmed) return trimmed;
 
   if (trimmed.includes(';')) {
-    return trimmed
-      .split(';')
-      .map(part => translateErrorMessage(part.trim()))
-      .filter(Boolean)
-      .join('; ');
+    return formatUserMessages(trimmed.split(';'));
   }
 
   const lower = trimmed.toLowerCase();
@@ -23,6 +57,13 @@ export function translateErrorMessage(message: string): string {
   }
   if (/^typeerror:/i.test(trimmed) && lower.includes('fetch')) {
     return WMS_ERROR.network;
+  }
+
+  if (lower.includes('could not be converted') || lower.includes('json value could not')) {
+    return 'Dữ liệu gửi lên không hợp lệ. Vui lòng kiểm tra lại form.';
+  }
+  if (lower.includes('the request field is required')) {
+    return 'Vui lòng kiểm tra lại thông tin form.';
   }
 
   if (lower.includes('passwords must have at least one lowercase')) {
@@ -60,6 +101,8 @@ export function translateErrorMessage(message: string): string {
 export function isTechnicalUserMessage(message: string): boolean {
   const lower = message.trim().toLowerCase();
   if (!lower) return true;
+  if (lower.includes('path:') && lower.includes('linenumber:')) return true;
+  if (lower.includes('could not be converted') || lower.includes('json value could not')) return true;
   return (
     /failed to fetch|networkerror|fetch failed|load failed/i.test(lower) ||
     /\bbackend\b/.test(lower) ||

@@ -9,5 +9,6 @@ export const dashboardChartTooltipProps = {
     zIndex: 50,
     pointerEvents: 'none',
     outline: 'none',
+    maxWidth: 'none',
   },
 } as const;

@@ -1,21 +1,28 @@
 import type { CSSProperties } from 'react';
+import { createPortal } from 'react-dom';
 import type { TooltipProps } from 'recharts';
 
 import { formatCurrency } from '../../utils/formatCurrency';
 
 type TooltipPayload = NonNullable<TooltipProps<number, string>['payload']>[number];
 
-export function DashboardChartTooltip({
+const PORTAL_TOOLTIP_WIDTH = 240;
+const PORTAL_TOOLTIP_GAP = 12;
+
+export function DashboardChartTooltipContent({
   active,
   payload,
   label,
 }: TooltipProps<number, string>) {
   if (!active || !payload?.length) return null;
 
+  const displayLabel =
+    payload[0]?.payload?.name != null ? String(payload[0].payload.name) : label;
+
   return (
     <div className="chart-tooltip" role="tooltip">
-      {label != null && label !== '' && (
-        <p className="chart-tooltip__label">{String(label)}</p>
+      {displayLabel != null && displayLabel !== '' && (
+        <p className="chart-tooltip__label">{String(displayLabel)}</p>
       )}
       {payload.map((entry: TooltipPayload, index) => {
         const color = entry.color ?? entry.fill ?? 'var(--md-primary)';
@@ -40,5 +47,43 @@ export function DashboardChartTooltip({
         );
       })}
     </div>
+  );
+}
+
+export function DashboardChartTooltip(props: TooltipProps<number, string>) {
+  return <DashboardChartTooltipContent {...props} />;
+}
+
+/** Renders tooltip in document.body so card overflow cannot clip it. */
+export function DashboardBarChartPortalTooltip(
+  props: TooltipProps<number, string> & { chartRoot: HTMLElement | null },
+) {
+  const { active, coordinate, chartRoot } = props;
+  if (!active || !coordinate || !chartRoot) return null;
+
+  const anchor = chartRoot.querySelector('.recharts-wrapper') ?? chartRoot;
+  const rect = anchor.getBoundingClientRect();
+  let left = rect.left + coordinate.x;
+  const top = rect.top + coordinate.y - PORTAL_TOOLTIP_GAP;
+
+  const minLeft = PORTAL_TOOLTIP_GAP;
+  const maxLeft = window.innerWidth - PORTAL_TOOLTIP_WIDTH - PORTAL_TOOLTIP_GAP;
+  left = Math.min(Math.max(left, minLeft), maxLeft);
+
+  return createPortal(
+    <div
+      className="chart-tooltip-portal"
+      style={{
+        position: 'fixed',
+        left,
+        top,
+        transform: 'translate(-50%, -100%)',
+        zIndex: 10000,
+        pointerEvents: 'none',
+      }}
+    >
+      <DashboardChartTooltipContent {...props} />
+    </div>,
+    document.body,
   );
 }
