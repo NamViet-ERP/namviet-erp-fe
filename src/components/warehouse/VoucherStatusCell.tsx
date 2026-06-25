@@ -9,10 +9,10 @@ interface VoucherApprovalProps {
 }
 
 function useApprovalMeta({ status, approvedBy, approvedAt }: VoucherApprovalProps) {
-  const approver = approvedBy?.trim();
-  const approvedTime = formatDateTimeVi(approvedAt);
-  const showMeta = status === 'approved' && Boolean(approver || approvedTime);
-  return { approver, approvedTime, showMeta };
+  const actor = approvedBy?.trim();
+  const actionTime = formatDateTimeVi(approvedAt);
+  const showMeta = (status === 'approved' || status === 'rejected') && Boolean(actor || actionTime);
+  return { actor, actionTime, showMeta };
 }
 
 /** Meta duyệt dạng label — dùng trong modal chi tiết. */
@@ -21,7 +21,7 @@ export function VoucherApprovalDetail({
   approvedBy,
   approvedAt,
 }: VoucherApprovalProps) {
-  const { approver, approvedTime, showMeta } = useApprovalMeta({
+  const { actor, actionTime, showMeta } = useApprovalMeta({
     status,
     approvedBy,
     approvedAt,
@@ -29,18 +29,21 @@ export function VoucherApprovalDetail({
 
   if (!showMeta) return null;
 
+  const timeLabel = status === 'rejected' ? 'Từ chối lúc' : 'Duyệt lúc';
+  const actorLabel = status === 'rejected' ? 'Người từ chối' : 'Người duyệt';
+
   return (
     <>
-      {approvedTime && (
+      {actionTime && (
         <div>
-          <strong>Duyệt lúc:</strong>{' '}
-          <span className="tabular-nums text-[var(--md-on-surface-variant)]">{approvedTime}</span>
+          <strong>{timeLabel}:</strong>{' '}
+          <span className="tabular-nums text-[var(--md-on-surface-variant)]">{actionTime}</span>
         </div>
       )}
-      {approver && (
+      {actor && (
         <div>
-          <strong>Người duyệt:</strong>{' '}
-          <span className="text-[var(--md-on-surface-variant)]">{approver}</span>
+          <strong>{actorLabel}:</strong>{' '}
+          <span className="text-[var(--md-on-surface-variant)]">{actor}</span>
         </div>
       )}
     </>
@@ -52,7 +55,7 @@ export default function VoucherStatusCell({
   approvedBy,
   approvedAt,
 }: VoucherApprovalProps) {
-  const { approver, approvedTime, showMeta } = useApprovalMeta({
+  const { actor, actionTime, showMeta } = useApprovalMeta({
     status,
     approvedBy,
     approvedAt,
@@ -63,8 +66,8 @@ export default function VoucherStatusCell({
       <Badge status={status} />
       {showMeta && (
         <div className="max-w-[9rem] text-center text-[10px] leading-snug text-[var(--md-on-surface-variant)]">
-          {approvedTime && <div className="tabular-nums">{approvedTime}</div>}
-          {approver && <div className="truncate" title={approver}>{approver}</div>}
+          {actionTime && <div className="tabular-nums">{actionTime}</div>}
+          {actor && <div className="truncate" title={actor}>{actor}</div>}
         </div>
       )}
     </div>

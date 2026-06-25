@@ -21,18 +21,20 @@ export function buildApprovalFields(
   approvedBy?: string,
   approvedAt?: string,
 ): VoucherDetailField[] {
-  if (status !== 'approved') return [];
-  const approver = approvedBy?.trim();
-  const approvedTime = formatDateTimeVi(approvedAt);
+  if (status !== 'approved' && status !== 'rejected') return [];
+  const actor = approvedBy?.trim();
+  const actionTime = formatDateTimeVi(approvedAt);
+  const timeLabel = status === 'rejected' ? 'Từ chối lúc' : 'Duyệt lúc';
+  const actorLabel = status === 'rejected' ? 'Người từ chối' : 'Người duyệt';
   const fields: VoucherDetailField[] = [];
-  if (approvedTime) {
+  if (actionTime) {
     fields.push({
-      label: 'Duyệt lúc',
-      value: <span className="tabular-nums">{approvedTime}</span>,
+      label: timeLabel,
+      value: <span className="tabular-nums">{actionTime}</span>,
     });
   }
-  if (approver) {
-    fields.push({ label: 'Người duyệt', value: approver });
+  if (actor) {
+    fields.push({ label: actorLabel, value: actor });
   }
   return fields;
 }

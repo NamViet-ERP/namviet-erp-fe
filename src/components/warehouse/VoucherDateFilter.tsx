@@ -1,3 +1,5 @@
+import HrmDatePicker from '../hr/HrmDatePicker';
+
 interface VoucherDateFilterProps {
   from: string;
   to: string;
@@ -19,22 +21,21 @@ export default function VoucherDateFilter({
     <div className="flex flex-wrap items-center gap-2">
       <label className="flex items-center gap-1.5 text-xs text-[var(--md-on-surface-variant)]">
         <span className="whitespace-nowrap">Từ ngày</span>
-        <input
-          type="date"
-          className="form-input text-xs py-1.5 h-8 w-[9.5rem]"
+        <HrmDatePicker
           value={from}
-          onChange={e => onFromChange(e.target.value)}
-          aria-label="Lọc từ ngày tạo"
+          onChange={onFromChange}
+          placeholder="dd/mm/yyyy"
+          className="w-[9.5rem] text-xs"
         />
       </label>
       <label className="flex items-center gap-1.5 text-xs text-[var(--md-on-surface-variant)]">
         <span className="whitespace-nowrap">Đến ngày</span>
-        <input
-          type="date"
-          className="form-input text-xs py-1.5 h-8 w-[9.5rem]"
+        <HrmDatePicker
           value={to}
-          onChange={e => onToChange(e.target.value)}
-          aria-label="Lọc đến ngày tạo"
+          onChange={onToChange}
+          placeholder="dd/mm/yyyy"
+          min={from || undefined}
+          className="w-[9.5rem] text-xs"
         />
       </label>
       {hasFilter && (

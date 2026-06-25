@@ -1,4 +1,5 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import {
   addMonths,
@@ -71,8 +72,7 @@ type PopoverLayout = {
   placement: 'top' | 'bottom';
 };
 
-function computePopoverLayout(trigger: HTMLElement, popover: HTMLElement): PopoverLayout {
-  const triggerRect = trigger.getBoundingClientRect();
+function computePopoverLayout(triggerRect: DOMRect, popover: HTMLElement): PopoverLayout {
   const popoverHeight = popover.offsetHeight || 380;
   const width = Math.min(POPOVER_WIDTH, window.innerWidth - VIEWPORT_PADDING * 2);
 
@@ -111,6 +111,7 @@ export default function HrmDatePicker({
 }: HrmDatePickerProps) {
   const listId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [popoverLayout, setPopoverLayout] = useState<PopoverLayout | null>(null);
@@ -142,22 +143,24 @@ export default function HrmDatePicker({
   useEffect(() => {
     if (!open) return;
     const onDocClick = (e: MouseEvent) => {
-      if (!rootRef.current?.contains(e.target as Node)) {
-        setOpen(false);
-        setPopoverLayout(null);
-        onBlur?.();
-      }
+      const target = e.target as Node;
+      if (rootRef.current?.contains(target) || popoverRef.current?.contains(target)) return;
+      setOpen(false);
+      setPopoverLayout(null);
+      onBlur?.();
     };
     document.addEventListener('mousedown', onDocClick);
     return () => document.removeEventListener('mousedown', onDocClick);
   }, [open, onBlur]);
 
   useLayoutEffect(() => {
-    if (!open || !rootRef.current || !popoverRef.current) return;
+    if (!open || !triggerRef.current || !popoverRef.current) return;
 
     const updateLayout = () => {
-      if (!rootRef.current || !popoverRef.current) return;
-      setPopoverLayout(computePopoverLayout(rootRef.current, popoverRef.current));
+      if (!triggerRef.current || !popoverRef.current) return;
+      setPopoverLayout(
+        computePopoverLayout(triggerRef.current.getBoundingClientRect(), popoverRef.current),
+      );
     };
 
     updateLayout();
@@ -240,24 +243,7 @@ export default function HrmDatePicker({
   const canGoPrev = !min || toIsoDate(prevMonthLast) >= min;
   const canGoNext = !max || toIsoDate(nextMonthFirst) <= max;
 
-  return (
-    <div ref={rootRef} className={`hrm-date-picker ${className}`.trim()}>
-      <button
-        type="button"
-        disabled={disabled}
-        className={`hrm-date-picker__trigger hrm-field-input ${error ? 'hrm-field-input--error' : ''} ${open ? 'hrm-date-picker__trigger--open' : ''}`}
-        onClick={handleToggleOpen}
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        aria-controls={listId}
-      >
-        <span className={value ? 'hrm-date-picker__value' : 'hrm-date-picker__placeholder'}>
-          {value ? isoToDisplay(value) : placeholder}
-        </span>
-        <Calendar size={18} className="hrm-date-picker__icon" aria-hidden />
-      </button>
-
-      {open && (
+  const popover = open ? (
         <div
           ref={popoverRef}
           id={listId}
@@ -378,7 +364,26 @@ export default function HrmDatePicker({
             )}
           </div>
         </div>
-      )}
+  ) : null;
+
+  return (
+    <div ref={rootRef} className={`hrm-date-picker ${className}`.trim()}>
+      <button
+        ref={triggerRef}
+        type="button"
+        disabled={disabled}
+        className={`hrm-date-picker__trigger hrm-field-input ${error ? 'hrm-field-input--error' : ''} ${open ? 'hrm-date-picker__trigger--open' : ''}`}
+        onClick={handleToggleOpen}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-controls={listId}
+      >
+        <span className={value ? 'hrm-date-picker__value' : 'hrm-date-picker__placeholder'}>
+          {value ? isoToDisplay(value) : placeholder}
+        </span>
+        <Calendar size={18} className="hrm-date-picker__icon" aria-hidden />
+      </button>
+      {popover && createPortal(popover, document.body)}
     </div>
   );
 }
