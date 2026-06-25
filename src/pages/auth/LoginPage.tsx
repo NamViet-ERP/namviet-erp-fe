@@ -8,7 +8,7 @@ import { getAccountLockReason } from '../../services/employeesService';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { UI_ERROR } from '../../lib/uiMessages';
 import { authService } from '../../services/authService';
-import { USE_MOCK } from '../../lib/mock';
+import { USE_MOCK } from '../../mocks';
 import { REMEMBER_KEY, SAVED_USER_KEY, setRememberMePreference } from '../../lib/authSession';
 import RoleSwitcher from '../../components/layout/RoleSwitcher';
 import { getDefaultRoute } from '../../utils/getDefaultRoute';

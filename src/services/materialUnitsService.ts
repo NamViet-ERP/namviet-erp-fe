@@ -1,5 +1,5 @@
 import { apiClient } from '../lib/apiClient';
-import { USE_MOCK } from '../lib/mock';
+import { resolveMock } from '../mocks';
 import type { MaterialUnitApiDto } from '../types/wms';
 
 export interface UpsertMaterialUnitRequest {
@@ -9,38 +9,37 @@ export interface UpsertMaterialUnitRequest {
 }
 
 const ENDPOINT = '/api/material-units';
+const MOCK = () => import('../mocks/services/materialUnitsService.mock');
 
 export const materialUnitsService = {
   async list(activeOnly = false): Promise<MaterialUnitApiDto[]> {
-    if (USE_MOCK) {
-      const mock = await import('./mocks/materialUnitsService.mock');
-      return mock.listMaterialUnitsMock(activeOnly);
-    }
-    const qs = activeOnly ? '?activeOnly=true' : '';
-    return apiClient.get<MaterialUnitApiDto[]>(`${ENDPOINT}${qs}`);
+    return resolveMock(
+      () => MOCK().then((m) => m.listMaterialUnitsMock(activeOnly)),
+      async () => {
+        const qs = activeOnly ? '?activeOnly=true' : '';
+        return apiClient.get<MaterialUnitApiDto[]>(`${ENDPOINT}${qs}`);
+      },
+    );
   },
 
   async create(body: UpsertMaterialUnitRequest): Promise<MaterialUnitApiDto> {
-    if (USE_MOCK) {
-      const mock = await import('./mocks/materialUnitsService.mock');
-      return mock.createMaterialUnitMock(body);
-    }
-    return apiClient.post<MaterialUnitApiDto>(ENDPOINT, body);
+    return resolveMock(
+      () => MOCK().then((m) => m.createMaterialUnitMock(body)),
+      () => apiClient.post<MaterialUnitApiDto>(ENDPOINT, body),
+    );
   },
 
   async update(id: number, body: UpsertMaterialUnitRequest): Promise<void> {
-    if (USE_MOCK) {
-      const mock = await import('./mocks/materialUnitsService.mock');
-      return mock.updateMaterialUnitMock(id, body);
-    }
-    await apiClient.put(`${ENDPOINT}/${id}`, body);
+    return resolveMock(
+      () => MOCK().then((m) => m.updateMaterialUnitMock(id, body)),
+      async () => { await apiClient.put(`${ENDPOINT}/${id}`, body); },
+    );
   },
 
   async remove(id: number): Promise<void> {
-    if (USE_MOCK) {
-      const mock = await import('./mocks/materialUnitsService.mock');
-      return mock.removeMaterialUnitMock(id);
-    }
-    await apiClient.delete(`${ENDPOINT}/${id}`);
+    return resolveMock(
+      () => MOCK().then((m) => m.removeMaterialUnitMock(id)),
+      async () => { await apiClient.delete(`${ENDPOINT}/${id}`); },
+    );
   },
 };

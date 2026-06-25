@@ -1,4 +1,4 @@
-import { USE_MOCK } from '../lib/mock';
+import { USE_MOCK } from '../mocks';
 import { apiClient, setAuthTokenProvider } from '../lib/apiClient';
 import { cacheEmployeeStatus } from './employeesService';
 import type { SystemUser } from '../constants/systemUsers';

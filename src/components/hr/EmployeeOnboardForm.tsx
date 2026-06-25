@@ -7,7 +7,7 @@ import { showToast } from '../ui/Toast';
 import { employeesService, getSuggestedEmployeeCode, validateUniqueCode } from '../../services/employeesService';
 import { employeeCodeNextHint } from '../../lib/hrm/suggestedEmployeeCode';
 import { filesService } from '../../services/filesService';
-import { USE_MOCK } from '../../lib/mock';
+import { USE_MOCK } from '../../mocks';
 import { removeVietnameseTones } from '../../lib/vietnamese';
 import FormSectionHeader from './FormSectionHeader';
 import HrmDatePicker from './HrmDatePicker';

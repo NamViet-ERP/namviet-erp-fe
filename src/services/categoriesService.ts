@@ -1,5 +1,5 @@
 import { apiClient } from '../lib/apiClient';
-import { USE_MOCK } from '../lib/mock';
+import { resolveMock } from '../mocks';
 import type { MaterialCategoryApiDto } from '../types/wms';
 
 const ENDPOINT = '/api/categories';
@@ -20,34 +20,30 @@ export function generateCategoryCode(): string {
 
 export const categoriesService = {
   async getTree(): Promise<MaterialCategoryApiDto[]> {
-    if (USE_MOCK) {
-      const mock = await import('./mocks/categoriesService.mock');
-      return mock.getCategoryTreeMock();
-    }
-    return apiClient.get<MaterialCategoryApiDto[]>(`${ENDPOINT}/tree`);
+    return resolveMock(
+      () => import('../mocks/services/categoriesService.mock').then((m) => m.getCategoryTreeMock()),
+      () => apiClient.get<MaterialCategoryApiDto[]>(`${ENDPOINT}/tree`),
+    );
   },
 
   async create(body: UpsertMaterialCategoryRequest): Promise<MaterialCategoryApiDto> {
-    if (USE_MOCK) {
-      const mock = await import('./mocks/categoriesService.mock');
-      return mock.createCategoryMock(body);
-    }
-    return apiClient.post<MaterialCategoryApiDto>(ENDPOINT, body);
+    return resolveMock(
+      () => import('../mocks/services/categoriesService.mock').then((m) => m.createCategoryMock(body)),
+      () => apiClient.post<MaterialCategoryApiDto>(ENDPOINT, body),
+    );
   },
 
   async update(id: number, body: UpsertMaterialCategoryRequest): Promise<void> {
-    if (USE_MOCK) {
-      const mock = await import('./mocks/categoriesService.mock');
-      return mock.updateCategoryMock(id, body);
-    }
-    await apiClient.put(`${ENDPOINT}/${id}`, body);
+    return resolveMock(
+      () => import('../mocks/services/categoriesService.mock').then((m) => m.updateCategoryMock(id, body)),
+      async () => { await apiClient.put(`${ENDPOINT}/${id}`, body); },
+    );
   },
 
   async remove(id: number): Promise<void> {
-    if (USE_MOCK) {
-      const mock = await import('./mocks/categoriesService.mock');
-      return mock.removeCategoryMock(id);
-    }
-    await apiClient.delete(`${ENDPOINT}/${id}`);
+    return resolveMock(
+      () => import('../mocks/services/categoriesService.mock').then((m) => m.removeCategoryMock(id)),
+      async () => { await apiClient.delete(`${ENDPOINT}/${id}`); },
+    );
   },
 };

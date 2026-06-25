@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Plus, Edit, Trash2, MapPin, Eye } from 'lucide-react';
-import { warehouses as initialWarehouses, warehouseGroups, branches } from '../../data/warehouses';
+import { warehouses as initialWarehouses, warehouseGroups, branches } from '../../mocks/data/warehouses';
 import { showToast } from '../../components/ui/Toast';
 import Modal from '../../components/ui/Modal';
 import SearchBar from '../../components/ui/SearchBar';

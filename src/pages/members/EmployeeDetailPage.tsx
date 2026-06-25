@@ -15,7 +15,7 @@ import { formatDateVi } from '../../lib/hrm/formatters';
 import { sanitizeEmployeeForSave } from '../../lib/hrm/sanitizeInput';
 import { toFileAttachment } from '../../lib/hrm/attachments';
 import type { LocalFileState } from '../../components/hr/HrmImageUpload';
-import { USE_MOCK } from '../../lib/mock';
+import { USE_MOCK } from '../../mocks';
 import { filesService, type UploadCategory } from '../../services/filesService';
 import DetailSection from '../../components/hr/DetailSection';
 import DetailFieldGrid from '../../components/hr/DetailFieldGrid';

@@ -1,5 +1,8 @@
 /// <reference types="vite/client" />
 
+/** Compile-time mock flag injected by Vite `define` (see vite.config.ts). */
+declare const __USE_MOCK__: boolean;
+
 interface ImportMetaEnv {
   /** Base URL of the C# .NET Core API (e.g. https://api.namviet.vn). */
   readonly VITE_API_BASE_URL: string;

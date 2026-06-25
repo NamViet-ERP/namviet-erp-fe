@@ -1,6 +1,6 @@
 import { getStoredToken } from './authSession';
 import { getClientRoleFromToken } from './jwtClaims';
-import { USE_MOCK } from './mock';
+import { USE_MOCK } from '../mocks';
 
 /**
  * Resolves the active FE role for routing.

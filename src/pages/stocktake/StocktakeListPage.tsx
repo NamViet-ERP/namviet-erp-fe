@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Plus, Eye, FileText, Download, Check, XCircle, Lock, Unlock } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
-import { warehouses } from '../../data/warehouses';
-import { products } from '../../data/products';
+import { warehouses } from '../../mocks/data/warehouses';
+import { products } from '../../mocks/data/products';
 import { generateCode } from '../../utils/generateCode';
 import { useStocktakes, useCreateStocktake, useUpdateStocktake } from '../../hooks/useStocktakes';
 import { getApiErrorMessage } from '../../lib/apiClient';
