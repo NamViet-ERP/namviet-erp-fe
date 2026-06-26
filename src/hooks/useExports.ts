@@ -34,7 +34,12 @@ export function useUpdateExport() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, dto }: { id: string; dto: UpdateExportDto }) => exportsService.update(id, dto),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.exports.all }),
+    onSuccess: (_data, { id }) => {
+      qc.invalidateQueries({ queryKey: queryKeys.exports.all });
+      qc.invalidateQueries({ queryKey: queryKeys.exports.detail(id) });
+      qc.invalidateQueries({ queryKey: queryKeys.stock.matrix });
+      qc.invalidateQueries({ queryKey: queryKeys.projects.all });
+    },
   });
 }
 

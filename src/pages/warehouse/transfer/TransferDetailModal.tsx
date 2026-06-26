@@ -40,6 +40,7 @@ export default function TransferDetailModal({
       onClose={onClose}
       voucherCode={selected.voucherCode}
       status={selected.status}
+      voucherKind="transfer"
       statusHint={transferStatusHint(selected.status, crossProject)}
       approvedBy={selected.approvedBy}
       approvedAt={selected.approvedAt}

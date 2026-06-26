@@ -24,11 +24,17 @@ import { validateImportCreate, getImportFormFieldErrors, type ImportFormFieldErr
 
 import { parseCurrencyInput } from '../../utils/currencyInput';
 
+import { getVoucherTabLabels } from '../../lib/wms/voucherStatusLabels';
+
+import { importToFormLines } from '../../lib/wms/voucherFormPopulate';
+
 import {
 
   useImports,
 
   useCreateImport,
+
+  useUpdateImport,
 
   useApproveImport,
 
@@ -99,6 +105,8 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
   const [selected, setSelected] = useState<Import | null>(null);
 
+  const [editing, setEditing] = useState<Import | null>(null);
+
 
 
   const [defaultSupplier, setDefaultSupplier] = useState('');
@@ -126,6 +134,8 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
   const createMutation = useCreateImport();
 
+  const updateMutation = useUpdateImport();
+
   const approveMutation = useApproveImport();
 
   const submitMutation = useSubmitImport();
@@ -140,15 +150,17 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
 
 
+  const voucherTabs = getVoucherTabLabels('import');
+
   const tabs = [
 
     { id: 'all', label: 'Tất cả', count: imports.length },
 
-    { id: 'draft', label: 'Nháp', count: imports.filter(i => i.status === 'draft').length },
+    { id: 'draft', label: voucherTabs.draft, count: imports.filter(i => i.status === 'draft').length },
 
-    { id: 'pending', label: 'Chờ duyệt', count: imports.filter(i => i.status === 'pending').length },
+    { id: 'pending', label: voucherTabs.pending, count: imports.filter(i => i.status === 'pending').length },
 
-    { id: 'approved', label: 'Đã duyệt', count: imports.filter(i => i.status === 'approved').length },
+    { id: 'approved', label: voucherTabs.approved, count: imports.filter(i => i.status === 'approved').length },
 
   ];
 
@@ -215,6 +227,8 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
 
   const resetForm = () => {
+
+    setEditing(null);
 
     setDefaultSupplier('');
 
@@ -356,9 +370,9 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
         status === 'draft'
 
-          ? `Phiếu nháp ${created.voucherCode} — đã ghi dự kiến nhập dự án.`
+          ? `Phiếu nháp ${created.voucherCode} — chưa chốt dự kiến.`
 
-          : `Phiếu ${created.voucherCode} đã duyệt dự kiến, chờ thủ kho duyệt kho.`,
+          : `Phiếu ${created.voucherCode} — nhập dự kiến, chờ duyệt thực tế.`,
 
       );
 
@@ -371,6 +385,58 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
       showToast('error', getApiErrorMessage(err, 'Không thể tạo phiếu nhập'));
 
     }
+
+  };
+
+
+
+  const handleUpdate = async () => {
+
+    if (!editing) return;
+
+    const status = editing.status === 'draft' ? 'draft' : 'pending';
+
+    const dto = buildDto(status);
+
+    if (!dto) return;
+
+    try {
+
+      await updateMutation.mutateAsync({ id: editing.id, dto: { ...dto, status: editing.status } });
+
+      showToast('success', `Đã cập nhật phiếu ${editing.voucherCode}.`);
+
+      setShowCreate(false);
+
+      resetForm();
+
+    } catch (err) {
+
+      showToast('error', getApiErrorMessage(err, 'Không thể cập nhật phiếu nhập'));
+
+    }
+
+  };
+
+
+
+  const openEdit = (imp: Import) => {
+
+    setEditing(imp);
+
+    setProjectCode(imp.project ?? '');
+
+    setDefaultSupplier(imp.supplier);
+
+    setReferenceCode(imp.referenceCode);
+
+    setNote(imp.note);
+
+    setItems(importToFormLines(imp.items));
+
+    setCreateErrors({});
+
+    setShowCreate(true);
 
   };
 
@@ -502,6 +568,8 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
           onOpenDetail={openDetail}
 
+          onEdit={openEdit}
+
           onSubmit={handleSubmit}
 
           onApprove={handleApprove}
@@ -542,9 +610,9 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
         isOpen={showCreate}
 
-        onClose={() => setShowCreate(false)}
+        onClose={() => { setShowCreate(false); resetForm(); }}
 
-        isPending={createMutation.isPending}
+        isPending={createMutation.isPending || updateMutation.isPending}
 
         projects={projects}
 
@@ -589,6 +657,10 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
         errors={createErrors}
 
         onCreate={handleCreate}
+
+        onSave={handleUpdate}
+
+        editVoucher={editing ? { code: editing.voucherCode } : null}
 
         materialUnit={materialUnit}
 

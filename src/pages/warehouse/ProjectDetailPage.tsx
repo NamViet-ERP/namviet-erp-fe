@@ -15,7 +15,7 @@ import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { formatDateCell } from '../../lib/hrm/formatters';
-import { fmtPlannedStock, fmtStockQtyOrDash } from '../../lib/wms/stockQtyFormat';
+import { fmtExpectedStock, fmtPlannedNet, fmtStockQtyOrDash } from '../../lib/wms/stockQtyFormat';
 import { formatCurrencyFull } from '../../utils/formatCurrency';
 import { useProject, useProjectInventory, useCloseProject } from '../../hooks/useProjects';
 import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
@@ -95,11 +95,12 @@ export default function ProjectDetailPage() {
                   <th className="table-header-cell text-right">Nhập dự kiến</th>
                   <th className="table-header-cell text-right">Xuất dự kiến</th>
                   <th className="table-header-cell text-right">Tồn dự kiến</th>
+                  <th className="table-header-cell text-right">Tồn kỳ vọng</th>
                   <th className="table-header-cell text-right">Giá trị</th>
                 </tr>
               </thead>
               <tbody>
-                <TableSkeletonRows colSpan={7} />
+                <TableSkeletonRows colSpan={8} />
               </tbody>
             </table>
           </div>
@@ -205,7 +206,7 @@ export default function ProjectDetailPage() {
                 <tbody>
                   {Array.from({ length: 4 }).map((_, i) => (
                     <tr key={i} className="hrm-table-skeleton-row" aria-hidden>
-                      <td colSpan={7}><div className="hrm-table-skeleton" /></td>
+                      <td colSpan={8}><div className="hrm-table-skeleton" /></td>
                     </tr>
                   ))}
                 </tbody>
@@ -225,7 +226,8 @@ export default function ProjectDetailPage() {
                       <th className="table-header-cell text-right">Tồn thực tế</th>
                       <th className="table-header-cell text-right">Nhập dự kiến</th>
                       <th className="table-header-cell text-right">Xuất dự kiến</th>
-                      <th className="table-header-cell text-right" title="Tồn thực tế + Nhập dự kiến">Tồn dự kiến</th>
+                      <th className="table-header-cell text-right" title="Nhập dự kiến − Xuất dự kiến">Tồn dự kiến</th>
+                      <th className="table-header-cell text-right" title="Tồn thực tế + Tồn dự kiến">Tồn kỳ vọng</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -246,7 +248,10 @@ export default function ProjectDetailPage() {
                           {fmtStockQtyOrDash(row.plannedExportQty)}
                         </td>
                         <td className="table-cell text-right font-semibold tabular-nums">
-                          {fmtPlannedStock(row.actualInventoryQty, row.plannedImportQty)}
+                          {fmtPlannedNet(row.plannedImportQty, row.plannedExportQty)}
+                        </td>
+                        <td className="table-cell text-right font-semibold tabular-nums">
+                          {fmtExpectedStock(row.actualInventoryQty, row.plannedImportQty, row.plannedExportQty)}
                         </td>
                       </tr>
                     ))}

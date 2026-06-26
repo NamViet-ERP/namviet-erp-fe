@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import Modal from '../ui/Modal';
 import type { StockMatrixRowApiDto } from '../../types/wms';
-import { fmtPlannedStock, fmtStockQtyOrDash } from '../../lib/wms/stockQtyFormat';
+import { fmtExpectedStock, fmtPlannedNet, fmtStockQtyOrDash } from '../../lib/wms/stockQtyFormat';
+import { STOCK_FORMULA_LEGEND_SHORT } from '../../lib/wms/stockTerminology';
+import { totalUsableQty } from '../../lib/wms/stockMatrixUtils';
 
 interface Props {
   row: StockMatrixRowApiDto | null;
@@ -28,12 +30,13 @@ function StockMaterialProjectContent({ row, onClose }: { row: StockMatrixRowApiD
   }, [row, q]);
 
   const projectActualTotal = row.projects.reduce((s, p) => s + p.actualQty, 0);
-  const projectPlannedImportTotal = row.projects.reduce((s, p) => s + p.plannedImportQty, 0);
-  const usableQty = Math.max(0, row.generalActualQty - row.generalReservedQty) + projectActualTotal;
+  const plannedImportTotal = row.projects.reduce((s, p) => s + p.plannedImportQty, 0);
+  const plannedExportTotal = row.projects.reduce((s, p) => s + p.plannedExportQty, 0);
+  const usableQty = totalUsableQty(row);
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
         <div className="stock-modal-stat">
           <span className="stock-modal-stat-label">Kho tổng</span>
           <span className="stock-modal-stat-value tabular-nums">{row.generalActualQty}</span>
@@ -43,17 +46,21 @@ function StockMaterialProjectContent({ row, onClose }: { row: StockMatrixRowApiD
           <span className="stock-modal-stat-value tabular-nums text-[var(--md-success)]">{usableQty}</span>
         </div>
         <div className="stock-modal-stat">
-          <span className="stock-modal-stat-label">Xuất dự kiến</span>
-          <span className="stock-modal-stat-value tabular-nums stock-qty--reserved">{row.generalReservedQty}</span>
+          <span className="stock-modal-stat-label">Nhập dự kiến</span>
+          <span className="stock-modal-stat-value tabular-nums stock-qty--pending">{fmtStockQtyOrDash(plannedImportTotal)}</span>
         </div>
         <div className="stock-modal-stat">
-          <span className="stock-modal-stat-label">Tồn dự án thực tế</span>
+          <span className="stock-modal-stat-label">Xuất dự kiến</span>
+          <span className="stock-modal-stat-value tabular-nums stock-qty--reserved">{fmtStockQtyOrDash(plannedExportTotal)}</span>
+        </div>
+        <div className="stock-modal-stat">
+          <span className="stock-modal-stat-label">Tồn thực tế</span>
           <span className="stock-modal-stat-value tabular-nums">{projectActualTotal}</span>
         </div>
         <div className="stock-modal-stat">
-          <span className="stock-modal-stat-label">Tồn dự kiến</span>
+          <span className="stock-modal-stat-label">Tồn kỳ vọng</span>
           <span className="stock-modal-stat-value tabular-nums">
-            {fmtPlannedStock(projectActualTotal, projectPlannedImportTotal)}
+            {fmtExpectedStock(projectActualTotal, plannedImportTotal, plannedExportTotal)}
           </span>
         </div>
       </div>
@@ -79,10 +86,11 @@ function StockMaterialProjectContent({ row, onClose }: { row: StockMatrixRowApiD
             <thead>
               <tr className="border-b border-[var(--md-outline-variant)]">
                 <th className="table-header-cell text-left py-2.5 pl-3">Dự án / công trình</th>
-                <th className="table-header-cell text-right py-2.5 w-24">Tồn TT</th>
-                <th className="table-header-cell text-right py-2.5 w-24">Nhập DK</th>
-                <th className="table-header-cell text-right py-2.5 w-24">Xuất DK</th>
-                <th className="table-header-cell text-right py-2.5 w-24 pr-3">Tồn DK</th>
+                <th className="table-header-cell text-right py-2.5 w-20">Tồn TT</th>
+                <th className="table-header-cell text-right py-2.5 w-20">Nhập DK</th>
+                <th className="table-header-cell text-right py-2.5 w-20">Xuất DK</th>
+                <th className="table-header-cell text-right py-2.5 w-20">Tồn DK</th>
+                <th className="table-header-cell text-right py-2.5 w-20 pr-3">Kỳ vọng</th>
               </tr>
             </thead>
             <tbody>
@@ -105,8 +113,11 @@ function StockMaterialProjectContent({ row, onClose }: { row: StockMatrixRowApiD
                   <td className="table-cell text-right tabular-nums stock-qty--reserved">
                     {fmtStockQtyOrDash(p.plannedExportQty)}
                   </td>
+                  <td className="table-cell text-right font-semibold tabular-nums">
+                    {fmtPlannedNet(p.plannedImportQty, p.plannedExportQty)}
+                  </td>
                   <td className="table-cell text-right font-semibold tabular-nums pr-3">
-                    {fmtPlannedStock(p.actualQty, p.plannedImportQty)}
+                    {fmtExpectedStock(p.actualQty, p.plannedImportQty, p.plannedExportQty)}
                   </td>
                 </tr>
               ))}
@@ -116,7 +127,7 @@ function StockMaterialProjectContent({ row, onClose }: { row: StockMatrixRowApiD
       )}
 
       <p className="text-[11px] text-[var(--md-on-surface-variant)]">
-        {activeProjects.length} dự án · Khả dụng = (Kho tổng − Xuất dự kiến) + Tồn dự án thực tế · Tồn dự kiến = Tồn thực tế + Nhập dự kiến
+        {activeProjects.length} dự án · {STOCK_FORMULA_LEGEND_SHORT}
       </p>
     </div>
   );

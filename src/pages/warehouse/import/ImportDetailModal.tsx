@@ -36,6 +36,7 @@ export default function ImportDetailModal({
       onClose={onClose}
       voucherCode={selected.voucherCode}
       status={selected.status}
+      voucherKind="import"
       statusHint={importStatusHint(selected.status)}
       approvedBy={selected.approvedBy}
       approvedAt={selected.approvedAt}

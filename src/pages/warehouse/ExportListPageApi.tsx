@@ -13,9 +13,12 @@ import { validateExportCreate, getExportFormFieldErrors, type ExportFormFieldErr
 import {
   useExports,
   useCreateExport,
+  useUpdateExport,
   useApproveExport,
   useSubmitExport,
 } from '../../hooks/useExports';
+import { getVoucherTabLabels } from '../../lib/wms/voucherStatusLabels';
+import { exportToFormLines } from '../../lib/wms/voucherFormPopulate';
 import { useMaterials } from '../../hooks/useMaterials';
 import { useProjects, useProjectInventory } from '../../hooks/useProjects';
 import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
@@ -46,6 +49,7 @@ function ExportListPageApi({ initialProjectCode }: ExportListPageApiProps) {
   const [showCreate, setShowCreate] = useState(!!initialProjectCode);
   const [showDetail, setShowDetail] = useState(false);
   const [selected, setSelected] = useState<Export | null>(null);
+  const [editing, setEditing] = useState<Export | null>(null);
 
   const [projectCode, setProjectCode] = useState(initialProjectCode ?? '');
   const [referenceCode, setReferenceCode] = useState('');
@@ -61,6 +65,7 @@ function ExportListPageApi({ initialProjectCode }: ExportListPageApiProps) {
   const { data: projectsPage } = useProjects({ pageSize: 100, status: 'Active' });
   const { data: projectInventory = [] } = useProjectInventory(projectCode || undefined);
   const createMutation = useCreateExport();
+  const updateMutation = useUpdateExport();
   const approveMutation = useApproveExport();
   const submitMutation = useSubmitExport();
 
@@ -77,11 +82,12 @@ function ExportListPageApi({ initialProjectCode }: ExportListPageApiProps) {
     return materials.filter(m => codes.has(m.materialCode));
   }, [materials, projectInventory, projectCode]);
 
+  const voucherTabs = getVoucherTabLabels('export');
   const tabs = [
     { id: 'all', label: 'Tất cả', count: exports.length },
-    { id: 'draft', label: 'Nháp', count: exports.filter(e => e.status === 'draft').length },
-    { id: 'pending', label: 'Chờ duyệt', count: exports.filter(e => e.status === 'pending').length },
-    { id: 'approved', label: 'Đã duyệt', count: exports.filter(e => e.status === 'approved').length },
+    { id: 'draft', label: voucherTabs.draft, count: exports.filter(e => e.status === 'draft').length },
+    { id: 'pending', label: voucherTabs.pending, count: exports.filter(e => e.status === 'pending').length },
+    { id: 'approved', label: voucherTabs.approved, count: exports.filter(e => e.status === 'approved').length },
   ];
 
   const filtered = useMemo(() => {
@@ -110,6 +116,7 @@ function ExportListPageApi({ initialProjectCode }: ExportListPageApiProps) {
   };
 
   const resetForm = () => {
+    setEditing(null);
     setProjectCode('');
     setReferenceCode('');
     setNote('');
@@ -171,14 +178,39 @@ function ExportListPageApi({ initialProjectCode }: ExportListPageApiProps) {
       showToast(
         'success',
         status === 'draft'
-          ? `Phiếu nháp ${created.voucherCode} — đã ghi dự kiến xuất.`
-          : `Phiếu ${created.voucherCode} đã duyệt dự kiến, chờ thủ kho duyệt kho.`,
+          ? `Phiếu nháp ${created.voucherCode} — chưa chốt dự kiến.`
+          : `Phiếu ${created.voucherCode} — xuất dự kiến, chờ duyệt thực tế.`,
       );
       setShowCreate(false);
       resetForm();
     } catch (err) {
       showToast('error', getApiErrorMessage(err, 'Không thể tạo phiếu xuất'));
     }
+  };
+
+  const handleUpdate = async () => {
+    if (!editing) return;
+    const status = editing.status === 'draft' ? 'draft' : 'pending';
+    const dto = buildDto(status);
+    if (!dto) return;
+    try {
+      await updateMutation.mutateAsync({ id: editing.id, dto: { ...dto, status: editing.status } });
+      showToast('success', `Đã cập nhật phiếu ${editing.voucherCode}.`);
+      setShowCreate(false);
+      resetForm();
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không thể cập nhật phiếu xuất'));
+    }
+  };
+
+  const openEdit = (exp: Export) => {
+    setEditing(exp);
+    setProjectCode(exp.project ?? '');
+    setReferenceCode(exp.soCode ?? '');
+    setNote(exp.note);
+    setItems(exportToFormLines(exp.items));
+    setCreateErrors({});
+    setShowCreate(true);
   };
 
   const handleSubmit = async (exp: Export) => {
@@ -246,6 +278,7 @@ function ExportListPageApi({ initialProjectCode }: ExportListPageApiProps) {
           isError={isError}
           error={error}
           onOpenDetail={openDetail}
+          onEdit={openEdit}
           onSubmit={handleSubmit}
           onApprove={handleApprove}
         />
@@ -266,8 +299,8 @@ function ExportListPageApi({ initialProjectCode }: ExportListPageApiProps) {
 
       <ExportCreateModal
         isOpen={showCreate}
-        onClose={() => setShowCreate(false)}
-        isPending={createMutation.isPending}
+        onClose={() => { setShowCreate(false); resetForm(); }}
+        isPending={createMutation.isPending || updateMutation.isPending}
         projects={projects}
         stockMaterials={stockMaterials}
         projectInventory={projectInventory}
@@ -287,6 +320,8 @@ function ExportListPageApi({ initialProjectCode }: ExportListPageApiProps) {
         }}
         errors={createErrors}
         onCreate={handleCreate}
+        onSave={handleUpdate}
+        editVoucher={editing ? { code: editing.voucherCode } : null}
         materialUnit={materialUnit}
       />
 

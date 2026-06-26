@@ -1,4 +1,4 @@
-import { Eye, Check, Send } from 'lucide-react';
+import { Eye, Check, Send, Pencil } from 'lucide-react';
 import type { Transfer } from '../../../types';
 import VoucherStatusCell from '../../../components/warehouse/VoucherStatusCell';
 import VoucherCodeCell from '../../../components/warehouse/VoucherCodeCell';
@@ -15,6 +15,7 @@ interface TransferTableProps {
   isError: boolean;
   error: unknown;
   onOpenDetail: (tf: Transfer) => void;
+  onEdit?: (tf: Transfer) => void;
   onSubmit: (tf: Transfer) => void;
   onApprove: (tf: Transfer) => void;
 }
@@ -25,6 +26,7 @@ export default function TransferTable({
   isError,
   error,
   onOpenDetail,
+  onEdit,
   onSubmit,
   onApprove,
 }: TransferTableProps) {
@@ -73,6 +75,7 @@ export default function TransferTable({
                 <td className="table-cell">{destinationLabel(tf)}</td>
                 <td className="table-cell text-center">
                   <VoucherStatusCell
+                    voucherKind="transfer"
                     status={tf.status}
                     approvedBy={tf.approvedBy}
                     approvedAt={tf.approvedAt}
@@ -82,11 +85,14 @@ export default function TransferTable({
                   <Dropdown
                     items={[
                       { label: 'Xem chi tiết', icon: Eye, onClick: () => onOpenDetail(tf) },
+                      ...(tf.status === 'draft' || tf.status === 'pending'
+                        ? [{ label: 'Sửa phiếu', icon: Pencil, onClick: () => onEdit?.(tf) }]
+                        : []),
                       ...(tf.status === 'draft'
-                        ? [{ label: 'Duyệt dự kiến', icon: Send, onClick: () => onSubmit(tf) }]
+                        ? [{ label: 'Chốt dự kiến', icon: Send, onClick: () => onSubmit(tf) }]
                         : []),
                       ...(tf.status === 'pending'
-                        ? [{ label: 'Duyệt kho', icon: Check, onClick: () => onApprove(tf) }]
+                        ? [{ label: 'Duyệt thực tế', icon: Check, onClick: () => onApprove(tf) }]
                         : []),
                     ]}
                   />

@@ -5,6 +5,7 @@ import Badge from '../ui/Badge';
 import type { StatusKey } from '../../types';
 import { buildApprovalFields } from './voucherDetailUtils';
 import type { VoucherDetailField } from './voucherDetailUtils';
+import { getVoucherStatusLabel, type WmsVoucherKind } from '../../lib/wms/voucherStatusLabels';
 
 export type { VoucherDetailField };
 
@@ -13,6 +14,7 @@ interface VoucherDetailModalProps {
   onClose: () => void;
   voucherCode: string;
   status: StatusKey;
+  voucherKind?: WmsVoucherKind;
   statusHint?: string;
   approvedBy?: string;
   approvedAt?: string;
@@ -27,6 +29,7 @@ export default function VoucherDetailModal({
   onClose,
   voucherCode,
   status,
+  voucherKind,
   statusHint,
   approvedBy,
   approvedAt,
@@ -54,7 +57,10 @@ export default function VoucherDetailModal({
               <h3 id="wms-voucher-detail-title" className="md-dialog__title md-dialog__title--mono">
                 {voucherCode}
               </h3>
-              <Badge status={status} />
+              <Badge
+                status={status}
+                label={voucherKind ? getVoucherStatusLabel(status, voucherKind) : undefined}
+              />
             </div>
             {statusHint && <p className="wms-voucher-detail__hint">{statusHint}</p>}
           </div>

@@ -1,4 +1,4 @@
-import { Eye, Check, Send } from 'lucide-react';
+import { Eye, Check, Send, Pencil } from 'lucide-react';
 import type { Import } from '../../../types';
 import VoucherStatusCell from '../../../components/warehouse/VoucherStatusCell';
 import VoucherCodeCell from '../../../components/warehouse/VoucherCodeCell';
@@ -16,6 +16,7 @@ interface ImportTableProps {
   error: unknown;
   projectName: (code?: string) => string;
   onOpenDetail: (imp: Import) => void;
+  onEdit?: (imp: Import) => void;
   onSubmit: (imp: Import) => void;
   onApprove: (imp: Import) => void;
 }
@@ -27,6 +28,7 @@ export default function ImportTable({
   error,
   projectName,
   onOpenDetail,
+  onEdit,
   onSubmit,
   onApprove,
 }: ImportTableProps) {
@@ -79,6 +81,7 @@ export default function ImportTable({
                 <td className="table-cell text-right tabular-nums">{formatCurrency(imp.totalValue)}</td>
                 <td className="table-cell text-center">
                   <VoucherStatusCell
+                    voucherKind="import"
                     status={imp.status}
                     approvedBy={imp.approvedBy}
                     approvedAt={imp.approvedAt}
@@ -88,11 +91,14 @@ export default function ImportTable({
                   <Dropdown
                     items={[
                       { label: 'Xem chi tiết', icon: Eye, onClick: () => onOpenDetail(imp) },
+                      ...(imp.status === 'draft' || imp.status === 'pending'
+                        ? [{ label: 'Sửa phiếu', icon: Pencil, onClick: () => onEdit?.(imp) }]
+                        : []),
                       ...(imp.status === 'draft'
-                        ? [{ label: 'Duyệt dự kiến', icon: Send, onClick: () => onSubmit(imp) }]
+                        ? [{ label: 'Chốt dự kiến', icon: Send, onClick: () => onSubmit(imp) }]
                         : []),
                       ...(imp.status === 'pending'
-                        ? [{ label: 'Duyệt kho', icon: Check, onClick: () => onApprove(imp) }]
+                        ? [{ label: 'Duyệt thực tế', icon: Check, onClick: () => onApprove(imp) }]
                         : []),
                     ]}
                   />

@@ -3,9 +3,9 @@ import type { WarehouseProjectInventoryApiDto } from '../../../types/wms';
 import type { MaterialQtyLine } from '../voucher/voucherFormTypes';
 
 export function exportStatusHint(status: Export['status']) {
-  if (status === 'draft') return 'Nháp — ghi dự kiến xuất dự án';
-  if (status === 'pending') return 'Đã duyệt dự kiến — chờ thủ kho duyệt kho';
-  if (status === 'approved') return 'Đã duyệt kho — trừ tồn thực tế dự án';
+  if (status === 'draft') return 'Nháp — chưa ghi dự kiến';
+  if (status === 'pending') return 'Xuất dự kiến — có thể sửa, chờ duyệt thực tế';
+  if (status === 'approved') return 'Xuất thực tế — đã trừ tồn dự án, không sửa';
   return '';
 }
 

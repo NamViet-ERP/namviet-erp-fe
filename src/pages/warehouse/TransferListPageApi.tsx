@@ -13,9 +13,12 @@ import { validateTransferCreate, getTransferFormFieldErrors, type TransferFormFi
 import {
   useTransfers,
   useCreateTransfer,
+  useUpdateTransfer,
   useApproveTransfer,
   useSubmitTransfer,
 } from '../../hooks/useTransfers';
+import { getVoucherTabLabels } from '../../lib/wms/voucherStatusLabels';
+import { transferToFormLines } from '../../lib/wms/voucherFormPopulate';
 import { useMaterials } from '../../hooks/useMaterials';
 import { useProjects, useProjectInventory } from '../../hooks/useProjects';
 import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
@@ -51,6 +54,7 @@ function TransferListPageApi({ initialProjectCode }: TransferListPageApiProps) {
   const [showCreate, setShowCreate] = useState(!!initialProjectCode);
   const [showDetail, setShowDetail] = useState(false);
   const [selected, setSelected] = useState<Transfer | null>(null);
+  const [editing, setEditing] = useState<Transfer | null>(null);
 
   const [projectCode, setProjectCode] = useState(initialProjectCode ?? '');
   const [toProjectCode, setToProjectCode] = useState('');
@@ -67,6 +71,7 @@ function TransferListPageApi({ initialProjectCode }: TransferListPageApiProps) {
   const { data: projectsPage } = useProjects({ pageSize: 100, status: 'Active' });
   const { data: projectInventory = [] } = useProjectInventory(projectCode || undefined);
   const createMutation = useCreateTransfer();
+  const updateMutation = useUpdateTransfer();
   const approveMutation = useApproveTransfer();
   const submitMutation = useSubmitTransfer();
 
@@ -88,11 +93,12 @@ function TransferListPageApi({ initialProjectCode }: TransferListPageApiProps) {
     return materials.filter(m => codes.has(m.materialCode));
   }, [materials, projectInventory, projectCode]);
 
+  const voucherTabs = getVoucherTabLabels('transfer');
   const tabs = [
     { id: 'all', label: 'Tất cả', count: transfers.length },
-    { id: 'draft', label: 'Nháp', count: transfers.filter(t => t.status === 'draft').length },
-    { id: 'pending', label: 'Chờ duyệt', count: transfers.filter(t => t.status === 'pending').length },
-    { id: 'approved', label: 'Đã duyệt', count: transfers.filter(t => t.status === 'approved').length },
+    { id: 'draft', label: voucherTabs.draft, count: transfers.filter(t => t.status === 'draft').length },
+    { id: 'pending', label: voucherTabs.pending, count: transfers.filter(t => t.status === 'pending').length },
+    { id: 'approved', label: voucherTabs.approved, count: transfers.filter(t => t.status === 'approved').length },
   ];
 
   const filtered = useMemo(() => {
@@ -122,6 +128,7 @@ function TransferListPageApi({ initialProjectCode }: TransferListPageApiProps) {
   };
 
   const resetForm = () => {
+    setEditing(null);
     setProjectCode('');
     setToProjectCode('');
     setTransferMode('return');
@@ -191,14 +198,40 @@ function TransferListPageApi({ initialProjectCode }: TransferListPageApiProps) {
       showToast(
         'success',
         status === 'draft'
-          ? `Phiếu nháp ${created.voucherCode} — đã giữ tồn khả dụng.`
-          : `Phiếu ${created.voucherCode} đã duyệt dự kiến, chờ thủ kho duyệt kho.`,
+          ? `Phiếu nháp ${created.voucherCode} — chưa chốt dự kiến.`
+          : `Phiếu ${created.voucherCode} — chuyển dự kiến, chờ duyệt thực tế.`,
       );
       setShowCreate(false);
       resetForm();
     } catch (err) {
       showToast('error', getApiErrorMessage(err, 'Không thể tạo phiếu chuyển kho'));
     }
+  };
+
+  const handleUpdate = async () => {
+    if (!editing) return;
+    const status = editing.status === 'draft' ? 'draft' : 'pending';
+    const dto = buildDto(status);
+    if (!dto) return;
+    try {
+      await updateMutation.mutateAsync({ id: editing.id, dto: { ...dto, status: editing.status } });
+      showToast('success', `Đã cập nhật phiếu ${editing.voucherCode}.`);
+      setShowCreate(false);
+      resetForm();
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không thể cập nhật phiếu chuyển kho'));
+    }
+  };
+
+  const openEdit = (tf: Transfer) => {
+    setEditing(tf);
+    setProjectCode(tf.project ?? '');
+    setToProjectCode(tf.toProject ?? '');
+    setTransferMode(tf.toProject ? 'cross-project' : 'return');
+    setNote(tf.note);
+    setItems(transferToFormLines(tf.items));
+    setCreateErrors({});
+    setShowCreate(true);
   };
 
   const handleSubmit = async (tf: Transfer) => {
@@ -266,6 +299,7 @@ function TransferListPageApi({ initialProjectCode }: TransferListPageApiProps) {
           isError={isError}
           error={error}
           onOpenDetail={openDetail}
+          onEdit={openEdit}
           onSubmit={handleSubmit}
           onApprove={handleApprove}
         />
@@ -286,8 +320,8 @@ function TransferListPageApi({ initialProjectCode }: TransferListPageApiProps) {
 
       <TransferCreateModal
         isOpen={showCreate}
-        onClose={() => setShowCreate(false)}
-        isPending={createMutation.isPending}
+        onClose={() => { setShowCreate(false); resetForm(); }}
+        isPending={createMutation.isPending || updateMutation.isPending}
         projects={projects}
         targetProjects={targetProjects}
         stockMaterials={stockMaterials}
@@ -313,6 +347,8 @@ function TransferListPageApi({ initialProjectCode }: TransferListPageApiProps) {
         }}
         errors={createErrors}
         onCreate={handleCreate}
+        onSave={handleUpdate}
+        editVoucher={editing ? { code: editing.voucherCode } : null}
         materialUnit={materialUnit}
       />
 

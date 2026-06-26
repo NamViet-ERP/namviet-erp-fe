@@ -31,6 +31,8 @@ interface TransferCreateModalProps {
   onItemsChange: (items: MaterialQtyPhaseLine[]) => void;
   errors?: TransferFormFieldErrors;
   onCreate: (status: 'draft' | 'pending') => void;
+  onSave?: () => void;
+  editVoucher?: { code: string } | null;
   materialUnit: (code: string) => string;
 }
 
@@ -54,6 +56,8 @@ export default function TransferCreateModal({
   onItemsChange,
   errors,
   onCreate,
+  onSave,
+  editVoucher,
   materialUnit,
 }: TransferCreateModalProps) {
   const resetItems = () => onItemsChange([{ materialCode: '', qty: '', constructionPhase: '' }]);
@@ -62,18 +66,26 @@ export default function TransferCreateModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Tạo phiếu chuyển kho dự án"
+      title={editVoucher ? `Sửa phiếu chuyển — ${editVoucher.code}` : 'Tạo phiếu chuyển kho dự án'}
       size="full"
       footer={
         <>
           <button type="button" className="btn btn-outline" onClick={onClose}>Hủy</button>
           <div className="md-dialog__footer-actions">
-            <button type="button" className="btn btn-outline" disabled={isPending} onClick={() => onCreate('draft')}>
-              Lưu nháp
-            </button>
-            <button type="button" className="btn btn-filled" disabled={isPending} onClick={() => onCreate('pending')}>
-              Chốt phiếu
-            </button>
+            {editVoucher ? (
+              <button type="button" className="btn btn-filled" disabled={isPending} onClick={onSave}>
+                Lưu thay đổi
+              </button>
+            ) : (
+              <>
+                <button type="button" className="btn btn-outline" disabled={isPending} onClick={() => onCreate('draft')}>
+                  Lưu nháp
+                </button>
+                <button type="button" className="btn btn-filled" disabled={isPending} onClick={() => onCreate('pending')}>
+                  Chốt dự kiến
+                </button>
+              </>
+            )}
           </div>
         </>
       }

@@ -28,6 +28,17 @@ export async function updateStocktakeMock(id: string, dto: UpdateStocktakeDto): 
   return mockDelay(updated);
 }
 
+export async function approveStocktakeMock(id: string): Promise<Stocktake> {
+  store = store.map((x) =>
+    x.id === id
+      ? { ...x, status: 'approved', condition: 'completed', isFrozen: false }
+      : x,
+  );
+  const updated = store.find((x) => x.id === id);
+  if (!updated) throw new Error(`Không tìm thấy phiếu kiểm kê ${id}`);
+  return mockDelay(updated);
+}
+
 export async function removeStocktakeMock(id: string): Promise<void> {
   store = store.filter((x) => x.id !== id);
   await mockDelay(null);

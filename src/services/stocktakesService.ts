@@ -38,4 +38,10 @@ export const stocktakesService = {
       async () => { await apiClient.delete<void>(`${ENDPOINT}/${id}`); },
     );
   },
+  async approve(id: string): Promise<Stocktake> {
+    return resolveMock(
+      () => import('../mocks/services/stocktakesService.mock').then((m) => m.approveStocktakeMock(id)),
+      () => apiClient.post<Stocktake>(`${ENDPOINT}/${id}/approve`),
+    );
+  },
 };

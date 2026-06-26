@@ -30,6 +30,18 @@ export function useUpdateStocktake() {
   });
 }
 
+export function useApproveStocktake() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => stocktakesService.approve(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.stocktakes.all });
+      qc.invalidateQueries({ queryKey: queryKeys.stock.matrix });
+      qc.invalidateQueries({ queryKey: queryKeys.projects.all });
+    },
+  });
+}
+
 export function useDeleteStocktake() {
   const qc = useQueryClient();
   return useMutation({

@@ -5,9 +5,13 @@ import type { MaterialQtyLine, MaterialQtyPhaseLine } from '../voucher/voucherFo
 export type TransferMode = 'return' | 'cross-project';
 
 export function transferStatusHint(status: Transfer['status'], isCrossProject: boolean) {
-  if (status === 'draft') return 'Nháp — giữ tồn khả dụng dự án';
-  if (status === 'pending') return 'Đã duyệt dự kiến — chờ thủ kho duyệt kho';
-  if (status === 'approved') return isCrossProject ? 'Đã duyệt kho — chuyển sang kho dự án đích' : 'Đã duyệt kho — hoàn về kho tổng';
+  if (status === 'draft') return 'Nháp — chưa ghi dự kiến';
+  if (status === 'pending') return 'Chuyển dự kiến — có thể sửa, chờ duyệt thực tế';
+  if (status === 'approved') {
+    return isCrossProject
+      ? 'Chuyển thực tế — đã chuyển sang kho dự án đích'
+      : 'Chuyển thực tế — đã hoàn về kho tổng';
+  }
   return '';
 }
 

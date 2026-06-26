@@ -40,6 +40,8 @@ export function useUpdateImport() {
     onSuccess: (_data, { id }) => {
       qc.invalidateQueries({ queryKey: queryKeys.imports.all });
       qc.invalidateQueries({ queryKey: queryKeys.imports.detail(id) });
+      qc.invalidateQueries({ queryKey: queryKeys.stock.matrix });
+      qc.invalidateQueries({ queryKey: queryKeys.projects.all });
     },
   });
 }

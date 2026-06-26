@@ -1,4 +1,4 @@
-import { Eye, Check, Send } from 'lucide-react';
+import { Eye, Check, Send, Pencil } from 'lucide-react';
 import type { Export } from '../../../types';
 import VoucherStatusCell from '../../../components/warehouse/VoucherStatusCell';
 import VoucherCodeCell from '../../../components/warehouse/VoucherCodeCell';
@@ -15,6 +15,7 @@ interface ExportTableProps {
   isError: boolean;
   error: unknown;
   onOpenDetail: (exp: Export) => void;
+  onEdit?: (exp: Export) => void;
   onSubmit: (exp: Export) => void;
   onApprove: (exp: Export) => void;
 }
@@ -25,6 +26,7 @@ export default function ExportTable({
   isError,
   error,
   onOpenDetail,
+  onEdit,
   onSubmit,
   onApprove,
 }: ExportTableProps) {
@@ -73,6 +75,7 @@ export default function ExportTable({
                 <td className="table-cell">{exp.soCode || '—'}</td>
                 <td className="table-cell text-center">
                   <VoucherStatusCell
+                    voucherKind="export"
                     status={exp.status}
                     approvedBy={exp.approvedBy}
                     approvedAt={exp.approvedAt}
@@ -82,11 +85,14 @@ export default function ExportTable({
                   <Dropdown
                     items={[
                       { label: 'Xem chi tiết', icon: Eye, onClick: () => onOpenDetail(exp) },
+                      ...(exp.status === 'draft' || exp.status === 'pending'
+                        ? [{ label: 'Sửa phiếu', icon: Pencil, onClick: () => onEdit?.(exp) }]
+                        : []),
                       ...(exp.status === 'draft'
-                        ? [{ label: 'Duyệt dự kiến', icon: Send, onClick: () => onSubmit(exp) }]
+                        ? [{ label: 'Chốt dự kiến', icon: Send, onClick: () => onSubmit(exp) }]
                         : []),
                       ...(exp.status === 'pending'
-                        ? [{ label: 'Duyệt kho', icon: Check, onClick: () => onApprove(exp) }]
+                        ? [{ label: 'Duyệt thực tế', icon: Check, onClick: () => onApprove(exp) }]
                         : []),
                     ]}
                   />

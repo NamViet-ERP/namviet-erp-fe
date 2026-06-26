@@ -35,7 +35,12 @@ export function useUpdateTransfer() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, dto }: { id: string; dto: UpdateTransferDto }) => transfersService.update(id, dto),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.transfers.all }),
+    onSuccess: (_data, { id }) => {
+      qc.invalidateQueries({ queryKey: queryKeys.transfers.all });
+      qc.invalidateQueries({ queryKey: queryKeys.transfers.detail(id) });
+      qc.invalidateQueries({ queryKey: queryKeys.stock.matrix });
+      qc.invalidateQueries({ queryKey: queryKeys.projects.all });
+    },
   });
 }
 

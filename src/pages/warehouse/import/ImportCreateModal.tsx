@@ -34,6 +34,8 @@ interface ImportCreateModalProps {
   formGrandTotal: number;
   errors?: ImportFormFieldErrors;
   onCreate: (status: 'draft' | 'pending') => void;
+  onSave?: () => void;
+  editVoucher?: { code: string } | null;
   materialUnit: (code: string) => string;
 }
 
@@ -57,6 +59,8 @@ export default function ImportCreateModal({
   formGrandTotal,
   errors,
   onCreate,
+  onSave,
+  editVoucher,
   materialUnit,
 }: ImportCreateModalProps) {
   const resetItems = () => onItemsChange([{ ...emptyQtyPriceLine }]);
@@ -69,7 +73,7 @@ export default function ImportCreateModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Tạo phiếu nhập kho dự án"
+      title={editVoucher ? `Sửa phiếu nhập — ${editVoucher.code}` : 'Tạo phiếu nhập kho dự án'}
       size="full"
       footer={
         <div className="flex w-full items-center justify-between gap-4 flex-wrap">
@@ -79,12 +83,20 @@ export default function ImportCreateModal({
           </div>
           <div className="flex items-center gap-2 md-dialog__footer-actions">
             <button type="button" className="btn btn-outline" onClick={onClose}>Hủy</button>
-            <button type="button" className="btn btn-outline" disabled={isPending} onClick={() => onCreate('draft')}>
-              Lưu nháp
-            </button>
-            <button type="button" className="btn btn-filled" disabled={isPending} onClick={() => onCreate('pending')}>
-              Chốt phiếu
-            </button>
+            {editVoucher ? (
+              <button type="button" className="btn btn-filled" disabled={isPending} onClick={onSave}>
+                Lưu thay đổi
+              </button>
+            ) : (
+              <>
+                <button type="button" className="btn btn-outline" disabled={isPending} onClick={() => onCreate('draft')}>
+                  Lưu nháp
+                </button>
+                <button type="button" className="btn btn-filled" disabled={isPending} onClick={() => onCreate('pending')}>
+                  Chốt dự kiến
+                </button>
+              </>
+            )}
           </div>
         </div>
       }

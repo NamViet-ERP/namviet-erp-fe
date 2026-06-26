@@ -33,6 +33,7 @@ export default function ExportDetailModal({
       onClose={onClose}
       voucherCode={selected.voucherCode}
       status={selected.status}
+      voucherKind="export"
       statusHint={exportStatusHint(selected.status)}
       approvedBy={selected.approvedBy}
       approvedAt={selected.approvedAt}

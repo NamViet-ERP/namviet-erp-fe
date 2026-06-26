@@ -3,9 +3,9 @@ import { parseCurrencyInput } from '../../../utils/currencyInput';
 import type { MaterialQtyPriceLine } from '../voucher/voucherFormTypes';
 
 export function importStatusHint(status: Import['status']) {
-  if (status === 'draft') return 'Nháp — ghi dự kiến nhập dự án';
-  if (status === 'pending') return 'Đã duyệt dự kiến — chờ thủ kho duyệt kho';
-  if (status === 'approved') return 'Đã duyệt kho — cộng tồn thực tế dự án';
+  if (status === 'draft') return 'Nháp — chưa ghi dự kiến';
+  if (status === 'pending') return 'Nhập dự kiến — có thể sửa, chờ duyệt thực tế';
+  if (status === 'approved') return 'Nhập thực tế — đã cộng tồn dự án, không sửa';
   return '';
 }
 

@@ -28,6 +28,8 @@ interface ExportCreateModalProps {
   onItemsChange: (items: MaterialQtyLine[]) => void;
   errors?: ExportFormFieldErrors;
   onCreate: (status: 'draft' | 'pending') => void;
+  onSave?: () => void;
+  editVoucher?: { code: string } | null;
   materialUnit: (code: string) => string;
 }
 
@@ -48,6 +50,8 @@ export default function ExportCreateModal({
   onItemsChange,
   errors,
   onCreate,
+  onSave,
+  editVoucher,
   materialUnit,
 }: ExportCreateModalProps) {
   const resetItems = () => onItemsChange([{ materialCode: '', qty: '' }]);
@@ -56,18 +60,26 @@ export default function ExportCreateModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Tạo phiếu xuất kho dự án"
+      title={editVoucher ? `Sửa phiếu xuất — ${editVoucher.code}` : 'Tạo phiếu xuất kho dự án'}
       size="full"
       footer={
         <>
           <button type="button" className="btn btn-outline" onClick={onClose}>Hủy</button>
           <div className="md-dialog__footer-actions">
-            <button type="button" className="btn btn-outline" disabled={isPending} onClick={() => onCreate('draft')}>
-              Lưu nháp
-            </button>
-            <button type="button" className="btn btn-filled" disabled={isPending} onClick={() => onCreate('pending')}>
-              Chốt phiếu
-            </button>
+            {editVoucher ? (
+              <button type="button" className="btn btn-filled" disabled={isPending} onClick={onSave}>
+                Lưu thay đổi
+              </button>
+            ) : (
+              <>
+                <button type="button" className="btn btn-outline" disabled={isPending} onClick={() => onCreate('draft')}>
+                  Lưu nháp
+                </button>
+                <button type="button" className="btn btn-filled" disabled={isPending} onClick={() => onCreate('pending')}>
+                  Chốt dự kiến
+                </button>
+              </>
+            )}
           </div>
         </>
       }
