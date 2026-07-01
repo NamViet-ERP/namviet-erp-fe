@@ -11,7 +11,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",
-    "test:run": "vitest run",
+    "test:run": "vitest run --mode test",
     "test:smoke": "vitest run src/mocks/mockServices.smoke.test.ts"
   },
   "dependencies": {

@@ -41,4 +41,7 @@ jobs:
           VITE_API_BASE_URL: https://api.ci-placeholder.local
 
       - name: Unit tests
-        run: npm run test:run
+        run: rm -f .env.production && npm run test:run
+        env:
+          NODE_ENV: test
+          VITE_USE_MOCK: 'true'

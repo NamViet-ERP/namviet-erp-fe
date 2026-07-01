@@ -6,12 +6,16 @@ import react from '@vitejs/plugin-react'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
 
-  const isVitest = mode === 'test' || process.env.VITEST === 'true'
+  const isVitest =
+    mode === 'test' ||
+    process.env.VITEST != null ||
+    process.env.VITEST_WORKER_ID != null ||
+    process.argv.some((arg) => /vitest/i.test(arg))
   const useMock =
     env.VITE_USE_MOCK === 'true' || process.env.VITE_USE_MOCK === 'true'
   const apiBaseUrl = (env.VITE_API_BASE_URL ?? process.env.VITE_API_BASE_URL ?? '').trim()
 
-  if (mode === 'production') {
+  if (mode === 'production' && !isVitest) {
     if (useMock) {
       throw new Error(
         'Production build blocked: VITE_USE_MOCK=true. Use `npm run build:prod` (mock is forced off).',
