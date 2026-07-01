@@ -64,7 +64,7 @@ export default function LoginPage() {
         }
 
         if (HAS_API) {
-          await authService.loginFe(username.trim(), password, rememberMe);
+          await authService.login(username.trim(), password, rememberMe);
         } else if (USE_MOCK) {
           await new Promise(r => setTimeout(r, 800));
           const user = findUserByLogin(username);

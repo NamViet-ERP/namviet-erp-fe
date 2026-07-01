@@ -6,16 +6,26 @@ import App from './App'
 import ErrorBoundary from './components/ErrorBoundary'
 import { queryClient } from './lib/queryClient'
 import { initAuthTokenProvider } from './services/authService'
+import { USE_MOCK } from './mocks'
+import { initSystemUsersMock } from './constants/systemUsers'
 
-initAuthTokenProvider()
+async function boot() {
+  if (USE_MOCK) {
+    await initSystemUsersMock()
+  }
 
-const rootElement = document.getElementById('root') as HTMLElement;
-createRoot(rootElement).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <ErrorBoundary>
-        <App />
-      </ErrorBoundary>
-    </QueryClientProvider>
-  </StrictMode>,
-)
+  initAuthTokenProvider()
+
+  const rootElement = document.getElementById('root') as HTMLElement
+  createRoot(rootElement).render(
+    <StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <ErrorBoundary>
+          <App />
+        </ErrorBoundary>
+      </QueryClientProvider>
+    </StrictMode>,
+  )
+}
+
+void boot()

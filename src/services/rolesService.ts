@@ -1,5 +1,5 @@
 import { apiClient } from '../lib/apiClient';
-import { resolveMock } from '../mocks';
+import { resolveMock, USE_MOCK } from '../mocks';
 import { readStore } from '../mocks/services/rolesMockStore';
 
 export interface SystemRole {
@@ -26,6 +26,7 @@ export interface RoleListParams {
 
 export const rolesService = {
   list(): SystemRole[] {
+    if (!USE_MOCK) return [];
     return readStore();
   },
 
@@ -40,10 +41,12 @@ export const rolesService = {
   },
 
   getLabel(code: string): string | undefined {
+    if (!USE_MOCK) return undefined;
     return readStore().find((r) => r.code === code)?.label;
   },
 
   getActiveLabel(code: string): string | undefined {
+    if (!USE_MOCK) return undefined;
     const role = readStore().find((r) => r.code === code);
     return role?.isActive ? role.label : undefined;
   },

@@ -57,7 +57,7 @@ export function initAuthTokenProvider(): void {
 }
 
 export const authService = {
-  async loginFe(username: string, password: string, rememberMe = false): Promise<SystemUser> {
+  async login(username: string, password: string, rememberMe = false): Promise<SystemUser> {
     const res = await apiClient.post<LoginResponse>('/api/auth/login', {
       username,
       password,

@@ -1,4 +1,11 @@
-import type { DashboardTopRow } from '../../mocks/pages/dashboardTopSales';
+import type { LucideIcon } from 'lucide-react';
+
+export interface DashboardTopRow {
+  imageIcon: LucideIcon;
+  code: string;
+  name: string;
+  qty: number;
+}
 
 interface TopSalesTableProps {
   title: string;

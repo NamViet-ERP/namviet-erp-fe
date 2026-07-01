@@ -20,7 +20,7 @@ describe('Sidebar menu items', () => {
 
   it('renders all provided menu items including warehouse and stocktake', async () => {
     const menuItems = [
-      { id: 'wh', label: 'Kho hang', icon: DummyIcon, path: '/warehouse/list' },
+      { id: 'wh', label: 'Kho hang', icon: DummyIcon, path: '/warehouse/projects' },
       { id: 'st', label: 'Kiem ke', icon: DummyIcon, path: '/stocktake/list' },
       { id: 'mb', label: 'Nhan vien', icon: DummyIcon, path: '/members/list' },
     ];

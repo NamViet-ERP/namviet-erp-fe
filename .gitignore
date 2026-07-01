@@ -23,8 +23,9 @@ dist-ssr
 *.sln
 *.sw?
 
-# Local AI / editor tooling (do not push)
-.cursor/
+# Local credentials scratch file (never commit)
+.tmp-login.json
+
 .claude/
 .sixth/
 

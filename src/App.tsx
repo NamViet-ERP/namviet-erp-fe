@@ -29,8 +29,6 @@ export default function App() {
             <Route path="/warehouse/materials" element={<Pages.MaterialsPage />} />
             <Route path="/warehouse/projects" element={<Pages.ProjectsPage />} />
             <Route path="/warehouse/projects/:code" element={<Pages.ProjectDetailPage />} />
-            <Route path="/warehouse/expected-imports" element={<Pages.ExpectedImportsPage />} />
-            <Route path="/warehouse/reconciliation" element={<Pages.ReconciliationPage />} />
             <Route path="/warehouse/suppliers" element={<Navigate to="/warehouse/settings/suppliers" replace />} />
             <Route path="/warehouse/transfer" element={<Pages.TransferListPage />} />
             <Route path="/warehouse/import" element={<Pages.ImportListPage />} />

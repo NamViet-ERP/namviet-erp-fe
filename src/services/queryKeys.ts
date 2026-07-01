@@ -12,10 +12,6 @@ export const queryKeys = {
     all: ['transfers'] as const,
     detail: (id: string) => ['transfers', id] as const,
   },
-  members: {
-    all: ['members'] as const,
-    detail: (id: string) => ['members', id] as const,
-  },
   candidates: {
     all: ['candidates'] as const,
     detail: (id: string) => ['candidates', id] as const,
@@ -23,14 +19,6 @@ export const queryKeys = {
   employees: {
     all: ['employees'] as const,
     detail: (id: string) => ['employees', id] as const,
-  },
-  warehouses: {
-    all: ['warehouses'] as const,
-    detail: (id: string) => ['warehouses', id] as const,
-  },
-  products: {
-    all: ['products'] as const,
-    detail: (id: string) => ['products', id] as const,
   },
   stocktakes: {
     all: ['stocktakes'] as const,

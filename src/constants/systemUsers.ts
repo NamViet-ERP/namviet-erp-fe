@@ -1,7 +1,6 @@
 import { isAccountActiveForEmployee } from '../services/employeesService';
 import { rolesService } from '../services/rolesService';
-import { USE_MOCK, createMockLocalStore } from '../mocks';
-import { SEED_SYSTEM_USERS } from '../mocks/data/systemUsersSeed';
+import { USE_MOCK } from '../mocks';
 import { isActiveEmployee, type Employee } from '../types/hr';
 import type { CreateSystemUserDto, SystemUser, SystemUserRole } from '../types/systemUser';
 
@@ -11,8 +10,30 @@ const SESSION_USER_KEY = 'nv-session-user';
 const USER_PASSWORD_PREFIX = 'nv-user-password-';
 const ACCOUNT_ENABLED_PREFIX = 'nv-user-enabled-';
 
-const { readStore: readSystemUsersStore, writeStore: writeSystemUsersStore } =
-  createMockLocalStore('nv-system-users', SEED_SYSTEM_USERS);
+type SystemUsersMockModule = typeof import('../mocks/services/systemUsersMockStore');
+
+let mockStoreModule: SystemUsersMockModule | null = null;
+
+async function loadMockStoreModule(): Promise<SystemUsersMockModule> {
+  mockStoreModule ??= await import('../mocks/services/systemUsersMockStore');
+  return mockStoreModule;
+}
+
+/** Gọi trước render app khi `VITE_USE_MOCK=true` để nạp seed user qua dynamic import. */
+export async function initSystemUsersMock(): Promise<void> {
+  if (!USE_MOCK) return;
+  const module = await loadMockStoreModule();
+  await module.loadSystemUsersMockStore();
+}
+
+function readSystemUsersStore(): SystemUser[] {
+  if (!USE_MOCK) return [];
+  return mockStoreModule?.getLoadedSystemUsersMockStore()?.readStore() ?? [];
+}
+
+function writeSystemUsersStore(users: SystemUser[]): void {
+  mockStoreModule?.getLoadedSystemUsersMockStore()?.writeStore(users);
+}
 
 export function setUserPassword(userId: string, password: string): void {
   localStorage.setItem(`${USER_PASSWORD_PREFIX}${userId}`, password);
@@ -31,6 +52,7 @@ function makeInitials(name: string): string {
 }
 
 export function createSystemUser(dto: CreateSystemUserDto): SystemUser {
+  if (!USE_MOCK) throw new Error('createSystemUser chỉ dùng trong chế độ mock.');
   const users = readSystemUsersStore();
   const email = dto.email.trim().toLowerCase();
   const username = (dto.username?.trim() || email.split('@')[0]).toLowerCase();

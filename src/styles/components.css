@@ -1896,7 +1896,7 @@
   .nv-snackbar__progress--warning { background: var(--status-warning-on-inverse); }
   .nv-snackbar__progress--info { background: var(--status-info-on-inverse); }
 
-  /* ── WMS side panels (reconciliation, filters) ── */
+  /* ── WMS side panels (filters) ── */
   .wms-side-panel {
     border-radius: 16px;
     padding: 20px;

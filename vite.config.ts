@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => {
     // sub-path (e.g. behind a .NET Core / IIS virtual directory).
     base: env.VITE_BASE_PATH || '/',
     define: {
-      __USE_MOCK__: JSON.stringify(env.VITE_USE_MOCK !== 'false'),
+      __USE_MOCK__: JSON.stringify(mode === 'test' || env.VITE_USE_MOCK === 'true'),
     },
     plugins: [react()],
     test: {
