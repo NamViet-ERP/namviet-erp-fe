@@ -5,25 +5,34 @@
  */
 
 import { spawnSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
-const root = path.dirname(fileURLToPath(import.meta.url));
+const scriptsDir = path.dirname(fileURLToPath(import.meta.url));
+const projectRoot = path.join(scriptsDir, '..');
 const env = { ...process.env, VITE_USE_MOCK: 'false' };
 
-const verify = spawnSync('node', [path.join(root, 'verify-prod-env.mjs')], {
+const verify = spawnSync(process.execPath, [path.join(scriptsDir, 'verify-prod-env.mjs')], {
   stdio: 'inherit',
   env,
+  cwd: projectRoot,
 });
 
 if (verify.status !== 0) {
   process.exit(verify.status ?? 1);
 }
 
-const build = spawnSync('npx', ['vite', 'build', '--mode', 'production'], {
+const viteCli = path.join(projectRoot, 'node_modules', 'vite', 'bin', 'vite.js');
+if (!existsSync(viteCli)) {
+  console.error('[build-prod] FAIL: vite CLI not found. Run npm ci first.');
+  process.exit(1);
+}
+
+const build = spawnSync(process.execPath, [viteCli, 'build', '--mode', 'production'], {
   stdio: 'inherit',
   env,
-  shell: true,
+  cwd: projectRoot,
 });
 
 process.exit(build.status ?? 0);

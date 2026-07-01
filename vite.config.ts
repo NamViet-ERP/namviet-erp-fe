@@ -7,15 +7,18 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
 
   const isVitest = mode === 'test' || process.env.VITEST === 'true'
+  const useMock =
+    env.VITE_USE_MOCK === 'true' || process.env.VITE_USE_MOCK === 'true'
+  const apiBaseUrl = (env.VITE_API_BASE_URL ?? process.env.VITE_API_BASE_URL ?? '').trim()
 
   if (mode === 'production') {
-    if (env.VITE_USE_MOCK === 'true') {
+    if (useMock) {
       throw new Error(
         'Production build blocked: VITE_USE_MOCK=true. Use `npm run build:prod` (mock is forced off).',
       )
     }
 
-    if (!env.VITE_API_BASE_URL?.trim()) {
+    if (!apiBaseUrl) {
       throw new Error(
         'Production build blocked: set VITE_API_BASE_URL in .env.production or the shell before building.',
       )
@@ -27,7 +30,7 @@ export default defineConfig(({ mode }) => {
     // sub-path (e.g. behind a .NET Core / IIS virtual directory).
     base: env.VITE_BASE_PATH || '/',
     define: {
-      __USE_MOCK__: JSON.stringify(isVitest || env.VITE_USE_MOCK === 'true'),
+      __USE_MOCK__: JSON.stringify(isVitest || useMock),
     },
     plugins: [react()],
     test: {
