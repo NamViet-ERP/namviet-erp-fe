@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "verify:prod-env": "node scripts/verify-prod-env.mjs",
+    "build:prod": "node scripts/build-prod.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",

@@ -6,6 +6,20 @@ import react from '@vitejs/plugin-react'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
 
+  if (mode === 'production') {
+    if (env.VITE_USE_MOCK === 'true') {
+      throw new Error(
+        'Production build blocked: VITE_USE_MOCK=true. Use `npm run build:prod` (mock is forced off).',
+      )
+    }
+
+    if (!env.VITE_API_BASE_URL?.trim()) {
+      throw new Error(
+        'Production build blocked: set VITE_API_BASE_URL in .env.production or the shell before building.',
+      )
+    }
+  }
+
   return {
     // Base public path. Override with VITE_BASE_PATH when hosting under a
     // sub-path (e.g. behind a .NET Core / IIS virtual directory).

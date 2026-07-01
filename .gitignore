@@ -34,6 +34,11 @@ dist-ssr
 .env.production
 .env.test
 
-# Local docs & one-off scripts (keep on disk, do not push)
-docs/
-scripts/
+# Local scratch under docs/ — only DEPLOY.md is tracked
+docs/*
+!docs/DEPLOY.md
+
+# Build scripts for production (verify + build-prod)
+scripts/*
+!scripts/verify-prod-env.mjs
+!scripts/build-prod.mjs

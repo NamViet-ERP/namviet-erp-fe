@@ -1,0 +1,29 @@
+# Runs on branch `production` — change `branches` here when you switch to main/master.
+name: CI
+
+on:
+  push:
+    branches: [production]
+  pull_request:
+    branches: [production]
+
+jobs:
+  frontend:
+    name: FE production build
+    runs-on: ubuntu-latest
+    env:
+      VITE_USE_MOCK: 'false'
+      # Placeholder for verify-only CI; set GitHub Secret VITE_API_BASE_URL on real deploy jobs.
+      VITE_API_BASE_URL: https://api.ci-placeholder.local
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+      - run: npm run verify:prod-env
+      - run: npm run build:prod
+      - run: npm run test:run
