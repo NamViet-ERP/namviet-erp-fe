@@ -86,8 +86,8 @@ describe('parseApiError', () => {
         const payload = {
           errors: [{ message: 'First error' }, { msg: 'Second error' }]
         };
-        // The implementation does String(item) which results in "[object Object]"
-        expect(parseApiError(payload, fallback)).toBe('[object Object]. [object Object].');
+        // String(item) => "[object Object]"; formatUserMessages dedupes identical strings.
+        expect(parseApiError(payload, fallback)).toBe('[object Object].');
       });
 
       it('should handle errors as list of objects nested inside field keys', () => {
@@ -96,7 +96,7 @@ describe('parseApiError', () => {
             Password: [{ message: 'Must be secure' }]
           }
         };
-        expect(parseApiError(payload, fallback)).toBe('[object Object]');
+        expect(parseApiError(payload, fallback)).toBe('[object Object].');
       });
 
       it('should return the raw HTML string for HTML error responses', () => {
