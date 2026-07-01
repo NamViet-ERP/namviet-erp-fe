@@ -6,6 +6,8 @@ import react from '@vitejs/plugin-react'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
 
+  const isVitest = mode === 'test' || process.env.VITEST === 'true'
+
   if (mode === 'production') {
     if (env.VITE_USE_MOCK === 'true') {
       throw new Error(
@@ -25,7 +27,7 @@ export default defineConfig(({ mode }) => {
     // sub-path (e.g. behind a .NET Core / IIS virtual directory).
     base: env.VITE_BASE_PATH || '/',
     define: {
-      __USE_MOCK__: JSON.stringify(mode === 'test' || env.VITE_USE_MOCK === 'true'),
+      __USE_MOCK__: JSON.stringify(isVitest || env.VITE_USE_MOCK === 'true'),
     },
     plugins: [react()],
     test: {

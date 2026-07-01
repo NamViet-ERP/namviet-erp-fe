@@ -11,10 +11,6 @@ jobs:
   frontend:
     name: FE production build
     runs-on: ubuntu-latest
-    env:
-      VITE_USE_MOCK: 'false'
-      # Placeholder for verify-only CI; set GitHub Secret VITE_API_BASE_URL on real deploy jobs.
-      VITE_API_BASE_URL: https://api.ci-placeholder.local
     steps:
       - uses: actions/checkout@v4
 
@@ -24,6 +20,18 @@ jobs:
           cache: npm
 
       - run: npm ci
-      - run: npm run verify:prod-env
-      - run: npm run build:prod
-      - run: npm run test:run
+
+      - name: Verify production env
+        run: npm run verify:prod-env
+        env:
+          VITE_USE_MOCK: 'false'
+          VITE_API_BASE_URL: https://api.ci-placeholder.local
+
+      - name: Production build
+        run: npm run build:prod
+        env:
+          VITE_USE_MOCK: 'false'
+          VITE_API_BASE_URL: https://api.ci-placeholder.local
+
+      - name: Unit tests
+        run: npm run test:run
