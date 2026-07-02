@@ -1,9 +1,7 @@
-import { resolveMock } from '../mocks';
 import { apiClient } from '../lib/apiClient';
 import type { CreateSystemUserDto } from '../constants/systemUsers';
 
 const USERS_ENDPOINT = '/api/admin/users';
-const MOCK = () => import('../mocks/services/adminUsersService.mock');
 
 export type AdminUserSource = 'employee' | 'manual';
 
@@ -118,68 +116,43 @@ export function rowMatchesListFilters(row: AdminUserRow, params: AdminUserListPa
 
 export const adminUsersService = {
   async list(params: AdminUserListParams = {}): Promise<AdminUserPagedResult> {
-    return resolveMock(
-      () => MOCK().then((m) => m.listAdminUsersMock(params)),
-      () => apiClient.get<AdminUserPagedApiDto>(USERS_ENDPOINT, {
-        page: params.page ?? 1,
-        pageSize: params.pageSize ?? 10,
-        search: params.search?.trim() || undefined,
-        pendingOnly: params.pendingOnly ?? false,
-        accountStatus: params.accountStatus || undefined,
-        source: params.source || undefined,
-        department: params.department?.trim() || undefined,
-      }),
-    );
+    return apiClient.get<AdminUserPagedApiDto>(USERS_ENDPOINT, {
+      page: params.page ?? 1,
+      pageSize: params.pageSize ?? 10,
+      search: params.search?.trim() || undefined,
+      pendingOnly: params.pendingOnly ?? false,
+      accountStatus: params.accountStatus || undefined,
+      source: params.source || undefined,
+      department: params.department?.trim() || undefined,
+    });
   },
 
   async getById(id: string, source: AdminUserSource): Promise<AdminUserRow> {
-    return resolveMock(
-      () => MOCK().then((m) => m.getAdminUserMock(id, source)),
-      () => apiClient.get<AdminUserRow>(`${USERS_ENDPOINT}/${id}`, { source }),
-    );
+    return apiClient.get<AdminUserRow>(`${USERS_ENDPOINT}/${id}`, { source });
   },
 
   async create(dto: CreateManualAccountDto): Promise<AdminUserRow> {
-    return resolveMock(
-      () => MOCK().then((m) => m.createManualAccountMock(dto)),
-      () => apiClient.post<AdminUserRow>(`${USERS_ENDPOINT}/system`, dto),
-    );
+    return apiClient.post<AdminUserRow>(`${USERS_ENDPOINT}/system`, dto);
   },
 
   async provisionAccount(dto: ProvisionAccountDto): Promise<AdminUserRow> {
-    return resolveMock(
-      () => MOCK().then((m) => m.provisionAccountMock(dto)),
-      () => apiClient.post<AdminUserRow>(`${USERS_ENDPOINT}/provision`, dto),
-    );
+    return apiClient.post<AdminUserRow>(`${USERS_ENDPOINT}/provision`, dto);
   },
 
   async resetPassword(dto: ResetPasswordDto): Promise<void> {
-    return resolveMock(
-      () => MOCK().then((m) => m.resetPasswordMock(dto)),
-      async () => {
-        await apiClient.put<void>(`${USERS_ENDPOINT}/${dto.accountUserId}/password`, {
-          password: dto.password,
-        });
-      },
-    );
+    await apiClient.put<void>(`${USERS_ENDPOINT}/${dto.accountUserId}/password`, {
+      password: dto.password,
+    });
   },
 
   async toggleStatus(toggleId: string, enabled: boolean, source: AdminUserSource): Promise<void> {
-    return resolveMock(
-      () => MOCK().then((m) => m.toggleAdminUserStatusMock(toggleId, enabled, source)),
-      async () => {
-        await apiClient.patch<void>(`${USERS_ENDPOINT}/${toggleId}/status?source=${source}`, { enabled });
-      },
-    );
+    await apiClient.patch<void>(`${USERS_ENDPOINT}/${toggleId}/status?source=${source}`, { enabled });
   },
 
   async changeRole(dto: ChangeAdminUserRoleDto): Promise<AdminUserRow> {
-    return resolveMock(
-      () => MOCK().then((m) => m.changeAdminRoleMock(dto)),
-      () => apiClient.patch<AdminUserRow>(
-        `${USERS_ENDPOINT}/${dto.toggleId}/role?source=${dto.source}`,
-        { role: dto.role },
-      ),
+    return apiClient.patch<AdminUserRow>(
+      `${USERS_ENDPOINT}/${dto.toggleId}/role?source=${dto.source}`,
+      { role: dto.role },
     );
   },
 };

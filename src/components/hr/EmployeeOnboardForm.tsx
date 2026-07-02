@@ -7,7 +7,6 @@ import { showToast } from '../ui/Toast';
 import { employeesService, getSuggestedEmployeeCode, validateUniqueCode } from '../../services/employeesService';
 import { employeeCodeNextHint } from '../../lib/hrm/suggestedEmployeeCode';
 import { filesService } from '../../services/filesService';
-import { USE_MOCK } from '../../mocks';
 import { removeVietnameseTones } from '../../lib/vietnamese';
 import FormSectionHeader from './FormSectionHeader';
 import HrmDatePicker from './HrmDatePicker';
@@ -172,8 +171,6 @@ export default function EmployeeOnboardForm({ mode = 'public', onCreated }: Empl
   const cmndIssueDate = useWatch({ control, name: 'cmndIssueDate' }) ?? '';
   const cccdIssueDate = useWatch({ control, name: 'cccdIssueDate' }) ?? '';
 
-  const toAttachment = (f: FileState | null) =>
-    f ? { fileName: f.file.name, fileSize: (f.file.size / 1024).toFixed(0) + ' KB', previewUrl: f.preview } : undefined;
 
   const onSubmit = async (data: FormValues) => {
     if (!profilePhoto) { showToast('error', 'Vui lòng tải ảnh hồ sơ'); return; }
@@ -189,27 +186,36 @@ export default function EmployeeOnboardForm({ mode = 'public', onCreated }: Empl
 
     try {
       const sessionId = crypto.randomUUID();
-      let profileAtt = toAttachment(profilePhoto);
-      let cccdFrontAtt = toAttachment(cccdFront);
-      let cccdBackAtt = toAttachment(cccdBack);
-      let degreeAtt = degreePhoto ? toAttachment(degreePhoto) : undefined;
-
-      if (!USE_MOCK) {
-        const [profileUp, frontUp, backUp, degreeUp] = await Promise.all([
-          filesService.upload(profilePhoto.file, 'profile', { sessionId }),
-          filesService.upload(cccdFront.file, 'cccd-front', { sessionId }),
-          filesService.upload(cccdBack.file, 'cccd-back', { sessionId }),
-          degreePhoto
-            ? filesService.upload(degreePhoto.file, 'degree', { sessionId })
-            : Promise.resolve(null),
-        ]);
-        profileAtt = { fileName: profileUp.fileName, fileSize: `${Math.round(profileUp.fileSize / 1024)} KB`, previewUrl: profileUp.url };
-        cccdFrontAtt = { fileName: frontUp.fileName, fileSize: `${Math.round(frontUp.fileSize / 1024)} KB`, previewUrl: frontUp.url };
-        cccdBackAtt = { fileName: backUp.fileName, fileSize: `${Math.round(backUp.fileSize / 1024)} KB`, previewUrl: backUp.url };
-        if (degreeUp) {
-          degreeAtt = { fileName: degreeUp.fileName, fileSize: `${Math.round(degreeUp.fileSize / 1024)} KB`, previewUrl: degreeUp.url };
-        }
-      }
+      const [profileUp, frontUp, backUp, degreeUp] = await Promise.all([
+        filesService.upload(profilePhoto.file, 'profile', { sessionId }),
+        filesService.upload(cccdFront.file, 'cccd-front', { sessionId }),
+        filesService.upload(cccdBack.file, 'cccd-back', { sessionId }),
+        degreePhoto
+          ? filesService.upload(degreePhoto.file, 'degree', { sessionId })
+          : Promise.resolve(null),
+      ]);
+      let profileAtt = {
+        fileName: profileUp.fileName,
+        fileSize: `${Math.round(profileUp.fileSize / 1024)} KB`,
+        previewUrl: profileUp.url,
+      };
+      let cccdFrontAtt = {
+        fileName: frontUp.fileName,
+        fileSize: `${Math.round(frontUp.fileSize / 1024)} KB`,
+        previewUrl: frontUp.url,
+      };
+      let cccdBackAtt = {
+        fileName: backUp.fileName,
+        fileSize: `${Math.round(backUp.fileSize / 1024)} KB`,
+        previewUrl: backUp.url,
+      };
+      let degreeAtt = degreePhoto
+        ? {
+            fileName: degreeUp!.fileName,
+            fileSize: `${Math.round(degreeUp!.fileSize / 1024)} KB`,
+            previewUrl: degreeUp!.url,
+          }
+        : undefined;
 
       const payload = {
         fullName: data.fullName,

@@ -3,21 +3,15 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Eye, EyeOff, ShieldAlert, FileText, Loader2 } from 'lucide-react';
 import { showToast } from '../../components/ui/Toast';
 import ToastContainer from '../../components/ui/Toast';
-import { getUserById, canUserLogin, setSessionUser, findUserByLogin } from '../../constants/systemUsers';
-import { getAccountLockReason } from '../../services/employeesService';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { UI_ERROR } from '../../lib/uiMessages';
 import { authService } from '../../services/authService';
-import { USE_MOCK } from '../../mocks';
-import { REMEMBER_KEY, SAVED_USER_KEY, setRememberMePreference } from '../../lib/authSession';
-import RoleSwitcher from '../../components/layout/RoleSwitcher';
+import { REMEMBER_KEY, SAVED_USER_KEY } from '../../lib/authSession';
 import { getDefaultRoute } from '../../utils/getDefaultRoute';
 import { getActiveRole } from '../../lib/getActiveRole';
 import { NAMVIET_GROUP_LOGO_URL } from '../../constants/branding';
 
 const HAS_API = Boolean(import.meta.env.VITE_API_BASE_URL?.trim());
-/** Chạy frontend thuần — không cần Docker/PostgreSQL; dùng dữ liệu mô phỏng trong `src/data/*`. */
-const PURE_MOCK_DEV = USE_MOCK && !HAS_API;
 
 export default function LoginPage() {
   const [username, setUsername] = useState(() => {
@@ -27,8 +21,6 @@ export default function LoginPage() {
     return '';
   });
   const [password, setPassword] = useState('');
-  const [mockUserId, setMockUserId] = useState('');
-  const [useMockQuickLogin, setUseMockQuickLogin] = useState(PURE_MOCK_DEV);
   const [rememberMe, setRememberMe] = useState(
     () => localStorage.getItem(REMEMBER_KEY) === 'true',
   );
@@ -44,57 +36,21 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      if (USE_MOCK && useMockQuickLogin && mockUserId) {
-        await new Promise(r => setTimeout(r, 800));
-        const user = getUserById(mockUserId);
-        if (!user) {
-          setError('Không tìm thấy vai trò mô phỏng');
-          return;
-        }
-        if (!canUserLogin(user)) {
-          setError(getAccountLockReason(user.employeeId) ?? 'Tài khoản không còn hoạt động.');
-          return;
-        }
-        localStorage.setItem('nv-logged-in', 'true');
-        setSessionUser(user);
-      } else {
-        if (!username.trim() || !password.trim()) {
-          setError('Vui lòng điền đầy đủ email/tên đăng nhập và mật khẩu');
-          return;
-        }
-
-        if (HAS_API) {
-          await authService.login(username.trim(), password, rememberMe);
-        } else if (USE_MOCK) {
-          await new Promise(r => setTimeout(r, 800));
-          const user = findUserByLogin(username);
-          if (!user) {
-            setError('Tài khoản không tồn tại');
-            return;
-          }
-          if (!canUserLogin(user)) {
-            setError(getAccountLockReason(user.employeeId) ?? 'Tài khoản không còn hoạt động.');
-            return;
-          }
-          localStorage.setItem('nv-logged-in', 'true');
-          setSessionUser(user);
-        } else {
-          setError(UI_ERROR.serverUnavailable);
-          return;
-        }
+      if (!username.trim() || !password.trim()) {
+        setError('Vui lòng điền đầy đủ email và mật khẩu');
+        return;
       }
 
-      if (!HAS_API || (USE_MOCK && useMockQuickLogin && mockUserId)) {
-        if (rememberMe && !mockUserId) {
-          setRememberMePreference(true, username.trim());
-        } else if (!mockUserId) {
-          setRememberMePreference(false);
-        }
+      if (!HAS_API) {
+        setError(UI_ERROR.serverUnavailable);
+        return;
       }
+
+      await authService.login(username.trim(), password, rememberMe);
+
       showToast('success', 'Chào mừng bạn quay trở lại hệ thống!', 'Đăng nhập thành công');
       setError('');
-      const role = getActiveRole();
-      navigate(getDefaultRoute(role));
+      navigate(getDefaultRoute(getActiveRole()));
     } catch (err) {
       setError(getApiErrorMessage(err, UI_ERROR.loginFailed));
     } finally {
@@ -137,17 +93,15 @@ export default function LoginPage() {
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="hrm-field__label">
-                {USE_MOCK ? 'Email hoặc tên đăng nhập' : 'Email'}
-              </label>
+              <label className="hrm-field__label">Email</label>
               <div className="relative">
                 <input
                   type="text"
                   className="form-input w-full h-11 rounded-lg"
                   value={username}
                   onChange={e => setUsername(e.target.value)}
-                  placeholder={USE_MOCK ? 'vd: vy.phan hoặc vy.phan@namviet.vn' : 'vd: tuan.nguyen@namviet.vn'}
-                  disabled={USE_MOCK && useMockQuickLogin && Boolean(mockUserId)}
+                  placeholder="vd: tuan.nguyen@namviet.vn"
+                  autoComplete="username"
                 />
               </div>
             </div>
@@ -161,7 +115,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   placeholder=""
-                  disabled={USE_MOCK && useMockQuickLogin && Boolean(mockUserId)}
+                  autoComplete="current-password"
                 />
                 <button
                   type="button"
@@ -172,55 +126,6 @@ export default function LoginPage() {
                 </button>
               </div>
             </div>
-
-            {PURE_MOCK_DEV && (
-              <div className="rounded-xl border border-[var(--md-outline-variant)] overflow-hidden bg-[var(--md-surface-container-low)]">
-                <RoleSwitcher
-                  compact
-                  embedded
-                  previewOnly
-                  activeUserId={mockUserId || undefined}
-                  onSwitch={user => {
-                    setMockUserId(user.id);
-                    setUsername(user.email);
-                  }}
-                />
-              </div>
-            )}
-
-            {import.meta.env.DEV && USE_MOCK && HAS_API && (
-              <>
-                <label className="flex items-center gap-2 cursor-pointer text-sm">
-                  <input
-                    type="checkbox"
-                    checked={useMockQuickLogin}
-                    onChange={e => {
-                      setUseMockQuickLogin(e.target.checked);
-                      if (!e.target.checked) setMockUserId('');
-                    }}
-                    className="form-checkbox-accent"
-                  />
-                  <span className="text-[var(--md-on-surface-variant)] font-medium">
-                    Đăng nhập nhanh theo vai trò mô phỏng
-                  </span>
-                </label>
-
-                {useMockQuickLogin && (
-                  <div className="rounded-xl border border-[var(--md-outline-variant)] overflow-hidden bg-[var(--md-surface-container-low)]">
-                    <RoleSwitcher
-                      compact
-                      embedded
-                      previewOnly
-                      activeUserId={mockUserId || undefined}
-                      onSwitch={user => {
-                        setMockUserId(user.id);
-                        setUsername(user.email);
-                      }}
-                    />
-                  </div>
-                )}
-              </>
-            )}
 
             <div className="flex items-center justify-between text-sm pt-1">
               <label className="flex items-center gap-2 cursor-pointer">
@@ -267,14 +172,6 @@ export default function LoginPage() {
               Nộp đơn ứng tuyển
             </button>
           </div>
-
-          {import.meta.env.DEV && PURE_MOCK_DEV && (
-            <p className="text-center mt-4 text-xs text-[var(--md-on-surface-variant)] leading-relaxed">
-              Chế độ thử nghiệm: chọn vai trò rồi bấm Đăng nhập.
-              <br />
-              Hoặc nhập email/tên đăng nhập mô phỏng (mật khẩu bất kỳ).
-            </p>
-          )}
 
           <p className="text-center mt-5 text-xs text-[var(--md-on-surface-variant)]">
             Phiên bản thử nghiệm Mayzer WMS v1.2.0

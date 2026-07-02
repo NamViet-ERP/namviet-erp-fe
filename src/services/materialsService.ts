@@ -1,9 +1,7 @@
 import { apiClient } from '../lib/apiClient';
-import { resolveMock } from '../mocks';
 import type { MaterialApiDto, PagedApiResult } from '../types/wms';
 
 const ENDPOINT = '/api/warehouse/materials';
-const MOCK = () => import('../mocks/services/materialsService.mock');
 
 export interface MaterialListParams {
   page?: number;
@@ -46,71 +44,48 @@ function normalizeMaterial(dto: MaterialApiDto): MaterialApiDto {
 
 export const materialsService = {
   async list(params: MaterialListParams = {}): Promise<PagedApiResult<MaterialApiDto>> {
-    return resolveMock(
-      () => MOCK().then((m) => m.listMaterialsMock(params)),
-      async () => {
-        const res = await apiClient.get<PagedApiResult<MaterialApiDto>>(ENDPOINT, {
-          page: params.page,
-          pageSize: params.pageSize,
-          search: params.search,
-          danhMuc: params.danhMuc,
-          nhomVatTu: params.nhomVatTu,
-          loaiVatTu: params.loaiVatTu,
-          phanLoai: params.phanLoai,
-          kieu: params.kieu,
-          categoryId: params.categoryId,
-          includeInactive: params.includeInactive,
-        });
-        return {
-          ...res,
-          items: res.items.map(normalizeMaterial),
-        };
-      },
-    );
+    const res = await apiClient.get<PagedApiResult<MaterialApiDto>>(ENDPOINT, {
+      page: params.page,
+      pageSize: params.pageSize,
+      search: params.search,
+      danhMuc: params.danhMuc,
+      nhomVatTu: params.nhomVatTu,
+      loaiVatTu: params.loaiVatTu,
+      phanLoai: params.phanLoai,
+      kieu: params.kieu,
+      categoryId: params.categoryId,
+      includeInactive: params.includeInactive,
+    });
+    return {
+      ...res,
+      items: res.items.map(normalizeMaterial),
+    };
   },
 
   async getByCode(code: string): Promise<MaterialApiDto> {
-    return resolveMock(
-      () => MOCK().then((m) => m.getMaterialMock(code)),
-      async () => normalizeMaterial(
-        await apiClient.get<MaterialApiDto>(`${ENDPOINT}/${encodeURIComponent(code)}`),
-      ),
+    return normalizeMaterial(
+      await apiClient.get<MaterialApiDto>(`${ENDPOINT}/${encodeURIComponent(code)}`),
     );
   },
 
   async create(body: UpsertMaterialRequest): Promise<MaterialApiDto> {
-    return resolveMock(
-      () => MOCK().then((m) => m.createMaterialMock(body)),
-      async () => normalizeMaterial(await apiClient.post<MaterialApiDto>(ENDPOINT, body)),
-    );
+    return normalizeMaterial(await apiClient.post<MaterialApiDto>(ENDPOINT, body));
   },
 
   async update(code: string, body: UpsertMaterialRequest): Promise<void> {
-    return resolveMock(
-      () => MOCK().then((m) => m.updateMaterialMock()),
-      async () => { await apiClient.put(`${ENDPOINT}/${encodeURIComponent(code)}`, body); },
-    );
+    await apiClient.put(`${ENDPOINT}/${encodeURIComponent(code)}`, body);
   },
 
   async remove(code: string): Promise<void> {
-    return resolveMock(
-      () => MOCK().then((m) => m.removeMaterialMock()),
-      async () => { await apiClient.delete(`${ENDPOINT}/${encodeURIComponent(code)}`); },
-    );
+    await apiClient.delete(`${ENDPOINT}/${encodeURIComponent(code)}`);
   },
 
   async discontinue(code: string): Promise<void> {
-    return resolveMock(
-      () => MOCK().then((m) => m.discontinueMaterialMock()),
-      async () => { await apiClient.post(`${ENDPOINT}/${encodeURIComponent(code)}/discontinue`); },
-    );
+    await apiClient.post(`${ENDPOINT}/${encodeURIComponent(code)}/discontinue`);
   },
 
   async reactivate(code: string): Promise<void> {
-    return resolveMock(
-      () => MOCK().then((m) => m.reactivateMaterialMock()),
-      async () => { await apiClient.post(`${ENDPOINT}/${encodeURIComponent(code)}/reactivate`); },
-    );
+    await apiClient.post(`${ENDPOINT}/${encodeURIComponent(code)}/reactivate`);
   },
 };
 

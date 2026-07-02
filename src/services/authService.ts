@@ -1,4 +1,3 @@
-import { USE_MOCK } from '../mocks';
 import { apiClient, setAuthTokenProvider } from '../lib/apiClient';
 import { cacheEmployeeStatus } from './employeesService';
 import type { SystemUser } from '../constants/systemUsers';
@@ -68,7 +67,6 @@ export const authService = {
 
     persistTokens(res.token, res.refreshToken, rememberMe);
     setRememberMePreference(rememberMe, rememberMe ? username.trim() : undefined);
-    localStorage.setItem('nv-logged-in', 'true');
 
     if (res.user.employeeId && res.user.employeeStatus) {
       cacheEmployeeStatus(res.user.employeeId, res.user.employeeStatus);
@@ -80,7 +78,6 @@ export const authService = {
   },
 
   async ensureSession(): Promise<boolean> {
-    if (USE_MOCK) return localStorage.getItem('nv-logged-in') === 'true';
     if (!hasAuthSession()) return false;
 
     const token = getStoredToken();
@@ -90,7 +87,6 @@ export const authService = {
   },
 
   async refreshSession(): Promise<boolean> {
-    if (USE_MOCK) return true;
     return refreshAccessToken();
   },
 
@@ -99,7 +95,6 @@ export const authService = {
   },
 
   isLoggedIn(): boolean {
-    if (USE_MOCK) return localStorage.getItem('nv-logged-in') === 'true';
     return hasAuthSession();
   },
 };

@@ -1,5 +1,0 @@
-/** Deep clone so mock callers can't mutate the shared seed arrays. */
-export function clone<T>(value: T): T {
-  if (typeof structuredClone === 'function') return structuredClone(value);
-  return JSON.parse(JSON.stringify(value)) as T;
-}

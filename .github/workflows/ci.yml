@@ -25,23 +25,15 @@ jobs:
         run: |
           printf '%s\n' \
             'VITE_API_BASE_URL=https://api.ci-placeholder.local' \
-            'VITE_USE_MOCK=false' \
             > .env.production
 
       - name: Verify production env
-        run: npm run verify:prod-env
-        env:
-          VITE_USE_MOCK: 'false'
-          VITE_API_BASE_URL: https://api.ci-placeholder.local
+        run: npm run verify:prod
 
       - name: Production build
         run: npm run build:prod
-        env:
-          VITE_USE_MOCK: 'false'
-          VITE_API_BASE_URL: https://api.ci-placeholder.local
 
       - name: Unit tests
         run: rm -f .env.production && npm run test:run
         env:
           NODE_ENV: test
-          VITE_USE_MOCK: 'true'

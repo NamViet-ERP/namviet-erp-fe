@@ -41,4 +41,6 @@ docs/*
 # Build scripts for production (verify + build-prod)
 scripts/*
 !scripts/verify-prod-env.mjs
+!scripts/verify-no-mock-src.mjs
+!scripts/verify-prod-bundle.mjs
 !scripts/build-prod.mjs

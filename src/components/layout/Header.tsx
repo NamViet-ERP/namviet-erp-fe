@@ -11,9 +11,7 @@ import { showToast } from '../ui/Toast';
 import { departments } from '../../constants/departments';
 import { getSessionUser, clearSessionUser } from '../../constants/systemUsers';
 import { authService } from '../../services/authService';
-import { USE_MOCK } from '../../mocks';
 import DepartmentCard from './DepartmentCard';
-import RoleSwitcher from './RoleSwitcher';
 
 type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin';
 type NotifType = 'warning' | 'import' | 'export' | 'info';
@@ -125,8 +123,6 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
   const navigate = useNavigate();
   const sessionUser = getSessionUser();
   const currentUser = sessionUser ?? { name: 'User', initials: 'U', roleLabel: '', email: '' };
-  const activeUserId = sessionUser?.id ?? 'admin';
-
   const [showModuleMenu, setShowModuleMenu] = useState(false);
   const [moduleMenuClosing, setModuleMenuClosing] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -409,16 +405,6 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
                   )}
                 </div>
               </div>
-
-              {USE_MOCK && (
-                <RoleSwitcher
-                  activeUserId={activeUserId}
-                  onSwitch={() => {
-                    setShowUserMenu(false);
-                    window.location.reload();
-                  }}
-                />
-              )}
 
               <div className="user-menu-panel__section">
                 <MenuBtn icon={User} label="Thông tin tài khoản" onClick={() => { navigate('/profile'); setShowUserMenu(false); }} />

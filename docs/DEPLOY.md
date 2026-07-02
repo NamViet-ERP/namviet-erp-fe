@@ -9,7 +9,7 @@ Backend: file `docs/DEPLOY.md` trong repo **`WareHouse_Management_BE`** (cùng b
 
 | Được | Không được |
 |------|------------|
-| Gọi API thật (`VITE_USE_MOCK=false`) | `VITE_USE_MOCK=true` trên production |
+| Gọi API thật qua `VITE_API_BASE_URL` | `VITE_USE_MOCK=true` (mock layer đã gỡ — build sẽ fail nếu set) |
 | Build bằng `npm run build:prod` | `npm run build` thiếu `.env.production` / env shell |
 | Master data tùy chọn qua script SQL (BE) sau khi business chốt | Seed user / dữ liệu nghiệp vụ trong code hoặc migration tự chạy |
 | Tạo admin đầu tiên thủ công qua API | Tài khoản admin cứng trong repo |
@@ -29,7 +29,6 @@ Chỉnh `.env.production` (không commit file này nếu chứa URL nội bộ n
 | Biến | Bắt buộc | Ví dụ | Ghi chú |
 |------|----------|-------|---------|
 | `VITE_API_BASE_URL` | Có | `https://api.namviet.vn` | URL backend; **bake vào bundle lúc build** |
-| `VITE_USE_MOCK` | Có | `false` | `build:prod` cũng ép `false` |
 | `VITE_BASE_PATH` | Không | `/` hoặc `/wms/` | Nếu host dưới sub-path |
 
 **Lưu ý:** Mọi biến `VITE_*` lộ trong file JS client — không đặt secret ở đây.
@@ -47,10 +46,13 @@ npm run build:prod
 
 Artifact: thư mục `dist/` — deploy lên static host (Nginx, IIS, CDN, …).
 
-### Guard đã bật (P0-1)
+### Guard đã bật (P0 + Phase 1)
 
-- `verify-prod-env` — fail nếu mock bật hoặc thiếu API URL  
-- `vite.config.ts` — fail production build nếu `VITE_USE_MOCK=true` hoặc thiếu URL  
+- `verify-prod-env` — fail nếu `VITE_USE_MOCK=true` hoặc thiếu API URL  
+- `verify-no-mock-src` — fail nếu còn `src/mocks/` hoặc import mock trong `src/`  
+- `verify-prod-bundle` — fail nếu `dist/assets/` còn chunk `*.mock*.js`  
+- `vite.config.ts` — fail production build nếu mock bật hoặc thiếu URL  
+- `assertProductionConfig()` — runtime guard trong `main.tsx`  
 - CI (GitHub Actions): chạy trên branch `production`, dùng URL placeholder chỉ để **verify compile** — deploy thật phải build lại với URL API thật
 
 ---
@@ -71,7 +73,6 @@ Deploy job thật (làm sau khi chốt hosting): thêm job hoặc pipeline riên
 
 - [ ] Backend đã chạy, `/health` trả 200  
 - [ ] `VITE_API_BASE_URL` trỏ đúng domain API production  
-- [ ] `VITE_USE_MOCK=false`  
 - [ ] CORS trên BE cho phép origin frontend (xem BE deploy doc)  
 - [ ] Đã chạy `npm run build:prod` thành công  
 - [ ] Không deploy artifact từ CI placeholder URL (trừ môi trường test tạm)
@@ -120,7 +121,10 @@ psql -h <host> -U <user> -d <database> -f scripts/seed-material-category-tree.sq
 
 ---
 
-## 9. Việc tiếp theo (roadmap)
+## 9. Roadmap tiếp theo
 
-- **P0-3:** Runtime guard — `assertProductionConfig()` trong `main.tsx` (prod + mock → dừng, hiện lỗi)
-- **Phase 1:** Gỡ `src/mocks/` khỏi bundle production (hiện vẫn có chunk mock trong `dist/` dù không chạy)
+- **Phase 2:** UI không còn dữ liệu giả (Header notifications, orphan pages, …)  
+- **Phase 3:** Dashboard KPI từ BE, thống nhất Projects API  
+- **Phase 4:** BE hardening, test voucher workflow  
+
+**Phase 0 + Phase 1 (hoàn tất):** deploy guards, CI xanh, `src/mocks/` đã gỡ, services/login chỉ gọi API.

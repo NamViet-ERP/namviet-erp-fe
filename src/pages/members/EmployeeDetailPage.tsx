@@ -13,9 +13,7 @@ import { calcSeniority } from '../../types/hr';
 import type { Employee, FileAttachment } from '../../types/hr';
 import { formatDateVi } from '../../lib/hrm/formatters';
 import { sanitizeEmployeeForSave } from '../../lib/hrm/sanitizeInput';
-import { toFileAttachment } from '../../lib/hrm/attachments';
 import type { LocalFileState } from '../../components/hr/HrmImageUpload';
-import { USE_MOCK } from '../../mocks';
 import { filesService, type UploadCategory } from '../../services/filesService';
 import DetailSection from '../../components/hr/DetailSection';
 import DetailFieldGrid from '../../components/hr/DetailFieldGrid';
@@ -100,7 +98,6 @@ export default function EmployeeDetailPage() {
         existing?: FileAttachment,
       ): Promise<FileAttachment | undefined> => {
         if (!pending) return existing;
-        if (USE_MOCK) return toFileAttachment(pending);
         const result = await filesService.upload(pending.file, category, { employeeId: id });
         return {
           fileName: result.fileName,

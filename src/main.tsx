@@ -7,8 +7,6 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { assertProductionConfig } from './lib/assertProductionConfig';
 import { queryClient } from './lib/queryClient';
 import { initAuthTokenProvider } from './services/authService';
-import { USE_MOCK } from './mocks';
-import { initSystemUsersMock } from './constants/systemUsers';
 
 function renderConfigError(message: string): void {
   const rootElement = document.getElementById('root');
@@ -31,17 +29,13 @@ function renderConfigError(message: string): void {
   rootElement.append(panel);
 }
 
-async function boot() {
+function boot() {
   try {
     assertProductionConfig();
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Cấu hình production không hợp lệ.';
     renderConfigError(message);
     return;
-  }
-
-  if (USE_MOCK) {
-    await initSystemUsersMock();
   }
 
   initAuthTokenProvider();
@@ -58,4 +52,4 @@ async function boot() {
   );
 }
 
-void boot();
+boot();

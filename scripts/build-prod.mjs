@@ -13,15 +13,19 @@ const scriptsDir = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.join(scriptsDir, '..');
 const env = { ...process.env, VITE_USE_MOCK: 'false' };
 
-const verify = spawnSync(process.execPath, [path.join(scriptsDir, 'verify-prod-env.mjs')], {
-  stdio: 'inherit',
-  env,
-  cwd: projectRoot,
-});
-
-if (verify.status !== 0) {
-  process.exit(verify.status ?? 1);
+function run(scriptName) {
+  const result = spawnSync(process.execPath, [path.join(scriptsDir, scriptName)], {
+    stdio: 'inherit',
+    env,
+    cwd: projectRoot,
+  });
+  if (result.status !== 0) {
+    process.exit(result.status ?? 1);
+  }
 }
+
+run('verify-prod-env.mjs');
+run('verify-no-mock-src.mjs');
 
 const viteCli = path.join(projectRoot, 'node_modules', 'vite', 'bin', 'vite.js');
 if (!existsSync(viteCli)) {
@@ -35,4 +39,8 @@ const build = spawnSync(process.execPath, [viteCli, 'build', '--mode', 'producti
   cwd: projectRoot,
 });
 
-process.exit(build.status ?? 0);
+if (build.status !== 0) {
+  process.exit(build.status ?? 1);
+}
+
+run('verify-prod-bundle.mjs');

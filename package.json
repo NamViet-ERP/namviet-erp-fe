@@ -7,12 +7,14 @@
     "dev": "vite",
     "build": "vite build",
     "verify:prod-env": "node scripts/verify-prod-env.mjs",
+    "verify:no-mock": "node scripts/verify-no-mock-src.mjs",
+    "verify:prod-bundle": "node scripts/verify-prod-bundle.mjs",
+    "verify:prod": "npm run verify:prod-env && npm run verify:no-mock",
     "build:prod": "node scripts/build-prod.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",
-    "test:run": "vitest run --mode test",
-    "test:smoke": "vitest run src/mocks/mockServices.smoke.test.ts"
+    "test:run": "vitest run --mode test"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",

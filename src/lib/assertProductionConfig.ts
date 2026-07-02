@@ -1,15 +1,13 @@
-import { USE_MOCK } from '../mocks';
-
 /**
- * Fail fast when a production bundle was built or configured for mock mode.
+ * Fail fast when a production bundle was built or configured without API URL.
  * Complements build-time guards in vite.config and verify-prod-env.
  */
 export function assertProductionConfig(): void {
   if (!import.meta.env.PROD) return;
 
-  if (USE_MOCK) {
+  if (import.meta.env.VITE_USE_MOCK === 'true') {
     throw new Error(
-      'Cấu hình production không hợp lệ: ứng dụng đang ở chế độ mock (VITE_USE_MOCK). ' +
+      'Cấu hình production không hợp lệ: VITE_USE_MOCK=true. ' +
         'Build lại bằng `npm run build:prod` với VITE_USE_MOCK=false và VITE_API_BASE_URL trỏ API thật.',
     );
   }
