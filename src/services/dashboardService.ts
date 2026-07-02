@@ -1,15 +1,33 @@
 import { apiClient } from '../lib/apiClient';
-
-export interface TopProductApiDto {
-  sku: string;
-  name: string;
-  qty: number;
-  value: number;
-}
+import type {
+  DashboardActivityApiDto,
+  DashboardCategoryApiDto,
+  DashboardKpiApiDto,
+  DashboardTrendApiDto,
+  TopProductApiDto,
+} from '../types/api/wms/dashboardApi';
 
 const ENDPOINT = '/api/dashboard';
 
+export type { TopProductApiDto };
+
 export const dashboardService = {
+  async kpi(): Promise<DashboardKpiApiDto> {
+    return apiClient.get<DashboardKpiApiDto>(`${ENDPOINT}/kpi`);
+  },
+
+  async trend(months = 6): Promise<DashboardTrendApiDto[]> {
+    return apiClient.get<DashboardTrendApiDto[]>(`${ENDPOINT}/trend`, { months });
+  },
+
+  async stockByCategory(): Promise<DashboardCategoryApiDto[]> {
+    return apiClient.get<DashboardCategoryApiDto[]>(`${ENDPOINT}/stock-by-category`);
+  },
+
+  async activityFeed(limit = 20): Promise<DashboardActivityApiDto[]> {
+    return apiClient.get<DashboardActivityApiDto[]>(`${ENDPOINT}/activity-feed`, { limit });
+  },
+
   async topProducts(): Promise<TopProductApiDto[]> {
     return apiClient.get<TopProductApiDto[]>(`${ENDPOINT}/top-products`);
   },

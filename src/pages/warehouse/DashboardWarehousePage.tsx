@@ -309,19 +309,19 @@ function DashboardWarehouseContent({
 
       <div className="dashboard-grid-charts">
         <BentoCard className="bento-card--chart">
-          <SectionHeading sub="6 tháng gần nhất">Xu hướng Nhập / Xuất</SectionHeading>
+          <SectionHeading sub="6 tháng gần nhất — giá trị">Xu hướng Nhập / Xuất</SectionHeading>
           <TrendChart data={data.trendData} />
         </BentoCard>
 
         <BentoCard className="bento-card--chart">
-          <SectionHeading sub="Theo mã vật tư">Cơ cấu tồn kho</SectionHeading>
+          <SectionHeading sub="Số mã vật tư theo danh mục">Cơ cấu tồn kho</SectionHeading>
           <CategoryPieChart data={data.stockByCategory} />
         </BentoCard>
       </div>
 
       <div className="dashboard-grid-row dashboard-grid-row--split">
         <BentoCard className="bento-card--chart bento-card--chart-bar">
-          <SectionHeading sub="Top kho dự án theo tồn thực tế">Phân bổ theo kho</SectionHeading>
+          <SectionHeading sub="Chưa có API phân bổ theo kho — hiển thị khi BE bổ sung">Phân bổ theo kho</SectionHeading>
           <WarehouseBarChart data={data.stockByWarehouse} />
         </BentoCard>
 
@@ -355,7 +355,7 @@ function DashboardWarehouseContent({
 function TrendChart({ data }: { data: TrendDataPoint[] }) {
   const hasData = data.some(point => point.imports > 0 || point.exports > 0);
   if (!hasData) {
-    return <ChartEmpty message="Chưa có phiếu nhập/xuất trong 6 tháng gần đây." />;
+    return <ChartEmpty message="Chưa có giá trị nhập/xuất trong 6 tháng gần đây." />;
   }
 
   const totalImports = data.reduce((sum, point) => sum + point.imports, 0);
@@ -368,11 +368,11 @@ function TrendChart({ data }: { data: TrendDataPoint[] }) {
       <div className="trend-summary">
         <span className="trend-summary__pill">
           <span className="trend-summary__dot" style={{ background: 'var(--status-success)' }} />
-          Nhập: <strong>{totalImports}</strong> phiếu
+          Nhập: <strong>{formatCurrencyShort(totalImports)}</strong>
         </span>
         <span className="trend-summary__pill">
           <span className="trend-summary__dot" style={{ background: 'var(--md-secondary)' }} />
-          Xuất: <strong>{totalExports}</strong> phiếu
+          Xuất: <strong>{formatCurrencyShort(totalExports)}</strong>
         </span>
       </div>
       <div className="chart-panel__body">
@@ -400,8 +400,8 @@ function TrendChart({ data }: { data: TrendDataPoint[] }) {
               <YAxis
                 stroke="transparent"
                 tick={{ fill: 'var(--md-on-surface-variant)', fontSize: 10, fontFamily: 'Roboto, sans-serif' }}
-                allowDecimals={false}
-                width={36}
+                tickFormatter={(v) => formatCurrencyShort(Number(v))}
+                width={48}
                 domain={[0, yMax]}
                 axisLine={false}
                 tickLine={false}

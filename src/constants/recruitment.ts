@@ -1,20 +1,3 @@
-export const RECRUITMENT_POSITIONS = [
-  'Cung ứng',
-  'CSKH',
-  'Lò hơi',
-  'Sale KP',
-  'Kế toán',
-  'Kỹ thuật',
-  'Nhân sự',
-  'MTKP',
-  'Sale KZ',
-  'Dự án',
-  'Trang trại',
-  'Marketing',
-  'IT',
-  'Sale MZ',
-] as const;
-
 export const RECRUITMENT_SOURCES = [
   'Facebook', 'Zalo', '24h - lọc', '24h - ứng tuyển', 'TopCV', 'Glints',
 ] as const;

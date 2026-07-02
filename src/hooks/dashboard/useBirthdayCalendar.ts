@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
-import type { Employee } from '../../types/hr';
+import { useQuery } from '@tanstack/react-query';
 import { MONTH_NAMES } from './calendarConstants';
+import { hrBirthdaysService } from '../../services/hrBirthdaysService';
 
 export interface BirthdayEvent {
   name: string;
-  role: 'Nhân viên' | 'Khách hàng';
+  department: string;
 }
 
 export interface CalendarCell {
@@ -12,29 +13,12 @@ export interface CalendarCell {
   isCurrentMonth: boolean;
 }
 
-function parseBirthMonthDay(birthDate: string): { month: number; day: number } | null {
-  const raw = birthDate?.trim();
-  if (!raw) return null;
-
-  const iso = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (iso) return { month: Number(iso[2]) - 1, day: Number(iso[3]) };
-
-  const vn = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-  if (vn) return { month: Number(vn[2]) - 1, day: Number(vn[1]) };
-
-  const parsed = new Date(raw);
-  if (Number.isNaN(parsed.getTime())) return null;
-  return { month: parsed.getMonth(), day: parsed.getDate() };
-}
-
-function buildBirthdaysByDay(employees: Employee[], month: number): Record<number, BirthdayEvent[]> {
+function buildBirthdaysByDay(rows: { name: string; department: string; day: number }[]): Record<number, BirthdayEvent[]> {
   const map: Record<number, BirthdayEvent[]> = {};
 
-  for (const emp of employees) {
-    const md = parseBirthMonthDay(emp.birthDate);
-    if (!md || md.month !== month) continue;
-    if (!map[md.day]) map[md.day] = [];
-    map[md.day].push({ name: emp.fullName, role: 'Nhân viên' });
+  for (const row of rows) {
+    if (!map[row.day]) map[row.day] = [];
+    map[row.day].push({ name: row.name, department: row.department });
   }
 
   for (const day of Object.keys(map)) {
@@ -72,7 +56,7 @@ function buildCalendarCells(year: number, month: number): CalendarCell[] {
   return cells;
 }
 
-export function useBirthdayCalendar(employees: Employee[]) {
+export function useBirthdayCalendar() {
   const now = useMemo(() => new Date(), []);
   const [viewDate, setViewDate] = useState(() => new Date(now.getFullYear(), now.getMonth(), 1));
   const viewYear = viewDate.getFullYear();
@@ -82,9 +66,14 @@ export function useBirthdayCalendar(employees: Employee[]) {
 
   const [selectedDay, setSelectedDay] = useState<number>(today);
 
+  const birthdaysQuery = useQuery({
+    queryKey: ['hr', 'birthdays', viewYear, viewMonth],
+    queryFn: () => hrBirthdaysService.list(viewMonth + 1),
+  });
+
   const birthdaysByDay = useMemo(
-    () => buildBirthdaysByDay(employees, viewMonth),
-    [employees, viewMonth],
+    () => buildBirthdaysByDay(birthdaysQuery.data ?? []),
+    [birthdaysQuery.data],
   );
 
   const calendarCells = useMemo(
@@ -112,5 +101,7 @@ export function useBirthdayCalendar(employees: Employee[]) {
     calendarCells,
     birthdayStats,
     monthLabel: MONTH_NAMES[viewMonth],
+    isLoading: birthdaysQuery.isLoading,
+    isError: birthdaysQuery.isError,
   };
 }

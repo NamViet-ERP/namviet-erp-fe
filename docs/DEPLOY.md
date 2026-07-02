@@ -123,9 +123,8 @@ psql -h <host> -U <user> -d <database> -f scripts/seed-material-category-tree.sq
 
 ## 9. Roadmap tiếp theo
 
-- **Phase 3:** Dashboard KPI từ BE, thống nhất Projects API  
 - **Phase 4:** BE hardening, test voucher workflow  
 - **CD:** pipeline deploy tự động (sau khi chốt hosting)
 
-**Phase 0 + Phase 1 (hoàn tất):** deploy guards, CI xanh, `src/mocks/` đã gỡ, services/login chỉ gọi API.  
-**Phase 2 (hoàn tất):** Header notifications empty state, widget công việc hiển thị (0 cho đến khi có API), calendar tháng thật, không còn wording "giả lập"; orphan pages không còn trong repo.
+**Phase 0–2 (hoàn tất):** guards, mock layer gỡ, UI không data giả.  
+**Phase 3 (hoàn tất):** dashboard kho + sinh nhật từ BE; một Projects API (`/api/warehouse/projects`); doc BE-only modules (repo BE).

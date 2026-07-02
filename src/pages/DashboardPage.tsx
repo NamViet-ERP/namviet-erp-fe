@@ -7,7 +7,6 @@ import { departments, type DepartmentSubItem } from '../constants/departments';
 import DepartmentCard from '../components/layout/DepartmentCard';
 import TopSalesTable from '../components/dashboard/TopSalesTable';
 import { getSessionUser } from '../constants/systemUsers';
-import { useEmployees } from '../hooks/useEmployees';
 import { useBirthdayCalendar } from '../hooks/dashboard/useBirthdayCalendar';
 import { useTopSalesRows } from '../hooks/dashboard/useTopSalesRows';
 import { WEEKDAY_LABELS, PENDING_TASKS } from '../hooks/dashboard/calendarConstants';
@@ -17,7 +16,6 @@ import { formatDate } from '../utils/formatDate';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const { data: employees = [] } = useEmployees();
   const { topProducts, topMaterials } = useTopSalesRows();
   const {
     now,
@@ -32,7 +30,7 @@ export default function DashboardPage() {
     calendarCells,
     birthdayStats,
     monthLabel,
-  } = useBirthdayCalendar(employees);
+  } = useBirthdayCalendar();
 
   const sessionUser = getSessionUser();
   const displayName = sessionUser?.name?.split(' ').slice(-1)[0] ?? 'bạn';
@@ -222,7 +220,9 @@ export default function DashboardPage() {
                         <span className="portal-calendar-detail__dot" aria-hidden />
                         <span className="text-pretty">
                           <strong>{person.name}</strong>
-                          <span className="portal-calendar-detail__role">({person.role})</span>
+                          {person.department && (
+                            <span className="portal-calendar-detail__role">({person.department})</span>
+                          )}
                         </span>
                       </li>
                     ))}
