@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { PackagePlus, PackageMinus, PackageX, Boxes, Package, UserRound, CalendarDays, ArrowRightLeft } from 'lucide-react';
+import { PackagePlus, PackageMinus, PackageX, Boxes, Package, UserRound, CalendarDays, ArrowRightLeft, Pencil } from 'lucide-react';
 import { HrmDetailHeader } from '../../components/hr/HrmPageChrome';
 import HrmPanel from '../../components/hr/HrmPanel';
 import HrmStatCard from '../../components/hr/HrmStatCard';
@@ -9,18 +9,25 @@ import Badge from '../../components/ui/Badge';
 import TabFilter from '../../components/ui/TabFilter';
 import Pagination from '../../components/ui/Pagination';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
+import Modal from '../../components/ui/Modal';
+import FormField from '../../components/ui/FormField';
+import CurrencyInput from '../../components/ui/CurrencyInput';
 import ProjectWarehouseHistoryTab from '../../components/warehouse/ProjectWarehouseHistoryTab';
 import HrmNotFound from '../../components/hr/HrmNotFound';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import { showToast } from '../../components/ui/Toast';
-import { getApiErrorMessage } from '../../lib/apiClient';
+import { getApiErrorMessage, getApiFieldErrors } from '../../lib/apiClient';
 import { formatDateCell } from '../../lib/hrm/formatters';
 import { fmtExpectedStock, fmtPlannedNet, fmtStockQtyOrDash } from '../../lib/wms/stockQtyFormat';
 import { formatCurrencyFull } from '../../utils/formatCurrency';
-import { useProject, useProjectInventory, useCloseProject } from '../../hooks/useProjects';
+import { parseCurrencyInput } from '../../utils/currencyInput';
+import { useProject, useProjectInventory, useCloseProject, useUpdateProject } from '../../hooks/useProjects';
 import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
+import type { WarehouseProjectApiDto } from '../../types/wms';
 
 type DetailTab = 'stock' | 'history' | 'info';
+
+const EMPTY_PM_ID = '00000000-0000-0000-0000-000000000000';
 
 const tabs = [
   { id: 'stock', label: 'Tồn kho' },
@@ -28,16 +35,51 @@ const tabs = [
   { id: 'info', label: 'Thông tin' },
 ];
 
+function toDateInputValue(value: string | null | undefined): string {
+  if (!value) return '';
+  return value.slice(0, 10);
+}
+
+function validateEditForm(form: {
+  projectName: string;
+  materialBudget: string;
+}): Record<string, string> {
+  const errs: Record<string, string> = {};
+  if (!form.projectName.trim()) errs.projectName = 'Vui lòng nhập tên công trình';
+  if (parseCurrencyInput(form.materialBudget) <= 0) {
+    errs.materialBudget = 'Vui lòng nhập ngân sách vật tư';
+  }
+  return errs;
+}
+
+function openEditForm(project: WarehouseProjectApiDto) {
+  return {
+    projectName: project.projectName,
+    pmName: project.pmName && project.pmName !== '—' ? project.pmName : '',
+    endDate: toDateInputValue(project.endDate ?? undefined),
+    materialBudget: project.materialBudget > 0 ? String(project.materialBudget) : '',
+  };
+}
+
 export default function ProjectDetailPage() {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<DetailTab>('stock');
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [editForm, setEditForm] = useState({
+    projectName: '',
+    pmName: '',
+    endDate: '',
+    materialBudget: '',
+  });
+  const [editErrors, setEditErrors] = useState<Record<string, string>>({});
   const [stockPageRaw, setStockPage] = useState(1);
   const [stockPageSize, setStockPageSize] = useState(DEFAULT_LIST_PAGE_SIZE);
   const { data: project, isLoading, isError } = useProject(code);
   const { data: inventory = [], isLoading: invLoading } = useProjectInventory(code);
   const closeMutation = useCloseProject();
+  const updateMutation = useUpdateProject();
 
   const goBack = () => navigate('/warehouse/projects');
 
@@ -49,6 +91,48 @@ export default function ProjectDetailPage() {
       showToast('success', 'Đã đóng kho dự án. Tồn còn lại đã chuyển về kho tổng.');
     } catch (err) {
       showToast('error', getApiErrorMessage(err, 'Không thể đóng kho dự án'));
+    }
+  };
+
+  const openEdit = () => {
+    if (!project) return;
+    setEditForm(openEditForm(project));
+    setEditErrors({});
+    setShowEdit(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!code || !project) return;
+    const clientErrors = validateEditForm(editForm);
+    if (Object.keys(clientErrors).length > 0) {
+      setEditErrors(clientErrors);
+      showToast('error', 'Vui lòng kiểm tra lại các ô được đánh dấu.');
+      return;
+    }
+
+    setEditErrors({});
+    try {
+      await updateMutation.mutateAsync({
+        code,
+        body: {
+          projectName: editForm.projectName.trim(),
+          pmId: EMPTY_PM_ID,
+          pmName: editForm.pmName.trim() || '—',
+          endDate: editForm.endDate || null,
+          materialBudget: parseCurrencyInput(editForm.materialBudget),
+          status: project.status,
+        },
+      });
+      setShowEdit(false);
+      showToast('success', 'Đã cập nhật thông tin kho dự án.');
+    } catch (err) {
+      const fieldErrors = getApiFieldErrors(err);
+      if (Object.keys(fieldErrors).length > 0) {
+        setEditErrors(fieldErrors);
+        showToast('error', 'Vui lòng kiểm tra lại các ô được đánh dấu.');
+      } else {
+        showToast('error', getApiErrorMessage(err, 'Không thể cập nhật kho dự án'));
+      }
     }
   };
 
@@ -130,6 +214,9 @@ export default function ProjectDetailPage() {
         actions={
           !isClosed ? (
             <div className="flex flex-wrap gap-2">
+              <button type="button" className="hrm-header-btn" onClick={openEdit}>
+                <Pencil size={14} /> Chỉnh sửa
+              </button>
               <Link
                 to="/warehouse/import"
                 state={{ projectCode: project.projectCode }}
@@ -328,6 +415,84 @@ export default function ProjectDetailPage() {
           </div>
         }
       />
+
+      <Modal
+        isOpen={showEdit}
+        onClose={() => setShowEdit(false)}
+        title="Chỉnh sửa kho dự án"
+        size="xl"
+        footer={
+          <>
+            <button type="button" className="btn btn-outline" onClick={() => setShowEdit(false)}>Hủy</button>
+            <button
+              type="button"
+              className="btn btn-filled"
+              disabled={updateMutation.isPending}
+              onClick={handleSaveEdit}
+            >
+              Lưu thay đổi
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-4 modal-form-bordered">
+          <FormField label="Mã kho dự án">
+            <input className="form-input font-mono" value={project.projectCode} readOnly disabled />
+          </FormField>
+          <FormField label="Tên công trình" required error={editErrors.projectName}>
+            <input
+              className="form-input"
+              value={editForm.projectName}
+              onChange={e => {
+                setEditForm({ ...editForm, projectName: e.target.value });
+                if (editErrors.projectName) {
+                  setEditErrors(prev => {
+                    const next = { ...prev };
+                    delete next.projectName;
+                    return next;
+                  });
+                }
+              }}
+            />
+          </FormField>
+          <FormField label="Người phụ trách dự án">
+            <input
+              className="form-input"
+              value={editForm.pmName}
+              onChange={e => setEditForm({ ...editForm, pmName: e.target.value })}
+              placeholder="Tên PM phụ trách"
+            />
+          </FormField>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField label="Ngày kết thúc dự kiến">
+              <input
+                type="date"
+                className="form-input"
+                value={editForm.endDate}
+                onChange={e => setEditForm({ ...editForm, endDate: e.target.value })}
+              />
+            </FormField>
+            <FormField label="Ngân sách Vật tư" required error={editErrors.materialBudget}>
+              <CurrencyInput
+                suffix="(VNĐ)"
+                className="tabular-nums"
+                value={editForm.materialBudget}
+                onChange={(_raw, numeric) => {
+                  setEditForm({ ...editForm, materialBudget: numeric > 0 ? String(numeric) : '' });
+                  if (editErrors.materialBudget) {
+                    setEditErrors(prev => {
+                      const next = { ...prev };
+                      delete next.materialBudget;
+                      return next;
+                    });
+                  }
+                }}
+                placeholder="0"
+              />
+            </FormField>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { CreateWarehouseProjectRequest } from '../types/wms';
+import type { CreateWarehouseProjectRequest, UpdateWarehouseProjectRequest } from '../types/wms';
 import { projectsService, type ProjectListParams } from '../services/projectsService';
 import { queryKeys } from '../services/queryKeys';
 
@@ -41,6 +41,18 @@ export function useCreateProject() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.projects.all });
       qc.invalidateQueries({ queryKey: queryKeys.stock.matrix });
+    },
+  });
+}
+
+export function useUpdateProject() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ code, body }: { code: string; body: UpdateWarehouseProjectRequest }) =>
+      projectsService.update(code, body),
+    onSuccess: (_data, { code }) => {
+      qc.invalidateQueries({ queryKey: queryKeys.projects.all });
+      qc.invalidateQueries({ queryKey: queryKeys.projects.detail(code) });
     },
   });
 }

@@ -2,6 +2,7 @@ import { apiClient } from '../lib/apiClient';
 import type {
   CreateWarehouseProjectRequest,
   PagedApiResult,
+  UpdateWarehouseProjectRequest,
   WarehouseProjectApiDto,
   WarehouseProjectInventoryApiDto,
   WarehouseProjectLedgerEntryApiDto,
@@ -38,6 +39,10 @@ export const projectsService = {
 
   async create(body: CreateWarehouseProjectRequest): Promise<WarehouseProjectApiDto> {
     return apiClient.post<WarehouseProjectApiDto>(ENDPOINT, body);
+  },
+
+  async update(code: string, body: UpdateWarehouseProjectRequest): Promise<void> {
+    await apiClient.put<void>(`${ENDPOINT}/${encodeURIComponent(code)}`, body);
   },
 
   async getLedger(code: string): Promise<WarehouseProjectLedgerEntryApiDto[]> {

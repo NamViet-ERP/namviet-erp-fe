@@ -58,6 +58,15 @@ export interface CreateWarehouseProjectRequest {
   materialBudget?: number;
 }
 
+export interface UpdateWarehouseProjectRequest {
+  projectName: string;
+  pmId: string;
+  pmName: string;
+  endDate?: string | null;
+  materialBudget: number;
+  status: string;
+}
+
 export interface WarehouseProjectInventoryApiDto {
   projectCode: string;
   materialCode: string;

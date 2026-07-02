@@ -22,21 +22,9 @@ export interface RoleListParams {
 }
 
 export const rolesService = {
-  list(): SystemRole[] {
-    return [];
-  },
-
   async listActiveOptions(): Promise<{ value: string; label: string }[]> {
     const roles = await apiClient.get<SystemRole[]>(ROLES_ENDPOINT, { activeOnly: true });
     return roles.map((r) => ({ value: r.code, label: r.label }));
-  },
-
-  getLabel(_code: string): string | undefined {
-    return undefined;
-  },
-
-  getActiveLabel(_code: string): string | undefined {
-    return undefined;
   },
 
   async listAsync(params: RoleListParams = {}): Promise<SystemRole[]> {
