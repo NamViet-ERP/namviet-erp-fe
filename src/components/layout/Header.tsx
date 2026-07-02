@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { NAMVIET_GROUP_LOGO_URL } from '../../constants/branding';
 import {
   Search, Grid3X3, Settings, BarChart3, Bell, ChevronDown,
-  User, LogOut, X, Check, AlertTriangle, Package, FileText, Moon, Sun,
+  User, LogOut, X, Moon, Sun,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -11,6 +11,7 @@ import { showToast } from '../ui/Toast';
 import { departments } from '../../constants/departments';
 import { getSessionUser, clearSessionUser } from '../../constants/systemUsers';
 import { authService } from '../../services/authService';
+import { UI_COMING_SOON } from '../../lib/uiMessages';
 import DepartmentCard from './DepartmentCard';
 
 type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin';
@@ -33,14 +34,6 @@ interface Notification {
   read: boolean;
   icon: LucideIcon;
 }
-
-const mockNotifications: Notification[] = [
-  { id: 1, type: 'import',  title: 'Phiếu nhập #NK-2026001', message: 'Đã được duyệt bởi Nguyễn Văn A', time: '5 phút trước',  read: false, icon: Package },
-  { id: 2, type: 'warning', title: 'Tồn kho thấp',           message: 'Sản phẩm "Xi măng PCB40" sắp hết hàng',     time: '15 phút trước', read: false, icon: AlertTriangle },
-  { id: 3, type: 'export',  title: 'Phiếu xuất #XK-2026043', message: 'Đang chờ xác nhận xuất kho',                time: '1 giờ trước',   read: false, icon: FileText },
-  { id: 4, type: 'info',    title: 'Kiểm kê hoàn tất',       message: 'Đợt kiểm kê tháng 5 đã hoàn thành',         time: '2 giờ trước',   read: true,  icon: Check },
-  { id: 5, type: 'import',  title: 'Phiếu nhập #NK-2026000', message: 'Nhập kho thành công 150 sản phẩm',          time: '3 giờ trước',   read: true,  icon: Package },
-];
 
 /* MD3 tonal containers for notification types — use CSS classes notif-icon--* */
 const notifIconClass: Record<NotifType, string> = {
@@ -127,7 +120,7 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
   const [moduleMenuClosing, setModuleMenuClosing] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [searchFocused, setSearchFocused] = useState(false);
   const [dark, setDark] = useDarkMode();
 
@@ -165,7 +158,7 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
     if (item.path) {
       navigate(item.path);
     } else {
-      showToast('info', `Phân hệ "${item.label}" thuộc bộ phận "${deptTitle}" đang được phát triển.`, 'Chức năng giả lập');
+      showToast('info', UI_COMING_SOON.module(item.label, deptTitle), UI_COMING_SOON.title);
     }
     closeModuleMenu();
   }, [navigate, closeModuleMenu]);
@@ -187,7 +180,7 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
   const markAsRead = (id: number) => setNotifications(p => p.map(n => n.id === id ? { ...n, read: true } : n));
 
   const handleSettingsClick = () => {
-    showToast('info', 'Phân hệ "Cài đặt" đang được phát triển.', 'Chức năng giả lập');
+    showToast('info', UI_COMING_SOON.settings, UI_COMING_SOON.title);
     setShowUserMenu(false);
   };
 
@@ -329,49 +322,62 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
 
               {/* List */}
               <div className="max-h-[340px] overflow-y-auto">
-                {notifications.map(n => {
-                  const NIcon = n.icon;
-                  return (
-                    <button
-                      key={n.id}
-                      type="button"
-                      onClick={() => markAsRead(n.id)}
-                      className={`w-full text-left px-4 py-3 flex items-start gap-3 border-b border-[var(--md-outline-variant)] last:border-b-0 transition-colors duration-150 hover:bg-[var(--nv-surface-hover)] ${
-                        !n.read ? 'bg-[color-mix(in_srgb,var(--md-primary)_4%,transparent)]' : ''
-                      }`}
-                    >
-                      <div className={`notif-icon ${notifIconClass[n.type] || notifIconClass.info}`}>
-                        <NIcon size={16} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className={`text-sm text-[var(--md-on-surface)] truncate ${!n.read ? 'font-semibold' : 'font-normal'}`}>
-                            {n.title}
-                          </p>
-                          {!n.read && (
-                            <span className="size-2 rounded-full bg-[var(--md-secondary)] shrink-0" aria-hidden />
-                          )}
+                {notifications.length === 0 ? (
+                  <div className="px-4 py-10 text-center">
+                    <Bell
+                      size={28}
+                      className="mx-auto mb-2 text-[var(--md-on-surface-variant)] opacity-45"
+                      aria-hidden
+                    />
+                    <p className="text-sm text-[var(--md-on-surface-variant)]">Chưa có thông báo</p>
+                  </div>
+                ) : (
+                  notifications.map(n => {
+                    const NIcon = n.icon;
+                    return (
+                      <button
+                        key={n.id}
+                        type="button"
+                        onClick={() => markAsRead(n.id)}
+                        className={`w-full text-left px-4 py-3 flex items-start gap-3 border-b border-[var(--md-outline-variant)] last:border-b-0 transition-colors duration-150 hover:bg-[var(--nv-surface-hover)] ${
+                          !n.read ? 'bg-[color-mix(in_srgb,var(--md-primary)_4%,transparent)]' : ''
+                        }`}
+                      >
+                        <div className={`notif-icon ${notifIconClass[n.type] || notifIconClass.info}`}>
+                          <NIcon size={16} />
                         </div>
-                        <p className="text-[13px] text-[var(--md-on-surface-variant)] mt-0.5 line-clamp-2 text-pretty">
-                          {n.message}
-                        </p>
-                        <p className="text-xs text-[var(--md-on-surface-variant)] mt-1 opacity-80">
-                          {n.time}
-                        </p>
-                      </div>
-                    </button>
-                  );
-                })}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className={`text-sm text-[var(--md-on-surface)] truncate ${!n.read ? 'font-semibold' : 'font-normal'}`}>
+                              {n.title}
+                            </p>
+                            {!n.read && (
+                              <span className="size-2 rounded-full bg-[var(--md-secondary)] shrink-0" aria-hidden />
+                            )}
+                          </div>
+                          <p className="text-[13px] text-[var(--md-on-surface-variant)] mt-0.5 line-clamp-2 text-pretty">
+                            {n.message}
+                          </p>
+                          <p className="text-xs text-[var(--md-on-surface-variant)] mt-1 opacity-80">
+                            {n.time}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })
+                )}
               </div>
 
-              <div className="p-3 border-t border-[var(--md-outline-variant)]">
-                <button
-                  type="button"
-                  className="w-full text-center text-sm font-medium text-[var(--md-primary)] py-2 rounded-xl hover:bg-[var(--nv-surface-hover)] transition-colors duration-150"
-                >
-                  Xem tất cả thông báo
-                </button>
-              </div>
+              {notifications.length > 0 && (
+                <div className="p-3 border-t border-[var(--md-outline-variant)]">
+                  <button
+                    type="button"
+                    className="w-full text-center text-sm font-medium text-[var(--md-primary)] py-2 rounded-xl hover:bg-[var(--nv-surface-hover)] transition-colors duration-150"
+                  >
+                    Xem tất cả thông báo
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>

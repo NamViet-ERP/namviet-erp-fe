@@ -74,9 +74,11 @@ function buildCalendarCells(year: number, month: number): CalendarCell[] {
 
 export function useBirthdayCalendar(employees: Employee[]) {
   const now = useMemo(() => new Date(), []);
-  const viewYear = now.getFullYear();
-  const viewMonth = now.getMonth();
+  const [viewDate, setViewDate] = useState(() => new Date(now.getFullYear(), now.getMonth(), 1));
+  const viewYear = viewDate.getFullYear();
+  const viewMonth = viewDate.getMonth();
   const today = now.getDate();
+  const isViewingCurrentMonth = viewYear === now.getFullYear() && viewMonth === now.getMonth();
 
   const [selectedDay, setSelectedDay] = useState<number>(today);
 
@@ -92,13 +94,20 @@ export function useBirthdayCalendar(employees: Employee[]) {
 
   const birthdayStats = useMemo(() => countMonthBirthdays(birthdaysByDay), [birthdaysByDay]);
 
+  const shiftMonth = (delta: number) => {
+    setViewDate((current) => new Date(current.getFullYear(), current.getMonth() + delta, 1));
+    setSelectedDay(1);
+  };
+
   return {
     now,
     viewYear,
     viewMonth,
     today,
+    isViewingCurrentMonth,
     selectedDay,
     setSelectedDay,
+    shiftMonth,
     birthdaysByDay,
     calendarCells,
     birthdayStats,

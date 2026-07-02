@@ -5,4 +5,5 @@ export const MONTH_NAMES = [
   'tháng 7', 'tháng 8', 'tháng 9', 'tháng 10', 'tháng 11', 'tháng 12',
 ] as const;
 
+/** Placeholder until tasks API — widget always visible; count from API when wired. */
 export const PENDING_TASKS = 0;

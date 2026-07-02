@@ -17,3 +17,11 @@ export const UI_ERROR = {
   loginFailed: 'Đăng nhập thất bại. Vui lòng thử lại.',
   serverUnavailable: 'Hệ thống chưa sẵn sàng. Vui lòng liên hệ quản trị.',
 } as const;
+
+/** Menu item / feature chưa có route — không dùng wording "giả lập". */
+export const UI_COMING_SOON = {
+  title: 'Sắp có',
+  module: (label: string, deptTitle: string) =>
+    `Phân hệ "${label}" thuộc bộ phận "${deptTitle}" đang được phát triển.`,
+  settings: 'Phân hệ "Cài đặt" đang được phát triển.',
+} as const;

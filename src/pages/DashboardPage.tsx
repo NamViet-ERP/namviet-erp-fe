@@ -3,7 +3,6 @@ import {
   Activity, ChevronRight, ChevronLeft, Gift, ClipboardList,
 } from 'lucide-react';
 
-import { showToast } from '../components/ui/Toast';
 import { departments, type DepartmentSubItem } from '../constants/departments';
 import DepartmentCard from '../components/layout/DepartmentCard';
 import TopSalesTable from '../components/dashboard/TopSalesTable';
@@ -11,7 +10,10 @@ import { getSessionUser } from '../constants/systemUsers';
 import { useEmployees } from '../hooks/useEmployees';
 import { useBirthdayCalendar } from '../hooks/dashboard/useBirthdayCalendar';
 import { useTopSalesRows } from '../hooks/dashboard/useTopSalesRows';
-import { PENDING_TASKS, WEEKDAY_LABELS } from '../hooks/dashboard/calendarConstants';
+import { WEEKDAY_LABELS, PENDING_TASKS } from '../hooks/dashboard/calendarConstants';
+import { showToast } from '../components/ui/Toast';
+import { UI_COMING_SOON } from '../lib/uiMessages';
+import { formatDate } from '../utils/formatDate';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -22,8 +24,10 @@ export default function DashboardPage() {
     viewYear,
     viewMonth,
     today,
+    isViewingCurrentMonth,
     selectedDay,
     setSelectedDay,
+    shiftMonth,
     birthdaysByDay,
     calendarCells,
     birthdayStats,
@@ -37,7 +41,7 @@ export default function DashboardPage() {
     if (item.path) {
       navigate(item.path);
     } else {
-      showToast('info', `Phân hệ "${item.label}" thuộc bộ phận "${deptTitle}" đang được phát triển.`, 'Chức năng giả lập');
+      showToast('info', UI_COMING_SOON.module(item.label, deptTitle), UI_COMING_SOON.title);
     }
   };
 
@@ -146,7 +150,7 @@ export default function DashboardPage() {
               <div className="portal-calendar-nav__actions">
                 <button
                   type="button"
-                  onClick={() => showToast('info', 'Lịch hiển thị tháng hiện tại.', 'Thông báo')}
+                  onClick={() => shiftMonth(-1)}
                   className="portal-calendar-nav__btn"
                   aria-label="Tháng trước"
                 >
@@ -154,7 +158,7 @@ export default function DashboardPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => showToast('info', 'Lịch hiển thị tháng hiện tại.', 'Thông báo')}
+                  onClick={() => shiftMonth(1)}
                   className="portal-calendar-nav__btn"
                   aria-label="Tháng sau"
                 >
@@ -172,7 +176,7 @@ export default function DashboardPage() {
 
               <div className="portal-calendar-grid">
                 {calendarCells.map((cell, idx) => {
-                  const isToday = cell.isCurrentMonth && cell.day === today;
+                  const isToday = cell.isCurrentMonth && cell.day === today && isViewingCurrentMonth;
                   const hasBirthday = cell.isCurrentMonth && Boolean(birthdaysByDay[cell.day]);
                   const isSelected = cell.isCurrentMonth && selectedDay === cell.day;
 
@@ -209,7 +213,7 @@ export default function DashboardPage() {
               <div className="portal-calendar-detail">
                 <h4 className="portal-calendar-detail__title">
                   <Gift size={12} aria-hidden />
-                  Ngày {selectedDay}/{String(viewMonth + 1).padStart(2, '0')}/{viewYear}
+                  Ngày {formatDate(new Date(viewYear, viewMonth, selectedDay))}
                 </h4>
                 {birthdaysByDay[selectedDay] ? (
                   <ul className="portal-calendar-detail__list">

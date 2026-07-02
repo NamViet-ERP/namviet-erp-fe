@@ -15,6 +15,8 @@ const FORBIDDEN_PATTERNS = [
   { name: 'mocks import', re: /from\s+['"][^'"]*\/mocks(?:\/|['"])/ },
   { name: 'resolveMock', re: /\bresolveMock\b/ },
   { name: 'USE_MOCK import', re: /import\s*\{[^}]*\bUSE_MOCK\b[^}]*\}\s*from/ },
+  { name: 'mockNotifications', re: /\bmockNotifications\b/ },
+  { name: 'Chức năng giả lập', re: /Chức năng giả lập/ },
 ];
 
 async function exists(p) {
