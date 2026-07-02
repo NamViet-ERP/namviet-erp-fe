@@ -32,6 +32,7 @@ export function mapWarehouseDashboardFromApi(
   trend: DashboardTrendApiDto[],
   activity: DashboardActivityApiDto[],
   categories: DashboardCategoryApiDto[],
+  projects: DashboardCategoryApiDto[],
 ): WarehouseDashboardData {
   const trendData = trend.map((row) => ({
     month: trendMonthLabel(row.month),
@@ -55,13 +56,19 @@ export function mapWarehouseDashboardFromApi(
     accent: ACTIVITY_ACCENT[row.type] ?? 'var(--chart-5)',
   }));
 
+  const stockByWarehouse = projects.map((row, index) => ({
+    name: row.category,
+    value: Number(row.value),
+    color: CHART_COLORS[index % CHART_COLORS.length],
+  }));
+
   return {
     totalStock: kpi.totalStock,
     totalValue: Number(kpi.totalValue),
     activeProjects: kpi.activeWarehouses,
     trendData,
     stockByCategory,
-    stockByWarehouse: [],
+    stockByWarehouse,
     recentActivity,
     miniStats: [
       {

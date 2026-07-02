@@ -24,6 +24,10 @@ export const dashboardService = {
     return apiClient.get<DashboardCategoryApiDto[]>(`${ENDPOINT}/stock-by-category`);
   },
 
+  async stockByProject(): Promise<DashboardCategoryApiDto[]> {
+    return apiClient.get<DashboardCategoryApiDto[]>(`${ENDPOINT}/stock-by-project`);
+  },
+
   async activityFeed(limit = 20): Promise<DashboardActivityApiDto[]> {
     return apiClient.get<DashboardActivityApiDto[]>(`${ENDPOINT}/activity-feed`, { limit });
   },

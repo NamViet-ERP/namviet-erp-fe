@@ -321,7 +321,7 @@ function DashboardWarehouseContent({
 
       <div className="dashboard-grid-row dashboard-grid-row--split">
         <BentoCard className="bento-card--chart bento-card--chart-bar">
-          <SectionHeading sub="Chưa có API phân bổ theo kho — hiển thị khi BE bổ sung">Phân bổ theo kho</SectionHeading>
+          <SectionHeading sub="Top kho dự án theo tồn thực tế">Phân bổ theo kho</SectionHeading>
           <WarehouseBarChart data={data.stockByWarehouse} />
         </BentoCard>
 
