@@ -10,6 +10,8 @@ export interface DepartmentSubItem {
   label: string;
   icon: LucideIcon;
   path?: string;
+  /** Any one of these permission keys grants access. */
+  permission?: string | string[];
 }
 
 export interface Department {
@@ -27,16 +29,36 @@ export const departments: Department[] = [
     title: 'KHO MAYZER',
     icon: Warehouse,
     items: [
-      { label: 'Kho hàng', icon: Warehouse, path: '/warehouse/dashboard-warehouse' },
-      { label: 'Kiểm kê', icon: ClipboardCheck, path: '/stocktake/list' },
+      {
+        label: 'Kho hàng',
+        icon: Warehouse,
+        path: '/warehouse/dashboard-warehouse',
+        permission: 'wms.dashboard.view',
+      },
+      {
+        label: 'Kiểm kê',
+        icon: ClipboardCheck,
+        path: '/stocktake/list',
+        permission: 'wms.stocktakes.view:all',
+      },
     ],
   },
   {
     title: 'HRM',
     icon: Users,
     items: [
-      { label: 'Nhân Viên', icon: Users, path: '/members/list' },
-      { label: 'Tuyển Dụng', icon: UserCheck, path: '/recruitment/candidates' },
+      {
+        label: 'Nhân Viên',
+        icon: Users,
+        path: '/members/list',
+        permission: 'hrm.employees.view:all',
+      },
+      {
+        label: 'Tuyển Dụng',
+        icon: UserCheck,
+        path: '/recruitment/candidates',
+        permission: 'hrm.candidates.view:all',
+      },
       { label: 'C & B', icon: CreditCard },
     ],
   },
@@ -44,7 +66,12 @@ export const departments: Department[] = [
     title: 'ADMIN',
     icon: ShieldCheck,
     items: [
-      { label: 'Quản lý người dùng', icon: UserCog, path: '/admin/users' },
+      {
+        label: 'Quản lý người dùng',
+        icon: UserCog,
+        path: '/admin/users',
+        permission: 'admin.users.view:all',
+      },
     ],
   },
 ];

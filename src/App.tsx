@@ -57,6 +57,7 @@ export default function App() {
             <Route path="/admin/users" element={<Pages.AdminUsersPage />} />
             <Route path="/admin/users/:id" element={<Pages.AdminUserDetailPage />} />
             <Route path="/admin/settings" element={<Pages.AdminSettingsPage />} />
+            <Route path="/admin/settings/roles/:code/permissions" element={<Pages.AdminRolePermissionsPage />} />
 
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Route>

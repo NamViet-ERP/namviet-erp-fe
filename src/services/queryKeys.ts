@@ -33,6 +33,10 @@ export const queryKeys = {
   roles: {
     all: ['roles'] as const,
   },
+  rolePermissions: {
+    catalog: ['rolePermissions', 'catalog'] as const,
+    role: (code: string) => ['rolePermissions', code] as const,
+  },
   stock: {
     matrix: ['stock', 'matrix'] as const,
   },

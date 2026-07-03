@@ -6,6 +6,7 @@ import Pagination from '../../components/ui/Pagination';
 import EmptyState from '../../components/ui/EmptyState';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import PageHeader from '../../components/ui/PageHeader';
+import PermissionGate from '../../components/auth/PermissionGate';
 import Modal from '../../components/ui/Modal';
 import FormField from '../../components/ui/FormField';
 import MaterialUnitSelect from '../../components/warehouse/MaterialUnitSelect';
@@ -179,14 +180,16 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
         eyebrow="Kho hàng"
         title="Danh mục vật tư"
         actions={
-          <button
-            type="button"
-            className="btn btn-primary flex items-center gap-2"
-            onClick={() => { resetCreateForm(); setShowCreate(true); }}
-          >
-            <Plus size={16} />
-            Tạo mã vật tư
-          </button>
+          <PermissionGate permission="wms.materials.create">
+            <button
+              type="button"
+              className="btn btn-primary flex items-center gap-2"
+              onClick={() => { resetCreateForm(); setShowCreate(true); }}
+            >
+              <Plus size={16} />
+              Tạo mã vật tư
+            </button>
+          </PermissionGate>
         }
       />
 

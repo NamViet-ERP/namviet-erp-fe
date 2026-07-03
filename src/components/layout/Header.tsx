@@ -9,9 +9,10 @@ import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { showToast } from '../ui/Toast';
 import { departments } from '../../constants/departments';
-import { getSessionUser, clearSessionUser } from '../../constants/systemUsers';
+import { getSessionUser, clearSessionUser, getSessionPermissions } from '../../constants/systemUsers';
 import { authService } from '../../services/authService';
 import { UI_COMING_SOON } from '../../lib/uiMessages';
+import { handlePermissionNavClick } from '../../lib/protectedNavigation';
 import DepartmentCard from './DepartmentCard';
 
 type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin';
@@ -115,6 +116,8 @@ interface HeaderProps {
 export default function Header({ currentModule: _currentModule, onModuleSwitch: _onModuleSwitch }: HeaderProps) {
   const navigate = useNavigate();
   const sessionUser = getSessionUser();
+  const sessionPermissions = getSessionPermissions();
+  const visibleDepartments = departments;
   const currentUser = sessionUser ?? { name: 'User', initials: 'U', roleLabel: '', email: '' };
   const [showModuleMenu, setShowModuleMenu] = useState(false);
   const [moduleMenuClosing, setModuleMenuClosing] = useState(false);
@@ -154,14 +157,12 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
     if (moduleMenuTimer.current) clearTimeout(moduleMenuTimer.current);
   }, []);
 
-  const handleModuleItemClick = useCallback((item: { path?: string; label: string }, deptTitle: string) => {
-    if (item.path) {
-      navigate(item.path);
-    } else {
-      showToast('info', UI_COMING_SOON.module(item.label, deptTitle), UI_COMING_SOON.title);
-    }
-    closeModuleMenu();
-  }, [navigate, closeModuleMenu]);
+  const handleModuleItemClick = useCallback((item: { path?: string; label: string; permission?: string | string[] }, deptTitle: string) => {
+    handlePermissionNavClick(sessionPermissions, item, navigate, {
+      deptTitle,
+      onAfter: closeModuleMenu,
+    });
+  }, [navigate, closeModuleMenu, sessionPermissions]);
 
   const moduleMenuOpen = showModuleMenu || moduleMenuClosing;
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -239,10 +240,11 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {departments.map((dept) => (
+                  {visibleDepartments.map((dept) => (
                     <DepartmentCard
                       key={dept.title}
                       dept={dept}
+                      permissions={sessionPermissions}
                       onItemClick={(item) => handleModuleItemClick(item, dept.title)}
                     />
                   ))}

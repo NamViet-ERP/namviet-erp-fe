@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Plus, Eye, FileText, Download, Check, XCircle, Lock, Unlock } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
+import PermissionGate from '../../components/auth/PermissionGate';
 import { generateCode } from '../../utils/generateCode';
 import {
   useStocktakes,
@@ -274,9 +275,11 @@ export default function StocktakeListPage() {
         actions={
           <>
             <button type="button" className="btn btn-outline text-xs"><Download size={14} /> XUẤT RA</button>
-            <button type="button" className="btn btn-filled" onClick={() => { setForm({ ...emptyForm }); setShowCreate(true); }}>
-              <Plus size={16} /> TẠO MỚI
-            </button>
+            <PermissionGate permission="wms.stocktakes.create">
+              <button type="button" className="btn btn-filled" onClick={() => { setForm({ ...emptyForm }); setShowCreate(true); }}>
+                <Plus size={16} /> TẠO MỚI
+              </button>
+            </PermissionGate>
           </>
         }
       />

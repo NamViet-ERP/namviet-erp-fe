@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Shield, Plus, Trash2, UserCog, Pencil } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Shield, Plus, Trash2, UserCog, Pencil, KeyRound } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import SearchBar from '../../components/ui/SearchBar';
 import HrmPanel from '../../components/hr/HrmPanel';
@@ -14,6 +14,7 @@ import type { SystemRole } from '../../services/rolesService';
 import { useRoles, useCreateRole, useDeleteRole, useToggleRoleStatus, useUpdateRole } from '../../hooks/useRoles';
 
 export default function AdminSettingsPage() {
+  const navigate = useNavigate();
   const [label, setLabel] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<{ code: string; label: string } | null>(null);
@@ -149,41 +150,54 @@ export default function AdminSettingsPage() {
               {roles.map(role => (
                 <div
                   key={role.code}
-                  className={`hrm-recruitment-position-card hrm-admin-role-card${role.isActive ? '' : ' hrm-recruitment-position-card--inactive'}`}
+                  className={`hrm-recruitment-position-card hrm-admin-role-card hrm-admin-role-card--stacked${role.isActive ? '' : ' hrm-recruitment-position-card--inactive'}`}
                 >
                   <div className="hrm-admin-role-card__text min-w-0">
                     <span className="hrm-recruitment-position-card__name" title={role.label}>
                       {role.label}
                     </span>
                   </div>
-                  <div className="hrm-recruitment-position-card__actions">
-                    <button
-                      type="button"
-                      onClick={() => openEdit(role)}
-                      className="hrm-recruitment-position-card__delete"
-                      title="Sửa tên vai trò"
-                      aria-label={`Sửa tên vai trò ${role.label}`}
-                    >
-                      <Pencil size={16} />
-                    </button>
+                  <div className="hrm-admin-role-card__toolbar">
+                    <div className="hrm-admin-role-card__tool-group">
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/admin/settings/roles/${encodeURIComponent(role.code)}/permissions`)}
+                        className="hrm-admin-role-card__tool"
+                        title="Ma trận quyền"
+                        aria-label={`Ma trận quyền ${role.label}`}
+                      >
+                        <KeyRound size={15} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => openEdit(role)}
+                        className="hrm-admin-role-card__tool"
+                        title="Sửa tên vai trò"
+                        aria-label={`Sửa tên vai trò ${role.label}`}
+                      >
+                        <Pencil size={15} />
+                      </button>
+                    </div>
+                    <span className="hrm-admin-role-card__tool-divider" aria-hidden />
                     <button
                       type="button"
                       onClick={() => handleToggle(role.code)}
-                      className={`hrm-toggle-switch${role.isActive ? ' hrm-toggle-switch--on' : ''}`}
+                      className={`hrm-toggle-switch hrm-admin-role-card__toggle${role.isActive ? ' hrm-toggle-switch--on' : ''}`}
                       role="switch"
                       aria-checked={role.isActive}
                       title={role.isActive ? 'Đang bật' : 'Đang tắt'}
                     >
                       <span className="hrm-toggle-switch__thumb" aria-hidden />
                     </button>
+                    <span className="hrm-admin-role-card__tool-divider" aria-hidden />
                     <button
                       type="button"
                       onClick={() => setDeleteTarget({ code: role.code, label: role.label })}
-                      className="hrm-recruitment-position-card__delete"
+                      className="hrm-admin-role-card__tool hrm-admin-role-card__tool--danger"
                       title="Xóa vai trò"
                       aria-label={`Xóa vai trò ${role.label}`}
                     >
-                      <Trash2 size={16} />
+                      <Trash2 size={15} />
                     </button>
                   </div>
                 </div>
@@ -209,6 +223,7 @@ export default function AdminSettingsPage() {
             </div>
           </div>
           <ul className="hrm-settings-list">
+            <li><strong>Quyền hạn:</strong> Mở ma trận quyền theo catalog hệ thống (61 quyền pilot).</li>
             <li><strong>Sửa tên:</strong> Chỉ đổi tên hiển thị — quyền và người dùng đang gán không đổi.</li>
             <li><strong>Bật:</strong> Vai trò hiển thị khi cấp tài khoản hoặc đổi quyền.</li>
             <li><strong>Tắt:</strong> Ẩn khỏi danh sách chọn — không xóa người dùng đang dùng vai trò đó.</li>

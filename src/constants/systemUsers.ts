@@ -1,11 +1,14 @@
 import { isAccountActiveForEmployee } from '../services/employeesService';
 import { isActiveEmployee, type Employee } from '../types/hr';
 import type { CreateSystemUserDto, SystemUser, SystemUserRole } from '../types/systemUser';
+import { getPermissionsFromToken } from '../lib/jwtClaims';
+import { getStoredToken } from '../lib/authSession';
 
 export type { CreateSystemUserDto, SystemUser, SystemUserRole };
 
 const SESSION_USER_KEY = 'nv-session-user';
 const ACCOUNT_ENABLED_PREFIX = 'nv-user-enabled-';
+export const AUTH_CHANGED_EVENT = 'nv-auth-changed';
 
 export function isAccountManuallyEnabled(id: string): boolean {
   const raw = localStorage.getItem(`${ACCOUNT_ENABLED_PREFIX}${id}`);
@@ -49,14 +52,26 @@ export function getSessionUser(): SystemUser | undefined {
   return readStoredSessionUser();
 }
 
+export function getSessionPermissions(): string[] {
+  const user = readStoredSessionUser();
+  if (user?.permissions?.length) return user.permissions;
+  return getPermissionsFromToken(getStoredToken());
+}
+
+function notifyAuthChanged(): void {
+  window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
+}
+
 export function setSessionUser(user: SystemUser): void {
   localStorage.setItem(SESSION_USER_KEY, JSON.stringify(user));
   localStorage.setItem('nv-user-id', user.id);
   localStorage.setItem('nv-user-role', user.role);
+  notifyAuthChanged();
 }
 
 export function clearSessionUser(): void {
   localStorage.removeItem(SESSION_USER_KEY);
   localStorage.removeItem('nv-user-id');
   localStorage.removeItem('nv-user-role');
+  notifyAuthChanged();
 }

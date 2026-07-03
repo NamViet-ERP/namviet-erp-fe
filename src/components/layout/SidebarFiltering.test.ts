@@ -32,6 +32,7 @@ describe('Sidebar menu items', () => {
         collapsed: false,
         onToggle: () => {},
         menuItems,
+        permissions: ['wms.projects.view:all'],
         currentModule: 'warehouse',
       }),
     );

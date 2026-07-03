@@ -16,6 +16,8 @@ export interface SystemUser {
   createdAt: string;
   /** Liên kết hồ sơ nhân viên — trạng thái Nghỉ việc sẽ khóa đăng nhập */
   employeeId?: string;
+  /** Effective permission keys from role (RBAC pilot). */
+  permissions?: string[];
 }
 
 export interface CreateSystemUserDto {

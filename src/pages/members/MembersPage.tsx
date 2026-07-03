@@ -7,6 +7,7 @@ import Pagination from '../../components/ui/Pagination';
 import EmptyState from '../../components/ui/EmptyState';
 import HrmPanel from '../../components/hr/HrmPanel';
 import HrmStatCard from '../../components/hr/HrmStatCard';
+import PermissionGate from '../../components/auth/PermissionGate';
 import EmployeeStatusSwap from '../../components/hr/EmployeeStatusSwap';
 import { useEmployees } from '../../hooks/useEmployees';
 import { EMPLOYEE_STATUSES } from '../../constants/recruitment';
@@ -73,14 +74,16 @@ export default function MembersPage() {
         title="Danh sách nhân viên"
         subtitle="Quản lý hồ sơ nhân sự — thêm thủ công hoặc nhận từ form khai báo công khai."
         actions={
-          <button
-            type="button"
-            className="btn btn-primary flex items-center gap-2 rounded-full px-5"
-            onClick={() => navigate('/members/new')}
-          >
-            <Plus size={16} />
-            Thêm nhân viên
-          </button>
+          <PermissionGate permission="hrm.employees.create">
+            <button
+              type="button"
+              className="btn btn-primary flex items-center gap-2 rounded-full px-5"
+              onClick={() => navigate('/members/new')}
+            >
+              <Plus size={16} />
+              Thêm nhân viên
+            </button>
+          </PermissionGate>
         }
       />
 

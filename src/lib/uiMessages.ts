@@ -25,3 +25,9 @@ export const UI_COMING_SOON = {
     `Phân hệ "${label}" thuộc bộ phận "${deptTitle}" đang được phát triển.`,
   settings: 'Phân hệ "Cài đặt" đang được phát triển.',
 } as const;
+
+export const UI_PERMISSION_DENIED = {
+  title: 'Không có quyền',
+  message: (label: string) => `Bạn không có quyền truy cập "${label}".`,
+  route: 'Bạn không có quyền truy cập chức năng này.',
+} as const;

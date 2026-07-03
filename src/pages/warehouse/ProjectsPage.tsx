@@ -11,6 +11,7 @@ import CurrencyInput from '../../components/ui/CurrencyInput';
 import Badge from '../../components/ui/Badge';
 import HrmPanel from '../../components/hr/HrmPanel';
 import HrmStatCard from '../../components/hr/HrmStatCard';
+import PermissionGate from '../../components/auth/PermissionGate';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage, getApiFieldErrors } from '../../lib/apiClient';
 import { WMS_ERROR } from '../../lib/wms/messages';
@@ -170,14 +171,16 @@ export default function ProjectsPage() {
         title="Kho dự án"
         subtitle="Mỗi công trình là một kho riêng — cấp vật tư qua Nhập kho, tiêu hao qua Xuất kho, hoàn dư qua Chuyển kho."
         actions={
-          <button
-            type="button"
-            className="btn btn-primary flex items-center gap-2 rounded-full px-5"
-            onClick={openCreate}
-          >
-            <Plus size={16} />
-            Tạo kho dự án
-          </button>
+          <PermissionGate permission="wms.projects.create">
+            <button
+              type="button"
+              className="btn btn-primary flex items-center gap-2 rounded-full px-5"
+              onClick={openCreate}
+            >
+              <Plus size={16} />
+              Tạo kho dự án
+            </button>
+          </PermissionGate>
         }
       />
 

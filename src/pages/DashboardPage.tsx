@@ -6,16 +6,18 @@ import {
 import { departments, type DepartmentSubItem } from '../constants/departments';
 import DepartmentCard from '../components/layout/DepartmentCard';
 import TopSalesTable from '../components/dashboard/TopSalesTable';
-import { getSessionUser } from '../constants/systemUsers';
+import { getSessionUser, getSessionPermissions } from '../constants/systemUsers';
+import { handlePermissionNavClick } from '../lib/protectedNavigation';
 import { useBirthdayCalendar } from '../hooks/dashboard/useBirthdayCalendar';
 import { useTopSalesRows } from '../hooks/dashboard/useTopSalesRows';
 import { WEEKDAY_LABELS, PENDING_TASKS } from '../hooks/dashboard/calendarConstants';
 import { showToast } from '../components/ui/Toast';
-import { UI_COMING_SOON } from '../lib/uiMessages';
 import { formatDate } from '../utils/formatDate';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
+  const sessionPermissions = getSessionPermissions();
+  const visibleDepartments = departments;
   const { topProducts, topMaterials } = useTopSalesRows();
   const {
     now,
@@ -36,11 +38,7 @@ export default function DashboardPage() {
   const displayName = sessionUser?.name?.split(' ').slice(-1)[0] ?? 'bạn';
 
   const handleItemClick = (item: DepartmentSubItem, deptTitle: string) => {
-    if (item.path) {
-      navigate(item.path);
-    } else {
-      showToast('info', UI_COMING_SOON.module(item.label, deptTitle), UI_COMING_SOON.title);
-    }
+    handlePermissionNavClick(sessionPermissions, item, navigate, { deptTitle });
   };
 
   const openTasks = () => {
@@ -72,10 +70,11 @@ export default function DashboardPage() {
 
       <div className="portal-layout">
         <div className="portal-modules">
-          {departments.map((dept) => (
+          {visibleDepartments.map((dept) => (
             <DepartmentCard
               key={dept.title}
               dept={dept}
+              permissions={sessionPermissions}
               onItemClick={(item) => handleItemClick(item, dept.title)}
             />
           ))}

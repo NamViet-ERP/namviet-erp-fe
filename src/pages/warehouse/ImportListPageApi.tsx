@@ -14,6 +14,8 @@ import Pagination from '../../components/ui/Pagination';
 
 import PageHeader from '../../components/ui/PageHeader';
 
+import PermissionGate from '../../components/auth/PermissionGate';
+
 import HrmPanel from '../../components/hr/HrmPanel';
 
 import { showToast } from '../../components/ui/Toast';
@@ -504,19 +506,21 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
             <button type="button" className="hrm-header-btn"><Download size={14} /> Xuất Excel</button>
 
-            <button
+            <PermissionGate permission="wms.imports.create">
+              <button
 
-              type="button"
+                type="button"
 
-              className="btn btn-primary flex items-center gap-2 rounded-full px-5"
+                className="btn btn-primary flex items-center gap-2 rounded-full px-5"
 
-              onClick={() => { resetForm(); setShowCreate(true); }}
+                onClick={() => { resetForm(); setShowCreate(true); }}
 
-            >
+              >
 
-              <Plus size={16} /> Tạo phiếu nhập
+                <Plus size={16} /> Tạo phiếu nhập
 
-            </button>
+              </button>
+            </PermissionGate>
 
           </>
 

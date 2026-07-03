@@ -1,7 +1,7 @@
 import { apiClient, setAuthTokenProvider } from '../lib/apiClient';
 import { cacheEmployeeStatus } from './employeesService';
 import type { SystemUser } from '../constants/systemUsers';
-import { setSessionUser } from '../constants/systemUsers';
+import { getSessionUser, setSessionUser, clearSessionUser } from '../constants/systemUsers';
 import { getEmployeeLockReason } from '../constants/employeeStatus';
 import {
   clearAuthSession as clearSession,
@@ -11,6 +11,7 @@ import {
   persistTokens,
   setRememberMePreference,
 } from '../lib/authSession';
+import { getPermissionsFromToken } from '../lib/jwtClaims';
 import { refreshAccessToken } from '../lib/authRefresh';
 
 export { clearSession as clearAuthSession, getStoredToken };
@@ -25,6 +26,7 @@ export interface AuthUserDto {
   email: string;
   employeeId?: string;
   employeeStatus?: string;
+  permissions?: string[];
 }
 
 interface LoginResponse {
@@ -33,7 +35,7 @@ interface LoginResponse {
   user: AuthUserDto;
 }
 
-function mapAuthUser(dto: AuthUserDto): SystemUser {
+function mapAuthUser(dto: AuthUserDto, tokenPermissions?: string[]): SystemUser {
   return {
     id: dto.id,
     username: dto.username,
@@ -43,12 +45,42 @@ function mapAuthUser(dto: AuthUserDto): SystemUser {
     roleLabel: dto.roleLabel,
     email: dto.email,
     employeeId: dto.employeeId,
+    permissions: dto.permissions?.length
+      ? [...dto.permissions]
+      : tokenPermissions?.length
+        ? [...tokenPermissions]
+        : [],
     createdAt: new Date().toISOString().slice(0, 10),
   };
 }
 
 function lockReasonFromStatus(status?: string): string | null {
   return getEmployeeLockReason(status);
+}
+
+async function syncSessionUserFromApi(): Promise<void> {
+  const existing = getSessionUser();
+  if (!existing) return;
+
+  try {
+    const dto = await apiClient.get<AuthUserDto>('/api/auth/me');
+    const lockReason = lockReasonFromStatus(dto.employeeStatus);
+    if (lockReason) {
+      clearSession();
+      return;
+    }
+
+    if (dto.employeeId && dto.employeeStatus) {
+      cacheEmployeeStatus(dto.employeeId, dto.employeeStatus);
+    }
+
+    setSessionUser(mapAuthUser(dto, getPermissionsFromToken(getStoredToken())));
+  } catch {
+    const tokenPermissions = getPermissionsFromToken(getStoredToken());
+    if (tokenPermissions.length > 0) {
+      setSessionUser({ ...existing, permissions: tokenPermissions });
+    }
+  }
 }
 
 export function initAuthTokenProvider(): void {
@@ -72,7 +104,7 @@ export const authService = {
       cacheEmployeeStatus(res.user.employeeId, res.user.employeeStatus);
     }
 
-    const user = mapAuthUser(res.user);
+    const user = mapAuthUser(res.user, getPermissionsFromToken(res.token));
     setSessionUser(user);
     return user;
   },
@@ -81,17 +113,28 @@ export const authService = {
     if (!hasAuthSession()) return false;
 
     const token = getStoredToken();
-    if (token && !isAccessTokenExpired(token)) return true;
+    if (token && !isAccessTokenExpired(token)) {
+      await syncSessionUserFromApi();
+      return true;
+    }
 
-    return refreshAccessToken();
+    const refreshed = await refreshAccessToken();
+    if (!refreshed) return false;
+
+    await syncSessionUserFromApi();
+    return true;
   },
 
   async refreshSession(): Promise<boolean> {
-    return refreshAccessToken();
+    const refreshed = await refreshAccessToken();
+    if (!refreshed) return false;
+    await syncSessionUserFromApi();
+    return true;
   },
 
   logout(): void {
     clearSession();
+    clearSessionUser();
   },
 
   isLoggedIn(): boolean {
