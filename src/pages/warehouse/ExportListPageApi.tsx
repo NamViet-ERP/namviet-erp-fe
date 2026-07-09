@@ -10,7 +10,11 @@ import PermissionGate from '../../components/auth/PermissionGate';
 import HrmPanel from '../../components/hr/HrmPanel';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
+import { downloadVoucherExport } from '../../lib/wms/voucherExportDownload';
 import { validateExportCreate, getExportFormFieldErrors, type ExportFormFieldErrors } from '../../lib/wms/exportFormSchema';
+import { DUPLICATE_MATERIAL_MESSAGE } from '../../lib/wms/voucherDuplicateMaterial';
+import { getFrozenProjectError } from '../../lib/wms/stocktakeFreeze';
+import { useFrozenProjects } from '../../hooks/useFrozenProjects';
 import {
   useExports,
   useCreateExport,
@@ -45,6 +49,7 @@ function ExportListPageApi({ initialProjectCode }: ExportListPageApiProps) {
   const [search, setSearch] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [isExporting, setIsExporting] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_LIST_PAGE_SIZE);
   const [showCreate, setShowCreate] = useState(!!initialProjectCode);
@@ -66,6 +71,7 @@ function ExportListPageApi({ initialProjectCode }: ExportListPageApiProps) {
   const { data: projectsPage } = useProjects({ pageSize: 100, status: 'Active' });
   const { data: projectInventory = [] } = useProjectInventory(projectCode || undefined);
   const createMutation = useCreateExport();
+  const frozenByProjectCode = useFrozenProjects();
   const updateMutation = useUpdateExport();
   const approveMutation = useApproveExport();
   const submitMutation = useSubmitExport();
@@ -131,10 +137,9 @@ function ExportListPageApi({ initialProjectCode }: ExportListPageApiProps) {
       const max = availableExportQty(projectInventory, it.materialCode, items, idx);
       return Number(it.qty) > max;
     });
-    const fieldErrors = getExportFormFieldErrors(projectCode, items, overflow);
+    const fieldErrors = getExportFormFieldErrors(projectCode, items, overflow, frozenByProjectCode);
     if (Object.keys(fieldErrors).length > 0) {
       setCreateErrors(fieldErrors);
-      showToast('error', 'Vui lòng kiểm tra lại các ô được đánh dấu.');
       return null;
     }
     setCreateErrors({});
@@ -165,7 +170,7 @@ function ExportListPageApi({ initialProjectCode }: ExportListPageApiProps) {
       warehouseId: '',
       items: mappedItems,
       status,
-      createdBy: 'USER',
+      createdBy: '',
       note,
       project: projectCode.trim(),
     };
@@ -237,6 +242,23 @@ function ExportListPageApi({ initialProjectCode }: ExportListPageApiProps) {
     setShowDetail(true);
   };
 
+  const handleExportExcel = async () => {
+    setIsExporting(true);
+    try {
+      await downloadVoucherExport('/api/exports/export', `phieu-xuat-${new Date().toISOString().slice(0, 10)}.xlsx`, {
+        dateFrom: dateFrom || undefined,
+        dateTo: dateTo || undefined,
+        status: activeTab,
+        search,
+      });
+      showToast('success', 'Đã xuất danh sách phiếu xuất');
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không thể xuất Excel'));
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="hrm-page">
       <PageHeader
@@ -244,7 +266,9 @@ function ExportListPageApi({ initialProjectCode }: ExportListPageApiProps) {
         subtitle="Tiêu hao vật tư tại kho dự án — trừ tồn thực tế sau khi thủ kho duyệt."
         actions={
           <>
-            <button type="button" className="hrm-header-btn"><Download size={14} /> Xuất Excel</button>
+            <button type="button" className="hrm-header-btn" onClick={() => void handleExportExcel()} disabled={isExporting}>
+              <Download size={14} /> {isExporting ? 'Đang xuất…' : 'Xuất Excel'}
+            </button>
             <PermissionGate permission="wms.exports.create">
               <button
                 type="button"
@@ -308,9 +332,13 @@ function ExportListPageApi({ initialProjectCode }: ExportListPageApiProps) {
         stockMaterials={stockMaterials}
         projectInventory={projectInventory}
         projectCode={projectCode}
+        frozenByProjectCode={frozenByProjectCode}
         onProjectCodeChange={code => {
           setProjectCode(code);
-          setCreateErrors(e => ({ ...e, projectCode: undefined }));
+          setCreateErrors(e => ({
+            ...e,
+            projectCode: getFrozenProjectError(frozenByProjectCode, code),
+          }));
         }}
         referenceCode={referenceCode}
         onReferenceCodeChange={setReferenceCode}
@@ -319,7 +347,20 @@ function ExportListPageApi({ initialProjectCode }: ExportListPageApiProps) {
         items={items}
         onItemsChange={next => {
           setItems(next);
-          setCreateErrors(e => ({ ...e, items: undefined }));
+          setCreateErrors(e => {
+            const cleared = { ...e, items: undefined };
+            delete cleared.lineErrors;
+            return cleared;
+          });
+        }}
+        onDuplicateMaterialAttempt={lineIndex => {
+          setCreateErrors(e => ({
+            ...e,
+            lineErrors: {
+              ...e.lineErrors,
+              [lineIndex]: { materialCode: DUPLICATE_MATERIAL_MESSAGE },
+            },
+          }));
         }}
         errors={createErrors}
         onCreate={handleCreate}

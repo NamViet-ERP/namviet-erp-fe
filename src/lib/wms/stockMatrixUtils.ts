@@ -27,7 +27,7 @@ export function sumProjectAvailable(row: StockMatrixRowApiDto) {
   );
 }
 
-/** Khả dụng = (Kho tổng − giữ) + Σ max(0, tồn TT − xuất DK) từng dự án */
+/** Khả dụng = (Kho trung tâm − giữ) + Σ max(0, tồn TT − xuất DK) từng dự án */
 export function totalUsableQty(row: StockMatrixRowApiDto) {
   const generalFree = Math.max(0, row.generalActualQty - row.generalReservedQty);
   return generalFree + sumProjectAvailable(row);

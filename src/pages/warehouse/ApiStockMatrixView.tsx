@@ -9,12 +9,16 @@ import { useStockMatrix } from '../../hooks/useStockMatrix';
 import { fmtExpectedStock, fmtPlannedNet, fmtStockQtyOrDash } from '../../lib/wms/stockQtyFormat';
 import {
   countActiveProjects,
-  STOCK_FORMULA_LEGEND,
   sumProjectActual,
   sumProjectPlannedExport,
   sumProjectPlannedImport,
   totalUsableQty,
 } from '../../lib/wms/stockMatrixUtils';
+import {
+  GENERAL_WAREHOUSE_LABEL,
+  GENERAL_WAREHOUSE_LABEL_LOWER,
+  STOCK_FORMULA_LEGEND,
+} from '../../lib/wms/stockTerminology';
 import { WMS_EMPTY, WMS_ERROR } from '../../lib/wms/messages';
 import type { StockMatrixRowApiDto } from '../../types/wms';
 import { formatCurrency } from '../../utils/formatCurrency';
@@ -57,7 +61,7 @@ export default function ApiStockMatrixView() {
             onChange={e => { setProjectFilter(e.target.value); setPage(1); }}
           >
             <option value="all">Tất cả vật tư</option>
-            <option value="general">Chỉ còn tại kho tổng</option>
+            <option value="general">Chỉ còn tại {GENERAL_WAREHOUSE_LABEL_LOWER}</option>
             {projects.map(p => (
               <option key={p.projectCode} value={p.projectCode}>{p.projectName}</option>
             ))}
@@ -81,8 +85,8 @@ export default function ApiStockMatrixView() {
                 <th className="table-header-cell text-left stock-col-code">Mã VT</th>
                 <th className="table-header-cell text-left stock-col-name">Tên vật tư</th>
                 <th className="table-header-cell text-center w-14">ĐVT</th>
-                <th className="table-header-cell text-right w-20">Kho tổng</th>
-                <th className="table-header-cell text-right w-20" title="(Kho tổng − giữ) + Σ(Tồn TT − Xuất DK)">Khả dụng</th>
+                <th className="table-header-cell text-right w-20">{GENERAL_WAREHOUSE_LABEL}</th>
+                <th className="table-header-cell text-right w-20" title={`(${GENERAL_WAREHOUSE_LABEL} − giữ) + Σ(Tồn TT − Xuất DK)`}>Khả dụng</th>
                 <th className="table-header-cell text-right w-20">Nhập dự kiến</th>
                 <th className="table-header-cell text-right w-20">Xuất dự kiến</th>
                 <th className="table-header-cell text-right stock-col-project">

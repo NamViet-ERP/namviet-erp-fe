@@ -8,7 +8,7 @@ import {
 
   ClipboardCheck, Users, UserCheck, UserCog,
 
-  Layers, FolderKanban, ArrowLeftRight, Building2, Ruler,
+  Layers, FolderKanban, ArrowLeftRight, Building2, Ruler, BarChart3, Receipt, RotateCcw,
 
 } from 'lucide-react';
 
@@ -104,6 +104,20 @@ export const warehouseMenu: SidebarMenuItem[] = [
 
   {
 
+    id: 'material-return',
+
+    label: 'Hoàn trả vật tư',
+
+    icon: RotateCcw,
+
+    path: '/warehouse/material-return',
+
+    permission: 'wms.export_returns.view:all',
+
+  },
+
+  {
+
     id: 'materials',
 
     label: 'Danh mục vật tư',
@@ -113,6 +127,20 @@ export const warehouseMenu: SidebarMenuItem[] = [
     path: '/warehouse/materials',
 
     permission: 'wms.materials.view:all',
+
+  },
+
+  {
+
+    id: 'reports',
+
+    label: 'Báo cáo kho',
+
+    icon: BarChart3,
+
+    path: '/warehouse/reports',
+
+    permission: 'wms.reports.view:all',
 
   },
 
@@ -133,6 +161,8 @@ export const warehouseMenu: SidebarMenuItem[] = [
       'wms.material_units.view:all',
 
       'wms.suppliers.view:all',
+
+      'wms.price_books.view:all',
 
     ],
 
@@ -185,6 +215,20 @@ export const warehouseSettingsMenu: SidebarMenuItem[] = [
     path: '/warehouse/settings/suppliers',
 
     permission: 'wms.suppliers.view:all',
+
+  },
+
+  {
+
+    id: 'wh-settings-price-books',
+
+    label: 'Bảng giá NCC',
+
+    icon: Receipt,
+
+    path: '/warehouse/settings/price-books',
+
+    permission: 'wms.price_books.view:all',
 
   },
 

@@ -12,6 +12,14 @@ export const queryKeys = {
     all: ['transfers'] as const,
     detail: (id: string) => ['transfers', id] as const,
   },
+  exportReturns: {
+    all: ['exportReturns'] as const,
+    detail: (id: string) => ['exportReturns', id] as const,
+    returnableExports: (projectCode: string, excludeReturnId?: string) =>
+      ['exportReturns', 'returnable', 'exports', projectCode, excludeReturnId ?? ''] as const,
+    returnableLines: (sourceExportId: string, excludeReturnId?: string) =>
+      ['exportReturns', 'returnable', 'lines', sourceExportId, excludeReturnId ?? ''] as const,
+  },
   candidates: {
     all: ['candidates'] as const,
     detail: (id: string) => ['candidates', id] as const,
@@ -58,5 +66,8 @@ export const queryKeys = {
   },
   suppliers: {
     all: ['suppliers'] as const,
+  },
+  priceBooks: {
+    all: ['priceBooks'] as const,
   },
 } as const;

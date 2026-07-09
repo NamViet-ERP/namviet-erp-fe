@@ -45,6 +45,8 @@ export interface WarehouseProjectApiDto {
   stockPlannedQty?: number;
   stockReservedQty?: number;
   stockMaterialCount?: number;
+  approvedImportValue?: number;
+  materialBudgetRemaining?: number;
 }
 
 export interface CreateWarehouseProjectRequest {
@@ -79,6 +81,7 @@ export interface WarehouseProjectInventoryApiDto {
   actualInventoryQty: number;
   plannedInventoryQty: number;
   reservedQty: number;
+  minStockQty: number;
 }
 
 export type ProjectLedgerKind = 'import' | 'export' | 'transfer';

@@ -17,6 +17,8 @@ import { getApiErrorMessage, getApiFieldErrors } from '../../lib/apiClient';
 import { WMS_ERROR } from '../../lib/wms/messages';
 import { formatDateCell } from '../../lib/hrm/formatters';
 import { parseCurrencyInput } from '../../utils/currencyInput';
+import { MAX_MATERIAL_BUDGET, MAX_MATERIAL_BUDGET_LABEL } from '../../constants/wmsLimits';
+import { projectStatusBadge } from '../../lib/wms/projectStatusBadge';
 import { useProjects, useCreateProject } from '../../hooks/useProjects';
 import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
 import type { WarehouseProjectApiDto } from '../../types/wms';
@@ -44,6 +46,8 @@ function validateCreateForm(form: {
   if (!form.startDate) errs.startDate = 'Vui lòng chọn ngày bắt đầu';
   if (parseCurrencyInput(form.materialBudget) <= 0) {
     errs.materialBudget = 'Vui lòng nhập ngân sách vật tư';
+  } else if (parseCurrencyInput(form.materialBudget) > MAX_MATERIAL_BUDGET) {
+    errs.materialBudget = `Ngân sách tối đa ${MAX_MATERIAL_BUDGET_LABEL} đ`;
   }
   return errs;
 }
@@ -136,7 +140,6 @@ export default function ProjectsPage() {
     const clientErrors = validateCreateForm(form);
     if (Object.keys(clientErrors).length > 0) {
       setErrors(clientErrors);
-      showToast('error', 'Vui lòng kiểm tra lại các ô được đánh dấu.');
       return;
     }
 
@@ -158,7 +161,6 @@ export default function ProjectsPage() {
       const fieldErrors = getApiFieldErrors(err);
       if (Object.keys(fieldErrors).length > 0) {
         setErrors(fieldErrors);
-        showToast('error', 'Vui lòng kiểm tra lại các ô được đánh dấu.');
       } else {
         showToast('error', getApiErrorMessage(err, 'Không thể tạo kho dự án'));
       }
@@ -238,7 +240,7 @@ export default function ProjectsPage() {
           <table className="wms-inventory-table project-warehouse-table">
             <thead>
               <tr>
-                <th className="table-header-cell whitespace-nowrap">Mã kho</th>
+                <th className="table-header-cell whitespace-nowrap project-col-code">Mã kho</th>
                 <th className="table-header-cell">Tên công trình</th>
                 <th className="table-header-cell project-col-pm">Người phụ trách</th>
                 <th className="table-header-cell project-col-date whitespace-nowrap">Ngày bắt đầu</th>
@@ -272,7 +274,7 @@ export default function ProjectsPage() {
                     className="table-row wms-inventory-row--interactive"
                     onClick={() => navigate(`/warehouse/projects/${encodeURIComponent(p.projectCode)}`)}
                   >
-                    <td className="table-cell font-mono text-sm text-[var(--md-primary)] whitespace-nowrap">
+                    <td className="table-cell font-mono text-sm text-[var(--md-primary)] whitespace-nowrap project-col-code">
                       {p.projectCode}
                     </td>
                     <td className="table-cell font-semibold max-w-[260px]">
@@ -288,7 +290,7 @@ export default function ProjectsPage() {
                     </td>
                     <ProjectMaterialCountCell project={p} />
                     <td className="table-cell text-center project-col-status">
-                      <Badge status={p.status === 'Closed' ? 'completed' : 'active'} />
+                      <Badge status={projectStatusBadge(p.status)} />
                     </td>
                   </tr>
                 ))

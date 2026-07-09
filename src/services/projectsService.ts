@@ -56,4 +56,15 @@ export const projectsService = {
       `${ENDPOINT}/${encodeURIComponent(code)}/close`,
     );
   },
+
+  async updateInventoryMinStock(
+    projectCode: string,
+    materialCode: string,
+    minStockQty: number,
+  ): Promise<void> {
+    await apiClient.patch<void>(
+      `${ENDPOINT}/${encodeURIComponent(projectCode)}/inventory/${encodeURIComponent(materialCode)}/min-stock`,
+      { minStockQty },
+    );
+  },
 };

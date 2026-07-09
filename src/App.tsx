@@ -31,12 +31,15 @@ export default function App() {
             <Route path="/warehouse/projects/:code" element={<Pages.ProjectDetailPage />} />
             <Route path="/warehouse/suppliers" element={<Navigate to="/warehouse/settings/suppliers" replace />} />
             <Route path="/warehouse/transfer" element={<Pages.TransferListPage />} />
+            <Route path="/warehouse/material-return" element={<Pages.MaterialReturnPage />} />
             <Route path="/warehouse/import" element={<Pages.ImportListPage />} />
             <Route path="/warehouse/export" element={<Pages.ExportListPage />} />
+            <Route path="/warehouse/reports" element={<Pages.WarehouseReportsPage />} />
             <Route path="/warehouse/settings" element={<Navigate to="/warehouse/settings/material-categories" replace />} />
             <Route path="/warehouse/settings/material-categories" element={<Pages.SettingsPage />} />
             <Route path="/warehouse/settings/material-units" element={<Pages.SettingsPage />} />
             <Route path="/warehouse/settings/suppliers" element={<Pages.SettingsPage />} />
+            <Route path="/warehouse/settings/price-books" element={<Pages.SettingsPage />} />
 
             <Route path="/stocktake/list" element={<Pages.StocktakeListPage />} />
             <Route path="/stocktake/settings" element={<Pages.StocktakeSettingsPage />} />

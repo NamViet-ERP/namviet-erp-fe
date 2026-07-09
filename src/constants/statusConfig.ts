@@ -1,5 +1,5 @@
 import type { StatusKey, StatusConfigItem } from '../types';
-import { Check, Clock, AlertCircle, Package, X } from 'lucide-react';
+import { Check, Clock, AlertCircle, Package, X, Archive, CircleDot } from 'lucide-react';
 
 // Color comes from the `className` (MD3 badge tokens in index.css), which
 // already adapts to dark mode. No hardcoded hex here — single source of truth.
@@ -12,13 +12,13 @@ export const statusConfig: Record<StatusKey, StatusConfigItem> = {
   draft:               { label: 'Nháp',           className: 'badge-draft',    icon: AlertCircle },
   new:                 { label: 'Mới',            className: 'badge-new',      icon: AlertCircle },
   cancelled:           { label: 'Đã hủy',         className: 'badge-error',    icon: X },
-  completed:           { label: 'Hoàn thành',     className: 'badge-approved', icon: Check },
+  completed:           { label: 'Đã đóng kho',    className: 'badge-neutral',  icon: Archive },
   frozen:              { label: 'Tạm khóa',       className: 'badge-exported', icon: AlertCircle },
   counting:            { label: 'Đang kiểm đếm',  className: 'badge-pending',  icon: Clock },
   rejected:            { label: 'Từ chối',        className: 'badge-error',    icon: X },
   loan_pending:        { label: 'Chờ duyệt PM',   className: 'badge-pending',  icon: Clock },
   borrowing:           { label: 'Đang mượn',      className: 'badge-exported', icon: Clock },
   returned:            { label: 'Đã hoàn trả',    className: 'badge-approved', icon: Check },
-  active:              { label: 'Hoạt động',      className: 'badge-approved', icon: Check },
+  active:              { label: 'Hoạt động',      className: 'badge-success',  icon: CircleDot },
   inactive:            { label: 'Tạm khóa',       className: 'badge-error',    icon: X },
 };

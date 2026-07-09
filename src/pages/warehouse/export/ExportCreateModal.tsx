@@ -10,6 +10,9 @@ import type { MaterialQtyLine } from '../voucher/voucherFormTypes';
 import { emptyQtyLine } from '../voucher/voucherFormTypes';
 import { availableExportQty } from './exportUtils';
 import type { ExportFormFieldErrors } from '../../../lib/wms/exportFormSchema';
+import { findDuplicateMaterialLineIndex } from '../../../lib/wms/voucherDuplicateMaterial';
+import { isProjectFrozen, type FrozenProjectMap } from '../../../lib/wms/stocktakeFreeze';
+import ProjectWarehouseSelect from '../../../components/warehouse/ProjectWarehouseSelect';
 
 interface ExportCreateModalProps {
   isOpen: boolean;
@@ -26,7 +29,9 @@ interface ExportCreateModalProps {
   onNoteChange: (note: string) => void;
   items: MaterialQtyLine[];
   onItemsChange: (items: MaterialQtyLine[]) => void;
+  onDuplicateMaterialAttempt?: (lineIndex: number) => void;
   errors?: ExportFormFieldErrors;
+  frozenByProjectCode: FrozenProjectMap;
   onCreate: (status: 'draft' | 'pending') => void;
   onSave?: () => void;
   editVoucher?: { code: string } | null;
@@ -48,13 +53,16 @@ export default function ExportCreateModal({
   onNoteChange,
   items,
   onItemsChange,
+  onDuplicateMaterialAttempt,
   errors,
+  frozenByProjectCode,
   onCreate,
   onSave,
   editVoucher,
   materialUnit,
 }: ExportCreateModalProps) {
   const resetItems = () => onItemsChange([{ materialCode: '', qty: '' }]);
+  const submitBlocked = isProjectFrozen(frozenByProjectCode, projectCode);
 
   return (
     <Modal
@@ -72,10 +80,10 @@ export default function ExportCreateModal({
               </button>
             ) : (
               <>
-                <button type="button" className="btn btn-outline" disabled={isPending} onClick={() => onCreate('draft')}>
+                <button type="button" className="btn btn-outline" disabled={isPending || submitBlocked} onClick={() => onCreate('draft')}>
                   Lưu nháp
                 </button>
-                <button type="button" className="btn btn-filled" disabled={isPending} onClick={() => onCreate('pending')}>
+                <button type="button" className="btn btn-filled" disabled={isPending || submitBlocked} onClick={() => onCreate('pending')}>
                   Chốt dự kiến
                 </button>
               </>
@@ -86,21 +94,15 @@ export default function ExportCreateModal({
     >
       <div className="space-y-4 modal-form-bordered">
         <FormField label="Kho dự án xuất vật tư" required error={errors?.projectCode}>
-          <select
-            className="form-select"
+          <ProjectWarehouseSelect
+            projects={projects}
+            frozenByProjectCode={frozenByProjectCode}
             value={projectCode}
-            onChange={e => {
-              onProjectCodeChange(e.target.value);
+            onChange={code => {
+              onProjectCodeChange(code);
               resetItems();
             }}
-          >
-            <option value="">— Chọn kho dự án —</option>
-            {projects.map(p => (
-              <option key={p.projectCode} value={p.projectCode}>
-                {p.projectCode} — {p.projectName}
-              </option>
-            ))}
-          </select>
+          />
         </FormField>
         <FormField label="Mã tham chiếu / lý do xuất">
           <input className="form-input" value={referenceCode} onChange={e => onReferenceCodeChange(e.target.value)} />
@@ -143,13 +145,21 @@ export default function ExportCreateModal({
                     const maxQty = it.materialCode
                       ? availableExportQty(projectInventory, it.materialCode, items, idx)
                       : undefined;
+                    const lineErr = errors?.lineErrors?.[idx];
                     return (
                       <tr key={idx} className="table-row">
-                        <td className="table-cell">
+                        <td className="table-cell align-top">
                           <MaterialAutocomplete
                             compact
                             value={it.materialCode}
                             onChange={code => {
+                              if (code.trim()) {
+                                const dupIdx = findDuplicateMaterialLineIndex(items, code, idx);
+                                if (dupIdx !== null) {
+                                  onDuplicateMaterialAttempt?.(idx);
+                                  return;
+                                }
+                              }
                               const next = [...items];
                               next[idx] = { ...next[idx], materialCode: code };
                               onItemsChange(next);
@@ -157,6 +167,9 @@ export default function ExportCreateModal({
                             materials={stockMaterials}
                             placeholder="— Vật tư —"
                           />
+                          {lineErr?.materialCode && (
+                            <p className="mt-0.5 text-[10px] text-[var(--md-error)]">{lineErr.materialCode}</p>
+                          )}
                         </td>
                         <td className="table-cell text-right">
                           <QtyStepper
@@ -170,12 +183,17 @@ export default function ExportCreateModal({
                           />
                         </td>
                         <td className="table-cell text-center text-[var(--md-on-surface-variant)]">
-                          {it.materialCode ? materialUnit(it.materialCode) : '—'}
+                          <div className="import-cell-placeholder import-cell-placeholder--center">
+                            {it.materialCode ? materialUnit(it.materialCode) : '—'}
+                          </div>
                         </td>
                         <td className="table-cell text-right tabular-nums font-semibold">
-                          {it.materialCode ? fmtStockQty(maxQty ?? 0) : '—'}
+                          <div className="import-cell-placeholder import-cell-placeholder--end font-semibold">
+                            {it.materialCode ? fmtStockQty(maxQty ?? 0) : '—'}
+                          </div>
                         </td>
                         <td className="table-cell text-center">
+                          <div className="import-cell-placeholder import-cell-placeholder--center">
                           {items.length > 1 && (
                             <button
                               type="button"
@@ -186,6 +204,7 @@ export default function ExportCreateModal({
                               <Trash2 size={14} />
                             </button>
                           )}
+                          </div>
                         </td>
                       </tr>
                     );

@@ -1,7 +1,10 @@
 import type { Stocktake } from '../types';
 import { apiClient } from '../lib/apiClient';
 
-export type CreateStocktakeDto = Omit<Stocktake, 'id'>;
+export type CreateStocktakeDto = Omit<Stocktake, 'id' | 'voucherCode' | 'createdBy'> & {
+  voucherCode?: string;
+  createdBy?: string;
+};
 export type UpdateStocktakeDto = Partial<CreateStocktakeDto>;
 
 const ENDPOINT = '/api/stocktakes';
@@ -20,7 +23,7 @@ export const stocktakesService = {
   },
 
   async update(id: string, dto: UpdateStocktakeDto): Promise<Stocktake> {
-    return apiClient.put<Stocktake>(`${ENDPOINT}/${id}`, dto);
+    return apiClient.put<Stocktake>(`${ENDPOINT}/${id}`, { id, ...dto });
   },
 
   async remove(id: string): Promise<void> {

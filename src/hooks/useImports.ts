@@ -1,7 +1,21 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { importsService, type CreateImportDto, type UpdateImportDto } from '../services/importsService';
+import type { ApproveImportRequestApiDto } from '../types/api/importBudgetApi';
 import { queryKeys } from '../services/queryKeys';
+import type { Import } from '../types';
 import type { VoucherListParams } from '../lib/wms/voucherDateUtils';
+
+function invalidateImportSideEffects(qc: ReturnType<typeof useQueryClient>, imp?: Import | null) {
+  qc.invalidateQueries({ queryKey: queryKeys.imports.all });
+  qc.invalidateQueries({ queryKey: queryKeys.stock.matrix });
+  qc.invalidateQueries({ queryKey: queryKeys.projects.all });
+  const projectCode = imp?.project?.trim();
+  if (projectCode) {
+    qc.invalidateQueries({ queryKey: queryKeys.projects.detail(projectCode) });
+    qc.invalidateQueries({ queryKey: queryKeys.projects.inventory(projectCode) });
+    qc.invalidateQueries({ queryKey: queryKeys.projects.ledger(projectCode) });
+  }
+}
 
 /** List all import vouchers. */
 export function useImports(params?: VoucherListParams) {
@@ -24,11 +38,7 @@ export function useCreateImport() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (dto: CreateImportDto) => importsService.create(dto),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.imports.all });
-      qc.invalidateQueries({ queryKey: queryKeys.stock.matrix });
-      qc.invalidateQueries({ queryKey: queryKeys.projects.all });
-    },
+    onSuccess: data => invalidateImportSideEffects(qc, data),
   });
 }
 
@@ -37,11 +47,9 @@ export function useUpdateImport() {
   return useMutation({
     mutationFn: ({ id, dto }: { id: string; dto: UpdateImportDto }) =>
       importsService.update(id, dto),
-    onSuccess: (_data, { id }) => {
-      qc.invalidateQueries({ queryKey: queryKeys.imports.all });
+    onSuccess: (data, { id }) => {
+      invalidateImportSideEffects(qc, data);
       qc.invalidateQueries({ queryKey: queryKeys.imports.detail(id) });
-      qc.invalidateQueries({ queryKey: queryKeys.stock.matrix });
-      qc.invalidateQueries({ queryKey: queryKeys.projects.all });
     },
   });
 }
@@ -49,12 +57,11 @@ export function useUpdateImport() {
 export function useApproveImport() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => importsService.approve(id),
-    onSuccess: (_data, id) => {
-      qc.invalidateQueries({ queryKey: queryKeys.imports.all });
+    mutationFn: ({ id, confirmOverBudget }: { id: string; confirmOverBudget?: boolean }) =>
+      importsService.approve(id, { confirmOverBudget } satisfies ApproveImportRequestApiDto),
+    onSuccess: (data, { id }) => {
+      invalidateImportSideEffects(qc, data);
       qc.invalidateQueries({ queryKey: queryKeys.imports.detail(id) });
-      qc.invalidateQueries({ queryKey: queryKeys.stock.matrix });
-      qc.invalidateQueries({ queryKey: queryKeys.projects.all });
     },
   });
 }

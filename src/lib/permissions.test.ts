@@ -49,6 +49,12 @@ describe('routePermissions', () => {
     expect(getRequiredPermissionsForPath('/admin/settings/roles/admin/permissions')).toEqual(['admin.roles.view:all']);
     expect(getRequiredPermissionsForPath('/unknown')).toBeNull();
   });
+
+  it('maps material return route to export return permission', () => {
+    expect(getRequiredPermissionsForPath('/warehouse/material-return')).toEqual([
+      'wms.export_returns.view:all',
+    ]);
+  });
 });
 
 describe('groupPermissionCatalog', () => {

@@ -62,6 +62,13 @@ export function translateErrorMessage(message: string): string {
   if (lower.includes('could not be converted') || lower.includes('json value could not')) {
     return 'Dữ liệu gửi lên không hợp lệ. Vui lòng kiểm tra lại form.';
   }
+  if (
+    lower.includes('linq expression') ||
+    lower.includes('could not be translated') ||
+    lower.includes('entityframeworkcore')
+  ) {
+    return 'Hệ thống chưa xử lý được yêu cầu. Vui lòng thử lại sau.';
+  }
   if (lower.includes('the request field is required')) {
     return 'Vui lòng kiểm tra lại thông tin form.';
   }
@@ -102,6 +109,8 @@ export function isTechnicalUserMessage(message: string): boolean {
   const lower = message.trim().toLowerCase();
   if (!lower) return true;
   if (lower.includes('path:') && lower.includes('linenumber:')) return true;
+  if (lower.includes('linq expression') || lower.includes('could not be translated')) return true;
+  if (lower.includes('entityframeworkcore') || lower.includes('transparentidentifier')) return true;
   if (lower.includes('could not be converted') || lower.includes('json value could not')) return true;
   return (
     /failed to fetch|networkerror|fetch failed|load failed/i.test(lower) ||

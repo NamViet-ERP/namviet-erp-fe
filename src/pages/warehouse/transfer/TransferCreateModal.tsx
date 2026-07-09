@@ -6,10 +6,14 @@ import FormField from '../../../components/ui/FormField';
 import QtyStepper from '../../../components/ui/QtyStepper';
 import MaterialAutocomplete from '../../../components/ui/MaterialAutocomplete';
 import { fmtStockQty } from '../../../lib/wms/stockQtyFormat';
+import { GENERAL_WAREHOUSE_LABEL, GENERAL_WAREHOUSE_LABEL_LOWER } from '../../../lib/wms/stockTerminology';
 import type { MaterialQtyPhaseLine } from '../voucher/voucherFormTypes';
 import { emptyQtyPhaseLine } from '../voucher/voucherFormTypes';
 import { availableReturnQty, type TransferMode } from './transferUtils';
 import type { TransferFormFieldErrors } from '../../../lib/wms/transferFormSchema';
+import { isProjectFrozen, type FrozenProjectMap } from '../../../lib/wms/stocktakeFreeze';
+import ProjectWarehouseSelect from '../../../components/warehouse/ProjectWarehouseSelect';
+import { findDuplicateMaterialLineIndex } from '../../../lib/wms/voucherDuplicateMaterial';
 
 interface TransferCreateModalProps {
   isOpen: boolean;
@@ -29,7 +33,9 @@ interface TransferCreateModalProps {
   onNoteChange: (note: string) => void;
   items: MaterialQtyPhaseLine[];
   onItemsChange: (items: MaterialQtyPhaseLine[]) => void;
+  onDuplicateMaterialAttempt?: (lineIndex: number) => void;
   errors?: TransferFormFieldErrors;
+  frozenByProjectCode: FrozenProjectMap;
   onCreate: (status: 'draft' | 'pending') => void;
   onSave?: () => void;
   editVoucher?: { code: string } | null;
@@ -54,13 +60,18 @@ export default function TransferCreateModal({
   onNoteChange,
   items,
   onItemsChange,
+  onDuplicateMaterialAttempt,
   errors,
+  frozenByProjectCode,
   onCreate,
   onSave,
   editVoucher,
   materialUnit,
 }: TransferCreateModalProps) {
   const resetItems = () => onItemsChange([{ materialCode: '', qty: '', constructionPhase: '' }]);
+  const submitBlocked =
+    isProjectFrozen(frozenByProjectCode, projectCode)
+    || (transferMode === 'cross-project' && isProjectFrozen(frozenByProjectCode, toProjectCode));
 
   return (
     <Modal
@@ -78,10 +89,10 @@ export default function TransferCreateModal({
               </button>
             ) : (
               <>
-                <button type="button" className="btn btn-outline" disabled={isPending} onClick={() => onCreate('draft')}>
+                <button type="button" className="btn btn-outline" disabled={isPending || submitBlocked} onClick={() => onCreate('draft')}>
                   Lưu nháp
                 </button>
-                <button type="button" className="btn btn-filled" disabled={isPending} onClick={() => onCreate('pending')}>
+                <button type="button" className="btn btn-filled" disabled={isPending || submitBlocked} onClick={() => onCreate('pending')}>
                   Chốt dự kiến
                 </button>
               </>
@@ -97,7 +108,7 @@ export default function TransferCreateModal({
             className={`btn btn-sm ${transferMode === 'return' ? 'btn-filled' : 'btn-outline'}`}
             onClick={() => { onTransferModeChange('return'); onToProjectCodeChange(''); }}
           >
-            Hoàn trả kho tổng
+            Hoàn trả {GENERAL_WAREHOUSE_LABEL_LOWER}
           </button>
           <button
             type="button"
@@ -108,42 +119,32 @@ export default function TransferCreateModal({
           </button>
         </div>
         <FormField label="Kho dự án nguồn" required error={errors?.projectCode}>
-          <select
-            className="form-select"
+          <ProjectWarehouseSelect
+            projects={projects}
+            frozenByProjectCode={frozenByProjectCode}
             value={projectCode}
-            onChange={e => {
-              onProjectCodeChange(e.target.value);
-              if (e.target.value === toProjectCode) onToProjectCodeChange('');
+            onChange={code => {
+              onProjectCodeChange(code);
+              if (code === toProjectCode) onToProjectCodeChange('');
               resetItems();
             }}
-          >
-            <option value="">— Chọn kho dự án —</option>
-            {projects.map(p => (
-              <option key={p.projectCode} value={p.projectCode}>
-                {p.projectCode} — {p.projectName}
-              </option>
-            ))}
-          </select>
+            placeholder="— Chọn kho dự án —"
+          />
         </FormField>
         {transferMode === 'return' ? (
           <FormField label="Đích">
-            <input className="form-input bg-[var(--md-surface-variant)]" value="Kho tổng" readOnly disabled />
+            <input className="form-input bg-[var(--md-surface-variant)]" value={GENERAL_WAREHOUSE_LABEL} readOnly disabled />
           </FormField>
         ) : (
           <FormField label="Kho dự án đích" required error={errors?.toProjectCode}>
-            <select
-              className="form-select"
+            <ProjectWarehouseSelect
+              projects={targetProjects}
+              frozenByProjectCode={frozenByProjectCode}
               value={toProjectCode}
-              onChange={e => onToProjectCodeChange(e.target.value)}
+              onChange={onToProjectCodeChange}
+              placeholder="— Chọn kho dự án đích —"
               disabled={!projectCode}
-            >
-              <option value="">— Chọn kho dự án đích —</option>
-              {targetProjects.map(p => (
-                <option key={p.projectCode} value={p.projectCode}>
-                  {p.projectCode} — {p.projectName}
-                </option>
-              ))}
-            </select>
+            />
           </FormField>
         )}
         <FormField label="Ghi chú">
@@ -185,13 +186,21 @@ export default function TransferCreateModal({
                     const maxQty = it.materialCode
                       ? availableReturnQty(projectInventory, it.materialCode, items, idx)
                       : undefined;
+                    const lineErr = errors?.lineErrors?.[idx];
                     return (
                       <tr key={idx} className="table-row">
-                        <td className="table-cell">
+                        <td className="table-cell align-top">
                           <MaterialAutocomplete
                             compact
                             value={it.materialCode}
                             onChange={code => {
+                              if (code.trim()) {
+                                const dupIdx = findDuplicateMaterialLineIndex(items, code, idx);
+                                if (dupIdx !== null) {
+                                  onDuplicateMaterialAttempt?.(idx);
+                                  return;
+                                }
+                              }
                               const next = [...items];
                               next[idx] = { ...next[idx], materialCode: code };
                               onItemsChange(next);
@@ -199,6 +208,9 @@ export default function TransferCreateModal({
                             materials={stockMaterials}
                             placeholder="— Vật tư —"
                           />
+                          {lineErr?.materialCode && (
+                            <p className="mt-0.5 text-[10px] text-[var(--md-error)]">{lineErr.materialCode}</p>
+                          )}
                         </td>
                         <td className="table-cell text-right">
                           <QtyStepper
@@ -212,10 +224,14 @@ export default function TransferCreateModal({
                           />
                         </td>
                         <td className="table-cell text-center text-[var(--md-on-surface-variant)]">
-                          {it.materialCode ? materialUnit(it.materialCode) : '—'}
+                          <div className="import-cell-placeholder import-cell-placeholder--center">
+                            {it.materialCode ? materialUnit(it.materialCode) : '—'}
+                          </div>
                         </td>
                         <td className="table-cell text-right tabular-nums font-semibold">
-                          {it.materialCode ? fmtStockQty(maxQty ?? 0) : '—'}
+                          <div className="import-cell-placeholder import-cell-placeholder--end font-semibold">
+                            {it.materialCode ? fmtStockQty(maxQty ?? 0) : '—'}
+                          </div>
                         </td>
                         <td className="table-cell">
                           <input
@@ -230,6 +246,7 @@ export default function TransferCreateModal({
                           />
                         </td>
                         <td className="table-cell text-center">
+                          <div className="import-cell-placeholder import-cell-placeholder--center">
                           {items.length > 1 && (
                             <button
                               type="button"
@@ -240,6 +257,7 @@ export default function TransferCreateModal({
                               <Trash2 size={14} />
                             </button>
                           )}
+                          </div>
                         </td>
                       </tr>
                     );

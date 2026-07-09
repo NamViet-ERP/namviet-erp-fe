@@ -30,8 +30,6 @@ export type StatusKey =
   | 'active'
   | 'inactive';
 
-export type VoucherPrefix = 'CK' | 'CDK' | 'NK' | 'XK' | 'KK';
-
 /** Card accent color options */
 export type CardAccent = 'amber' | 'blue' | 'teal' | 'purple';
 
@@ -188,6 +186,58 @@ export interface Transfer {
   projectName?: string;
   toProject?: string;
   toProjectName?: string;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Export return (Hoàn trả vật tư theo phiếu xuất)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface ExportReturnItem {
+  productId: string;
+  sku: string;
+  name: string;
+  qty: number;
+  unit: string;
+  [key: string]: unknown;
+}
+
+export interface ExportReturn {
+  id: string;
+  voucherCode: string;
+  date: string;
+  createdAt?: string;
+  sourceExportId: string;
+  sourceExportCode: string;
+  project?: string;
+  projectName?: string;
+  items: ExportReturnItem[];
+  status: StatusKey;
+  createdBy: string;
+  note: string;
+  approvedBy?: string;
+  approvedAt?: string;
+}
+
+export interface ExportReturnableExport {
+  id: string;
+  voucherCode: string;
+  date: string;
+  soCode?: string;
+  customer?: string;
+  status: StatusKey;
+  approvedAt?: string;
+  returnableLineCount: number;
+  totalRemainingQty: number;
+}
+
+export interface ExportReturnableLine {
+  productId: string;
+  sku: string;
+  name: string;
+  unit: string;
+  exportedQty: number;
+  returnedQty: number;
+  remainingQty: number;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

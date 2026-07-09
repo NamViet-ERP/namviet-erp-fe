@@ -1,0 +1,68 @@
+import { test, expect } from '@playwright/test';
+import {
+  deleteExportReturn,
+  findAnyReturnableExport,
+  findVoucherIdByCode,
+  listExportReturns,
+  loginToken,
+} from './helpers/api';
+import {
+  clickDropdownItem,
+  expectSnackbar,
+  extractVoucherCode,
+  openRowActions,
+} from './helpers/ui';
+
+test.describe('WMS material return', () => {
+  test('create draft when returnable export exists', async ({ page }) => {
+    const token = await loginToken();
+    const source = await findAnyReturnableExport(token);
+    test.skip(!source, 'No returnable export with remaining qty in DB for material return E2E');
+
+    let voucherCode: string | undefined;
+    let voucherId: string | undefined;
+
+    try {
+      await page.goto('/warehouse/material-return');
+      await page.getByRole('button', { name: 'Tạo phiếu hoàn trả' }).click();
+
+      const dialog = page.getByRole('dialog', { name: 'Tạo phiếu hoàn trả vật tư' });
+      await dialog.locator('select.form-select').first().selectOption(source!.projectCode);
+
+      const exportSelect = dialog.locator('select.form-select').nth(1);
+      await expect(async () => {
+        expect(await exportSelect.locator('option').count()).toBeGreaterThan(1);
+      }).toPass();
+      await exportSelect.selectOption(source!.export.id);
+      await expect(dialog.getByText(/dòng vật tư còn có thể hoàn trả/)).toBeVisible();
+      await expect(dialog.locator('tbody tr').first()).toBeVisible();
+
+      await dialog.getByRole('button', { name: 'Lưu nháp' }).click();
+      const toast = await expectSnackbar(page, /Phiếu nháp .* — chưa chốt dự kiến/);
+      voucherCode = extractVoucherCode(await toast.textContent(), 'HT');
+      expect(voucherCode).toBeTruthy();
+
+      voucherId = await findVoucherIdByCode(token, 'export-returns', voucherCode!);
+      expect(voucherId).toBeTruthy();
+    } finally {
+      if (voucherId) {
+        await deleteExportReturn(voucherId, token).catch(() => undefined);
+      }
+    }
+  });
+
+  test('detail modal opens for existing return voucher', async ({ page }) => {
+    const token = await loginToken();
+    const returns = await listExportReturns(token);
+    const row = returns[0];
+    test.skip(!row, 'No material return voucher in DB');
+
+    await page.goto('/warehouse/material-return');
+    await openRowActions(page, row!.voucherCode);
+    await clickDropdownItem(page, 'Xem chi tiết');
+
+    const dialog = page.getByRole('dialog');
+    await expect(dialog.getByRole('heading', { name: row!.voucherCode })).toBeVisible();
+    await dialog.getByRole('button', { name: 'Đóng', exact: true }).click();
+  });
+});

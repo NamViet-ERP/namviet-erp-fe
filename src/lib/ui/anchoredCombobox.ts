@@ -1,6 +1,5 @@
 import type { CSSProperties } from 'react';
 
-export const COMBOBOX_MAX_SUGGESTIONS = 8;
 export const COMBOBOX_PANEL_MAX_H = 220;
 export const COMBOBOX_PANEL_MIN_H = 88;
 export const COMBOBOX_VIEWPORT_PAD = 8;

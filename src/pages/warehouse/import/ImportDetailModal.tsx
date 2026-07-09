@@ -1,4 +1,5 @@
 import type { Import } from '../../../types';
+import { FileText } from 'lucide-react';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import VoucherDetailModal from '../../../components/warehouse/VoucherDetailModal';
 import VoucherDetailFooter from '../../../components/warehouse/VoucherDetailFooter';
@@ -6,6 +7,8 @@ import { displayValue } from '../../../components/warehouse/voucherDetailUtils';
 import { importStatusHint } from './importUtils';
 import { formatDateTimeVi } from '../../../lib/hrm/formatters';
 import { getVoucherCreatedAt } from '../../../lib/wms/voucherDateUtils';
+import { printVoucherWithFeedback } from '../../../lib/wms/printVoucher';
+import { buildImportPrintPayload } from '../../../lib/wms/voucherPrintBuilders';
 
 interface ImportDetailModalProps {
   isOpen: boolean;
@@ -55,13 +58,31 @@ export default function ImportDetailModal({
         { label: 'Ghi chú', value: displayValue(selected.note), wide: true },
       ]}
       footer={
-        <VoucherDetailFooter
-          status={selected.status}
-          isSubmitPending={isSubmitPending}
-          isApprovePending={isApprovePending}
-          onSubmit={() => onSubmit(selected)}
-          onApprove={() => onApprove(selected)}
-        />
+        <div className="flex w-full items-center justify-between gap-3 flex-wrap">
+          <button
+            type="button"
+            className="btn btn-outline btn-sm"
+            onClick={() =>
+              printVoucherWithFeedback(
+                buildImportPrintPayload(
+                  selected,
+                  selected.project ? projectName(selected.project) : '—',
+                ),
+              )
+            }
+          >
+            <FileText size={14} /> In phiếu
+          </button>
+          <div className="flex items-center gap-2">
+            <VoucherDetailFooter
+              status={selected.status}
+              isSubmitPending={isSubmitPending}
+              isApprovePending={isApprovePending}
+              onSubmit={() => onSubmit(selected)}
+              onApprove={() => onApprove(selected)}
+            />
+          </div>
+        </div>
       }
     >
       <div className="wms-voucher-detail-table-wrap">

@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import { Plus, Eye, FileText, Download, Check, XCircle, Lock, Unlock } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import PermissionGate from '../../components/auth/PermissionGate';
-import { generateCode } from '../../utils/generateCode';
 import {
   useStocktakes,
   useCreateStocktake,
@@ -14,6 +13,8 @@ import { useMaterials } from '../../hooks/useMaterials';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { UI_ERROR } from '../../lib/uiMessages';
 import { fmtStocktakeDiff, computeStocktakeDiff } from '../../lib/wms/stockQtyFormat';
+import { printVoucherWithFeedback } from '../../lib/wms/printVoucher';
+import { buildStocktakePrintPayload } from '../../lib/wms/voucherPrintBuilders';
 import { showToast } from '../../components/ui/Toast';
 import TabFilter from '../../components/ui/TabFilter';
 import SearchBar from '../../components/ui/SearchBar';
@@ -79,6 +80,26 @@ function buildStocktakeItem(
   };
 }
 
+function toStocktakeUpdateDto(
+  item: Stocktake,
+  patch: Partial<CreateStocktakeDto> = {},
+): CreateStocktakeDto & { id: string } {
+  return {
+    id: item.id,
+    voucherCode: item.voucherCode,
+    date: item.date,
+    createdBy: item.createdBy,
+    status: item.status,
+    warehouseId: item.warehouseId,
+    warehouseName: item.warehouseName,
+    condition: item.condition,
+    isFrozen: item.isFrozen,
+    note: item.note ?? '',
+    items: item.items,
+    ...patch,
+  };
+}
+
 export default function StocktakeListPage() {
   const { data: list = [], isLoading, isError, error } = useStocktakes();
   const { data: projectsPage } = useProjects({ pageSize: 200, status: 'Active' });
@@ -113,6 +134,7 @@ export default function StocktakeListPage() {
     { id: 'all', label: 'Tất cả', count: list.length },
     { id: 'approved', label: 'Đã duyệt', count: list.filter(s => s.status === 'approved').length },
     { id: 'pending', label: 'Chưa duyệt', count: list.filter(s => s.status === 'pending').length },
+    { id: 'cancelled', label: 'Đã hủy', count: list.filter(s => s.status === 'cancelled').length },
   ];
 
   let filtered = list;
@@ -159,9 +181,7 @@ export default function StocktakeListPage() {
       );
 
     return {
-      voucherCode: generateCode('KK'),
       date: new Date().toLocaleDateString('vi-VN'),
-      createdBy: '',
       status: 'pending',
       warehouseId: form.projectCode,
       warehouseName: whName,
@@ -202,7 +222,10 @@ export default function StocktakeListPage() {
   const handleToggleFreeze = async (item: Stocktake): Promise<void> => {
     const newFrozen = !item.isFrozen;
     try {
-      await updateMutation.mutateAsync({ id: item.id, dto: { isFrozen: newFrozen } });
+      await updateMutation.mutateAsync({
+        id: item.id,
+        dto: toStocktakeUpdateDto(item, { isFrozen: newFrozen }),
+      });
       showToast(
         newFrozen ? 'warning' : 'success',
         newFrozen
@@ -219,12 +242,17 @@ export default function StocktakeListPage() {
       showToast('error', 'Không thể hủy phiếu đã duyệt');
       return;
     }
+    if (item.status === 'cancelled') {
+      showToast('error', 'Phiếu đã được hủy');
+      return;
+    }
     try {
       await updateMutation.mutateAsync({
         id: item.id,
-        dto: { status: 'cancelled', isFrozen: false },
+        dto: toStocktakeUpdateDto(item, { status: 'cancelled', isFrozen: false }),
       });
-      showToast('warning', `Đã hủy phiếu ${item.voucherCode}.`);
+      if (selectedItem?.id === item.id) setShowDetail(false);
+      showToast('warning', `Đã hủy phiếu ${item.voucherCode} — vẫn tra cứu được ở tab Đã hủy.`);
     } catch (err) {
       showToast('error', getApiErrorMessage(err, 'Không thể hủy phiếu kiểm kê'));
     }
@@ -249,6 +277,35 @@ export default function StocktakeListPage() {
     setForm({ ...form, items });
   };
 
+  const freezeBadgeClass = (tone: 'frozen' | 'open') =>
+    [
+      'inline-flex h-6 min-w-[6.75rem] shrink-0 items-center justify-center gap-1',
+      'whitespace-nowrap rounded-full px-2.5 text-xs font-medium leading-none',
+      tone === 'frozen'
+        ? 'bg-[var(--md-error-container)] text-[var(--md-on-error-container)]'
+        : 'bg-[var(--md-success-container)] text-[var(--md-on-success-container)]',
+    ].join(' ');
+
+  const renderFreezeBadge = (item: Stocktake) => {
+    if (item.status !== 'pending') {
+      return <span className="text-xs text-[var(--md-on-surface-variant)]">—</span>;
+    }
+    if (item.isFrozen) {
+      return (
+        <span className={freezeBadgeClass('frozen')}>
+          <Lock size={12} className="shrink-0" aria-hidden />
+          Đóng băng
+        </span>
+      );
+    }
+    return (
+      <span className={freezeBadgeClass('open')}>
+        <Unlock size={12} className="shrink-0" aria-hidden />
+        Mở băng
+      </span>
+    );
+  };
+
   const getActions = (item: Stocktake): DropdownItem[] => {
     const a: DropdownItem[] = [
       { label: 'Xem chi tiết', icon: Eye, onClick: () => { setSelectedItem(item); setShowDetail(true); } },
@@ -263,7 +320,11 @@ export default function StocktakeListPage() {
       a.push({ divider: true });
       a.push({ label: 'Hủy phiếu', icon: XCircle, onClick: () => handleCancel(item), danger: true });
     }
-    a.push({ label: 'In phiếu', icon: FileText, onClick: () => showToast('info', 'Đang chuẩn bị in...') });
+    a.push({
+      label: 'In phiếu',
+      icon: FileText,
+      onClick: () => printVoucherWithFeedback(buildStocktakePrintPayload(item)),
+    });
     return a;
   };
 
@@ -289,15 +350,6 @@ export default function StocktakeListPage() {
           <TabFilter tabs={tabs} activeTab={activeTab} onChange={id => { setActiveTab(id); setPage(1); }} />
         </div>
         <div className="surface-panel__filter-bar px-4 pb-3 page-filter-bar">
-          <div className="flex items-center gap-2">
-            <select
-              className="form-select w-20 text-xs py-1.5"
-              value={pageSize}
-              onChange={e => setPageSize(Number(e.target.value))}
-            >
-              {[10, 15, 25].map(n => <option key={n} value={n}>{n}</option>)}
-            </select>
-          </div>
           <SearchBar value={search} onChange={setSearch} placeholder="Tìm mã phiếu, kho dự án..." />
         </div>
 
@@ -311,22 +363,23 @@ export default function StocktakeListPage() {
                 <th className="table-header-cell">Trạng thái</th>
                 <th className="table-header-cell">Kho dự án</th>
                 <th className="table-header-cell">Tình trạng</th>
+                <th className="table-header-cell text-center w-28 min-w-[7rem]">Đóng băng</th>
                 <th className="table-header-cell">Ghi chú</th>
                 <th className="table-header-cell text-center">Tác vụ</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
-                <TableSkeletonRows colSpan={8} />
+                <TableSkeletonRows colSpan={9} />
               ) : isError ? (
                 <tr>
-                  <td colSpan={8}>
+                  <td colSpan={9}>
                     <EmptyState message={getApiErrorMessage(error, UI_ERROR.loadStocktakes)} />
                   </td>
                 </tr>
               ) : paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={8}>
+                  <td colSpan={9}>
                     <EmptyState message="Không tìm thấy phiếu kiểm kê nào." />
                   </td>
                 </tr>
@@ -354,6 +407,7 @@ export default function StocktakeListPage() {
                       <div className="text-[10px] font-mono text-[var(--md-on-surface-variant)]">{st.warehouseId}</div>
                     </td>
                     <td className="table-cell"><Badge status={st.condition} /></td>
+                    <td className="table-cell text-center w-28 min-w-[7rem]">{renderFreezeBadge(st)}</td>
                     <td className="table-cell text-[var(--md-on-surface-variant)] max-w-[180px] truncate">{st.note || '—'}</td>
                     <td className="table-cell text-center"><Dropdown items={getActions(st)} /></td>
                   </tr>
@@ -470,9 +524,14 @@ export default function StocktakeListPage() {
                         />
                       </td>
                       <td className="table-cell w-28">
-                        <div className="form-input text-sm text-right tabular-nums bg-[var(--md-surface-container-low)] pointer-events-none select-none">
-                          {it.systemQty || '—'}
-                        </div>
+                        <input
+                          type="text"
+                          readOnly
+                          tabIndex={-1}
+                          aria-readonly
+                          className="form-input text-right tabular-nums cursor-default"
+                          value={it.systemQty || '—'}
+                        />
                       </td>
                       <td className="table-cell w-28">
                         <div className={!it.materialCode ? 'opacity-40 pointer-events-none' : undefined}>
@@ -515,7 +574,22 @@ export default function StocktakeListPage() {
         onClose={() => setShowDetail(false)}
         title={`PHIẾU KIỂM KÊ — ${selectedItem?.voucherCode || ''}`}
         size="xl"
-        footer={<button type="button" className="btn btn-outline" onClick={() => setShowDetail(false)}>Đóng</button>}
+        footer={
+          selectedItem ? (
+            <div className="flex w-full items-center justify-between gap-3">
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                onClick={() => printVoucherWithFeedback(buildStocktakePrintPayload(selectedItem))}
+              >
+                <FileText size={14} /> In phiếu
+              </button>
+              <button type="button" className="btn btn-outline" onClick={() => setShowDetail(false)}>Đóng</button>
+            </div>
+          ) : (
+            <button type="button" className="btn btn-outline" onClick={() => setShowDetail(false)}>Đóng</button>
+          )
+        }
       >
         {selectedItem && (
           <>

@@ -1,5 +1,6 @@
 import type { Transfer } from '../../../types';
 import type { WarehouseProjectInventoryApiDto } from '../../../types/wms';
+import { GENERAL_WAREHOUSE_LABEL, GENERAL_WAREHOUSE_LABEL_LOWER } from '../../../lib/wms/stockTerminology';
 import type { MaterialQtyLine, MaterialQtyPhaseLine } from '../voucher/voucherFormTypes';
 
 export type TransferMode = 'return' | 'cross-project';
@@ -10,7 +11,7 @@ export function transferStatusHint(status: Transfer['status'], isCrossProject: b
   if (status === 'approved') {
     return isCrossProject
       ? 'Chuyển thực tế — đã chuyển sang kho dự án đích'
-      : 'Chuyển thực tế — đã hoàn về kho tổng';
+      : `Chuyển thực tế — đã hoàn về ${GENERAL_WAREHOUSE_LABEL_LOWER}`;
   }
   return '';
 }
@@ -18,7 +19,7 @@ export function transferStatusHint(status: Transfer['status'], isCrossProject: b
 export function destinationLabel(tf: Transfer) {
   if (tf.toProjectName) return tf.toProjectName;
   if (tf.toProject) return tf.toProject;
-  return tf.toWarehouseName || 'Kho tổng';
+  return tf.toWarehouseName || GENERAL_WAREHOUSE_LABEL;
 }
 
 export function isCrossProjectTransfer(tf: Transfer) {

@@ -1,6 +1,7 @@
 import { Package, DollarSign, Warehouse, TrendingUp, ArrowUpRight, Activity, AlertTriangle, RefreshCw, ChevronDown } from 'lucide-react';
 import type { CSSProperties } from 'react';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import type { LucideIcon } from 'lucide-react';
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip,
@@ -17,6 +18,7 @@ import { WMS_EMPTY, WMS_ERROR } from '../../lib/wms/messages';
 import { formatCurrency, formatCurrencyShort } from '../../utils/formatCurrency';
 import { fmtStockQty } from '../../lib/wms/stockQtyFormat';
 import { useWarehouseDashboard } from '../../hooks/useWarehouseDashboard';
+import { useLowStockAlerts } from '../../hooks/useLowStockAlerts';
 import type {
   CategoryDataPoint,
   DashboardActivityItem,
@@ -219,6 +221,7 @@ function DashboardWarehouseContent({
   isRetrying = false,
 }: DashboardWarehouseContentProps) {
   const [activityExpanded, setActivityExpanded] = useState(false);
+  const { data: lowStockAlerts = [] } = useLowStockAlerts(undefined, 8);
   const activityItems = activityExpanded
     ? data.recentActivity
     : data.recentActivity.slice(0, ACTIVITY_PREVIEW_COUNT);
@@ -266,7 +269,7 @@ function DashboardWarehouseContent({
       <div className="dashboard-kpi-grid">
         <Card
           title="Tổng tồn kho"
-          value={hasLoadError ? '—' : formatCurrency(data.totalStock)}
+          value={hasLoadError ? '—' : fmtStockQty(data.totalStock)}
           subtitle="vật tư trong tất cả kho dự án"
           accent="amber"
           icon={Package}
@@ -286,6 +289,31 @@ function DashboardWarehouseContent({
           icon={Warehouse}
         />
       </div>
+
+      {lowStockAlerts.length > 0 && (
+        <div className="alert-banner alert-banner--warning" role="alert">
+          <AlertTriangle size={18} className="alert-banner__icon" aria-hidden />
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-sm text-[var(--md-on-surface)]">
+              {lowStockAlerts.length} cảnh báo tồn dưới ngưỡng tối thiểu
+            </p>
+            <ul className="mt-1 text-xs text-[var(--md-on-surface-variant)] space-y-0.5">
+              {lowStockAlerts.slice(0, 5).map(a => (
+                <li key={`${a.projectCode}-${a.materialCode}`}>
+                  <Link
+                    className="text-[var(--md-primary)] hover:underline"
+                    to={`/warehouse/projects/${encodeURIComponent(a.projectCode)}`}
+                  >
+                    {a.projectCode}
+                  </Link>
+                  {' — '}
+                  {a.materialCode} ({a.actualQty}/{a.minStockQty} {a.unit})
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
 
       <div className="dashboard-ops-grid" aria-label="Hoạt động hôm nay">
         {data.miniStats.map(stat => {

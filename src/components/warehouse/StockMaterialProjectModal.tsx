@@ -4,7 +4,7 @@ import { Search } from 'lucide-react';
 import Modal from '../ui/Modal';
 import type { StockMatrixRowApiDto } from '../../types/wms';
 import { fmtExpectedStock, fmtPlannedNet, fmtStockQtyOrDash } from '../../lib/wms/stockQtyFormat';
-import { STOCK_FORMULA_LEGEND_SHORT } from '../../lib/wms/stockTerminology';
+import { STOCK_FORMULA_LEGEND_SHORT, GENERAL_WAREHOUSE_LABEL } from '../../lib/wms/stockTerminology';
 import { totalUsableQty } from '../../lib/wms/stockMatrixUtils';
 
 interface Props {
@@ -38,7 +38,7 @@ function StockMaterialProjectContent({ row, onClose }: { row: StockMatrixRowApiD
     <div className="space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
         <div className="stock-modal-stat">
-          <span className="stock-modal-stat-label">Kho tổng</span>
+          <span className="stock-modal-stat-label">{GENERAL_WAREHOUSE_LABEL}</span>
           <span className="stock-modal-stat-value tabular-nums">{row.generalActualQty}</span>
         </div>
         <div className="stock-modal-stat">

@@ -313,8 +313,18 @@
   .form-table.import-items-table .import-cell-placeholder {
     display: flex;
     align-items: center;
+    min-height: 32px;
     height: 32px;
     color: var(--md-on-surface-variant);
+  }
+
+  .form-table.import-items-table .import-cell-placeholder--end {
+    justify-content: flex-end;
+    color: var(--md-on-surface);
+  }
+
+  .form-table.import-items-table .import-cell-placeholder--center {
+    justify-content: center;
   }
 
   .form-table .search-autocomplete,
@@ -445,6 +455,10 @@
   .form-table .qty-stepper__input:focus {
     box-shadow: inset 0 0 0 1px var(--md-primary) !important;
     outline: none !important;
+  }
+
+  .form-table .qty-stepper--error .qty-stepper__input {
+    box-shadow: inset 0 0 0 1px var(--md-error) !important;
   }
 
   .form-table .qty-stepper__input::-webkit-outer-spin-button,

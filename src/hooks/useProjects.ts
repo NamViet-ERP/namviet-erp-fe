@@ -69,3 +69,22 @@ export function useCloseProject() {
     },
   });
 }
+
+export function useUpdateProjectInventoryMinStock() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      projectCode,
+      materialCode,
+      minStockQty,
+    }: {
+      projectCode: string;
+      materialCode: string;
+      minStockQty: number;
+    }) => projectsService.updateInventoryMinStock(projectCode, materialCode, minStockQty),
+    onSuccess: (_data, { projectCode }) => {
+      qc.invalidateQueries({ queryKey: queryKeys.projects.inventory(projectCode) });
+      qc.invalidateQueries({ queryKey: ['wms-alerts', 'low-stock'] });
+    },
+  });
+}

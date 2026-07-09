@@ -2195,6 +2195,43 @@
   .import-items-table--transfer :is(th, td):nth-child(4) { width: 10%; }
   .import-items-table--transfer :is(th, td):nth-child(5) { width: 18%; }
   .import-items-table--transfer :is(th, td):nth-child(6) { width: 40px; }
+  .import-items-table--exportReturn { min-width: 820px; }
+  .import-items-table--exportReturn th {
+    vertical-align: middle;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .import-items-table--exportReturn .export-return-col-code { width: 7rem; }
+  .import-items-table--exportReturn .export-return-col-name { width: 36%; }
+  .import-items-table--exportReturn .export-return-col-qty { width: 5.75rem; }
+  .import-items-table--exportReturn .export-return-col-return { width: 8.75rem; }
+  .import-items-table--exportReturn .export-return-col-unit { width: 3.5rem; }
+  .import-items-table--exportReturn .export-return-qty-cell .qty-stepper {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+  }
+
+  .export-return-list-table {
+    table-layout: fixed;
+    width: 100%;
+    min-width: 0;
+  }
+  .export-return-list-table :is(th, td):nth-child(1) { width: 9rem; }
+  .export-return-list-table :is(th, td):nth-child(2) { width: 9rem; }
+  .export-return-list-table :is(th, td):nth-child(3) {
+    width: 11rem;
+    max-width: 11rem;
+  }
+  .export-return-list-table :is(th, td):nth-child(4) { width: 6.5rem; }
+  .export-return-list-table :is(th, td):nth-child(5) { width: 10.5rem; }
+  .export-return-list-table :is(th, td):nth-child(6) { width: 4.5rem; }
+  .export-return-list-table .export-return-project-cell {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 11rem;
+  }
 
   .table-min-w--720 { min-width: 720px; }
 
@@ -2856,6 +2893,13 @@
     transition: background-color var(--md-duration) var(--md-easing);
   }
   .hrm-table .table-row:active {
+    transform: none;
+  }
+  /* Form tables (phiếu nhập/xuất/chuyển…): interactive cells, same jitter fix */
+  .form-table .table-row {
+    transition: background-color var(--md-duration) var(--md-easing);
+  }
+  .form-table .table-row:active {
     transform: none;
   }
   .dark .table-row:hover {
@@ -7088,11 +7132,18 @@
   }
 
   /* Kho dự án — column widths (shared wms-inventory-table skin) */
+  .project-warehouse-table {
+    table-layout: fixed;
+  }
   .project-warehouse-table .table-header-cell {
     font-weight: 600;
   }
   .project-warehouse-table .table-cell {
     font-size: 0.75rem;
+  }
+  .project-warehouse-table .project-col-code {
+    width: 9rem;
+    max-width: 9rem;
   }
   .project-warehouse-table .project-col-pm {
     min-width: 9rem;
@@ -7111,10 +7162,10 @@
     white-space: nowrap;
   }
   .project-warehouse-table .project-col-status {
-    width: 6.5rem;
-    max-width: 6.5rem;
-    padding-left: 0.35rem;
-    padding-right: 0.35rem;
+    width: 8rem;
+    max-width: 8rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
   }
   .project-warehouse-table .project-col-status .badge {
     font-size: 0.625rem;

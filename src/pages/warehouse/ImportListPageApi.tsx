@@ -4,7 +4,7 @@ import { useLocation } from 'react-router-dom';
 
 import { Plus, Download } from 'lucide-react';
 
-import type { Import } from '../../types';
+import type { ImportBudgetExceededApiDto } from '../../types/api/importBudgetApi';
 
 import TabFilter from '../../components/ui/TabFilter';
 
@@ -22,7 +22,17 @@ import { showToast } from '../../components/ui/Toast';
 
 import { getApiErrorMessage } from '../../lib/apiClient';
 
-import { validateImportCreate, getImportFormFieldErrors, type ImportFormFieldErrors } from '../../lib/wms/importFormSchema';
+import { parseImportBudgetExceeded } from '../../lib/wms/projectBudget';
+import { downloadVoucherExport } from '../../lib/wms/voucherExportDownload';
+
+import { formatCurrencyFull } from '../../utils/formatCurrency';
+
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
+
+import { validateImportCreate, getImportFormFieldErrors, isImportLineComplete, type ImportFormFieldErrors } from '../../lib/wms/importFormSchema';
+import { DUPLICATE_MATERIAL_MESSAGE } from '../../lib/wms/voucherDuplicateMaterial';
+import { getFrozenProjectError } from '../../lib/wms/stocktakeFreeze';
+import { useFrozenProjects } from '../../hooks/useFrozenProjects';
 
 import { parseCurrencyInput } from '../../utils/currencyInput';
 
@@ -51,10 +61,13 @@ import { useProjects } from '../../hooks/useProjects';
 import { useSuppliers } from '../../hooks/useSuppliers';
 
 import { findSupplierByName } from '../../services/suppliersService';
+import { suggestImportUnitPrice } from '../../lib/wms/suggestImportUnitPrice';
 
 import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
 
 import type { CreateImportDto } from '../../services/importsService';
+import { importsService } from '../../services/importsService';
+import type { ImportParseErrorApiDto } from '../../types/api/importParseApi';
 
 import { emptyQtyPriceLine, type MaterialQtyPriceLine } from './voucher/voucherFormTypes';
 
@@ -107,6 +120,10 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
   const [selected, setSelected] = useState<Import | null>(null);
 
+  const [budgetConfirmImport, setBudgetConfirmImport] = useState<Import | null>(null);
+
+  const [budgetExceeded, setBudgetExceeded] = useState<ImportBudgetExceededApiDto | null>(null);
+
   const [editing, setEditing] = useState<Import | null>(null);
 
 
@@ -122,6 +139,9 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
   const [items, setItems] = useState<MaterialQtyPriceLine[]>([{ ...emptyQtyPriceLine }]);
 
   const [createErrors, setCreateErrors] = useState<ImportFormFieldErrors>({});
+  const [importErrors, setImportErrors] = useState<ImportParseErrorApiDto[]>([]);
+  const [isImportParsing, setIsImportParsing] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const { data: imports = [], isLoading, isError, error } = useImports({
     dateFrom: dateFrom || undefined,
@@ -135,6 +155,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
   const { data: suppliersPage } = useSuppliers({ all: true });
 
   const createMutation = useCreateImport();
+  const frozenByProjectCode = useFrozenProjects();
 
   const updateMutation = useUpdateImport();
 
@@ -149,6 +170,20 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
   const projects = useMemo(() => projectsPage?.items ?? [], [projectsPage?.items]);
 
   const suppliers = useMemo(() => suppliersPage?.items ?? [], [suppliersPage?.items]);
+
+  const handleMaterialLineChange = async (index: number, materialCode: string) => {
+    const supplier = findSupplierByName(suppliers, defaultSupplier);
+    if (!materialCode || !supplier) return;
+    const price = await suggestImportUnitPrice(materialCode, supplier.id);
+    if (!price) return;
+    setItems(prev => {
+      const next = [...prev];
+      const line = next[index];
+      if (!line || (line.unitPrice && Number(line.unitPrice) > 0)) return prev;
+      next[index] = { ...line, unitPrice: String(price) };
+      return next;
+    });
+  };
 
 
 
@@ -243,14 +278,62 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
     setItems([{ ...emptyQtyPriceLine }]);
 
     setCreateErrors({});
+    setImportErrors([]);
 
+  };
+
+
+
+  const handleDownloadImportTemplate = async () => {
+    try {
+      await importsService.downloadImportTemplate();
+      showToast('success', 'Đã tải mẫu import.');
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không thể tải mẫu import'));
+    }
+  };
+
+  const handleImportFile = async (file: File) => {
+    setIsImportParsing(true);
+    setImportErrors([]);
+    try {
+      const result = await importsService.parseImportFile(file);
+      if (result.lines.length === 0) {
+        setImportErrors(result.errors);
+        showToast('error', 'Không có dòng hợp lệ để import.');
+        return;
+      }
+
+      setItems(
+        result.lines.map(line => ({
+          materialCode: line.materialCode,
+          qty: String(line.qty),
+          unitPrice: line.unitPrice > 0 ? String(line.unitPrice) : '',
+        })),
+      );
+      setImportErrors(result.errors);
+      setCreateErrors(e => ({ ...e, items: undefined }));
+
+      if (result.errors.length > 0) {
+        showToast(
+          'success',
+          `Đã import ${result.validRowCount}/${result.totalRows} dòng. ${result.errorRowCount} dòng lỗi — xem chi tiết bên dưới.`,
+        );
+      } else {
+        showToast('success', `Đã import ${result.validRowCount} dòng vật tư.`);
+      }
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không thể import file'));
+    } finally {
+      setIsImportParsing(false);
+    }
   };
 
 
 
   const buildDto = (status: 'draft' | 'pending'): CreateImportDto | null => {
 
-    const validItems = items.filter(it => it.materialCode && Number(it.qty) > 0);
+    const validItems = items.filter(isImportLineComplete);
 
     const supplierValid = Boolean(findSupplierByName(suppliers, defaultSupplier));
 
@@ -260,16 +343,12 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
       defaultSupplier,
       supplierValid,
       items,
+      frozenByProjectCode,
     );
 
     if (Object.keys(fieldErrors).length > 0) {
-
       setCreateErrors(fieldErrors);
-
-      showToast('error', 'Vui lòng kiểm tra lại các ô được đánh dấu.');
-
       return null;
-
     }
 
     setCreateErrors({});
@@ -340,7 +419,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
       items: mappedItems,
 
-      createdBy: 'USER',
+      createdBy: '',
 
       note,
 
@@ -462,17 +541,75 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
 
 
-  const handleApprove = async (imp: Import) => {
+  const runApprove = async (imp: Import, confirmOverBudget = false) => {
 
     try {
 
-      await approveMutation.mutateAsync(imp.id);
+      await approveMutation.mutateAsync({ id: imp.id, confirmOverBudget });
+
+      setBudgetConfirmImport(null);
+
+      setBudgetExceeded(null);
 
       showToast('success', `Thủ kho đã duyệt kho phiếu ${imp.voucherCode}`);
 
     } catch (err) {
 
+      const exceeded = parseImportBudgetExceeded(err);
+
+      if (exceeded) {
+
+        setBudgetConfirmImport(imp);
+
+        setBudgetExceeded(exceeded);
+
+        return;
+
+      }
+
       showToast('error', getApiErrorMessage(err, 'Không thể duyệt phiếu'));
+
+    }
+
+  };
+
+
+
+  const handleApprove = (imp: Import) => {
+
+    void runApprove(imp, false);
+
+  };
+
+
+
+  const handleExportExcel = async () => {
+
+    setIsExporting(true);
+
+    try {
+
+      await downloadVoucherExport('/api/imports/export', `phieu-nhap-${new Date().toISOString().slice(0, 10)}.xlsx`, {
+
+        dateFrom: dateFrom || undefined,
+
+        dateTo: dateTo || undefined,
+
+        status: activeTab,
+
+        search,
+
+      });
+
+      showToast('success', 'Đã xuất danh sách phiếu nhập');
+
+    } catch (err) {
+
+      showToast('error', getApiErrorMessage(err, 'Không thể xuất Excel'));
+
+    } finally {
+
+      setIsExporting(false);
 
     }
 
@@ -504,7 +641,11 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
           <>
 
-            <button type="button" className="hrm-header-btn"><Download size={14} /> Xuất Excel</button>
+            <button type="button" className="hrm-header-btn" onClick={() => void handleExportExcel()} disabled={isExporting}>
+
+              <Download size={14} /> {isExporting ? 'Đang xuất…' : 'Xuất Excel'}
+
+            </button>
 
             <PermissionGate permission="wms.imports.create">
               <button
@@ -626,9 +767,14 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
         projectCode={projectCode}
 
+        frozenByProjectCode={frozenByProjectCode}
+
         onProjectCodeChange={code => {
           setProjectCode(code);
-          setCreateErrors(e => ({ ...e, projectCode: undefined }));
+          setCreateErrors(e => ({
+            ...e,
+            projectCode: getFrozenProjectError(frozenByProjectCode, code),
+          }));
         }}
 
         defaultSupplier={defaultSupplier}
@@ -653,7 +799,11 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
         onItemsChange={next => {
           setItems(next);
-          setCreateErrors(e => ({ ...e, items: undefined }));
+          setCreateErrors(e => {
+            const cleared = { ...e, items: undefined };
+            delete cleared.lineErrors;
+            return cleared;
+          });
         }}
 
         formGrandTotal={formGrandTotal}
@@ -667,6 +817,26 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
         editVoucher={editing ? { code: editing.voucherCode } : null}
 
         materialUnit={materialUnit}
+
+        isImportParsing={isImportParsing}
+
+        importErrors={importErrors}
+
+        onDownloadTemplate={handleDownloadImportTemplate}
+
+        onImportFile={handleImportFile}
+
+        onMaterialLineChange={handleMaterialLineChange}
+
+        onDuplicateMaterialAttempt={lineIndex => {
+          setCreateErrors(e => ({
+            ...e,
+            lineErrors: {
+              ...e.lineErrors,
+              [lineIndex]: { materialCode: DUPLICATE_MATERIAL_MESSAGE },
+            },
+          }));
+        }}
 
       />
 
@@ -689,6 +859,68 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
         onSubmit={handleSubmit}
 
         onApprove={handleApprove}
+
+      />
+
+
+
+      <ConfirmDialog
+
+        isOpen={budgetConfirmImport != null && budgetExceeded != null}
+
+        onClose={() => {
+
+          setBudgetConfirmImport(null);
+
+          setBudgetExceeded(null);
+
+        }}
+
+        onConfirm={() => {
+
+          if (budgetConfirmImport) void runApprove(budgetConfirmImport, true);
+
+        }}
+
+        title="Vượt ngân sách vật tư"
+
+        variant="default"
+
+        confirmLabel="Vẫn duyệt"
+
+        isLoading={approveMutation.isPending}
+
+        message={budgetExceeded ? (
+
+          <div className="space-y-2 text-sm">
+
+            <p>
+
+              Kho dự án <strong>{budgetExceeded.projectCode}</strong> sẽ vượt hạn mức sau khi duyệt phiếu{' '}
+
+              <strong>{budgetConfirmImport?.voucherCode}</strong>.
+
+            </p>
+
+            <ul className="text-left space-y-1 tabular-nums">
+
+              <li>Hạn mức: {formatCurrencyFull(budgetExceeded.materialBudget)}</li>
+
+              <li>Đã nhập (đã duyệt): {formatCurrencyFull(budgetExceeded.approvedImportValue)}</li>
+
+              <li>Giá trị phiếu này: {formatCurrencyFull(budgetExceeded.importValue)}</li>
+
+              <li className="text-[var(--md-error)] font-semibold">
+
+                Vượt: {formatCurrencyFull(budgetExceeded.overflowAmount)}
+
+              </li>
+
+            </ul>
+
+          </div>
+
+        ) : null}
 
       />
 

@@ -35,7 +35,13 @@ interface LoginResponse {
   user: AuthUserDto;
 }
 
-function mapAuthUser(dto: AuthUserDto, tokenPermissions?: string[]): SystemUser {
+function resolvePermissions(dto: AuthUserDto, token: string | null | undefined): string[] {
+  const apiPermissions = dto.permissions ?? [];
+  if (apiPermissions.length > 0) return [...apiPermissions];
+  return getPermissionsFromToken(token);
+}
+
+function mapAuthUser(dto: AuthUserDto, permissions: string[]): SystemUser {
   return {
     id: dto.id,
     username: dto.username,
@@ -45,11 +51,7 @@ function mapAuthUser(dto: AuthUserDto, tokenPermissions?: string[]): SystemUser 
     roleLabel: dto.roleLabel,
     email: dto.email,
     employeeId: dto.employeeId,
-    permissions: dto.permissions?.length
-      ? [...dto.permissions]
-      : tokenPermissions?.length
-        ? [...tokenPermissions]
-        : [],
+    permissions: [...permissions],
     createdAt: new Date().toISOString().slice(0, 10),
   };
 }
@@ -74,10 +76,20 @@ async function syncSessionUserFromApi(): Promise<void> {
       cacheEmployeeStatus(dto.employeeId, dto.employeeStatus);
     }
 
-    setSessionUser(mapAuthUser(dto, getPermissionsFromToken(getStoredToken())));
+    let token = getStoredToken();
+    const apiPermissions = dto.permissions ?? [];
+    const tokenPermissions = getPermissionsFromToken(token);
+    const permissionsOutOfSync = apiPermissions.some(p => !tokenPermissions.includes(p));
+    if (permissionsOutOfSync) {
+      const refreshed = await refreshAccessToken();
+      if (refreshed) token = getStoredToken();
+    }
+
+    const permissions = resolvePermissions(dto, token);
+    setSessionUser(mapAuthUser(dto, permissions));
   } catch {
     const tokenPermissions = getPermissionsFromToken(getStoredToken());
-    if (tokenPermissions.length > 0) {
+    if (tokenPermissions.length > 0 && existing) {
       setSessionUser({ ...existing, permissions: tokenPermissions });
     }
   }
@@ -104,7 +116,10 @@ export const authService = {
       cacheEmployeeStatus(res.user.employeeId, res.user.employeeStatus);
     }
 
-    const user = mapAuthUser(res.user, getPermissionsFromToken(res.token));
+    const user = mapAuthUser(
+      res.user,
+      resolvePermissions(res.user, res.token),
+    );
     setSessionUser(user);
     return user;
   },

@@ -17,6 +17,7 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
   { match: p => p === '/warehouse/import', permissions: ['wms.imports.view:all'] },
   { match: p => p === '/warehouse/export', permissions: ['wms.exports.view:all'] },
   { match: p => p === '/warehouse/transfer', permissions: ['wms.transfers.view:all'] },
+  { match: p => p === '/warehouse/material-return', permissions: ['wms.export_returns.view:all'] },
   {
     match: p => p === '/warehouse/settings/material-categories',
     permissions: ['wms.categories.view:all'],
@@ -29,6 +30,11 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
     match: p => p === '/warehouse/settings/suppliers',
     permissions: ['wms.suppliers.view:all'],
   },
+  {
+    match: p => p === '/warehouse/settings/price-books',
+    permissions: ['wms.price_books.view:all'],
+  },
+  { match: p => p === '/warehouse/reports', permissions: ['wms.reports.view:all'] },
 
   { match: p => p === '/stocktake/list', permissions: ['wms.stocktakes.view:all'] },
   { match: p => p === '/stocktake/settings', permissions: ['wms.stocktakes.settings.view'] },

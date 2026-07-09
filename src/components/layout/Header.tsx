@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { NAMVIET_GROUP_LOGO_URL } from '../../constants/branding';
 import {
   Search, Grid3X3, Settings, BarChart3, Bell, ChevronDown,
-  User, LogOut, X, Moon, Sun,
+  User, LogOut, X, Moon, Sun, PackagePlus, PackageMinus, ArrowLeftRight, ClipboardCheck,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -13,10 +13,57 @@ import { getSessionUser, clearSessionUser, getSessionPermissions } from '../../c
 import { authService } from '../../services/authService';
 import { UI_COMING_SOON } from '../../lib/uiMessages';
 import { handlePermissionNavClick } from '../../lib/protectedNavigation';
+import { useWmsNotifications } from '../../hooks/useWmsNotifications';
+import type { WmsNotificationItemApiDto } from '../../services/notificationsService';
 import DepartmentCard from './DepartmentCard';
 
 type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin';
-type NotifType = 'warning' | 'import' | 'export' | 'info';
+type NotifType = 'warning' | 'import' | 'export' | 'info' | 'transfer' | 'stocktake';
+
+const NOTIF_READ_KEY = 'nv-wms-notif-read';
+
+function readStoredNotifIds(): Set<string> {
+  try {
+    const raw = sessionStorage.getItem(NOTIF_READ_KEY);
+    if (!raw) return new Set();
+    return new Set(JSON.parse(raw) as string[]);
+  } catch {
+    return new Set();
+  }
+}
+
+function persistNotifRead(id: string) {
+  const ids = readStoredNotifIds();
+  ids.add(id);
+  sessionStorage.setItem(NOTIF_READ_KEY, JSON.stringify([...ids]));
+}
+
+function mapNotifType(kind: string): NotifType {
+  if (kind === 'import' || kind === 'export' || kind === 'transfer' || kind === 'stocktake') return kind;
+  return 'info';
+}
+
+function mapNotifIcon(kind: string): LucideIcon {
+  if (kind === 'import') return PackagePlus;
+  if (kind === 'export') return PackageMinus;
+  if (kind === 'transfer') return ArrowLeftRight;
+  if (kind === 'stocktake') return ClipboardCheck;
+  return Bell;
+}
+
+function mapApiNotification(item: WmsNotificationItemApiDto, readIds: Set<string>): Notification {
+  const type = mapNotifType(item.kind);
+  return {
+    id: item.id,
+    type,
+    title: item.title,
+    message: item.message,
+    time: item.timeLabel,
+    read: readIds.has(item.id),
+    icon: mapNotifIcon(item.kind),
+    route: item.route,
+  };
+}
 
 interface User {
   name: string;
@@ -27,13 +74,14 @@ interface User {
 
 
 interface Notification {
-  id: number;
+  id: string;
   type: NotifType;
   title: string;
   message: string;
   time: string;
   read: boolean;
   icon: LucideIcon;
+  route: string;
 }
 
 /* MD3 tonal containers for notification types — use CSS classes notif-icon--* */
@@ -42,6 +90,8 @@ const notifIconClass: Record<NotifType, string> = {
   import: 'notif-icon--import',
   export: 'notif-icon--export',
   info: 'notif-icon--info',
+  transfer: 'notif-icon--info',
+  stocktake: 'notif-icon--warning',
 };
 
 /* ── Shared Icon Button ── */
@@ -126,6 +176,7 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [searchFocused, setSearchFocused] = useState(false);
   const [dark, setDark] = useDarkMode();
+  const { data: pendingNotifications } = useWmsNotifications();
 
   const userMenuRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
@@ -168,6 +219,15 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
   const unreadCount = notifications.filter(n => !n.read).length;
 
   useEffect(() => {
+    if (!pendingNotifications?.items) {
+      setNotifications([]);
+      return;
+    }
+    const readIds = readStoredNotifIds();
+    setNotifications(pendingNotifications.items.map(item => mapApiNotification(item, readIds)));
+  }, [pendingNotifications]);
+
+  useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) setShowUserMenu(false);
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) setShowNotifications(false);
@@ -177,8 +237,18 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
     return () => document.removeEventListener('mousedown', handleClick);
   }, [closeModuleMenu]);
 
-  const markAllRead = () => setNotifications(p => p.map(n => ({ ...n, read: true })));
-  const markAsRead = (id: number) => setNotifications(p => p.map(n => n.id === id ? { ...n, read: true } : n));
+  const markAllRead = () => {
+    notifications.forEach(n => persistNotifRead(n.id));
+    setNotifications(p => p.map(n => ({ ...n, read: true })));
+  };
+  const markAsRead = (id: string, route?: string) => {
+    persistNotifRead(id);
+    setNotifications(p => p.map(n => (n.id === id ? { ...n, read: true } : n)));
+    if (route) {
+      navigate(route);
+      setShowNotifications(false);
+    }
+  };
 
   const handleSettingsClick = () => {
     showToast('info', UI_COMING_SOON.settings, UI_COMING_SOON.title);
@@ -266,7 +336,7 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
         <button
           type="button"
           className="nv-header-report-btn"
-          onClick={() => navigate('/warehouse/dashboard-warehouse')}
+          onClick={() => navigate('/warehouse/reports')}
         >
           <BarChart3 size={15} aria-hidden />
           Báo cáo kho
@@ -280,7 +350,7 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
             title="Thông báo"
             active={showNotifications}
             onClick={() => { setShowNotifications(p => !p); setShowUserMenu(false); }}
-            badge={unreadCount}
+            badge={pendingNotifications?.totalCount ?? unreadCount}
           >
             <Bell size={20} />
           </IconBtn>
@@ -340,7 +410,7 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
                       <button
                         key={n.id}
                         type="button"
-                        onClick={() => markAsRead(n.id)}
+                        onClick={() => markAsRead(n.id, n.route)}
                         className={`w-full text-left px-4 py-3 flex items-start gap-3 border-b border-[var(--md-outline-variant)] last:border-b-0 transition-colors duration-150 hover:bg-[var(--nv-surface-hover)] ${
                           !n.read ? 'bg-[color-mix(in_srgb,var(--md-primary)_4%,transparent)]' : ''
                         }`}
@@ -375,8 +445,12 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
                   <button
                     type="button"
                     className="w-full text-center text-sm font-medium text-[var(--md-primary)] py-2 rounded-xl hover:bg-[var(--nv-surface-hover)] transition-colors duration-150"
+                    onClick={() => {
+                      setShowNotifications(false);
+                      navigate('/warehouse/reports?section=pending');
+                    }}
                   >
-                    Xem tất cả thông báo
+                    Xem báo cáo chờ duyệt
                   </button>
                 </div>
               )}

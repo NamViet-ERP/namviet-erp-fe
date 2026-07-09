@@ -3,6 +3,7 @@ import { lazy } from 'react';
 export const DashboardPage = lazy(() => import('../pages/DashboardPage'));
 export const DashboardWarehousePage = lazy(() => import('../pages/warehouse/DashboardWarehousePage'));
 export const TransferListPage = lazy(() => import('../pages/warehouse/TransferListPage'));
+export const MaterialReturnPage = lazy(() => import('../pages/warehouse/MaterialReturnPage'));
 export const ImportListPage = lazy(() => import('../pages/warehouse/ImportListPage'));
 export const ExportListPage = lazy(() => import('../pages/warehouse/ExportListPage'));
 export const SettingsPage = lazy(() => import('../pages/warehouse/SettingsPage'));
@@ -27,3 +28,4 @@ export const AdminSettingsPage = lazy(() => import('../pages/admin/AdminSettings
 export const AdminRolePermissionsPage = lazy(() => import('../pages/admin/AdminRolePermissionsPage'));
 export const StocktakeListPage = lazy(() => import('../pages/stocktake/StocktakeListPage'));
 export const StocktakeSettingsPage = lazy(() => import('../pages/stocktake/StocktakeSettingsPage'));
+export const WarehouseReportsPage = lazy(() => import('../pages/warehouse/WarehouseReportsPage'));

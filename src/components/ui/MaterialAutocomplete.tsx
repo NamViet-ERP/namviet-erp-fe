@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom';
 import { ChevronDown } from 'lucide-react';
 import type { MaterialApiDto } from '../../services/materialsService';
 import {
-  COMBOBOX_MAX_SUGGESTIONS,
   collectScrollParents,
   computeAnchoredPanelStyle,
   isInputAnchoredVisible,
@@ -33,6 +32,7 @@ export default function MaterialAutocomplete({
 }: MaterialAutocompleteProps) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState('');
+  const [filterQuery, setFilterQuery] = useState('');
   const [highlight, setHighlight] = useState(0);
   const [panelStyle, setPanelStyle] = useState<React.CSSProperties>({});
   const [placement, setPlacement] = useState<'below' | 'above'>('below');
@@ -49,7 +49,7 @@ export default function MaterialAutocomplete({
   const inputValue = open ? draft : closedLabel;
 
   const filtered = useMemo(() => {
-    const q = normalizeComboboxQuery(inputValue);
+    const q = normalizeComboboxQuery(open ? filterQuery : '');
     const list = q
       ? materials.filter(
           m =>
@@ -57,8 +57,8 @@ export default function MaterialAutocomplete({
             m.materialCode.toLowerCase().includes(q),
         )
       : materials;
-    return list.slice(0, COMBOBOX_MAX_SUGGESTIONS);
-  }, [inputValue, materials]);
+    return list;
+  }, [filterQuery, materials, open]);
 
   const safeHighlight =
     filtered.length === 0 ? 0 : Math.min(highlight, filtered.length - 1);
@@ -82,7 +82,9 @@ export default function MaterialAutocomplete({
 
   const openPanel = () => {
     setDraft(closedLabel);
-    setHighlight(0);
+    setFilterQuery('');
+    const selectedIdx = value ? materials.findIndex(m => m.materialCode === value) : -1;
+    setHighlight(selectedIdx >= 0 ? selectedIdx : 0);
     setOpen(true);
     updatePanelPosition();
   };
@@ -90,6 +92,7 @@ export default function MaterialAutocomplete({
   const selectMaterial = (material: MaterialApiDto) => {
     onChange(material.materialCode);
     setDraft(materialLabel(material));
+    setFilterQuery('');
     setOpen(false);
     inputRef.current?.blur();
   };
@@ -161,7 +164,7 @@ export default function MaterialAutocomplete({
     }
   };
 
-  const showEmpty = open && normalizeComboboxQuery(inputValue).length > 0 && filtered.length === 0;
+  const showEmpty = open && normalizeComboboxQuery(filterQuery).length > 0 && filtered.length === 0;
   const showList = open && filtered.length > 0;
   const chevronOpenClass =
     open && placement === 'below' ? 'search-autocomplete__chevron-icon--open' : '';
@@ -224,12 +227,17 @@ export default function MaterialAutocomplete({
           value={inputValue}
           placeholder={placeholder}
           onChange={e => {
-            setDraft(e.target.value);
+            const next = e.target.value;
+            setDraft(next);
+            setFilterQuery(next);
             setHighlight(0);
-            if (!e.target.value.trim()) onChange('');
+            if (!next.trim()) onChange('');
             setOpen(true);
           }}
-          onFocus={openPanel}
+          onFocus={() => {
+            openPanel();
+            requestAnimationFrame(() => inputRef.current?.select());
+          }}
           onKeyDown={onKeyDown}
         />
         <button

@@ -1,6 +1,6 @@
 import type { StockMatrixRowApiDto } from '../types/wms';
 
-/** Phần lấy từ kho tổng vs mua NCC khi tạo phiếu nhập dự án. */
+/** Phần lấy từ kho trung tâm vs mua NCC khi tạo phiếu nhập dự án. */
 export function splitImportQty(
   qty: number,
   materialCode: string,
@@ -35,7 +35,7 @@ export interface ImportFormLine {
   lineType: ImportLineSource;
 }
 
-/** Tổng SL các dòng lấy kho tổng cùng mã VT (trừ dòng excludeIndex). */
+/** Tổng SL các dòng lấy kho trung tâm cùng mã VT (trừ dòng excludeIndex). */
 export function stockQtyUsedForMaterial(
   items: ImportFormLine[],
   materialCode: string,
@@ -48,7 +48,7 @@ export function stockQtyUsedForMaterial(
   }, 0);
 }
 
-/** SL tối đa trên một dòng lấy kho tổng. */
+/** SL tối đa trên một dòng lấy kho trung tâm. */
 export function maxStockQtyForLine(
   items: ImportFormLine[],
   lineIndex: number,
@@ -61,7 +61,7 @@ export function maxStockQtyForLine(
   return Math.max(0, available - usedByOthers);
 }
 
-/** Tồn KT còn lại sau khi trừ SL các dòng lấy kho tổng (preview UI). */
+/** Tồn KT còn lại sau khi trừ SL các dòng lấy kho trung tâm (preview UI). */
 export function previewGeneralRemaining(
   materialCode: string,
   lineQtys: number[],

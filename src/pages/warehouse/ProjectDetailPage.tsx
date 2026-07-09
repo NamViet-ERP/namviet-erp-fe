@@ -1,11 +1,12 @@
 import { useState, useMemo } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { PackagePlus, PackageMinus, PackageX, Boxes, Package, UserRound, CalendarDays, ArrowRightLeft, Pencil } from 'lucide-react';
+import { PackagePlus, PackageMinus, PackageX, Package, UserRound, ArrowRightLeft, Pencil, CircleDollarSign, Wallet, AlertTriangle } from 'lucide-react';
 import { HrmDetailHeader } from '../../components/hr/HrmPageChrome';
 import HrmPanel from '../../components/hr/HrmPanel';
 import HrmStatCard from '../../components/hr/HrmStatCard';
 import EmptyState from '../../components/ui/EmptyState';
 import Badge from '../../components/ui/Badge';
+import { projectStatusBadge } from '../../lib/wms/projectStatusBadge';
 import TabFilter from '../../components/ui/TabFilter';
 import Pagination from '../../components/ui/Pagination';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
@@ -19,9 +20,17 @@ import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage, getApiFieldErrors } from '../../lib/apiClient';
 import { formatDateCell } from '../../lib/hrm/formatters';
 import { fmtExpectedStock, fmtPlannedNet, fmtStockQtyOrDash } from '../../lib/wms/stockQtyFormat';
+import { GENERAL_WAREHOUSE_LABEL_LOWER } from '../../lib/wms/stockTerminology';
 import { formatCurrencyFull } from '../../utils/formatCurrency';
 import { parseCurrencyInput } from '../../utils/currencyInput';
-import { useProject, useProjectInventory, useCloseProject, useUpdateProject } from '../../hooks/useProjects';
+import { MAX_MATERIAL_BUDGET, MAX_MATERIAL_BUDGET_LABEL } from '../../constants/wmsLimits';
+import {
+  getBudgetRemainingHint,
+  getBudgetRemainingTone,
+  resolveMaterialBudgetRemaining,
+} from '../../lib/wms/projectBudget';
+import { useProject, useProjectInventory, useProjectLedger, useCloseProject, useUpdateProject, useUpdateProjectInventoryMinStock } from '../../hooks/useProjects';
+import PermissionGate from '../../components/auth/PermissionGate';
 import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
 import type { WarehouseProjectApiDto } from '../../types/wms';
 
@@ -48,6 +57,8 @@ function validateEditForm(form: {
   if (!form.projectName.trim()) errs.projectName = 'Vui lòng nhập tên công trình';
   if (parseCurrencyInput(form.materialBudget) <= 0) {
     errs.materialBudget = 'Vui lòng nhập ngân sách vật tư';
+  } else if (parseCurrencyInput(form.materialBudget) > MAX_MATERIAL_BUDGET) {
+    errs.materialBudget = `Ngân sách tối đa ${MAX_MATERIAL_BUDGET_LABEL} đ`;
   }
   return errs;
 }
@@ -78,8 +89,10 @@ export default function ProjectDetailPage() {
   const [stockPageSize, setStockPageSize] = useState(DEFAULT_LIST_PAGE_SIZE);
   const { data: project, isLoading, isError } = useProject(code);
   const { data: inventory = [], isLoading: invLoading } = useProjectInventory(code);
+  const { data: ledger = [] } = useProjectLedger(code);
   const closeMutation = useCloseProject();
   const updateMutation = useUpdateProject();
+  const minStockMutation = useUpdateProjectInventoryMinStock();
 
   const goBack = () => navigate('/warehouse/projects');
 
@@ -88,7 +101,7 @@ export default function ProjectDetailPage() {
     try {
       await closeMutation.mutateAsync(code);
       setShowCloseConfirm(false);
-      showToast('success', 'Đã đóng kho dự án. Tồn còn lại đã chuyển về kho tổng.');
+      showToast('success', `Đã đóng kho dự án. Tồn còn lại đã chuyển về ${GENERAL_WAREHOUSE_LABEL_LOWER}.`);
     } catch (err) {
       showToast('error', getApiErrorMessage(err, 'Không thể đóng kho dự án'));
     }
@@ -106,7 +119,6 @@ export default function ProjectDetailPage() {
     const clientErrors = validateEditForm(editForm);
     if (Object.keys(clientErrors).length > 0) {
       setEditErrors(clientErrors);
-      showToast('error', 'Vui lòng kiểm tra lại các ô được đánh dấu.');
       return;
     }
 
@@ -129,7 +141,6 @@ export default function ProjectDetailPage() {
       const fieldErrors = getApiFieldErrors(err);
       if (Object.keys(fieldErrors).length > 0) {
         setEditErrors(fieldErrors);
-        showToast('error', 'Vui lòng kiểm tra lại các ô được đánh dấu.');
       } else {
         showToast('error', getApiErrorMessage(err, 'Không thể cập nhật kho dự án'));
       }
@@ -140,8 +151,13 @@ export default function ProjectDetailPage() {
     () => inventory.filter(
       r => r.actualInventoryQty !== 0
         || r.plannedImportQty !== 0
-        || r.plannedExportQty !== 0,
+        || r.plannedExportQty !== 0
+        || r.minStockQty > 0,
     ),
+    [inventory],
+  );
+  const belowMinRows = useMemo(
+    () => inventory.filter(r => r.minStockQty > 0 && r.actualInventoryQty < r.minStockQty),
     [inventory],
   );
   const actualStockLines = useMemo(
@@ -149,12 +165,41 @@ export default function ProjectDetailPage() {
     [inventory],
   );
   const totalActualQty = actualStockLines.reduce((s, r) => s + r.actualInventoryQty, 0);
+  const approvedImportValue = useMemo(() => {
+    if (project?.approvedImportValue != null) return project.approvedImportValue;
+    return ledger
+      .filter(e => e.kind === 'import' && e.status === 'approved' && e.totalValue != null)
+      .reduce((sum, e) => sum + (e.totalValue ?? 0), 0);
+  }, [project?.approvedImportValue, ledger]);
+  const materialBudgetRemaining = useMemo(() => {
+    if (!project) return 0;
+    if (project.materialBudgetRemaining != null) return project.materialBudgetRemaining;
+    return resolveMaterialBudgetRemaining(project.materialBudget, approvedImportValue);
+  }, [project, approvedImportValue]);
+  const budgetRemainingTone = project
+    ? getBudgetRemainingTone(project.materialBudget, materialBudgetRemaining)
+    : 'neutral';
+  const budgetRemainingHint = project
+    ? getBudgetRemainingHint(project.materialBudget, materialBudgetRemaining)
+    : undefined;
   const stockTotalPages = Math.max(1, Math.ceil(stockWithQty.length / stockPageSize));
   const stockPage = Math.min(stockPageRaw, stockTotalPages);
   const paginatedStock = stockWithQty.slice(
     (stockPage - 1) * stockPageSize,
     stockPage * stockPageSize,
   );
+
+  const handleMinStockBlur = async (materialCode: string, rawValue: string, current: number) => {
+    if (!code) return;
+    const parsed = Number(rawValue);
+    const next = Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+    if (next === current) return;
+    try {
+      await minStockMutation.mutateAsync({ projectCode: code, materialCode, minStockQty: next });
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không thể cập nhật tồn tối thiểu'));
+    }
+  };
 
   if (isLoading) {
     return (
@@ -261,22 +306,23 @@ export default function ProjectDetailPage() {
           tone="primary"
         />
         <HrmStatCard
-          label="Mặt hàng có tồn"
-          value={stockWithQty.length}
-          icon={Boxes}
+          label="Giá trị đã nhập"
+          value={formatCurrencyFull(approvedImportValue)}
+          hint="Phiếu nhập đã duyệt"
+          icon={CircleDollarSign}
           tone="success"
+        />
+        <HrmStatCard
+          label="Ngân sách còn lại"
+          value={formatCurrencyFull(materialBudgetRemaining)}
+          hint={budgetRemainingHint}
+          icon={Wallet}
+          tone={budgetRemainingTone}
         />
         <HrmStatCard
           label="Người phụ trách"
           value={project.pmName && project.pmName !== '—' ? project.pmName : '—'}
           icon={UserRound}
-          tone="neutral"
-        />
-        <HrmStatCard
-          label="Ngân sách Vật tư"
-          value={formatCurrencyFull(project.materialBudget)}
-          hint={`Bắt đầu ${formatDateCell(project.startDate)}`}
-          icon={CalendarDays}
           tone="neutral"
         />
       </div>
@@ -293,7 +339,7 @@ export default function ProjectDetailPage() {
                 <tbody>
                   {Array.from({ length: 4 }).map((_, i) => (
                     <tr key={i} className="hrm-table-skeleton-row" aria-hidden>
-                      <td colSpan={8}><div className="hrm-table-skeleton" /></td>
+                      <td colSpan={9}><div className="hrm-table-skeleton" /></td>
                     </tr>
                   ))}
                 </tbody>
@@ -303,6 +349,15 @@ export default function ProjectDetailPage() {
             <EmptyState message="Chưa có vật tư tại kho dự án. Tạo phiếu nhập kho để cấp vật tư." icon={Package} />
           ) : (
             <>
+              {belowMinRows.length > 0 && (
+                <div className="mx-4 mt-3 mb-1 rounded-xl border border-[var(--md-warning)]/40 bg-[var(--md-warning-container)]/30 px-3 py-2.5 flex items-start gap-2 text-sm text-[var(--md-on-surface)]">
+                  <AlertTriangle size={16} className="text-[var(--md-warning)] shrink-0 mt-0.5" aria-hidden />
+                  <p>
+                    <strong>{belowMinRows.length}</strong> mặt hàng đang dưới tồn tối thiểu.
+                    Kiểm tra cột <strong>Tồn tối thiểu</strong> và lập phiếu nhập bổ sung.
+                  </p>
+                </div>
+              )}
               <div className="overflow-x-auto table-scroll wms-inventory-table-wrap">
                 <table className="wms-inventory-table project-warehouse-table">
                   <thead>
@@ -311,6 +366,7 @@ export default function ProjectDetailPage() {
                       <th className="table-header-cell">Tên vật tư</th>
                       <th className="table-header-cell text-center">ĐVT</th>
                       <th className="table-header-cell text-right">Tồn thực tế</th>
+                      <th className="table-header-cell text-right" title="Ngưỡng cảnh báo theo dự án">Tồn tối thiểu</th>
                       <th className="table-header-cell text-right">Nhập dự kiến</th>
                       <th className="table-header-cell text-right">Xuất dự kiến</th>
                       <th className="table-header-cell text-right" title="Nhập dự kiến − Xuất dự kiến">Tồn dự kiến</th>
@@ -318,8 +374,10 @@ export default function ProjectDetailPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {paginatedStock.map(row => (
-                      <tr key={row.materialCode} className="table-row wms-inventory-row--interactive">
+                    {paginatedStock.map(row => {
+                      const isBelowMin = row.minStockQty > 0 && row.actualInventoryQty < row.minStockQty;
+                      return (
+                      <tr key={row.materialCode} className={`table-row wms-inventory-row--interactive${isBelowMin ? ' bg-[color-mix(in_srgb,var(--md-warning)_8%,transparent)]' : ''}`}>
                         <td className="table-cell font-mono text-sm text-[var(--md-primary)] whitespace-nowrap">
                           {row.materialCode}
                         </td>
@@ -327,7 +385,25 @@ export default function ProjectDetailPage() {
                           <span className="line-clamp-2" title={row.materialName}>{row.materialName}</span>
                         </td>
                         <td className="table-cell text-center">{row.unit}</td>
-                        <td className="table-cell text-right font-semibold tabular-nums">{row.actualInventoryQty}</td>
+                        <td className={`table-cell text-right font-semibold tabular-nums${isBelowMin ? ' text-[var(--md-warning)]' : ''}`}>
+                          {row.actualInventoryQty}
+                        </td>
+                        <td className="table-cell text-right align-top">
+                          <PermissionGate permission="wms.projects.update" fallback={
+                            <span className="tabular-nums">{row.minStockQty > 0 ? row.minStockQty : '—'}</span>
+                          }>
+                            <input
+                              type="number"
+                              min={0}
+                              step="any"
+                              className="form-input w-24 text-right text-xs ml-auto"
+                              defaultValue={row.minStockQty > 0 ? row.minStockQty : ''}
+                              placeholder="0"
+                              disabled={minStockMutation.isPending}
+                              onBlur={e => handleMinStockBlur(row.materialCode, e.target.value, row.minStockQty)}
+                            />
+                          </PermissionGate>
+                        </td>
                         <td className="table-cell text-right tabular-nums stock-qty--pending">
                           {fmtStockQtyOrDash(row.plannedImportQty)}
                         </td>
@@ -341,7 +417,8 @@ export default function ProjectDetailPage() {
                           {fmtExpectedStock(row.actualInventoryQty, row.plannedImportQty, row.plannedExportQty)}
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -369,11 +446,17 @@ export default function ProjectDetailPage() {
             </div>
             <div>
               <div className="text-xs font-semibold text-[var(--md-on-surface-variant)] mb-1">Trạng thái</div>
-              <Badge status={isClosed ? 'completed' : 'active'} />
+              <Badge status={projectStatusBadge(project.status)} />
             </div>
             <div>
               <div className="text-xs font-semibold text-[var(--md-on-surface-variant)] mb-1">Ngân sách vật tư</div>
               <div className="font-semibold tabular-nums">{formatCurrencyFull(project.materialBudget)}</div>
+            </div>
+            <div>
+              <div className="text-xs font-semibold text-[var(--md-on-surface-variant)] mb-1">Còn lại (đã trừ nhập duyệt)</div>
+              <div className={`font-semibold tabular-nums ${materialBudgetRemaining < 0 ? 'text-[var(--md-error)]' : ''}`}>
+                {formatCurrencyFull(materialBudgetRemaining)}
+              </div>
             </div>
             <div>
               <div className="text-xs font-semibold text-[var(--md-on-surface-variant)] mb-1">Ngày kết thúc</div>
@@ -381,7 +464,7 @@ export default function ProjectDetailPage() {
             </div>
             <div className="md:col-span-2 text-sm text-[var(--md-on-surface-variant)] text-pretty leading-relaxed">
               Kho dự án lưu tồn thực tế tại công trình. Vật tư cấp qua phiếu nhập; tiêu hao qua phiếu xuất;
-              phần dư hoàn về kho tổng qua chuyển kho hoặc khi đóng kho.
+              phần dư hoàn về {GENERAL_WAREHOUSE_LABEL_LOWER} qua chuyển kho hoặc khi đóng kho.
             </div>
           </div>
         )}
@@ -404,7 +487,7 @@ export default function ProjectDetailPage() {
             {actualStockLines.length > 0 ? (
               <p>
                 <strong>{actualStockLines.length}</strong> mặt hàng (tổng{' '}
-                <strong>{totalActualQty}</strong> đơn vị) sẽ được hoàn về <strong>kho tổng</strong>.
+                <strong>{totalActualQty}</strong> đơn vị) sẽ được hoàn về <strong>{GENERAL_WAREHOUSE_LABEL_LOWER}</strong>.
               </p>
             ) : (
               <p>Kho không còn tồn thực tế — chỉ khóa thao tác nhập/xuất.</p>

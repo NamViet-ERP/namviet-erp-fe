@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Plus, Download } from 'lucide-react';
 import type { Transfer } from '../../types';
@@ -10,7 +10,11 @@ import PermissionGate from '../../components/auth/PermissionGate';
 import HrmPanel from '../../components/hr/HrmPanel';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
+import { downloadVoucherExport } from '../../lib/wms/voucherExportDownload';
 import { validateTransferCreate, getTransferFormFieldErrors, type TransferFormFieldErrors } from '../../lib/wms/transferFormSchema';
+import { DUPLICATE_MATERIAL_MESSAGE } from '../../lib/wms/voucherDuplicateMaterial';
+import { getFrozenProjectError } from '../../lib/wms/stocktakeFreeze';
+import { useFrozenProjects } from '../../hooks/useFrozenProjects';
 import {
   useTransfers,
   useCreateTransfer,
@@ -19,6 +23,7 @@ import {
   useSubmitTransfer,
 } from '../../hooks/useTransfers';
 import { getVoucherTabLabels } from '../../lib/wms/voucherStatusLabels';
+import { GENERAL_WAREHOUSE_LABEL_LOWER } from '../../lib/wms/stockTerminology';
 import { transferToFormLines } from '../../lib/wms/voucherFormPopulate';
 import { useMaterials } from '../../hooks/useMaterials';
 import { useProjects, useProjectInventory } from '../../hooks/useProjects';
@@ -50,6 +55,7 @@ function TransferListPageApi({ initialProjectCode }: TransferListPageApiProps) {
   const [search, setSearch] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [isExporting, setIsExporting] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_LIST_PAGE_SIZE);
   const [showCreate, setShowCreate] = useState(!!initialProjectCode);
@@ -75,6 +81,21 @@ function TransferListPageApi({ initialProjectCode }: TransferListPageApiProps) {
   const updateMutation = useUpdateTransfer();
   const approveMutation = useApproveTransfer();
   const submitMutation = useSubmitTransfer();
+  const frozenByProjectCode = useFrozenProjects();
+
+  useEffect(() => {
+    if (!showCreate) return;
+    const sourceErr = getFrozenProjectError(frozenByProjectCode, projectCode);
+    const destErr = transferMode === 'cross-project'
+      ? getFrozenProjectError(frozenByProjectCode, toProjectCode)
+      : undefined;
+    if (!sourceErr && !destErr) return;
+    setCreateErrors(prev => ({
+      ...prev,
+      ...(sourceErr ? { projectCode: sourceErr } : {}),
+      ...(destErr ? { toProjectCode: destErr } : {}),
+    }));
+  }, [showCreate, frozenByProjectCode, projectCode, toProjectCode, transferMode]);
 
   const materials = useMemo(() => materialsPage?.items ?? [], [materialsPage?.items]);
   const projects = useMemo(() => projectsPage?.items ?? [], [projectsPage?.items]);
@@ -150,10 +171,10 @@ function TransferListPageApi({ initialProjectCode }: TransferListPageApiProps) {
       transferMode,
       items,
       overflow,
+      frozenByProjectCode,
     );
     if (Object.keys(fieldErrors).length > 0) {
       setCreateErrors(fieldErrors);
-      showToast('error', 'Vui lòng kiểm tra lại các ô được đánh dấu.');
       return null;
     }
     setCreateErrors({});
@@ -184,7 +205,7 @@ function TransferListPageApi({ initialProjectCode }: TransferListPageApiProps) {
       toWarehouseId: '',
       items: mappedItems,
       status,
-      createdBy: 'USER',
+      createdBy: '',
       note,
       project: projectCode.trim(),
       toProject: transferMode === 'cross-project' ? toProjectCode.trim() : undefined,
@@ -258,14 +279,33 @@ function TransferListPageApi({ initialProjectCode }: TransferListPageApiProps) {
     setShowDetail(true);
   };
 
+  const handleExportExcel = async () => {
+    setIsExporting(true);
+    try {
+      await downloadVoucherExport('/api/transfers/export', `phieu-chuyen-${new Date().toISOString().slice(0, 10)}.xlsx`, {
+        dateFrom: dateFrom || undefined,
+        dateTo: dateTo || undefined,
+        status: activeTab,
+        search,
+      });
+      showToast('success', 'Đã xuất danh sách phiếu chuyển');
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không thể xuất Excel'));
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="hrm-page">
       <PageHeader
         title="Chuyển kho"
-        subtitle="Hoàn trả về kho tổng hoặc chuyển vật tư giữa các kho dự án — sau khi thủ kho duyệt."
+        subtitle={`Hoàn trả về ${GENERAL_WAREHOUSE_LABEL_LOWER} hoặc chuyển vật tư giữa các kho dự án — sau khi thủ kho duyệt.`}
         actions={
           <>
-            <button type="button" className="hrm-header-btn"><Download size={14} /> Xuất Excel</button>
+            <button type="button" className="hrm-header-btn" onClick={() => void handleExportExcel()} disabled={isExporting}>
+              <Download size={14} /> {isExporting ? 'Đang xuất…' : 'Xuất Excel'}
+            </button>
             <PermissionGate permission="wms.transfers.create">
               <button
                 type="button"
@@ -329,24 +369,44 @@ function TransferListPageApi({ initialProjectCode }: TransferListPageApiProps) {
         targetProjects={targetProjects}
         stockMaterials={stockMaterials}
         projectInventory={projectInventory}
+        frozenByProjectCode={frozenByProjectCode}
         transferMode={transferMode}
         onTransferModeChange={setTransferMode}
         projectCode={projectCode}
         onProjectCodeChange={code => {
           setProjectCode(code);
-          setCreateErrors(e => ({ ...e, projectCode: undefined }));
+          setCreateErrors(e => ({
+            ...e,
+            projectCode: getFrozenProjectError(frozenByProjectCode, code),
+          }));
         }}
         toProjectCode={toProjectCode}
         onToProjectCodeChange={code => {
           setToProjectCode(code);
-          setCreateErrors(e => ({ ...e, toProjectCode: undefined }));
+          setCreateErrors(e => ({
+            ...e,
+            toProjectCode: getFrozenProjectError(frozenByProjectCode, code),
+          }));
         }}
         note={note}
         onNoteChange={setNote}
         items={items}
         onItemsChange={next => {
           setItems(next);
-          setCreateErrors(e => ({ ...e, items: undefined }));
+          setCreateErrors(e => {
+            const cleared = { ...e, items: undefined };
+            delete cleared.lineErrors;
+            return cleared;
+          });
+        }}
+        onDuplicateMaterialAttempt={lineIndex => {
+          setCreateErrors(e => ({
+            ...e,
+            lineErrors: {
+              ...e.lineErrors,
+              [lineIndex]: { materialCode: DUPLICATE_MATERIAL_MESSAGE },
+            },
+          }));
         }}
         errors={createErrors}
         onCreate={handleCreate}
