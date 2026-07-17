@@ -2,6 +2,7 @@ import type { ModalSize } from '../../types';
 import { X } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 interface ModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ const sizeClass: Record<ModalSize, string> = {
 };
 
 export default function Modal({ isOpen, onClose, title, children, size = 'md', footer }: ModalProps) {
+  useBodyScrollLock(isOpen);
   if (!isOpen) return null;
 
   return createPortal(

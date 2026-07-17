@@ -61,7 +61,9 @@
 
   /* Route transition — applied in AppLayout on pathname change */
   .page-route-enter {
-    animation: pageRouteEnter 280ms var(--md-easing) forwards;
+    opacity: 1;
+    transform: translateY(0);
+    animation: pageRouteEnter 280ms var(--md-easing);
     transform-origin: top center;
     will-change: opacity, transform;
   }

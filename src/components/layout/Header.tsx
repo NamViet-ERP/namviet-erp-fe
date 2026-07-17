@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { NAMVIET_GROUP_LOGO_URL } from '../../constants/branding';
 import {
@@ -14,10 +14,11 @@ import { authService } from '../../services/authService';
 import { UI_COMING_SOON } from '../../lib/uiMessages';
 import { handlePermissionNavClick } from '../../lib/protectedNavigation';
 import { useWmsNotifications } from '../../hooks/useWmsNotifications';
+import { useDarkMode } from '../../hooks/useDarkMode';
 import type { WmsNotificationItemApiDto } from '../../services/notificationsService';
 import DepartmentCard from './DepartmentCard';
 
-type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin';
+type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin' | 'technical' | 'purchasing' | 'suppliers';
 type NotifType = 'warning' | 'import' | 'export' | 'info' | 'transfer' | 'stocktake';
 
 const NOTIF_READ_KEY = 'nv-wms-notif-read';
@@ -141,23 +142,6 @@ function MenuBtn({ icon: Icon, label, onClick, danger }: MenuBtnProps) {
   );
 }
 
-/* ── Dark Mode hook (stored in localStorage) ── */
-function useDarkMode(): [boolean, React.Dispatch<React.SetStateAction<boolean>>] {
-  const [dark, setDark] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false;
-    const stored = localStorage.getItem('nv-dark');
-    if (stored !== null) return stored === 'true';
-    return false;
-  });
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', dark);
-    localStorage.setItem('nv-dark', String(dark));
-  }, [dark]);
-
-  return [dark, setDark];
-}
-
 interface HeaderProps {
   currentModule: Module;
   onModuleSwitch: (module: Module) => void;
@@ -173,9 +157,9 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
   const [moduleMenuClosing, setModuleMenuClosing] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [readNotificationIds, setReadNotificationIds] = useState(readStoredNotifIds);
   const [searchFocused, setSearchFocused] = useState(false);
-  const [dark, setDark] = useDarkMode();
+  const { dark, toggleDark } = useDarkMode();
   const { data: pendingNotifications } = useWmsNotifications();
 
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -216,16 +200,11 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
   }, [navigate, closeModuleMenu, sessionPermissions]);
 
   const moduleMenuOpen = showModuleMenu || moduleMenuClosing;
+  const notifications = useMemo(
+    () => pendingNotifications?.items.map(item => mapApiNotification(item, readNotificationIds)) ?? [],
+    [pendingNotifications, readNotificationIds],
+  );
   const unreadCount = notifications.filter(n => !n.read).length;
-
-  useEffect(() => {
-    if (!pendingNotifications?.items) {
-      setNotifications([]);
-      return;
-    }
-    const readIds = readStoredNotifIds();
-    setNotifications(pendingNotifications.items.map(item => mapApiNotification(item, readIds)));
-  }, [pendingNotifications]);
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -239,11 +218,11 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
 
   const markAllRead = () => {
     notifications.forEach(n => persistNotifRead(n.id));
-    setNotifications(p => p.map(n => ({ ...n, read: true })));
+    setReadNotificationIds(new Set(notifications.map(n => n.id)));
   };
   const markAsRead = (id: string, route?: string) => {
     persistNotifRead(id);
-    setNotifications(p => p.map(n => (n.id === id ? { ...n, read: true } : n)));
+    setReadNotificationIds(previous => new Set(previous).add(id));
     if (route) {
       navigate(route);
       setShowNotifications(false);
@@ -257,106 +236,98 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
 
   return (
     <header className="nv-header">
-      {/* ── Left: Logo ── */}
-      <div
-        className="flex items-center gap-2.5 shrink-0 cursor-pointer"
-        onClick={() => navigate('/warehouse/dashboard')}
-        role="button"
-        tabIndex={0}
-        onKeyDown={e => { if (e.key === 'Enter') navigate('/warehouse/dashboard'); }}
-        aria-label="Về trang chủ"
-      >
-        <img
-          src={NAMVIET_GROUP_LOGO_URL}
-          alt="Nam Viet Group"
-          className="header-brand-logo h-14 w-auto object-contain"
-        />
-      </div>
-
-      {/* ── Center: Search ── */}
-      <div className={`nv-header-search hidden sm:block${searchFocused ? ' nv-header-search--focused' : ''}`}>
-        <Search className="nv-header-search__icon" size={16} aria-hidden />
-        <input
-          type="search"
-          placeholder="Tìm kiếm chứng từ, sản phẩm..."
-          className="nv-header-search__input"
-          aria-label="Tìm kiếm chứng từ, sản phẩm"
-          onFocus={() => setSearchFocused(true)}
-          onBlur={() => setSearchFocused(false)}
-        />
-      </div>
-
-      {/* ── Right: Actions ── */}
-      <div className="flex items-center gap-1.5 shrink-0">
-
-        {/* Module switcher */}
-        <div className="nv-header-anchor" ref={moduleMenuRef}>
-          <IconBtn title="Chuyển module" active={moduleMenuOpen} onClick={toggleModuleMenu}>
-            <Grid3X3 size={20} />
-          </IconBtn>
-          {moduleMenuOpen && (
-            <>
-              <div
-                className={moduleMenuClosing ? 'mega-menu-scrim mega-menu-scrim--out' : 'mega-menu-scrim'}
-                onClick={closeModuleMenu}
-                aria-hidden
-              />
-              <div
-                className={`mega-menu-panel ${moduleMenuClosing ? 'animate-scale-out' : 'animate-scale-in'}`}
-              >
-                <div className="mega-menu-panel__header">
-                  <h2 className="mega-menu-panel__title">Truy cập phân hệ</h2>
-                  <p className="mega-menu-panel__subtitle">Chọn module để điều hướng nhanh trong hệ thống</p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {visibleDepartments.map((dept) => (
-                    <DepartmentCard
-                      key={dept.title}
-                      dept={dept}
-                      permissions={sessionPermissions}
-                      onItemClick={(item) => handleModuleItemClick(item, dept.title)}
-                    />
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Dark mode toggle */}
-        <IconBtn title={dark ? 'Chế độ sáng' : 'Chế độ tối'} onClick={() => setDark(d => !d)}>
-          {dark ? <Sun size={20} /> : <Moon size={20} />}
-        </IconBtn>
-
-        {/* Divider */}
-        <div className="hidden lg:block w-px h-6 bg-[var(--nv-header-border)] mx-1" aria-hidden />
-
-        {/* Báo cáo */}
+      <div className="nv-header__inner">
         <button
           type="button"
-          className="nv-header-report-btn"
-          onClick={() => navigate('/warehouse/reports')}
+          className="nv-header__brand"
+          onClick={() => navigate('/warehouse/dashboard')}
+          aria-label="Về trang chủ"
         >
-          <BarChart3 size={15} aria-hidden />
-          Báo cáo kho
+          <img
+            src={NAMVIET_GROUP_LOGO_URL}
+            alt="Nam Viet Group"
+            className="nv-header__logo"
+          />
         </button>
 
-        <div className="hidden lg:block w-px h-6 bg-[var(--nv-header-border)] mx-1" aria-hidden />
+        <div className={`nv-header-search nv-header-search--bar${searchFocused ? ' nv-header-search--focused' : ''}`}>
+          <Search className="nv-header-search__icon" size={16} aria-hidden />
+          <input
+            type="search"
+            placeholder="Tìm kiếm chứng từ, sản phẩm..."
+            className="nv-header-search__input"
+            aria-label="Tìm kiếm chứng từ, sản phẩm"
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() => setSearchFocused(false)}
+          />
+        </div>
 
-        {/* Notifications */}
-        <div className="nv-header-anchor" ref={notifRef}>
-          <IconBtn
-            title="Thông báo"
-            active={showNotifications}
-            onClick={() => { setShowNotifications(p => !p); setShowUserMenu(false); }}
-            badge={pendingNotifications?.totalCount ?? unreadCount}
+        <div className="nv-header__actions">
+          <div className="nv-header__cluster">
+            <div className="nv-header-anchor" ref={moduleMenuRef}>
+              <IconBtn title="Chuyển module" active={moduleMenuOpen} onClick={toggleModuleMenu}>
+                <Grid3X3 size={18} />
+              </IconBtn>
+              {moduleMenuOpen && (
+                <>
+                  <div
+                    className={moduleMenuClosing ? 'mega-menu-scrim mega-menu-scrim--out' : 'mega-menu-scrim'}
+                    onClick={closeModuleMenu}
+                    aria-hidden
+                  />
+                  <div
+                    className={`mega-menu-panel ${moduleMenuClosing ? 'animate-scale-out' : 'animate-scale-in'}`}
+                  >
+                    <div className="mega-menu-panel__header">
+                      <h2 className="mega-menu-panel__title">Truy cập phân hệ</h2>
+                      <p className="mega-menu-panel__subtitle">Chọn module để điều hướng nhanh trong hệ thống</p>
+                    </div>
+
+                    <div className="portal-modules">
+                      {visibleDepartments.map((dept) => (
+                        <DepartmentCard
+                          key={dept.title}
+                          dept={dept}
+                          permissions={sessionPermissions}
+                          onItemClick={(item) => handleModuleItemClick(item, dept.title)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <IconBtn title={dark ? 'Chế độ sáng' : 'Chế độ tối'} onClick={toggleDark}>
+              {dark ? <Sun size={18} /> : <Moon size={18} />}
+            </IconBtn>
+          </div>
+
+          <div className="nv-header__divider" aria-hidden />
+
+          <button
+            type="button"
+            className="nv-header-report-btn"
+            onClick={() => navigate('/warehouse/reports')}
           >
-            <Bell size={20} />
-          </IconBtn>
+            <BarChart3 size={15} aria-hidden />
+            Báo cáo kho
+          </button>
 
-          {showNotifications && (
-            <div className="nv-notif-panel animate-scale-in">
+          <div className="nv-header__divider nv-header__divider--wide" aria-hidden />
+
+          <div className="nv-header-anchor" ref={notifRef}>
+              <IconBtn
+                title="Thông báo"
+                active={showNotifications}
+                onClick={() => { setShowNotifications(p => !p); setShowUserMenu(false); }}
+                badge={pendingNotifications?.totalCount ?? unreadCount}
+              >
+                <Bell size={18} />
+              </IconBtn>
+
+              {showNotifications && (
+                <div className="nv-notif-panel animate-scale-in">
               {/* Header */}
               <div className="flex items-center justify-between px-4 pt-4 pb-3">
                 <div className="flex items-center gap-2">
@@ -456,52 +427,52 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
               )}
             </div>
           )}
-        </div>
+          </div>
 
-        {/* User avatar */}
-        <div className="relative" ref={userMenuRef}>
-          <button
-            type="button"
-            onClick={() => { setShowUserMenu(p => !p); setShowNotifications(false); }}
-            className={`nv-header-user-trigger${showUserMenu ? ' nv-header-user-trigger--open' : ''}`}
-            aria-expanded={showUserMenu}
-            aria-haspopup="menu"
-            aria-label="Menu tài khoản"
-          >
-            <div className="nv-header-user-trigger__avatar">{currentUser.initials}</div>
-            <span className="nv-header-user-trigger__name hidden xl:block">
-              {currentUser.name}
-            </span>
-            <ChevronDown size={14} className="nv-header-user-trigger__chevron hidden sm:block" />
-          </button>
+          <div className="nv-header-anchor nv-header-user-wrap" ref={userMenuRef}>
+              <button
+                type="button"
+                onClick={() => { setShowUserMenu(p => !p); setShowNotifications(false); }}
+                className={`nv-header-user-trigger${showUserMenu ? ' nv-header-user-trigger--open' : ''}`}
+                aria-expanded={showUserMenu}
+                aria-haspopup="menu"
+                aria-label="Menu tài khoản"
+              >
+                <div className="nv-header-user-trigger__avatar">{currentUser.initials}</div>
+                <span className="nv-header-user-trigger__name">
+                  {currentUser.name}
+                </span>
+                <ChevronDown size={14} className="nv-header-user-trigger__chevron" />
+              </button>
 
-          {showUserMenu && (
-            <div className="user-menu-panel animate-scale-in" role="menu">
-              <div className="user-menu-panel__profile">
-                <div className="user-menu-panel__avatar">{currentUser.initials}</div>
-                <div className="min-w-0">
-                  <p className="user-menu-panel__name">{currentUser.name}</p>
-                  <p className="user-menu-panel__email">{currentUser.email}</p>
-                  {'roleLabel' in currentUser && currentUser.roleLabel && (
-                    <span className="user-menu-panel__role-badge">{currentUser.roleLabel}</span>
-                  )}
+              {showUserMenu && (
+                <div className="user-menu-panel animate-scale-in" role="menu">
+                  <div className="user-menu-panel__profile">
+                    <div className="user-menu-panel__avatar">{currentUser.initials}</div>
+                    <div className="min-w-0">
+                      <p className="user-menu-panel__name">{currentUser.name}</p>
+                      <p className="user-menu-panel__email">{currentUser.email}</p>
+                      {'roleLabel' in currentUser && currentUser.roleLabel && (
+                        <span className="user-menu-panel__role-badge">{currentUser.roleLabel}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="user-menu-panel__section">
+                    <MenuBtn icon={User} label="Thông tin tài khoản" onClick={() => { navigate('/profile'); setShowUserMenu(false); }} />
+                    <MenuBtn icon={Settings} label="Cài đặt" onClick={handleSettingsClick} />
+                  </div>
+                  <div className="user-menu-panel__section user-menu-panel__section--bordered">
+                    <MenuBtn icon={LogOut} label="Đăng xuất" danger onClick={() => {
+                      authService.logout();
+                      clearSessionUser();
+                      setShowUserMenu(false);
+                      navigate('/login');
+                    }} />
+                  </div>
                 </div>
-              </div>
-
-              <div className="user-menu-panel__section">
-                <MenuBtn icon={User} label="Thông tin tài khoản" onClick={() => { navigate('/profile'); setShowUserMenu(false); }} />
-                <MenuBtn icon={Settings} label="Cài đặt" onClick={handleSettingsClick} />
-              </div>
-              <div className="user-menu-panel__section user-menu-panel__section--bordered">
-                <MenuBtn icon={LogOut} label="Đăng xuất" danger onClick={() => {
-                  authService.logout();
-                  clearSessionUser();
-                  setShowUserMenu(false);
-                  navigate('/login');
-                }} />
-              </div>
+              )}
             </div>
-          )}
         </div>
       </div>
     </header>

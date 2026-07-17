@@ -57,6 +57,7 @@
   --md-on-surface-variant:       #362e2e;
   --md-surface-container:        #ffffff;
   --md-surface-container-low:    #ffffff;
+  --md-surface-container-lowest:   #ffffff;
   --md-surface-container-high:   #f4f4f4;
   --md-inverse-surface:          #323a45;
   --md-inverse-on-surface:       #f4f4f4;
@@ -147,6 +148,7 @@
   --z-dropdown: 40;
   --z-sidebar-flyout: 50;
   --z-modal: 1000;
+  --z-popover: 1050;
   --z-toast: 1100;
 
   /* Legacy shims — prevents broken styles during migration */
@@ -229,6 +231,7 @@
   --md-on-surface-variant:       #A3B4C8;
   --md-surface-container:        #182233;
   --md-surface-container-low:    #121A28;
+  --md-surface-container-lowest: #101722;
   --md-surface-container-high:   #212E42;
   --md-inverse-surface:          #DCE8F4;
   --md-inverse-on-surface:       #162030;

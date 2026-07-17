@@ -1,7 +1,9 @@
 import { X, User } from 'lucide-react';
+import { createPortal } from 'react-dom';
 import Badge from './Badge';
 import type { ColumnDef, DetailModalData } from '../../types';
 import type { ReactNode } from 'react';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 interface DetailModalProps {
   isOpen: boolean;
@@ -29,17 +31,18 @@ export default function DetailModal({
   badgeField = 'status',
   children,
 }: DetailModalProps) {
+  useBodyScrollLock(isOpen && !!data);
   if (!isOpen || !data) return null;
 
   const cols = columns ?? defaultColumns;
 
-  return (
-    <div className="md-dialog-overlay">
+  return createPortal(
+    <div className="md-dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="md-detail-title">
       <div className="md-dialog-scrim" onClick={onClose} aria-hidden />
       <div className="md-dialog md-dialog--detail animate-scale-in">
         <div className="md-dialog__header md-dialog__header--compact">
           <div className="md-dialog__title-row">
-            <h3 className="md-dialog__title">{title}</h3>
+            <h3 id="md-detail-title" className="md-dialog__title">{title}</h3>
             {data[badgeField] != null && <Badge status={String(data[badgeField])} />}
           </div>
           <button type="button" className="md-dialog__close" onClick={onClose} aria-label="Đóng">
@@ -124,6 +127,7 @@ export default function DetailModal({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

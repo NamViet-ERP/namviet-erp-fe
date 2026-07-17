@@ -5,6 +5,7 @@ interface QtyStepperProps {
   max?: number;
   onRequestAboveMax?: () => void;
   className?: string;
+  ariaLabel?: string;
 }
 
 export default function QtyStepper({
@@ -14,6 +15,7 @@ export default function QtyStepper({
   max,
   onRequestAboveMax,
   className = '',
+  ariaLabel = 'Số lượng',
 }: QtyStepperProps) {
   const n = Number(value) || 0;
 
@@ -52,6 +54,7 @@ export default function QtyStepper({
         type="number"
         min={min}
         max={max}
+        aria-label={ariaLabel}
         inputMode="numeric"
         className="qty-stepper__input"
         value={value}

@@ -12,18 +12,21 @@ interface Props {
 export default function CurrencyInput({
   value,
   onChange,
-  className = 'form-input text-xs text-right input-no-spinner',
-  placeholder = '0',
+  className,
+  placeholder = '',
   min = 0,
   suffix,
 }: Props) {
   const display = value === '' ? '' : formatCurrencyInput(parseCurrencyInput(value));
+  const inputClassName = suffix
+    ? ['currency-input-group__input', 'tabular-nums', 'text-right', className].filter(Boolean).join(' ')
+    : (className ?? 'form-input text-xs text-right input-no-spinner');
 
   const input = (
     <input
       type="text"
       inputMode="numeric"
-      className={suffix ? `currency-input-group__input ${className}`.trim() : className}
+      className={inputClassName}
       placeholder={placeholder}
       value={display}
       onChange={e => {

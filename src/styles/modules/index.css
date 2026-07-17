@@ -1,0 +1,4 @@
+/* Module import order follows the former order in components.css. */
+@import './dashboard-portal.css';
+@import './recruitment-hr.css';
+@import './purchasing-suppliers.css';

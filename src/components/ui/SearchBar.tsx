@@ -5,6 +5,7 @@ interface SearchBarProps {
   onChange: (value: string) => void;
   onRefresh?: () => void;
   placeholder?: string;
+  ariaLabel?: string;
   /** Ẩn placeholder trên UI — vẫn giữ aria-label cho accessibility */
   hidePlaceholder?: boolean;
 }
@@ -14,6 +15,7 @@ export default function SearchBar({
   onChange,
   onRefresh,
   placeholder = 'Tìm kiếm...',
+  ariaLabel = placeholder,
   hidePlaceholder = false,
 }: SearchBarProps) {
   return (
@@ -30,7 +32,7 @@ export default function SearchBar({
           value={value}
           onChange={e => onChange(e.target.value)}
           placeholder={hidePlaceholder ? '' : placeholder}
-          aria-label={placeholder}
+          aria-label={ariaLabel}
           className="search-bar__input form-input-compact"
         />
       </div>

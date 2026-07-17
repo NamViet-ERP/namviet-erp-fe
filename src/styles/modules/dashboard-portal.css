@@ -1,0 +1,736 @@
+/* Dashboard and portal-owned component styles. Keep selector order unchanged. */
+@layer components {
+  /* ── Portal home dashboard ── */
+  .portal-greeting {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    position: relative;
+    z-index: 1;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid color-mix(in srgb, var(--md-outline-variant02) 85%, transparent);
+    background:
+      linear-gradient(135deg, color-mix(in srgb, var(--md-primary) 5%, transparent) 0%, transparent 55%),
+      var(--md-surface-container);
+    box-shadow: var(--md-shadow-1);
+  }
+  .dark .portal-greeting {
+    background:
+      linear-gradient(135deg, color-mix(in srgb, var(--md-primary) 10%, transparent) 0%, transparent 55%),
+      var(--md-surface-container);
+    border-color: var(--md-outline-variant02);
+  }
+  .portal-greeting__title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--md-on-surface);
+    text-wrap: balance;
+    line-height: 1.25;
+  }
+  .portal-greeting__sub {
+    margin-top: 4px;
+    font-size: 0.875rem;
+    color: var(--md-on-surface-variant);
+    text-wrap: pretty;
+  }
+  .portal-greeting__meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: var(--md-on-surface-variant);
+    flex-shrink: 0;
+  }
+  .portal-greeting__meta-icon {
+    color: var(--md-secondary);
+  }
+
+  .portal-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    position: relative;
+    z-index: 1;
+  }
+  @media (min-width: 1280px) {
+    .portal-layout {
+      grid-template-columns: minmax(0, 1fr) 280px;
+    }
+  }
+  .portal-modules {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(232px, 1fr));
+    gap: 14px;
+    align-items: start;
+  }
+  .portal-modules > * {
+    margin-bottom: 0;
+    min-width: 0;
+  }
+  @media (min-width: 1280px) {
+    .portal-modules {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1536px) {
+    .portal-modules {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .portal-dept-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid color-mix(in srgb, var(--md-outline-variant02) 88%, transparent);
+    background: var(--md-surface-container);
+    box-shadow: var(--md-shadow-1);
+    transition: border-color 160ms ease-out, box-shadow 160ms ease-out;
+  }
+  .portal-dept-card:hover {
+    border-color: color-mix(in srgb, var(--md-secondary) 28%, var(--md-outline-variant02));
+    box-shadow: var(--md-shadow-2);
+  }
+  .portal-dept-card__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--md-outline-variant02);
+  }
+  .portal-dept-card__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--md-secondary) 14%, var(--md-surface-container));
+    color: var(--md-secondary);
+  }
+  .portal-dept-card__title {
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--md-primary);
+    line-height: 1.25;
+    text-wrap: balance;
+  }
+  .portal-dept-card__items {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .portal-dept-card__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    padding: 9px 10px;
+    border-radius: 8px;
+    border: 1px solid color-mix(in srgb, var(--md-outline-variant02) 80%, transparent);
+    background: var(--md-surface-container-high);
+    color: var(--md-on-surface);
+    text-align: left;
+    transition:
+      background-color 140ms ease-out,
+      border-color 140ms ease-out,
+      transform 120ms ease-out;
+  }
+  .portal-dept-card__item:not(.mega-menu-item--locked):hover {
+    background: color-mix(in srgb, var(--md-secondary) 8%, var(--md-surface-container-high));
+    border-color: color-mix(in srgb, var(--md-secondary) 35%, var(--md-outline-variant02));
+    transform: translateX(2px);
+  }
+  .portal-dept-card__item:not(.mega-menu-item--locked):active {
+    transform: scale(0.99);
+  }
+  .portal-dept-card__item-main {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  .portal-dept-card__item-icon {
+    flex-shrink: 0;
+    color: var(--md-on-surface-variant);
+  }
+  .portal-dept-card__item:not(.mega-menu-item--locked):hover .portal-dept-card__item-icon {
+    color: var(--md-secondary);
+  }
+  .portal-dept-card__item-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--md-on-surface);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .portal-dept-card__item-chevron {
+    flex-shrink: 0;
+    color: var(--md-on-surface-variant);
+    transition: color 140ms ease-out, transform 140ms ease-out;
+  }
+  .portal-dept-card__item-lock {
+    flex-shrink: 0;
+    color: var(--md-on-surface-variant);
+    opacity: 0.75;
+  }
+  .portal-dept-card__item:not(.mega-menu-item--locked):hover .portal-dept-card__item-chevron {
+    color: var(--md-secondary);
+    transform: translateX(2px);
+  }
+  .dark .portal-dept-card {
+    background: var(--md-surface-container);
+    border-color: var(--md-outline-variant02);
+  }
+  .dark .portal-dept-card__item {
+    background: var(--md-surface-container-high);
+    border-color: var(--md-outline-variant02);
+  }
+  .portal-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  @media (min-width: 1280px) {
+    .portal-sidebar {
+      position: sticky;
+      top: calc(var(--nv-app-chrome-top, 60px) + 16px);
+      align-self: start;
+    }
+  }
+
+  .portal-pending-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 12px;
+    text-align: left;
+    border: 1px solid var(--md-outline-variant02);
+    background: var(--md-surface-container);
+    color: var(--md-on-surface);
+    box-shadow: var(--md-shadow-1);
+    transition: transform 150ms var(--md-easing), background-color 150ms var(--md-easing), border-color 150ms var(--md-easing);
+  }
+  .portal-pending-card:hover {
+    border-color: color-mix(in srgb, var(--md-secondary) 30%, var(--md-outline-variant02));
+    box-shadow: var(--md-shadow-2);
+  }
+  .portal-pending-card:active { transform: scale(0.99); }
+  .portal-pending-card:focus-visible {
+    outline: 2px solid var(--md-secondary);
+    outline-offset: 2px;
+  }
+  .portal-pending-card--active {
+    border-color: transparent;
+    background: var(--md-secondary);
+    color: var(--md-on-secondary);
+    box-shadow: var(--md-shadow-2);
+  }
+  .portal-pending-card__body {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+  .portal-pending-card__icon-wrap {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: var(--md-secondary-container);
+    color: var(--md-secondary);
+  }
+  .portal-pending-card--active .portal-pending-card__icon-wrap {
+    background: color-mix(in srgb, var(--md-on-secondary) 15%, transparent);
+    color: var(--md-on-secondary);
+  }
+  .portal-pending-card__count {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+    color: var(--md-primary);
+  }
+  .portal-pending-card--active .portal-pending-card__count {
+    color: var(--md-on-secondary);
+  }
+  .portal-pending-card__label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--md-on-surface-variant);
+  }
+  .portal-pending-card--active .portal-pending-card__label {
+    color: color-mix(in srgb, var(--md-on-secondary) 90%, transparent);
+  }
+  .portal-pending-card__chevron {
+    flex-shrink: 0;
+    color: var(--md-on-surface-variant);
+  }
+  .portal-pending-card--active .portal-pending-card__chevron {
+    color: color-mix(in srgb, var(--md-on-secondary) 80%, transparent);
+  }
+
+  .portal-birthday-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: var(--md-surface-container);
+    border: 1px solid var(--md-outline-variant02);
+    box-shadow: var(--md-shadow-1);
+  }
+  .dark .portal-birthday-card {
+    background: var(--md-surface-container-high);
+    border-color: var(--md-outline-variant);
+  }
+  .portal-birthday-card__title {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--md-primary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-wrap: balance;
+  }
+  .portal-birthday-card__title-icon {
+    color: var(--md-secondary);
+    flex-shrink: 0;
+  }
+  .portal-birthday-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .portal-birthday-stat {
+    padding: 8px 12px;
+    border-radius: 12px;
+    background: var(--md-surface-container-high);
+    border: 1px solid var(--md-outline-variant);
+  }
+  .portal-birthday-stat__label {
+    font-size: 11px;
+    color: var(--md-on-surface-variant);
+  }
+  .portal-birthday-stat__value {
+    font-size: 1.125rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .portal-birthday-stat__value--employees { color: var(--md-secondary); }
+  .portal-birthday-stat__value--customers { color: var(--md-primary); }
+  .portal-birthday-card__footer {
+    font-size: 0.75rem;
+    text-align: center;
+    color: var(--md-on-surface-variant);
+    text-wrap: pretty;
+  }
+
+  .portal-content-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    position: relative;
+    z-index: 1;
+  }
+  @media (min-width: 1024px) {
+    .portal-content-grid { grid-template-columns: 3fr 2fr; }
+  }
+  .portal-content-main {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .portal-page .surface-panel--table {
+    border-color: color-mix(in srgb, var(--md-outline-variant02) 90%, var(--md-primary));
+  }
+
+  .portal-calendar-nav__btn {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--md-on-surface);
+    cursor: pointer;
+    transition: background 150ms var(--md-easing), border-color 150ms var(--md-easing);
+  }
+  .portal-calendar-nav__btn:hover {
+    background: var(--md-surface-container);
+    border-color: var(--md-outline-variant);
+  }
+
+  /* ── Portal birthday calendar (month grid + agenda) ── */
+  .portal-bday-cal {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    align-self: start;
+  }
+  .portal-bday-cal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .portal-bday-cal__header-main {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  .portal-bday-cal__header-icon {
+    flex-shrink: 0;
+    color: var(--md-on-primary);
+    opacity: 0.92;
+  }
+  .portal-bday-cal__header-badge {
+    flex-shrink: 0;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--md-on-secondary-container);
+    background: var(--md-secondary-container);
+    border: 1px solid color-mix(in srgb, var(--md-secondary) 22%, transparent);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .portal-bday-cal__nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--md-outline-variant02);
+    background: var(--md-surface-container-high);
+  }
+  .portal-bday-cal__nav-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+  .portal-bday-cal__today {
+    flex-shrink: 0;
+    padding: 5px 10px;
+    border-radius: 8px;
+    border: 1px solid color-mix(in srgb, var(--md-secondary) 30%, var(--md-outline-variant02));
+    background: var(--md-surface-container);
+    color: var(--md-secondary);
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 140ms ease-out, border-color 140ms ease-out;
+  }
+  .portal-bday-cal__today:hover {
+    background: color-mix(in srgb, var(--md-secondary) 8%, var(--md-surface-container));
+    border-color: color-mix(in srgb, var(--md-secondary) 45%, var(--md-outline-variant02));
+  }
+  .portal-bday-cal__today:focus-visible {
+    outline: 2px solid var(--md-secondary);
+    outline-offset: 2px;
+  }
+  .portal-bday-cal__month {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--md-on-surface);
+    text-wrap: balance;
+    line-height: 1.25;
+  }
+  .portal-bday-cal__fetching-slot {
+    flex-shrink: 0;
+    min-width: 6.5rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--md-on-surface-variant);
+    white-space: nowrap;
+  }
+  .portal-bday-cal__nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .portal-bday-cal__status {
+    padding: 20px 16px;
+    font-size: 0.8125rem;
+    color: var(--md-on-surface-variant);
+  }
+  .portal-bday-cal__content {
+    display: flex;
+    flex-direction: column;
+    background: var(--md-surface-container-lowest);
+    transition: opacity 180ms ease-out;
+  }
+  .portal-bday-cal__content--fetching {
+    opacity: 0.72;
+    pointer-events: none;
+  }
+  .portal-bday-cal__mini {
+    padding: 12px 14px 10px;
+  }
+  .portal-bday-cal__mini-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 6px;
+    margin-bottom: 6px;
+    text-align: center;
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--md-on-surface-variant);
+  }
+  .portal-bday-cal__mini-weekdays > :nth-child(6),
+  .portal-bday-cal__mini-weekdays > :nth-child(7) {
+    color: color-mix(in srgb, var(--chart-5) 55%, var(--md-on-surface-variant));
+  }
+  .portal-bday-cal__mini-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    grid-template-rows: repeat(6, 34px);
+    gap: 6px;
+    min-height: calc(6 * 34px + 5 * 6px);
+  }
+  .portal-bday-cal__mini-day {
+    position: relative;
+    height: 34px;
+    min-height: 34px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    background: var(--md-surface-container-high);
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--md-on-surface);
+    cursor: pointer;
+    transition: background-color 140ms ease-out, color 140ms ease-out, box-shadow 140ms ease-out;
+  }
+  .portal-bday-cal__mini-day:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--md-secondary) 10%, var(--md-surface-container-high));
+  }
+  .portal-bday-cal__mini-day:focus-visible {
+    outline: 2px solid var(--md-secondary);
+    outline-offset: 2px;
+  }
+  .portal-bday-cal__mini-day--muted {
+    opacity: 0.32;
+    background: transparent;
+    cursor: default;
+  }
+  .portal-bday-cal__mini-day--today:not(.portal-bday-cal__mini-day--selected) {
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--md-secondary) 55%, transparent);
+  }
+  .portal-bday-cal__mini-day--selected {
+    background: var(--md-secondary);
+    color: var(--md-on-secondary);
+    box-shadow: 0 2px 6px color-mix(in srgb, var(--md-secondary) 32%, transparent);
+  }
+  .portal-bday-cal__mini-day--has::after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--chart-5);
+  }
+  .portal-bday-cal__mini-day--selected.portal-bday-cal__mini-day--has::after {
+    background: var(--md-on-secondary);
+    opacity: 0.92;
+  }
+  .portal-bday-cal__selected-hint {
+    margin: 0 14px 8px;
+    padding: 8px 10px;
+    min-height: 34px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--md-on-surface-variant);
+    background: var(--md-surface-container-high);
+    border: 1px dashed var(--md-outline-variant02);
+    text-wrap: pretty;
+    box-sizing: border-box;
+  }
+  .portal-bday-cal__selected-hint--spacer {
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .portal-bday-cal__timeline {
+    border-top: 1px solid var(--md-outline-variant02);
+    padding: 10px 14px 14px;
+    min-height: 248px;
+  }
+  .portal-bday-cal__timeline-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 10px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--md-on-surface-variant);
+  }
+  .portal-bday-cal__timeline-body {
+    min-height: 200px;
+    max-height: 200px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+    -webkit-overflow-scrolling: touch;
+  }
+  .portal-bday-cal__timeline-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .portal-bday-cal__timeline-group {
+    border-radius: 10px;
+    border: 1px solid var(--md-outline-variant02);
+    background: var(--md-surface-container);
+    flex-shrink: 0;
+    transition: border-color 140ms ease-out, box-shadow 140ms ease-out;
+  }
+  .portal-bday-cal__timeline-group--selected {
+    border-color: color-mix(in srgb, var(--md-secondary) 40%, var(--md-outline-variant02));
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--md-secondary) 10%, transparent);
+  }
+  .portal-bday-cal__timeline-date {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 9px 12px;
+    border: none;
+    border-bottom: 1px solid var(--md-outline-variant02);
+    background: color-mix(in srgb, var(--chart-5) 6%, var(--md-surface-container-high));
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--md-primary);
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 140ms ease-out;
+  }
+  .portal-bday-cal__timeline-date:hover {
+    background: color-mix(in srgb, var(--chart-5) 10%, var(--md-surface-container-high));
+  }
+  .portal-bday-cal__timeline-date:focus-visible {
+    outline: 2px solid var(--md-secondary);
+    outline-offset: -2px;
+  }
+  .portal-bday-cal__timeline-count {
+    flex-shrink: 0;
+    min-width: 22px;
+    padding: 2px 7px;
+    border-radius: 9999px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--md-on-secondary-container);
+    background: var(--md-secondary-container);
+  }
+  .portal-bday-cal__timeline-people {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    max-height: 168px;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+    -webkit-overflow-scrolling: touch;
+  }
+  .portal-bday-cal__person-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-top: 1px solid var(--md-outline-variant02);
+  }
+  .portal-bday-cal__person-row:first-child {
+    border-top: none;
+  }
+  .portal-bday-cal__avatar {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    font-size: 0.625rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: var(--md-on-secondary);
+    background: var(--md-secondary);
+  }
+  .portal-bday-cal__person-meta {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .portal-bday-cal__person-name {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--md-on-surface);
+    line-height: 1.3;
+    text-wrap: pretty;
+  }
+  .portal-bday-cal__person-dept {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--md-on-surface-variant);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .portal-bday-cal__empty {
+    margin: 0;
+    height: 100%;
+    min-height: 200px;
+    padding: 16px 12px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    color: var(--md-on-surface-variant);
+    text-align: center;
+    text-wrap: pretty;
+    background: var(--md-surface-container-high);
+    border: 1px dashed var(--md-outline-variant02);
+  }
+  .dark .portal-bday-cal__timeline-group {
+    background: var(--md-surface-container-high);
+  }
+  .dark .portal-bday-cal__timeline-date {
+    background: color-mix(in srgb, var(--chart-5) 10%, var(--md-surface-container));
+  }
+
+}

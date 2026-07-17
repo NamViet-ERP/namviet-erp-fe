@@ -1,6 +1,6 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { LIST_PAGE_SIZE_OPTIONS } from '../../constants/pagination';
+import { LIST_PAGE_SIZE_OPTIONS, type ListPageSize } from '../../constants/pagination';
 
 interface PageBtnProps {
   children: ReactNode;
@@ -29,7 +29,7 @@ interface PaginationProps {
   totalPages: number;
   onPageChange: (page: number) => void;
   pageSize: number;
-  onPageSizeChange?: (size: number) => void;
+  onPageSizeChange?: (size: ListPageSize) => void;
   totalItems: number;
   /** Nhãn đếm bản ghi, mặc định "bản ghi" */
   itemLabel?: string;
@@ -57,22 +57,28 @@ export default function Pagination({
   const rangeStart = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const rangeEnd = Math.min(currentPage * pageSize, totalItems);
 
+  const showPageSize = typeof onPageSizeChange === 'function';
+
   return (
     <div className={`pagination-bar${embedded ? ' pagination-bar--embedded' : ''}`}>
       <div className="pagination-bar__meta">
-        <label className="pagination-bar__size-label" htmlFor="pagination-page-size">
-          Hiển thị
-        </label>
-        <select
-          id="pagination-page-size"
-          value={pageSize}
-          onChange={e => onPageSizeChange?.(Number(e.target.value))}
-          className="pagination-bar__size-select"
-        >
-          {LIST_PAGE_SIZE_OPTIONS.map(n => (
-            <option key={n} value={n}>{n}</option>
-          ))}
-        </select>
+        {showPageSize ? (
+          <>
+            <label className="pagination-bar__size-label" htmlFor="pagination-page-size">
+              Hiển thị
+            </label>
+            <select
+              id="pagination-page-size"
+              value={pageSize}
+              onChange={e => onPageSizeChange(Number(e.target.value) as ListPageSize)}
+              className="pagination-bar__size-select"
+            >
+              {LIST_PAGE_SIZE_OPTIONS.map(n => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+          </>
+        ) : null}
         <span className="pagination-bar__count tabular-nums">
           {rangeStart}–{rangeEnd} / {totalItems} {itemLabel}
         </span>

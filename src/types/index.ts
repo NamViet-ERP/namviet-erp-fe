@@ -5,6 +5,7 @@
  */
 
 import type { LucideIcon } from 'lucide-react';
+export type { MaterialApiDto as Material } from './wms';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Status & Enum Union Types
@@ -382,5 +383,3 @@ export interface StockQuantities {
   held: number;
   available: number;
 }
-
-export type { ToastType, ModalSize, CardAccent } from './ui';

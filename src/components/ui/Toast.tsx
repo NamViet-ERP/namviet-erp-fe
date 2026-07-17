@@ -35,10 +35,16 @@ function restartProgressBar(el: HTMLDivElement | null) {
 function ToastItem({ toast, onDismiss }: ToastItemProps) {
   const [exiting, setExiting] = useState(false);
   const [entered, setEntered] = useState(false);
+  const [renderRevision, setRenderRevision] = useState(toast.revision);
   const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const progressRef = useRef<HTMLDivElement>(null);
   const Icon = icons[toast.type] || icons.info;
+
+  if (renderRevision !== toast.revision) {
+    setRenderRevision(toast.revision);
+    setExiting(false);
+  }
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => setEntered(true));
@@ -52,7 +58,6 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
   }, [onDismiss]);
 
   useEffect(() => {
-    setExiting(false);
     if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
     exitTimerRef.current = null;
 

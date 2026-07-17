@@ -38,7 +38,7 @@ export default function MaterialAutocomplete({
   const [placement, setPlacement] = useState<'below' | 'above'>('below');
   const [panelReady, setPanelReady] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const panelRef = useRef<HTMLElement>(null);
+  const panelRef = useRef<HTMLUListElement | HTMLDivElement>(null);
   const listId = useId();
 
   const selected = useMemo(
@@ -176,7 +176,7 @@ export default function MaterialAutocomplete({
   const panel = showList ? (
     <ul
       id={listId}
-      ref={panelRef}
+      ref={node => { panelRef.current = node; }}
       role="listbox"
       className={panelClass}
       style={panelStyle}
@@ -204,7 +204,7 @@ export default function MaterialAutocomplete({
     </ul>
   ) : showEmpty ? (
     <div
-      ref={panelRef}
+      ref={node => { panelRef.current = node; }}
       className={`${panelClass} search-autocomplete__empty`}
       style={panelStyle}
     >

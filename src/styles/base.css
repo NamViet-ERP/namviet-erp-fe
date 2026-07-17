@@ -11,6 +11,61 @@
   html {
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  /* Crossfade khi đổi light/dark (View Transitions API) */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.45s;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  ::view-transition-old(root) {
+    animation-name: nv-theme-fade-out;
+    z-index: 1;
+  }
+
+  ::view-transition-new(root) {
+    animation-name: nv-theme-fade-in;
+    z-index: 2;
+  }
+
+  @keyframes nv-theme-fade-out {
+    to { opacity: 0; }
+  }
+
+  @keyframes nv-theme-fade-in {
+    from { opacity: 0; }
+  }
+
+  /* Fallback: trình duyệt không hỗ trợ View Transitions */
+  html.nv-theme-animating,
+  html.nv-theme-animating *:not(img):not(video):not(canvas):not(svg):not(iframe),
+  html.nv-theme-animating *::before,
+  html.nv-theme-animating *::after {
+    transition-property: background-color, color, border-color, outline-color, box-shadow, fill, stroke;
+    transition-duration: 0.45s !important;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+    transition-delay: 0s !important;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+      animation: none;
+    }
+
+    html.nv-theme-animating,
+    html.nv-theme-animating *,
+    html.nv-theme-animating *::before,
+    html.nv-theme-animating *::after {
+      transition: none !important;
+    }
   }
 
   /* Single source of truth for icon stroke weight (overrides Lucide's
@@ -28,8 +83,8 @@
     color: var(--md-on-surface);
     line-height: 18.5714px;
     font-size: 13px;
-    transition: background-color var(--md-duration) var(--md-easing),
-                color var(--md-duration) var(--md-easing);
+    transition: background-color 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+                color 0.45s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   ::-webkit-scrollbar { width: 6px; height: 6px; }
