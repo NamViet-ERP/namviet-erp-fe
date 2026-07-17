@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { MONTH_NAMES } from './calendarConstants';
+import { buildMonthCalendarCells, type MonthCalendarCell } from '../../lib/calendar/monthGrid';
 import { hrBirthdaysService } from '../../services/hrBirthdaysService';
 
 export interface BirthdayEvent {
@@ -8,10 +9,7 @@ export interface BirthdayEvent {
   department: string;
 }
 
-export interface CalendarCell {
-  day: number;
-  isCurrentMonth: boolean;
-}
+export type CalendarCell = MonthCalendarCell;
 
 function buildBirthdaysByDay(rows: { name: string; department: string; day: number }[]): Record<number, BirthdayEvent[]> {
   const map: Record<number, BirthdayEvent[]> = {};
@@ -37,23 +35,7 @@ function countMonthBirthdays(data: Record<number, BirthdayEvent[]>) {
 }
 
 function buildCalendarCells(year: number, month: number): CalendarCell[] {
-  const firstWeekday = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const daysInPrevMonth = new Date(year, month, 0).getDate();
-  const cells: CalendarCell[] = [];
-
-  for (let i = firstWeekday - 1; i >= 0; i -= 1) {
-    cells.push({ day: daysInPrevMonth - i, isCurrentMonth: false });
-  }
-  for (let day = 1; day <= daysInMonth; day += 1) {
-    cells.push({ day, isCurrentMonth: true });
-  }
-  let nextMonthDay = 1;
-  while (cells.length % 7 !== 0) {
-    cells.push({ day: nextMonthDay, isCurrentMonth: false });
-    nextMonthDay += 1;
-  }
-  return cells;
+  return buildMonthCalendarCells(year, month);
 }
 
 export function useBirthdayCalendar() {
@@ -69,6 +51,8 @@ export function useBirthdayCalendar() {
   const birthdaysQuery = useQuery({
     queryKey: ['hr', 'birthdays', viewYear, viewMonth],
     queryFn: () => hrBirthdaysService.list(viewMonth + 1),
+    placeholderData: (previous) => previous,
+    staleTime: 5 * 60 * 1000,
   });
 
   const birthdaysByDay = useMemo(
@@ -84,8 +68,18 @@ export function useBirthdayCalendar() {
   const birthdayStats = useMemo(() => countMonthBirthdays(birthdaysByDay), [birthdaysByDay]);
 
   const shiftMonth = (delta: number) => {
-    setViewDate((current) => new Date(current.getFullYear(), current.getMonth() + delta, 1));
-    setSelectedDay(1);
+    setViewDate((current) => {
+      const next = new Date(current.getFullYear(), current.getMonth() + delta, 1);
+      const daysInMonth = new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate();
+      setSelectedDay((day) => Math.min(day, daysInMonth));
+      return next;
+    });
+  };
+
+  const goToday = () => {
+    const current = new Date();
+    setViewDate(new Date(current.getFullYear(), current.getMonth(), 1));
+    setSelectedDay(current.getDate());
   };
 
   return {
@@ -97,11 +91,13 @@ export function useBirthdayCalendar() {
     selectedDay,
     setSelectedDay,
     shiftMonth,
+    goToday,
     birthdaysByDay,
     calendarCells,
     birthdayStats,
     monthLabel: MONTH_NAMES[viewMonth],
-    isLoading: birthdaysQuery.isLoading,
+    isInitialLoading: birthdaysQuery.isLoading && birthdaysQuery.data === undefined,
+    isFetching: birthdaysQuery.isFetching,
     isError: birthdaysQuery.isError,
   };
 }

@@ -15,42 +15,39 @@ interface TopSalesTableProps {
 
 export default function TopSalesTable({ title, rows, codeLabel = 'Mã thành phẩm' }: TopSalesTableProps) {
   return (
-    <section className="surface-panel surface-panel--table">
+    <section className="surface-panel surface-panel--table portal-rank-panel">
       <header className="surface-panel__header">
         <h3 className="surface-panel__header-title">{title}</h3>
       </header>
       <div className="overflow-x-auto table-scroll">
-        <table className="w-full text-left border-collapse">
+        <table className="portal-rank-table">
           <thead>
-            <tr className="border-b border-[var(--md-outline-variant)] bg-[var(--md-surface-container-high)]">
-              <th className="px-3 py-2 text-[11px] font-semibold text-[var(--md-on-surface-variant)] w-10 text-center">#</th>
-              <th className="px-3 py-2 text-[11px] font-semibold text-[var(--md-on-surface-variant)] w-16 text-center">Ảnh</th>
-              <th className="px-3 py-2 text-[11px] font-semibold text-[var(--md-on-surface-variant)] w-[108px]">{codeLabel}</th>
-              <th className="px-3 py-2 text-[11px] font-semibold text-[var(--md-on-surface-variant)]">Tên</th>
-              <th className="px-3 py-2 text-[11px] font-semibold text-[var(--md-on-surface-variant)] w-20 text-right">SL</th>
+            <tr>
+              <th className="portal-rank-table__th portal-rank-table__th--rank">#</th>
+              <th className="portal-rank-table__th portal-rank-table__th--icon">Ảnh</th>
+              <th className="portal-rank-table__th portal-rank-table__th--code">{codeLabel}</th>
+              <th className="portal-rank-table__th">Tên</th>
+              <th className="portal-rank-table__th portal-rank-table__th--qty">SL</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row, index) => {
               const RowIcon = row.imageIcon;
               return (
-                <tr
-                  key={row.code}
-                  className="border-b border-[var(--md-outline-variant)] last:border-b-0 hover:bg-[var(--nv-surface-hover)] transition-colors duration-150"
-                >
-                  <td className="px-3 py-2.5 text-center">
+                <tr key={row.code} className="portal-rank-table__row">
+                  <td className="portal-rank-table__td portal-rank-table__td--center">
                     <span className="portal-rank-table__rank">{index + 1}</span>
                   </td>
-                  <td className="px-3 py-2.5 text-center">
+                  <td className="portal-rank-table__td portal-rank-table__td--center">
                     <div className="portal-rank-table__icon-wrap">
-                      <RowIcon size={14} />
+                      <RowIcon size={14} aria-hidden />
                     </div>
                   </td>
-                  <td className="px-3 py-2.5 text-[12px] font-semibold text-[var(--md-on-surface)] tabular-nums">{row.code}</td>
-                  <td className="px-3 py-2.5 text-[12px] text-[var(--md-on-surface)] font-medium leading-snug">
+                  <td className="portal-rank-table__td portal-rank-table__td--code">{row.code}</td>
+                  <td className="portal-rank-table__td portal-rank-table__td--name">
                     <span className="line-clamp-2 text-pretty" title={row.name}>{row.name}</span>
                   </td>
-                  <td className="px-3 py-2.5 portal-rank-table__qty">{row.qty}</td>
+                  <td className="portal-rank-table__td portal-rank-table__qty">{row.qty}</td>
                 </tr>
               );
             })}

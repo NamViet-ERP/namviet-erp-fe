@@ -1,18 +1,18 @@
 import { useNavigate } from 'react-router-dom';
 import {
-  Activity, ChevronRight, ChevronLeft, Gift, ClipboardList,
+  Activity, ChevronRight, Gift, ClipboardList,
 } from 'lucide-react';
 
 import { departments, type DepartmentSubItem } from '../constants/departments';
 import DepartmentCard from '../components/layout/DepartmentCard';
 import TopSalesTable from '../components/dashboard/TopSalesTable';
+import PortalBirthdayCalendar from '../components/dashboard/PortalBirthdayCalendar';
 import { getSessionUser, getSessionPermissions } from '../constants/systemUsers';
 import { handlePermissionNavClick } from '../lib/protectedNavigation';
 import { useBirthdayCalendar } from '../hooks/dashboard/useBirthdayCalendar';
 import { useTopSalesRows } from '../hooks/dashboard/useTopSalesRows';
-import { WEEKDAY_LABELS, PENDING_TASKS } from '../hooks/dashboard/calendarConstants';
+import { PENDING_TASKS } from '../hooks/dashboard/calendarConstants';
 import { showToast } from '../components/ui/Toast';
-import { formatDate } from '../utils/formatDate';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -28,10 +28,14 @@ export default function DashboardPage() {
     selectedDay,
     setSelectedDay,
     shiftMonth,
+    goToday,
     birthdaysByDay,
     calendarCells,
     birthdayStats,
     monthLabel,
+    isInitialLoading: birthdaysLoading,
+    isFetching: birthdaysFetching,
+    isError: birthdaysError,
   } = useBirthdayCalendar();
 
   const sessionUser = getSessionUser();
@@ -52,7 +56,10 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="page-shell page-shell--portal pb-6">
+    <div className="page-shell page-shell--portal portal-page pb-6">
+      <div className="portal-ambient portal-ambient--tl" aria-hidden />
+      <div className="portal-ambient portal-ambient--br" aria-hidden />
+
       <header className="portal-greeting">
         <div>
           <h1 className="portal-greeting__title">
@@ -134,107 +141,22 @@ export default function DashboardPage() {
           />
         </div>
 
-        <div>
-          <section className="surface-panel surface-panel--table h-full flex flex-col">
-            <header className="surface-panel__header">
-              <h3 className="surface-panel__header-title">Lịch sinh nhật nhân viên</h3>
-            </header>
-
-            <div className="portal-calendar-nav">
-              <span className="portal-calendar-nav__month">
-                {monthLabel} {viewYear}
-              </span>
-              <div className="portal-calendar-nav__actions">
-                <button
-                  type="button"
-                  onClick={() => shiftMonth(-1)}
-                  className="portal-calendar-nav__btn"
-                  aria-label="Tháng trước"
-                >
-                  <ChevronLeft size={14} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => shiftMonth(1)}
-                  className="portal-calendar-nav__btn"
-                  aria-label="Tháng sau"
-                >
-                  <ChevronRight size={14} />
-                </button>
-              </div>
-            </div>
-
-            <div className="portal-calendar-body">
-              <div className="portal-calendar-weekdays">
-                {WEEKDAY_LABELS.map((label) => (
-                  <div key={label}>{label}</div>
-                ))}
-              </div>
-
-              <div className="portal-calendar-grid">
-                {calendarCells.map((cell, idx) => {
-                  const isToday = cell.isCurrentMonth && cell.day === today && isViewingCurrentMonth;
-                  const hasBirthday = cell.isCurrentMonth && Boolean(birthdaysByDay[cell.day]);
-                  const isSelected = cell.isCurrentMonth && selectedDay === cell.day;
-
-                  return (
-                    <button
-                      key={`${cell.isCurrentMonth ? 'in' : 'out'}-${cell.day}-${idx}`}
-                      type="button"
-                      onClick={() => {
-                        if (cell.isCurrentMonth) setSelectedDay(cell.day);
-                      }}
-                      disabled={!cell.isCurrentMonth}
-                      className={[
-                        'portal-calendar-day',
-                        !cell.isCurrentMonth && 'portal-calendar-day--muted',
-                        isToday && 'portal-calendar-day--today',
-                        isSelected && !isToday && 'portal-calendar-day--selected',
-                      ].filter(Boolean).join(' ')}
-                      aria-label={
-                        cell.isCurrentMonth
-                          ? `Ngày ${cell.day}${hasBirthday ? ', có sinh nhật' : ''}${isToday ? ', hôm nay' : ''}`
-                          : undefined
-                      }
-                      aria-pressed={cell.isCurrentMonth ? isSelected : undefined}
-                    >
-                      <span>{cell.day}</span>
-                      {hasBirthday && (
-                        <span className="portal-calendar-day__dot" aria-hidden />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="portal-calendar-detail">
-                <h4 className="portal-calendar-detail__title">
-                  <Gift size={12} aria-hidden />
-                  Ngày {formatDate(new Date(viewYear, viewMonth, selectedDay))}
-                </h4>
-                {birthdaysByDay[selectedDay] ? (
-                  <ul className="portal-calendar-detail__list">
-                    {birthdaysByDay[selectedDay].map((person) => (
-                      <li key={person.name} className="portal-calendar-detail__item">
-                        <span className="portal-calendar-detail__dot" aria-hidden />
-                        <span className="text-pretty">
-                          <strong>{person.name}</strong>
-                          {person.department && (
-                            <span className="portal-calendar-detail__role">({person.department})</span>
-                          )}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="portal-calendar-detail__empty">
-                    Không có sinh nhật trong ngày này.
-                  </p>
-                )}
-              </div>
-            </div>
-          </section>
-        </div>
+        <PortalBirthdayCalendar
+          viewYear={viewYear}
+          viewMonth={viewMonth}
+          today={today}
+          isViewingCurrentMonth={isViewingCurrentMonth}
+          selectedDay={selectedDay}
+          setSelectedDay={setSelectedDay}
+          shiftMonth={shiftMonth}
+          goToday={goToday}
+          birthdaysByDay={birthdaysByDay}
+          calendarCells={calendarCells}
+          monthBirthdayCount={birthdayStats.employees}
+          isInitialLoading={birthdaysLoading}
+          isFetching={birthdaysFetching}
+          isError={birthdaysError}
+        />
       </div>
     </div>
   );
