@@ -7,6 +7,7 @@ export interface RoutePermissionRule {
 
 export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
   { match: p => p === '/dashboard', permissions: ['core.dashboard.view'] },
+  { match: p => p === '/warehouse/dashboard', permissions: ['core.dashboard.view'] },
   { match: p => p === '/profile', permissions: ['core.profile.view'] },
 
   { match: p => p === '/warehouse/dashboard-warehouse', permissions: ['wms.dashboard.view'] },

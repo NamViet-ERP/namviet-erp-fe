@@ -31,7 +31,7 @@ import { formatAdminDateCell } from '../../lib/hrm/formatters';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { UI_ERROR } from '../../lib/uiMessages';
 import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
-import type { AdminUserListParams, AdminUserRow } from '../../services/adminUsersService';
+import type { AdminUserListParams, AdminUserPagedResult, AdminUserRow } from '../../services/adminUsersService';
 import { getSessionUser } from '../../constants/systemUsers';
 import { isCurrentAdminUserRow, adminUserToggleKey } from '../../lib/admin/isCurrentAdminUser';
 
@@ -291,7 +291,7 @@ export default function AdminUsersPage() {
   const executeToggle = async (user: AdminUserRow, next: boolean) => {
     try {
       await toggleMutation.mutateAsync({ toggleId: user.toggleId, enabled: next, source: user.source });
-      const updated = qc.getQueryData(adminUsersListQueryKey(listParams));
+      const updated = qc.getQueryData<AdminUserPagedResult>(adminUsersListQueryKey(listParams));
       if (updated?.page && updated.page !== page) setPage(updated.page);
       showToast('success', next ? 'Đã bật tài khoản' : 'Đã khóa tài khoản');
     } catch (err: unknown) {

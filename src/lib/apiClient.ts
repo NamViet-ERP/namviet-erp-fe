@@ -34,7 +34,7 @@ interface ProblemDetailsLike {
 }
 
 /** User-facing message from any caught error (never raw JSON or technical jargon). */
-export function getApiErrorMessage(err: unknown, fallback = UI_ERROR.generic): string {
+export function getApiErrorMessage(err: unknown, fallback: string = UI_ERROR.generic): string {
   let msg = fallback;
   if (err instanceof ApiError) msg = translateErrorMessage(err.message);
   else if (err instanceof Error && err.message.trim()) msg = translateErrorMessage(err.message.trim());
@@ -155,11 +155,25 @@ let refreshInFlight: Promise<boolean> | null = null;
 
 async function tryRefreshSession(): Promise<boolean> {
   if (!refreshInFlight) {
-    refreshInFlight = refreshAccessToken().finally(() => {
-      refreshInFlight = null;
-    });
+    refreshInFlight = refreshAccessToken()
+      .then(result => result === 'refreshed')
+      .finally(() => {
+        refreshInFlight = null;
+      });
   }
   return refreshInFlight;
+}
+
+function fallbackForStatus(status: number): string {
+  if (status === 401) return 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
+  if (status === 403) return 'Bạn không có quyền truy cập chức năng này.';
+  return 'Yêu cầu không thành công. Vui lòng thử lại.';
+}
+
+function throwResponseError(response: Response, data: unknown): never {
+  const message = parseApiError(data, fallbackForStatus(response.status));
+  if (response.status === 401) forceLogoutExpired();
+  throw new ApiError(message, response.status, data);
 }
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
@@ -188,16 +202,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   }
 
   if (!response.ok) {
-    const message = parseApiError(
-      data,
-      response.status === 401
-        ? 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'
-        : response.status === 403
-          ? 'Bạn không có quyền truy cập chức năng này.'
-          : 'Yêu cầu không thành công. Vui lòng thử lại.',
-    );
-    if (response.status === 401) forceLogoutExpired();
-    throw new ApiError(message, response.status, data);
+    throwResponseError(response, data);
   }
 
   return data as T;
@@ -236,19 +241,54 @@ export const apiClient = {
       }
 
       if (!response.ok) {
-        const message = parseApiError(
-          data,
-          response.status === 401
-            ? 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'
-            : response.status === 403
-              ? 'Bạn không có quyền truy cập chức năng này.'
-              : 'Yêu cầu không thành công. Vui lòng thử lại.',
-        );
-        if (response.status === 401) forceLogoutExpired();
-        throw new ApiError(message, response.status, data);
+        throwResponseError(response, data);
       }
       return data as T;
     };
     return run();
   },
+
+  getBlob: (
+    path: string,
+    params?: RequestOptions['params'],
+    options?: { signal?: AbortSignal; headers?: HeadersInit },
+  ) => {
+    const run = async (retried = false): Promise<Blob> => {
+      const token = authTokenProvider();
+      const response = await fetch(buildUrl(path, params), {
+        method: 'GET',
+        signal: options?.signal ?? AbortSignal.timeout(20_000),
+        headers: {
+          Accept: '*/*',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...options?.headers,
+        },
+      });
+
+      if (response.status === 401 && !retried) {
+        const refreshed = await tryRefreshSession();
+        if (refreshed) return run(true);
+      }
+
+      if (!response.ok) {
+        throwResponseError(response, await readResponseBody(response));
+      }
+      return response.blob();
+    };
+    return run();
+  },
 };
+
+export function saveBlob(blob: Blob, fileName: string): void {
+  const objectUrl = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = objectUrl;
+  anchor.download = fileName;
+  anchor.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;pointer-events:none';
+  document.body.appendChild(anchor);
+  anchor.click();
+  window.setTimeout(() => {
+    anchor.remove();
+    URL.revokeObjectURL(objectUrl);
+  }, 500);
+}

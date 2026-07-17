@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, KeyRound, RotateCcw, Save } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
@@ -45,13 +45,16 @@ export default function AdminRolePermissionsPage() {
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [baseline, setBaseline] = useState<Set<string>>(new Set());
+  const [syncedPermissions, setSyncedPermissions] = useState(rolePermissions);
 
-  useEffect(() => {
-    if (!rolePermissions?.permissions) return;
+  if (rolePermissions !== syncedPermissions) {
+    setSyncedPermissions(rolePermissions);
+    if (rolePermissions?.permissions) {
     const next = new Set(rolePermissions.permissions);
     setSelected(next);
     setBaseline(next);
-  }, [rolePermissions]);
+    }
+  }
 
   const groups = useMemo(() => groupPermissionCatalog(catalog), [catalog]);
   const visibleGroups = useMemo(() => filterPermissionGroups(groups, search), [groups, search]);

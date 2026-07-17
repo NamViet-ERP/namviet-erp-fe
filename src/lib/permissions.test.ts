@@ -44,6 +44,7 @@ describe('permissions', () => {
 
 describe('routePermissions', () => {
   it('maps pilot routes to permission keys', () => {
+    expect(getRequiredPermissionsForPath('/warehouse/dashboard')).toEqual(['core.dashboard.view']);
     expect(getRequiredPermissionsForPath('/warehouse/import')).toEqual(['wms.imports.view:all']);
     expect(getRequiredPermissionsForPath('/members/new')).toEqual(['hrm.employees.create']);
     expect(getRequiredPermissionsForPath('/admin/settings/roles/admin/permissions')).toEqual(['admin.roles.view:all']);

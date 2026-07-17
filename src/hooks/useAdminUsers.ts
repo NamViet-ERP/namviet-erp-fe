@@ -146,7 +146,7 @@ export function useToggleAdminUserStatus(listParams?: AdminUserListParams) {
     }) => adminUsersService.toggleStatus(toggleId, enabled, source),
     onSuccess: (_data, { toggleId, enabled, source }) => {
       if (listParams) {
-        qc.setQueryData(adminUsersListQueryKey(listParams), old =>
+        qc.setQueryData<AdminUserPagedResult>(adminUsersListQueryKey(listParams), old =>
           patchPagedToggle(old, toggleId, enabled, source, listParams),
         );
       } else {

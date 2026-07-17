@@ -1,7 +1,7 @@
-import { apiClient, setAuthTokenProvider } from '../lib/apiClient';
+import { ApiError, apiClient, setAuthTokenProvider } from '../lib/apiClient';
 import { cacheEmployeeStatus } from './employeesService';
 import type { SystemUser } from '../constants/systemUsers';
-import { getSessionUser, setSessionUser, clearSessionUser } from '../constants/systemUsers';
+import { setSessionUser, clearSessionUser } from '../constants/systemUsers';
 import { getEmployeeLockReason } from '../constants/employeeStatus';
 import {
   clearAuthSession as clearSession,
@@ -36,8 +36,7 @@ interface LoginResponse {
 }
 
 function resolvePermissions(dto: AuthUserDto, token: string | null | undefined): string[] {
-  const apiPermissions = dto.permissions ?? [];
-  if (apiPermissions.length > 0) return [...apiPermissions];
+  if (dto.permissions !== undefined) return [...dto.permissions];
   return getPermissionsFromToken(token);
 }
 
@@ -60,16 +59,16 @@ function lockReasonFromStatus(status?: string): string | null {
   return getEmployeeLockReason(status);
 }
 
-async function syncSessionUserFromApi(): Promise<void> {
-  const existing = getSessionUser();
-  if (!existing) return;
+export type SessionCheckResult = 'authenticated' | 'unauthenticated' | 'recoverable-error';
 
+async function syncSessionUserFromApi(): Promise<SessionCheckResult> {
   try {
     const dto = await apiClient.get<AuthUserDto>('/api/auth/me');
     const lockReason = lockReasonFromStatus(dto.employeeStatus);
     if (lockReason) {
       clearSession();
-      return;
+      clearSessionUser();
+      return 'unauthenticated';
     }
 
     if (dto.employeeId && dto.employeeStatus) {
@@ -81,17 +80,20 @@ async function syncSessionUserFromApi(): Promise<void> {
     const tokenPermissions = getPermissionsFromToken(token);
     const permissionsOutOfSync = apiPermissions.some(p => !tokenPermissions.includes(p));
     if (permissionsOutOfSync) {
-      const refreshed = await refreshAccessToken();
-      if (refreshed) token = getStoredToken();
+      const refreshResult = await refreshAccessToken();
+      if (refreshResult === 'refreshed') token = getStoredToken();
     }
 
     const permissions = resolvePermissions(dto, token);
     setSessionUser(mapAuthUser(dto, permissions));
-  } catch {
-    const tokenPermissions = getPermissionsFromToken(getStoredToken());
-    if (tokenPermissions.length > 0 && existing) {
-      setSessionUser({ ...existing, permissions: tokenPermissions });
+    return 'authenticated';
+  } catch (error) {
+    clearSessionUser();
+    if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+      clearSession();
+      return 'unauthenticated';
     }
+    return 'recoverable-error';
   }
 }
 
@@ -124,27 +126,41 @@ export const authService = {
     return user;
   },
 
-  async ensureSession(): Promise<boolean> {
-    if (!hasAuthSession()) return false;
+  async ensureSession(): Promise<SessionCheckResult> {
+    clearSessionUser();
+    if (!hasAuthSession()) return 'unauthenticated';
 
     const token = getStoredToken();
     if (token && !isAccessTokenExpired(token)) {
-      await syncSessionUserFromApi();
-      return true;
+      return syncSessionUserFromApi();
     }
 
-    const refreshed = await refreshAccessToken();
-    if (!refreshed) return false;
+    const refreshResult = await refreshAccessToken();
+    if (refreshResult === 'unavailable') {
+      clearSessionUser();
+      return 'recoverable-error';
+    }
+    if (refreshResult === 'rejected') {
+      clearSession();
+      clearSessionUser();
+      return 'unauthenticated';
+    }
 
-    await syncSessionUserFromApi();
-    return true;
+    return syncSessionUserFromApi();
   },
 
-  async refreshSession(): Promise<boolean> {
-    const refreshed = await refreshAccessToken();
-    if (!refreshed) return false;
-    await syncSessionUserFromApi();
-    return true;
+  async refreshSession(): Promise<SessionCheckResult> {
+    const refreshResult = await refreshAccessToken();
+    if (refreshResult === 'unavailable') {
+      clearSessionUser();
+      return 'recoverable-error';
+    }
+    if (refreshResult === 'rejected') {
+      clearSession();
+      clearSessionUser();
+      return 'unauthenticated';
+    }
+    return syncSessionUserFromApi();
   },
 
   logout(): void {

@@ -1,11 +1,5 @@
 export type PermissionKey = string;
 
-import { getSessionUser } from '../constants/systemUsers';
-
-function isAdminSession(): boolean {
-  return getSessionUser()?.role === 'admin';
-}
-
 export function normalizePermissionRequirement(
   requirement: PermissionKey | PermissionKey[],
 ): PermissionKey[] {
@@ -16,7 +10,6 @@ export function hasPermission(
   permissions: readonly PermissionKey[],
   required: PermissionKey,
 ): boolean {
-  if (isAdminSession()) return true;
   return permissions.includes(required);
 }
 
@@ -24,7 +17,6 @@ export function hasAnyPermission(
   permissions: readonly PermissionKey[],
   required: PermissionKey | PermissionKey[],
 ): boolean {
-  if (isAdminSession()) return true;
   const keys = normalizePermissionRequirement(required);
   return keys.some(key => permissions.includes(key));
 }
@@ -33,7 +25,6 @@ export function hasAllPermissions(
   permissions: readonly PermissionKey[],
   required: PermissionKey | PermissionKey[],
 ): boolean {
-  if (isAdminSession()) return true;
   const keys = normalizePermissionRequirement(required);
   return keys.every(key => permissions.includes(key));
 }
