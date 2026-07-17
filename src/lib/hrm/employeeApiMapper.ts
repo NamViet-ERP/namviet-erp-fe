@@ -35,11 +35,11 @@ export interface EmployeeApiDto {
   cmndIssueDate?: string;
   cmndIssuePlace?: string;
   maritalStatus?: string;
-  taxCode?: string;
-  photoUrl?: string;
-  cccdFrontUrl?: string;
-  cccdBackUrl?: string;
-  degreePhotoUrl?: string;
+  taxCode?: unknown;
+  photoUrl?: string | null;
+  cccdFrontUrl?: string | null;
+  cccdBackUrl?: string | null;
+  degreePhotoUrl?: string | null;
   linkedAccountStatus?: string;
 }
 
@@ -61,13 +61,13 @@ function inputDateToApi(value?: string): string {
   return value;
 }
 
-function urlToAttachment(url?: string, fallbackName = 'file') {
+function urlToAttachment(url?: string | null, fallbackName = 'file') {
   if (!url) return undefined;
   const name = url.split('/').pop() ?? fallbackName;
   return { fileName: name, fileSize: '', previewUrl: resolveMediaUrl(url) };
 }
 
-export function resolveMediaUrl(url?: string): string | undefined {
+export function resolveMediaUrl(url?: string | null): string | undefined {
   if (!url) return undefined;
   if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('blob:') || url.startsWith('data:'))
     return url;
@@ -110,7 +110,7 @@ export function fromApi(dto: EmployeeApiDto): Employee {
     cccdIssueDate: apiDateToInput(dto.cccdIssueDate),
     cccdIssuePlace: dto.cccdIssuePlace,
     maritalStatus: dto.maritalStatus,
-    taxCode: dto.taxCode,
+    taxCode: dto.taxCode as Employee['taxCode'],
     profilePhoto: urlToAttachment(dto.photoUrl, 'profile'),
     cccdFront: urlToAttachment(dto.cccdFrontUrl, 'cccd-front'),
     cccdBack: urlToAttachment(dto.cccdBackUrl, 'cccd-back'),

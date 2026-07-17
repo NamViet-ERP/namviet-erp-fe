@@ -8,7 +8,8 @@ import { candidatesService } from '../../services/candidatesService';
 import { filesService } from '../../services/filesService';
 import FormSectionHeader from '../hr/FormSectionHeader';
 import HrmDatePicker from '../hr/HrmDatePicker';
-import HrmFieldLabel, { hrmFieldClass } from '../hr/HrmFieldLabel';
+import HrmFieldLabel from '../hr/HrmFieldLabel';
+import { hrmFieldClass } from '../hr/hrmFieldClass';
 import HrmSelect from '../hr/HrmSelect';
 import { RECRUITMENT_SOURCES, EDUCATION_LEVELS } from '../../constants/recruitment';
 import { useActivePositions } from '../../hooks/usePositions';
@@ -214,9 +215,8 @@ export default function CandidateForm() {
       return;
     }
 
-    // Save to localStorage simulated candidate database
     try {
-      await candidatesService.create({
+      await candidatesService.applyPublic({
         fullName: data.fullName,
         phone: data.phone,
         email: data.email,
@@ -229,7 +229,6 @@ export default function CandidateForm() {
         position: data.position,
         experience: data.experience || 'Chưa cập nhật',
         source: data.source,
-        hrResponsible: data.hrResponsible,
         cvFileName: cvFile.name,
         cvFileSize: cvFileSize || (cvFile.size / (1024 * 1024)).toFixed(2) + ' MB',
         cvFileUrl,

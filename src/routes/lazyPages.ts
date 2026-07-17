@@ -22,6 +22,12 @@ export const EmployeeOnboardPage = lazy(() => import('../pages/public/EmployeeOn
 export const CandidateListPage = lazy(() => import('../pages/recruitment/CandidateListPage'));
 export const CandidateDetailPage = lazy(() => import('../pages/recruitment/CandidateDetailPage'));
 export const RecruitmentSettingsPage = lazy(() => import('../pages/recruitment/RecruitmentSettingsPage'));
+export const RecruitmentPlansPage = lazy(() => import('../pages/recruitment/RecruitmentPlansPage'));
+export const RecruitmentDashboardPage = lazy(() => import('../pages/recruitment/RecruitmentDashboardPage'));
+export const RecruitmentCostsPage = lazy(() => import('../pages/recruitment/RecruitmentCostsPage'));
+export const RecruitmentCalendarPage = lazy(() => import('../pages/recruitment/RecruitmentCalendarPage'));
+export const RecruitmentReportsPage = lazy(() => import('../pages/recruitment/RecruitmentReportsPage'));
+export const RecruitmentHrStatsPage = lazy(() => import('../pages/recruitment/RecruitmentHrStatsPage'));
 export const AdminUsersPage = lazy(() => import('../pages/admin/AdminUsersPage'));
 export const AdminUserDetailPage = lazy(() => import('../pages/admin/AdminUserDetailPage'));
 export const AdminSettingsPage = lazy(() => import('../pages/admin/AdminSettingsPage'));

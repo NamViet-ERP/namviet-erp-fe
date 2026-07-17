@@ -9,7 +9,7 @@ import {
 import { createPortal } from 'react-dom';
 import { ChevronDown } from 'lucide-react';
 import { computeFloatingMenuLayout, type FloatingMenuLayout } from '../../lib/hrm/floatingMenuPlacement';
-import { hrmFieldClass } from './HrmFieldLabel';
+import { hrmFieldClass } from './hrmFieldClass';
 
 const ITEM_HEIGHT = 40;
 

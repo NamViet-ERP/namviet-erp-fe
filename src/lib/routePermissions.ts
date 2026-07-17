@@ -47,11 +47,17 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
     match: p => /^\/members\/[^/]+$/.test(p) && p !== '/members/new' && p !== '/members/settings',
     permissions: ['hrm.employees.view:all', 'hrm.employees.view:own'],
   },
+  { match: p => p === '/recruitment/dashboard', permissions: ['hrm.candidates.view:all'] },
+  { match: p => p === '/recruitment/plans', permissions: ['hrm.recruitment.plans.view'] },
+  { match: p => p === '/recruitment/costs', permissions: ['hrm.recruitment.costs.view'] },
   { match: p => p === '/recruitment/candidates', permissions: ['hrm.candidates.view:all'] },
   {
     match: p => p.startsWith('/recruitment/candidates/'),
     permissions: ['hrm.candidates.view:all'],
   },
+  { match: p => p === '/recruitment/calendar', permissions: ['hrm.candidates.view:all'] },
+  { match: p => p === '/recruitment/reports', permissions: ['hrm.recruitment.reports.view'] },
+  { match: p => p === '/recruitment/hr-stats', permissions: ['hrm.candidates.view:all', 'hrm.employees.view:all'] },
   { match: p => p === '/recruitment/settings', permissions: ['hrm.recruitment.positions.view'] },
 
   { match: p => p === '/admin/users', permissions: ['admin.users.view:all'] },

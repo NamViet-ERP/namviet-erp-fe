@@ -55,7 +55,7 @@ export function FormSelectField({
         className={`h-11${className ? ` ${className}` : ''}`}
         value={value}
         onChange={v => registration.onChange({ target: { name: registration.name, value: v } })}
-        onBlur={registration.onBlur}
+        onBlur={() => registration.onBlur({ target: { name: registration.name } })}
         name={registration.name}
         options={options}
         placeholder={placeholder}

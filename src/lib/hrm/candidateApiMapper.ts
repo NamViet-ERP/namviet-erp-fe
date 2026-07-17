@@ -1,4 +1,4 @@
-import type { Candidate, CreateCandidateDto, UpdateCandidateDto } from '../../types/hr';
+import type { Candidate, CreateCandidateDto, UpdateCandidateDto, CandidatePipelineStatus } from '../../types/hr';
 
 export interface CandidateApiDto {
   id: string;
@@ -25,14 +25,19 @@ export interface CandidateApiDto {
   preScreenResult?: string;
   contactResult?: string;
   interviewDate?: string;
+  interviewTime?: string;
   interviewAttended?: string;
   evaluator?: string;
   evaluationResult?: string;
   offerStatus?: string;
   offerRejectReason?: string;
+  offerSalary?: string;
   startDate?: string;
   onboardingAttended?: string;
   onboardingRejectReason?: string;
+  status?: string;
+  recruitmentPlanId?: string;
+  recruitmentPlanLabel?: string;
 }
 
 function apiDateToInput(value?: string): string {
@@ -45,7 +50,7 @@ function apiDateToInput(value?: string): string {
   return d.toISOString().slice(0, 10);
 }
 
-function inputDateToApi(value?: string): string {
+export function inputDateToApi(value?: string): string {
   if (!value) return '';
   if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) return value;
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
@@ -114,6 +119,15 @@ export function compareCandidateAppliedAtNewestFirst(
   return Number(b.id) - Number(a.id);
 }
 
+function normalizePipelineStatus(value?: string): CandidatePipelineStatus {
+  const allowed: CandidatePipelineStatus[] = [
+    'New', 'Screening', 'InterviewScheduled', 'Interview1', 'Interview2', 'InterviewPassed',
+    'Rejected', 'Offered', 'OfferDeclined', 'Accepted', 'Probation', 'Official', 'Cancelled',
+  ];
+  const v = value?.trim() as CandidatePipelineStatus | undefined;
+  return v && allowed.includes(v) ? v : 'New';
+}
+
 export function fromApi(dto: CandidateApiDto): Candidate {
   return {
     id: dto.id,
@@ -134,17 +148,22 @@ export function fromApi(dto: CandidateApiDto): Candidate {
     cvFileSize: dto.cvFileSize ?? '',
     cvFileUrl: dto.cvFileUrl,
     appliedAt: readApiField(dto, 'appliedAt', 'AppliedAt'),
+    status: normalizePipelineStatus(readApiField(dto, 'status', 'Status')),
+    recruitmentPlanId: dto.recruitmentPlanId || undefined,
+    recruitmentPlanLabel: dto.recruitmentPlanLabel || undefined,
     screeningType: dto.screeningType,
     targetPosition: dto.targetPosition,
     targetDepartment: dto.targetDepartment,
     preScreenResult: dto.preScreenResult,
     contactResult: dto.contactResult,
     interviewDate: dto.interviewDate ? apiDateToInput(dto.interviewDate) : undefined,
+    interviewTime: dto.interviewTime,
     interviewAttended: dto.interviewAttended as Candidate['interviewAttended'],
     evaluator: dto.evaluator,
     evaluationResult: dto.evaluationResult as Candidate['evaluationResult'],
     offerStatus: dto.offerStatus as Candidate['offerStatus'],
     offerRejectReason: dto.offerRejectReason,
+    offerSalary: dto.offerSalary,
     startDate: dto.startDate ? apiDateToInput(dto.startDate) : undefined,
     onboardingAttended: dto.onboardingAttended as Candidate['onboardingAttended'],
     onboardingRejectReason: dto.onboardingRejectReason,
@@ -173,17 +192,22 @@ export function toApi(candidate: CreateCandidateDto | UpdateCandidateDto, id = '
     cvFileUrl: c.cvFileUrl,
     // appliedAt do server ghi khi nộp form — client không gửi khi create/update
     appliedAt: '',
+    status: normalizePipelineStatus(c.status),
+    recruitmentPlanId: c.recruitmentPlanId || undefined,
+    recruitmentPlanLabel: c.recruitmentPlanLabel || undefined,
     screeningType: c.screeningType,
     targetPosition: c.targetPosition,
     targetDepartment: c.targetDepartment,
     preScreenResult: c.preScreenResult,
     contactResult: c.contactResult,
     interviewDate: c.interviewDate ? inputDateToApi(c.interviewDate) : undefined,
+    interviewTime: c.interviewTime,
     interviewAttended: c.interviewAttended,
     evaluator: c.evaluator,
     evaluationResult: c.evaluationResult,
     offerStatus: c.offerStatus,
     offerRejectReason: c.offerRejectReason,
+    offerSalary: c.offerSalary,
     startDate: c.startDate ? inputDateToApi(c.startDate) : undefined,
     onboardingAttended: c.onboardingAttended,
     onboardingRejectReason: c.onboardingRejectReason,

@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { Camera, Upload, X } from 'lucide-react';
 import HrmProfileAvatar from './HrmProfileAvatar';
 import { readProfileImageFile, type LocalFileState } from '../../lib/hrm/attachments';
+import { useSecureFileUrl } from '../../hooks/useSecureFileUrl';
 
 type HrmProfileStripPhotoProps = {
   name: string;
@@ -24,8 +25,9 @@ export default function HrmProfileStripPhoto({
 }: HrmProfileStripPhotoProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const preview = pending?.preview ?? photoUrl;
-  const [broken, setBroken] = useState(false);
-  const hasPreview = !!preview && !broken;
+  const securePreview = useSecureFileUrl(preview);
+  const [brokenUrl, setBrokenUrl] = useState<string | undefined>();
+  const hasPreview = !!securePreview.url && brokenUrl !== securePreview.url;
 
   const openPicker = () => inputRef.current?.click();
 
@@ -48,12 +50,12 @@ export default function HrmProfileStripPhoto({
                 aria-label="Chọn ảnh hồ sơ"
               >
                 <img
-                  key={preview}
-                  src={preview}
+                  key={securePreview.url}
+                  src={securePreview.url}
                   alt=""
                   className="hrm-profile-strip__photo-img"
                   onError={() => {
-                    setBroken(true);
+                    setBrokenUrl(securePreview.url);
                     if (photoUrl && !pending) onRemove();
                   }}
                 />

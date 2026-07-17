@@ -59,9 +59,12 @@ export const employeesService = {
     return fromApi(res);
   },
 
-  async createOnboard(dto: CreateEmployeeDto): Promise<Employee> {
+  async createOnboard(dto: CreateEmployeeDto, inviteToken: string): Promise<Employee> {
     const payload = toApi(dto);
-    const res = await apiClient.post<EmployeeApiDto>(`${ENDPOINT}/onboard`, payload);
+    const res = await apiClient.post<EmployeeApiDto>(
+      `${ENDPOINT}/onboard?token=${encodeURIComponent(inviteToken)}`,
+      payload,
+    );
     return fromApi(res);
   },
 

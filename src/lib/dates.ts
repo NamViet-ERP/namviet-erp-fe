@@ -53,3 +53,18 @@ export function mondayFirstIndex(date: Date): number {
 export function addMonths(date: Date, delta: number): Date {
   return new Date(date.getFullYear(), date.getMonth() + delta, 1);
 }
+
+export function buildRecentMonthFilterOptions(count = 24) {
+  const options: { value: string; label: string }[] = [];
+  const now = new Date();
+  for (let i = 0; i < count; i += 1) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const y = d.getFullYear();
+    const m = d.getMonth() + 1;
+    options.push({
+      value: `${y}-${String(m).padStart(2, '0')}`,
+      label: `Tháng ${String(m).padStart(2, '0')}/${y}`,
+    });
+  }
+  return options;
+}

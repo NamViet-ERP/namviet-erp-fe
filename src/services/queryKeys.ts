@@ -24,9 +24,39 @@ export const queryKeys = {
     all: ['candidates'] as const,
     detail: (id: string) => ['candidates', id] as const,
   },
+  recruitmentPlans: {
+    all: ['recruitmentPlans'] as const,
+  },
+  recruitmentDashboard: {
+    all: ['recruitmentDashboard'] as const,
+    kpi: ['recruitmentDashboard', 'kpi'] as const,
+    trend: ['recruitmentDashboard', 'trend'] as const,
+    bySource: ['recruitmentDashboard', 'bySource'] as const,
+    byPosition: ['recruitmentDashboard', 'byPosition'] as const,
+    costBySource: ['recruitmentDashboard', 'costBySource'] as const,
+  },
+  recruitmentCalendar: {
+    all: ['recruitmentCalendar'] as const,
+  },
+  recruitmentCosts: {
+    all: ['recruitmentCosts'] as const,
+    summary: ['recruitmentCosts', 'summary'] as const,
+  },
+  recruitmentReports: {
+    all: ['recruitmentReports'] as const,
+    summary: ['recruitmentReports', 'summary'] as const,
+  },
+  recruitmentBudget: {
+    all: ['recruitmentBudget'] as const,
+    year: (year: number) => ['recruitmentBudget', year] as const,
+  },
   employees: {
     all: ['employees'] as const,
     detail: (id: string) => ['employees', id] as const,
+  },
+  onboardingInvites: {
+    all: ['onboardingInvites'] as const,
+    validate: (token: string) => ['onboardingInvites', 'validate', token] as const,
   },
   stocktakes: {
     all: ['stocktakes'] as const,

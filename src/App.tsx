@@ -7,6 +7,10 @@ import { getDefaultRoute } from './utils/getDefaultRoute';
 import { getActiveRole } from './lib/getActiveRole';
 import * as Pages from './routes/lazyPages';
 
+const DevOnlyRoutes = import.meta.env.DEV
+  ? lazy(() => import('./routes/DevOnlyRoutes'))
+  : null;
+
 export default function App() {
   const role = getActiveRole();
 
@@ -49,8 +53,14 @@ export default function App() {
             <Route path="/members/new" element={<Pages.EmployeeCreatePage />} />
             <Route path="/members/:id" element={<Pages.EmployeeDetailPage />} />
 
+            <Route path="/recruitment/dashboard" element={<Pages.RecruitmentDashboardPage />} />
+            <Route path="/recruitment/plans" element={<Pages.RecruitmentPlansPage />} />
+            <Route path="/recruitment/costs" element={<Pages.RecruitmentCostsPage />} />
             <Route path="/recruitment/candidates" element={<Pages.CandidateListPage />} />
             <Route path="/recruitment/candidates/:id" element={<Pages.CandidateDetailPage />} />
+            <Route path="/recruitment/calendar" element={<Pages.RecruitmentCalendarPage />} />
+            <Route path="/recruitment/reports" element={<Pages.RecruitmentReportsPage />} />
+            <Route path="/recruitment/hr-stats" element={<Pages.RecruitmentHrStatsPage />} />
             <Route path="/recruitment/settings" element={<Pages.RecruitmentSettingsPage />} />
 
             <Route path="/members/recruits" element={<Navigate to="/recruitment/candidates" replace />} />

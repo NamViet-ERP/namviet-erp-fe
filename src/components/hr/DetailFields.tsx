@@ -5,6 +5,7 @@ import HrmImageUpload, { type LocalFileState } from './HrmImageUpload';
 import { maskSensitiveId } from '../../lib/hrm/formatters';
 import { readImageFile } from '../../lib/hrm/attachments';
 import type { FileAttachment } from '../../types/hr';
+import { useSecureFileUrl } from '../../hooks/useSecureFileUrl';
 
 export function FieldView({ label, value }: { label: string; value?: string }) {
   return (
@@ -98,12 +99,13 @@ export function FieldSelect({ label, value, onChange, options, placeholder = '�
 export function ImagePreview({ label, url, fileName, document }: {
   label: string; url?: string; fileName?: string; document?: boolean;
 }) {
+  const secureImage = useSecureFileUrl(url, fileName);
   return (
     <div className="hrm-field">
       <span className="hrm-field__label">{label}</span>
-      {url ? (
+      {secureImage.url ? (
         <img
-          src={url}
+          src={secureImage.url}
           alt={label}
           className={`hrm-field-image${document ? ' hrm-field-image--document' : ''}`}
         />
@@ -119,6 +121,7 @@ export function SecureImagePreview({ label, url, fileName, document }: {
   label: string; url?: string; fileName?: string; document?: boolean;
 }) {
   const [revealed, setRevealed] = useState(false);
+  const secureImage = useSecureFileUrl(url, fileName);
 
   if (!url) {
     return (
@@ -133,11 +136,17 @@ export function SecureImagePreview({ label, url, fileName, document }: {
     <div className="hrm-field">
       <span className="hrm-field__label">{label}</span>
       <div className={`hrm-secure-image${revealed ? ' hrm-secure-image--revealed' : ''}`}>
-        <img
-          src={url}
-          alt={label}
-          className={`hrm-field-image${document ? ' hrm-field-image--document' : ''}`}
-        />
+        {secureImage.url ? (
+          <img
+            src={secureImage.url}
+            alt={label}
+            className={`hrm-field-image${document ? ' hrm-field-image--document' : ''}`}
+          />
+        ) : (
+          <div className={`hrm-field-image${document ? ' hrm-field-image--document' : ''}`} role="status">
+            {secureImage.error ? 'Không thể tải ảnh' : 'Đang tải ảnh...'}
+          </div>
+        )}
         {!revealed && (
           <div className="hrm-secure-image__overlay">
             <ImageIcon size={22} className="hrm-secure-image__overlay-icon" aria-hidden />
@@ -184,9 +193,10 @@ export function EditableImageField({
 }) {
   const replaceRef = useRef<HTMLInputElement>(null);
   const preview = pending?.preview ?? attachment?.previewUrl;
-  const [previewBroken, setPreviewBroken] = useState(false);
+  const securePreview = useSecureFileUrl(preview, attachment?.fileName);
+  const [brokenUrl, setBrokenUrl] = useState<string | undefined>();
 
-  if (!preview || previewBroken) {
+  if (!preview || brokenUrl === securePreview.url || securePreview.error) {
     return (
       <HrmImageUpload
         label={label}
@@ -202,16 +212,22 @@ export function EditableImageField({
     <div className="hrm-field">
       <span className="hrm-field__label">{label}</span>
       <div className="hrm-editable-image">
-        <img
-          key={preview}
-          src={preview}
+        {securePreview.url ? (
+          <img
+          key={securePreview.url}
+          src={securePreview.url}
           alt={label}
           className={`hrm-field-image${document ? ' hrm-field-image--document' : ''}`}
           onError={() => {
-            setPreviewBroken(true);
+            setBrokenUrl(securePreview.url);
             if (attachment?.previewUrl && !pending) onRemove();
           }}
         />
+        ) : (
+          <div className={`hrm-field-image${document ? ' hrm-field-image--document' : ''}`} role="status">
+            Đang tải ảnh...
+          </div>
+        )}
         <div className="hrm-editable-image__actions">
           <button type="button" className="btn btn-outline btn-sm rounded-full" onClick={() => replaceRef.current?.click()}>
             Thay ảnh

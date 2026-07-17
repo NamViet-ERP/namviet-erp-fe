@@ -10,10 +10,12 @@ import { filesService } from '../../services/filesService';
 import { removeVietnameseTones } from '../../lib/vietnamese';
 import FormSectionHeader from './FormSectionHeader';
 import HrmDatePicker from './HrmDatePicker';
-import HrmFieldLabel, { hrmFieldClass } from './HrmFieldLabel';
+import HrmFieldLabel from './HrmFieldLabel';
+import { hrmFieldClass } from './hrmFieldClass';
 import HrmSelect from './HrmSelect';
 import { EDUCATION_LEVELS } from '../../constants/recruitment';
-import type { Employee } from '../../types/hr';
+import type { Employee, Candidate } from '../../types/hr';
+import { candidateToEmployeePrefill } from '../../lib/hrm/candidateToEmployeePrefill';
 import { readProfileImageFile } from '../../lib/hrm/attachments';
 import { validateFullName } from '../../lib/hrm/validateFullName';
 import { zPhoneField, zTrimmedString } from '../../lib/hrm/sanitizeInput';
@@ -59,7 +61,9 @@ type FormValues = z.infer<typeof employeeSchema>;
 
 interface EmployeeOnboardFormProps {
   mode?: 'public' | 'hr';
+  inviteToken?: string;
   onCreated?: (employee: Employee) => void;
+  prefillFromCandidate?: Candidate;
 }
 
 interface FileState {
@@ -103,7 +107,12 @@ function ImageUpload({ label, required, file, onFile, onRemove, cropProfile = fa
   );
 }
 
-export default function EmployeeOnboardForm({ mode = 'public', onCreated }: EmployeeOnboardFormProps) {
+export default function EmployeeOnboardForm({
+  mode = 'public',
+  inviteToken,
+  onCreated,
+  prefillFromCandidate,
+}: EmployeeOnboardFormProps) {
   const isHr = mode === 'hr';
   const [profilePhoto, setProfilePhoto] = useState<FileState | null>(null);
   const [cccdFront, setCccdFront] = useState<FileState | null>(null);
@@ -112,7 +121,7 @@ export default function EmployeeOnboardForm({ mode = 'public', onCreated }: Empl
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [codeHint, setCodeHint] = useState('');
 
-  const { register, handleSubmit, setValue, control, formState: { errors, isSubmitting }, reset } = useForm<FormValues>({
+  const { register, handleSubmit, setValue, control, formState: { errors, isSubmitting } } = useForm<FormValues>({
     resolver: zodResolver(employeeSchema),
     defaultValues: {
       fullName: '',
@@ -147,6 +156,22 @@ export default function EmployeeOnboardForm({ mode = 'public', onCreated }: Empl
       hadSocialInsurance: undefined,
     },
   });
+
+  useEffect(() => {
+    if (!prefillFromCandidate) return;
+    const patch = candidateToEmployeePrefill(prefillFromCandidate);
+    if (patch.fullName) setValue('fullName', patch.fullName);
+    if (patch.gender) setValue('gender', patch.gender);
+    if (patch.birthDate) setValue('birthDate', patch.birthDate);
+    if (patch.joinDate) setValue('joinDate', patch.joinDate);
+    if (patch.personalEmail) setValue('personalEmail', patch.personalEmail);
+    if (patch.personalPhone) setValue('personalPhone', patch.personalPhone);
+    if (patch.permanentAddress) setValue('permanentAddress', patch.permanentAddress);
+    if (patch.education) setValue('education', patch.education);
+    if (patch.school) setValue('school', patch.school);
+    if (patch.major) setValue('major', patch.major);
+    if (patch.position) setValue('position', patch.position);
+  }, [prefillFromCandidate, setValue]);
 
   useEffect(() => {
     if (!isHr) return;
@@ -186,30 +211,31 @@ export default function EmployeeOnboardForm({ mode = 'public', onCreated }: Empl
 
     try {
       const sessionId = crypto.randomUUID();
+      const uploadOptions = { sessionId, inviteToken: isHr ? undefined : inviteToken };
       const [profileUp, frontUp, backUp, degreeUp] = await Promise.all([
-        filesService.upload(profilePhoto.file, 'profile', { sessionId }),
-        filesService.upload(cccdFront.file, 'cccd-front', { sessionId }),
-        filesService.upload(cccdBack.file, 'cccd-back', { sessionId }),
+        filesService.upload(profilePhoto.file, 'profile', uploadOptions),
+        filesService.upload(cccdFront.file, 'cccd-front', uploadOptions),
+        filesService.upload(cccdBack.file, 'cccd-back', uploadOptions),
         degreePhoto
-          ? filesService.upload(degreePhoto.file, 'degree', { sessionId })
+          ? filesService.upload(degreePhoto.file, 'degree', uploadOptions)
           : Promise.resolve(null),
       ]);
-      let profileAtt = {
+      const profileAtt = {
         fileName: profileUp.fileName,
         fileSize: `${Math.round(profileUp.fileSize / 1024)} KB`,
         previewUrl: profileUp.url,
       };
-      let cccdFrontAtt = {
+      const cccdFrontAtt = {
         fileName: frontUp.fileName,
         fileSize: `${Math.round(frontUp.fileSize / 1024)} KB`,
         previewUrl: frontUp.url,
       };
-      let cccdBackAtt = {
+      const cccdBackAtt = {
         fileName: backUp.fileName,
         fileSize: `${Math.round(backUp.fileSize / 1024)} KB`,
         previewUrl: backUp.url,
       };
-      let degreeAtt = degreePhoto
+      const degreeAtt = degreePhoto
         ? {
             fileName: degreeUp!.fileName,
             fileSize: `${Math.round(degreeUp!.fileSize / 1024)} KB`,
@@ -257,7 +283,7 @@ export default function EmployeeOnboardForm({ mode = 'public', onCreated }: Empl
 
       const created = isHr
         ? await employeesService.create(payload)
-        : await employeesService.createOnboard(payload);
+        : await employeesService.createOnboard(payload, inviteToken ?? '');
 
       if (isHr) {
         onCreated?.(created);
@@ -277,9 +303,6 @@ export default function EmployeeOnboardForm({ mode = 'public', onCreated }: Empl
         <div className="hrm-success-state__icon"><CheckCircle2 size={64} /></div>
         <h3 className="hrm-success-state__title">Gửi thông tin thành công!</h3>
         <p className="hrm-success-state__desc">Phòng Nhân sự sẽ xem xét và liên hệ với bạn sớm nhất.</p>
-        <button type="button" onClick={() => { reset(); setProfilePhoto(null); setCccdFront(null); setCccdBack(null); setDegreePhoto(null); setIsSubmitted(false); }} className="btn btn-primary rounded-full px-8">
-          Gửi hồ sơ khác
-        </button>
       </div>
     );
   }

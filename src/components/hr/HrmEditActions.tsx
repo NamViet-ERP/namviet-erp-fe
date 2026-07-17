@@ -3,6 +3,7 @@ import { Edit, Save, X } from 'lucide-react';
 interface HrmEditActionsProps {
   isEditing: boolean;
   isSaving?: boolean;
+  disabled?: boolean;
   onEdit: () => void;
   onCancel: () => void;
   onSave: () => void;
@@ -11,13 +12,20 @@ interface HrmEditActionsProps {
 export default function HrmEditActions({
   isEditing,
   isSaving = false,
+  disabled = false,
   onEdit,
   onCancel,
   onSave,
 }: HrmEditActionsProps) {
   if (!isEditing) {
     return (
-      <button type="button" onClick={onEdit} className="btn btn-primary rounded-full px-5 flex items-center gap-2">
+      <button
+        type="button"
+        onClick={onEdit}
+        disabled={disabled}
+        title={disabled ? 'Bạn không có quyền chỉnh sửa' : undefined}
+        className="btn btn-primary rounded-full px-5 flex items-center gap-2"
+      >
         <Edit size={16} /> Chỉnh sửa
       </button>
     );
@@ -31,7 +39,7 @@ export default function HrmEditActions({
       <button
         type="button"
         onClick={onSave}
-        disabled={isSaving}
+        disabled={isSaving || disabled}
         className="btn btn-primary rounded-full px-5 flex items-center gap-2"
       >
         <Save size={16} /> Lưu

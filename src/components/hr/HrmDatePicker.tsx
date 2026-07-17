@@ -1,4 +1,5 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import {
   addMonths,
@@ -142,11 +143,11 @@ export default function HrmDatePicker({
   useEffect(() => {
     if (!open) return;
     const onDocClick = (e: MouseEvent) => {
-      if (!rootRef.current?.contains(e.target as Node)) {
-        setOpen(false);
-        setPopoverLayout(null);
-        onBlur?.();
-      }
+      const target = e.target as Node;
+      if (rootRef.current?.contains(target) || popoverRef.current?.contains(target)) return;
+      setOpen(false);
+      setPopoverLayout(null);
+      onBlur?.();
     };
     document.addEventListener('mousedown', onDocClick);
     return () => document.removeEventListener('mousedown', onDocClick);
@@ -257,7 +258,7 @@ export default function HrmDatePicker({
         <Calendar size={18} className="hrm-date-picker__icon" aria-hidden />
       </button>
 
-      {open && (
+      {open && createPortal(
         <div
           ref={popoverRef}
           id={listId}
@@ -377,7 +378,8 @@ export default function HrmDatePicker({
               </button>
             )}
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );

@@ -1,8 +1,8 @@
 import { useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FileText, Download } from 'lucide-react';
+import { FileText, Download, UserPlus } from 'lucide-react';
 import { showToast } from '../../components/ui/Toast';
-import { useCandidate, useUpdateCandidate } from '../../hooks/useCandidates';
+import { useCandidate, useUpdateCandidate, useUpdateCandidateStatus } from '../../hooks/useCandidates';
 import { useHrStaffSelectOptions } from '../../hooks/useHrStaff';
 import { RECRUITMENT_SOURCES, EDUCATION_LEVELS } from '../../constants/recruitment';
 import { usePositionSelectOptions } from '../../hooks/usePositions';
@@ -14,17 +14,25 @@ import { FieldView, FieldInput, FieldSelect } from '../../components/hr/DetailFi
 import { HrmDetailHeader } from '../../components/hr/HrmPageChrome';
 import HrmEditActions from '../../components/hr/HrmEditActions';
 import HrmNotFound, { HrmLoadingState } from '../../components/hr/HrmNotFound';
+import CandidateStatusBadge from '../../components/recruitment/CandidateStatusBadge';
+import CandidateStatusModal, { type CandidateStatusFormValues } from '../../components/recruitment/CandidateStatusModal';
 import { formatCandidateAppliedAt } from '../../lib/hrm/candidateApiMapper';
 import { sanitizeCandidateForSave } from '../../lib/hrm/sanitizeInput';
 import type { Candidate, UpdateCandidateDto } from '../../types/hr';
+import { usePermission } from '../../hooks/usePermission';
 
 export default function CandidateDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: candidate, isLoading, isError } = useCandidate(id);
   const updateMutation = useUpdateCandidate();
+  const statusMutation = useUpdateCandidateStatus();
+  const { has } = usePermission();
+  const canUpdateCandidate = has('hrm.candidates.update');
+  const canCreateEmployee = has('hrm.employees.create');
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState<Candidate | null>(null);
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
   const downloadingCvRef = useRef(false);
   const form = isEditing ? draft : candidate;
   const positionOptions = usePositionSelectOptions(form?.position ?? candidate?.position);
@@ -86,14 +94,57 @@ export default function CandidateDetailPage() {
     }
   };
 
+  const handleStatusSubmit = async (values: CandidateStatusFormValues) => {
+    if (!id) return;
+    try {
+      await statusMutation.mutateAsync({ id, payload: values });
+      showToast('success', 'Đã cập nhật trạng thái ứng viên');
+      setStatusModalOpen(false);
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không thể cập nhật trạng thái'));
+    }
+  };
+
   const editActions = (
     <HrmEditActions
       isEditing={isEditing}
       isSaving={updateMutation.isPending}
+      disabled={!canUpdateCandidate}
       onEdit={handleStartEditing}
       onCancel={handleCancel}
       onSave={handleSave}
     />
+  );
+
+  const candidateCanBecomeEmployee = candidate.status === 'Offered' || candidate.status === 'Accepted';
+
+  const headerActions = (
+    <div className="flex flex-wrap items-center gap-2">
+      {!isEditing && candidateCanBecomeEmployee && (
+        <button
+          type="button"
+          className="btn btn-primary btn-sm"
+          onClick={() => navigate('/members/new', { state: { fromCandidate: candidate } })}
+          disabled={!canCreateEmployee}
+          title={canCreateEmployee ? undefined : 'Bạn không có quyền tạo nhân viên'}
+        >
+          <UserPlus size={16} aria-hidden />
+          Tạo nhân viên
+        </button>
+      )}
+      {!isEditing && (
+        <button
+          type="button"
+          className="inline-flex"
+          title="Cập nhật trạng thái"
+          disabled={!canUpdateCandidate}
+          onClick={() => setStatusModalOpen(true)}
+        >
+          <CandidateStatusBadge status={candidate.status} />
+        </button>
+      )}
+      {editActions}
+    </div>
   );
 
   return (
@@ -102,7 +153,7 @@ export default function CandidateDetailPage() {
         onBack={() => navigate('/recruitment/candidates')}
         title={candidate.fullName}
         subtitle={`Nộp hồ sơ · ${formatCandidateAppliedAt(candidate.appliedAt)}`}
-        actions={editActions}
+        actions={headerActions}
       />
 
       <DetailSection title="Thông tin ứng viên" description="Hồ sơ từ form ứng tuyển công khai">
@@ -138,6 +189,7 @@ export default function CandidateDetailPage() {
               <FieldView label="Số năm kinh nghiệm" value={form.experience} />
               <FieldView label="Nguồn ứng tuyển" value={form.source as string} />
               <FieldView label="HR phụ trách" value={form.hrResponsible} />
+              <FieldView label="Kế hoạch tuyển dụng" value={form.recruitmentPlanLabel ?? 'Chưa gán kế hoạch'} />
             </>
           )}
         </div>
@@ -194,6 +246,15 @@ export default function CandidateDetailPage() {
           )}
         </div>
       </DetailSection>
+
+      <CandidateStatusModal
+        open={statusModalOpen}
+        candidate={candidate}
+        action="custom"
+        onClose={() => setStatusModalOpen(false)}
+        onSubmit={handleStatusSubmit}
+        isSubmitting={statusMutation.isPending}
+      />
     </div>
   );
 }

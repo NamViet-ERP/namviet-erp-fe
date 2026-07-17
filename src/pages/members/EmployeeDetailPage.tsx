@@ -383,7 +383,7 @@ export default function EmployeeDetailPage() {
         <DetailFieldGrid layout="three">
           {isEditing ? (
             <>
-              <FieldSelect label="Đã tham gia BHXH" value={form.hadSocialInsurance ?? ''} onChange={v => setField('hadSocialInsurance', v)} options={['Đã từng tham gia', 'Chưa từng tham gia']} />
+              <FieldSelect label="Đã tham gia BHXH" value={form.hadSocialInsurance ?? ''} onChange={v => setField('hadSocialInsurance', v as Employee['hadSocialInsurance'])} options={['Đã từng tham gia', 'Chưa từng tham gia']} />
               <FieldInput label="Số BHXH" value={form.siNumber ?? ''} onChange={v => setField('siNumber', v)} />
               <FieldInput label="Mã số thuế" value={form.taxCode ?? ''} onChange={v => setField('taxCode', v)} />
             </>

@@ -1,9 +1,6 @@
-import { apiClient } from '../lib/apiClient';
-import { getStoredToken } from '../lib/authSession';
-import { fromApi, toApi, type CandidateApiDto } from '../lib/hrm/candidateApiMapper';
-import type { Candidate, CreateCandidateDto, UpdateCandidateDto } from '../types/hr';
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
+import { apiClient, saveBlob } from '../lib/apiClient';
+import { fromApi, inputDateToApi, toApi, type CandidateApiDto } from '../lib/hrm/candidateApiMapper';
+import type { Candidate, CreateCandidateDto, UpdateCandidateDto, CandidatePipelineStatus } from '../types/hr';
 const ENDPOINT = '/api/candidates';
 
 export interface CandidateListParams {
@@ -14,6 +11,8 @@ export interface CandidateListParams {
   source?: string;
   hrResponsible?: string;
   status?: string;
+  dateFrom?: string;
+  dateTo?: string;
 }
 
 export interface CandidatePagedResult {
@@ -24,6 +23,7 @@ export interface CandidatePagedResult {
   totalPages: number;
   totalUnfiltered: number;
   uniquePositionCount: number;
+  newCvCount: number;
 }
 
 interface CandidatePagedApiDto {
@@ -34,7 +34,39 @@ interface CandidatePagedApiDto {
   totalPages: number;
   totalUnfiltered: number;
   uniquePositionCount: number;
+  newCvCount: number;
 }
+
+export interface UpdateCandidateStatusPayload {
+  status: CandidatePipelineStatus;
+  interviewDate?: string;
+  interviewTime?: string;
+  evaluator?: string;
+  startDate?: string;
+  offerSalary?: string;
+  offerNote?: string;
+  rejectReason?: string;
+  recruitmentPlanId?: string | null;
+}
+
+export type PublicCandidateApplication = Pick<
+  CreateCandidateDto,
+  | 'fullName'
+  | 'phone'
+  | 'email'
+  | 'gender'
+  | 'address'
+  | 'birthDate'
+  | 'education'
+  | 'school'
+  | 'major'
+  | 'position'
+  | 'experience'
+  | 'source'
+  | 'cvFileName'
+  | 'cvFileSize'
+  | 'cvFileUrl'
+>;
 
 export const candidatesService = {
   async list(params: CandidateListParams = {}): Promise<CandidatePagedResult> {
@@ -46,6 +78,8 @@ export const candidatesService = {
       source: params.source || undefined,
       hrResponsible: params.hrResponsible || undefined,
       status: params.status || undefined,
+      dateFrom: params.dateFrom || undefined,
+      dateTo: params.dateTo || undefined,
     });
     return {
       items: res.items.map(fromApi),
@@ -55,6 +89,7 @@ export const candidatesService = {
       totalPages: res.totalPages,
       totalUnfiltered: res.totalUnfiltered,
       uniquePositionCount: res.uniquePositionCount,
+      newCvCount: res.newCvCount ?? 0,
     };
   },
 
@@ -68,38 +103,50 @@ export const candidatesService = {
     return fromApi(res);
   },
 
+  async applyPublic(dto: PublicCandidateApplication): Promise<Candidate> {
+    const res = await apiClient.post<CandidateApiDto>(`${ENDPOINT}/apply`, {
+      fullName: dto.fullName,
+      phone: dto.phone,
+      email: dto.email,
+      gender: dto.gender,
+      address: dto.address,
+      birthDate: inputDateToApi(dto.birthDate),
+      education: dto.education,
+      school: dto.school,
+      major: dto.major,
+      position: dto.position,
+      experience: dto.experience,
+      source: dto.source,
+      cvFileName: dto.cvFileName,
+      cvFileSize: dto.cvFileSize,
+      cvFileUrl: dto.cvFileUrl,
+    });
+    return fromApi(res);
+  },
+
   async update(id: string, dto: UpdateCandidateDto): Promise<Candidate> {
     const payload = toApi({ ...dto, fullName: dto.fullName ?? '' } as CreateCandidateDto, id);
     const res = await apiClient.put<CandidateApiDto>(`${ENDPOINT}/${id}`, payload);
     return fromApi(res);
   },
 
-  async remove(id: string): Promise<void> {
-    await apiClient.delete<void>(`${ENDPOINT}/${id}`);
+  async updateStatus(id: string, payload: UpdateCandidateStatusPayload): Promise<Candidate> {
+    const res = await apiClient.patch<CandidateApiDto>(`${ENDPOINT}/${id}/status`, {
+      status: payload.status,
+      interviewDate: payload.interviewDate,
+      interviewTime: payload.interviewTime,
+      evaluator: payload.evaluator,
+      startDate: payload.startDate,
+      offerSalary: payload.offerSalary,
+      offerNote: payload.offerNote,
+      rejectReason: payload.rejectReason,
+      recruitmentPlanId: payload.recruitmentPlanId,
+    });
+    return fromApi(res);
   },
 
   async downloadCv(id: string, fileName?: string): Promise<void> {
-    const token = getStoredToken();
-    const url = `${BASE_URL}${ENDPOINT}/${id}/cv`;
-    const response = await fetch(url, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(text.trim() || `Không thể tải CV (HTTP ${response.status})`);
-    }
-
-    const blob = await response.blob();
-    const objectUrl = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = objectUrl;
-    anchor.download = fileName?.trim() || `CV-${id}`;
-    anchor.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;pointer-events:none';
-    document.body.appendChild(anchor);
-    anchor.click();
-    window.setTimeout(() => {
-      anchor.remove();
-      URL.revokeObjectURL(objectUrl);
-    }, 500);
+    const blob = await apiClient.getBlob(`${ENDPOINT}/${id}/cv`);
+    saveBlob(blob, fileName?.trim() || `CV-${id}`);
   },
 };

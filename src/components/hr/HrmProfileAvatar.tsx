@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { profileInitials } from '../../lib/hrm/profileInitials';
+import { useSecureFileUrl } from '../../hooks/useSecureFileUrl';
 
 type HrmProfileAvatarProps = {
   name: string;
@@ -15,9 +16,10 @@ export default function HrmProfileAvatar({
   variant = 'member',
   className,
 }: HrmProfileAvatarProps) {
-  const [broken, setBroken] = useState(false);
+  const [brokenUrl, setBrokenUrl] = useState<string | undefined>();
+  const securePhoto = useSecureFileUrl(photoUrl);
 
-  if (!photoUrl || broken) {
+  if (!photoUrl || brokenUrl === securePhoto.url || securePhoto.error) {
     const fallbackClass =
       variant === 'profile'
         ? 'hrm-profile-avatar-fallback'
@@ -29,25 +31,33 @@ export default function HrmProfileAvatar({
     );
   }
 
+  if (securePhoto.isLoading || !securePhoto.url) {
+    const loadingClass =
+      variant === 'profile'
+        ? 'hrm-profile-avatar-fallback'
+        : 'hrm-member-avatar hrm-member-avatar--fallback';
+    return <span className={[loadingClass, className].filter(Boolean).join(' ')} aria-hidden />;
+  }
+
   if (variant === 'profile') {
     return (
       <img
-        key={photoUrl}
-        src={photoUrl}
+        key={securePhoto.url}
+        src={securePhoto.url}
         alt=""
         className={className}
-        onError={() => setBroken(true)}
+        onError={() => setBrokenUrl(securePhoto.url)}
       />
     );
   }
 
   return (
     <img
-      key={photoUrl}
-      src={photoUrl}
+      key={securePhoto.url}
+      src={securePhoto.url}
       alt=""
       className={['hrm-member-avatar', className].filter(Boolean).join(' ')}
-      onError={() => setBroken(true)}
+      onError={() => setBrokenUrl(securePhoto.url)}
     />
   );
 }

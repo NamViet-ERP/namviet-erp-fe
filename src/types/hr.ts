@@ -1,6 +1,20 @@
 export type CandidateGender = 'Nam' | 'Nữ';
 export type CandidateEducation = 'Đại học' | 'Cao đẳng' | 'THPT' | 'Khác';
 export type CandidateSource = 'Facebook' | 'Zalo' | '24h - lọc' | '24h - ứng tuyển' | 'TopCV' | 'Glints';
+export type CandidatePipelineStatus =
+  | 'New'
+  | 'Screening'
+  | 'InterviewScheduled'
+  | 'Interview1'
+  | 'Interview2'
+  | 'InterviewPassed'
+  | 'Rejected'
+  | 'Offered'
+  | 'OfferDeclined'
+  | 'Accepted'
+  | 'Probation'
+  | 'Official'
+  | 'Cancelled';
 
 export interface Candidate {
   id: string;
@@ -21,6 +35,9 @@ export interface Candidate {
   cvFileSize: string;
   cvFileUrl?: string;
   appliedAt: string;
+  status: CandidatePipelineStatus;
+  recruitmentPlanId?: string;
+  recruitmentPlanLabel?: string;
   // HR workflow
   screeningType?: string;
   targetPosition?: string;
@@ -28,15 +45,34 @@ export interface Candidate {
   preScreenResult?: string;
   contactResult?: string;
   interviewDate?: string;
+  interviewTime?: string;
   interviewAttended?: 'Đến' | 'Không đến' | '';
   evaluator?: string;
   evaluationResult?: 'Đạt' | 'Không đạt' | '';
   offerStatus?: 'Đồng ý' | 'Từ chối' | '';
   offerRejectReason?: string;
+  offerSalary?: string;
   startDate?: string;
   onboardingAttended?: 'Đến' | 'Không đến' | '';
   onboardingRejectReason?: string;
 }
+
+export interface RecruitmentPlan {
+  id: string;
+  positionName: string;
+  departmentName: string;
+  headcount: number;
+  hiredCount: number;
+  remainingCount: number;
+  reason?: string;
+  period?: string;
+  openDate?: string;
+  deadlineDate?: string;
+  status: string;
+}
+
+export type CreateRecruitmentPlanDto = Omit<RecruitmentPlan, 'id' | 'hiredCount' | 'remainingCount'>;
+export type UpdateRecruitmentPlanDto = CreateRecruitmentPlanDto;
 
 export type EmployeeGender = 'Nam' | 'Nữ';
 export type EmployeeStatus = 'Đang làm' | 'Nghỉ việc' | 'Thai sản';
@@ -97,7 +133,9 @@ export interface Employee {
   linkedAccountStatus?: 'active' | 'locked' | 'none';
 }
 
-export type CreateCandidateDto = Omit<Candidate, 'id' | 'appliedAt'>;
+export type CreateCandidateDto = Omit<Candidate, 'id' | 'appliedAt' | 'status'> & {
+  status?: CandidatePipelineStatus;
+};
 export type UpdateCandidateDto = Partial<Omit<Candidate, 'id'>>;
 export type CreateEmployeeDto = Omit<Employee, 'id'>;
 export type UpdateEmployeeDto = Partial<Omit<Employee, 'id'>>;
