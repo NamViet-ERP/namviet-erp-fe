@@ -2,9 +2,10 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
+import { Package } from 'lucide-react';
 import Sidebar from './Sidebar';
 
-const DummyIcon = () => null;
+const DummyIcon = Package;
 
 describe('Sidebar menu items', () => {
   let container: HTMLDivElement;

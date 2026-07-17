@@ -70,6 +70,19 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
     match: p => /^\/admin\/settings\/roles\/[^/]+\/permissions$/.test(p),
     permissions: ['admin.roles.view:all'],
   },
+
+  { match: p => p.startsWith('/technical/cskh'), permissions: ['tech.cskh.view'] },
+  { match: p => p === '/technical' || p.startsWith('/technical/'), permissions: ['tech.cskh.view'] },
+
+  { match: p => p === '/purchasing/dashboard', permissions: ['purchasing.dashboard.view'] },
+  { match: p => p.startsWith('/suppliers') || p === '/purchasing/suppliers', permissions: ['purchasing.suppliers.view', 'wms.suppliers.view:all'] },
+  { match: p => p === '/purchasing/plans', permissions: ['purchasing.plans.view'] },
+  { match: p => p === '/purchasing/requests', permissions: ['purchasing.requests.view'] },
+  { match: p => p.startsWith('/purchasing/orders'), permissions: ['purchasing.orders.view'] },
+  { match: p => p === '/purchasing/deliveries', permissions: ['purchasing.deliveries.view'] },
+  { match: p => p === '/purchasing/payments', permissions: ['purchasing.payments.view'] },
+  { match: p => p === '/purchasing/documents', permissions: ['purchasing.documents.view'] },
+  { match: p => p === '/purchasing/settings', permissions: ['purchasing.settings.view'] },
 ];
 
 export function getRequiredPermissionsForPath(pathname: string): PermissionKey[] | null {

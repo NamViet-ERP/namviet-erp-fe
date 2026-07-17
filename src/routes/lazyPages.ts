@@ -35,3 +35,11 @@ export const AdminRolePermissionsPage = lazy(() => import('../pages/admin/AdminR
 export const StocktakeListPage = lazy(() => import('../pages/stocktake/StocktakeListPage'));
 export const StocktakeSettingsPage = lazy(() => import('../pages/stocktake/StocktakeSettingsPage'));
 export const WarehouseReportsPage = lazy(() => import('../pages/warehouse/WarehouseReportsPage'));
+
+export const AfterSalesClientsPage = lazy(() => import('../pages/technical/cskh/AfterSalesClientsPage'));
+export const CareHistoryPage = lazy(() => import('../pages/technical/cskh/CareHistoryPage'));
+export const CskhBirthdaysPage = lazy(() => import('../pages/technical/cskh/CskhBirthdaysPage'));
+export const CskhSettingsPage = lazy(() => import('../pages/technical/cskh/CskhSettingsPage'));
+export const ProjectIssuesPage = lazy(() => import('../pages/technical/cskh/ProjectIssuesPage'));
+export const CdtReportsPage = lazy(() => import('../pages/technical/cskh/CdtReportsPage'));
+export const InternalReportsPage = lazy(() => import('../pages/technical/cskh/InternalReportsPage'));

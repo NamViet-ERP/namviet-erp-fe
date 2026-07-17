@@ -49,4 +49,11 @@ export default defineConfig([
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
     },
   },
+  {
+    files: ['src/components/purchasing/**/*.{ts,tsx}'],
+    rules: {
+      // These DEV-only mock modals intentionally hydrate/reset local form drafts when opened.
+      'react-hooks/set-state-in-effect': 'off',
+    },
+  },
 ])

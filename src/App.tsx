@@ -1,4 +1,4 @@
-import { Suspense } from 'react';
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AppLayout from './components/layout/AppLayout';
 import PageLoader from './components/ui/PageLoader';
@@ -72,8 +72,24 @@ export default function App() {
             <Route path="/admin/settings" element={<Pages.AdminSettingsPage />} />
             <Route path="/admin/settings/roles/:code/permissions" element={<Pages.AdminRolePermissionsPage />} />
 
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
-          </Route>
+            <Route path="/technical" element={<Navigate to="/technical/cskh/clients" replace />} />
+            <Route path="/technical/cskh" element={<Navigate to="/technical/cskh/clients" replace />} />
+            <Route path="/technical/cskh/clients" element={<Pages.AfterSalesClientsPage />} />
+            <Route path="/technical/cskh/history" element={<Pages.CareHistoryPage />} />
+            <Route path="/technical/cskh/project-issues" element={<Pages.ProjectIssuesPage />} />
+            <Route path="/technical/cskh/reports-cdt" element={<Pages.CdtReportsPage />} />
+            <Route path="/technical/cskh/reports-internal" element={<Pages.InternalReportsPage />} />
+            <Route path="/technical/cskh/birthdays" element={<Pages.CskhBirthdaysPage />} />
+            <Route path="/technical/cskh/settings" element={<Pages.CskhSettingsPage />} />
+
+            {DevOnlyRoutes && (
+              <>
+                <Route path="/purchasing/*" element={<DevOnlyRoutes module="purchasing" />} />
+                <Route path="/suppliers/*" element={<DevOnlyRoutes module="suppliers" />} />
+              </>
+            )}
+
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />          </Route>
         </Routes>
       </Suspense>
       {import.meta.env.DEV && <Agentation />}

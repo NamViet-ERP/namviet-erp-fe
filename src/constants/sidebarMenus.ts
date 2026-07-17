@@ -10,6 +10,9 @@ import {
 
   Layers, FolderKanban, ArrowLeftRight, Building2, Ruler, BarChart3, Receipt, RotateCcw,
 
+  Target, CalendarDays, DollarSign, Headphones, ShoppingCart, ClipboardList, FileText, Cake,
+  Star,
+
 } from 'lucide-react';
 
 
@@ -274,13 +277,97 @@ export const recruitmentMenu: SidebarMenuItem[] = [
 
   {
 
+    id: 'recruitment-dashboard',
+
+    label: 'Tổng quan',
+
+    icon: LayoutDashboard,
+
+    path: '/recruitment/dashboard',
+
+    permission: 'hrm.candidates.view:all',
+
+  },
+
+  {
+
+    id: 'recruitment-plans',
+
+    label: 'Kế hoạch & Tiến độ',
+
+    icon: Target,
+
+    path: '/recruitment/plans',
+
+    permission: 'hrm.recruitment.plans.view',
+
+  },
+
+  {
+
+    id: 'recruitment-costs',
+
+    label: 'Chi phí',
+
+    icon: DollarSign,
+
+    path: '/recruitment/costs',
+
+    permission: 'hrm.recruitment.costs.view',
+
+  },
+
+  {
+
     id: 'candidates-list',
 
-    label: 'Danh sách ứng viên',
+    label: 'Quản lý ứng viên',
 
     icon: UserCheck,
 
     path: '/recruitment/candidates',
+
+    permission: 'hrm.candidates.view:all',
+
+  },
+
+  {
+
+    id: 'recruitment-calendar',
+
+    label: 'Lịch PV',
+
+    icon: CalendarDays,
+
+    path: '/recruitment/calendar',
+
+    permission: 'hrm.candidates.view:all',
+
+  },
+
+  {
+
+    id: 'recruitment-reports',
+
+    label: 'Báo cáo',
+
+    icon: BarChart3,
+
+    path: '/recruitment/reports',
+
+    permission: 'hrm.recruitment.reports.view',
+
+  },
+
+  {
+
+    id: 'recruitment-hr-stats',
+
+    label: 'Thống kê nhân sự',
+
+    icon: UserCog,
+
+    path: '/recruitment/hr-stats',
 
     permission: 'hrm.candidates.view:all',
 
@@ -368,5 +455,126 @@ export const adminMenu: SidebarMenuItem[] = [
 
   },
 
+];
+
+
+
+/** Kỹ thuật — chỉ CSKH (ERP cũ + yêu cầu sếp). */
+export const technicalMenu: SidebarMenuItem[] = [
+  {
+    id: 'cskh-clients',
+    label: 'Khách hàng sau bán',
+    icon: Headphones,
+    path: '/technical/cskh/clients',
+    permission: 'tech.cskh.view',
+  },
+  {
+    id: 'cskh-history',
+    label: 'Lịch sử chăm sóc',
+    icon: ClipboardList,
+    path: '/technical/cskh/history',
+    permission: 'tech.cskh.view',
+  },
+  {
+    id: 'cskh-issues',
+    label: 'Vấn đề theo dự án',
+    icon: FolderKanban,
+    path: '/technical/cskh/project-issues',
+    permission: 'tech.cskh.view',
+  },
+  {
+    id: 'cskh-cdt',
+    label: 'Báo cáo CĐT',
+    icon: FileText,
+    path: '/technical/cskh/reports-cdt',
+    permission: 'tech.cskh.view',
+  },
+  {
+    id: 'cskh-internal',
+    label: 'Báo cáo nội bộ',
+    icon: BarChart3,
+    path: '/technical/cskh/reports-internal',
+    permission: 'tech.cskh.view',
+  },
+  {
+    id: 'cskh-birthdays',
+    label: 'Sinh nhật hôm nay',
+    icon: Cake,
+    path: '/technical/cskh/birthdays',
+    permission: 'tech.cskh.view',
+  },
+  {
+    id: 'cskh-settings',
+    label: 'Thiết lập',
+    icon: Settings,
+    path: '/technical/cskh/settings',
+    permission: 'tech.cskh.view',
+  },
+];
+
+
+
+/** Mua hàng — phase reset: kế hoạch + đơn hàng (gồm phiếu phát sinh). */
+export const purchasingMenu: SidebarMenuItem[] = [
+  {
+    id: 'pur-plan',
+    label: 'Kế hoạch mua hàng',
+    icon: Target,
+    path: '/purchasing/plans',
+    permission: 'purchasing.plans.view',
+  },
+  {
+    id: 'pur-orders',
+    label: 'Đơn hàng',
+    icon: ShoppingCart,
+    path: '/purchasing/orders',
+    permission: 'purchasing.orders.view',
+  },
+  {
+    id: 'pur-settings',
+    label: 'Thiết lập',
+    icon: Settings,
+    path: '/purchasing/settings',
+    permission: 'purchasing.settings.view',
+  },
+];
+
+/** Nhà cung cấp — menu giống ERP /admin/suppliers. */
+export const suppliersMenu: SidebarMenuItem[] = [
+  {
+    id: 'sup-dashboard',
+    label: 'Dashboard',
+    icon: LayoutDashboard,
+    path: '/suppliers/dashboard',
+    permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
+  },
+  {
+    id: 'sup-groups',
+    label: 'Nhóm nhà cung cấp',
+    icon: Layers,
+    path: '/suppliers/groups',
+    permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
+  },
+  {
+    id: 'sup-directory',
+    label: 'Nhà cung cấp',
+    icon: Building2,
+    path: '/suppliers/list',
+    permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
+  },
+  {
+    id: 'sup-evaluate',
+    label: 'Đánh giá NCC',
+    icon: Star,
+    path: '/suppliers/evaluations',
+    permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
+  },
+  {
+    id: 'sup-settings',
+    label: 'Thiết lập',
+    icon: Settings,
+    path: '/suppliers/settings',
+    permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
+  },
 ];
 

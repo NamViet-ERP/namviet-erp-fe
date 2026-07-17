@@ -17,6 +17,19 @@ const FORBIDDEN_PATTERNS = [
   { name: 'USE_MOCK import', re: /import\s*\{[^}]*\bUSE_MOCK\b[^}]*\}\s*from/ },
   { name: 'mockNotifications', re: /\bmockNotifications\b/ },
   { name: 'Chức năng giả lập', re: /Chức năng giả lập/ },
+  { name: 'purchasingMock outside DEV graph', re: /\bpurchasingMock\b/, devOnlyAllowed: true },
+  { name: 'suppliersMock outside DEV graph', re: /\bsuppliersMock\b/, devOnlyAllowed: true },
+  { name: 'seed factory outside DEV graph', re: /\bcreate[A-Za-z0-9]*Seed\b/, devOnlyAllowed: true },
+];
+
+const DEV_ONLY_PREFIXES = [
+  'src/components/purchasing/',
+  'src/data/purchasingMock.ts',
+  'src/data/suppliersMock.ts',
+  'src/lib/purchasing/',
+  'src/pages/purchasing/',
+  'src/pages/suppliers/',
+  'src/routes/DevOnlyRoutes.tsx',
 ];
 
 async function exists(p) {
@@ -50,7 +63,9 @@ const violations = [];
 for (const file of files) {
   const rel = path.relative(root, file).replace(/\\/g, '/');
   const content = await readFile(file, 'utf8');
-  for (const { name, re } of FORBIDDEN_PATTERNS) {
+  const isDevOnly = DEV_ONLY_PREFIXES.some(prefix => rel.startsWith(prefix));
+  for (const { name, re, devOnlyAllowed } of FORBIDDEN_PATTERNS) {
+    if (devOnlyAllowed && isDevOnly) continue;
     if (re.test(content)) {
       violations.push(`${rel}: ${name}`);
     }

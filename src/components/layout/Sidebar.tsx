@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
-import { ChevronDown, ChevronsLeft, ChevronLeft, Warehouse as WarehouseIcon, ClipboardCheck, Users, UserCheck, ShieldCheck, Settings } from 'lucide-react';
+import { ChevronDown, ChevronsLeft, ChevronLeft, Warehouse as WarehouseIcon, ClipboardCheck, Users, UserCheck, ShieldCheck, Settings, Wrench, ShoppingCart, Building2 } from 'lucide-react';
 import type { SidebarMenuItem } from '../../types';
 import type { LucideIcon } from 'lucide-react';
 import type { PermissionKey } from '../../lib/permissions';
 import { handlePermissionNavClick, isNavItemAccessible } from '../../lib/protectedNavigation';
 
-type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin';
+type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin' | 'technical' | 'purchasing' | 'suppliers';
 
 const moduleIcons: Record<Module, LucideIcon> = { 
   warehouse: WarehouseIcon, 
@@ -15,13 +15,19 @@ const moduleIcons: Record<Module, LucideIcon> = {
   members: Users,
   recruitment: UserCheck,
   admin: ShieldCheck,
+  technical: Wrench,
+  purchasing: ShoppingCart,
+  suppliers: Building2,
 };
-const moduleLabels: Record<Module, string> = { 
-  warehouse: 'Kho hàng', 
+const moduleLabels: Record<Module, string> = {
+  warehouse: 'KHO HÀNG',
   stocktake: 'KIỂM KÊ',
   members: 'NHÂN VIÊN',
   recruitment: 'TUYỂN DỤNG',
   admin: 'ADMIN',
+  technical: 'KỸ THUẬT',
+  purchasing: 'MUA HÀNG',
+  suppliers: 'NHÀ CUNG CẤP',
 };
 
 interface SidebarProps {
@@ -168,7 +174,9 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
   }, [popoverItem, updateFlyoutPosition]);
 
   const isModuleAlt =
-    currentModule === 'members' || currentModule === 'recruitment' || currentModule === 'admin';
+    currentModule === 'warehouse' || currentModule === 'stocktake'
+    || currentModule === 'members' || currentModule === 'recruitment' || currentModule === 'admin'
+      || currentModule === 'technical' || currentModule === 'purchasing' || currentModule === 'suppliers';
 
   return (
     <aside
