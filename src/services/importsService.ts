@@ -1,36 +1,15 @@
 import type { Import } from '../types';
 import type { ApproveImportRequestApiDto } from '../types/api/importBudgetApi';
-import { apiClient } from '../lib/apiClient';
-import { getStoredToken } from '../lib/authSession';
+import type { ImportParseResultApiDto } from '../types/api/importParseApi';
+import { apiClient, saveBlob } from '../lib/apiClient';
 import { appendVoucherDateQuery, type VoucherListParams } from '../lib/wms/voucherDateUtils';
 
 export type CreateImportDto = Omit<Import, 'id' | 'createdBy'> & { createdBy?: string };
 export type UpdateImportDto = Partial<CreateImportDto>;
 
 const ENDPOINT = '/api/imports';
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
-
 async function downloadBlob(path: string, fileName: string): Promise<void> {
-  const token = getStoredToken();
-  const response = await fetch(`${BASE_URL}${path}`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-  });
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(text.trim() || `Không thể tải file (HTTP ${response.status})`);
-  }
-  const blob = await response.blob();
-  const objectUrl = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = objectUrl;
-  anchor.download = fileName;
-  anchor.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;pointer-events:none';
-  document.body.appendChild(anchor);
-  anchor.click();
-  window.setTimeout(() => {
-    anchor.remove();
-    URL.revokeObjectURL(objectUrl);
-  }, 500);
+  saveBlob(await apiClient.getBlob(path), fileName);
 }
 
 export const importsService = {

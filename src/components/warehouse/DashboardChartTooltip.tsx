@@ -1,10 +1,10 @@
 import type { CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
-import type { TooltipProps } from 'recharts';
+import type { TooltipContentProps, TooltipPayloadEntry } from 'recharts';
 
 import { formatCurrency } from '../../utils/formatCurrency';
 
-type TooltipPayload = NonNullable<TooltipProps<number, string>['payload']>[number];
+type ChartTooltipProps = TooltipContentProps;
 
 const PORTAL_TOOLTIP_WIDTH = 240;
 const PORTAL_TOOLTIP_GAP = 12;
@@ -13,7 +13,7 @@ export function DashboardChartTooltipContent({
   active,
   payload,
   label,
-}: TooltipProps<number, string>) {
+}: ChartTooltipProps) {
   if (!active || !payload?.length) return null;
 
   const displayLabel =
@@ -24,7 +24,7 @@ export function DashboardChartTooltipContent({
       {displayLabel != null && displayLabel !== '' && (
         <p className="chart-tooltip__label">{String(displayLabel)}</p>
       )}
-      {payload.map((entry: TooltipPayload, index) => {
+      {payload.map((entry: TooltipPayloadEntry, index: number) => {
         const color = entry.color ?? entry.fill ?? 'var(--md-primary)';
         const name = entry.name ?? entry.dataKey ?? '';
         const raw = entry.value;
@@ -41,7 +41,7 @@ export function DashboardChartTooltipContent({
               className="chart-tooltip__dot"
               style={{ '--chart-dot-color': color } as CSSProperties}
             />
-            <span className="chart-tooltip__name">{name}:</span>
+            <span className="chart-tooltip__name">{String(name)}:</span>
             <span className="chart-tooltip__value">{display}</span>
           </div>
         );
@@ -50,21 +50,21 @@ export function DashboardChartTooltipContent({
   );
 }
 
-export function DashboardChartTooltip(props: TooltipProps<number, string>) {
+export function DashboardChartTooltip(props: ChartTooltipProps) {
   return <DashboardChartTooltipContent {...props} />;
 }
 
 /** Renders tooltip in document.body so card overflow cannot clip it. */
 export function DashboardBarChartPortalTooltip(
-  props: TooltipProps<number, string> & { chartRoot: HTMLElement | null },
+  props: ChartTooltipProps & { chartRoot: HTMLElement | null },
 ) {
   const { active, coordinate, chartRoot } = props;
   if (!active || !coordinate || !chartRoot) return null;
 
   const anchor = chartRoot.querySelector('.recharts-wrapper') ?? chartRoot;
   const rect = anchor.getBoundingClientRect();
-  let left = rect.left + coordinate.x;
-  const top = rect.top + coordinate.y - PORTAL_TOOLTIP_GAP;
+  let left = rect.left + (coordinate.x ?? 0);
+  const top = rect.top + (coordinate.y ?? 0) - PORTAL_TOOLTIP_GAP;
 
   const minLeft = PORTAL_TOOLTIP_GAP;
   const maxLeft = window.innerWidth - PORTAL_TOOLTIP_WIDTH - PORTAL_TOOLTIP_GAP;

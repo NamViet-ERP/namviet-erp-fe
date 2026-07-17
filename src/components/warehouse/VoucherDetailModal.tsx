@@ -6,6 +6,7 @@ import type { StatusKey } from '../../types';
 import { buildApprovalFields } from './voucherDetailUtils';
 import type { VoucherDetailField } from './voucherDetailUtils';
 import { getVoucherStatusLabel, type WmsVoucherKind } from '../../lib/wms/voucherStatusLabels';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 export type { VoucherDetailField };
 
@@ -38,6 +39,7 @@ export default function VoucherDetailModal({
   children,
   itemsTitle = 'Danh sách vật tư',
 }: VoucherDetailModalProps) {
+  useBodyScrollLock(isOpen);
   if (!isOpen) return null;
 
   const allFields = [...fields, ...buildApprovalFields(status, approvedBy, approvedAt)];

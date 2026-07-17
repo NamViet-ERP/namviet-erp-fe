@@ -13,6 +13,7 @@ interface ProjectWarehouseSelectProps {
   placeholder?: string;
   disabled?: boolean;
   className?: string;
+  ariaLabel?: string;
 }
 
 export default function ProjectWarehouseSelect({
@@ -23,12 +24,14 @@ export default function ProjectWarehouseSelect({
   placeholder = '— Chọn kho dự án —',
   disabled = false,
   className = 'form-select',
+  ariaLabel,
 }: ProjectWarehouseSelectProps) {
   return (
     <select
       className={className}
       value={value}
       disabled={disabled}
+      aria-label={ariaLabel}
       onChange={e => {
         const code = e.target.value;
         if (code && isProjectFrozen(frozenByProjectCode, code)) return;

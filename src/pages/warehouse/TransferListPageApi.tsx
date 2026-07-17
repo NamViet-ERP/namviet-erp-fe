@@ -90,6 +90,8 @@ function TransferListPageApi({ initialProjectCode }: TransferListPageApiProps) {
       ? getFrozenProjectError(frozenByProjectCode, toProjectCode)
       : undefined;
     if (!sourceErr && !destErr) return;
+    // Keep an already-open transfer draft aligned with asynchronous freeze status updates.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCreateErrors(prev => ({
       ...prev,
       ...(sourceErr ? { projectCode: sourceErr } : {}),

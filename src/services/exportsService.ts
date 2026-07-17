@@ -2,7 +2,7 @@ import type { Export } from '../types';
 import { apiClient } from '../lib/apiClient';
 import { appendVoucherDateQuery, type VoucherListParams } from '../lib/wms/voucherDateUtils';
 
-export type CreateExportDto = Omit<Export, 'id' | 'createdBy'> & { createdBy?: string };
+export type CreateExportDto = Omit<Export, 'id' | 'createdBy' | 'warehouseName'> & { createdBy?: string };
 export type UpdateExportDto = Partial<CreateExportDto>;
 
 const ENDPOINT = '/api/exports';

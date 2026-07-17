@@ -1,6 +1,4 @@
-import { getStoredToken } from '../authSession';
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
+import { apiClient, saveBlob } from '../apiClient';
 
 export interface VoucherExportQuery {
   dateFrom?: string;
@@ -9,40 +7,16 @@ export interface VoucherExportQuery {
   search?: string;
 }
 
-function buildExportUrl(endpoint: string, params?: VoucherExportQuery): string {
-  const url = new URL(`${BASE_URL}${endpoint}`, BASE_URL || window.location.origin);
-  if (params?.dateFrom) url.searchParams.set('dateFrom', params.dateFrom);
-  if (params?.dateTo) url.searchParams.set('dateTo', params.dateTo);
-  if (params?.status && params.status !== 'all') url.searchParams.set('status', params.status);
-  if (params?.search?.trim()) url.searchParams.set('search', params.search.trim());
-  return url.toString();
-}
-
 export async function downloadVoucherExport(
   endpoint: string,
   fileName: string,
   params?: VoucherExportQuery,
 ): Promise<void> {
-  const token = getStoredToken();
-  const response = await fetch(buildExportUrl(endpoint, params), {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  const blob = await apiClient.getBlob(endpoint, {
+    dateFrom: params?.dateFrom,
+    dateTo: params?.dateTo,
+    status: params?.status && params.status !== 'all' ? params.status : undefined,
+    search: params?.search?.trim() || undefined,
   });
-
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(text.trim() || `Không thể xuất Excel (HTTP ${response.status})`);
-  }
-
-  const blob = await response.blob();
-  const objectUrl = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = objectUrl;
-  anchor.download = fileName;
-  anchor.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;pointer-events:none';
-  document.body.appendChild(anchor);
-  anchor.click();
-  window.setTimeout(() => {
-    anchor.remove();
-    URL.revokeObjectURL(objectUrl);
-  }, 500);
+  saveBlob(blob, fileName);
 }

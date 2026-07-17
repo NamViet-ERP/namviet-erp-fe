@@ -19,7 +19,7 @@ import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage, getApiFieldErrors } from '../../lib/apiClient';
 import { formatDateCell } from '../../lib/hrm/formatters';
-import { fmtExpectedStock, fmtPlannedNet, fmtStockQtyOrDash } from '../../lib/wms/stockQtyFormat';
+import { fmtPlannedStock, fmtStockQtyOrDash } from '../../lib/wms/stockQtyFormat';
 import { GENERAL_WAREHOUSE_LABEL_LOWER } from '../../lib/wms/stockTerminology';
 import { formatCurrencyFull } from '../../utils/formatCurrency';
 import { parseCurrencyInput } from '../../utils/currencyInput';
@@ -165,17 +165,17 @@ export default function ProjectDetailPage() {
     [inventory],
   );
   const totalActualQty = actualStockLines.reduce((s, r) => s + r.actualInventoryQty, 0);
-  const approvedImportValue = useMemo(() => {
+  const approvedImportValue = (() => {
     if (project?.approvedImportValue != null) return project.approvedImportValue;
     return ledger
       .filter(e => e.kind === 'import' && e.status === 'approved' && e.totalValue != null)
       .reduce((sum, e) => sum + (e.totalValue ?? 0), 0);
-  }, [project?.approvedImportValue, ledger]);
-  const materialBudgetRemaining = useMemo(() => {
+  })();
+  const materialBudgetRemaining = (() => {
     if (!project) return 0;
     if (project.materialBudgetRemaining != null) return project.materialBudgetRemaining;
     return resolveMaterialBudgetRemaining(project.materialBudget, approvedImportValue);
-  }, [project, approvedImportValue]);
+  })();
   const budgetRemainingTone = project
     ? getBudgetRemainingTone(project.materialBudget, materialBudgetRemaining)
     : 'neutral';
@@ -224,12 +224,11 @@ export default function ProjectDetailPage() {
                   <th className="table-header-cell text-right">Nhập dự kiến</th>
                   <th className="table-header-cell text-right">Xuất dự kiến</th>
                   <th className="table-header-cell text-right">Tồn dự kiến</th>
-                  <th className="table-header-cell text-right">Tồn kỳ vọng</th>
                   <th className="table-header-cell text-right">Giá trị</th>
                 </tr>
               </thead>
               <tbody>
-                <TableSkeletonRows colSpan={8} />
+                <TableSkeletonRows colSpan={7} />
               </tbody>
             </table>
           </div>
@@ -339,7 +338,7 @@ export default function ProjectDetailPage() {
                 <tbody>
                   {Array.from({ length: 4 }).map((_, i) => (
                     <tr key={i} className="hrm-table-skeleton-row" aria-hidden>
-                      <td colSpan={9}><div className="hrm-table-skeleton" /></td>
+                      <td colSpan={8}><div className="hrm-table-skeleton" /></td>
                     </tr>
                   ))}
                 </tbody>
@@ -369,8 +368,7 @@ export default function ProjectDetailPage() {
                       <th className="table-header-cell text-right" title="Ngưỡng cảnh báo theo dự án">Tồn tối thiểu</th>
                       <th className="table-header-cell text-right">Nhập dự kiến</th>
                       <th className="table-header-cell text-right">Xuất dự kiến</th>
-                      <th className="table-header-cell text-right" title="Nhập dự kiến − Xuất dự kiến">Tồn dự kiến</th>
-                      <th className="table-header-cell text-right" title="Tồn thực tế + Tồn dự kiến">Tồn kỳ vọng</th>
+                      <th className="table-header-cell text-right" title="Tồn thực tế + nhập/hoàn trả/chuyển kho dự kiến">Tồn dự kiến</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -411,10 +409,7 @@ export default function ProjectDetailPage() {
                           {fmtStockQtyOrDash(row.plannedExportQty)}
                         </td>
                         <td className="table-cell text-right font-semibold tabular-nums">
-                          {fmtPlannedNet(row.plannedImportQty, row.plannedExportQty)}
-                        </td>
-                        <td className="table-cell text-right font-semibold tabular-nums">
-                          {fmtExpectedStock(row.actualInventoryQty, row.plannedImportQty, row.plannedExportQty)}
+                          {fmtPlannedStock(row.actualInventoryQty, row.plannedImportQty)}
                         </td>
                       </tr>
                       );

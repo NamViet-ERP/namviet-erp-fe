@@ -2,36 +2,26 @@ export function fmtStockQty(n: number) {
   return new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 2 }).format(n);
 }
 
-/** Tồn dự kiến (net) = nhập dự kiến − xuất dự kiến */
-export function computePlannedNet(plannedImport: number, plannedExport: number) {
-  return plannedImport - plannedExport;
+/** Khả dụng (kho dự án) = tồn thực tế − xuất/chuyển dự kiến */
+export function computeAvailableQty(actual: number, plannedExport: number) {
+  return actual - plannedExport;
 }
 
-/** Tồn kỳ vọng = tồn thực tế + tồn dự kiến net */
-export function computeExpectedStock(actual: number, plannedImport: number, plannedExport: number) {
-  return actual + computePlannedNet(plannedImport, plannedExport);
-}
-
-export function fmtPlannedNet(plannedImport: number, plannedExport: number) {
-  const net = computePlannedNet(plannedImport, plannedExport);
-  if (net === 0 && plannedImport === 0 && plannedExport === 0) return '—';
-  return fmtStockQty(net);
-}
-
-export function fmtExpectedStock(actual: number, plannedImport: number, plannedExport: number) {
-  const total = computeExpectedStock(actual, plannedImport, plannedExport);
-  if (total === 0 && actual === 0 && plannedImport === 0 && plannedExport === 0) return '—';
-  return fmtStockQty(total);
-}
-
-/** @deprecated Use fmtExpectedStock — kept for project detail until aligned */
+/** Tồn dự kiến = tồn thực tế + nhập/hoàn trả/chuyển kho dự kiến (không trừ xuất DK) */
 export function computePlannedStock(actual: number, plannedImport: number) {
   return actual + plannedImport;
 }
 
-/** @deprecated Use fmtExpectedStock */
+export function fmtAvailableQty(actual: number, plannedExport: number) {
+  const qty = computeAvailableQty(actual, plannedExport);
+  if (qty === 0 && actual === 0 && plannedExport === 0) return '—';
+  return fmtStockQty(qty);
+}
+
 export function fmtPlannedStock(actual: number, plannedImport: number) {
-  return fmtExpectedStock(actual, plannedImport, 0);
+  const total = computePlannedStock(actual, plannedImport);
+  if (total === 0 && actual === 0 && plannedImport === 0) return '—';
+  return fmtStockQty(total);
 }
 
 export function fmtStockQtyOrDash(n: number) {

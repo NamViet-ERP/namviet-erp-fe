@@ -48,7 +48,6 @@ export function VoucherApprovalDetail({
     </>
   );
 }
-
 export default function VoucherStatusCell({
   status,
   voucherKind,
@@ -74,8 +73,4 @@ export default function VoucherStatusCell({
       )}
     </div>
   );
-}
-
-export function voucherStatusLabel(status: StatusKey, kind: WmsVoucherKind) {
-  return getVoucherStatusLabel(status, kind);
 }

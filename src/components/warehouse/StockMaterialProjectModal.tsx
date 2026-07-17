@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import Modal from '../ui/Modal';
 import type { StockMatrixRowApiDto } from '../../types/wms';
-import { fmtExpectedStock, fmtPlannedNet, fmtStockQtyOrDash } from '../../lib/wms/stockQtyFormat';
+import { fmtPlannedStock, fmtStockQtyOrDash } from '../../lib/wms/stockQtyFormat';
 import { STOCK_FORMULA_LEGEND_SHORT, GENERAL_WAREHOUSE_LABEL } from '../../lib/wms/stockTerminology';
 import { totalUsableQty } from '../../lib/wms/stockMatrixUtils';
 
@@ -58,9 +58,9 @@ function StockMaterialProjectContent({ row, onClose }: { row: StockMatrixRowApiD
           <span className="stock-modal-stat-value tabular-nums">{projectActualTotal}</span>
         </div>
         <div className="stock-modal-stat">
-          <span className="stock-modal-stat-label">Tồn kỳ vọng</span>
+          <span className="stock-modal-stat-label">Tồn dự kiến</span>
           <span className="stock-modal-stat-value tabular-nums">
-            {fmtExpectedStock(projectActualTotal, plannedImportTotal, plannedExportTotal)}
+            {fmtPlannedStock(projectActualTotal, plannedImportTotal)}
           </span>
         </div>
       </div>
@@ -89,8 +89,7 @@ function StockMaterialProjectContent({ row, onClose }: { row: StockMatrixRowApiD
                 <th className="table-header-cell text-right py-2.5 w-20">Tồn TT</th>
                 <th className="table-header-cell text-right py-2.5 w-20">Nhập DK</th>
                 <th className="table-header-cell text-right py-2.5 w-20">Xuất DK</th>
-                <th className="table-header-cell text-right py-2.5 w-20">Tồn DK</th>
-                <th className="table-header-cell text-right py-2.5 w-20 pr-3">Kỳ vọng</th>
+                <th className="table-header-cell text-right py-2.5 w-20 pr-3" title="Tồn thực tế + nhập dự kiến">Tồn DK</th>
               </tr>
             </thead>
             <tbody>
@@ -113,11 +112,8 @@ function StockMaterialProjectContent({ row, onClose }: { row: StockMatrixRowApiD
                   <td className="table-cell text-right tabular-nums stock-qty--reserved">
                     {fmtStockQtyOrDash(p.plannedExportQty)}
                   </td>
-                  <td className="table-cell text-right font-semibold tabular-nums">
-                    {fmtPlannedNet(p.plannedImportQty, p.plannedExportQty)}
-                  </td>
                   <td className="table-cell text-right font-semibold tabular-nums pr-3">
-                    {fmtExpectedStock(p.actualQty, p.plannedImportQty, p.plannedExportQty)}
+                    {fmtPlannedStock(p.actualQty, p.plannedImportQty)}
                   </td>
                 </tr>
               ))}

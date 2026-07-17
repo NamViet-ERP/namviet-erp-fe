@@ -92,6 +92,7 @@ export default function ExportReturnCreateModal({
             projects={projects}
             frozenByProjectCode={frozenByProjectCode}
             value={projectCode}
+            ariaLabel="Kho dự án"
             disabled={isEditing}
             onChange={code => {
               onProjectCodeChange(code);
@@ -105,6 +106,7 @@ export default function ExportReturnCreateModal({
           <select
             className="form-select"
             value={sourceExportId}
+            aria-label="Phiếu xuất nguồn"
             disabled={isEditing || !projectCode || exportsLoading}
             onChange={e => onSourceExportIdChange(e.target.value)}
           >
@@ -201,6 +203,7 @@ export default function ExportReturnCreateModal({
                           value={line.returnQty}
                           min={0}
                           max={line.remainingQty}
+                          ariaLabel={`Số lượng hoàn trả cho ${line.sku}`}
                           onChange={qtyVal => {
                             const next = [...lines];
                             next[idx] = { ...next[idx], returnQty: qtyVal };

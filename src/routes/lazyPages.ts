@@ -2,10 +2,10 @@ import { lazy } from 'react';
 
 export const DashboardPage = lazy(() => import('../pages/DashboardPage'));
 export const DashboardWarehousePage = lazy(() => import('../pages/warehouse/DashboardWarehousePage'));
-export const TransferListPage = lazy(() => import('../pages/warehouse/TransferListPage'));
+export const TransferListPage = lazy(() => import('../pages/warehouse/TransferListPageApi'));
 export const MaterialReturnPage = lazy(() => import('../pages/warehouse/MaterialReturnPage'));
-export const ImportListPage = lazy(() => import('../pages/warehouse/ImportListPage'));
-export const ExportListPage = lazy(() => import('../pages/warehouse/ExportListPage'));
+export const ImportListPage = lazy(() => import('../pages/warehouse/ImportListPageApi'));
+export const ExportListPage = lazy(() => import('../pages/warehouse/ExportListPageApi'));
 export const SettingsPage = lazy(() => import('../pages/warehouse/SettingsPage'));
 export const StockListPage = lazy(() => import('../pages/warehouse/StockListPage'));
 export const MaterialsPage = lazy(() => import('../pages/warehouse/MaterialsPage'));

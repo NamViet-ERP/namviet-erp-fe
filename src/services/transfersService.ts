@@ -2,7 +2,10 @@ import type { Transfer } from '../types';
 import { apiClient } from '../lib/apiClient';
 import { appendVoucherDateQuery, type VoucherListParams } from '../lib/wms/voucherDateUtils';
 
-export type CreateTransferDto = Omit<Transfer, 'id' | 'createdBy'> & { createdBy?: string };
+export type CreateTransferDto = Omit<
+  Transfer,
+  'id' | 'createdBy' | 'fromWarehouseName' | 'toWarehouseName'
+> & { createdBy?: string };
 export type UpdateTransferDto = Partial<CreateTransferDto>;
 
 const ENDPOINT = '/api/transfers';

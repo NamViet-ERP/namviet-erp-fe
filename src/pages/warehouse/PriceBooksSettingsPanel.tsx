@@ -167,12 +167,12 @@ export default function PriceBooksSettingsPanel() {
               <th className="table-header-cell">NCC</th>
               <th className="table-header-cell text-right">Đơn giá</th>
               <th className="table-header-cell">Cập nhật</th>
-              <th className="table-header-cell text-center">Tác vụ</th>
+              <th className="table-header-cell text-center hrm-table-col-actions">Tác vụ</th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
-              <TableSkeletonRows cols={6} />
+              <TableSkeletonRows colSpan={6} />
             ) : isError ? (
               <tr>
                 <td colSpan={6} className="table-cell text-center text-[var(--md-error)]">
@@ -182,7 +182,7 @@ export default function PriceBooksSettingsPanel() {
             ) : items.length === 0 ? (
               <tr>
                 <td colSpan={6}>
-                  <EmptyState title="Chưa có bảng giá" description="Thêm giá theo vật tư và NCC để gợi ý khi lập phiếu nhập." />
+                  <EmptyState message="Chưa có bảng giá. Thêm giá theo vật tư và NCC để gợi ý khi lập phiếu nhập." />
                 </td>
               </tr>
             ) : (
@@ -197,8 +197,8 @@ export default function PriceBooksSettingsPanel() {
                   <td className="table-cell text-xs text-[var(--md-on-surface-variant)]">
                     {formatDateTimeVi(row.priceDate)}
                   </td>
-                  <td className="table-cell text-center">
-                    <div className="flex items-center justify-center gap-1">
+                  <td className="table-cell text-center hrm-table-col-actions">
+                    <div className="hrm-table-row-actions">
                       <button type="button" className="icon-btn" title="Sửa" onClick={() => openEdit(row)}>
                         <Pencil size={15} />
                       </button>
@@ -216,9 +216,9 @@ export default function PriceBooksSettingsPanel() {
 
       <div className="px-4 py-3 border-t border-[var(--md-outline-variant)]">
         <Pagination
-          page={page}
+          currentPage={page}
           totalPages={totalPages}
-          totalCount={totalCount}
+          totalItems={totalCount}
           pageSize={pageSize}
           onPageChange={setPage}
           onPageSizeChange={size => { setPageSize(size); setPage(1); }}

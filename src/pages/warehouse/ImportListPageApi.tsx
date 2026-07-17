@@ -5,6 +5,7 @@ import { useLocation } from 'react-router-dom';
 import { Plus, Download } from 'lucide-react';
 
 import type { ImportBudgetExceededApiDto } from '../../types/api/importBudgetApi';
+import type { Import } from '../../types';
 
 import TabFilter from '../../components/ui/TabFilter';
 

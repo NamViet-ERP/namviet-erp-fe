@@ -92,10 +92,14 @@ export default function WarehouseReportsPage() {
         <div className="space-y-4">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <VoucherDateFilter
-              dateFrom={dateFrom}
-              dateTo={dateTo}
-              onDateFromChange={setDateFrom}
-              onDateToChange={setDateTo}
+              from={dateFrom}
+              to={dateTo}
+              onFromChange={setDateFrom}
+              onToChange={setDateTo}
+              onReset={() => {
+                setDateFrom('');
+                setDateTo('');
+              }}
             />
             <PermissionGate permission="wms.reports.export">
               <button
@@ -174,7 +178,7 @@ export default function WarehouseReportsPage() {
               </thead>
               <tbody>
                 {stockQuery.isLoading ? (
-                  <TableSkeletonRows cols={5} />
+                  <TableSkeletonRows colSpan={5} />
                 ) : stockQuery.isError ? (
                   <tr>
                     <td colSpan={5} className="table-cell text-center text-[var(--md-error)]">
@@ -184,7 +188,7 @@ export default function WarehouseReportsPage() {
                 ) : stockRows.length === 0 ? (
                   <tr>
                     <td colSpan={5}>
-                      <EmptyState title="Không có tồn" description="Không có vật tư nào còn tồn theo bộ lọc hiện tại." />
+                      <EmptyState message="Không có vật tư nào còn tồn theo bộ lọc hiện tại." />
                     </td>
                   </tr>
                 ) : (
@@ -256,7 +260,7 @@ export default function WarehouseReportsPage() {
               </thead>
               <tbody>
                 {pendingQuery.isLoading ? (
-                  <TableSkeletonRows cols={5} />
+                  <TableSkeletonRows colSpan={5} />
                 ) : pendingQuery.isError ? (
                   <tr>
                     <td colSpan={5} className="table-cell text-center text-[var(--md-error)]">
@@ -266,7 +270,7 @@ export default function WarehouseReportsPage() {
                 ) : !pending?.items.length ? (
                   <tr>
                     <td colSpan={5}>
-                      <EmptyState title="Không có phiếu chờ duyệt" description="Tất cả phiếu đã được xử lý." />
+                      <EmptyState message="Không có phiếu chờ duyệt. Tất cả phiếu đã được xử lý." />
                     </td>
                   </tr>
                 ) : (

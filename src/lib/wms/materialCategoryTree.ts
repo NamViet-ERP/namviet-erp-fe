@@ -1,4 +1,4 @@
-import type { MaterialCategoryApiDto, MaterialCategoryPathApiDto } from '../types/wms';
+import type { MaterialCategoryApiDto, MaterialCategoryPathApiDto } from '../../types/wms';
 
 const UNCATEGORIZED_CODE = 'UNCATEGORIZED';
 

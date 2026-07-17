@@ -1,5 +1,6 @@
 import { Package, DollarSign, Warehouse, TrendingUp, ArrowUpRight, Activity, AlertTriangle, RefreshCw, ChevronDown } from 'lucide-react';
 import type { CSSProperties } from 'react';
+import type { XAxisTickContentProps } from 'recharts';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { LucideIcon } from 'lucide-react';
@@ -15,7 +16,7 @@ import PageLoader from '../../components/ui/PageLoader';
 import { dashboardChartTooltipProps } from '../../components/warehouse/dashboardChartTooltipProps';
 import { DashboardBarChartPortalTooltip } from '../../components/warehouse/DashboardChartTooltip';
 import { WMS_EMPTY, WMS_ERROR } from '../../lib/wms/messages';
-import { formatCurrency, formatCurrencyShort } from '../../utils/formatCurrency';
+import { formatCurrencyShort } from '../../utils/formatCurrency';
 import { fmtStockQty } from '../../lib/wms/stockQtyFormat';
 import { useWarehouseDashboard } from '../../hooks/useWarehouseDashboard';
 import { useLowStockAlerts } from '../../hooks/useLowStockAlerts';
@@ -68,17 +69,11 @@ function warehouseBarChartHeight(): number {
   return 280;
 }
 
-interface WarehouseBarXTickProps {
-  x?: number;
-  y?: number;
-  index?: number;
-}
-
-function WarehouseBarXTick({ x = 0, y = 0, index = 0 }: WarehouseBarXTickProps) {
+function WarehouseBarXTick({ x = 0, y = 0, index = 0 }: XAxisTickContentProps) {
   return (
     <text
-      x={x}
-      y={y}
+      x={Number(x)}
+      y={Number(y)}
       dy={14}
       fill={CHART_AXIS_TICK.fill}
       fontSize={CHART_AXIS_TICK.fontSize}
@@ -620,7 +615,7 @@ function WarehouseBarChart({ data }: { data: CategoryDataPoint[] }) {
                       dataKey="value"
                       position="top"
                       offset={8}
-                      formatter={(value: number) => fmtStockQty(value)}
+                      formatter={value => fmtStockQty(Number(value ?? 0))}
                       className="chart-bar-label"
                     />
                   </Bar>

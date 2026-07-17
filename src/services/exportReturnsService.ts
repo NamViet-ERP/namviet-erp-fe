@@ -4,7 +4,13 @@ import { appendVoucherDateQuery, type VoucherListParams } from '../lib/wms/vouch
 
 export type CreateExportReturnDto = Omit<
   ExportReturn,
-  'id' | 'voucherCode' | 'date' | 'createdAt' | 'approvedBy' | 'approvedAt' | 'projectName' | 'createdBy'
+  | 'id'
+  | 'createdAt'
+  | 'approvedBy'
+  | 'approvedAt'
+  | 'projectName'
+  | 'sourceExportCode'
+  | 'createdBy'
 > & { createdBy?: string };
 
 const ENDPOINT = '/api/export-returns';

@@ -6,7 +6,7 @@ import EmptyState from '../../components/ui/EmptyState';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import StockMaterialProjectModal from '../../components/warehouse/StockMaterialProjectModal';
 import { useStockMatrix } from '../../hooks/useStockMatrix';
-import { fmtExpectedStock, fmtPlannedNet, fmtStockQtyOrDash } from '../../lib/wms/stockQtyFormat';
+import { fmtPlannedStock, fmtStockQtyOrDash } from '../../lib/wms/stockQtyFormat';
 import {
   countActiveProjects,
   sumProjectActual,
@@ -23,7 +23,7 @@ import { WMS_EMPTY, WMS_ERROR } from '../../lib/wms/messages';
 import type { StockMatrixRowApiDto } from '../../types/wms';
 import { formatCurrency } from '../../utils/formatCurrency';
 
-const STOCK_COL_SPAN = 12;
+const STOCK_COL_SPAN = 11;
 
 export default function ApiStockMatrixView() {
   const { data: rows = [], isLoading, isError } = useStockMatrix();
@@ -86,19 +86,12 @@ export default function ApiStockMatrixView() {
                 <th className="table-header-cell text-left stock-col-name">Tên vật tư</th>
                 <th className="table-header-cell text-center w-14">ĐVT</th>
                 <th className="table-header-cell text-right w-20">{GENERAL_WAREHOUSE_LABEL}</th>
-                <th className="table-header-cell text-right w-20" title={`(${GENERAL_WAREHOUSE_LABEL} − giữ) + Σ(Tồn TT − Xuất DK)`}>Khả dụng</th>
+                <th className="table-header-cell text-right w-20" title="Tồn thực tế − xuất/chuyển dự kiến (kèm kho trung tâm − giữ)">Khả dụng</th>
                 <th className="table-header-cell text-right w-20">Nhập dự kiến</th>
                 <th className="table-header-cell text-right w-20">Xuất dự kiến</th>
-                <th className="table-header-cell text-right stock-col-project">
-                  <span className="stock-matrix-th-stack">Tồn<br />thực tế</span>
-                </th>
-                <th className="table-header-cell text-right stock-col-project" title="Nhập dự kiến − Xuất dự kiến">
-                  <span className="stock-matrix-th-stack">Tồn<br />dự kiến</span>
-                </th>
-                <th className="table-header-cell text-right stock-col-project" title="Tồn thực tế + Tồn dự kiến">
-                  <span className="stock-matrix-th-stack">Tồn<br />kỳ vọng</span>
-                </th>
-                <th className="table-header-cell text-right w-24" title="WAC từ phiếu nhập đã duyệt">Giá BQ</th>
+                <th className="table-header-cell text-right stock-col-project whitespace-nowrap">Tồn thực tế</th>
+                <th className="table-header-cell text-right stock-col-project whitespace-nowrap" title="Tồn thực tế + nhập/hoàn trả/chuyển kho dự kiến">Tồn dự kiến</th>
+                <th className="table-header-cell text-right w-24" title="WAC từ phiếu nhập đã duyệt trong 12 tháng (ngày duyệt)">Giá BQ</th>
                 <th className="table-header-cell text-center w-14">Dự án</th>
               </tr>
             </thead>
@@ -166,10 +159,7 @@ export default function ApiStockMatrixView() {
                         {projectActual}
                       </td>
                       <td className="table-cell text-right font-semibold tabular-nums">
-                        {fmtPlannedNet(plannedImport, plannedExport)}
-                      </td>
-                      <td className="table-cell text-right font-semibold tabular-nums">
-                        {fmtExpectedStock(projectActual, plannedImport, plannedExport)}
+                        {fmtPlannedStock(projectActual, plannedImport)}
                       </td>
                       <td className="table-cell text-right tabular-nums text-[var(--md-on-surface)]">
                         {row.weightedAverageUnitCost > 0

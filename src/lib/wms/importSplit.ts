@@ -1,4 +1,4 @@
-import type { StockMatrixRowApiDto } from '../types/wms';
+import type { StockMatrixRowApiDto } from '../../types/wms';
 
 /** Phần lấy từ kho trung tâm vs mua NCC khi tạo phiếu nhập dự án. */
 export function splitImportQty(

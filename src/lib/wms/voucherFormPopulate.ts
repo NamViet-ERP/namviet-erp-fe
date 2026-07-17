@@ -25,10 +25,11 @@ export function exportToFormLines(items: Export['items']): MaterialQtyLine[] {
   }));
 }
 
-export function transferToFormLines(items: Transfer['items']): MaterialQtyLine[] {
-  if (!items.length) return [{ ...emptyQtyLine }];
+export function transferToFormLines(items: Transfer['items']): MaterialQtyPhaseLine[] {
+  if (!items.length) return [{ ...emptyQtyPhaseLine }];
   return items.map(it => ({
     materialCode: it.sku || it.productId,
     qty: String(it.qty),
+    constructionPhase: typeof it.constructionPhase === 'string' ? it.constructionPhase : '',
   }));
 }

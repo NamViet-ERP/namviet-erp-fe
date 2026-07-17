@@ -1,11 +1,5 @@
 import type { StockMatrixRowApiDto } from '../../types/wms';
-import {
-  computeExpectedStock,
-  computePlannedNet,
-  fmtExpectedStock,
-  fmtPlannedNet,
-  fmtStockQtyOrDash,
-} from './stockQtyFormat';
+import { computeAvailableQty, computePlannedStock } from './stockQtyFormat';
 import { STOCK_FORMULA_LEGEND } from './stockTerminology';
 
 export function sumProjectActual(row: StockMatrixRowApiDto) {
@@ -22,27 +16,20 @@ export function sumProjectPlannedExport(row: StockMatrixRowApiDto) {
 
 export function sumProjectAvailable(row: StockMatrixRowApiDto) {
   return row.projects.reduce(
-    (sum, p) => sum + Math.max(0, p.actualQty - p.plannedExportQty),
+    (sum, p) => sum + computeAvailableQty(p.actualQty, p.plannedExportQty),
     0,
   );
 }
 
-/** Khả dụng = (Kho trung tâm − giữ) + Σ max(0, tồn TT − xuất DK) từng dự án */
+/** Khả dụng tổng = (Kho trung tâm − giữ) + Σ(Tồn TT − xuất/CK DK) từng dự án */
 export function totalUsableQty(row: StockMatrixRowApiDto) {
-  const generalFree = Math.max(0, row.generalActualQty - row.generalReservedQty);
+  const generalFree = row.generalActualQty - row.generalReservedQty;
   return generalFree + sumProjectAvailable(row);
 }
 
-export function projectPlannedNet(row: StockMatrixRowApiDto) {
-  return computePlannedNet(sumProjectPlannedImport(row), sumProjectPlannedExport(row));
-}
-
-export function projectExpectedStock(row: StockMatrixRowApiDto) {
-  return computeExpectedStock(
-    sumProjectActual(row),
-    sumProjectPlannedImport(row),
-    sumProjectPlannedExport(row),
-  );
+/** Tồn dự kiến (tổng dự án) = Σ tồn TT + nhập DK */
+export function projectPlannedStock(row: StockMatrixRowApiDto) {
+  return computePlannedStock(sumProjectActual(row), sumProjectPlannedImport(row));
 }
 
 export function countActiveProjects(row: StockMatrixRowApiDto) {
