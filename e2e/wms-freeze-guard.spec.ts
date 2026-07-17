@@ -8,20 +8,31 @@ import {
 import {
   bumpQtyStepper,
   expectSnackbar,
-  fillImportDraftForm,
   pickFirstAutocomplete,
 } from './helpers/ui';
 
+function uniqueFixtureNote(kind: string, workerIndex: number, retry: number): string {
+  return `E2E-FREEZE-${kind}-${workerIndex}-${retry}-${Date.now()}`;
+}
+
 test.describe('WMS freeze guard', () => {
-  test('blocks export chốt dự kiến when project is frozen', async ({ page }) => {
+  test('blocks export chốt dự kiến when project is frozen', async ({ page }, testInfo) => {
     const token = await loginToken();
     const stock = await findProjectWithStock(token);
     test.skip(!stock, 'No unfrozen project for freeze guard export test');
 
-    const note = `E2E-FREEZE-EXPORT-${Date.now()}`;
+    const note = uniqueFixtureNote('EXPORT', testInfo.workerIndex, testInfo.retry);
     let stocktakeId: string | undefined;
 
     try {
+      await page.goto('/warehouse/export');
+      await page.getByRole('button', { name: 'Tạo phiếu xuất' }).click();
+
+      const dialog = page.getByRole('dialog', { name: 'Tạo phiếu xuất kho dự án' });
+      await dialog.locator('select.form-select').first().selectOption(stock!.projectCode);
+      await pickFirstAutocomplete(page, dialog.locator('.search-autocomplete__input').first());
+      await bumpQtyStepper(dialog.locator('.qty-stepper').first(), 1);
+
       const created = await createFrozenStocktake(
         token,
         stock!.projectCode,
@@ -31,14 +42,6 @@ test.describe('WMS freeze guard', () => {
         note,
       );
       stocktakeId = created.id;
-
-      await page.goto('/warehouse/export');
-      await page.getByRole('button', { name: 'Tạo phiếu xuất' }).click();
-
-      const dialog = page.getByRole('dialog', { name: 'Tạo phiếu xuất kho dự án' });
-      await dialog.locator('select.form-select').first().selectOption(stock!.projectCode);
-      await pickFirstAutocomplete(page, dialog.locator('.search-autocomplete__input').first());
-      await bumpQtyStepper(dialog.locator('.qty-stepper').first(), 1);
 
       await dialog.getByRole('button', { name: 'Chốt dự kiến' }).click();
       await expectSnackbar(page, /đóng băng kiểm kê/i);
@@ -48,25 +51,15 @@ test.describe('WMS freeze guard', () => {
     }
   });
 
-  test('blocks import chốt dự kiến when project is frozen', async ({ page }) => {
+  test('blocks import chốt dự kiến when project is frozen', async ({ page }, testInfo) => {
     const token = await loginToken();
     const stock = await findProjectWithStock(token);
     test.skip(!stock, 'No unfrozen project for freeze guard import test');
 
-    const note = `E2E-FREEZE-IMPORT-${Date.now()}`;
+    const note = uniqueFixtureNote('IMPORT', testInfo.workerIndex, testInfo.retry);
     let stocktakeId: string | undefined;
 
     try {
-      const created = await createFrozenStocktake(
-        token,
-        stock!.projectCode,
-        stock!.projectName,
-        stock!.materialCode,
-        stock!.materialName,
-        note,
-      );
-      stocktakeId = created.id;
-
       await page.goto('/warehouse/import');
       await page.getByRole('button', { name: 'Tạo phiếu nhập' }).click();
 
@@ -78,23 +71,6 @@ test.describe('WMS freeze guard', () => {
       await bumpQtyStepper(dialog.locator('.qty-stepper').first(), 1);
       await dialog.locator('.currency-input-group__input, input.input-no-spinner').first().fill('10000');
 
-      await dialog.getByRole('button', { name: 'Chốt dự kiến' }).click();
-      await expectSnackbar(page, /đóng băng kiểm kê/i);
-      await expect(page.getByRole('dialog', { name: 'Tạo phiếu nhập kho dự án' })).toBeVisible();
-    } finally {
-      if (stocktakeId) await cancelStocktake(stocktakeId, token);
-    }
-  });
-
-  test('blocks transfer chốt dự kiến when source project is frozen', async ({ page }) => {
-    const token = await loginToken();
-    const stock = await findProjectWithStock(token);
-    test.skip(!stock, 'No unfrozen project stock for freeze guard transfer test');
-
-    const note = `E2E-FREEZE-TRANSFER-${Date.now()}`;
-    let stocktakeId: string | undefined;
-
-    try {
       const created = await createFrozenStocktake(
         token,
         stock!.projectCode,
@@ -105,6 +81,23 @@ test.describe('WMS freeze guard', () => {
       );
       stocktakeId = created.id;
 
+      await dialog.getByRole('button', { name: 'Chốt dự kiến' }).click();
+      await expectSnackbar(page, /đóng băng kiểm kê/i);
+      await expect(page.getByRole('dialog', { name: 'Tạo phiếu nhập kho dự án' })).toBeVisible();
+    } finally {
+      if (stocktakeId) await cancelStocktake(stocktakeId, token);
+    }
+  });
+
+  test('blocks transfer chốt dự kiến when source project is frozen', async ({ page }, testInfo) => {
+    const token = await loginToken();
+    const stock = await findProjectWithStock(token);
+    test.skip(!stock, 'No unfrozen project stock for freeze guard transfer test');
+
+    const note = uniqueFixtureNote('TRANSFER', testInfo.workerIndex, testInfo.retry);
+    let stocktakeId: string | undefined;
+
+    try {
       await page.goto('/warehouse/transfer');
       await page.getByRole('button', { name: 'Tạo phiếu chuyển' }).click();
 
@@ -112,6 +105,16 @@ test.describe('WMS freeze guard', () => {
       await dialog.locator('select.form-select').first().selectOption(stock!.projectCode);
       await pickFirstAutocomplete(page, dialog.locator('.search-autocomplete__input').first());
       await bumpQtyStepper(dialog.locator('.qty-stepper').first(), 1);
+
+      const created = await createFrozenStocktake(
+        token,
+        stock!.projectCode,
+        stock!.projectName,
+        stock!.materialCode,
+        stock!.materialName,
+        note,
+      );
+      stocktakeId = created.id;
 
       await dialog.getByRole('button', { name: 'Chốt dự kiến' }).click();
       await expectSnackbar(page, /đóng băng kiểm kê/i);

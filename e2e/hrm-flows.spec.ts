@@ -154,7 +154,7 @@ test.describe('HRM flows', () => {
 
     const target = items[0];
     await page.goto('/recruitment/candidates');
-    await page.getByPlaceholder('Tìm theo tên, email, SĐT...').fill(target.fullName);
+    await page.getByRole('searchbox', { name: 'Tìm kiếm ứng viên' }).fill(target.fullName);
     await clickFirstInteractiveRow(page);
     await expect(page).toHaveURL(new RegExp(`/recruitment/candidates/${target.id}`));
     await expect(page.getByRole('heading', { level: 1, name: target.fullName })).toBeVisible();

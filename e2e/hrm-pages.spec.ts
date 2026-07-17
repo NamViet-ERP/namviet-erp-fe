@@ -6,7 +6,7 @@ const hrmPages: Array<{ path: string; title: string | RegExp }> = [
   { path: '/members/list', title: 'Danh sách nhân viên' },
   { path: '/members/new', title: 'Thêm nhân viên' },
   { path: '/members/settings', title: 'Thiết lập nhân sự' },
-  { path: '/recruitment/candidates', title: 'Danh sách ứng viên' },
+  { path: '/recruitment/candidates', title: 'Hồ sơ ứng viên' },
   { path: '/recruitment/settings', title: 'Thiết lập tuyển dụng' },
 ];
 
@@ -22,13 +22,14 @@ test.describe('HRM pages', () => {
     await page.goto('/dashboard');
     await expect(page.getByText('Chọn phân hệ để bắt đầu')).toBeVisible();
     await expect(page.getByText('HRM')).toBeVisible();
-    await expect(page.getByText('Kho hàng')).toBeVisible();
+    await expect(page.getByRole('heading', { level: 3, name: /^Kho hàng$/i })).toBeVisible();
   });
 
-  test('members settings shows onboarding link', async ({ page }) => {
+  test('members settings shows one-time onboarding invites', async ({ page }) => {
     await page.goto('/members/settings');
-    await expect(page.getByLabel('Đường dẫn công khai')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Sao chép' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Form khai báo thông tin nhân viên' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Tạo liên kết 7 ngày' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Liên kết đã tạo' })).toBeVisible();
   });
 
   test('recruitment settings shows position form', async ({ page }) => {

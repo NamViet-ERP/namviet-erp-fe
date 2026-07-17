@@ -11,6 +11,7 @@
     "verify:prod-bundle": "node scripts/verify-prod-bundle.mjs",
     "verify:prod": "npm run verify:prod-env && npm run verify:no-mock",
     "build:prod": "node scripts/build-prod.mjs",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",

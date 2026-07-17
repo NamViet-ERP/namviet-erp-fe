@@ -212,7 +212,11 @@ export async function findReturnableLines(
 
 export async function findAnyReturnableExport(
   token: string,
-): Promise<{ projectCode: string; export: ReturnableExportApiDto } | null> {
+): Promise<{
+  projectCode: string;
+  export: ReturnableExportApiDto;
+  line: ReturnableLineApiDto;
+} | null> {
   const projects = await getProjects(token);
   for (const project of projects) {
     const list = await apiRequest<ReturnableExportApiDto[]>(
@@ -223,8 +227,9 @@ export async function findAnyReturnableExport(
     for (const exp of list) {
       if (exp.returnableLineCount <= 0) continue;
       const lines = await findReturnableLines(token, exp.id);
-      if (lines.some(line => line.remainingQty > 0)) {
-        return { projectCode: project.projectCode, export: exp };
+      const line = lines.find(item => item.remainingQty > 0);
+      if (line) {
+        return { projectCode: project.projectCode, export: exp, line };
       }
     }
   }

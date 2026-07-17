@@ -90,7 +90,6 @@ test.describe('WMS stocktake', () => {
 
   test('cancel pending stocktake from row actions', async ({ page }) => {
     const e2eNote = `E2E-CANCEL-${Date.now()}`;
-    let voucherCode: string | undefined;
 
     await page.goto('/stocktake/list');
     await page.getByRole('button', { name: /TẠO MỚI/i }).click();
@@ -102,7 +101,7 @@ test.describe('WMS stocktake', () => {
     await dialog.getByRole('button', { name: 'Tạo phiếu kiểm kê' }).click();
 
     const toast = await expectSnackbar(page, /Phiếu kiểm kê KK-\d{4}/);
-    voucherCode = extractVoucherCode(await toast.textContent(), 'KK');
+    const voucherCode = extractVoucherCode(await toast.textContent(), 'KK');
     expect(voucherCode).toBeTruthy();
 
     await openRowActions(page, voucherCode!);

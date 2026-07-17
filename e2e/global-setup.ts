@@ -12,6 +12,7 @@ export default async function globalSetup(): Promise<void> {
     const detail = err instanceof Error ? err.message : String(err);
     throw new Error(
       `Backend not ready at ${healthUrl} (${detail}). Start WareHouse_Management_BE before running Playwright.`,
+      { cause: err },
     );
   }
 }

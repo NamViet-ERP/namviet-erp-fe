@@ -27,15 +27,22 @@ test.describe('WMS material return', () => {
       await page.getByRole('button', { name: 'Tạo phiếu hoàn trả' }).click();
 
       const dialog = page.getByRole('dialog', { name: 'Tạo phiếu hoàn trả vật tư' });
-      await dialog.locator('select.form-select').first().selectOption(source!.projectCode);
+      await dialog.getByLabel('Kho dự án').selectOption(source!.projectCode);
 
-      const exportSelect = dialog.locator('select.form-select').nth(1);
+      const exportSelect = dialog.getByLabel('Phiếu xuất nguồn');
       await expect(async () => {
         expect(await exportSelect.locator('option').count()).toBeGreaterThan(1);
       }).toPass();
       await exportSelect.selectOption(source!.export.id);
       await expect(dialog.getByText(/dòng vật tư còn có thể hoàn trả/)).toBeVisible();
-      await expect(dialog.locator('tbody tr').first()).toBeVisible();
+
+      const returnQty = dialog
+        .getByRole('spinbutton', { name: `Số lượng hoàn trả cho ${source!.line.sku}` })
+        .first();
+      const fixtureQty = String(Math.min(1, source!.line.remainingQty));
+      await expect(returnQty).toBeVisible();
+      await returnQty.fill(fixtureQty);
+      await expect(returnQty).toHaveValue(fixtureQty);
 
       await dialog.getByRole('button', { name: 'Lưu nháp' }).click();
       const toast = await expectSnackbar(page, /Phiếu nháp .* — chưa chốt dự kiến/);

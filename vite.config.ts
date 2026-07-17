@@ -39,8 +39,8 @@ export default defineConfig(({ mode }) => {
       environment: 'jsdom',
     },
     build: {
-      // Source maps help diagnose production issues without shipping readable code.
-      sourcemap: true,
+      // Production source maps are opt-in to avoid publishing readable source by default.
+      sourcemap: env.VITE_BUILD_SOURCEMAP === 'true',
       // Avoid one giant bundle: split heavy vendors so the app shell loads fast.
       rollupOptions: {
         output: {

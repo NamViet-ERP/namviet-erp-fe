@@ -16,7 +16,6 @@ import {
   extractVoucherCode,
   fillImportDraftForm,
   pickFirstAutocomplete,
-  selectFirstProjectOption,
 } from './helpers/ui';
 
 test.describe('WMS voucher create (draft)', () => {

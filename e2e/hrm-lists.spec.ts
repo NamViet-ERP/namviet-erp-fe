@@ -30,9 +30,12 @@ test.describe('HRM list filters', () => {
 
   test('candidates list filters', async ({ page }) => {
     await page.goto('/recruitment/candidates');
-    await expect(page.getByPlaceholder('Tìm theo tên, email, SĐT...')).toBeVisible();
+    await expect(page.getByRole('searchbox', { name: 'Tìm kiếm ứng viên' })).toBeVisible();
     await expect(page.getByText('Tổng hồ sơ')).toBeVisible();
-    await expect(page.locator('.hrm-filter-select')).toHaveCount(3);
+    await expect(page.getByRole('combobox', { name: 'Lọc trạng thái' })).toBeVisible();
+    await expect(page.getByRole('combobox', { name: 'Lọc vị trí' })).toBeVisible();
+    await expect(page.getByRole('combobox', { name: 'Lọc nguồn' })).toBeVisible();
+    await expect(page.getByRole('combobox', { name: 'Lọc HR phụ trách' })).toBeVisible();
   });
 
   test('candidates list search', async ({ page }) => {
@@ -42,7 +45,7 @@ test.describe('HRM list filters', () => {
 
     const target = items[0];
     await page.goto('/recruitment/candidates');
-    await page.getByPlaceholder('Tìm theo tên, email, SĐT...').fill(target.fullName);
+    await page.getByRole('searchbox', { name: 'Tìm kiếm ứng viên' }).fill(target.fullName);
     await expect(page.locator('.hrm-table-row--interactive').first()).toContainText(target.fullName);
   });
 });

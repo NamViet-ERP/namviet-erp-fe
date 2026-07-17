@@ -21,6 +21,17 @@ jobs:
 
       - run: npm ci
 
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm run test:run
+        env:
+          NODE_ENV: test
+
       - name: Write .env.production for CI build
         run: |
           printf '%s\n' \
@@ -36,8 +47,3 @@ jobs:
         run: npm run build:prod
         env:
           VITE_API_BASE_URL: https://api.ci-placeholder.local
-
-      - name: Unit tests
-        run: rm -f .env.production && npm run test:run
-        env:
-          NODE_ENV: test
