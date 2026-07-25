@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { importsService, type CreateImportDto, type UpdateImportDto } from '../services/importsService';
 import type { ApproveImportRequestApiDto } from '../types/api/importBudgetApi';
+import type { CreateImportFromPoRequest } from '../types/api/poImportApi';
 import { queryKeys } from '../services/queryKeys';
 import type { Import } from '../types';
 import type { VoucherListParams } from '../lib/wms/voucherDateUtils';
@@ -42,6 +43,36 @@ export function useCreateImport() {
   });
 }
 
+/** Preview dòng PO còn nhập được (trừ pending NK). */
+export function usePoImportPreview(poCode: string | undefined, enabled = true) {
+  return useQuery({
+    queryKey: [...queryKeys.imports.all, 'from-po-preview', poCode ?? ''] as const,
+    queryFn: () => importsService.previewFromPurchaseOrder(poCode as string),
+    enabled: Boolean(poCode) && enabled,
+  });
+}
+
+/** Tạo phiếu nhập nháp từ PO đã đặt (chọn dòng + SL). */
+export function useCreateImportFromPo() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      poCode,
+      request,
+    }: {
+      poCode: string;
+      request?: CreateImportFromPoRequest | null;
+    }) => importsService.createFromPurchaseOrder(poCode, request),
+    onSuccess: (data, { poCode }) => {
+      invalidateImportSideEffects(qc, data);
+      qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all });
+      qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.detail(poCode) });
+      qc.invalidateQueries({ queryKey: queryKeys.purchasePlans.all });
+      qc.invalidateQueries({ queryKey: [...queryKeys.imports.all, 'from-po-preview', poCode] });
+    },
+  });
+}
+
 export function useUpdateImport() {
   const qc = useQueryClient();
   return useMutation({
@@ -62,6 +93,11 @@ export function useApproveImport() {
     onSuccess: (data, { id }) => {
       invalidateImportSideEffects(qc, data);
       qc.invalidateQueries({ queryKey: queryKeys.imports.detail(id) });
+      // PO.Received / DeliveryStatus may change when ReferenceCode is a PO code
+      qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all });
+      qc.invalidateQueries({ queryKey: queryKeys.purchasePlans.all });
+      const ref = data?.referenceCode?.trim();
+      if (ref) qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.detail(ref) });
     },
   });
 }

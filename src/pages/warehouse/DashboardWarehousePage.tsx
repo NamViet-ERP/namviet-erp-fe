@@ -20,6 +20,7 @@ import { formatCurrencyShort } from '../../utils/formatCurrency';
 import { fmtStockQty } from '../../lib/wms/stockQtyFormat';
 import { useWarehouseDashboard } from '../../hooks/useWarehouseDashboard';
 import { useLowStockAlerts } from '../../hooks/useLowStockAlerts';
+import { usePermission } from '../../hooks/usePermission';
 import type {
   CategoryDataPoint,
   DashboardActivityItem,
@@ -216,6 +217,8 @@ function DashboardWarehouseContent({
   isRetrying = false,
 }: DashboardWarehouseContentProps) {
   const [activityExpanded, setActivityExpanded] = useState(false);
+  const { has } = usePermission();
+  const canViewPrices = has('wms.prices.view');
   const { data: lowStockAlerts = [] } = useLowStockAlerts(undefined, 8);
   const activityItems = activityExpanded
     ? data.recentActivity
@@ -269,13 +272,15 @@ function DashboardWarehouseContent({
           accent="amber"
           icon={Package}
         />
-        <Card
-          title="Tổng giá trị"
-          value={hasLoadError ? '—' : formatCurrencyShort(data.totalValue)}
-          subtitle="ước tính từ giá bình quân"
-          accent="blue"
-          icon={DollarSign}
-        />
+        {canViewPrices && (
+          <Card
+            title="Tổng giá trị"
+            value={hasLoadError ? '—' : formatCurrencyShort(data.totalValue)}
+            subtitle="ước tính từ giá bình quân"
+            accent="blue"
+            icon={DollarSign}
+          />
+        )}
         <Card
           title="Kho dự án hoạt động"
           value={hasLoadError ? '—' : data.activeProjects}
@@ -333,7 +338,13 @@ function DashboardWarehouseContent({
       <div className="dashboard-grid-charts">
         <BentoCard className="bento-card--chart">
           <SectionHeading sub="6 tháng gần nhất — giá trị">Xu hướng Nhập / Xuất</SectionHeading>
-          <TrendChart data={data.trendData} />
+          {canViewPrices ? (
+            <TrendChart data={data.trendData} />
+          ) : (
+            <div className="chart-panel">
+              <EmptyState message="Biểu đồ giá trị nhập/xuất yêu cầu quyền xem giá." />
+            </div>
+          )}
         </BentoCard>
 
         <BentoCard className="bento-card--chart">

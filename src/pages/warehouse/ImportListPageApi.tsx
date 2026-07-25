@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { useLocation } from 'react-router-dom';
 
@@ -6,6 +6,7 @@ import { Plus, Download } from 'lucide-react';
 
 import type { ImportBudgetExceededApiDto } from '../../types/api/importBudgetApi';
 import type { Import } from '../../types';
+import type { ImportParseErrorApiDto } from '../../types/api/importParseApi';
 
 import TabFilter from '../../components/ui/TabFilter';
 
@@ -16,12 +17,13 @@ import Pagination from '../../components/ui/Pagination';
 import PageHeader from '../../components/ui/PageHeader';
 
 import PermissionGate from '../../components/auth/PermissionGate';
+import { usePermission } from '../../hooks/usePermission';
 
 import HrmPanel from '../../components/hr/HrmPanel';
 
 import { showToast } from '../../components/ui/Toast';
 
-import { getApiErrorMessage } from '../../lib/apiClient';
+import { getApiErrorMessage, saveBlob } from '../../lib/apiClient';
 
 import { parseImportBudgetExceeded } from '../../lib/wms/projectBudget';
 import { downloadVoucherExport } from '../../lib/wms/voucherExportDownload';
@@ -52,6 +54,8 @@ import {
   useApproveImport,
 
   useSubmitImport,
+  useCreateImportFromPo,
+  usePoImportPreview,
 
 } from '../../hooks/useImports';
 
@@ -60,15 +64,14 @@ import { useMaterials } from '../../hooks/useMaterials';
 import { useProjects } from '../../hooks/useProjects';
 
 import { useSuppliers } from '../../hooks/useSuppliers';
+import { usePurchaseOrders } from '../../hooks/usePurchaseOrders';
 
 import { findSupplierByName } from '../../services/suppliersService';
-import { suggestImportUnitPrice } from '../../lib/wms/suggestImportUnitPrice';
 
 import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
 
 import type { CreateImportDto } from '../../services/importsService';
 import { importsService } from '../../services/importsService';
-import type { ImportParseErrorApiDto } from '../../types/api/importParseApi';
 
 import { emptyQtyPriceLine, type MaterialQtyPriceLine } from './voucher/voucherFormTypes';
 
@@ -120,6 +123,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
   const [showDetail, setShowDetail] = useState(false);
 
   const [selected, setSelected] = useState<Import | null>(null);
+  const [isEvidencePending, setIsEvidencePending] = useState(false);
 
   const [budgetConfirmImport, setBudgetConfirmImport] = useState<Import | null>(null);
 
@@ -132,6 +136,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
   const [defaultSupplier, setDefaultSupplier] = useState('');
 
   const [referenceCode, setReferenceCode] = useState('');
+  const [selectedPoCode, setSelectedPoCode] = useState('');
 
   const [projectCode, setProjectCode] = useState(initialProjectCode ?? '');
 
@@ -140,9 +145,9 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
   const [items, setItems] = useState<MaterialQtyPriceLine[]>([{ ...emptyQtyPriceLine }]);
 
   const [createErrors, setCreateErrors] = useState<ImportFormFieldErrors>({});
+  const [isExporting, setIsExporting] = useState(false);
   const [importErrors, setImportErrors] = useState<ImportParseErrorApiDto[]>([]);
   const [isImportParsing, setIsImportParsing] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
 
   const { data: imports = [], isLoading, isError, error } = useImports({
     dateFrom: dateFrom || undefined,
@@ -156,6 +161,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
   const { data: suppliersPage } = useSuppliers({ all: true });
 
   const createMutation = useCreateImport();
+  const createFromPoMutation = useCreateImportFromPo();
   const frozenByProjectCode = useFrozenProjects();
 
   const updateMutation = useUpdateImport();
@@ -164,6 +170,11 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
   const submitMutation = useSubmitImport();
 
+  const { has } = usePermission();
+  const canEditImport = has('wms.imports.update');
+  const canSubmitImport = has('wms.imports.update');
+  const canApproveImport = has('wms.imports.approve');
+
 
 
   const materials = useMemo(() => materialsPage?.items ?? [], [materialsPage?.items]);
@@ -171,22 +182,16 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
   const projects = useMemo(() => projectsPage?.items ?? [], [projectsPage?.items]);
 
   const suppliers = useMemo(() => suppliersPage?.items ?? [], [suppliersPage?.items]);
-
-  const handleMaterialLineChange = async (index: number, materialCode: string) => {
-    const supplier = findSupplierByName(suppliers, defaultSupplier);
-    if (!materialCode || !supplier) return;
-    const price = await suggestImportUnitPrice(materialCode, supplier.id);
-    if (!price) return;
-    setItems(prev => {
-      const next = [...prev];
-      const line = next[index];
-      if (!line || (line.unitPrice && Number(line.unitPrice) > 0)) return prev;
-      next[index] = { ...line, unitPrice: String(price) };
-      return next;
-    });
-  };
-
-
+  const purchaseOrdersQuery = usePurchaseOrders({
+    page: 1,
+    pageSize: 200,
+    orderPlacementStatus: 'placed',
+  });
+  const poOptions = useMemo(
+    () => (purchaseOrdersQuery.data?.items ?? []).filter(po => po.deliveryStatus !== 'complete'),
+    [purchaseOrdersQuery.data?.items],
+  );
+  const poPreviewQuery = usePoImportPreview(selectedPoCode || undefined, showCreate && !editing && Boolean(selectedPoCode));
 
   const voucherTabs = getVoucherTabLabels('import');
 
@@ -271,6 +276,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
     setDefaultSupplier('');
 
     setReferenceCode('');
+    setSelectedPoCode('');
 
     setProjectCode('');
 
@@ -283,7 +289,15 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
   };
 
-
+  useEffect(() => {
+    if (editing || !showCreate) return;
+    const preview = poPreviewQuery.data;
+    if (!preview) return;
+    setDefaultSupplier(preview.supplierName ?? '');
+    setReferenceCode(preview.poCode ?? '');
+    if (preview.projectCode) setProjectCode(preview.projectCode);
+    setCreateErrors({});
+  }, [poPreviewQuery.data, editing, showCreate]);
 
   const handleDownloadImportTemplate = async () => {
     try {
@@ -329,8 +343,6 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
       setIsImportParsing(false);
     }
   };
-
-
 
   const buildDto = (status: 'draft' | 'pending'): CreateImportDto | null => {
 
@@ -390,6 +402,8 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
         supplierId: supplierMatch?.id,
 
+        notes: it.notes?.trim() ? it.notes.trim() : undefined,
+
       };
 
     });
@@ -436,38 +450,82 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
 
 
-  const handleCreate = async (status: 'draft' | 'pending') => {
+  const handleCreate = async (
+    status: 'draft' | 'pending',
+    evidence?: { files: File[]; evaluation: string },
+  ) => {
+    if (!editing) {
+      if (!selectedPoCode) {
+        setCreateErrors(e => ({ ...e, referenceCode: 'Vui lòng chọn PO đã đặt NCC.' }));
+        return;
+      }
+      const selectedItems = items
+        .map(line => {
+          const match = /poItem:(\d+)/i.exec((line.notes ?? '').trim());
+          const poItemId = match ? Number(match[1]) : NaN;
+          const qty = Number(line.qty);
+          return Number.isFinite(poItemId) && poItemId > 0 && Number.isFinite(qty) && qty > 0
+            ? { poItemId, qty }
+            : null;
+        })
+        .filter((x): x is { poItemId: number; qty: number } => Boolean(x));
+
+      if (selectedItems.length === 0) {
+        setCreateErrors(e => ({ ...e, items: 'PO chưa có dòng hợp lệ để nhập kho.' }));
+        return;
+      }
+
+      try {
+        const created = await createFromPoMutation.mutateAsync({
+          poCode: selectedPoCode,
+          request: { items: selectedItems },
+        });
+
+        const files = evidence?.files ?? [];
+        const evaluation = (evidence?.evaluation ?? '').trim();
+        if (evaluation) {
+          await importsService.updateReceiptEvaluation(created.id, evaluation);
+        }
+        for (const file of files) {
+          const kind = file.type.startsWith('image/') ? 'photo' : 'document';
+          await importsService.uploadAttachment(created.id, file, kind);
+        }
+
+        if (status === 'pending') {
+          await submitMutation.mutateAsync(created.id);
+        }
+
+        showToast(
+          'success',
+          status === 'draft'
+            ? `Phiếu nháp ${created.voucherCode} — chưa chốt dự kiến.`
+            : `Phiếu ${created.voucherCode} — nhập dự kiến, chờ duyệt thực tế.`,
+        );
+        setShowCreate(false);
+        resetForm();
+      } catch (err) {
+        showToast('error', getApiErrorMessage(err, 'Không thể tạo phiếu nhập từ PO'));
+      }
+      return;
+    }
 
     const dto = buildDto(status);
-
     if (!dto) return;
-
     try {
-
       const created = await createMutation.mutateAsync(dto);
 
       showToast(
-
         'success',
-
         status === 'draft'
-
           ? `Phiếu nháp ${created.voucherCode} — chưa chốt dự kiến.`
-
           : `Phiếu ${created.voucherCode} — nhập dự kiến, chờ duyệt thực tế.`,
-
       );
 
       setShowCreate(false);
-
       resetForm();
-
     } catch (err) {
-
       showToast('error', getApiErrorMessage(err, 'Không thể tạo phiếu nhập'));
-
     }
-
   };
 
 
@@ -511,6 +569,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
     setDefaultSupplier(imp.supplier);
 
     setReferenceCode(imp.referenceCode);
+    setSelectedPoCode('');
 
     setNote(imp.note);
 
@@ -576,10 +635,36 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
 
 
-  const handleApprove = (imp: Import) => {
+  const handleApprove = async (imp: Import, evaluationText?: string) => {
+    const text = (evaluationText ?? imp.receiptEvaluation ?? '').trim();
+    const hasPhoto = (imp.attachments ?? []).some(a => a.kind === 'photo');
+    const hasDocument = (imp.attachments ?? []).some(a => a.kind === 'document');
 
-    void runApprove(imp, false);
+    // Duyệt từ bảng (không mở modal): vẫn chặn sớm; lỗi trên modal dùng inline đỏ.
+    if (evaluationText === undefined && (!text || !hasPhoto || !hasDocument)) {
+      showToast(
+        'error',
+        !text
+          ? 'Thiếu đánh giá nhận hàng. Mở chi tiết phiếu để nhập đánh giá, ảnh và file chứng từ.'
+          : !hasPhoto
+            ? 'Thiếu ảnh nhận hàng. Mở chi tiết phiếu để tải ảnh.'
+            : 'Thiếu file chứng từ. Mở chi tiết phiếu để tải file.',
+      );
+      return;
+    }
 
+    try {
+      if ((imp.receiptEvaluation ?? '').trim() !== text) {
+        setIsEvidencePending(true);
+        await importsService.updateReceiptEvaluation(imp.id, text);
+        await reloadSelected(imp.id);
+      }
+      await runApprove(imp, false);
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không thể duyệt phiếu'));
+    } finally {
+      setIsEvidencePending(false);
+    }
   };
 
 
@@ -624,6 +709,67 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
     setShowDetail(true);
 
+  };
+
+  const reloadSelected = async (id: string) => {
+    const refreshed = await importsService.getById(id);
+    setSelected(refreshed);
+  };
+
+  const handleSaveEvaluation = async (imp: Import, evaluation: string) => {
+    try {
+      setIsEvidencePending(true);
+      await importsService.updateReceiptEvaluation(imp.id, evaluation.trim());
+      await reloadSelected(imp.id);
+      showToast('success', 'Đã lưu đánh giá nhận hàng.');
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không lưu được đánh giá.'));
+    } finally {
+      setIsEvidencePending(false);
+    }
+  };
+
+  const handleUploadAttachment = async (
+    imp: Import,
+    file: File,
+    kind: 'document' | 'photo',
+  ) => {
+    try {
+      setIsEvidencePending(true);
+      await importsService.uploadAttachment(imp.id, file, kind);
+      await reloadSelected(imp.id);
+      showToast('success', 'Đã tải file lên phiếu nhập.');
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không tải được file.'));
+    } finally {
+      setIsEvidencePending(false);
+    }
+  };
+
+  const handleDeleteAttachment = async (imp: Import, attachmentId: string) => {
+    try {
+      setIsEvidencePending(true);
+      await importsService.deleteAttachment(imp.id, attachmentId);
+      await reloadSelected(imp.id);
+      showToast('success', 'Đã xóa file.');
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không xóa được file.'));
+    } finally {
+      setIsEvidencePending(false);
+    }
+  };
+
+  const handleDownloadAttachment = async (
+    imp: Import,
+    attachmentId: string,
+    fileName: string,
+  ) => {
+    try {
+      const blob = await importsService.downloadAttachment(imp.id, attachmentId);
+      await saveBlob(blob, fileName);
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không tải được file.'));
+    }
   };
 
 
@@ -720,6 +866,12 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
           onApprove={handleApprove}
 
+          canEdit={canEditImport}
+
+          canSubmit={canSubmitImport}
+
+          canApprove={canApproveImport}
+
         />
 
 
@@ -758,7 +910,9 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
         onClose={() => { setShowCreate(false); resetForm(); }}
 
-        isPending={createMutation.isPending || updateMutation.isPending}
+        isPending={createMutation.isPending || createFromPoMutation.isPending || updateMutation.isPending}
+
+        isImportParsing={isImportParsing}
 
         projects={projects}
 
@@ -772,9 +926,12 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
         onProjectCodeChange={code => {
           setProjectCode(code);
+          setSelectedPoCode('');
           setCreateErrors(e => ({
             ...e,
             projectCode: getFrozenProjectError(frozenByProjectCode, code),
+            referenceCode: undefined,
+            items: undefined,
           }));
         }}
 
@@ -799,7 +956,17 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
         items={items}
 
         onItemsChange={next => {
-          setItems(next);
+          // Tạo từ PO: giữ nguyên notes poItem:* từ bảng chọn dòng.
+          // Sửa phiếu: đổi mã VT thì bỏ notes cũ để tránh khớp sai khi duyệt.
+          setItems(prev => {
+            if (!editing) return next;
+            return next.map((line, idx) => {
+              const prevLine = prev[idx];
+              if (prevLine && prevLine.materialCode === line.materialCode) return line;
+              if (line.notes) return { ...line, notes: undefined };
+              return line;
+            });
+          });
           setCreateErrors(e => {
             const cleared = { ...e, items: undefined };
             delete cleared.lineErrors;
@@ -815,19 +982,28 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
         onSave={handleUpdate}
 
-        editVoucher={editing ? { code: editing.voucherCode } : null}
-
-        materialUnit={materialUnit}
-
-        isImportParsing={isImportParsing}
-
         importErrors={importErrors}
 
         onDownloadTemplate={handleDownloadImportTemplate}
 
         onImportFile={handleImportFile}
 
-        onMaterialLineChange={handleMaterialLineChange}
+        editVoucher={editing ? { code: editing.voucherCode } : null}
+
+        materialUnit={materialUnit}
+        poOptions={poOptions}
+        selectedPoCode={selectedPoCode}
+        onSelectedPoCodeChange={code => {
+          setSelectedPoCode(code);
+          const po = poOptions.find(p => p.code === code);
+          setProjectCode(po?.projectCode ?? '');
+          setDefaultSupplier(po?.supplierName ?? '');
+          setReferenceCode(code);
+          setCreateErrors(e => ({ ...e, referenceCode: undefined, items: undefined, projectCode: undefined }));
+          setItems([{ ...emptyQtyPriceLine }]);
+        }}
+        poLoading={purchaseOrdersQuery.isLoading || poPreviewQuery.isLoading}
+        poPreviewLines={poPreviewQuery.data?.lines ?? []}
 
         onDuplicateMaterialAttempt={lineIndex => {
           setCreateErrors(e => ({
@@ -856,10 +1032,15 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
         isSubmitPending={submitMutation.isPending}
 
         isApprovePending={approveMutation.isPending}
+        isEvidencePending={isEvidencePending}
 
-        onSubmit={handleSubmit}
+        onSubmit={canSubmitImport ? handleSubmit : undefined}
 
-        onApprove={handleApprove}
+        onApprove={canApproveImport ? handleApprove : undefined}
+        onSaveEvaluation={canEditImport ? handleSaveEvaluation : undefined}
+        onUploadAttachment={canEditImport ? handleUploadAttachment : undefined}
+        onDeleteAttachment={canEditImport ? handleDeleteAttachment : undefined}
+        onDownloadAttachment={handleDownloadAttachment}
 
       />
 

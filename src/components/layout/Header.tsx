@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { NAMVIET_GROUP_LOGO_URL } from '../../constants/branding';
 import {
   Search, Grid3X3, Settings, BarChart3, Bell, ChevronDown,
-  User, LogOut, X, Moon, Sun, PackagePlus, PackageMinus, ArrowLeftRight, ClipboardCheck,
+  User, LogOut, X, PackagePlus, PackageMinus, ArrowLeftRight, ClipboardCheck,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -159,7 +159,7 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
   const [showNotifications, setShowNotifications] = useState(false);
   const [readNotificationIds, setReadNotificationIds] = useState(readStoredNotifIds);
   const [searchFocused, setSearchFocused] = useState(false);
-  const { dark, toggleDark } = useDarkMode();
+  useDarkMode();
   const { data: pendingNotifications } = useWmsNotifications();
 
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -297,10 +297,6 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
                 </>
               )}
             </div>
-
-            <IconBtn title={dark ? 'Chế độ sáng' : 'Chế độ tối'} onClick={toggleDark}>
-              {dark ? <Sun size={18} /> : <Moon size={18} />}
-            </IconBtn>
           </div>
 
           <div className="nv-header__divider" aria-hidden />
@@ -464,10 +460,11 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
                   </div>
                   <div className="user-menu-panel__section user-menu-panel__section--bordered">
                     <MenuBtn icon={LogOut} label="Đăng xuất" danger onClick={() => {
-                      authService.logout();
-                      clearSessionUser();
-                      setShowUserMenu(false);
-                      navigate('/login');
+                      void authService.logout().finally(() => {
+                        clearSessionUser();
+                        setShowUserMenu(false);
+                        navigate('/login');
+                      });
                     }} />
                   </div>
                 </div>

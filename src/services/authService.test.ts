@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getSessionPermissions, getSessionUser, setSessionUser } from '../constants/systemUsers';
-import { getStoredToken, persistTokens } from '../lib/authSession';
+import { setAccessToken } from '../lib/authSession';
 
 const mocks = vi.hoisted(() => ({
   get: vi.fn(),
@@ -29,6 +29,7 @@ vi.mock('../lib/authRefresh', () => ({
   refreshAccessToken: mocks.refresh,
 }));
 
+import { ApiError } from '../lib/apiClient';
 import { authService } from './authService';
 
 function tokenWithExpiry(exp: number): string {
@@ -49,29 +50,28 @@ function cacheStaleUser() {
   });
 }
 
-describe('authService fail-closed bootstrap', () => {
+describe('authService hybrid cookie + memory access', () => {
   beforeEach(() => {
     localStorage.clear();
     sessionStorage.clear();
+    setAccessToken(null);
     mocks.get.mockReset();
     mocks.post.mockReset();
     mocks.refresh.mockReset();
   });
 
   it('does not retain cached permissions when /auth/me is unavailable', async () => {
-    const token = tokenWithExpiry(Math.floor(Date.now() / 1000) + 3600);
-    persistTokens(token, 'refresh-token', false);
+    setAccessToken(tokenWithExpiry(Math.floor(Date.now() / 1000) + 3600));
     cacheStaleUser();
     mocks.get.mockRejectedValueOnce(new TypeError('Network unavailable'));
 
     await expect(authService.ensureSession()).resolves.toBe('recoverable-error');
     expect(getSessionUser()).toBeUndefined();
     expect(getSessionPermissions()).toEqual([]);
-    expect(getStoredToken()).toBe(token);
   });
 
   it('treats server-provided empty permissions as authoritative', async () => {
-    persistTokens(tokenWithExpiry(Math.floor(Date.now() / 1000) + 3600), 'refresh-token', false);
+    setAccessToken(tokenWithExpiry(Math.floor(Date.now() / 1000) + 3600));
     cacheStaleUser();
     mocks.get.mockResolvedValueOnce({
       id: 'user-1',
@@ -88,15 +88,49 @@ describe('authService fail-closed bootstrap', () => {
     expect(getSessionPermissions()).toEqual([]);
   });
 
-  it('returns a retryable state when refresh times out or is unavailable', async () => {
-    const token = tokenWithExpiry(Math.floor(Date.now() / 1000) - 60);
-    persistTokens(token, 'refresh-token', false);
-    cacheStaleUser();
+  it('refreshes when access is missing then loads /me', async () => {
+    mocks.refresh.mockResolvedValueOnce('refreshed');
+    mocks.get.mockResolvedValueOnce({
+      id: 'user-1',
+      username: 'tester',
+      role: 'staff',
+      name: 'Tester',
+      initials: 'T',
+      roleLabel: 'Nhân viên',
+      email: 'tester@example.com',
+      permissions: ['wms.imports.view'],
+    });
+
+    await expect(authService.ensureSession()).resolves.toBe('authenticated');
+    expect(mocks.refresh).toHaveBeenCalledOnce();
+    expect(getSessionPermissions()).toEqual(['wms.imports.view']);
+  });
+
+  it('returns retryable when refresh is unavailable and no access token', async () => {
     mocks.refresh.mockResolvedValueOnce('unavailable');
 
     await expect(authService.ensureSession()).resolves.toBe('recoverable-error');
     expect(getSessionUser()).toBeUndefined();
-    expect(getStoredToken()).toBe(token);
     expect(mocks.get).not.toHaveBeenCalled();
+  });
+
+  it('retries refresh after /me 401', async () => {
+    setAccessToken(tokenWithExpiry(Math.floor(Date.now() / 1000) + 3600));
+    mocks.get
+      .mockRejectedValueOnce(new ApiError('expired', 401))
+      .mockResolvedValueOnce({
+        id: 'user-1',
+        username: 'tester',
+        role: 'staff',
+        name: 'Tester',
+        initials: 'T',
+        roleLabel: 'Nhân viên',
+        email: 'tester@example.com',
+        permissions: ['wms.imports.view'],
+      });
+    mocks.refresh.mockResolvedValueOnce('refreshed');
+
+    await expect(authService.ensureSession()).resolves.toBe('authenticated');
+    expect(getSessionPermissions()).toEqual(['wms.imports.view']);
   });
 });

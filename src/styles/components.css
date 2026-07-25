@@ -376,7 +376,7 @@
   /* ── Form field helpers ── */
   .form-label__required {
     color: var(--md-error);
-    margin-right: 2px;
+    font-weight: 700;
   }
   .form-field__error {
     font-family: 'Roboto', sans-serif;
@@ -501,9 +501,18 @@
   .md-dialog--md { max-width: 560px; }
   .md-dialog--lg { max-width: 720px; }
   .md-dialog--xl { max-width: 900px; }
-  .md-dialog--full {
-    max-width: min(1180px, calc(100vw - 48px));
-    width: min(1180px, calc(100vw - 48px));
+  /* Phiếu chứng từ WMS (tạo + chi tiết): cùng khung — đủ bảng + upload 2 cột */
+  .md-dialog--full,
+  .md-dialog--detail {
+    max-width: min(1080px, calc(100vw - 40px));
+    width: min(1080px, calc(100vw - 40px));
+  }
+  .md-dialog:has(.import-create-form) {
+    height: fit-content;
+    max-height: min(90dvh, 920px);
+  }
+  .md-dialog:has(.import-create-form) .md-dialog__body {
+    flex: 0 1 auto;
   }
   /* YCMH / PO: hơi rộng hơn full mặc định cho bảng, không tràn gần hết màn */
   .md-dialog:has(.pur-ycmh),
@@ -560,7 +569,6 @@
     display: none;
   }
   .md-dialog--confirm { max-width: 400px; }
-  .md-dialog--detail { max-width: 900px; }
   .md-dialog__header {
     display: flex;
     align-items: center;
@@ -605,7 +613,7 @@
     margin: 16px 0 0;
   }
   .md-dialog__body {
-    flex: 1;
+    flex: 0 1 auto;
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -647,6 +655,14 @@
     letter-spacing: 0.04em;
     color: var(--md-on-surface-variant);
     margin-bottom: 2px;
+  }
+
+  /* Phiếu chi tiết: nhãn meta cùng cỡ với form-label modal (Đánh giá nhận hàng) */
+  .wms-voucher-detail .md-detail-field__label {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    margin-bottom: 4px;
   }
   .md-detail-field__value {
     font-family: 'Roboto', sans-serif;
@@ -1836,7 +1852,7 @@
   .sidebar-nav {
     flex: 1;
     overflow-y: auto;
-    padding: 6px;
+    padding: 10px 6px 6px;
   }
   .app-sidebar--collapsed .sidebar-item {
     justify-content: center;
@@ -3035,11 +3051,19 @@
   .form-label {
     display: block;
     font-family: 'Roboto', sans-serif;
-    font-size: 0.75rem;
-    font-weight: 500;
-    letter-spacing: 0.04em;
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
     color: var(--md-on-surface-variant);
-    margin-bottom: 4px;
+    margin-bottom: 6px;
+    line-height: 1.35;
+  }
+
+  /* Modal forms: labels stay readable against bordered inputs */
+  .modal-form-bordered .form-label,
+  .md-dialog .form-label {
+    font-size: 0.9375rem;
+    font-weight: 600;
   }
 
   /* ────────────────────────────────────────────────────────
@@ -4850,6 +4874,10 @@
       color var(--md-duration) var(--md-easing),
       box-shadow var(--md-duration) var(--md-easing);
   }
+  /* Standalone back on module pages (not inside .hrm-detail-header) */
+  .app-shell--module .page-shell > .hrm-back-btn {
+    margin-top: 12px;
+  }
   .hrm-back-btn:hover,
   .hrm-header-btn:hover {
     background: var(--md-primary-container);
@@ -4862,6 +4890,8 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
+    /* Module shell sets app-main__inner padding-top: 0 — keep back btn clear of app chrome */
+    padding-top: 12px;
   }
   .hrm-detail-header__row {
     display: flex;
@@ -6611,6 +6641,10 @@
     padding-right: 16px;
     padding-bottom: 16px;
   }
+  /* PageHeader không có padding riêng — tránh đè dưới thanh Header cố định */
+  .app-shell--module .page-shell > .page-header {
+    padding-top: 14px;
+  }
   .app-main__inner--portal {
     padding: 20px 24px 32px;
     max-width: 1400px;
@@ -7239,9 +7273,12 @@
     border: 1px solid color-mix(in srgb, var(--md-outline-variant02) 80%, transparent);
     border-left: 3px solid var(--wms-accent);
     overflow: hidden;
-    padding: 0;
+    padding: 1rem 1.25rem 1.15rem;
     animation: none;
     box-shadow: 0 1px 2px color-mix(in srgb, var(--md-primary) 6%, transparent);
+  }
+  .app-shell--wms .hrm-panel.hrm-panel-flush {
+    padding: 0;
   }
   .app-shell--wms .hrm-panel > .border-b {
     padding: 0.45rem 1rem 0;
@@ -7389,10 +7426,11 @@
   }
   .wms-voucher-detail__section-label {
     margin-bottom: 10px;
-    font-size: 0.6875rem;
+    font-family: 'Roboto', sans-serif;
+    font-size: 0.9375rem;
     font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    text-transform: none;
     color: var(--md-on-surface-variant);
   }
   .wms-voucher-detail__footer {

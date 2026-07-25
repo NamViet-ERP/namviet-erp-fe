@@ -113,10 +113,10 @@ export default function RecruitmentCalendarPage() {
 
           <div className="recruitment-cal-nav__actions">
             <button type="button" onClick={() => shiftMonth(-1)} className="portal-calendar-nav__btn" aria-label="Tháng trước">
-              <ChevronLeft size={14} />
+              <ChevronLeft size={16} strokeWidth={2.25} aria-hidden />
             </button>
             <button type="button" onClick={() => shiftMonth(1)} className="portal-calendar-nav__btn" aria-label="Tháng sau">
-              <ChevronRight size={14} />
+              <ChevronRight size={16} strokeWidth={2.25} aria-hidden />
             </button>
           </div>
         </div>

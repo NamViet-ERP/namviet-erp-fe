@@ -4,6 +4,7 @@ export const DashboardPage = lazy(() => import('../pages/DashboardPage'));
 export const DashboardWarehousePage = lazy(() => import('../pages/warehouse/DashboardWarehousePage'));
 export const TransferListPage = lazy(() => import('../pages/warehouse/TransferListPageApi'));
 export const MaterialReturnPage = lazy(() => import('../pages/warehouse/MaterialReturnPage'));
+export const DefectsPage = lazy(() => import('../pages/warehouse/DefectsPage'));
 export const ImportListPage = lazy(() => import('../pages/warehouse/ImportListPageApi'));
 export const ExportListPage = lazy(() => import('../pages/warehouse/ExportListPageApi'));
 export const SettingsPage = lazy(() => import('../pages/warehouse/SettingsPage'));
@@ -11,6 +12,7 @@ export const StockListPage = lazy(() => import('../pages/warehouse/StockListPage
 export const MaterialsPage = lazy(() => import('../pages/warehouse/MaterialsPage'));
 export const ProjectsPage = lazy(() => import('../pages/warehouse/ProjectsPage'));
 export const ProjectDetailPage = lazy(() => import('../pages/warehouse/ProjectDetailPage'));
+export const ArrivalPlansPage = lazy(() => import('../pages/warehouse/ArrivalPlansPage'));
 export const MembersPage = lazy(() => import('../pages/members/MembersPage'));
 export const EmployeeCreatePage = lazy(() => import('../pages/members/EmployeeCreatePage'));
 export const EmployeeDetailPage = lazy(() => import('../pages/members/EmployeeDetailPage'));
@@ -43,3 +45,13 @@ export const CskhSettingsPage = lazy(() => import('../pages/technical/cskh/CskhS
 export const ProjectIssuesPage = lazy(() => import('../pages/technical/cskh/ProjectIssuesPage'));
 export const CdtReportsPage = lazy(() => import('../pages/technical/cskh/CdtReportsPage'));
 export const InternalReportsPage = lazy(() => import('../pages/technical/cskh/InternalReportsPage'));
+
+export const PurchasePlansPage = lazy(() => import('../pages/purchasing/PurchasePlansPage'));
+export const PurchasePlanDetailPage = lazy(() => import('../pages/purchasing/PurchasePlanDetailPage'));
+export const PurchaseOrdersPage = lazy(() => import('../pages/purchasing/PurchaseOrdersPage'));
+export const PurchaseOrderDetailPage = lazy(() => import('../pages/purchasing/PurchaseOrderDetailPage'));
+export const PurchasePaymentsPage = lazy(() => import('../pages/purchasing/PurchasePaymentsPage'));
+export const PurchasePaymentDetailPage = lazy(() => import('../pages/purchasing/PurchasePaymentDetailPage'));
+export const PurchasingDashboardPage = lazy(() => import('../pages/purchasing/PurchasingDashboardPage'));
+export const PurchasingSettingsPage = lazy(() => import('../pages/purchasing/PurchasingSettingsPage'));
+export const PurchasingSuppliersPage = lazy(() => import('../pages/purchasing/PurchasingSuppliersPage'));

@@ -1,8 +1,6 @@
 import { isAccountActiveForEmployee } from '../services/employeesService';
 import { isActiveEmployee, type Employee } from '../types/hr';
 import type { CreateSystemUserDto, SystemUser, SystemUserRole } from '../types/systemUser';
-import { getPermissionsFromToken } from '../lib/jwtClaims';
-import { getStoredToken } from '../lib/authSession';
 
 export type { CreateSystemUserDto, SystemUser, SystemUserRole };
 
@@ -54,8 +52,7 @@ export function getSessionUser(): SystemUser | undefined {
 
 export function getSessionPermissions(): string[] {
   const user = readStoredSessionUser();
-  if (user?.permissions?.length) return user.permissions;
-  return getPermissionsFromToken(getStoredToken());
+  return user?.permissions ? [...user.permissions] : [];
 }
 
 function notifyAuthChanged(): void {

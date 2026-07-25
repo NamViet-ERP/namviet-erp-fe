@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Cake, Gift } from 'lucide-react';
 import EmptyState from '../ui/EmptyState';
 import { MONTH_NAMES_TITLE, WEEKDAY_LABELS } from '../../hooks/dashboard/calendarConstants';
@@ -52,18 +51,8 @@ export default function PortalBirthdayCalendar({
   isFetching,
   isError,
 }: PortalBirthdayCalendarProps) {
-  const monthTitle = `${MONTH_NAMES_TITLE[viewMonth]} ${viewYear}`;
-
-  const agendaDays = useMemo(
-    () =>
-      Object.keys(birthdaysByDay)
-        .map(Number)
-        .sort((a, b) => a - b)
-        .map((day) => ({ day, events: birthdaysByDay[day] })),
-    [birthdaysByDay],
-  );
-
-  const selectedHasBirthdays = (birthdaysByDay[selectedDay]?.length ?? 0) > 0;
+  const selectedEvents = birthdaysByDay[selectedDay] ?? [];
+  const selectedHasBirthdays = selectedEvents.length > 0;
 
   if (isInitialLoading) {
     return (
@@ -108,33 +97,35 @@ export default function PortalBirthdayCalendar({
       </header>
 
       <div className="portal-bday-cal__nav">
-        <div className="portal-bday-cal__nav-left">
-          <button type="button" className="portal-bday-cal__today" onClick={goToday}>
-            Hôm nay
-          </button>
-          <span className="portal-bday-cal__month">{monthTitle}</span>
-          <span className="portal-bday-cal__fetching-slot" aria-live="polite">
-            {isFetching ? 'Đang cập nhật…' : '\u00a0'}
-          </span>
-        </div>
-        <div className="portal-bday-cal__nav-actions">
+        <button type="button" className="portal-bday-cal__today" onClick={goToday}>
+          Hôm nay
+        </button>
+
+        <div className="portal-bday-cal__month-switcher" role="group" aria-label="Chọn tháng">
           <button
             type="button"
             onClick={() => shiftMonth(-1)}
-            className="portal-calendar-nav__btn"
+            className="portal-bday-cal__month-btn"
             aria-label="Tháng trước"
           >
-            <ChevronLeft size={14} />
+            <ChevronLeft size={16} strokeWidth={2.25} aria-hidden />
           </button>
+          <span className="portal-bday-cal__month" aria-live="polite">
+            {MONTH_NAMES_TITLE[viewMonth]} {viewYear}
+          </span>
           <button
             type="button"
             onClick={() => shiftMonth(1)}
-            className="portal-calendar-nav__btn"
+            className="portal-bday-cal__month-btn"
             aria-label="Tháng sau"
           >
-            <ChevronRight size={14} />
+            <ChevronRight size={16} strokeWidth={2.25} aria-hidden />
           </button>
         </div>
+
+        <span className="portal-bday-cal__fetching-slot" aria-live="polite">
+          {isFetching ? 'Đang cập nhật…' : '\u00a0'}
+        </span>
       </div>
 
       <div
@@ -199,54 +190,35 @@ export default function PortalBirthdayCalendar({
         <div className="portal-bday-cal__timeline">
           <h4 className="portal-bday-cal__timeline-title">
             <Gift size={13} aria-hidden />
-            Sinh nhật trong tháng
+            {selectedHasBirthdays
+              ? `${formatAgendaHeading(selectedDay, viewMonth, viewYear)} · ${selectedEvents.length}`
+              : 'Sinh nhật ngày đã chọn'}
           </h4>
 
           <div className="portal-bday-cal__timeline-body">
-          {agendaDays.length === 0 ? (
-            <p className="portal-bday-cal__empty">
-              Không có sinh nhật trong tháng này.
-            </p>
-          ) : (
-            <div className="portal-bday-cal__timeline-groups">
-              {agendaDays.map(({ day, events }) => {
-                const isSelected = selectedDay === day;
-                return (
-                  <section
-                    key={day}
-                    className={[
-                      'portal-bday-cal__timeline-group',
-                      isSelected && 'portal-bday-cal__timeline-group--selected',
-                    ].filter(Boolean).join(' ')}
-                  >
-                    <button
-                      type="button"
-                      className="portal-bday-cal__timeline-date"
-                      onClick={() => setSelectedDay(day)}
-                    >
-                      <span>{formatAgendaHeading(day, viewMonth, viewYear)}</span>
-                      <span className="portal-bday-cal__timeline-count">{events.length}</span>
-                    </button>
-                    <ul className="portal-bday-cal__timeline-people">
-                      {events.map((person) => (
-                        <li key={person.name} className="portal-bday-cal__person-row">
-                          <span className="portal-bday-cal__avatar" aria-hidden>
-                            {getInitials(person.name)}
-                          </span>
-                          <span className="portal-bday-cal__person-meta">
-                            <strong className="portal-bday-cal__person-name">{person.name}</strong>
-                            {person.department && (
-                              <span className="portal-bday-cal__person-dept">{person.department}</span>
-                            )}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </section>
-                );
-              })}
-            </div>
-          )}
+            {selectedHasBirthdays ? (
+              <section className="portal-bday-cal__timeline-group portal-bday-cal__timeline-group--selected">
+                <ul className="portal-bday-cal__timeline-people">
+                  {selectedEvents.map((person) => (
+                    <li key={person.name} className="portal-bday-cal__person-row">
+                      <span className="portal-bday-cal__avatar" aria-hidden>
+                        {getInitials(person.name)}
+                      </span>
+                      <span className="portal-bday-cal__person-meta">
+                        <strong className="portal-bday-cal__person-name">{person.name}</strong>
+                        {person.department && (
+                          <span className="portal-bday-cal__person-dept">{person.department}</span>
+                        )}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : (
+              <p className="portal-bday-cal__empty">
+                Không có sinh nhật trong tháng này.
+              </p>
+            )}
           </div>
         </div>
       </div>

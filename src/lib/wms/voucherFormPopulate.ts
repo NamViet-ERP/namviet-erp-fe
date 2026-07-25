@@ -14,6 +14,7 @@ export function importToFormLines(items: Import['items']): MaterialQtyPriceLine[
     materialCode: it.sku || it.productId,
     qty: String(it.qty),
     unitPrice: String(it.unitPrice ?? 0),
+    notes: typeof it.notes === 'string' ? it.notes : undefined,
   }));
 }
 

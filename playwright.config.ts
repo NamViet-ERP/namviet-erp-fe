@@ -36,7 +36,9 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
     env: {
-      VITE_API_BASE_URL: apiBaseURL,
+      // Same-origin cookie auth via Vite proxy
+      VITE_API_BASE_URL: '',
+      VITE_DEV_PROXY_TARGET: apiBaseURL,
     },
   },
 });

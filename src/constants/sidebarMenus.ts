@@ -8,10 +8,10 @@ import {
 
   ClipboardCheck, Users, UserCheck, UserCog,
 
-  Layers, FolderKanban, ArrowLeftRight, Building2, Ruler, BarChart3, Receipt, RotateCcw,
+  Layers, FolderKanban, ArrowLeftRight, Building2, Ruler, BarChart3, RotateCcw, AlertTriangle,
 
   Target, CalendarDays, DollarSign, Headphones, ShoppingCart, ClipboardList, FileText, Cake,
-  Star,
+  Star, Truck,
 
 } from 'lucide-react';
 
@@ -60,6 +60,20 @@ export const warehouseMenu: SidebarMenuItem[] = [
     path: '/warehouse/stock',
 
     permission: 'wms.stock.view:all',
+
+  },
+
+  {
+
+    id: 'arrival-plans',
+
+    label: 'Kế hoạch hàng về',
+
+    icon: Truck,
+
+    path: '/warehouse/arrival-plans',
+
+    permission: 'purchasing.arrival_plans.view',
 
   },
 
@@ -121,6 +135,20 @@ export const warehouseMenu: SidebarMenuItem[] = [
 
   {
 
+    id: 'defects',
+
+    label: 'Hàng lỗi',
+
+    icon: AlertTriangle,
+
+    path: '/warehouse/defects',
+
+    permission: 'wms.defects.view:all',
+
+  },
+
+  {
+
     id: 'materials',
 
     label: 'Danh mục vật tư',
@@ -163,10 +191,6 @@ export const warehouseMenu: SidebarMenuItem[] = [
 
       'wms.material_units.view:all',
 
-      'wms.suppliers.view:all',
-
-      'wms.price_books.view:all',
-
     ],
 
   },
@@ -204,34 +228,6 @@ export const warehouseSettingsMenu: SidebarMenuItem[] = [
     path: '/warehouse/settings/material-units',
 
     permission: 'wms.material_units.view:all',
-
-  },
-
-  {
-
-    id: 'wh-settings-suppliers',
-
-    label: 'Danh mục NCC',
-
-    icon: Building2,
-
-    path: '/warehouse/settings/suppliers',
-
-    permission: 'wms.suppliers.view:all',
-
-  },
-
-  {
-
-    id: 'wh-settings-price-books',
-
-    label: 'Bảng giá NCC',
-
-    icon: Receipt,
-
-    path: '/warehouse/settings/price-books',
-
-    permission: 'wms.price_books.view:all',
 
   },
 
@@ -514,8 +510,15 @@ export const technicalMenu: SidebarMenuItem[] = [
 
 
 
-/** Mua hàng — phase reset: kế hoạch + đơn hàng (gồm phiếu phát sinh). */
+/** Mua hàng — Dashboard + KHMH + Đơn hàng (NCC nằm module Nhà cung cấp). */
 export const purchasingMenu: SidebarMenuItem[] = [
+  {
+    id: 'pur-dashboard',
+    label: 'Dashboard',
+    icon: LayoutDashboard,
+    path: '/purchasing/dashboard',
+    permission: 'purchasing.dashboard.view',
+  },
   {
     id: 'pur-plan',
     label: 'Kế hoạch mua hàng',
@@ -531,11 +534,11 @@ export const purchasingMenu: SidebarMenuItem[] = [
     permission: 'purchasing.orders.view',
   },
   {
-    id: 'pur-settings',
-    label: 'Thiết lập',
-    icon: Settings,
-    path: '/purchasing/settings',
-    permission: 'purchasing.settings.view',
+    id: 'pur-payments',
+    label: 'Đề nghị thanh toán',
+    icon: DollarSign,
+    path: '/purchasing/payments',
+    permission: 'purchasing.payments.view',
   },
 ];
 

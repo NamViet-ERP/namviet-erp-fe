@@ -31,6 +31,11 @@ export interface MaterialApiDto {
   isActive: boolean;
 }
 
+export interface ProjectWarehouseKeeperDto {
+  userId: string;
+  displayName: string;
+}
+
 export interface WarehouseProjectApiDto {
   projectCode: string;
   projectName: string;
@@ -47,6 +52,7 @@ export interface WarehouseProjectApiDto {
   stockMaterialCount?: number;
   approvedImportValue?: number;
   materialBudgetRemaining?: number;
+  warehouseKeepers?: ProjectWarehouseKeeperDto[];
 }
 
 export interface CreateWarehouseProjectRequest {
@@ -58,6 +64,7 @@ export interface CreateWarehouseProjectRequest {
   startDate: string;
   endDate?: string | null;
   materialBudget?: number;
+  warehouseKeepers?: ProjectWarehouseKeeperDto[];
 }
 
 export interface UpdateWarehouseProjectRequest {
@@ -67,6 +74,7 @@ export interface UpdateWarehouseProjectRequest {
   endDate?: string | null;
   materialBudget: number;
   status: string;
+  warehouseKeepers?: ProjectWarehouseKeeperDto[];
 }
 
 export interface WarehouseProjectInventoryApiDto {

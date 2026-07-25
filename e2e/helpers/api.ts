@@ -3,7 +3,9 @@ import { e2eEnv } from './env';
 type ApiMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
 interface LoginResponse {
-  token: string;
+  accessToken?: string;
+  token?: string;
+  user?: { id: string };
 }
 
 let cachedLoginToken: string | null = null;
@@ -103,9 +105,10 @@ export async function loginToken(): Promise<string> {
 
   if (!res.ok) throw new Error(`E2E login failed (${res.status})`);
   const data = (await res.json()) as LoginResponse;
-  if (!data.token) throw new Error('E2E login response missing token');
-  cachedLoginToken = data.token;
-  return data.token;
+  const token = data.accessToken ?? data.token;
+  if (!token) throw new Error('E2E login response missing accessToken');
+  cachedLoginToken = token;
+  return token;
 }
 
 export async function getProjects(token: string): Promise<ProjectApiDto[]> {

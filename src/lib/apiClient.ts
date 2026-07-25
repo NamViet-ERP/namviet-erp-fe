@@ -63,6 +63,13 @@ export function getApiFieldErrors(err: unknown): Record<string, string> {
 function forceLogoutExpired(): void {
   if (typeof window === 'undefined') return;
   if (window.location.pathname.startsWith('/login')) return;
+  const logoutUrl = buildUrl('/api/auth/logout');
+  void fetch(logoutUrl, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: '{}',
+  }).catch(() => undefined);
   clearAuthSession();
   window.location.assign('/login?expired=1');
 }
@@ -170,9 +177,9 @@ function fallbackForStatus(status: number): string {
   return 'Yêu cầu không thành công. Vui lòng thử lại.';
 }
 
-function throwResponseError(response: Response, data: unknown): never {
+function throwResponseError(response: Response, data: unknown, options?: { forceLogout?: boolean }): never {
   const message = parseApiError(data, fallbackForStatus(response.status));
-  if (response.status === 401) forceLogoutExpired();
+  if (response.status === 401 && options?.forceLogout !== false) forceLogoutExpired();
   throw new ApiError(message, response.status, data);
 }
 
@@ -182,6 +189,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
   const response = await fetch(buildUrl(path, params), {
     ...rest,
+    credentials: 'include',
     signal: AbortSignal.timeout(20_000),
     headers: {
       'Content-Type': 'application/json',
@@ -194,7 +202,12 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
   const data = await readResponseBody(response);
 
-  if (response.status === 401 && !_retried && !path.includes('/api/auth/login') && !path.includes('/api/auth/refresh')) {
+  const skipRefresh =
+    path.includes('/api/auth/login')
+    || path.includes('/api/auth/refresh')
+    || path.includes('/api/auth/logout');
+
+  if (response.status === 401 && !_retried && !skipRefresh) {
     const refreshed = await tryRefreshSession();
     if (refreshed) {
       return request<T>(path, { ...options, _retried: true });
@@ -202,7 +215,8 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   }
 
   if (!response.ok) {
-    throwResponseError(response, data);
+    const forceLogout = !path.includes('/api/auth/me') && !skipRefresh;
+    throwResponseError(response, data, { forceLogout });
   }
 
   return data as T;
@@ -226,6 +240,7 @@ export const apiClient = {
       const url = buildUrl(path);
       const response = await fetch(url, {
         method: 'POST',
+        credentials: 'include',
         signal: AbortSignal.timeout(20_000),
         headers: {
           Accept: 'application/json',
@@ -257,6 +272,7 @@ export const apiClient = {
       const token = authTokenProvider();
       const response = await fetch(buildUrl(path, params), {
         method: 'GET',
+        credentials: 'include',
         signal: options?.signal ?? AbortSignal.timeout(20_000),
         headers: {
           Accept: '*/*',
@@ -279,16 +295,52 @@ export const apiClient = {
   },
 };
 
-export function saveBlob(blob: Blob, fileName: string): void {
+export async function saveBlob(blob: Blob, fileName: string): Promise<boolean> {
+  // Chromium: tải blob sau await hay bị mất user-gesture → "Needs permission to download".
+  // Ưu tiên hộp thoại Save As (File System Access) khi có.
+  const picker = (window as Window & {
+    showSaveFilePicker?: (options?: {
+      suggestedName?: string;
+      types?: Array<{ description?: string; accept: Record<string, string[]> }>;
+    }) => Promise<{ createWritable: () => Promise<{ write: (data: Blob) => Promise<void>; close: () => Promise<void> }> }>;
+  }).showSaveFilePicker;
+
+  if (typeof picker === 'function') {
+    try {
+      const handle = await picker({
+        suggestedName: fileName,
+        types: [
+          {
+            description: 'Excel',
+            accept: {
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+              'application/vnd.ms-excel': ['.xls'],
+            },
+          },
+        ],
+      });
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      return true;
+    } catch (err) {
+      // User cancelled save dialog.
+      if (err instanceof DOMException && err.name === 'AbortError') return false;
+      // Unsupported / denied → fallback below.
+    }
+  }
+
   const objectUrl = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
   anchor.href = objectUrl;
   anchor.download = fileName;
-  anchor.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;pointer-events:none';
+  anchor.rel = 'noopener';
+  anchor.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
   document.body.appendChild(anchor);
-  anchor.click();
+  anchor.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
   window.setTimeout(() => {
     anchor.remove();
     URL.revokeObjectURL(objectUrl);
-  }, 500);
+  }, 1500);
+  return true;
 }

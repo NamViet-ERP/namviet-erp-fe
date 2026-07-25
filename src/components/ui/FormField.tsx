@@ -20,10 +20,13 @@ export default function FormField({ label, required, error, children, className 
     <div className={fieldClass}>
       {label && (
         <label className="form-label">
-          {required && (
-            <span className="form-label__required" aria-hidden>*</span>
-          )}
           {label}
+          {required ? (
+            <span className="form-label__required" aria-hidden>
+              {' '}
+              *
+            </span>
+          ) : null}
         </label>
       )}
       {children}

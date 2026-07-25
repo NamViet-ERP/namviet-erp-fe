@@ -32,7 +32,9 @@ import {
 import { useProject, useProjectInventory, useProjectLedger, useCloseProject, useUpdateProject, useUpdateProjectInventoryMinStock } from '../../hooks/useProjects';
 import PermissionGate from '../../components/auth/PermissionGate';
 import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
-import type { WarehouseProjectApiDto } from '../../types/wms';
+import type { WarehouseProjectApiDto, ProjectWarehouseKeeperDto } from '../../types/wms';
+import WarehouseKeeperMultiSelect from '../../components/warehouse/WarehouseKeeperMultiSelect';
+import { usePermission } from '../../hooks/usePermission';
 
 type DetailTab = 'stock' | 'history' | 'info';
 
@@ -69,6 +71,7 @@ function openEditForm(project: WarehouseProjectApiDto) {
     pmName: project.pmName && project.pmName !== '—' ? project.pmName : '',
     endDate: toDateInputValue(project.endDate ?? undefined),
     materialBudget: project.materialBudget > 0 ? String(project.materialBudget) : '',
+    warehouseKeepers: [...(project.warehouseKeepers ?? [])],
   };
 }
 
@@ -83,8 +86,11 @@ export default function ProjectDetailPage() {
     pmName: '',
     endDate: '',
     materialBudget: '',
+    warehouseKeepers: [] as ProjectWarehouseKeeperDto[],
   });
   const [editErrors, setEditErrors] = useState<Record<string, string>>({});
+  const { has } = usePermission();
+  const canViewPrices = has('wms.prices.view');
   const [stockPageRaw, setStockPage] = useState(1);
   const [stockPageSize, setStockPageSize] = useState(DEFAULT_LIST_PAGE_SIZE);
   const { data: project, isLoading, isError } = useProject(code);
@@ -129,10 +135,14 @@ export default function ProjectDetailPage() {
         body: {
           projectName: editForm.projectName.trim(),
           pmId: EMPTY_PM_ID,
-          pmName: editForm.pmName.trim() || '—',
+          pmName:
+            editForm.warehouseKeepers.map(k => k.displayName).join(', ')
+            || editForm.pmName.trim()
+            || '—',
           endDate: editForm.endDate || null,
           materialBudget: parseCurrencyInput(editForm.materialBudget),
           status: project.status,
+          warehouseKeepers: editForm.warehouseKeepers,
         },
       });
       setShowEdit(false);
@@ -304,23 +314,33 @@ export default function ProjectDetailPage() {
           icon={Package}
           tone="primary"
         />
+        {canViewPrices && (
+          <HrmStatCard
+            label="Giá trị đã nhập"
+            value={formatCurrencyFull(approvedImportValue)}
+            hint="Phiếu nhập đã duyệt"
+            icon={CircleDollarSign}
+            tone="success"
+          />
+        )}
+        {canViewPrices && (
+          <HrmStatCard
+            label="Ngân sách còn lại"
+            value={formatCurrencyFull(materialBudgetRemaining)}
+            hint={budgetRemainingHint}
+            icon={Wallet}
+            tone={budgetRemainingTone}
+          />
+        )}
         <HrmStatCard
-          label="Giá trị đã nhập"
-          value={formatCurrencyFull(approvedImportValue)}
-          hint="Phiếu nhập đã duyệt"
-          icon={CircleDollarSign}
-          tone="success"
-        />
-        <HrmStatCard
-          label="Ngân sách còn lại"
-          value={formatCurrencyFull(materialBudgetRemaining)}
-          hint={budgetRemainingHint}
-          icon={Wallet}
-          tone={budgetRemainingTone}
-        />
-        <HrmStatCard
-          label="Người phụ trách"
-          value={project.pmName && project.pmName !== '—' ? project.pmName : '—'}
+          label="Thủ kho phụ trách"
+          value={
+            (project.warehouseKeepers?.length ?? 0) > 0
+              ? project.warehouseKeepers!.map(k => k.displayName).join(', ')
+              : project.pmName && project.pmName !== '—'
+                ? project.pmName
+                : '—'
+          }
           icon={UserRound}
           tone="neutral"
         />
@@ -533,12 +553,11 @@ export default function ProjectDetailPage() {
               }}
             />
           </FormField>
-          <FormField label="Người phụ trách dự án">
-            <input
-              className="form-input"
-              value={editForm.pmName}
-              onChange={e => setEditForm({ ...editForm, pmName: e.target.value })}
-              placeholder="Tên PM phụ trách"
+          <FormField label="Người phụ trách dự án (Thủ kho)">
+            <WarehouseKeeperMultiSelect
+              value={editForm.warehouseKeepers}
+              onChange={warehouseKeepers => setEditForm({ ...editForm, warehouseKeepers })}
+              placeholder="Tên thủ kho phụ trách"
             />
           </FormField>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

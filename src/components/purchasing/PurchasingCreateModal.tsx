@@ -7,6 +7,7 @@ interface PurchasingCreateModalProps {
   title: string;
   formId: string;
   submitLabel?: string;
+  submitDisabled?: boolean;
   onSubmit: (e: FormEvent) => void;
   children: ReactNode;
   size?: 'md' | 'lg';
@@ -19,6 +20,7 @@ export default function PurchasingCreateModal({
   title,
   formId,
   submitLabel = 'Thêm',
+  submitDisabled = false,
   onSubmit,
   children,
   size = 'lg',
@@ -31,8 +33,8 @@ export default function PurchasingCreateModal({
       size={size}
       footer={(
         <>
-          <button type="button" className="btn btn-secondary" onClick={onClose}>Hủy</button>
-          <button type="submit" form={formId} className="btn btn-primary">{submitLabel}</button>
+          <button type="button" className="btn btn-secondary" onClick={onClose} disabled={submitDisabled}>Hủy</button>
+          <button type="submit" form={formId} className="btn btn-primary" disabled={submitDisabled}>{submitLabel}</button>
         </>
       )}
     >

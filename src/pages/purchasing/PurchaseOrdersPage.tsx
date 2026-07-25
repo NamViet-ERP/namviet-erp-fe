@@ -1,217 +1,195 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Download, RefreshCw, X } from 'lucide-react';
-import CreateOrderModal from '../../components/purchasing/CreateOrderModal';
-import EditOrderModal from '../../components/purchasing/EditOrderModal';
-import PurchaseOrderDetailModal from '../../components/purchasing/PurchaseOrderDetailModal';
-import PurchaseOrdersTable from '../../components/purchasing/PurchaseOrdersTable';
+import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Check, Eye, Plus, RefreshCw, Send, Undo2 } from 'lucide-react';
 import EmptyState from '../../components/ui/EmptyState';
 import Pagination from '../../components/ui/Pagination';
-import type { PurchaseOrderRow } from '../../data/purchasingMock';
-import { orderMatchesTab, parseViDate } from '../../data/purchasingMock';
-import { usePurchasingStore } from '../../lib/purchasing/purchasingStore';
+import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
+import Dropdown from '../../components/ui/Dropdown';
 import { showToast } from '../../components/ui/Toast';
-import HrmDatePicker from '../../components/hr/HrmDatePicker';
-import { isoToDisplay } from '../../lib/dates';
-import { DEFAULT_LIST_PAGE_SIZE, LIST_PAGE_SIZE_OPTIONS, type ListPageSize } from '../../constants/pagination';
+import { DEFAULT_LIST_PAGE_SIZE, type ListPageSize } from '../../constants/pagination';
+import {
+  useApprovePurchaseOrder,
+  usePlacePurchaseOrder,
+  usePurchaseOrders,
+  useUnapprovePurchaseOrder,
+} from '../../hooks/usePurchaseOrders';
+import { usePermission } from '../../hooks/usePermission';
+import { getApiErrorMessage } from '../../lib/apiClient';
+import { formatDateTimeVi } from '../../lib/hrm/formatters';
+import {
+  PoStatusPill,
+  poDeliveryStatus,
+  poPaymentStatus,
+  poPaymentWarningStatus,
+  poPlacementStatus,
+} from '../../lib/purchasing/purchaseOrderStatus';
+import { formatCurrency } from '../../utils/formatCurrency';
+import type { DropdownItem } from '../../types';
 
-const STATUS_TABS = [
-  { id: '', label: 'Tất cả' },
-  { id: 'Đang theo dõi', label: 'Đang theo dõi' },
-  { id: 'Hóa đơn thuế', label: 'Hóa đơn thuế' },
-  { id: 'Hóa đơn lẻ', label: 'Hóa đơn lẻ' },
-  { id: 'Đã chi', label: 'Đã chi' },
-  { id: 'Chi 1 phần', label: 'Chi 1 phần' },
-  { id: 'Chưa chi', label: 'Chưa chi' },
-  { id: 'Sắp đến hạn về', label: 'Sắp đến hạn về' },
-  { id: 'Trễ hạn về', label: 'Trễ hạn về' },
-  { id: 'Chưa nhập hàng', label: 'Chưa nhập hàng' },
-  { id: 'Nhập 1 phần', label: 'Nhập 1 phần' },
-  { id: 'Nhập đủ', label: 'Nhập đủ' },
-] as const;
+const PLACEMENT_OPTIONS = [
+  { value: '', label: 'Tất cả' },
+  { value: 'not_placed', label: 'Chưa đặt' },
+  { value: 'placed', label: 'Đã đặt' },
+];
 
-const EMPTY_SELECT = 'Không có mục nào được chọn';
+const DELIVERY_OPTIONS = [
+  { value: '', label: 'Tất cả' },
+  { value: 'none', label: 'Chưa giao' },
+  { value: 'partial', label: '1 phần' },
+  { value: 'complete', label: 'Đủ' },
+];
 
-function sameDay(a: string, bIsoOrDisplay: string): boolean {
-  if (!bIsoOrDisplay) return true;
-  const display = bIsoOrDisplay.includes('-') ? isoToDisplay(bIsoOrDisplay) : bIsoOrDisplay;
-  return a === display;
-}
+const PAYMENT_OPTIONS = [
+  { value: '', label: 'Tất cả' },
+  { value: 'unpaid', label: 'Chưa thanh toán' },
+  { value: 'partial', label: 'Thanh toán 1 phần' },
+  { value: 'paid', label: 'Đã thanh toán' },
+  { value: 'overdue', label: 'Quá hạn' },
+];
 
-function dateInRange(value: string, filterIso: string): boolean {
-  if (!filterIso) return true;
-  const v = parseViDate(value);
-  const f = parseViDate(isoToDisplay(filterIso));
-  if (!v || !f) return sameDay(value, filterIso);
-  return v.getTime() === f.getTime();
-}
+const WARNING_OPTIONS = [
+  { value: '', label: 'Tất cả' },
+  { value: 'true', label: 'Đang có cảnh báo' },
+  { value: 'false', label: 'Không cảnh báo' },
+];
 
-/** Đơn hàng trong nước — chrome khớp KHMH; bảng cột theo ERP. */
+const COL_COUNT = 12;
+
+/** Danh sách đơn hàng PO — cột + bộ lọc theo spec. */
 export default function PurchaseOrdersPage() {
-  const { orders: allOrders } = usePurchasingStore();
-  const rows = useMemo(() => allOrders.filter(r => r.channel === 'domestic'), [allOrders]);
-
-  const [createOpen, setCreateOpen] = useState(false);
-  const [viewOrder, setViewOrder] = useState<PurchaseOrderRow | null>(null);
-  const [editOrder, setEditOrder] = useState<PurchaseOrderRow | null>(null);
-  const [payOpen, setPayOpen] = useState(false);
-  const [paySupplier, setPaySupplier] = useState('');
-  const payPopoverRef = useRef<HTMLDivElement>(null);
-
-  const [docCode, setDocCode] = useState('');
-  const [supplier, setSupplier] = useState('');
-  const [pod, setPod] = useState('');
-  const [ecd, setEcd] = useState('');
-  const [etd, setEtd] = useState('');
-  const [etaPort, setEtaPort] = useState('');
-  const [etw, setEtw] = useState('');
-  const [poNumber, setPoNumber] = useState('');
-  const [invoice, setInvoice] = useState('');
-  const [buyCompany, setBuyCompany] = useState('');
-  const [statusTab, setStatusTab] = useState('');
-  const [tableSearch, setTableSearch] = useState('');
-  const [pageSize, setPageSize] = useState<ListPageSize>(DEFAULT_LIST_PAGE_SIZE);
+  const navigate = useNavigate();
   const [page, setPage] = useState(1);
-  const tabsRef = useRef<HTMLDivElement>(null);
+  const [pageSize, setPageSize] = useState<ListPageSize>(DEFAULT_LIST_PAGE_SIZE);
+  const [supplierName, setSupplierName] = useState('');
+  const [planCode, setPlanCode] = useState('');
+  const [projectCode, setProjectCode] = useState('');
+  const [orderPlacementStatus, setOrderPlacementStatus] = useState('');
+  const [deliveryStatus, setDeliveryStatus] = useState('');
+  const [paymentStatus, setPaymentStatus] = useState('');
+  const [paymentWarning, setPaymentWarning] = useState('');
+  const approveMutation = useApprovePurchaseOrder();
+  const unapproveMutation = useUnapprovePurchaseOrder();
+  const placeMutation = usePlacePurchaseOrder();
+  const { has } = usePermission();
+  const canApprove = has('purchasing.orders.approve');
+  const canUnapprove = has('purchasing.orders.unapprove');
+  const canPlace = has('purchasing.orders.place');
 
-  const docOptions = useMemo(() => [...new Set(rows.map(r => r.code))].sort(), [rows]);
-  const supplierOptions = useMemo(() => [...new Set(rows.map(r => r.supplier).filter(Boolean))].sort(), [rows]);
-  const companyOptions = useMemo(() => [...new Set(rows.map(r => r.buyCompany).filter(Boolean))].sort(), [rows]);
+  const listParams = useMemo(() => ({
+    page,
+    pageSize,
+    search: supplierName.trim() || undefined,
+    planCode: planCode.trim() || undefined,
+    projectCode: projectCode.trim() || undefined,
+    orderPlacementStatus: orderPlacementStatus || undefined,
+    deliveryStatus: deliveryStatus || undefined,
+    paymentStatus: paymentStatus || undefined,
+    paymentWarning: paymentWarning === '' ? undefined : paymentWarning === 'true',
+  }), [
+    page, pageSize, supplierName, planCode, projectCode,
+    orderPlacementStatus, deliveryStatus, paymentStatus, paymentWarning,
+  ]);
 
-  const tabCounts = useMemo(() => {
-    const map: Record<string, number> = { '': rows.length };
-    for (const t of STATUS_TABS) {
-      if (!t.id) continue;
-      map[t.id] = rows.filter(r => orderMatchesTab(r, t.id)).length;
+  const { data, isLoading, isError, error, refetch } = usePurchaseOrders(listParams);
+
+  const items = data?.items ?? [];
+  const totalCount = data?.totalCount ?? 0;
+  const totalPages = Math.max(1, data?.totalPages ?? 1);
+
+  const handleApprove = async (code: string) => {
+    try {
+      await approveMutation.mutateAsync(code);
+      showToast('success', `Đã duyệt PO ${code}.`);
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, `Không duyệt được PO ${code}`));
     }
-    return map;
-  }, [rows]);
+  };
 
-  const filtered = useMemo(() => {
-    const q = tableSearch.trim().toLowerCase();
-    return rows.filter(r => {
-      if (!orderMatchesTab(r, statusTab)) return false;
-      if (docCode && r.code !== docCode) return false;
-      if (supplier && r.supplier !== supplier) return false;
-      if (buyCompany && r.buyCompany !== buyCompany) return false;
-      if (poNumber && !r.poNumber.toLowerCase().includes(poNumber.toLowerCase())) return false;
-      if (invoice && !r.invoiceNo.toLowerCase().includes(invoice.toLowerCase())) return false;
-      if (pod && !dateInRange(r.orderedAt, pod)) return false;
-      if (ecd && !dateInRange(r.eta, ecd)) return false;
-      if (etd && !dateInRange(r.etd, etd)) return false;
-      if (etaPort && !dateInRange(r.etaPort, etaPort)) return false;
-      if (etw && !dateInRange(r.etw || r.eta, etw)) return false;
-      if (q && ![r.code, r.project, r.supplier, r.poNumber, r.invoiceNo, r.buyCompany, r.note]
-        .some(v => v.toLowerCase().includes(q))) {
-        return false;
-      }
-      return true;
-    });
-  }, [rows, statusTab, docCode, supplier, buyCompany, poNumber, invoice, pod, ecd, etd, etaPort, etw, tableSearch]);
+  const handleUnapprove = async (code: string) => {
+    try {
+      await unapproveMutation.mutateAsync(code);
+      showToast('success', `Đã hủy duyệt PO ${code}.`);
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, `Không hủy duyệt được PO ${code}`));
+    }
+  };
 
-  useEffect(() => {
-    if (!payOpen) return;
-    const onDoc = (e: MouseEvent) => {
-      if (payPopoverRef.current && !payPopoverRef.current.contains(e.target as Node)) {
-        setPayOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', onDoc);
-    return () => document.removeEventListener('mousedown', onDoc);
-  }, [payOpen]);
+  const handlePlace = async (code: string) => {
+    try {
+      await placeMutation.mutateAsync(code);
+      showToast('success', `Đã đặt NCC cho PO ${code}.`);
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, `Không thể đặt NCC cho PO ${code}`));
+    }
+  };
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize) || 1);
-  const safePage = Math.min(page, totalPages);
-  const pageRows = useMemo(() => {
-    const start = (safePage - 1) * pageSize;
-    return filtered.slice(start, start + pageSize);
-  }, [filtered, safePage, pageSize]);
+  const rowActions = (row: (typeof items)[number]): DropdownItem[] => [
+    { label: 'Xem chi tiết', icon: Eye, onClick: () => navigate(`/purchasing/orders/${encodeURIComponent(row.code)}`) },
+    ...(canApprove && row.approvalStatus === 'draft'
+      ? [{ label: 'Duyệt PO', icon: Check, onClick: () => void handleApprove(row.code) }]
+      : []),
+    ...(canUnapprove && row.approvalStatus === 'approved' && row.orderPlacementStatus !== 'placed'
+      ? [{ label: 'Hủy duyệt', icon: Undo2, onClick: () => void handleUnapprove(row.code) }]
+      : []),
+    ...(canPlace && row.approvalStatus === 'approved' && row.orderPlacementStatus !== 'placed'
+      ? [{ label: 'Đã đặt NCC', icon: Send, onClick: () => void handlePlace(row.code) }]
+      : []),
+  ];
 
   const resetFilters = () => {
-    setDocCode('');
-    setSupplier('');
-    setPod('');
-    setEcd('');
-    setEtd('');
-    setEtaPort('');
-    setEtw('');
-    setPoNumber('');
-    setInvoice('');
-    setBuyCompany('');
-    setStatusTab('');
-    setTableSearch('');
+    setSupplierName('');
+    setPlanCode('');
+    setProjectCode('');
+    setOrderPlacementStatus('');
+    setDeliveryStatus('');
+    setPaymentStatus('');
+    setPaymentWarning('');
     setPage(1);
   };
 
-  const scrollTabs = (dir: -1 | 1) => {
-    tabsRef.current?.scrollBy({ left: dir * 180, behavior: 'smooth' });
-  };
+  const hasActiveFilters = Boolean(
+    supplierName.trim()
+    || planCode.trim()
+    || projectCode.trim()
+    || orderPlacementStatus
+    || deliveryStatus
+    || paymentStatus
+    || paymentWarning,
+  );
+
+  const tableHead = (
+    <tr>
+      <th>Ngày tạo</th>
+      <th>Mã PO</th>
+      <th>KHMH</th>
+      <th>Dự án</th>
+      <th>Nhà cung cấp</th>
+      <th className="pur-erp__th-num">Tổng tiền</th>
+      <th className="pur-erp__th-status">Trạng thái đặt</th>
+      <th className="pur-erp__th-status">Trạng thái giao</th>
+      <th className="pur-erp__th-status">Tình trạng thanh toán</th>
+      <th className="pur-erp__th-status">Cảnh báo thanh toán</th>
+      <th>Ghi chú</th>
+      <th>Tác vụ</th>
+    </tr>
+  );
 
   return (
     <div className="page-shell pur-erp pur-erp--plan pur-erp--po">
       <header className="pur-erp__head">
         <div className="pur-erp__head-text">
-          <h1 className="pur-erp__title">Đơn đặt hàng (PO)</h1>
-          <p className="pur-erp__subtitle">Đơn trong nước — theo dõi POD / ECD · thanh toán · nhập hàng</p>
+          <h1 className="pur-erp__title">Đơn hàng</h1>
+          <p className="pur-erp__subtitle">PO theo KHMH — theo dõi đặt hàng, giao hàng và thanh toán</p>
         </div>
         <div className="pur-erp__head-actions">
-          <button type="button" className="pur-erp__action pur-erp__action--primary" onClick={() => setCreateOpen(true)}>
-            Tạo mới
+          <button
+            type="button"
+            className="pur-erp__action pur-erp__action--primary"
+            onClick={() => navigate('/purchasing/orders/new')}
+          >
+            <Plus size={14} aria-hidden />
+            Tạo PO
           </button>
-          <div className="pur-erp__chi-tong" ref={payPopoverRef}>
-            <button
-              type="button"
-              className="pur-erp__action pur-erp__action--history"
-              aria-expanded={payOpen}
-              aria-haspopup="dialog"
-              onClick={() => {
-                setPayOpen(v => !v);
-                if (!payOpen) setPaySupplier('');
-              }}
-            >
-              Chi tổng
-            </button>
-            {payOpen && (
-              <div className="pur-erp__chi-tong-pop" role="dialog" aria-label="Chi tổng">
-                <div className="pur-erp__chi-tong-pop-head">
-                  <span>Chi tổng</span>
-                  <button
-                    type="button"
-                    className="pur-erp__chi-tong-close"
-                    aria-label="Đóng"
-                    onClick={() => setPayOpen(false)}
-                  >
-                    <X size={14} aria-hidden />
-                  </button>
-                </div>
-                <label className="pur-erp__chi-tong-field">
-                  <span>Chọn nhà cung cấp</span>
-                  <select
-                    value={paySupplier}
-                    onChange={e => setPaySupplier(e.target.value)}
-                  >
-                    <option value="">{EMPTY_SELECT}</option>
-                    {supplierOptions.map(s => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
-                </label>
-                <button
-                  type="button"
-                  className="pur-erp__chi-tong-submit"
-                  onClick={() => {
-                    if (!paySupplier) {
-                      showToast('warning', 'Chọn nhà cung cấp.');
-                      return;
-                    }
-                    showToast('success', `Lập phiếu chi tổng — ${paySupplier} (UI demo).`);
-                    setPayOpen(false);
-                  }}
-                >
-                  LẬP PHIẾU
-                </button>
-              </div>
-            )}
-          </div>
         </div>
       </header>
 
@@ -220,163 +198,171 @@ export default function PurchaseOrdersPage() {
           <div className="pur-erp__toolbar pur-erp__toolbar--po">
             <div className="pur-erp__toolbar-fields pur-erp__filter-grid pur-erp__filter-grid--po">
               <label className="pur-erp__field">
-                <span>Mã chứng từ</span>
-                <select className="pur-erp__select" value={docCode} onChange={e => { setDocCode(e.target.value); setPage(1); }}>
-                  <option value="">{EMPTY_SELECT}</option>
-                  {docOptions.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </label>
-              <label className="pur-erp__field">
-                <span>Tên nhà cung cấp</span>
-                <select className="pur-erp__select" value={supplier} onChange={e => { setSupplier(e.target.value); setPage(1); }}>
-                  <option value="">{EMPTY_SELECT}</option>
-                  {supplierOptions.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-              </label>
-              <label className="pur-erp__field">
-                <span>Ngày đặt hàng (POD)</span>
-                <HrmDatePicker value={pod} onChange={v => { setPod(v); setPage(1); }} placeholder="dd/mm/yyyy" />
-              </label>
-              <label className="pur-erp__field">
-                <span>Ngày dự kiến có hàng (ECD)</span>
-                <HrmDatePicker value={ecd} onChange={v => { setEcd(v); setPage(1); }} placeholder="dd/mm/yyyy" />
-              </label>
-              <label className="pur-erp__field">
-                <span>Ngày tàu khởi hành (ETD)</span>
-                <HrmDatePicker value={etd} onChange={v => { setEtd(v); setPage(1); }} placeholder="dd/mm/yyyy" />
-              </label>
-              <label className="pur-erp__field">
-                <span>Ngày tàu cập cảng (ETA)</span>
-                <HrmDatePicker value={etaPort} onChange={v => { setEtaPort(v); setPage(1); }} placeholder="dd/mm/yyyy" />
-              </label>
-              <label className="pur-erp__field">
-                <span>Ngày hàng về kho (ETW)</span>
-                <HrmDatePicker value={etw} onChange={v => { setEtw(v); setPage(1); }} placeholder="dd/mm/yyyy" />
-              </label>
-              <label className="pur-erp__field">
-                <span>Số PO</span>
+                <span>Nhà cung cấp</span>
                 <input
                   className="pur-erp__select"
-                  value={poNumber}
-                  onChange={e => { setPoNumber(e.target.value); setPage(1); }}
-                  placeholder="Số PO"
+                  value={supplierName}
+                  onChange={e => { setSupplierName(e.target.value); setPage(1); }}
+                  placeholder="Tên NCC"
+                  aria-label="Lọc nhà cung cấp"
                 />
               </label>
               <label className="pur-erp__field">
-                <span>Invoice</span>
+                <span>KHMH</span>
                 <input
                   className="pur-erp__select"
-                  value={invoice}
-                  onChange={e => { setInvoice(e.target.value); setPage(1); }}
-                  placeholder="Invoice"
+                  value={planCode}
+                  onChange={e => { setPlanCode(e.target.value); setPage(1); }}
+                  placeholder="Mã KHMH"
+                  aria-label="Lọc mã KHMH"
                 />
               </label>
               <label className="pur-erp__field">
-                <span>Tên cty mua hàng</span>
-                <select className="pur-erp__select" value={buyCompany} onChange={e => { setBuyCompany(e.target.value); setPage(1); }}>
-                  <option value="">{EMPTY_SELECT}</option>
-                  {companyOptions.map(c => <option key={c} value={c}>{c}</option>)}
+                <span>Dự án</span>
+                <input
+                  className="pur-erp__select"
+                  value={projectCode}
+                  onChange={e => { setProjectCode(e.target.value); setPage(1); }}
+                  placeholder="Mã dự án"
+                  aria-label="Lọc dự án"
+                />
+              </label>
+              <label className="pur-erp__field">
+                <span>Trạng thái đặt</span>
+                <select
+                  className="pur-erp__select"
+                  value={orderPlacementStatus}
+                  onChange={e => { setOrderPlacementStatus(e.target.value); setPage(1); }}
+                  aria-label="Lọc trạng thái đặt"
+                >
+                  {PLACEMENT_OPTIONS.map(o => <option key={o.value || 'all'} value={o.value}>{o.label}</option>)}
+                </select>
+              </label>
+              <label className="pur-erp__field">
+                <span>Trạng thái giao</span>
+                <select
+                  className="pur-erp__select"
+                  value={deliveryStatus}
+                  onChange={e => { setDeliveryStatus(e.target.value); setPage(1); }}
+                  aria-label="Lọc trạng thái giao"
+                >
+                  {DELIVERY_OPTIONS.map(o => <option key={o.value || 'all'} value={o.value}>{o.label}</option>)}
+                </select>
+              </label>
+              <label className="pur-erp__field">
+                <span>Tình trạng thanh toán</span>
+                <select
+                  className="pur-erp__select"
+                  value={paymentStatus}
+                  onChange={e => { setPaymentStatus(e.target.value); setPage(1); }}
+                  aria-label="Lọc tình trạng thanh toán"
+                >
+                  {PAYMENT_OPTIONS.map(o => <option key={o.value || 'all'} value={o.value}>{o.label}</option>)}
+                </select>
+              </label>
+              <label className="pur-erp__field">
+                <span>Cảnh báo thanh toán</span>
+                <select
+                  className="pur-erp__select"
+                  value={paymentWarning}
+                  onChange={e => { setPaymentWarning(e.target.value); setPage(1); }}
+                  aria-label="Lọc đơn đang có cảnh báo thanh toán"
+                >
+                  {WARNING_OPTIONS.map(o => <option key={o.value || 'all'} value={o.value}>{o.label}</option>)}
                 </select>
               </label>
             </div>
-            <div className="pur-erp__toolbar-actions">
-              <button type="button" className="pur-erp__export" onClick={() => showToast('info', `Xuất ${filtered.length} đơn (UI demo).`)}>
-                <Download size={13} aria-hidden />
-                Xuất ra
-              </button>
-              <button type="button" className="pur-erp__icon-btn" aria-label="Làm mới bộ lọc" onClick={resetFilters}>
-                <RefreshCw size={14} />
-              </button>
-            </div>
+            {hasActiveFilters ? (
+              <div className="pur-erp__toolbar-actions">
+                <button type="button" className="hrm-filter-reset" onClick={resetFilters}>
+                  <RefreshCw size={14} aria-hidden />
+                  Xóa lọc
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
 
         <div className="pur-erp__panel">
-          <div className="pur-erp__tabs-row">
-            <div className="pur-erp__tabs-wrap">
-              <button type="button" className="pur-erp__tabs-nav" aria-label="Cuộn tab trái" onClick={() => scrollTabs(-1)}>
-                <ChevronLeft size={16} />
-              </button>
-              <div ref={tabsRef} className="pur-erp__tabs pur-erp__tabs--scroll" role="tablist" aria-label="Trạng thái đơn">
-                {STATUS_TABS.map(t => (
-                  <button
-                    key={t.id || 'all'}
-                    type="button"
-                    role="tab"
-                    aria-selected={statusTab === t.id}
-                    className={`pur-erp__tab${statusTab === t.id ? ' is-active' : ''}`}
-                    onClick={() => { setStatusTab(t.id); setPage(1); }}
-                  >
-                    {t.label}
-                    <span className="pur-erp__tab-count">{tabCounts[t.id] ?? 0}</span>
-                  </button>
-                ))}
-              </div>
-              <button type="button" className="pur-erp__tabs-nav" aria-label="Cuộn tab phải" onClick={() => scrollTabs(1)}>
-                <ChevronRight size={16} />
-              </button>
+          {isError ? (
+            <EmptyState
+              message={getApiErrorMessage(error, 'Không tải được danh sách đơn hàng.')}
+              action={(
+                <button type="button" className="btn btn-primary btn-sm" onClick={() => { void refetch(); }}>
+                  Thử lại
+                </button>
+              )}
+            />
+          ) : isLoading ? (
+            <div className="overflow-x-auto table-scroll">
+              <table className="pur-erp__table pur-erp__table--po">
+                <thead>{tableHead}</thead>
+                <tbody>
+                  <TableSkeletonRows rows={8} colSpan={COL_COUNT} />
+                </tbody>
+              </table>
             </div>
-            <div className="pur-erp__table-tools">
-              <select
-                className="pur-erp__pagesize"
-                value={pageSize}
-                aria-label="Số dòng mỗi trang"
-                onChange={e => { setPageSize(Number(e.target.value) as ListPageSize); setPage(1); }}
-              >
-                {LIST_PAGE_SIZE_OPTIONS.map(n => (
-                  <option key={n} value={n}>{n}</option>
-                ))}
-              </select>
-              <div className="pur-erp__table-search">
-                <input
-                  type="search"
-                  value={tableSearch}
-                  onChange={e => { setTableSearch(e.target.value); setPage(1); }}
-                  placeholder="Tìm kiếm..."
-                  aria-label="Tìm kiếm trong bảng"
-                />
-              </div>
-            </div>
-          </div>
-
-          {filtered.length === 0 ? (
-            <EmptyState message={rows.length === 0 ? 'Chưa có đơn đặt hàng trong nước.' : 'Không có đơn khớp bộ lọc.'} />
+          ) : items.length === 0 ? (
+            <EmptyState message="Chưa có đơn hàng khớp bộ lọc." />
           ) : (
             <>
-              <PurchaseOrdersTable
-                rows={pageRows}
-                onView={setViewOrder}
-                onEdit={setEditOrder}
-              />
+              <div className="overflow-x-auto table-scroll">
+                <table className="pur-erp__table pur-erp__table--po">
+                  <thead>{tableHead}</thead>
+                  <tbody>
+                    {items.map(row => {
+                      const placement = poPlacementStatus(row.orderPlacementStatus);
+                      const delivery = poDeliveryStatus(row.deliveryStatus);
+                      const payment = poPaymentStatus(row.paymentStatus);
+                      const warning = poPaymentWarningStatus(row.paymentWarning);
+                      return (
+                        <tr key={row.code}>
+                          <td className="pur-erp__td-datetime">{formatDateTimeVi(row.createdAt) ?? '—'}</td>
+                          <td className="pur-erp__td-code">{row.code}</td>
+                        <td className="pur-erp__td-code">{row.planCode}</td>
+                        <td className="pur-erp__td-project">
+                          {row.projectName
+                            ? `${row.projectName} (${row.projectCode})`
+                            : (row.projectCode || '—')}
+                        </td>
+                        <td>{row.supplierName || '—'}</td>
+                        <td className="pur-erp__td-num">{formatCurrency(row.totalAmount)} (VNĐ)</td>
+                          <td className="pur-erp__td-status">
+                            <PoStatusPill label={placement.label} tone={placement.tone} />
+                          </td>
+                          <td className="pur-erp__td-status">
+                            <PoStatusPill label={delivery.label} tone={delivery.tone} />
+                          </td>
+                          <td className="pur-erp__td-status">
+                            <PoStatusPill label={payment.label} tone={payment.tone} />
+                          </td>
+                          <td className="pur-erp__td-status">
+                            <PoStatusPill label={warning.label} tone={warning.tone} />
+                          </td>
+                          <td>{row.note || '—'}</td>
+                          <td className="text-center">
+                            <Dropdown trigger="Tác vụ" items={rowActions(row)} />
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
               <Pagination
                 embedded
                 itemLabel="đơn"
-                currentPage={safePage}
+                currentPage={Math.min(page, totalPages)}
                 totalPages={totalPages}
                 onPageChange={setPage}
                 pageSize={pageSize}
-                onPageSizeChange={s => { setPageSize(s as ListPageSize); setPage(1); }}
-                totalItems={filtered.length}
+                onPageSizeChange={s => { setPageSize(s); setPage(1); }}
+                totalItems={totalCount}
               />
             </>
           )}
         </div>
       </div>
-
-      <CreateOrderModal
-        open={createOpen}
-        onClose={() => setCreateOpen(false)}
-        defaultKind="standard"
-      />
-
-      <PurchaseOrderDetailModal
-        order={viewOrder}
-        onClose={() => setViewOrder(null)}
-      />
-      <EditOrderModal
-        order={editOrder ? (allOrders.find(o => o.id === editOrder.id) ?? editOrder) : null}
-        onClose={() => setEditOrder(null)}
-      />
     </div>
   );
 }

@@ -333,7 +333,7 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
               className="btn btn-outline"
               onClick={() => { setShowCreate(false); resetCreateForm(); }}
             >
-              Hủy bỏ
+              Hủy
             </button>
             <button
               type="button"

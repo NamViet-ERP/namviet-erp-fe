@@ -1,0 +1,260 @@
+import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { CalendarClock, PackagePlus, Truck } from 'lucide-react';
+import PageHeader from '../../components/ui/PageHeader';
+import HrmPanel from '../../components/hr/HrmPanel';
+import HrmStatCard from '../../components/hr/HrmStatCard';
+import EmptyState from '../../components/ui/EmptyState';
+import SearchBar from '../../components/ui/SearchBar';
+import { useArrivalPlans } from '../../hooks/useArrivalPlans';
+import { usePermission } from '../../hooks/usePermission';
+import { formatDateCell } from '../../lib/hrm/formatters';
+import { getApiErrorMessage } from '../../lib/apiClient';
+import { formatCurrencyFull } from '../../utils/formatCurrency';
+import type { ArrivalPlanProjectApiDto } from '../../services/arrivalPlansService';
+
+const DAY_PRESETS = [
+  { days: 3, label: '3 ngày tới' },
+  { days: 7, label: '7 ngày tới' },
+  { days: 14, label: '14 ngày tới' },
+  { days: 30, label: '30 ngày tới' },
+] as const;
+
+function fmtQty(n: number) {
+  return n.toLocaleString('vi-VN', { maximumFractionDigits: 2 });
+}
+
+export default function ArrivalPlansPage() {
+  const { has } = usePermission();
+  const canViewPrices = has('wms.prices.view');
+  const [daysAhead, setDaysAhead] = useState(7);
+  const [search, setSearch] = useState('');
+  const [expanded, setExpanded] = useState<string | null>(null);
+
+  const { data, isLoading, isError, error } = useArrivalPlans(daysAhead);
+  const projects = data?.projects ?? [];
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return projects;
+    return projects.filter(
+      p =>
+        p.projectCode.toLowerCase().includes(q)
+        || p.projectName.toLowerCase().includes(q)
+        || p.lines.some(l => l.productName.toLowerCase().includes(q) || l.planCode.toLowerCase().includes(q)),
+    );
+  }, [projects, search]);
+
+  const totalLines = filtered.reduce((s, p) => s + p.lineCount, 0);
+  const totalQty = filtered.reduce((s, p) => s + p.totalRemainingQty, 0);
+
+  return (
+    <div className="hrm-page arrival-plans-page">
+      <PageHeader
+        title="Kế hoạch hàng về"
+        subtitle="Theo ngày dự kiến (Ngày DK) trên KHMH — hàng đã nhận thực tế sẽ biến mất khỏi danh sách này."
+      />
+
+      <div className="hrm-stat-grid">
+        <HrmStatCard
+          label="Dự án có hàng về"
+          value={isLoading ? '—' : filtered.length}
+          icon={Truck}
+          tone="primary"
+        />
+        <HrmStatCard
+          label="Dòng chờ nhận"
+          value={isLoading ? '—' : totalLines}
+          icon={CalendarClock}
+          tone="warning"
+        />
+        <HrmStatCard
+          label="SL còn lại"
+          value={isLoading ? '—' : fmtQty(totalQty)}
+          icon={PackagePlus}
+          tone="success"
+        />
+      </div>
+
+      <HrmPanel noPadding>
+        <div className="hrm-list-toolbar arrival-plans-toolbar">
+          <div className="hrm-list-toolbar__filters arrival-plans-filters">
+            <div className="arrival-plans-day-chips" role="group" aria-label="Lọc thời gian">
+              {DAY_PRESETS.map(p => (
+                <button
+                  key={p.days}
+                  type="button"
+                  className={
+                    daysAhead === p.days
+                      ? 'arrival-plans-day-chip is-active'
+                      : 'arrival-plans-day-chip'
+                  }
+                  onClick={() => {
+                    setDaysAhead(p.days);
+                    setExpanded(null);
+                  }}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+            <SearchBar
+              value={search}
+              onChange={setSearch}
+              placeholder="Tìm dự án, mã KHMH, mặt hàng…"
+            />
+          </div>
+          {data && (
+            <div className="arrival-plans-window text-sm text-[var(--md-on-surface-variant)] tabular-nums">
+              Cửa sổ: {formatDateCell(data.windowFrom)} → {formatDateCell(data.windowTo)}
+            </div>
+          )}
+        </div>
+
+        {isLoading ? (
+          <div className="arrival-plans-skeleton" aria-hidden>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="arrival-plans-skeleton__row" />
+            ))}
+          </div>
+        ) : isError ? (
+          <EmptyState message={getApiErrorMessage(error, 'Không tải được kế hoạch hàng về')} icon={Truck} />
+        ) : filtered.length === 0 ? (
+          <EmptyState
+            message={`Không có hàng về trong ${daysAhead} ngày tới.`}
+            icon={CalendarClock}
+          />
+        ) : (
+          <ul className="arrival-plans-project-list">
+            {filtered.map(project => (
+              <ArrivalProjectCard
+                key={project.projectCode}
+                project={project}
+                expanded={expanded === project.projectCode}
+                canViewPrices={canViewPrices}
+                onToggle={() =>
+                  setExpanded(prev =>
+                    prev === project.projectCode ? null : project.projectCode,
+                  )
+                }
+              />
+            ))}
+          </ul>
+        )}
+      </HrmPanel>
+    </div>
+  );
+}
+
+function ArrivalProjectCard({
+  project,
+  expanded,
+  canViewPrices,
+  onToggle,
+}: {
+  project: ArrivalPlanProjectApiDto;
+  expanded: boolean;
+  canViewPrices: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <li className="arrival-plans-project is-highlight">
+      <button type="button" className="arrival-plans-project__head" onClick={onToggle}>
+        <div className="arrival-plans-project__title">
+          <span className="arrival-plans-project__code font-mono">{project.projectCode}</span>
+          <span className="arrival-plans-project__name">{project.projectName}</span>
+        </div>
+        <div className="arrival-plans-project__meta">
+          <span className="arrival-plans-pill">
+            {project.lineCount} dòng
+          </span>
+          <span className="arrival-plans-pill arrival-plans-pill--qty">
+            SL {fmtQty(project.totalRemainingQty)}
+          </span>
+          {project.earliestExpectedDate && (
+            <span className="arrival-plans-pill arrival-plans-pill--date tabular-nums">
+              Sớm nhất {formatDateCell(project.earliestExpectedDate)}
+            </span>
+          )}
+          <span className="arrival-plans-project__chevron" aria-hidden>
+            {expanded ? '▾' : '▸'}
+          </span>
+        </div>
+      </button>
+
+      {expanded && (
+        <div className="arrival-plans-project__body">
+          <div className="overflow-x-auto">
+            <table className="wms-inventory-table arrival-plans-table">
+              <thead>
+                <tr>
+                  <th className="table-header-cell">KHMH</th>
+                  <th className="table-header-cell">Mặt hàng</th>
+                  <th className="table-header-cell text-right">Còn lại</th>
+                  <th className="table-header-cell">ĐVT</th>
+                  <th className="table-header-cell whitespace-nowrap">Ngày DK</th>
+                  <th className="table-header-cell">NCC</th>
+                  {canViewPrices && <th className="table-header-cell text-right">Đơn giá</th>}
+                  <th className="table-header-cell text-center">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                {project.lines.map(line => (
+                  <tr key={line.lineId} className="table-row">
+                    <td className="table-cell font-mono text-sm">
+                      <Link
+                        to={`/purchasing/plans/${encodeURIComponent(line.planCode)}`}
+                        className="text-[var(--md-primary)]"
+                        onClick={e => e.stopPropagation()}
+                      >
+                        {line.planCode}
+                      </Link>
+                    </td>
+                    <td className="table-cell">
+                      <div className="font-semibold line-clamp-2" title={line.productName}>
+                        {line.productName}
+                      </div>
+                      {line.materialCode && (
+                        <div className="text-xs text-[var(--md-on-surface-variant)] font-mono">
+                          {line.materialCode}
+                        </div>
+                      )}
+                    </td>
+                    <td className="table-cell text-right tabular-nums font-semibold">
+                      {fmtQty(line.remainingQty)}
+                    </td>
+                    <td className="table-cell">{line.unit}</td>
+                    <td className="table-cell tabular-nums whitespace-nowrap">
+                      {formatDateCell(line.expectedDeliveryDate)}
+                    </td>
+                    <td className="table-cell max-w-[160px]">
+                      <span className="line-clamp-2">{line.purchaseSupplierName || '—'}</span>
+                    </td>
+                    {canViewPrices && (
+                      <td className="table-cell text-right tabular-nums">
+                        {line.unitPrice != null ? formatCurrencyFull(line.unitPrice) : '—'}
+                      </td>
+                    )}
+                    <td className="table-cell text-center">
+                      <Link
+                        to={`/warehouse/import?project=${encodeURIComponent(project.projectCode)}&plan=${encodeURIComponent(line.planCode)}`}
+                        className="btn btn-outline btn-sm inline-flex items-center gap-1"
+                        onClick={e => e.stopPropagation()}
+                      >
+                        <PackagePlus size={14} />
+                        Nhập kho
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="arrival-plans-hint">
+            Khi duyệt phiếu nhập thực tế, hệ thống ghi Ngày TT trên KHMH và dòng sẽ không còn trong kế hoạch hàng về.
+          </p>
+        </div>
+      )}
+    </li>
+  );
+}

@@ -18,10 +18,15 @@
     "test:run": "vitest run --mode test",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:report": "playwright show-report"
+    "test:e2e:report": "playwright show-report",
+    "api:fetch": "node scripts/fetch-swagger.mjs",
+    "api:gen": "openapi-typescript openapi/swagger.json -o src/types/generated/openapi.ts",
+    "api:sync": "npm run api:fetch && npm run api:gen",
+    "api:check": "node scripts/check-openapi-generated.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
+    "@microsoft/signalr": "^10.0.0",
     "@tanstack/react-query": "^5.0.0",
     "lucide-react": "^1.17.0",
     "react": "^19.2.6",
@@ -47,6 +52,7 @@
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.6.0",
     "jsdom": "^26.0.0",
+    "openapi-typescript": "^7.13.0",
     "postcss": "^8.5.15",
     "postcss-import": "^16.1.1",
     "tailwindcss": "3.4",

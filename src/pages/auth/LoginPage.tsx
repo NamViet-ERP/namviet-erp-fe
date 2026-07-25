@@ -6,24 +6,17 @@ import ToastContainer from '../../components/ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { UI_ERROR } from '../../lib/uiMessages';
 import { authService } from '../../services/authService';
-import { REMEMBER_KEY, SAVED_USER_KEY } from '../../lib/authSession';
 import { getDefaultRoute } from '../../utils/getDefaultRoute';
 import { getActiveRole } from '../../lib/getActiveRole';
 import { NAMVIET_GROUP_LOGO_URL } from '../../constants/branding';
 
-const HAS_API = Boolean(import.meta.env.VITE_API_BASE_URL?.trim());
+// Same-origin cookie auth: empty VITE_API_BASE_URL still talks to /api via proxy.
+const HAS_API = import.meta.env.VITE_USE_MOCK !== 'true';
 
 export default function LoginPage() {
-  const [username, setUsername] = useState(() => {
-    if (localStorage.getItem(REMEMBER_KEY) === 'true') {
-      return localStorage.getItem(SAVED_USER_KEY) ?? '';
-    }
-    return '';
-  });
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(
-    () => localStorage.getItem(REMEMBER_KEY) === 'true',
-  );
+  const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -47,10 +40,19 @@ export default function LoginPage() {
       }
 
       await authService.login(username.trim(), password, rememberMe);
+      const session = await authService.ensureSession();
+      if (session !== 'authenticated') {
+        setError(
+          session === 'recoverable-error'
+            ? UI_ERROR.serverUnavailable
+            : 'Không xác minh được phiên sau đăng nhập. Thử lại hoặc kiểm tra API/proxy.',
+        );
+        return;
+      }
 
       showToast('success', 'Chào mừng bạn quay trở lại hệ thống!', 'Đăng nhập thành công');
       setError('');
-      navigate(getDefaultRoute(getActiveRole()));
+      navigate(getDefaultRoute(getActiveRole()), { replace: true });
     } catch (err) {
       setError(getApiErrorMessage(err, UI_ERROR.loginFailed));
     } finally {

@@ -364,21 +364,32 @@
   }
 
   .portal-calendar-nav__btn {
-    width: 28px;
-    height: 28px;
-    display: flex;
+    box-sizing: border-box;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid transparent;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--md-outline-variant02);
     border-radius: 8px;
-    background: transparent;
-    color: var(--md-on-surface);
+    background: var(--md-surface-container);
+    color: var(--md-on-surface-variant);
     cursor: pointer;
-    transition: background 150ms var(--md-easing), border-color 150ms var(--md-easing);
+    transition: background-color 140ms ease-out, border-color 140ms ease-out, color 140ms ease-out;
   }
   .portal-calendar-nav__btn:hover {
-    background: var(--md-surface-container);
-    border-color: var(--md-outline-variant);
+    background: color-mix(in srgb, var(--md-secondary) 10%, var(--md-surface-container));
+    border-color: color-mix(in srgb, var(--md-secondary) 35%, var(--md-outline-variant02));
+    color: var(--md-secondary);
+  }
+  .portal-calendar-nav__btn:active {
+    background: color-mix(in srgb, var(--md-secondary) 16%, var(--md-surface-container));
+  }
+  .portal-calendar-nav__btn:focus-visible {
+    outline: 2px solid var(--md-secondary);
+    outline-offset: 2px;
   }
 
   /* ── Portal birthday calendar (month grid + agenda) ── */
@@ -421,17 +432,10 @@
   .portal-bday-cal__nav {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 12px;
+    gap: 10px;
     padding: 10px 14px;
     border-bottom: 1px solid var(--md-outline-variant02);
     background: var(--md-surface-container-high);
-  }
-  .portal-bday-cal__nav-left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-width: 0;
   }
   .portal-bday-cal__today {
     flex-shrink: 0;
@@ -453,26 +457,64 @@
     outline: 2px solid var(--md-secondary);
     outline-offset: 2px;
   }
+  .portal-bday-cal__month-switcher {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    min-width: 0;
+    padding: 2px;
+    border-radius: 10px;
+    border: 1px solid var(--md-outline-variant02);
+    background: var(--md-surface-container);
+  }
+  .portal-bday-cal__month-btn {
+    flex-shrink: 0;
+    box-sizing: border-box;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--md-on-surface-variant);
+    cursor: pointer;
+    transition: background-color 140ms ease-out, color 140ms ease-out;
+  }
+  .portal-bday-cal__month-btn:hover {
+    background: color-mix(in srgb, var(--md-secondary) 10%, var(--md-surface-container));
+    color: var(--md-secondary);
+  }
+  .portal-bday-cal__month-btn:active {
+    background: color-mix(in srgb, var(--md-secondary) 16%, var(--md-surface-container));
+  }
+  .portal-bday-cal__month-btn:focus-visible {
+    outline: 2px solid var(--md-secondary);
+    outline-offset: 1px;
+  }
   .portal-bday-cal__month {
+    min-width: 7.5rem;
+    padding: 0 6px;
     font-size: 0.875rem;
     font-weight: 600;
     color: var(--md-on-surface);
+    text-align: center;
     text-wrap: balance;
     line-height: 1.25;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
   .portal-bday-cal__fetching-slot {
-    flex-shrink: 0;
-    min-width: 6.5rem;
+    flex: 1 1 auto;
+    min-width: 0;
     font-size: 0.6875rem;
     font-weight: 600;
     color: var(--md-on-surface-variant);
     white-space: nowrap;
-  }
-  .portal-bday-cal__nav-actions {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    flex-shrink: 0;
+    text-align: right;
   }
   .portal-bday-cal__status {
     padding: 20px 16px;
@@ -586,7 +628,6 @@
   .portal-bday-cal__timeline {
     border-top: 1px solid var(--md-outline-variant02);
     padding: 10px 14px 14px;
-    min-height: 248px;
   }
   .portal-bday-cal__timeline-title {
     display: flex;
@@ -600,12 +641,7 @@
     color: var(--md-on-surface-variant);
   }
   .portal-bday-cal__timeline-body {
-    min-height: 200px;
-    max-height: 200px;
-    overflow-x: hidden;
-    overflow-y: auto;
-    scrollbar-gutter: stable;
-    -webkit-overflow-scrolling: touch;
+    overflow: visible;
   }
   .portal-bday-cal__timeline-groups {
     display: flex;
@@ -640,8 +676,14 @@
     cursor: pointer;
     transition: background-color 140ms ease-out;
   }
+  .portal-bday-cal__timeline-date--static {
+    cursor: default;
+  }
   .portal-bday-cal__timeline-date:hover {
     background: color-mix(in srgb, var(--chart-5) 10%, var(--md-surface-container-high));
+  }
+  .portal-bday-cal__timeline-date--static:hover {
+    background: color-mix(in srgb, var(--chart-5) 6%, var(--md-surface-container-high));
   }
   .portal-bday-cal__timeline-date:focus-visible {
     outline: 2px solid var(--md-secondary);
@@ -662,10 +704,7 @@
     margin: 0;
     padding: 0;
     list-style: none;
-    max-height: 168px;
-    overflow-y: auto;
-    scrollbar-gutter: stable;
-    -webkit-overflow-scrolling: touch;
+    overflow: visible;
   }
   .portal-bday-cal__person-row {
     display: flex;
@@ -675,6 +714,9 @@
     border-top: 1px solid var(--md-outline-variant02);
   }
   .portal-bday-cal__person-row:first-child {
+    border-top: none;
+  }
+  .portal-bday-cal__timeline-group--selected .portal-bday-cal__person-row:first-child {
     border-top: none;
   }
   .portal-bday-cal__avatar {

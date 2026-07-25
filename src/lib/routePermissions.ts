@@ -12,6 +12,7 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
 
   { match: p => p === '/warehouse/dashboard-warehouse', permissions: ['wms.dashboard.view'] },
   { match: p => p === '/warehouse/stock', permissions: ['wms.stock.view:all'] },
+  { match: p => p === '/warehouse/arrival-plans', permissions: ['purchasing.arrival_plans.view'] },
   { match: p => p === '/warehouse/projects', permissions: ['wms.projects.view:all'] },
   { match: p => p.startsWith('/warehouse/projects/'), permissions: ['wms.projects.view:all'] },
   { match: p => p === '/warehouse/materials', permissions: ['wms.materials.view:all'] },
@@ -19,6 +20,7 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
   { match: p => p === '/warehouse/export', permissions: ['wms.exports.view:all'] },
   { match: p => p === '/warehouse/transfer', permissions: ['wms.transfers.view:all'] },
   { match: p => p === '/warehouse/material-return', permissions: ['wms.export_returns.view:all'] },
+  { match: p => p === '/warehouse/defects', permissions: ['wms.defects.view:all'] },
   {
     match: p => p === '/warehouse/settings/material-categories',
     permissions: ['wms.categories.view:all'],
@@ -26,14 +28,6 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
   {
     match: p => p === '/warehouse/settings/material-units',
     permissions: ['wms.material_units.view:all'],
-  },
-  {
-    match: p => p === '/warehouse/settings/suppliers',
-    permissions: ['wms.suppliers.view:all'],
-  },
-  {
-    match: p => p === '/warehouse/settings/price-books',
-    permissions: ['wms.price_books.view:all'],
   },
   { match: p => p === '/warehouse/reports', permissions: ['wms.reports.view:all'] },
 
@@ -74,14 +68,25 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
   { match: p => p.startsWith('/technical/cskh'), permissions: ['tech.cskh.view'] },
   { match: p => p === '/technical' || p.startsWith('/technical/'), permissions: ['tech.cskh.view'] },
 
-  { match: p => p === '/purchasing/dashboard', permissions: ['purchasing.dashboard.view'] },
-  { match: p => p.startsWith('/suppliers') || p === '/purchasing/suppliers', permissions: ['purchasing.suppliers.view', 'wms.suppliers.view:all'] },
+  { match: p => p.startsWith('/suppliers') || p.startsWith('/purchasing/suppliers'), permissions: ['purchasing.suppliers.view', 'wms.suppliers.view:all'] },
+  { match: p => p === '/purchasing/dashboard' || p === '/purchasing', permissions: ['purchasing.dashboard.view'] },
   { match: p => p === '/purchasing/plans', permissions: ['purchasing.plans.view'] },
-  { match: p => p === '/purchasing/requests', permissions: ['purchasing.requests.view'] },
-  { match: p => p.startsWith('/purchasing/orders'), permissions: ['purchasing.orders.view'] },
-  { match: p => p === '/purchasing/deliveries', permissions: ['purchasing.deliveries.view'] },
+  {
+    match: p => p.startsWith('/purchasing/plans/'),
+    permissions: ['purchasing.plans.view'],
+  },
+  { match: p => p === '/purchasing/orders', permissions: ['purchasing.orders.view'] },
+  { match: p => p === '/purchasing/orders/new', permissions: ['purchasing.orders.create', 'purchasing.orders.view'] },
+  {
+    match: p => p.startsWith('/purchasing/orders/'),
+    permissions: ['purchasing.orders.view'],
+  },
   { match: p => p === '/purchasing/payments', permissions: ['purchasing.payments.view'] },
-  { match: p => p === '/purchasing/documents', permissions: ['purchasing.documents.view'] },
+  { match: p => p === '/purchasing/payments/new', permissions: ['purchasing.payments.create', 'purchasing.payments.view'] },
+  {
+    match: p => p.startsWith('/purchasing/payments/'),
+    permissions: ['purchasing.payments.view'],
+  },
   { match: p => p === '/purchasing/settings', permissions: ['purchasing.settings.view'] },
 ];
 

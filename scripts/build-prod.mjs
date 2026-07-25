@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Production build — forces VITE_USE_MOCK=false (Windows + Unix).
- * Requires VITE_API_BASE_URL via .env.production or shell env.
+ * VITE_API_BASE_URL may be empty (same-origin reverse proxy + cookie auth).
  */
 
 import { spawnSync } from 'node:child_process';

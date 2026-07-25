@@ -1,63 +1,67 @@
-export const TOKEN_KEY = 'nv-access-token';
-export const REFRESH_KEY = 'nv-refresh-token';
+/**
+ * Auth session: access JWT in memory (Bearer); refresh token in HttpOnly cookie (same-origin).
+ * Access JWT is too large for cookies when packed with permission claims.
+ */
+
 export const REMEMBER_KEY = 'nv-remember-me';
+/** @deprecated Legacy prefill key — cleared on logout; never store credentials. */
 export const SAVED_USER_KEY = 'nv-saved-user';
 
-export function isRememberMe(): boolean {
-  return localStorage.getItem(REMEMBER_KEY) === 'true';
-}
+/** @deprecated Legacy storage keys — cleared only. */
+export const TOKEN_KEY = 'nv-access-token';
+/** @deprecated */
+export const REFRESH_KEY = 'nv-refresh-token';
 
-export function getStoredToken(): string | null {
-  return sessionStorage.getItem(TOKEN_KEY) ?? localStorage.getItem(TOKEN_KEY);
-}
+let memoryAccessToken: string | null = null;
 
-export function getStoredRefreshToken(): string | null {
-  return sessionStorage.getItem(REFRESH_KEY) ?? localStorage.getItem(REFRESH_KEY);
-}
-
-export function persistTokens(accessToken: string, refreshToken: string, rememberMe: boolean): void {
+export function clearLegacyTokenStorage(): void {
   for (const store of [localStorage, sessionStorage]) {
     store.removeItem(TOKEN_KEY);
     store.removeItem(REFRESH_KEY);
   }
-
-  const target = rememberMe ? localStorage : sessionStorage;
-  target.setItem(TOKEN_KEY, accessToken);
-  target.setItem(REFRESH_KEY, refreshToken);
-
-  if (rememberMe) {
-    localStorage.setItem(REMEMBER_KEY, 'true');
-  } else {
-    localStorage.removeItem(REMEMBER_KEY);
-  }
-}
-
-export function setRememberMePreference(rememberMe: boolean, savedUser?: string): void {
-  if (rememberMe) {
-    localStorage.setItem(REMEMBER_KEY, 'true');
-    if (savedUser) localStorage.setItem(SAVED_USER_KEY, savedUser);
-  } else {
-    localStorage.removeItem(REMEMBER_KEY);
-    localStorage.removeItem(SAVED_USER_KEY);
-  }
+  localStorage.removeItem(REMEMBER_KEY);
+  localStorage.removeItem(SAVED_USER_KEY);
 }
 
 export function clearAuthSession(): void {
-  for (const store of [localStorage, sessionStorage]) {
-    store.removeItem(TOKEN_KEY);
-    store.removeItem(REFRESH_KEY);
-  }
+  memoryAccessToken = null;
+  clearLegacyTokenStorage();
   localStorage.removeItem('nv-logged-in');
   localStorage.removeItem('nv-session-user');
   localStorage.removeItem('nv-user-id');
   localStorage.removeItem('nv-user-role');
 }
 
-export function hasAuthSession(): boolean {
-  return Boolean(getStoredToken() || getStoredRefreshToken());
+export function setAccessToken(token: string | null): void {
+  memoryAccessToken = token && token.trim() ? token : null;
 }
 
-/** JWT exp claim in seconds, or null if unreadable. */
+export function getStoredToken(): string | null {
+  return memoryAccessToken;
+}
+
+export function hasAuthSession(): boolean {
+  return Boolean(memoryAccessToken);
+}
+
+export function getStoredRefreshToken(): string | null {
+  return null;
+}
+
+export function persistTokens(accessToken: string, _refreshToken: string, _rememberMe: boolean): void {
+  clearLegacyTokenStorage();
+  setAccessToken(accessToken);
+}
+
+export function setRememberMePreference(_rememberMe: boolean): void {
+  localStorage.removeItem(REMEMBER_KEY);
+  localStorage.removeItem(SAVED_USER_KEY);
+}
+
+export function isRememberMe(): boolean {
+  return false;
+}
+
 export function getAccessTokenExpiryMs(token: string): number | null {
   try {
     const payload = token.split('.')[1];

@@ -94,7 +94,17 @@ export interface ImportItem {
   /** NCC theo dòng — nếu trống dùng NCC mặc định của phiếu */
   supplier?: string;
   supplierId?: number;
+  /** Ghi chú dòng — giữ khi sửa (vd. poItem:{id} từ PO) */
+  notes?: string | null;
   [key: string]: unknown;
+}
+
+export interface ImportAttachment {
+  id: string;
+  kind: 'document' | 'photo' | string;
+  fileName: string;
+  storageKey: string;
+  uploadedAt: string;
 }
 
 export interface Import {
@@ -119,6 +129,12 @@ export interface Import {
   isDirectProcurement?: boolean;
   /** Dự án thụ hưởng khi isDirectProcurement = true */
   project?: string;
+  /** Mã KHMH khi NK tạo từ PO */
+  planCode?: string | null;
+  /** Đánh giá nhận hàng (bắt buộc lúc duyệt kho) */
+  receiptEvaluation?: string | null;
+  /** Chứng từ + ảnh nhận hàng đã upload */
+  attachments?: ImportAttachment[];
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

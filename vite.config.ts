@@ -2,6 +2,28 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 
+function createApiProxy(proxyTarget: string) {
+  return {
+    target: proxyTarget,
+    changeOrigin: true,
+    configure: (proxy: { on: (event: string, fn: (...args: unknown[]) => void) => void }) => {
+      proxy.on('proxyRes', (...args: unknown[]) => {
+        const proxyRes = args[0] as { headers: Record<string, string | string[] | undefined> };
+        const raw = proxyRes.headers['set-cookie'];
+        if (!raw) return;
+        const list = Array.isArray(raw) ? raw : [raw];
+        // Cookie must bind to the Vite origin (5173), not the API host.
+        proxyRes.headers['set-cookie'] = list.map(cookie =>
+          cookie
+            .replace(/;\s*Domain=[^;]*/gi, '')
+            .replace(/;\s*Secure/gi, '')
+            .replace(/;\s*SameSite=None/gi, '; SameSite=Lax'),
+        );
+      });
+    },
+  };
+}
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
@@ -13,7 +35,8 @@ export default defineConfig(({ mode }) => {
     process.argv.some((arg) => /vitest/i.test(arg))
   const useMock =
     env.VITE_USE_MOCK === 'true' || process.env.VITE_USE_MOCK === 'true'
-  const apiBaseUrl = (env.VITE_API_BASE_URL ?? process.env.VITE_API_BASE_URL ?? '').trim()
+  const proxyTarget = (env.VITE_DEV_PROXY_TARGET ?? process.env.VITE_DEV_PROXY_TARGET ?? 'http://localhost:8080').trim()
+  const apiProxy = createApiProxy(proxyTarget)
 
   if (mode === 'production' && !isVitest) {
     if (useMock) {
@@ -21,12 +44,7 @@ export default defineConfig(({ mode }) => {
         'Production build blocked: VITE_USE_MOCK=true. Use `npm run build:prod` (mock is forced off).',
       )
     }
-
-    if (!apiBaseUrl) {
-      throw new Error(
-        'Production build blocked: set VITE_API_BASE_URL in .env.production or the shell before building.',
-      )
-    }
+    // Empty VITE_API_BASE_URL = same-origin (reverse proxy). Non-empty = absolute API URL.
   }
 
   return {
@@ -37,6 +55,23 @@ export default defineConfig(({ mode }) => {
     test: {
       globals: true,
       environment: 'jsdom',
+    },
+    server: {
+      proxy: {
+        '/api': apiProxy,
+        '/hubs': { ...apiProxy, ws: true },
+        '/uploads': apiProxy,
+        '/health': apiProxy,
+      },
+    },
+    preview: {
+      port: 4173,
+      proxy: {
+        '/api': apiProxy,
+        '/hubs': { ...apiProxy, ws: true },
+        '/uploads': apiProxy,
+        '/health': apiProxy,
+      },
     },
     build: {
       // Production source maps are opt-in to avoid publishing readable source by default.
@@ -57,9 +92,6 @@ export default defineConfig(({ mode }) => {
           },
         },
       },
-    },
-    preview: {
-      port: 4173,
     },
   }
 })

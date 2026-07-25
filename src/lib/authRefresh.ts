@@ -1,44 +1,50 @@
-import {
-  getStoredRefreshToken,
-  isRememberMe,
-  persistTokens,
-} from './authSession';
+import { setAccessToken } from './authSession';
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
 export const AUTH_REFRESH_TIMEOUT_MS = 10_000;
 
 export type AuthRefreshResult = 'refreshed' | 'rejected' | 'unavailable';
 
-interface TokenPairResponse {
-  token: string;
-  refreshToken: string;
+const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
+
+function refreshUrl(): string {
+  const path = '/api/auth/refresh';
+  if (!BASE_URL.trim()) return path;
+  return `${BASE_URL.replace(/\/$/, '')}${path}`;
 }
 
-/** Refresh access token without going through apiClient (avoids 401 loop). */
-export async function refreshAccessToken(): Promise<AuthRefreshResult> {
-  const refreshToken = getStoredRefreshToken();
-  if (!refreshToken) return 'rejected';
+interface TokenPairResponse {
+  accessToken?: string;
+  token?: string;
+}
 
+/** Refresh via HttpOnly cookie; puts new access JWT into memory. */
+export async function refreshAccessToken(): Promise<AuthRefreshResult> {
   try {
-    const response = await fetch(`${BASE_URL}/api/auth/refresh`, {
+    const response = await fetch(refreshUrl(), {
       method: 'POST',
       signal: AbortSignal.timeout(AUTH_REFRESH_TIMEOUT_MS),
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
-      body: JSON.stringify({ refreshToken }),
+      body: '{}',
     });
 
     if (!response.ok) {
-      return response.status >= 500 ? 'unavailable' : 'rejected';
+      if (response.status >= 500) return 'unavailable';
+      setAccessToken(null);
+      return 'rejected';
     }
 
-    const data = (await response.json()) as TokenPairResponse;
-    if (!data.token || !data.refreshToken) return 'rejected';
+    const data = (await response.json().catch(() => null)) as TokenPairResponse | null;
+    const access = data?.accessToken ?? data?.token;
+    if (!access) {
+      setAccessToken(null);
+      return 'rejected';
+    }
 
-    persistTokens(data.token, data.refreshToken, isRememberMe());
-    localStorage.setItem('nv-logged-in', 'true');
+    setAccessToken(access);
     return 'refreshed';
   } catch {
     return 'unavailable';

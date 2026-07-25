@@ -21,7 +21,8 @@ import { MAX_MATERIAL_BUDGET, MAX_MATERIAL_BUDGET_LABEL } from '../../constants/
 import { projectStatusBadge } from '../../lib/wms/projectStatusBadge';
 import { useProjects, useCreateProject } from '../../hooks/useProjects';
 import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
-import type { WarehouseProjectApiDto } from '../../types/wms';
+import type { WarehouseProjectApiDto, ProjectWarehouseKeeperDto } from '../../types/wms';
+import WarehouseKeeperMultiSelect from '../../components/warehouse/WarehouseKeeperMultiSelect';
 
 const EMPTY_PM_ID = '00000000-0000-0000-0000-000000000000';
 
@@ -99,6 +100,7 @@ export default function ProjectsPage() {
     pmName: '',
     startDate: todayIso(),
     materialBudget: '',
+    warehouseKeepers: [] as ProjectWarehouseKeeperDto[],
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -131,6 +133,7 @@ export default function ProjectsPage() {
       pmName: '',
       startDate: todayIso(),
       materialBudget: '',
+      warehouseKeepers: [],
     });
     setErrors({});
     setShowCreate(true);
@@ -145,14 +148,16 @@ export default function ProjectsPage() {
 
     setErrors({});
     try {
+      const keepers = form.warehouseKeepers;
       const created = await createMutation.mutateAsync({
         projectCode: form.projectCode.trim().toUpperCase(),
         projectName: form.projectName.trim(),
         projectType: 'Project',
         pmId: EMPTY_PM_ID,
-        pmName: form.pmName.trim() || '—',
+        pmName: keepers.map(k => k.displayName).join(', ') || form.pmName.trim() || '—',
         startDate: form.startDate,
         materialBudget: parseCurrencyInput(form.materialBudget),
+        warehouseKeepers: keepers,
       });
       showToast('success', `Đã tạo kho dự án ${created.projectCode}.`);
       setShowCreate(false);
@@ -242,7 +247,7 @@ export default function ProjectsPage() {
               <tr>
                 <th className="table-header-cell whitespace-nowrap project-col-code">Mã kho</th>
                 <th className="table-header-cell">Tên công trình</th>
-                <th className="table-header-cell project-col-pm">Người phụ trách</th>
+                <th className="table-header-cell project-col-pm">Thủ kho phụ trách</th>
                 <th className="table-header-cell project-col-date whitespace-nowrap">Ngày bắt đầu</th>
                 <th className="table-header-cell text-right project-col-count">Mặt hàng</th>
                 <th className="table-header-cell text-center project-col-status">Trạng thái</th>
@@ -281,9 +286,19 @@ export default function ProjectsPage() {
                       <span className="line-clamp-2" title={p.projectName}>{p.projectName}</span>
                     </td>
                     <td className="table-cell project-col-pm">
-                      {p.pmName && p.pmName !== '—'
-                        ? p.pmName
-                        : <span className="hrm-empty-cell">—</span>}
+                      {(() => {
+                        const keepers = p.warehouseKeepers ?? [];
+                        if (keepers.length > 0) {
+                          return (
+                            <span title={keepers.map(k => k.displayName).join(', ')}>
+                              {keepers.map(k => k.displayName).join(', ')}
+                            </span>
+                          );
+                        }
+                        return p.pmName && p.pmName !== '—'
+                          ? p.pmName
+                          : <span className="hrm-empty-cell">—</span>;
+                      })()}
                     </td>
                     <td className="table-cell project-col-date whitespace-nowrap tabular-nums">
                       {formatDateCell(p.startDate)}
@@ -355,12 +370,11 @@ export default function ProjectsPage() {
               placeholder="VD: Dự án Nhiệt điện Long Phú 1"
             />
           </FormField>
-          <FormField label="Người phụ trách dự án">
-            <input
-              className="form-input"
-              value={form.pmName}
-              onChange={e => setForm({ ...form, pmName: e.target.value })}
-              placeholder="Tên PM phụ trách"
+          <FormField label="Người phụ trách dự án (Thủ kho)">
+            <WarehouseKeeperMultiSelect
+              value={form.warehouseKeepers}
+              onChange={warehouseKeepers => setForm({ ...form, warehouseKeepers })}
+              placeholder="Tên thủ kho phụ trách"
             />
           </FormField>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -1,0 +1,242 @@
+/* Kế hoạch hàng về + gán thủ kho dự án */
+
+.warehouse-keeper-multi {
+  position: relative;
+}
+
+.warehouse-keeper-multi__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  min-height: 42px;
+  padding: 6px 10px;
+  border: 1px solid var(--md-outline-variant, #c4c7c5);
+  border-radius: 10px;
+  background: var(--md-surface, #fff);
+}
+
+.warehouse-keeper-multi__input {
+  flex: 1 1 120px;
+  min-width: 120px;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font: inherit;
+  padding: 4px 2px;
+}
+
+.warehouse-keeper-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--md-primary) 12%, transparent);
+  color: var(--md-primary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.warehouse-keeper-chip__remove {
+  display: inline-flex;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.warehouse-keeper-multi__panel {
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--md-surface, #fff);
+  border: 1px solid var(--md-outline-variant, #c4c7c5);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 12%);
+  overflow: auto;
+}
+
+.warehouse-keeper-multi__option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font: inherit;
+}
+
+.warehouse-keeper-multi__option.is-active,
+.warehouse-keeper-multi__option:hover {
+  background: color-mix(in srgb, var(--md-primary) 10%, transparent);
+}
+
+.arrival-plans-toolbar {
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.arrival-plans-filters {
+  flex: 1;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.arrival-plans-day-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.arrival-plans-day-chip {
+  border: 1px solid var(--md-outline-variant, #c4c7c5);
+  background: var(--md-surface, #fff);
+  color: var(--md-on-surface, #1a1c1e);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.arrival-plans-day-chip.is-active {
+  border-color: var(--md-primary);
+  background: color-mix(in srgb, var(--md-primary) 14%, transparent);
+  color: var(--md-primary);
+}
+
+.arrival-plans-window {
+  padding: 4px 16px 12px;
+}
+
+.arrival-plans-project-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 8px;
+}
+
+.arrival-plans-project {
+  border-top: 1px solid var(--md-outline-variant, #e2e4e2);
+}
+
+.arrival-plans-project.is-highlight .arrival-plans-project__head {
+  border-left: 3px solid var(--md-primary);
+}
+
+.arrival-plans-project__head {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px 16px;
+  align-items: center;
+  padding: 14px 16px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+
+.arrival-plans-project__head:hover {
+  background: color-mix(in srgb, var(--md-primary) 4%, transparent);
+}
+
+.arrival-plans-project__title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.arrival-plans-project__code {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--md-primary);
+  letter-spacing: 0.02em;
+}
+
+.arrival-plans-project__name {
+  font-weight: 650;
+  color: var(--md-on-surface, #1a1c1e);
+}
+
+.arrival-plans-project__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.arrival-plans-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--md-surface-container, #f0f1f0);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--md-on-surface-variant, #444746);
+}
+
+.arrival-plans-pill--qty {
+  background: color-mix(in srgb, var(--md-tertiary, #386a20) 12%, transparent);
+  color: var(--md-tertiary, #386a20);
+}
+
+.arrival-plans-pill--date {
+  background: color-mix(in srgb, #b45309 12%, transparent);
+  color: #9a3412;
+}
+
+.arrival-plans-project__chevron {
+  color: var(--md-on-surface-variant);
+  font-size: 0.875rem;
+  margin-left: 4px;
+}
+
+.arrival-plans-project__body {
+  padding: 0 16px 16px;
+}
+
+.arrival-plans-hint {
+  margin: 10px 0 0;
+  font-size: 0.8125rem;
+  color: var(--md-on-surface-variant);
+  line-height: 1.45;
+}
+
+.arrival-plans-skeleton {
+  padding: 16px;
+  display: grid;
+  gap: 10px;
+}
+
+.arrival-plans-skeleton__row {
+  height: 56px;
+  border-radius: 10px;
+  background: linear-gradient(
+    90deg,
+    var(--md-surface-container, #eceeee) 0%,
+    color-mix(in srgb, var(--md-surface-container, #eceeee) 40%, #fff) 50%,
+    var(--md-surface-container, #eceeee) 100%
+  );
+  background-size: 200% 100%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .arrival-plans-skeleton__row {
+    animation: arrival-skel 1.2s ease-in-out infinite;
+  }
+}
+
+@keyframes arrival-skel {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}

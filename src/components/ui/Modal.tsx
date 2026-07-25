@@ -18,9 +18,9 @@ const sizeClass: Record<ModalSize, string> = {
   sm: 'md-dialog--sm',
   md: 'md-dialog--md',
   lg: 'md-dialog--lg',
-  /** Form tạo/sửa, chi tiết đọc — chuẩn ERP */
+  /** Form tạo/sửa danh mục — chuẩn ERP */
   xl: 'md-dialog--xl',
-  /** Phiếu chứng từ có bảng nhiều dòng */
+  /** Phiếu chứng từ (tạo + bảng dòng) — cùng khung với chi tiết phiếu */
   full: 'md-dialog--full',
 };
 

@@ -1,40 +1,46 @@
+import HrmDatePicker from '../hr/HrmDatePicker';
+
 interface VoucherDateFilterProps {
   from: string;
   to: string;
   onFromChange: (value: string) => void;
   onToChange: (value: string) => void;
   onReset: () => void;
+  /** Optional class on the wrapper for layout tweaks. */
+  className?: string;
 }
 
+/** Shared Từ ngày / Đến ngày filter — used by WMS lists and purchasing. */
 export default function VoucherDateFilter({
   from,
   to,
   onFromChange,
   onToChange,
   onReset,
+  className,
 }: VoucherDateFilterProps) {
   const hasFilter = Boolean(from || to);
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className={`flex flex-wrap items-center gap-2${className ? ` ${className}` : ''}`}>
       <label className="flex items-center gap-1.5 text-xs text-[var(--md-on-surface-variant)]">
         <span className="whitespace-nowrap">Từ ngày</span>
-        <input
-          type="date"
-          className="form-input text-xs py-1.5 h-8 w-[9.5rem]"
+        <HrmDatePicker
+          className="hrm-filter-date-picker"
           value={from}
-          onChange={e => onFromChange(e.target.value)}
-          aria-label="Lọc từ ngày tạo"
+          onChange={onFromChange}
+          placeholder="mm/dd/yyyy"
+          max={to || undefined}
         />
       </label>
       <label className="flex items-center gap-1.5 text-xs text-[var(--md-on-surface-variant)]">
         <span className="whitespace-nowrap">Đến ngày</span>
-        <input
-          type="date"
-          className="form-input text-xs py-1.5 h-8 w-[9.5rem]"
+        <HrmDatePicker
+          className="hrm-filter-date-picker"
           value={to}
-          onChange={e => onToChange(e.target.value)}
-          aria-label="Lọc đến ngày tạo"
+          onChange={onToChange}
+          placeholder="mm/dd/yyyy"
+          min={from || undefined}
         />
       </label>
       {hasFilter && (

@@ -16,10 +16,12 @@ interface MaterialAutocompleteProps {
   placeholder?: string;
   compact?: boolean;
   disabled?: boolean;
+  /** Closed input label: full `code — name` (default) or name only. */
+  displayLabel?: 'code-name' | 'name';
 }
 
-function materialLabel(m: MaterialApiDto) {
-  return `${m.materialCode} — ${m.materialName}`;
+function materialLabel(m: MaterialApiDto, displayLabel: 'code-name' | 'name') {
+  return displayLabel === 'name' ? m.materialName : `${m.materialCode} — ${m.materialName}`;
 }
 
 export default function MaterialAutocomplete({
@@ -29,6 +31,7 @@ export default function MaterialAutocomplete({
   placeholder = 'Gõ mã hoặc tên vật tư…',
   compact = false,
   disabled = false,
+  displayLabel = 'code-name',
 }: MaterialAutocompleteProps) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState('');
@@ -45,7 +48,7 @@ export default function MaterialAutocomplete({
     () => materials.find(m => m.materialCode === value),
     [materials, value],
   );
-  const closedLabel = selected ? materialLabel(selected) : '';
+  const closedLabel = selected ? materialLabel(selected, displayLabel) : '';
   const inputValue = open ? draft : closedLabel;
 
   const filtered = useMemo(() => {
@@ -91,7 +94,7 @@ export default function MaterialAutocomplete({
 
   const selectMaterial = (material: MaterialApiDto) => {
     onChange(material.materialCode);
-    setDraft(materialLabel(material));
+    setDraft(materialLabel(material, displayLabel));
     setFilterQuery('');
     setOpen(false);
     inputRef.current?.blur();

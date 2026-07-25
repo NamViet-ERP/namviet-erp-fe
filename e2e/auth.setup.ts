@@ -15,6 +15,6 @@ setup('authenticate as admin', async ({ page }) => {
   await page.getByRole('button', { name: 'ĐĂNG NHẬP' }).click();
 
   await expect(page).not.toHaveURL(/\/login(?:\?|$)/, { timeout: 20_000 });
-  await page.waitForFunction(() => Boolean(localStorage.getItem('nv-access-token')));
+  await page.waitForFunction(() => Boolean(localStorage.getItem('nv-session-user')));
   await page.context().storageState({ path: authFile });
 });

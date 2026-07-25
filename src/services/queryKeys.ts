@@ -20,6 +20,11 @@ export const queryKeys = {
     returnableLines: (sourceExportId: string, excludeReturnId?: string) =>
       ['exportReturns', 'returnable', 'lines', sourceExportId, excludeReturnId ?? ''] as const,
   },
+  defects: {
+    all: ['defects'] as const,
+    detail: (id: string) => ['defects', id] as const,
+    poPreview: (poCode: string) => ['defects', 'poPreview', poCode] as const,
+  },
   candidates: {
     all: ['candidates'] as const,
     detail: (id: string) => ['candidates', id] as const,
@@ -97,7 +102,27 @@ export const queryKeys = {
   suppliers: {
     all: ['suppliers'] as const,
   },
-  priceBooks: {
-    all: ['priceBooks'] as const,
+  purchasePlans: {
+    all: ['purchasePlans'] as const,
+    detail: (code: string) => ['purchasePlans', code] as const,
+  },
+  arrivalPlans: {
+    list: (daysAhead: number, projectCode?: string) =>
+      ['arrivalPlans', daysAhead, projectCode ?? ''] as const,
+  },
+  purchaseOrders: {
+    all: ['purchaseOrders'] as const,
+    detail: (code: string) => ['purchaseOrders', code] as const,
+  },
+  purchasePayments: {
+    all: ['purchasePayments'] as const,
+    detail: (code: string) => ['purchasePayments', code] as const,
+  },
+  purchasingDashboard: {
+    all: ['purchasingDashboard'] as const,
+    summary: (params: object) => ['purchasingDashboard', 'summary', params] as const,
+    chart: (params: object) => ['purchasingDashboard', 'chart', params] as const,
+    activity: (params: object) => ['purchasingDashboard', 'activity', params] as const,
+    actors: (params: object) => ['purchasingDashboard', 'actors', params] as const,
   },
 } as const;

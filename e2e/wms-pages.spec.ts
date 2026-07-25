@@ -12,8 +12,7 @@ const wmsPages: Array<{ path: string; title: string | RegExp }> = [
   { path: '/warehouse/reports', title: 'Báo cáo kho' },
   { path: '/warehouse/settings/material-categories', title: 'Cây vật tư' },
   { path: '/warehouse/settings/material-units', title: 'Đơn vị tính' },
-  { path: '/warehouse/settings/suppliers', title: 'Danh mục NCC' },
-  { path: '/warehouse/settings/price-books', title: 'Bảng giá NCC' },
+  { path: '/purchasing/suppliers', title: 'Nhà cung cấp' },
   { path: '/stocktake/list', title: /KIỂM KÊ KHO DỰ ÁN/i },
 ];
 

@@ -1,17 +1,14 @@
 import { ApiError, apiClient, setAuthTokenProvider } from '../lib/apiClient';
 import { cacheEmployeeStatus } from './employeesService';
 import type { SystemUser } from '../constants/systemUsers';
-import { setSessionUser, clearSessionUser } from '../constants/systemUsers';
+import { setSessionUser, clearSessionUser, getSessionUser } from '../constants/systemUsers';
 import { getEmployeeLockReason } from '../constants/employeeStatus';
 import {
   clearAuthSession as clearSession,
   getStoredToken,
-  hasAuthSession,
+  setAccessToken,
   isAccessTokenExpired,
-  persistTokens,
-  setRememberMePreference,
 } from '../lib/authSession';
-import { getPermissionsFromToken } from '../lib/jwtClaims';
 import { refreshAccessToken } from '../lib/authRefresh';
 
 export { clearSession as clearAuthSession, getStoredToken };
@@ -30,14 +27,13 @@ export interface AuthUserDto {
 }
 
 interface LoginResponse {
-  token: string;
-  refreshToken: string;
   user: AuthUserDto;
+  accessToken?: string;
+  token?: string;
 }
 
-function resolvePermissions(dto: AuthUserDto, token: string | null | undefined): string[] {
-  if (dto.permissions !== undefined) return [...dto.permissions];
-  return getPermissionsFromToken(token);
+function resolvePermissions(dto: AuthUserDto): string[] {
+  return dto.permissions !== undefined ? [...dto.permissions] : [];
 }
 
 function mapAuthUser(dto: AuthUserDto, permissions: string[]): SystemUser {
@@ -66,6 +62,7 @@ async function syncSessionUserFromApi(): Promise<SessionCheckResult> {
     const dto = await apiClient.get<AuthUserDto>('/api/auth/me');
     const lockReason = lockReasonFromStatus(dto.employeeStatus);
     if (lockReason) {
+      await logoutRemote();
       clearSession();
       clearSessionUser();
       return 'unauthenticated';
@@ -75,25 +72,23 @@ async function syncSessionUserFromApi(): Promise<SessionCheckResult> {
       cacheEmployeeStatus(dto.employeeId, dto.employeeStatus);
     }
 
-    let token = getStoredToken();
-    const apiPermissions = dto.permissions ?? [];
-    const tokenPermissions = getPermissionsFromToken(token);
-    const permissionsOutOfSync = apiPermissions.some(p => !tokenPermissions.includes(p));
-    if (permissionsOutOfSync) {
-      const refreshResult = await refreshAccessToken();
-      if (refreshResult === 'refreshed') token = getStoredToken();
-    }
-
-    const permissions = resolvePermissions(dto, token);
+    const permissions = resolvePermissions(dto);
     setSessionUser(mapAuthUser(dto, permissions));
     return 'authenticated';
   } catch (error) {
     clearSessionUser();
     if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
-      clearSession();
       return 'unauthenticated';
     }
     return 'recoverable-error';
+  }
+}
+
+async function logoutRemote(): Promise<void> {
+  try {
+    await apiClient.post<void>('/api/auth/logout', {});
+  } catch {
+    // Cookie clear is best-effort when API is down.
   }
 }
 
@@ -111,30 +106,41 @@ export const authService = {
     const lockReason = lockReasonFromStatus(res.user.employeeStatus);
     if (lockReason) throw new Error(lockReason);
 
-    persistTokens(res.token, res.refreshToken, rememberMe);
-    setRememberMePreference(rememberMe, rememberMe ? username.trim() : undefined);
+    const access = res.accessToken ?? res.token;
+    if (!access) throw new Error('Phản hồi đăng nhập thiếu access token.');
+    setAccessToken(access);
 
     if (res.user.employeeId && res.user.employeeStatus) {
       cacheEmployeeStatus(res.user.employeeId, res.user.employeeStatus);
     }
 
-    const user = mapAuthUser(
-      res.user,
-      resolvePermissions(res.user, res.token),
-    );
+    const user = mapAuthUser(res.user, resolvePermissions(res.user));
     setSessionUser(user);
     return user;
   },
 
   async ensureSession(): Promise<SessionCheckResult> {
-    clearSessionUser();
-    if (!hasAuthSession()) return 'unauthenticated';
-
     const token = getStoredToken();
-    if (token && !isAccessTokenExpired(token)) {
-      return syncSessionUserFromApi();
+    if (!token || isAccessTokenExpired(token)) {
+      const refreshResult = await refreshAccessToken();
+      if (refreshResult === 'unavailable') {
+        clearSessionUser();
+        return 'recoverable-error';
+      }
+      if (refreshResult === 'rejected') {
+        clearSession();
+        clearSessionUser();
+        return 'unauthenticated';
+      }
     }
 
+    const synced = await syncSessionUserFromApi();
+    if (synced === 'authenticated' || synced === 'recoverable-error') {
+      if (synced === 'recoverable-error') clearSessionUser();
+      return synced;
+    }
+
+    // Access rejected — try one refresh then /me again.
     const refreshResult = await refreshAccessToken();
     if (refreshResult === 'unavailable') {
       clearSessionUser();
@@ -145,7 +151,6 @@ export const authService = {
       clearSessionUser();
       return 'unauthenticated';
     }
-
     return syncSessionUserFromApi();
   },
 
@@ -163,12 +168,13 @@ export const authService = {
     return syncSessionUserFromApi();
   },
 
-  logout(): void {
+  async logout(): Promise<void> {
+    await logoutRemote();
     clearSession();
     clearSessionUser();
   },
 
   isLoggedIn(): boolean {
-    return hasAuthSession();
+    return Boolean(getSessionUser() && getStoredToken());
   },
 };

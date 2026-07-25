@@ -1,0 +1,903 @@
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { AlertTriangle, Check, Eye, FileText, Plus, Trash2, Upload } from 'lucide-react';
+import PageHeader from '../../components/ui/PageHeader';
+import PermissionGate from '../../components/auth/PermissionGate';
+import SearchBar from '../../components/ui/SearchBar';
+import TabFilter from '../../components/ui/TabFilter';
+import Pagination from '../../components/ui/Pagination';
+import EmptyState from '../../components/ui/EmptyState';
+import Modal from '../../components/ui/Modal';
+import FormField from '../../components/ui/FormField';
+import QtyStepper from '../../components/ui/QtyStepper';
+import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
+import HrmPanel from '../../components/hr/HrmPanel';
+import ProjectWarehouseSelect from '../../components/warehouse/ProjectWarehouseSelect';
+import {
+  PendingDocList,
+  PendingPhotoGrid,
+  SavedDefectDocList,
+  SavedDefectPhotoGrid,
+} from '../../components/warehouse/PendingLocalEvidence';
+import Badge from '../../components/ui/Badge';
+import Dropdown from '../../components/ui/Dropdown';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
+import { showToast } from '../../components/ui/Toast';
+import { getApiErrorMessage } from '../../lib/apiClient';
+import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
+import {
+  useApproveDefect,
+  useCreateDefectFromPo,
+  useDefects,
+  useDeleteDefect,
+  usePoDefectPreview,
+  useSubmitDefect,
+} from '../../hooks/useDefects';
+import { usePermission } from '../../hooks/usePermission';
+import { usePurchaseOrders } from '../../hooks/usePurchaseOrders';
+import { useProjects } from '../../hooks/useProjects';
+import { useFrozenProjects } from '../../hooks/useFrozenProjects';
+import { defectsService } from '../../services/defectsService';
+import type { PurchaseDefectApiDto } from '../../types/api/poDefectApi';
+import type { StatusKey } from '../../types';
+import type { DropdownItem } from '../../types';
+
+type LineDraft = { selected: boolean; qty: string; lineReason: string };
+
+function statusLabel(status: string) {
+  if (status === 'draft') return 'Nháp';
+  if (status === 'pending') return 'Chờ duyệt';
+  if (status === 'approved') return 'Đã duyệt';
+  if (status === 'rejected') return 'Từ chối';
+  return status;
+}
+
+function toStatusKey(status: string): StatusKey {
+  if (
+    status === 'draft'
+    || status === 'pending'
+    || status === 'approved'
+    || status === 'rejected'
+  ) {
+    return status;
+  }
+  return 'pending';
+}
+
+export default function DefectsPage() {
+  const [activeTab, setActiveTab] = useState('all');
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_LIST_PAGE_SIZE);
+  const [showCreate, setShowCreate] = useState(false);
+  const [showDetail, setShowDetail] = useState(false);
+  const [selected, setSelected] = useState<PurchaseDefectApiDto | null>(null);
+
+  const [projectCode, setProjectCode] = useState('');
+  const [selectedPoCode, setSelectedPoCode] = useState('');
+  const [lineDrafts, setLineDrafts] = useState<Record<number, LineDraft>>({});
+  const [uploading, setUploading] = useState(false);
+  const [createPhotoFiles, setCreatePhotoFiles] = useState<File[]>([]);
+  const [createDocFiles, setCreateDocFiles] = useState<File[]>([]);
+  const [deleteTarget, setDeleteTarget] = useState<PurchaseDefectApiDto | null>(null);
+  const createPhotoInputRef = useRef<HTMLInputElement>(null);
+  const createDocInputRef = useRef<HTMLInputElement>(null);
+  const detailPhotoInputRef = useRef<HTMLInputElement>(null);
+  const detailDocInputRef = useRef<HTMLInputElement>(null);
+
+  const { has } = usePermission();
+  const canCreate = has('wms.defects.create');
+  const canApprove = has('wms.defects.approve');
+
+  const listQuery = useDefects();
+  const { data: projectsPage } = useProjects({ pageSize: 100, status: 'Active' });
+  const projects = useMemo(() => projectsPage?.items ?? [], [projectsPage?.items]);
+  const frozenByProjectCode = useFrozenProjects();
+  const purchaseOrdersQuery = usePurchaseOrders({
+    pageSize: 200,
+    orderPlacementStatus: 'placed',
+    projectCode: projectCode || undefined,
+  });
+  const previewQuery = usePoDefectPreview(selectedPoCode || undefined, showCreate && Boolean(selectedPoCode));
+  const createMutation = useCreateDefectFromPo();
+  const submitMutation = useSubmitDefect();
+  const approveMutation = useApproveDefect();
+  const deleteMutation = useDeleteDefect();
+
+  const poOptions = useMemo(
+    () =>
+      (purchaseOrdersQuery.data?.items ?? []).filter(
+        po =>
+          po.orderPlacementStatus === 'placed'
+          && (!projectCode || po.projectCode === projectCode),
+      ),
+    [purchaseOrdersQuery.data?.items, projectCode],
+  );
+
+  const previewLines = previewQuery.data?.lines ?? [];
+  const previewKey = useMemo(
+    () => `${selectedPoCode}|${previewLines.map(l => `${l.poItemId}:${l.available}`).join(',')}`,
+    [selectedPoCode, previewLines],
+  );
+
+  useEffect(() => {
+    if (!selectedPoCode || previewLines.length === 0) {
+      setLineDrafts({});
+      return;
+    }
+    // Chỉ khởi tạo danh sách — không tick sẵn; user tự chọn dòng.
+    const next: Record<number, LineDraft> = {};
+    for (const line of previewLines) {
+      next[line.poItemId] = {
+        selected: false,
+        qty: line.available > 0 ? String(line.available) : '0',
+        lineReason: '',
+      };
+    }
+    setLineDrafts(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- chỉ reset khi đổi PO/preview
+  }, [previewKey]);
+
+  const filtered = useMemo(() => {
+    let rows = listQuery.data ?? [];
+    if (activeTab !== 'all') rows = rows.filter(r => r.status === activeTab);
+    const q = search.trim().toLowerCase();
+    if (q) {
+      rows = rows.filter(r =>
+        [r.ticketCode, r.poCode, r.planCode, r.projectCode, r.supplierName ?? '']
+          .join(' ')
+          .toLowerCase()
+          .includes(q),
+      );
+    }
+    return rows;
+  }, [listQuery.data, activeTab, search]);
+
+  const paged = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filtered.slice(start, start + pageSize);
+  }, [filtered, page, pageSize]);
+
+  const tabCounts = useMemo(() => {
+    const all = listQuery.data ?? [];
+    return {
+      all: all.length,
+      draft: all.filter(r => r.status === 'draft').length,
+      pending: all.filter(r => r.status === 'pending').length,
+      approved: all.filter(r => r.status === 'approved').length,
+    };
+  }, [listQuery.data]);
+
+  const resetCreate = () => {
+    setProjectCode('');
+    setSelectedPoCode('');
+    setLineDrafts({});
+    setCreatePhotoFiles([]);
+    setCreateDocFiles([]);
+  };
+
+  const handleCreate = async (asPending: boolean) => {
+    if (!selectedPoCode) {
+      showToast('error', 'Vui lòng chọn PO.');
+      return;
+    }
+    const items = previewLines
+      .filter(line => lineDrafts[line.poItemId]?.selected)
+      .map(line => {
+        const draft = lineDrafts[line.poItemId]!;
+        return {
+          poItemId: line.poItemId,
+          qty: Number(draft.qty),
+          lineReason: draft.lineReason.trim() || null,
+        };
+      })
+      .filter(x => Number.isFinite(x.qty) && x.qty > 0);
+
+    if (items.length === 0) {
+      showToast('error', 'Chọn ít nhất một dòng còn SL để ghi lỗi.');
+      return;
+    }
+
+    if (items.some(x => !x.lineReason)) {
+      showToast('error', 'Mỗi dòng đã chọn cần nhập lý do dòng.');
+      return;
+    }
+
+    if (asPending && createPhotoFiles.length < 1) {
+      showToast('error', 'Gửi duyệt cần ít nhất 1 ảnh hàng lỗi.');
+      return;
+    }
+
+    try {
+      const created = await createMutation.mutateAsync({
+        poCode: selectedPoCode,
+        request: { items, reason: null, note: null },
+      });
+
+      for (const file of createPhotoFiles) {
+        await defectsService.uploadAttachment(created.ticketCode, file, 'photo');
+      }
+      for (const file of createDocFiles) {
+        await defectsService.uploadAttachment(created.ticketCode, file, 'document');
+      }
+
+      if (asPending) {
+        await submitMutation.mutateAsync(created.ticketCode);
+        showToast('success', `Đã tạo và gửi duyệt ${created.ticketCode}.`);
+      } else {
+        showToast('success', `Đã lưu nháp ${created.ticketCode}.`);
+      }
+      setShowCreate(false);
+      resetCreate();
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không tạo được phiếu hàng lỗi'));
+    }
+  };
+
+  const openDetail = async (row: PurchaseDefectApiDto) => {
+    try {
+      const fresh = await defectsService.getById(row.ticketCode);
+      setSelected(fresh);
+      setShowDetail(true);
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không tải được phiếu'));
+    }
+  };
+
+  const reloadSelected = async () => {
+    if (!selected) return;
+    const fresh = await defectsService.getById(selected.ticketCode);
+    setSelected(fresh);
+  };
+
+  const handleApproveRow = async (row: PurchaseDefectApiDto) => {
+    try {
+      await approveMutation.mutateAsync(row.ticketCode);
+      showToast('success', `Đã duyệt ${row.ticketCode} — cập nhật PO/KHMH, không cộng tồn.`);
+      if (selected?.ticketCode === row.ticketCode) {
+        const fresh = await defectsService.getById(row.ticketCode);
+        setSelected(fresh);
+      }
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không duyệt được'));
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      await deleteMutation.mutateAsync(deleteTarget.ticketCode);
+      showToast('success', `Đã xóa ${deleteTarget.ticketCode}.`);
+      if (selected?.ticketCode === deleteTarget.ticketCode) {
+        setShowDetail(false);
+        setSelected(null);
+      }
+      setDeleteTarget(null);
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không xóa được phiếu'));
+    }
+  };
+
+  const buildRowActions = (row: PurchaseDefectApiDto): DropdownItem[] => {
+    const items: DropdownItem[] = [
+      { label: 'Xem chi tiết', icon: Eye, onClick: () => void openDetail(row) },
+    ];
+    if (canApprove && row.status === 'pending') {
+      items.push({
+        label: 'Duyệt',
+        icon: Check,
+        onClick: () => void handleApproveRow(row),
+      });
+    }
+    if (canCreate && row.status === 'draft') {
+      items.push({
+        label: 'Xóa phiếu',
+        icon: Trash2,
+        onClick: () => setDeleteTarget(row),
+        danger: true,
+      });
+    }
+    return items;
+  };
+
+  const canEditEvidence = selected && selected.status !== 'approved';
+
+  return (
+    <div className="hrm-page space-y-4">
+      <PageHeader
+        title="Hàng lỗi"
+        subtitle="Ghi nhận hàng lỗi từ PO — không cộng tồn kho; duyệt sẽ trừ SL còn lại trên PO/KHMH."
+        actions={(
+          <PermissionGate permission="wms.defects.create">
+            <button
+              type="button"
+              className="btn btn-primary flex items-center gap-2"
+              onClick={() => {
+                resetCreate();
+                setShowCreate(true);
+              }}
+            >
+              <Plus size={16} aria-hidden />
+              Tạo phiếu hàng lỗi
+            </button>
+          </PermissionGate>
+        )}
+      />
+
+      <HrmPanel>
+        <div className="flex flex-wrap items-center gap-3 mb-3">
+          <TabFilter
+            tabs={[
+              { id: 'all', label: `Tất cả (${tabCounts.all})` },
+              { id: 'draft', label: `Nháp (${tabCounts.draft})` },
+              { id: 'pending', label: `Chờ duyệt (${tabCounts.pending})` },
+              { id: 'approved', label: `Đã duyệt (${tabCounts.approved})` },
+            ]}
+            activeTab={activeTab}
+            onChange={id => {
+              setActiveTab(id);
+              setPage(1);
+            }}
+          />
+          <SearchBar
+            value={search}
+            onChange={v => {
+              setSearch(v);
+              setPage(1);
+            }}
+            placeholder="Tìm mã HL, PO, KHMH, dự án…"
+          />
+        </div>
+
+        <div className="overflow-x-auto table-scroll">
+          <table className="form-table text-xs w-full">
+            <thead>
+              <tr>
+                <th className="table-header-cell text-center">Mã phiếu</th>
+                <th className="table-header-cell text-center">PO</th>
+                <th className="table-header-cell text-center">KHMH</th>
+                <th className="table-header-cell text-center">Dự án</th>
+                <th className="table-header-cell text-center">NCC</th>
+                <th className="table-header-cell text-center">Trạng thái</th>
+                <th className="table-header-cell text-center">Tác vụ</th>
+              </tr>
+            </thead>
+            <tbody>
+              {listQuery.isLoading ? (
+                <TableSkeletonRows rows={5} colSpan={7} />
+              ) : paged.length === 0 ? (
+                <tr>
+                  <td colSpan={7}>
+                    <EmptyState message="Chưa có phiếu hàng lỗi." />
+                  </td>
+                </tr>
+              ) : (
+                paged.map(row => (
+                  <tr key={row.ticketCode} className="table-row">
+                    <td className="table-cell text-center font-semibold">{row.ticketCode}</td>
+                    <td className="table-cell text-center">{row.poCode}</td>
+                    <td className="table-cell text-center">{row.planCode || '—'}</td>
+                    <td className="table-cell text-center">{row.projectCode || '—'}</td>
+                    <td className="table-cell text-center">{row.supplierName || '—'}</td>
+                    <td className="table-cell text-center">
+                      <Badge status={toStatusKey(row.status)} label={statusLabel(row.status)} />
+                    </td>
+                    <td className="table-cell text-center">
+                      <Dropdown items={buildRowActions(row)} />
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <Pagination
+          embedded
+          itemLabel="phiếu HL"
+          currentPage={page}
+          totalPages={Math.max(1, Math.ceil(filtered.length / pageSize) || 1)}
+          totalItems={filtered.length}
+          onPageChange={setPage}
+          pageSize={pageSize}
+          onPageSizeChange={size => {
+            setPageSize(size);
+            setPage(1);
+          }}
+        />
+      </HrmPanel>
+
+      <Modal
+        isOpen={showCreate}
+        onClose={() => {
+          setShowCreate(false);
+          resetCreate();
+        }}
+        title="Tạo phiếu hàng lỗi từ PO"
+        size="full"
+        footer={(
+          <>
+            <button type="button" className="btn btn-outline" onClick={() => setShowCreate(false)}>Hủy</button>
+            <div className="md-dialog__footer-actions">
+              <button
+                type="button"
+                className="btn btn-outline"
+                disabled={createMutation.isPending || submitMutation.isPending}
+                onClick={() => void handleCreate(false)}
+              >
+                Lưu nháp
+              </button>
+              <button
+                type="button"
+                className="btn btn-filled"
+                disabled={createMutation.isPending || submitMutation.isPending}
+                onClick={() => void handleCreate(true)}
+              >
+                Lưu & gửi duyệt
+              </button>
+            </div>
+          </>
+        )}
+      >
+        <div className="space-y-3 modal-form-bordered defect-create-form">
+          <div className="rounded-lg border border-[var(--md-outline-variant)] bg-[var(--md-surface-container-low)] px-3 py-2 text-xs text-[var(--md-on-surface-variant)] flex gap-2">
+            <AlertTriangle size={14} className="shrink-0 mt-0.5" />
+            <span>
+              Phiếu HL không cộng tồn. Duyệt sẽ tăng SL lỗi trên PO/KHMH và giảm SL còn lại.
+              Dòng đang trên NK chờ duyệt/đã nhận không chọn được.
+            </span>
+          </div>
+          <div className="defect-create-form__meta">
+            <FormField label="Kho dự án" required>
+              <ProjectWarehouseSelect
+                projects={projects}
+                frozenByProjectCode={frozenByProjectCode}
+                value={projectCode}
+                className="form-input"
+                onChange={code => {
+                  setProjectCode(code);
+                  setSelectedPoCode('');
+                  setLineDrafts({});
+                }}
+                placeholder="— Chọn kho dự án —"
+              />
+            </FormField>
+            <FormField
+              label="Phiếu PO"
+              required
+              error={
+                projectCode && !purchaseOrdersQuery.isLoading && poOptions.length === 0
+                  ? 'Dự án này chưa có PO đã đặt NCC còn hàng để ghi lỗi.'
+                  : undefined
+              }
+            >
+              <select
+                className="form-input"
+                value={selectedPoCode}
+                disabled={!projectCode || purchaseOrdersQuery.isLoading}
+                onChange={e => setSelectedPoCode(e.target.value)}
+              >
+                <option value="">
+                  {!projectCode
+                    ? 'Chọn kho dự án trước'
+                    : purchaseOrdersQuery.isLoading
+                      ? 'Đang tải PO…'
+                      : '— Chọn PO đã đặt NCC —'}
+                </option>
+                {poOptions.map(po => (
+                  <option key={po.code} value={po.code}>
+                    {po.code} · {po.supplierName || 'NCC'} · {po.planCode}
+                  </option>
+                ))}
+              </select>
+            </FormField>
+          </div>
+
+          {!projectCode ? (
+            <p className="text-xs text-[var(--md-on-surface-variant)]">Chọn kho dự án trước.</p>
+          ) : !selectedPoCode ? (
+            <p className="text-xs text-[var(--md-on-surface-variant)]">Chọn PO để hiện mặt hàng — tick dòng cần ghi lỗi.</p>
+          ) : previewQuery.isLoading ? (
+            <p className="text-xs">Đang tải dòng PO…</p>
+          ) : (
+            <div className="overflow-x-auto table-scroll">
+              <table className="form-table import-items-table import-items-table--po-select import-items-table--defect-select text-xs">
+                <thead>
+                  <tr>
+                    <th className="table-header-cell text-center w-10" />
+                    <th className="table-header-cell text-center">Mặt hàng</th>
+                    <th className="table-header-cell text-center">Đặt</th>
+                    <th className="table-header-cell text-center">Đã nhận</th>
+                    <th className="table-header-cell text-center">Đã lỗi</th>
+                    <th className="table-header-cell text-center">Chờ NK</th>
+                    <th className="table-header-cell text-center">Còn lại</th>
+                    <th className="table-header-cell text-center">SL lỗi</th>
+                    <th className="table-header-cell text-center">Lý do dòng</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {previewLines.length === 0 ? (
+                    <tr>
+                      <td colSpan={9}>
+                        <EmptyState message="PO không còn SL để ghi lỗi." />
+                      </td>
+                    </tr>
+                  ) : (
+                    previewLines.map(line => {
+                      const draft = lineDrafts[line.poItemId] ?? {
+                        selected: false,
+                        qty: '0',
+                        lineReason: '',
+                      };
+                      return (
+                        <tr key={line.poItemId} className="table-row">
+                          <td className="table-cell text-center">
+                            <input
+                              type="checkbox"
+                              checked={draft.selected}
+                              disabled={line.available <= 0}
+                              onChange={e => {
+                                const selected = e.target.checked;
+                                setLineDrafts(prev => ({
+                                  ...prev,
+                                  [line.poItemId]: {
+                                    ...draft,
+                                    selected,
+                                    qty: selected
+                                      ? (Number(draft.qty) > 0 ? draft.qty : String(line.available))
+                                      : draft.qty,
+                                  },
+                                }));
+                              }}
+                              aria-label={`Chọn ${line.name}`}
+                            />
+                          </td>
+                          <td className="table-cell">
+                            <div className="font-medium">{line.name}</div>
+                            <div className="text-[10px] text-[var(--md-on-surface-variant)]">
+                              {[line.materialCode, line.unit].filter(Boolean).join(' · ') || '—'}
+                            </div>
+                          </td>
+                          <td className="table-cell text-center tabular-nums">{line.ordered}</td>
+                          <td className="table-cell text-center tabular-nums">{line.received}</td>
+                          <td className="table-cell text-center tabular-nums">{line.defected}</td>
+                          <td className="table-cell text-center tabular-nums">{line.reservedPendingNk}</td>
+                          <td className="table-cell text-center tabular-nums font-semibold">{line.available}</td>
+                          <td className="table-cell text-center defect-qty-cell">
+                            {draft.selected ? (
+                              <QtyStepper
+                                value={draft.qty}
+                                max={line.available}
+                                onChange={qty =>
+                                  setLineDrafts(prev => ({
+                                    ...prev,
+                                    [line.poItemId]: { ...draft, qty },
+                                  }))
+                                }
+                              />
+                            ) : (
+                              '—'
+                            )}
+                          </td>
+                          <td className="table-cell defect-reason-cell">
+                            {draft.selected ? (
+                              <textarea
+                                className="form-input form-input-sm defect-line-reason"
+                                rows={2}
+                                value={draft.lineReason}
+                                onChange={e =>
+                                  setLineDrafts(prev => ({
+                                    ...prev,
+                                    [line.poItemId]: { ...draft, lineReason: e.target.value },
+                                  }))
+                                }
+                              />
+                            ) : (
+                              <span className="text-[var(--md-on-surface-variant)]">—</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="pending-evidence">
+              <div className="pending-evidence__title">Ảnh hàng lỗi</div>
+              <p className="pending-evidence__hint">Gửi duyệt bắt buộc ≥1 ảnh.</p>
+              <button
+                type="button"
+                className="pending-evidence__zone"
+                onClick={() => createPhotoInputRef.current?.click()}
+              >
+                <Upload size={20} aria-hidden />
+                <span className="pending-evidence__zone-hint">Chọn ảnh (có thể chọn nhiều)</span>
+              </button>
+              <input
+                ref={createPhotoInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="pending-evidence__input"
+                onChange={e => {
+                  const files = Array.from(e.target.files ?? []);
+                  if (files.length) setCreatePhotoFiles(prev => [...prev, ...files]);
+                  e.target.value = '';
+                }}
+              />
+              <PendingPhotoGrid
+                files={createPhotoFiles}
+                onRemove={idx => setCreatePhotoFiles(prev => prev.filter((_, i) => i !== idx))}
+              />
+            </div>
+
+            <div className="pending-evidence">
+              <div className="pending-evidence__title">File chứng từ</div>
+              <p className="pending-evidence__hint">PDF / Word / Excel — tuỳ chọn.</p>
+              <button
+                type="button"
+                className="pending-evidence__zone"
+                onClick={() => createDocInputRef.current?.click()}
+              >
+                <FileText size={20} aria-hidden />
+                <span className="pending-evidence__zone-hint">Chọn file PDF / Word / Excel</span>
+              </button>
+              <input
+                ref={createDocInputRef}
+                type="file"
+                accept=".pdf,.doc,.docx,.xls,.xlsx,application/pdf"
+                multiple
+                className="pending-evidence__input"
+                onChange={e => {
+                  const files = Array.from(e.target.files ?? []);
+                  if (files.length) setCreateDocFiles(prev => [...prev, ...files]);
+                  e.target.value = '';
+                }}
+              />
+              <PendingDocList
+                files={createDocFiles}
+                onRemove={idx => setCreateDocFiles(prev => prev.filter((_, i) => i !== idx))}
+              />
+            </div>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={showDetail && Boolean(selected)}
+        onClose={() => {
+          setShowDetail(false);
+          setSelected(null);
+        }}
+        title={selected ? `Phiếu hàng lỗi — ${selected.ticketCode}` : 'Chi tiết'}
+        size="full"
+        footer={selected ? (
+          <>
+            <button type="button" className="btn btn-outline" onClick={() => setShowDetail(false)}>Đóng</button>
+            <div className="md-dialog__footer-actions flex items-center gap-2 flex-wrap">
+              <Badge status={toStatusKey(selected.status)} label={statusLabel(selected.status)} />
+              <span className="text-sm text-[var(--md-on-surface-variant)]">{selected.poCode}</span>
+              {selected.status === 'draft' ? (
+                <PermissionGate permission="wms.defects.create">
+                  <button
+                    type="button"
+                    className="btn btn-filled"
+                    disabled={submitMutation.isPending}
+                    onClick={async () => {
+                      try {
+                        const updated = await submitMutation.mutateAsync(selected.ticketCode);
+                        setSelected(updated);
+                        showToast('success', 'Đã gửi duyệt.');
+                      } catch (err) {
+                        showToast('error', getApiErrorMessage(err, 'Không gửi duyệt được'));
+                      }
+                    }}
+                  >
+                    Gửi duyệt
+                  </button>
+                </PermissionGate>
+              ) : null}
+              {selected.status === 'pending' ? (
+                <PermissionGate permission="wms.defects.approve">
+                  <button
+                    type="button"
+                    className="btn btn-filled"
+                    disabled={approveMutation.isPending}
+                    onClick={async () => {
+                      try {
+                        const updated = await approveMutation.mutateAsync(selected.ticketCode);
+                        setSelected(updated);
+                        showToast('success', 'Đã duyệt — đã cập nhật PO/KHMH, không cộng tồn.');
+                      } catch (err) {
+                        showToast('error', getApiErrorMessage(err, 'Không duyệt được'));
+                      }
+                    }}
+                  >
+                    Duyệt
+                  </button>
+                </PermissionGate>
+              ) : null}
+            </div>
+          </>
+        ) : null}
+      >
+        {selected ? (
+          <div className="space-y-3 text-sm defect-detail-form">
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div>PO: <strong>{selected.poCode}</strong></div>
+              <div>KHMH: <strong>{selected.planCode || '—'}</strong></div>
+              <div>Dự án: <strong>{selected.projectCode || '—'}</strong></div>
+              <div>NCC: <strong>{selected.supplierName || '—'}</strong></div>
+            </div>
+
+            <div>
+              <div className="text-xs font-bold uppercase text-[var(--md-on-surface-variant)] mb-1">Dòng hàng</div>
+              <table className="form-table text-xs w-full">
+                <thead>
+                  <tr>
+                    <th className="table-header-cell">Mặt hàng</th>
+                    <th className="table-header-cell text-center">SL lỗi</th>
+                    <th className="table-header-cell">Lý do dòng</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {selected.items.map(it => (
+                    <tr key={it.id}>
+                      <td className="table-cell">
+                        <div className="font-medium">{it.name}</div>
+                        <div className="text-[10px] text-[var(--md-on-surface-variant)]">
+                          {[it.materialCode, it.unit].filter(Boolean).join(' · ') || '—'}
+                        </div>
+                      </td>
+                      <td className="table-cell text-center tabular-nums">{it.quantity}</td>
+                      <td className="table-cell whitespace-pre-wrap">{it.lineReason || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="pending-evidence">
+                <div className="pending-evidence__title">Ảnh hàng lỗi</div>
+                {canEditEvidence ? (
+                  <>
+                    <button
+                      type="button"
+                      className={`pending-evidence__zone${uploading ? ' is-disabled' : ''}`}
+                      disabled={uploading}
+                      onClick={() => detailPhotoInputRef.current?.click()}
+                    >
+                      <Upload size={20} aria-hidden />
+                      <span className="pending-evidence__zone-hint">
+                        {uploading ? 'Đang tải…' : 'Chọn ảnh (có thể chọn nhiều)'}
+                      </span>
+                    </button>
+                    <input
+                      ref={detailPhotoInputRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="pending-evidence__input"
+                      disabled={uploading}
+                      onChange={async e => {
+                        const files = Array.from(e.target.files ?? []);
+                        e.target.value = '';
+                        if (files.length === 0) return;
+                        setUploading(true);
+                        try {
+                          for (const file of files) {
+                            await defectsService.uploadAttachment(selected.ticketCode, file, 'photo');
+                          }
+                          await reloadSelected();
+                          showToast('success', 'Đã thêm ảnh.');
+                        } catch (err) {
+                          showToast('error', getApiErrorMessage(err, 'Upload thất bại'));
+                        } finally {
+                          setUploading(false);
+                        }
+                      }}
+                    />
+                  </>
+                ) : null}
+                <SavedDefectPhotoGrid
+                  ticketCode={selected.ticketCode}
+                  attachments={selected.attachments}
+                  canEdit={Boolean(canEditEvidence)}
+                  onDelete={async attachmentId => {
+                    try {
+                      await defectsService.deleteAttachment(selected.ticketCode, attachmentId);
+                      await reloadSelected();
+                    } catch (err) {
+                      showToast('error', getApiErrorMessage(err, 'Không xóa được'));
+                    }
+                  }}
+                />
+              </div>
+
+              <div className="pending-evidence">
+                <div className="pending-evidence__title">File chứng từ</div>
+                {canEditEvidence ? (
+                  <>
+                    <button
+                      type="button"
+                      className={`pending-evidence__zone${uploading ? ' is-disabled' : ''}`}
+                      disabled={uploading}
+                      onClick={() => detailDocInputRef.current?.click()}
+                    >
+                      <FileText size={20} aria-hidden />
+                      <span className="pending-evidence__zone-hint">
+                        {uploading ? 'Đang tải…' : 'Chọn file PDF / Word / Excel'}
+                      </span>
+                    </button>
+                    <input
+                      ref={detailDocInputRef}
+                      type="file"
+                      accept=".pdf,.doc,.docx,.xls,.xlsx,application/pdf"
+                      multiple
+                      className="pending-evidence__input"
+                      disabled={uploading}
+                      onChange={async e => {
+                        const files = Array.from(e.target.files ?? []);
+                        e.target.value = '';
+                        if (files.length === 0) return;
+                        setUploading(true);
+                        try {
+                          for (const file of files) {
+                            await defectsService.uploadAttachment(selected.ticketCode, file, 'document');
+                          }
+                          await reloadSelected();
+                          showToast('success', 'Đã thêm file.');
+                        } catch (err) {
+                          showToast('error', getApiErrorMessage(err, 'Upload thất bại'));
+                        } finally {
+                          setUploading(false);
+                        }
+                      }}
+                    />
+                  </>
+                ) : null}
+                <SavedDefectDocList
+                  ticketCode={selected.ticketCode}
+                  attachments={selected.attachments}
+                  canEdit={Boolean(canEditEvidence)}
+                  onDelete={async attachmentId => {
+                    try {
+                      await defectsService.deleteAttachment(selected.ticketCode, attachmentId);
+                      await reloadSelected();
+                    } catch (err) {
+                      showToast('error', getApiErrorMessage(err, 'Không xóa được'));
+                    }
+                  }}
+                />
+              </div>
+            </div>
+            {selected.status === 'pending' ? (
+              <p className="text-[11px] text-[var(--md-on-surface-variant)]">
+                Duyệt cần lý do trên từng dòng + ít nhất 1 ảnh. Duyệt xong chỉ cập nhật PO/KHMH — không cộng tồn kho.
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+      </Modal>
+
+      <ConfirmDialog
+        isOpen={Boolean(deleteTarget)}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => void handleConfirmDelete()}
+        title="Xóa phiếu hàng lỗi"
+        message={
+          deleteTarget
+            ? `Xóa phiếu nháp ${deleteTarget.ticketCode}? Thao tác không hoàn tác.`
+            : ''
+        }
+        confirmLabel="Xóa phiếu"
+        variant="danger"
+        isLoading={deleteMutation.isPending}
+      />
+    </div>
+  );
+}

@@ -39,7 +39,8 @@ export default function SupplierAutocomplete({
   const listId = useId();
 
   const selected = useMemo(() => findSupplierByName(suppliers, value), [suppliers, value]);
-  const closedLabel = selected?.supplierName ?? '';
+  /** Cho phép tên NCC tự do (import Excel) — không khớp danh mục vẫn hiện. */
+  const closedLabel = selected?.supplierName || value;
   const inputValue = open ? draft : closedLabel;
 
   const filtered = useMemo(() => {
@@ -83,6 +84,11 @@ export default function SupplierAutocomplete({
     setHighlight(selectedIdx >= 0 ? selectedIdx : 0);
     setOpen(true);
     updatePanelPosition();
+  };
+
+  const commitFreeText = (raw: string) => {
+    const next = raw.trim();
+    if (next !== value.trim()) onChange(next);
   };
 
   const selectSupplier = (supplier: SupplierApiDto) => {
@@ -131,11 +137,12 @@ export default function SupplierAutocomplete({
       const target = e.target as Node;
       if (inputRef.current?.contains(target)) return;
       if (panelRef.current?.contains(target)) return;
+      commitFreeText(draft);
       setOpen(false);
     };
     document.addEventListener('mousedown', onPointerDown);
     return () => document.removeEventListener('mousedown', onPointerDown);
-  }, [open]);
+  }, [open, draft, value]);
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'ArrowDown') {
@@ -150,9 +157,14 @@ export default function SupplierAutocomplete({
       setHighlight(i => Math.max(i - 1, 0));
       return;
     }
-    if (e.key === 'Enter' && open && filtered[safeHighlight]) {
+    if (e.key === 'Enter' && open) {
       e.preventDefault();
-      selectSupplier(filtered[safeHighlight]);
+      if (filtered[safeHighlight]) {
+        selectSupplier(filtered[safeHighlight]);
+      } else if (draft.trim()) {
+        commitFreeText(draft);
+        setOpen(false);
+      }
       return;
     }
     if (e.key === 'Escape') {
@@ -204,7 +216,7 @@ export default function SupplierAutocomplete({
       className={`${panelClass} search-autocomplete__empty`}
       style={panelStyle}
     >
-      Không có NCC khớp — thêm mới tại Thiết lập → Danh mục NCC.
+      Không có NCC khớp — có thể giữ tên đã gõ, hoặc thêm mới tại Thiết lập → Danh mục NCC.
     </div>
   ) : null;
 
@@ -227,12 +239,15 @@ export default function SupplierAutocomplete({
             setDraft(next);
             setFilterQuery(next);
             setHighlight(0);
-            if (!next.trim()) onChange('');
+            onChange(next);
             setOpen(true);
           }}
           onFocus={() => {
             openPanel();
             requestAnimationFrame(() => inputRef.current?.select());
+          }}
+          onBlur={() => {
+            commitFreeText(draft);
           }}
           onKeyDown={onKeyDown}
         />

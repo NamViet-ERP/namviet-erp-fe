@@ -55,6 +55,33 @@ describe('routePermissions', () => {
     expect(getRequiredPermissionsForPath('/warehouse/material-return')).toEqual([
       'wms.export_returns.view:all',
     ]);
+    expect(getRequiredPermissionsForPath('/warehouse/defects')).toEqual([
+      'wms.defects.view:all',
+    ]);
+  });
+
+  it('maps warehouse arrival plans route', () => {
+    expect(getRequiredPermissionsForPath('/warehouse/arrival-plans')).toEqual([
+      'purchasing.arrival_plans.view',
+    ]);
+  });
+
+  it('maps purchasing routes to permission keys', () => {
+    expect(getRequiredPermissionsForPath('/purchasing/dashboard')).toEqual(['purchasing.dashboard.view']);
+    expect(getRequiredPermissionsForPath('/purchasing/plans')).toEqual(['purchasing.plans.view']);
+    expect(getRequiredPermissionsForPath('/purchasing/plans/KH-001')).toEqual(['purchasing.plans.view']);
+    expect(getRequiredPermissionsForPath('/purchasing/orders')).toEqual(['purchasing.orders.view']);
+    expect(getRequiredPermissionsForPath('/purchasing/orders/new')).toEqual([
+      'purchasing.orders.create',
+      'purchasing.orders.view',
+    ]);
+    expect(getRequiredPermissionsForPath('/purchasing/orders/PO-001')).toEqual(['purchasing.orders.view']);
+    expect(getRequiredPermissionsForPath('/purchasing/payments')).toEqual(['purchasing.payments.view']);
+    expect(getRequiredPermissionsForPath('/purchasing/payments/new')).toEqual([
+      'purchasing.payments.create',
+      'purchasing.payments.view',
+    ]);
+    expect(getRequiredPermissionsForPath('/purchasing/payments/DNTT-0001')).toEqual(['purchasing.payments.view']);
   });
 });
 

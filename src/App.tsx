@@ -7,9 +7,7 @@ import { getDefaultRoute } from './utils/getDefaultRoute';
 import { getActiveRole } from './lib/getActiveRole';
 import * as Pages from './routes/lazyPages';
 
-const DevOnlyRoutes = import.meta.env.DEV
-  ? lazy(() => import('./routes/DevOnlyRoutes'))
-  : null;
+const SuppliersModuleRoutes = lazy(() => import('./routes/DevOnlyRoutes'));
 
 export default function App() {
   const role = getActiveRole();
@@ -33,17 +31,18 @@ export default function App() {
             <Route path="/warehouse/materials" element={<Pages.MaterialsPage />} />
             <Route path="/warehouse/projects" element={<Pages.ProjectsPage />} />
             <Route path="/warehouse/projects/:code" element={<Pages.ProjectDetailPage />} />
-            <Route path="/warehouse/suppliers" element={<Navigate to="/warehouse/settings/suppliers" replace />} />
+            <Route path="/warehouse/arrival-plans" element={<Pages.ArrivalPlansPage />} />
+            <Route path="/warehouse/suppliers" element={<Navigate to="/suppliers/list" replace />} />
             <Route path="/warehouse/transfer" element={<Pages.TransferListPage />} />
             <Route path="/warehouse/material-return" element={<Pages.MaterialReturnPage />} />
+            <Route path="/warehouse/defects" element={<Pages.DefectsPage />} />
             <Route path="/warehouse/import" element={<Pages.ImportListPage />} />
             <Route path="/warehouse/export" element={<Pages.ExportListPage />} />
             <Route path="/warehouse/reports" element={<Pages.WarehouseReportsPage />} />
             <Route path="/warehouse/settings" element={<Navigate to="/warehouse/settings/material-categories" replace />} />
             <Route path="/warehouse/settings/material-categories" element={<Pages.SettingsPage />} />
             <Route path="/warehouse/settings/material-units" element={<Pages.SettingsPage />} />
-            <Route path="/warehouse/settings/suppliers" element={<Pages.SettingsPage />} />
-            <Route path="/warehouse/settings/price-books" element={<Pages.SettingsPage />} />
+            <Route path="/warehouse/settings/suppliers" element={<Navigate to="/suppliers/list" replace />} />
 
             <Route path="/stocktake/list" element={<Pages.StocktakeListPage />} />
             <Route path="/stocktake/settings" element={<Pages.StocktakeSettingsPage />} />
@@ -82,12 +81,20 @@ export default function App() {
             <Route path="/technical/cskh/birthdays" element={<Pages.CskhBirthdaysPage />} />
             <Route path="/technical/cskh/settings" element={<Pages.CskhSettingsPage />} />
 
-            {DevOnlyRoutes && (
-              <>
-                <Route path="/purchasing/*" element={<DevOnlyRoutes module="purchasing" />} />
-                <Route path="/suppliers/*" element={<DevOnlyRoutes module="suppliers" />} />
-              </>
-            )}
+            <Route path="/purchasing" element={<Navigate to="/purchasing/dashboard" replace />} />
+            <Route path="/purchasing/dashboard" element={<Pages.PurchasingDashboardPage />} />
+            <Route path="/purchasing/plans" element={<Pages.PurchasePlansPage />} />
+            <Route path="/purchasing/plans/:code" element={<Pages.PurchasePlanDetailPage />} />
+            <Route path="/purchasing/orders" element={<Pages.PurchaseOrdersPage />} />
+            <Route path="/purchasing/orders/new" element={<Pages.PurchaseOrderDetailPage />} />
+            <Route path="/purchasing/orders/:code" element={<Pages.PurchaseOrderDetailPage />} />
+            <Route path="/purchasing/payments" element={<Pages.PurchasePaymentsPage />} />
+            <Route path="/purchasing/payments/new" element={<Pages.PurchasePaymentDetailPage />} />
+            <Route path="/purchasing/payments/:code" element={<Pages.PurchasePaymentDetailPage />} />
+            <Route path="/purchasing/suppliers" element={<Navigate to="/suppliers/list" replace />} />
+            <Route path="/purchasing/settings" element={<Pages.PurchasingSettingsPage />} />
+
+            <Route path="/suppliers/*" element={<SuppliersModuleRoutes />} />
 
             <Route path="*" element={<Navigate to="/dashboard" replace />} />          </Route>
         </Routes>

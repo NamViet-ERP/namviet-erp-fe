@@ -29,7 +29,9 @@ export interface Department {
 
 /**
  * Portal + Header mega-menu — chỉ phân hệ đã có.
- * MUA HÀNG: 2 mục như ERP cũ (NCC + Mua hàng); vào mỗi mục = module/sidebar riêng.
+ * MUA HÀNG (1 card): 2 mục → vào module/sidebar riêng
+ *   - Nhà cung cấp → /suppliers/dashboard (rồi sidebar: Dashboard, Nhóm, NCC, Đánh giá, Thiết lập)
+ *   - Mua hàng → /purchasing (KHMH, Đơn hàng)
  * Thứ tự: Mua hàng → Kỹ thuật → Kho → HRM → Admin
  */
 export const departments: Department[] = [
@@ -47,7 +49,7 @@ export const departments: Department[] = [
         label: 'Mua hàng',
         icon: ShoppingCart,
         path: '/purchasing/plans',
-        permission: ['purchasing.plans.view', 'purchasing.dashboard.view'],
+        permission: 'purchasing.plans.view',
       },
     ],
   },

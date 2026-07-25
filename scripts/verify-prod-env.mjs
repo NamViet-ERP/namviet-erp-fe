@@ -46,11 +46,16 @@ if (mock === 'true' || mock === '1' || mock === 'yes') {
 }
 
 const apiBase = (process.env.VITE_API_BASE_URL ?? fileEnv.VITE_API_BASE_URL ?? '').trim();
-if (!apiBase) {
+// Empty = same-origin (reverse proxy). Absolute URL also allowed.
+if (apiBase && !/^https?:\/\//i.test(apiBase) && !apiBase.startsWith('/')) {
   console.error(
-    '[verify-prod-env] FAIL: VITE_API_BASE_URL is required for production builds.',
+    '[verify-prod-env] FAIL: VITE_API_BASE_URL must be empty (same-origin), an absolute http(s) URL, or a path.',
   );
   process.exit(1);
 }
 
-console.log('[verify-prod-env] OK — mock disabled, API base URL set.');
+console.log(
+  apiBase
+    ? `[verify-prod-env] OK — mock disabled, API base URL set (${apiBase}).`
+    : '[verify-prod-env] OK — mock disabled, same-origin API (empty VITE_API_BASE_URL).',
+);
