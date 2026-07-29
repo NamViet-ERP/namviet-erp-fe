@@ -1,4 +1,5 @@
-import type { PurchasingTone } from '../../data/purchasingMock';
+/** Tone tokens for purchasing/supplier status chips (UI-only, not API wire). */
+export type PurchasingTone = 'success' | 'warning' | 'danger' | 'neutral' | 'primary';
 
 const TONE_CLASS: Record<PurchasingTone, string> = {
   success: 'hrm-badge hrm-badge--success',

@@ -7,10 +7,8 @@ import {
   ShieldCheck,
   UserCog,
   ClipboardCheck,
-  Wrench,
   ShoppingCart,
   Building2,
-  Headphones,
 } from 'lucide-react';
 
 export interface DepartmentSubItem {
@@ -28,11 +26,10 @@ export interface Department {
 }
 
 /**
- * Portal + Header mega-menu — chỉ phân hệ đã có.
- * MUA HÀNG (1 card): 2 mục → vào module/sidebar riêng
- *   - Nhà cung cấp → /suppliers/dashboard (rồi sidebar: Dashboard, Nhóm, NCC, Đánh giá, Thiết lập)
- *   - Mua hàng → /purchasing (KHMH, Đơn hàng)
- * Thứ tự: Mua hàng → Kỹ thuật → Kho → HRM → Admin
+ * Portal + Header mega-menu — chỉ phân hệ đã ship (có API).
+ * MUA HÀNG: Nhà cung cấp + Mua hàng
+ * KỸ THUẬT / CSKH: chưa ship — không đưa vào menu (xem docs nội bộ).
+ * Thứ tự: Mua hàng → Kho → HRM → Admin
  */
 export const departments: Department[] = [
   {
@@ -48,20 +45,8 @@ export const departments: Department[] = [
       {
         label: 'Mua hàng',
         icon: ShoppingCart,
-        path: '/purchasing/plans',
-        permission: 'purchasing.plans.view',
-      },
-    ],
-  },
-  {
-    title: 'KỸ THUẬT',
-    icon: Wrench,
-    items: [
-      {
-        label: 'Chăm sóc khách hàng',
-        icon: Headphones,
-        path: '/technical/cskh/clients',
-        permission: 'tech.cskh.view',
+        path: '/purchasing/dashboard',
+        permission: 'purchasing.dashboard.view',
       },
     ],
   },

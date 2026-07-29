@@ -4,6 +4,10 @@ import type { CreateSystemUserDto, SystemUser, SystemUserRole } from '../types/s
 
 export type { CreateSystemUserDto, SystemUser, SystemUserRole };
 
+/**
+ * Session mirror for UI only (menu / labels).
+ * Authorization is always enforced by the API (JWT + permissions) — never trust localStorage alone.
+ */
 const SESSION_USER_KEY = 'nv-session-user';
 const ACCOUNT_ENABLED_PREFIX = 'nv-user-enabled-';
 export const AUTH_CHANGED_EVENT = 'nv-auth-changed';
