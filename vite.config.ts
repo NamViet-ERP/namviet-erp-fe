@@ -52,6 +52,16 @@ export default defineConfig(({ mode }) => {
     // sub-path (e.g. behind a .NET Core / IIS virtual directory).
     base: env.VITE_BASE_PATH || '/',
     plugins: [react()],
+    define: {
+      // Shell/playwright set VITE_E2E=true; force client replacement (loadEnv alone can miss it).
+      'import.meta.env.VITE_E2E': JSON.stringify(
+        env.VITE_E2E === 'true' || process.env.VITE_E2E === 'true' ? 'true' : '',
+      ),
+    },
+    // recharts peer-depends on react-is; force Vite to prebundle it so dashboard charts don't break.
+    optimizeDeps: {
+      include: ['react-is', 'recharts'],
+    },
     test: {
       globals: true,
       environment: 'jsdom',
