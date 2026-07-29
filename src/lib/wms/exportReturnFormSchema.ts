@@ -4,6 +4,7 @@ export type ExportReturnFormFieldErrors = {
   projectCode?: string;
   sourceExportId?: string;
   lines?: string;
+  note?: string;
 };
 
 export function getExportReturnFormFieldErrors(
@@ -12,12 +13,14 @@ export function getExportReturnFormFieldErrors(
   lines: { sku: string; returnQty: string; remainingQty: number }[],
   qtyOverflow?: boolean,
   frozenByProjectCode?: FrozenProjectMap,
+  note?: string,
 ): ExportReturnFormFieldErrors {
   const errors: ExportReturnFormFieldErrors = {};
   const projectFreezeError = getFrozenProjectError(frozenByProjectCode, projectCode);
   if (!projectCode.trim()) errors.projectCode = 'Vui lòng chọn kho dự án';
   else if (projectFreezeError) errors.projectCode = projectFreezeError;
   if (!sourceExportId.trim()) errors.sourceExportId = 'Vui lòng chọn phiếu xuất nguồn';
+  if (note !== undefined && !note.trim()) errors.note = 'Vui lòng nhập lý do hoàn trả';
 
   const validLines = lines.filter(l => l.sku && Number(l.returnQty) > 0);
   if (validLines.length === 0) {

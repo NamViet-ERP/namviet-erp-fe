@@ -24,7 +24,7 @@ import {
   useSubmitExportReturn,
 } from '../../hooks/useExportReturns';
 import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
-import type { CreateExportReturnDto } from '../../services/exportReturnsService';
+import { exportReturnsService, type CreateExportReturnDto } from '../../services/exportReturnsService';
 import type { ExportReturn } from '../../types';
 import VoucherDateFilter from '../../components/warehouse/VoucherDateFilter';
 import ExportReturnTable from './materialReturn/ExportReturnTable';
@@ -58,6 +58,7 @@ function MaterialReturnPage({ initialProjectCode }: MaterialReturnPageProps) {
   const [sourceExportId, setSourceExportId] = useState('');
   const [note, setNote] = useState('');
   const [formLines, setFormLines] = useState<ExportReturnFormLine[]>([]);
+  const [createPhotoFiles, setCreatePhotoFiles] = useState<File[]>([]);
   const [createErrors, setCreateErrors] = useState<ReturnType<typeof getExportReturnFormFieldErrors>>({});
 
   const { data: projectsPage } = useProjects({ pageSize: 100, status: 'Active' });
@@ -143,10 +144,11 @@ function MaterialReturnPage({ initialProjectCode }: MaterialReturnPageProps) {
     setSourceExportId('');
     setNote('');
     setFormLines([]);
+    setCreatePhotoFiles([]);
     setCreateErrors({});
   };
 
-  const buildDto = (status: 'draft' | 'pending'): CreateExportReturnDto | null => {
+  const buildDto = (status: 'draft' | 'pending', requireNote: boolean): CreateExportReturnDto | null => {
     const validLines = formLines.filter(l => l.sku && Number(l.returnQty) > 0);
     const qtyOverflow = validLines.some(l => Number(l.returnQty) > l.remainingQty);
     const fieldErrors = getExportReturnFormFieldErrors(
@@ -159,6 +161,7 @@ function MaterialReturnPage({ initialProjectCode }: MaterialReturnPageProps) {
       })),
       qtyOverflow,
       frozenByProjectCode,
+      requireNote ? note : undefined,
     );
     if (Object.keys(fieldErrors).length > 0) {
       setCreateErrors(fieldErrors);
@@ -185,16 +188,23 @@ function MaterialReturnPage({ initialProjectCode }: MaterialReturnPageProps) {
   };
 
   const handleCreate = async (status: 'draft' | 'pending') => {
-    const dto = buildDto(status);
+    const dto = buildDto('draft', true);
     if (!dto) return;
+    if (status === 'pending' && createPhotoFiles.length === 0) {
+      showToast('error', 'Chốt hoàn trả dự kiến cần ít nhất 1 ảnh minh chứng.');
+      return;
+    }
     try {
       const created = await createMutation.mutateAsync(dto);
-      showToast(
-        'success',
-        status === 'draft'
-          ? `Phiếu nháp ${created.voucherCode} — chưa chốt dự kiến.`
-          : `Phiếu ${created.voucherCode} — hoàn trả dự kiến, chờ duyệt thực tế.`,
-      );
+      for (const file of createPhotoFiles) {
+        await exportReturnsService.uploadAttachment(created.id, file, 'photo');
+      }
+      if (status === 'pending') {
+        await submitMutation.mutateAsync(created.id);
+        showToast('success', `Phiếu ${created.voucherCode} — hoàn trả dự kiến, chờ duyệt thực tế.`);
+      } else {
+        showToast('success', `Phiếu nháp ${created.voucherCode} — chưa chốt dự kiến.`);
+      }
       setShowCreate(false);
       resetForm();
     } catch (err) {
@@ -205,7 +215,7 @@ function MaterialReturnPage({ initialProjectCode }: MaterialReturnPageProps) {
   const handleUpdate = async () => {
     if (!editing) return;
     const status = editing.status === 'draft' ? 'draft' : 'pending';
-    const dto = buildDto(status);
+    const dto = buildDto(status, true);
     if (!dto) return;
     try {
       await updateMutation.mutateAsync({ id: editing.id, dto: { ...dto, status: editing.status } });
@@ -335,6 +345,8 @@ function MaterialReturnPage({ initialProjectCode }: MaterialReturnPageProps) {
         onLinesChange={setFormLines}
         linesLoading={linesLoading}
         errors={createErrors}
+        photoFiles={createPhotoFiles}
+        onPhotoFilesChange={setCreatePhotoFiles}
         onCreate={status => void handleCreate(status)}
         onSave={() => void handleUpdate()}
         editVoucher={editing ? { code: editing.voucherCode } : null}
@@ -348,6 +360,11 @@ function MaterialReturnPage({ initialProjectCode }: MaterialReturnPageProps) {
         isApprovePending={approveMutation.isPending}
         onSubmit={row => void handleSubmit(row)}
         onApprove={row => void handleApprove(row)}
+        onReload={async () => {
+          if (!selected) return;
+          const fresh = await exportReturnsService.getById(selected.id);
+          setSelected(fresh);
+        }}
       />
     </div>
   );

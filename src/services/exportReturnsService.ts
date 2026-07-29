@@ -20,6 +20,10 @@ export const exportReturnsService = {
     return apiClient.get<ExportReturn[]>(appendVoucherDateQuery(ENDPOINT, params));
   },
 
+  async getById(id: string): Promise<ExportReturn> {
+    return apiClient.get<ExportReturn>(`${ENDPOINT}/${encodeURIComponent(id)}`);
+  },
+
   async listReturnableExports(
     projectCode: string,
     excludeReturnId?: string,
@@ -52,5 +56,28 @@ export const exportReturnsService = {
 
   async submit(id: string): Promise<ExportReturn> {
     return apiClient.post<ExportReturn>(`${ENDPOINT}/${id}/submit`);
+  },
+
+  async uploadAttachment(
+    id: string,
+    file: File,
+    kind: 'photo' | 'document' = 'photo',
+  ): Promise<ExportReturn> {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('kind', kind);
+    await apiClient.postForm(`${ENDPOINT}/${encodeURIComponent(id)}/attachments`, form);
+    return this.getById(id);
+  },
+
+  async deleteAttachment(id: string, attachmentId: string): Promise<ExportReturn> {
+    await apiClient.delete<void>(`${ENDPOINT}/${encodeURIComponent(id)}/attachments/${attachmentId}`);
+    return this.getById(id);
+  },
+
+  async downloadAttachment(id: string, attachmentId: string): Promise<Blob> {
+    return apiClient.getBlob(
+      `${ENDPOINT}/${encodeURIComponent(id)}/attachments/${attachmentId}/download`,
+    );
   },
 };

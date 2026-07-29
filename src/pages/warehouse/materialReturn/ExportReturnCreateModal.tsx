@@ -1,3 +1,5 @@
+import { useRef } from 'react';
+import { Upload } from 'lucide-react';
 import Modal from '../../../components/ui/Modal';
 import FormField from '../../../components/ui/FormField';
 import QtyStepper from '../../../components/ui/QtyStepper';
@@ -8,6 +10,7 @@ import type { ExportReturnFormLine } from './exportReturnFormTypes';
 import type { ExportReturnFormFieldErrors } from '../../../lib/wms/exportReturnFormSchema';
 import { isProjectFrozen, type FrozenProjectMap } from '../../../lib/wms/stocktakeFreeze';
 import ProjectWarehouseSelect from '../../../components/warehouse/ProjectWarehouseSelect';
+import { PendingPhotoGrid } from '../../../components/warehouse/PendingLocalEvidence';
 
 interface ExportReturnCreateModalProps {
   isOpen: boolean;
@@ -27,6 +30,8 @@ interface ExportReturnCreateModalProps {
   linesLoading: boolean;
   errors?: ExportReturnFormFieldErrors;
   frozenByProjectCode: FrozenProjectMap;
+  photoFiles: File[];
+  onPhotoFilesChange: (files: File[]) => void;
   onCreate: (status: 'draft' | 'pending') => void;
   onSave?: () => void;
   editVoucher?: { code: string } | null;
@@ -50,6 +55,8 @@ export default function ExportReturnCreateModal({
   linesLoading,
   errors,
   frozenByProjectCode,
+  photoFiles,
+  onPhotoFilesChange,
   onCreate,
   onSave,
   editVoucher,
@@ -57,6 +64,7 @@ export default function ExportReturnCreateModal({
   const selectedExport = returnableExports.find(e => e.id === sourceExportId);
   const isEditing = Boolean(editVoucher);
   const submitBlocked = isProjectFrozen(frozenByProjectCode, projectCode);
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   return (
     <Modal
@@ -134,9 +142,40 @@ export default function ExportReturnCreateModal({
           )}
         </FormField>
 
-        <FormField label="Ghi chú">
+        <FormField label="Lý do hoàn trả" required error={errors?.note}>
           <textarea className="form-input" rows={2} value={note} onChange={e => onNoteChange(e.target.value)} />
         </FormField>
+
+        {!isEditing && (
+          <div className="pending-evidence">
+            <div className="pending-evidence__title">Ảnh minh chứng</div>
+            <p className="pending-evidence__hint">Chốt hoàn trả dự kiến cần ít nhất 1 ảnh.</p>
+            <button
+              type="button"
+              className="pending-evidence__zone"
+              onClick={() => photoInputRef.current?.click()}
+            >
+              <Upload size={20} aria-hidden />
+              <span className="pending-evidence__zone-hint">Chọn ảnh (có thể chọn nhiều)</span>
+            </button>
+            <input
+              ref={photoInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="pending-evidence__input"
+              onChange={e => {
+                const files = Array.from(e.target.files ?? []);
+                if (files.length) onPhotoFilesChange([...photoFiles, ...files]);
+                e.target.value = '';
+              }}
+            />
+            <PendingPhotoGrid
+              files={photoFiles}
+              onRemove={idx => onPhotoFilesChange(photoFiles.filter((_, i) => i !== idx))}
+            />
+          </div>
+        )}
 
         <div className="space-y-2">
           <div className="text-xs font-bold uppercase text-[var(--md-on-surface-variant)]">
