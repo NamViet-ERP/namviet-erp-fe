@@ -731,7 +731,9 @@ export interface paths {
             parameters: {
                 query?: {
                     daysAhead?: number;
+                    overdueLookbackDays?: number;
                     projectCode?: string;
+                    lineStatus?: string;
                 };
                 header?: never;
                 path?: never;
@@ -1917,6 +1919,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/defects/eligible-purchase-orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PoDefectEligiblePurchaseOrderDto"][];
+                        "application/json": components["schemas"]["PoDefectEligiblePurchaseOrderDto"][];
+                        "text/json": components["schemas"]["PoDefectEligiblePurchaseOrderDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/defects/{id}": {
         parameters: {
             query?: never;
@@ -2059,6 +2098,88 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/defects/from-stock/{projectCode}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectCode: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["StockDefectPreviewDto"];
+                        "application/json": components["schemas"]["StockDefectPreviewDto"];
+                        "text/json": components["schemas"]["StockDefectPreviewDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/defects/from-stock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateDefectFromStockRequest"];
+                    "text/json": components["schemas"]["CreateDefectFromStockRequest"];
+                    "application/*+json": components["schemas"]["CreateDefectFromStockRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseDefectDto"];
+                        "application/json": components["schemas"]["PurchaseDefectDto"];
+                        "text/json": components["schemas"]["PurchaseDefectDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/defects/{id}/submit": {
         parameters: {
             query?: never;
@@ -2159,6 +2280,51 @@ export interface paths {
                     "application/json": components["schemas"]["UpdateDefectReasonRequest"];
                     "text/json": components["schemas"]["UpdateDefectReasonRequest"];
                     "application/*+json": components["schemas"]["UpdateDefectReasonRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseDefectDto"];
+                        "application/json": components["schemas"]["PurchaseDefectDto"];
+                        "text/json": components["schemas"]["PurchaseDefectDto"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/defects/{id}/processing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateDefectProcessingRequest"];
+                    "text/json": components["schemas"]["UpdateDefectProcessingRequest"];
+                    "application/*+json": components["schemas"]["UpdateDefectProcessingRequest"];
                 };
             };
             responses: {
@@ -3177,6 +3343,125 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/export-returns/{id}/attachments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file?: string;
+                        kind?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ImportAttachmentDto"];
+                        "application/json": components["schemas"]["ImportAttachmentDto"];
+                        "text/json": components["schemas"]["ImportAttachmentDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/export-returns/{id}/attachments/{attachmentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    attachmentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/export-returns/{id}/attachments/{attachmentId}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    attachmentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/exports": {
         parameters: {
             query?: never;
@@ -4032,7 +4317,9 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    excludeTicketCode?: string;
+                };
                 header?: never;
                 path: {
                     poCode: string;
@@ -4142,6 +4429,17 @@ export interface paths {
                         "text/plain": components["schemas"]["ImportDto"];
                         "application/json": components["schemas"]["ImportDto"];
                         "text/json": components["schemas"]["ImportDto"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ImportBudgetExceededDto"];
+                        "application/json": components["schemas"]["ImportBudgetExceededDto"];
+                        "text/json": components["schemas"]["ImportBudgetExceededDto"];
                     };
                 };
             };
@@ -5414,7 +5712,11 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "text/plain": components["schemas"]["MaterialDtoPagedResult"];
+                        "application/json": components["schemas"]["MaterialDtoPagedResult"];
+                        "text/json": components["schemas"]["MaterialDtoPagedResult"];
+                    };
                 };
             };
         };
@@ -5472,7 +5774,11 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "text/plain": components["schemas"]["MaterialDto"];
+                        "application/json": components["schemas"]["MaterialDto"];
+                        "text/json": components["schemas"]["MaterialDto"];
+                    };
                 };
             };
         };
@@ -5868,7 +6174,11 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "text/plain": components["schemas"]["ProjectDtoPagedResult"];
+                        "application/json": components["schemas"]["ProjectDtoPagedResult"];
+                        "text/json": components["schemas"]["ProjectDtoPagedResult"];
+                    };
                 };
             };
         };
@@ -5926,7 +6236,11 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "text/plain": components["schemas"]["ProjectDto"];
+                        "application/json": components["schemas"]["ProjectDto"];
+                        "text/json": components["schemas"]["ProjectDto"];
+                    };
                 };
             };
         };
@@ -5986,7 +6300,11 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "text/plain": components["schemas"]["ProjectInventoryDto"][];
+                        "application/json": components["schemas"]["ProjectInventoryDto"][];
+                        "text/json": components["schemas"]["ProjectInventoryDto"][];
+                    };
                 };
             };
         };
@@ -6063,7 +6381,11 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "text/plain": components["schemas"]["ProjectLedgerEntryDto"][];
+                        "application/json": components["schemas"]["ProjectLedgerEntryDto"][];
+                        "text/json": components["schemas"]["ProjectLedgerEntryDto"][];
+                    };
                 };
             };
         };
@@ -6370,6 +6692,149 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/purchasing/orders/{code}/attachments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseOrderAttachmentDto"][];
+                        "application/json": components["schemas"]["PurchaseOrderAttachmentDto"][];
+                        "text/json": components["schemas"]["PurchaseOrderAttachmentDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file?: string;
+                        /** @default other */
+                        docType?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseOrderAttachmentDto"];
+                        "application/json": components["schemas"]["PurchaseOrderAttachmentDto"];
+                        "text/json": components["schemas"]["PurchaseOrderAttachmentDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/orders/{code}/attachments/{id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/orders/{code}/attachments/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/purchasing/payments": {
         parameters: {
             query?: never;
@@ -6479,6 +6944,123 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/purchasing/payments/{code}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchasePaymentDto"];
+                        "application/json": components["schemas"]["PurchasePaymentDto"];
+                        "text/json": components["schemas"]["PurchasePaymentDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/payments/{code}/pay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchasePaymentDto"];
+                        "application/json": components["schemas"]["PurchasePaymentDto"];
+                        "text/json": components["schemas"]["PurchasePaymentDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/payments/{code}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchasePaymentDto"];
+                        "application/json": components["schemas"]["PurchasePaymentDto"];
+                        "text/json": components["schemas"]["PurchasePaymentDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/purchasing/plans": {
         parameters: {
             query?: never;
@@ -6546,6 +7128,46 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/plans/variance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    planCode?: string;
+                    projectCode?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchasePlanVarianceDto"][];
+                        "application/json": components["schemas"]["PurchasePlanVarianceDto"][];
+                        "text/json": components["schemas"]["PurchasePlanVarianceDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -8057,6 +8679,628 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/warehouse/supplier-contacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    supplierId?: number;
+                    search?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierContactPagedResponse"];
+                        "application/json": components["schemas"]["SupplierContactPagedResponse"];
+                        "text/json": components["schemas"]["SupplierContactPagedResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpsertSupplierContactRequest"];
+                    "text/json": components["schemas"]["UpsertSupplierContactRequest"];
+                    "application/*+json": components["schemas"]["UpsertSupplierContactRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierContactDto"];
+                        "application/json": components["schemas"]["SupplierContactDto"];
+                        "text/json": components["schemas"]["SupplierContactDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/supplier-contacts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpsertSupplierContactRequest"];
+                    "text/json": components["schemas"]["UpsertSupplierContactRequest"];
+                    "application/*+json": components["schemas"]["UpsertSupplierContactRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierContactDto"];
+                        "application/json": components["schemas"]["SupplierContactDto"];
+                        "text/json": components["schemas"]["SupplierContactDto"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/supplier-evaluations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    supplierId?: number;
+                    period?: string;
+                    search?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierEvaluationPagedResponse"];
+                        "application/json": components["schemas"]["SupplierEvaluationPagedResponse"];
+                        "text/json": components["schemas"]["SupplierEvaluationPagedResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpsertSupplierEvaluationRequest"];
+                    "text/json": components["schemas"]["UpsertSupplierEvaluationRequest"];
+                    "application/*+json": components["schemas"]["UpsertSupplierEvaluationRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierEvaluationDto"];
+                        "application/json": components["schemas"]["SupplierEvaluationDto"];
+                        "text/json": components["schemas"]["SupplierEvaluationDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/supplier-evaluations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpsertSupplierEvaluationRequest"];
+                    "text/json": components["schemas"]["UpsertSupplierEvaluationRequest"];
+                    "application/*+json": components["schemas"]["UpsertSupplierEvaluationRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierEvaluationDto"];
+                        "application/json": components["schemas"]["SupplierEvaluationDto"];
+                        "text/json": components["schemas"]["SupplierEvaluationDto"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/supplier-groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    search?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierGroupPagedResponse"];
+                        "application/json": components["schemas"]["SupplierGroupPagedResponse"];
+                        "text/json": components["schemas"]["SupplierGroupPagedResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpsertSupplierGroupRequest"];
+                    "text/json": components["schemas"]["UpsertSupplierGroupRequest"];
+                    "application/*+json": components["schemas"]["UpsertSupplierGroupRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierGroupDto"];
+                        "application/json": components["schemas"]["SupplierGroupDto"];
+                        "text/json": components["schemas"]["SupplierGroupDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/supplier-groups/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierGroupDto"];
+                        "application/json": components["schemas"]["SupplierGroupDto"];
+                        "text/json": components["schemas"]["SupplierGroupDto"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpsertSupplierGroupRequest"];
+                    "text/json": components["schemas"]["UpsertSupplierGroupRequest"];
+                    "application/*+json": components["schemas"]["UpsertSupplierGroupRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierGroupDto"];
+                        "application/json": components["schemas"]["SupplierGroupDto"];
+                        "text/json": components["schemas"]["SupplierGroupDto"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/supplier-groups/{id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierGroupMemberDto"][];
+                        "application/json": components["schemas"]["SupplierGroupMemberDto"][];
+                        "text/json": components["schemas"]["SupplierGroupMemberDto"][];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SetSupplierGroupMembersRequest"];
+                    "text/json": components["schemas"]["SetSupplierGroupMembersRequest"];
+                    "application/*+json": components["schemas"]["SetSupplierGroupMembersRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierGroupMemberDto"][];
+                        "application/json": components["schemas"]["SupplierGroupMemberDto"][];
+                        "text/json": components["schemas"]["SupplierGroupMemberDto"][];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/supplier-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierModuleSettingsDto"];
+                        "application/json": components["schemas"]["SupplierModuleSettingsDto"];
+                        "text/json": components["schemas"]["SupplierModuleSettingsDto"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateSupplierModuleSettingsRequest"];
+                    "text/json": components["schemas"]["UpdateSupplierModuleSettingsRequest"];
+                    "application/*+json": components["schemas"]["UpdateSupplierModuleSettingsRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierModuleSettingsDto"];
+                        "application/json": components["schemas"]["SupplierModuleSettingsDto"];
+                        "text/json": components["schemas"]["SupplierModuleSettingsDto"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/suppliers/{id}/groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierGroupRefDto"][];
+                        "application/json": components["schemas"]["SupplierGroupRefDto"][];
+                        "text/json": components["schemas"]["SupplierGroupRefDto"][];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SetSupplierGroupsRequest"];
+                    "text/json": components["schemas"]["SetSupplierGroupsRequest"];
+                    "application/*+json": components["schemas"]["SetSupplierGroupsRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierGroupRefDto"][];
+                        "application/json": components["schemas"]["SupplierGroupRefDto"][];
+                        "text/json": components["schemas"]["SupplierGroupRefDto"][];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/warehouse/suppliers": {
         parameters: {
             query?: never;
@@ -8083,7 +9327,11 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "text/plain": components["schemas"]["SupplierDtoPagedResult"];
+                        "application/json": components["schemas"]["SupplierDtoPagedResult"];
+                        "text/json": components["schemas"]["SupplierDtoPagedResult"];
+                    };
                 };
             };
         };
@@ -8141,7 +9389,11 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "text/plain": components["schemas"]["SupplierDto"];
+                        "application/json": components["schemas"]["SupplierDto"];
+                        "text/json": components["schemas"]["SupplierDto"];
+                    };
                 };
             };
         };
@@ -8192,6 +9444,48 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/suppliers/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    period?: string;
+                    from?: string;
+                    to?: string;
+                    supplierId?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SuppliersDashboardDto"];
+                        "application/json": components["schemas"]["SuppliersDashboardDto"];
+                        "text/json": components["schemas"]["SuppliersDashboardDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -9180,10 +10474,13 @@ export interface components {
             purchaseSupplierName?: string | null;
             /** Format: double */
             unitPrice?: number | null;
+            lineStatus: string;
         };
         ArrivalPlanListResponse: {
             /** Format: int32 */
             daysAhead: number;
+            /** Format: int32 */
+            overdueLookbackDays: number;
             /** Format: date */
             windowFrom: string;
             /** Format: date */
@@ -9200,6 +10497,12 @@ export interface components {
             lineCount: number;
             /** Format: double */
             totalRemainingQty: number;
+            /** Format: int32 */
+            upcomingCount: number;
+            /** Format: int32 */
+            dueTodayCount: number;
+            /** Format: int32 */
+            overdueCount: number;
             lines: components["schemas"]["ArrivalPlanLineDto"][];
         };
         BirthdayDto: {
@@ -9335,6 +10638,18 @@ export interface components {
         };
         CreateDefectFromPoRequest: {
             items: components["schemas"]["CreateDefectFromPoLineRequest"][];
+            reason?: string | null;
+            note?: string | null;
+        };
+        CreateDefectFromStockLineRequest: {
+            materialCode: string;
+            /** Format: double */
+            qty: number;
+            lineReason?: string | null;
+        };
+        CreateDefectFromStockRequest: {
+            projectCode: string;
+            items: components["schemas"]["CreateDefectFromStockLineRequest"][];
             reason?: string | null;
             note?: string | null;
         };
@@ -9799,6 +11114,7 @@ export interface components {
             approvedBy?: string | null;
             approvedAt?: string | null;
             createdAt: string;
+            attachments?: components["schemas"]["ImportAttachmentDto"][] | null;
         };
         ExportReturnItemDto: {
             productId: string;
@@ -9850,6 +11166,19 @@ export interface components {
             fileName: string;
             storageKey: string;
             uploadedAt: string;
+        };
+        ImportBudgetExceededDto: {
+            code: string;
+            message: string;
+            projectCode: string;
+            /** Format: double */
+            materialBudget: number;
+            /** Format: double */
+            approvedImportValue: number;
+            /** Format: double */
+            importValue: number;
+            /** Format: double */
+            overflowAmount: number;
         };
         ImportDto: {
             id: string;
@@ -9951,6 +11280,39 @@ export interface components {
             sortOrder: number;
             isActive: boolean;
         };
+        MaterialCategoryPathDto: {
+            danhMuc?: string | null;
+            nhomVatTu?: string | null;
+            loaiVatTu?: string | null;
+            phanLoai?: string | null;
+            kieu?: string | null;
+        };
+        MaterialDto: {
+            materialCode: string;
+            materialName: string;
+            /** Format: int32 */
+            categoryId: number;
+            categoryName?: string | null;
+            categoryPath: components["schemas"]["MaterialCategoryPathDto"];
+            unit: string;
+            technicalSpec?: string | null;
+            qualityStandard?: string | null;
+            isConsumable: boolean;
+            isActive: boolean;
+        };
+        MaterialDtoPagedResult: {
+            items: components["schemas"]["MaterialDto"][];
+            /** Format: int32 */
+            totalCount: number;
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            readonly totalPages: number;
+            readonly hasNextPage: boolean;
+            readonly hasPreviousPage: boolean;
+        };
         MaterialUnitDto: {
             /** Format: int32 */
             id: number;
@@ -9964,6 +11326,14 @@ export interface components {
             module: string;
             resource: string;
             label: string;
+        };
+        PoDefectEligiblePurchaseOrderDto: {
+            poCode: string;
+            planCode: string;
+            projectCode: string;
+            supplierName: string;
+            /** Format: double */
+            availableQty: number;
         };
         PoDefectLinePreviewDto: {
             /** Format: int32 */
@@ -10017,6 +11387,80 @@ export interface components {
             supplierName: string;
             lines: components["schemas"]["PoImportLinePreviewDto"][];
         };
+        ProjectDto: {
+            projectCode: string;
+            projectName: string;
+            projectType: string;
+            /** Format: uuid */
+            pmId: string;
+            pmName: string;
+            /** Format: date */
+            startDate: string;
+            /** Format: date */
+            endDate?: string | null;
+            /** Format: double */
+            materialBudget: number;
+            status: string;
+            /** Format: double */
+            stockActualQty: number;
+            /** Format: double */
+            stockPlannedQty: number;
+            /** Format: double */
+            stockReservedQty: number;
+            /** Format: int32 */
+            stockMaterialCount: number;
+            /** Format: double */
+            approvedImportValue: number;
+            /** Format: double */
+            materialBudgetRemaining: number;
+            warehouseKeepers?: components["schemas"]["ProjectWarehouseKeeperDto"][] | null;
+        };
+        ProjectDtoPagedResult: {
+            items: components["schemas"]["ProjectDto"][];
+            /** Format: int32 */
+            totalCount: number;
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            readonly totalPages: number;
+            readonly hasNextPage: boolean;
+            readonly hasPreviousPage: boolean;
+        };
+        ProjectInventoryDto: {
+            projectCode: string;
+            materialCode: string;
+            materialName: string;
+            unit: string;
+            /** Format: double */
+            plannedImportQty: number;
+            /** Format: double */
+            plannedExportQty: number;
+            /** Format: double */
+            actualImportQty: number;
+            /** Format: double */
+            actualExportQty: number;
+            /** Format: double */
+            actualInventoryQty: number;
+            /** Format: double */
+            plannedInventoryQty: number;
+            /** Format: double */
+            reservedQty: number;
+            /** Format: double */
+            minStockQty: number;
+        };
+        ProjectLedgerEntryDto: {
+            id: string;
+            kind: string;
+            voucherCode: string;
+            date: string;
+            status: string;
+            /** Format: double */
+            itemQty: number;
+            /** Format: double */
+            totalValue?: number | null;
+        };
         /** @enum {string} */
         ProjectStatus: "Active" | "Transferring" | "Transferred" | "Closed";
         /** @enum {string} */
@@ -10060,19 +11504,27 @@ export interface components {
         PurchaseDefectDto: {
             id: string;
             ticketCode: string;
-            poCode: string;
+            sourceType: string;
+            poCode?: string | null;
             planCode: string;
             projectCode: string;
             supplierName?: string | null;
             status: string;
+            processingPhase: string;
             reason?: string | null;
             note?: string | null;
+            causeSource?: string | null;
+            supplierFeedback?: string | null;
+            handlingMethod?: string | null;
             createdByName: string;
             /** Format: date-time */
             createdAt: string;
             approvedByName?: string | null;
             /** Format: date-time */
             approvedAt?: string | null;
+            processedByName?: string | null;
+            /** Format: date-time */
+            processedAt?: string | null;
             items: components["schemas"]["PurchaseDefectItemDto"][];
             attachments: components["schemas"]["PurchaseDefectAttachmentDto"][];
         };
@@ -10087,6 +11539,17 @@ export interface components {
             /** Format: double */
             quantity: number;
             lineReason?: string | null;
+        };
+        PurchaseOrderAttachmentDto: {
+            /** Format: uuid */
+            id: string;
+            poCode: string;
+            docType: string;
+            fileName: string;
+            storageKey: string;
+            /** Format: date-time */
+            uploadedAt: string;
+            uploadedByName?: string | null;
         };
         PurchaseOrderDetailDto: {
             code: string;
@@ -10442,6 +11905,30 @@ export interface components {
             /** Format: int32 */
             totalPages: number;
         };
+        PurchasePlanVarianceDto: {
+            planCode: string;
+            projectCode: string;
+            lines: components["schemas"]["PurchasePlanVarianceLineDto"][];
+        };
+        PurchasePlanVarianceLineDto: {
+            planCode: string;
+            projectCode: string;
+            materialCode?: string | null;
+            productName: string;
+            /** Format: double */
+            plannedQty: number;
+            /** Format: double */
+            orderedQty: number;
+            /** Format: double */
+            receivedQty: number;
+            /** Format: double */
+            remainingOrderableQty: number;
+            /** Format: double */
+            varianceOrderedPct: number;
+            /** Format: double */
+            varianceReceivedPct: number;
+            status: string;
+        };
         PurchasingActivityActorDto: {
             /** Format: uuid */
             userId: string;
@@ -10661,6 +12148,27 @@ export interface components {
             /** Format: double */
             totalDays: number;
         };
+        SetSupplierGroupMembersRequest: {
+            supplierIds: number[];
+        };
+        SetSupplierGroupsRequest: {
+            groupIds: number[];
+        };
+        StockDefectLinePreviewDto: {
+            materialCode: string;
+            name: string;
+            unit: string;
+            /** Format: double */
+            onHand: number;
+            /** Format: double */
+            reservedPendingDefect: number;
+            /** Format: double */
+            available: number;
+        };
+        StockDefectPreviewDto: {
+            projectCode: string;
+            lines: components["schemas"]["StockDefectLinePreviewDto"][];
+        };
         StockMatrixProjectColumnDto: {
             projectCode: string;
             projectId: string;
@@ -10685,6 +12193,8 @@ export interface components {
             generalAvailableQty: number;
             /** Format: double */
             weightedAverageUnitCost: number;
+            /** Format: double */
+            defectedQty: number;
             projects: components["schemas"]["StockMatrixProjectColumnDto"][];
         };
         StocktakeDto: {
@@ -10710,6 +12220,195 @@ export interface components {
             actualQty: number;
             /** Format: double */
             diff: number;
+        };
+        SupplierContactDto: {
+            /** Format: int32 */
+            id: number;
+            /** Format: int32 */
+            supplierId: number;
+            supplierName: string;
+            fullName: string;
+            position?: string | null;
+            phone?: string | null;
+            email?: string | null;
+            note?: string | null;
+            isPrimary: boolean;
+        };
+        SupplierContactPagedResponse: {
+            items: components["schemas"]["SupplierContactDto"][];
+            /** Format: int32 */
+            totalCount: number;
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalPages: number;
+        };
+        SupplierDebtRowDto: {
+            /** Format: int32 */
+            supplierId: number;
+            supplierName: string;
+            /** Format: double */
+            debt: number;
+            /** Format: double */
+            paid: number;
+            /** Format: double */
+            remaining: number;
+        };
+        SupplierDto: {
+            /** Format: int32 */
+            id: number;
+            supplierCode: string;
+            supplierName: string;
+            contactPhone?: string | null;
+            /** Format: int32 */
+            maxDebtDays: number;
+            paymentTerms?: string | null;
+            rating: string;
+            /** Format: double */
+            purchasedRevenue: number;
+            industryGroups: string[];
+            latestEvaluation?: components["schemas"]["SupplierLatestEvaluationDto"];
+        };
+        SupplierDtoPagedResult: {
+            items: components["schemas"]["SupplierDto"][];
+            /** Format: int32 */
+            totalCount: number;
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            readonly totalPages: number;
+            readonly hasNextPage: boolean;
+            readonly hasPreviousPage: boolean;
+        };
+        SupplierEvaluationDto: {
+            /** Format: int32 */
+            id: number;
+            /** Format: int32 */
+            supplierId: number;
+            supplierName: string;
+            period: string;
+            /** Format: double */
+            score: number;
+            grade: string;
+            /** Format: date */
+            evaluatedAt: string;
+            /** Format: double */
+            onTimeDeliveryRate: number;
+            /** Format: double */
+            defectRate: number;
+            /** Format: double */
+            warrantyCompletionRate: number;
+            note?: string | null;
+            evaluatedByName?: string | null;
+        };
+        SupplierEvaluationPagedResponse: {
+            items: components["schemas"]["SupplierEvaluationDto"][];
+            /** Format: int32 */
+            totalCount: number;
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalPages: number;
+        };
+        SupplierGroupDto: {
+            /** Format: int32 */
+            id: number;
+            name: string;
+            description?: string | null;
+            /** Format: int32 */
+            supplierCount: number;
+        };
+        SupplierGroupMemberDto: {
+            /** Format: int32 */
+            supplierId: number;
+            supplierCode: string;
+            supplierName: string;
+        };
+        SupplierGroupPagedResponse: {
+            items: components["schemas"]["SupplierGroupDto"][];
+            /** Format: int32 */
+            totalCount: number;
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalPages: number;
+        };
+        SupplierGroupRefDto: {
+            /** Format: int32 */
+            id: number;
+            name: string;
+        };
+        SupplierLatestEvaluationDto: {
+            period: string;
+            /** Format: double */
+            score: number;
+            grade: string;
+            /** Format: date */
+            evaluatedAt: string;
+            /** Format: double */
+            onTimeDeliveryRate: number;
+            /** Format: double */
+            defectRate: number;
+            /** Format: double */
+            warrantyCompletionRate: number;
+        };
+        SupplierModuleSettingsDto: {
+            /** Format: double */
+            gradeAMinScore: number;
+            /** Format: double */
+            gradeBMinScore: number;
+            /** Format: double */
+            gradeCMinScore: number;
+            /** Format: double */
+            gradeDMinScore: number;
+            /** Format: double */
+            gradeEMinScore: number;
+            /** Format: double */
+            gradeFMinScore: number;
+            /** Format: double */
+            gradeGMinScore: number;
+            /** Format: double */
+            gradeHMinScore: number;
+            evaluationCycle: string;
+            groupRequired: boolean;
+        };
+        SupplierTrendPointDto: {
+            month: string;
+            /** Format: double */
+            debt: number;
+            /** Format: double */
+            payment: number;
+        };
+        SuppliersDashboardDto: {
+            /** Format: int32 */
+            supplierCount: number;
+            /** Format: int32 */
+            contactCount: number;
+            /** Format: int32 */
+            orderCount: number;
+            /** Format: double */
+            debtTotal: number;
+            /** Format: double */
+            paymentTotal: number;
+            /** Format: double */
+            remaining: number;
+            debtBySupplier: components["schemas"]["SupplierDebtRowDto"][];
+            trend: components["schemas"]["SupplierTrendPointDto"][];
+            /** Format: date-time */
+            from: string;
+            /** Format: date-time */
+            to: string;
+            period: string;
+            /** Format: date-time */
+            generatedAt: string;
         };
         TopProductDto: {
             sku: string;
@@ -10778,6 +12477,11 @@ export interface components {
             offerNote?: string | null;
             rejectReason?: string | null;
             recruitmentPlanId?: string | null;
+        };
+        UpdateDefectProcessingRequest: {
+            causeSource?: string | null;
+            supplierFeedback?: string | null;
+            handlingMethod?: string | null;
         };
         UpdateDefectReasonRequest: {
             reason?: string | null;
@@ -10865,6 +12569,26 @@ export interface components {
         };
         UpdateRolePermissionsRequest: {
             permissions: string[];
+        };
+        UpdateSupplierModuleSettingsRequest: {
+            /** Format: double */
+            gradeAMinScore: number;
+            /** Format: double */
+            gradeBMinScore: number;
+            /** Format: double */
+            gradeCMinScore: number;
+            /** Format: double */
+            gradeDMinScore: number;
+            /** Format: double */
+            gradeEMinScore: number;
+            /** Format: double */
+            gradeFMinScore: number;
+            /** Format: double */
+            gradeGMinScore: number;
+            /** Format: double */
+            gradeHMinScore: number;
+            evaluationCycle: string;
+            groupRequired: boolean;
         };
         UpdateWarehouseDto: {
             code?: string | null;
@@ -10957,12 +12681,43 @@ export interface components {
             departmentId: number;
             level?: string | null;
         };
+        UpsertSupplierContactRequest: {
+            /** Format: int32 */
+            supplierId: number;
+            fullName: string;
+            position?: string | null;
+            phone?: string | null;
+            email?: string | null;
+            note?: string | null;
+            isPrimary: boolean;
+        };
+        UpsertSupplierEvaluationRequest: {
+            /** Format: int32 */
+            supplierId: number;
+            period: string;
+            /** Format: double */
+            score: number;
+            /** Format: double */
+            onTimeDeliveryRate: number;
+            /** Format: double */
+            defectRate: number;
+            /** Format: double */
+            warrantyCompletionRate: number;
+            /** Format: date */
+            evaluatedAt?: string | null;
+            note?: string | null;
+        };
+        UpsertSupplierGroupRequest: {
+            name: string;
+            description?: string | null;
+        };
         UpsertSupplierRequest: {
             supplierCode: string;
             supplierName: string;
             contactPhone?: string | null;
             /** Format: int32 */
             maxDebtDays: number;
+            paymentTerms?: string | null;
             rating: string;
         };
         WarehouseDto: {

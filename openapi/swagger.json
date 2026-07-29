@@ -903,7 +903,23 @@
             }
           },
           {
+            "name": "overdueLookbackDays",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 30
+            }
+          },
+          {
             "name": "projectCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lineStatus",
             "in": "query",
             "schema": {
               "type": "string"
@@ -2233,6 +2249,44 @@
         }
       }
     },
+    "/api/defects/eligible-purchase-orders": {
+      "get": {
+        "tags": [
+          "Defects"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PoDefectEligiblePurchaseOrderDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PoDefectEligiblePurchaseOrderDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PoDefectEligiblePurchaseOrderDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/defects/{id}": {
       "get": {
         "tags": [
@@ -2389,6 +2443,93 @@
         }
       }
     },
+    "/api/defects/from-stock/{projectCode}/preview": {
+      "get": {
+        "tags": [
+          "Defects"
+        ],
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockDefectPreviewDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockDefectPreviewDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockDefectPreviewDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/defects/from-stock": {
+      "post": {
+        "tags": [
+          "Defects"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDefectFromStockRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDefectFromStockRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDefectFromStockRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseDefectDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseDefectDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseDefectDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/defects/{id}/submit": {
       "post": {
         "tags": [
@@ -2497,6 +2638,64 @@
             "application/*+json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateDefectReasonRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseDefectDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseDefectDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseDefectDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/defects/{id}/processing": {
+      "put": {
+        "tags": [
+          "Defects"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDefectProcessingRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDefectProcessingRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDefectProcessingRequest"
               }
             }
           }
@@ -3668,6 +3867,133 @@
         }
       }
     },
+    "/api/export-returns/{id}/attachments": {
+      "post": {
+        "tags": [
+          "ExportReturns"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "kind": {
+                    "type": "string"
+                  }
+                }
+              },
+              "encoding": {
+                "file": {
+                  "style": "form"
+                },
+                "kind": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportAttachmentDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportAttachmentDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportAttachmentDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/export-returns/{id}/attachments/{attachmentId}": {
+      "delete": {
+        "tags": [
+          "ExportReturns"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "attachmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/export-returns/{id}/attachments/{attachmentId}/download": {
+      "get": {
+        "tags": [
+          "ExportReturns"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "attachmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/exports": {
       "get": {
         "tags": [
@@ -4724,6 +5050,13 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "excludeTicketCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -4859,6 +5192,26 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ImportDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportBudgetExceededDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportBudgetExceededDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportBudgetExceededDto"
                 }
               }
             }
@@ -6230,7 +6583,24 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialDtoPagedResult"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialDtoPagedResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialDtoPagedResult"
+                }
+              }
+            }
           }
         }
       },
@@ -6281,7 +6651,24 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialDto"
+                }
+              }
+            }
           }
         }
       },
@@ -6701,7 +7088,24 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDtoPagedResult"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDtoPagedResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDtoPagedResult"
+                }
+              }
+            }
           }
         }
       },
@@ -6752,7 +7156,24 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDto"
+                }
+              }
+            }
           }
         }
       },
@@ -6813,7 +7234,33 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProjectInventoryDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProjectInventoryDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProjectInventoryDto"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -6884,7 +7331,33 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProjectLedgerEntryDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProjectLedgerEntryDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProjectLedgerEntryDto"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -7275,6 +7748,180 @@
         }
       }
     },
+    "/api/purchasing/orders/{code}/attachments": {
+      "get": {
+        "tags": [
+          "PurchaseOrders"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PurchaseOrderAttachmentDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PurchaseOrderAttachmentDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PurchaseOrderAttachmentDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "PurchaseOrders"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "docType": {
+                    "type": "string",
+                    "default": "other"
+                  }
+                }
+              },
+              "encoding": {
+                "file": {
+                  "style": "form"
+                },
+                "docType": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseOrderAttachmentDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseOrderAttachmentDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseOrderAttachmentDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/orders/{code}/attachments/{id}/download": {
+      "get": {
+        "tags": [
+          "PurchaseOrders"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchasing/orders/{code}/attachments/{id}": {
+      "delete": {
+        "tags": [
+          "PurchaseOrders"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/purchasing/payments": {
       "get": {
         "tags": [
@@ -7393,6 +8040,123 @@
     },
     "/api/purchasing/payments/{code}": {
       "get": {
+        "tags": [
+          "PurchasePayments"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasePaymentDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasePaymentDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasePaymentDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/payments/{code}/submit": {
+      "post": {
+        "tags": [
+          "PurchasePayments"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasePaymentDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasePaymentDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasePaymentDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/payments/{code}/pay": {
+      "post": {
+        "tags": [
+          "PurchasePayments"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasePaymentDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasePaymentDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasePaymentDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/payments/{code}/cancel": {
+      "post": {
         "tags": [
           "PurchasePayments"
         ],
@@ -7562,6 +8326,60 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PurchasePlanDetailDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/plans/variance": {
+      "get": {
+        "tags": [
+          "PurchasePlans"
+        ],
+        "parameters": [
+          {
+            "name": "planCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "projectCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PurchasePlanVarianceDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PurchasePlanVarianceDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PurchasePlanVarianceDto"
+                  }
                 }
               }
             }
@@ -9386,6 +10204,918 @@
         }
       }
     },
+    "/api/warehouse/supplier-contacts": {
+      "get": {
+        "tags": [
+          "SupplierContacts"
+        ],
+        "parameters": [
+          {
+            "name": "supplierId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierContactPagedResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierContactPagedResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierContactPagedResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "SupplierContacts"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertSupplierContactRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertSupplierContactRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertSupplierContactRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierContactDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierContactDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierContactDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/warehouse/supplier-contacts/{id}": {
+      "put": {
+        "tags": [
+          "SupplierContacts"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertSupplierContactRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertSupplierContactRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertSupplierContactRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierContactDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierContactDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierContactDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "SupplierContacts"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/warehouse/supplier-evaluations": {
+      "get": {
+        "tags": [
+          "SupplierEvaluations"
+        ],
+        "parameters": [
+          {
+            "name": "supplierId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierEvaluationPagedResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierEvaluationPagedResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierEvaluationPagedResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "SupplierEvaluations"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertSupplierEvaluationRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertSupplierEvaluationRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertSupplierEvaluationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierEvaluationDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierEvaluationDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierEvaluationDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/warehouse/supplier-evaluations/{id}": {
+      "put": {
+        "tags": [
+          "SupplierEvaluations"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertSupplierEvaluationRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertSupplierEvaluationRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertSupplierEvaluationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierEvaluationDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierEvaluationDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierEvaluationDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "SupplierEvaluations"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/warehouse/supplier-groups": {
+      "get": {
+        "tags": [
+          "SupplierGroups"
+        ],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierGroupPagedResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierGroupPagedResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierGroupPagedResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "SupplierGroups"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertSupplierGroupRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertSupplierGroupRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertSupplierGroupRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierGroupDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierGroupDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierGroupDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/warehouse/supplier-groups/{id}": {
+      "get": {
+        "tags": [
+          "SupplierGroups"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierGroupDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierGroupDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierGroupDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "SupplierGroups"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertSupplierGroupRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertSupplierGroupRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertSupplierGroupRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierGroupDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierGroupDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierGroupDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "SupplierGroups"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/warehouse/supplier-groups/{id}/members": {
+      "get": {
+        "tags": [
+          "SupplierGroups"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SupplierGroupMemberDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SupplierGroupMemberDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SupplierGroupMemberDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "SupplierGroups"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetSupplierGroupMembersRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetSupplierGroupMembersRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetSupplierGroupMembersRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SupplierGroupMemberDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SupplierGroupMemberDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SupplierGroupMemberDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/warehouse/supplier-settings": {
+      "get": {
+        "tags": [
+          "SupplierModuleSettings"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierModuleSettingsDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierModuleSettingsDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierModuleSettingsDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "SupplierModuleSettings"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSupplierModuleSettingsRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSupplierModuleSettingsRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSupplierModuleSettingsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierModuleSettingsDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierModuleSettingsDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierModuleSettingsDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/warehouse/suppliers/{id}/groups": {
+      "get": {
+        "tags": [
+          "Suppliers"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SupplierGroupRefDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SupplierGroupRefDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SupplierGroupRefDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Suppliers"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetSupplierGroupsRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetSupplierGroupsRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetSupplierGroupsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SupplierGroupRefDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SupplierGroupRefDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SupplierGroupRefDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/warehouse/suppliers": {
       "get": {
         "tags": [
@@ -9427,7 +11157,24 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierDtoPagedResult"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierDtoPagedResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierDtoPagedResult"
+                }
+              }
+            }
           }
         }
       },
@@ -9479,7 +11226,24 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierDto"
+                }
+              }
+            }
           }
         }
       },
@@ -9541,6 +11305,68 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/warehouse/suppliers/dashboard": {
+      "get": {
+        "tags": [
+          "SuppliersDashboard"
+        ],
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "supplierId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuppliersDashboardDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuppliersDashboardDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuppliersDashboardDto"
+                }
+              }
+            }
           }
         }
       }
@@ -10782,6 +12608,7 @@
         "required": [
           "expectedDeliveryDate",
           "lineId",
+          "lineStatus",
           "orderedQty",
           "planCode",
           "productName",
@@ -10837,6 +12664,9 @@
             "type": "number",
             "format": "double",
             "nullable": true
+          },
+          "lineStatus": {
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -10844,6 +12674,7 @@
       "ArrivalPlanListResponse": {
         "required": [
           "daysAhead",
+          "overdueLookbackDays",
           "projects",
           "windowFrom",
           "windowTo"
@@ -10851,6 +12682,10 @@
         "type": "object",
         "properties": {
           "daysAhead": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "overdueLookbackDays": {
             "type": "integer",
             "format": "int32"
           },
@@ -10873,12 +12708,15 @@
       },
       "ArrivalPlanProjectDto": {
         "required": [
+          "dueTodayCount",
           "hasArrivalInWindow",
           "lineCount",
           "lines",
+          "overdueCount",
           "projectCode",
           "projectName",
-          "totalRemainingQty"
+          "totalRemainingQty",
+          "upcomingCount"
         ],
         "type": "object",
         "properties": {
@@ -10903,6 +12741,18 @@
           "totalRemainingQty": {
             "type": "number",
             "format": "double"
+          },
+          "upcomingCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dueTodayCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "overdueCount": {
+            "type": "integer",
+            "format": "int32"
           },
           "lines": {
             "type": "array",
@@ -11406,6 +13256,54 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CreateDefectFromPoLineRequest"
+            }
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateDefectFromStockLineRequest": {
+        "required": [
+          "materialCode",
+          "qty"
+        ],
+        "type": "object",
+        "properties": {
+          "materialCode": {
+            "type": "string"
+          },
+          "qty": {
+            "type": "number",
+            "format": "double"
+          },
+          "lineReason": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateDefectFromStockRequest": {
+        "required": [
+          "items",
+          "projectCode"
+        ],
+        "type": "object",
+        "properties": {
+          "projectCode": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateDefectFromStockLineRequest"
             }
           },
           "reason": {
@@ -13070,6 +14968,13 @@
           },
           "createdAt": {
             "type": "string"
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImportAttachmentDto"
+            },
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -13250,6 +15155,46 @@
           },
           "uploadedAt": {
             "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ImportBudgetExceededDto": {
+        "required": [
+          "approvedImportValue",
+          "code",
+          "importValue",
+          "materialBudget",
+          "message",
+          "overflowAmount",
+          "projectCode"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "projectCode": {
+            "type": "string"
+          },
+          "materialBudget": {
+            "type": "number",
+            "format": "double"
+          },
+          "approvedImportValue": {
+            "type": "number",
+            "format": "double"
+          },
+          "importValue": {
+            "type": "number",
+            "format": "double"
+          },
+          "overflowAmount": {
+            "type": "number",
+            "format": "double"
           }
         },
         "additionalProperties": false
@@ -13618,6 +15563,127 @@
         },
         "additionalProperties": false
       },
+      "MaterialCategoryPathDto": {
+        "type": "object",
+        "properties": {
+          "danhMuc": {
+            "type": "string",
+            "nullable": true
+          },
+          "nhomVatTu": {
+            "type": "string",
+            "nullable": true
+          },
+          "loaiVatTu": {
+            "type": "string",
+            "nullable": true
+          },
+          "phanLoai": {
+            "type": "string",
+            "nullable": true
+          },
+          "kieu": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "MaterialDto": {
+        "required": [
+          "categoryId",
+          "categoryPath",
+          "isActive",
+          "isConsumable",
+          "materialCode",
+          "materialName",
+          "unit"
+        ],
+        "type": "object",
+        "properties": {
+          "materialCode": {
+            "type": "string"
+          },
+          "materialName": {
+            "type": "string"
+          },
+          "categoryId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "categoryName": {
+            "type": "string",
+            "nullable": true
+          },
+          "categoryPath": {
+            "$ref": "#/components/schemas/MaterialCategoryPathDto"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "technicalSpec": {
+            "type": "string",
+            "nullable": true
+          },
+          "qualityStandard": {
+            "type": "string",
+            "nullable": true
+          },
+          "isConsumable": {
+            "type": "boolean"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MaterialDtoPagedResult": {
+        "required": [
+          "hasNextPage",
+          "hasPreviousPage",
+          "items",
+          "page",
+          "pageSize",
+          "totalCount",
+          "totalPages"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MaterialDto"
+            }
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32",
+            "readOnly": true
+          },
+          "hasNextPage": {
+            "type": "boolean",
+            "readOnly": true
+          },
+          "hasPreviousPage": {
+            "type": "boolean",
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
       "MaterialUnitDto": {
         "required": [
           "id",
@@ -13664,6 +15730,35 @@
           },
           "label": {
             "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PoDefectEligiblePurchaseOrderDto": {
+        "required": [
+          "availableQty",
+          "planCode",
+          "poCode",
+          "projectCode",
+          "supplierName"
+        ],
+        "type": "object",
+        "properties": {
+          "poCode": {
+            "type": "string"
+          },
+          "planCode": {
+            "type": "string"
+          },
+          "projectCode": {
+            "type": "string"
+          },
+          "supplierName": {
+            "type": "string"
+          },
+          "availableQty": {
+            "type": "number",
+            "format": "double"
           }
         },
         "additionalProperties": false
@@ -13840,6 +15935,239 @@
         },
         "additionalProperties": false
       },
+      "ProjectDto": {
+        "required": [
+          "approvedImportValue",
+          "materialBudget",
+          "materialBudgetRemaining",
+          "pmId",
+          "pmName",
+          "projectCode",
+          "projectName",
+          "projectType",
+          "startDate",
+          "status",
+          "stockActualQty",
+          "stockMaterialCount",
+          "stockPlannedQty",
+          "stockReservedQty"
+        ],
+        "type": "object",
+        "properties": {
+          "projectCode": {
+            "type": "string"
+          },
+          "projectName": {
+            "type": "string"
+          },
+          "projectType": {
+            "type": "string"
+          },
+          "pmId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "pmName": {
+            "type": "string"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "materialBudget": {
+            "type": "number",
+            "format": "double"
+          },
+          "status": {
+            "type": "string"
+          },
+          "stockActualQty": {
+            "type": "number",
+            "format": "double"
+          },
+          "stockPlannedQty": {
+            "type": "number",
+            "format": "double"
+          },
+          "stockReservedQty": {
+            "type": "number",
+            "format": "double"
+          },
+          "stockMaterialCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "approvedImportValue": {
+            "type": "number",
+            "format": "double"
+          },
+          "materialBudgetRemaining": {
+            "type": "number",
+            "format": "double"
+          },
+          "warehouseKeepers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProjectWarehouseKeeperDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProjectDtoPagedResult": {
+        "required": [
+          "hasNextPage",
+          "hasPreviousPage",
+          "items",
+          "page",
+          "pageSize",
+          "totalCount",
+          "totalPages"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProjectDto"
+            }
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32",
+            "readOnly": true
+          },
+          "hasNextPage": {
+            "type": "boolean",
+            "readOnly": true
+          },
+          "hasPreviousPage": {
+            "type": "boolean",
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProjectInventoryDto": {
+        "required": [
+          "actualExportQty",
+          "actualImportQty",
+          "actualInventoryQty",
+          "materialCode",
+          "materialName",
+          "minStockQty",
+          "plannedExportQty",
+          "plannedImportQty",
+          "plannedInventoryQty",
+          "projectCode",
+          "reservedQty",
+          "unit"
+        ],
+        "type": "object",
+        "properties": {
+          "projectCode": {
+            "type": "string"
+          },
+          "materialCode": {
+            "type": "string"
+          },
+          "materialName": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "plannedImportQty": {
+            "type": "number",
+            "format": "double"
+          },
+          "plannedExportQty": {
+            "type": "number",
+            "format": "double"
+          },
+          "actualImportQty": {
+            "type": "number",
+            "format": "double"
+          },
+          "actualExportQty": {
+            "type": "number",
+            "format": "double"
+          },
+          "actualInventoryQty": {
+            "type": "number",
+            "format": "double"
+          },
+          "plannedInventoryQty": {
+            "type": "number",
+            "format": "double"
+          },
+          "reservedQty": {
+            "type": "number",
+            "format": "double"
+          },
+          "minStockQty": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProjectLedgerEntryDto": {
+        "required": [
+          "date",
+          "id",
+          "itemQty",
+          "kind",
+          "status",
+          "voucherCode"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "voucherCode": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "itemQty": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalValue": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "ProjectStatus": {
         "enum": [
           "Active",
@@ -13999,8 +16327,9 @@
           "id",
           "items",
           "planCode",
-          "poCode",
+          "processingPhase",
           "projectCode",
+          "sourceType",
           "status",
           "ticketCode"
         ],
@@ -14012,8 +16341,12 @@
           "ticketCode": {
             "type": "string"
           },
-          "poCode": {
+          "sourceType": {
             "type": "string"
+          },
+          "poCode": {
+            "type": "string",
+            "nullable": true
           },
           "planCode": {
             "type": "string"
@@ -14028,11 +16361,26 @@
           "status": {
             "type": "string"
           },
+          "processingPhase": {
+            "type": "string"
+          },
           "reason": {
             "type": "string",
             "nullable": true
           },
           "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "causeSource": {
+            "type": "string",
+            "nullable": true
+          },
+          "supplierFeedback": {
+            "type": "string",
+            "nullable": true
+          },
+          "handlingMethod": {
             "type": "string",
             "nullable": true
           },
@@ -14048,6 +16396,15 @@
             "nullable": true
           },
           "approvedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "processedByName": {
+            "type": "string",
+            "nullable": true
+          },
+          "processedAt": {
             "type": "string",
             "format": "date-time",
             "nullable": true
@@ -14100,6 +16457,44 @@
             "format": "double"
           },
           "lineReason": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchaseOrderAttachmentDto": {
+        "required": [
+          "docType",
+          "fileName",
+          "id",
+          "poCode",
+          "storageKey",
+          "uploadedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "poCode": {
+            "type": "string"
+          },
+          "docType": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "storageKey": {
+            "type": "string"
+          },
+          "uploadedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "uploadedByName": {
             "type": "string",
             "nullable": true
           }
@@ -15234,6 +17629,87 @@
         },
         "additionalProperties": false
       },
+      "PurchasePlanVarianceDto": {
+        "required": [
+          "lines",
+          "planCode",
+          "projectCode"
+        ],
+        "type": "object",
+        "properties": {
+          "planCode": {
+            "type": "string"
+          },
+          "projectCode": {
+            "type": "string"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PurchasePlanVarianceLineDto"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchasePlanVarianceLineDto": {
+        "required": [
+          "orderedQty",
+          "planCode",
+          "plannedQty",
+          "productName",
+          "projectCode",
+          "receivedQty",
+          "remainingOrderableQty",
+          "status",
+          "varianceOrderedPct",
+          "varianceReceivedPct"
+        ],
+        "type": "object",
+        "properties": {
+          "planCode": {
+            "type": "string"
+          },
+          "projectCode": {
+            "type": "string"
+          },
+          "materialCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "productName": {
+            "type": "string"
+          },
+          "plannedQty": {
+            "type": "number",
+            "format": "double"
+          },
+          "orderedQty": {
+            "type": "number",
+            "format": "double"
+          },
+          "receivedQty": {
+            "type": "number",
+            "format": "double"
+          },
+          "remainingOrderableQty": {
+            "type": "number",
+            "format": "double"
+          },
+          "varianceOrderedPct": {
+            "type": "number",
+            "format": "double"
+          },
+          "varianceReceivedPct": {
+            "type": "number",
+            "format": "double"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "PurchasingActivityActorDto": {
         "required": [
           "name",
@@ -15964,6 +18440,92 @@
         },
         "additionalProperties": false
       },
+      "SetSupplierGroupMembersRequest": {
+        "required": [
+          "supplierIds"
+        ],
+        "type": "object",
+        "properties": {
+          "supplierIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "SetSupplierGroupsRequest": {
+        "required": [
+          "groupIds"
+        ],
+        "type": "object",
+        "properties": {
+          "groupIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "StockDefectLinePreviewDto": {
+        "required": [
+          "available",
+          "materialCode",
+          "name",
+          "onHand",
+          "reservedPendingDefect",
+          "unit"
+        ],
+        "type": "object",
+        "properties": {
+          "materialCode": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "onHand": {
+            "type": "number",
+            "format": "double"
+          },
+          "reservedPendingDefect": {
+            "type": "number",
+            "format": "double"
+          },
+          "available": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "StockDefectPreviewDto": {
+        "required": [
+          "lines",
+          "projectCode"
+        ],
+        "type": "object",
+        "properties": {
+          "projectCode": {
+            "type": "string"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StockDefectLinePreviewDto"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
       "StockMatrixProjectColumnDto": {
         "required": [
           "actualQty",
@@ -16001,6 +18563,7 @@
       },
       "StockMatrixRowDto": {
         "required": [
+          "defectedQty",
           "generalActualQty",
           "generalAvailableQty",
           "generalReservedQty",
@@ -16038,6 +18601,10 @@
             "format": "double"
           },
           "weightedAverageUnitCost": {
+            "type": "number",
+            "format": "double"
+          },
+          "defectedQty": {
             "type": "number",
             "format": "double"
           },
@@ -16136,6 +18703,605 @@
           "diff": {
             "type": "number",
             "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupplierContactDto": {
+        "required": [
+          "fullName",
+          "id",
+          "isPrimary",
+          "supplierId",
+          "supplierName"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "supplierId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "supplierName": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "position": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "isPrimary": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupplierContactPagedResponse": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount",
+          "totalPages"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupplierContactDto"
+            }
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupplierDebtRowDto": {
+        "required": [
+          "debt",
+          "paid",
+          "remaining",
+          "supplierId",
+          "supplierName"
+        ],
+        "type": "object",
+        "properties": {
+          "supplierId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "supplierName": {
+            "type": "string"
+          },
+          "debt": {
+            "type": "number",
+            "format": "double"
+          },
+          "paid": {
+            "type": "number",
+            "format": "double"
+          },
+          "remaining": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupplierDto": {
+        "required": [
+          "id",
+          "industryGroups",
+          "maxDebtDays",
+          "purchasedRevenue",
+          "rating",
+          "supplierCode",
+          "supplierName"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "supplierCode": {
+            "type": "string"
+          },
+          "supplierName": {
+            "type": "string"
+          },
+          "contactPhone": {
+            "type": "string",
+            "nullable": true
+          },
+          "maxDebtDays": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "paymentTerms": {
+            "type": "string",
+            "nullable": true
+          },
+          "rating": {
+            "type": "string"
+          },
+          "purchasedRevenue": {
+            "type": "number",
+            "format": "double"
+          },
+          "industryGroups": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "latestEvaluation": {
+            "$ref": "#/components/schemas/SupplierLatestEvaluationDto"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupplierDtoPagedResult": {
+        "required": [
+          "hasNextPage",
+          "hasPreviousPage",
+          "items",
+          "page",
+          "pageSize",
+          "totalCount",
+          "totalPages"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupplierDto"
+            }
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32",
+            "readOnly": true
+          },
+          "hasNextPage": {
+            "type": "boolean",
+            "readOnly": true
+          },
+          "hasPreviousPage": {
+            "type": "boolean",
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupplierEvaluationDto": {
+        "required": [
+          "defectRate",
+          "evaluatedAt",
+          "grade",
+          "id",
+          "onTimeDeliveryRate",
+          "period",
+          "score",
+          "supplierId",
+          "supplierName",
+          "warrantyCompletionRate"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "supplierId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "supplierName": {
+            "type": "string"
+          },
+          "period": {
+            "type": "string"
+          },
+          "score": {
+            "type": "number",
+            "format": "double"
+          },
+          "grade": {
+            "type": "string"
+          },
+          "evaluatedAt": {
+            "type": "string",
+            "format": "date"
+          },
+          "onTimeDeliveryRate": {
+            "type": "number",
+            "format": "double"
+          },
+          "defectRate": {
+            "type": "number",
+            "format": "double"
+          },
+          "warrantyCompletionRate": {
+            "type": "number",
+            "format": "double"
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "evaluatedByName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupplierEvaluationPagedResponse": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount",
+          "totalPages"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupplierEvaluationDto"
+            }
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupplierGroupDto": {
+        "required": [
+          "id",
+          "name",
+          "supplierCount"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "supplierCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupplierGroupMemberDto": {
+        "required": [
+          "supplierCode",
+          "supplierId",
+          "supplierName"
+        ],
+        "type": "object",
+        "properties": {
+          "supplierId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "supplierCode": {
+            "type": "string"
+          },
+          "supplierName": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupplierGroupPagedResponse": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount",
+          "totalPages"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupplierGroupDto"
+            }
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupplierGroupRefDto": {
+        "required": [
+          "id",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupplierLatestEvaluationDto": {
+        "required": [
+          "defectRate",
+          "evaluatedAt",
+          "grade",
+          "onTimeDeliveryRate",
+          "period",
+          "score",
+          "warrantyCompletionRate"
+        ],
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "string"
+          },
+          "score": {
+            "type": "number",
+            "format": "double"
+          },
+          "grade": {
+            "type": "string"
+          },
+          "evaluatedAt": {
+            "type": "string",
+            "format": "date"
+          },
+          "onTimeDeliveryRate": {
+            "type": "number",
+            "format": "double"
+          },
+          "defectRate": {
+            "type": "number",
+            "format": "double"
+          },
+          "warrantyCompletionRate": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupplierModuleSettingsDto": {
+        "required": [
+          "evaluationCycle",
+          "gradeAMinScore",
+          "gradeBMinScore",
+          "gradeCMinScore",
+          "gradeDMinScore",
+          "gradeEMinScore",
+          "gradeFMinScore",
+          "gradeGMinScore",
+          "gradeHMinScore",
+          "groupRequired"
+        ],
+        "type": "object",
+        "properties": {
+          "gradeAMinScore": {
+            "type": "number",
+            "format": "double"
+          },
+          "gradeBMinScore": {
+            "type": "number",
+            "format": "double"
+          },
+          "gradeCMinScore": {
+            "type": "number",
+            "format": "double"
+          },
+          "gradeDMinScore": {
+            "type": "number",
+            "format": "double"
+          },
+          "gradeEMinScore": {
+            "type": "number",
+            "format": "double"
+          },
+          "gradeFMinScore": {
+            "type": "number",
+            "format": "double"
+          },
+          "gradeGMinScore": {
+            "type": "number",
+            "format": "double"
+          },
+          "gradeHMinScore": {
+            "type": "number",
+            "format": "double"
+          },
+          "evaluationCycle": {
+            "type": "string"
+          },
+          "groupRequired": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupplierTrendPointDto": {
+        "required": [
+          "debt",
+          "month",
+          "payment"
+        ],
+        "type": "object",
+        "properties": {
+          "month": {
+            "type": "string"
+          },
+          "debt": {
+            "type": "number",
+            "format": "double"
+          },
+          "payment": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SuppliersDashboardDto": {
+        "required": [
+          "contactCount",
+          "debtBySupplier",
+          "debtTotal",
+          "from",
+          "generatedAt",
+          "orderCount",
+          "paymentTotal",
+          "period",
+          "remaining",
+          "supplierCount",
+          "to",
+          "trend"
+        ],
+        "type": "object",
+        "properties": {
+          "supplierCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "contactCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "orderCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "debtTotal": {
+            "type": "number",
+            "format": "double"
+          },
+          "paymentTotal": {
+            "type": "number",
+            "format": "double"
+          },
+          "remaining": {
+            "type": "number",
+            "format": "double"
+          },
+          "debtBySupplier": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupplierDebtRowDto"
+            }
+          },
+          "trend": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupplierTrendPointDto"
+            }
+          },
+          "from": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "to": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "period": {
+            "type": "string"
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
           }
         },
         "additionalProperties": false
@@ -16397,6 +19563,24 @@
             "nullable": true
           },
           "recruitmentPlanId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateDefectProcessingRequest": {
+        "type": "object",
+        "properties": {
+          "causeSource": {
+            "type": "string",
+            "nullable": true
+          },
+          "supplierFeedback": {
+            "type": "string",
+            "nullable": true
+          },
+          "handlingMethod": {
             "type": "string",
             "nullable": true
           }
@@ -16712,6 +19896,62 @@
         },
         "additionalProperties": false
       },
+      "UpdateSupplierModuleSettingsRequest": {
+        "required": [
+          "evaluationCycle",
+          "gradeAMinScore",
+          "gradeBMinScore",
+          "gradeCMinScore",
+          "gradeDMinScore",
+          "gradeEMinScore",
+          "gradeFMinScore",
+          "gradeGMinScore",
+          "gradeHMinScore",
+          "groupRequired"
+        ],
+        "type": "object",
+        "properties": {
+          "gradeAMinScore": {
+            "type": "number",
+            "format": "double"
+          },
+          "gradeBMinScore": {
+            "type": "number",
+            "format": "double"
+          },
+          "gradeCMinScore": {
+            "type": "number",
+            "format": "double"
+          },
+          "gradeDMinScore": {
+            "type": "number",
+            "format": "double"
+          },
+          "gradeEMinScore": {
+            "type": "number",
+            "format": "double"
+          },
+          "gradeFMinScore": {
+            "type": "number",
+            "format": "double"
+          },
+          "gradeGMinScore": {
+            "type": "number",
+            "format": "double"
+          },
+          "gradeHMinScore": {
+            "type": "number",
+            "format": "double"
+          },
+          "evaluationCycle": {
+            "type": "string"
+          },
+          "groupRequired": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
       "UpdateWarehouseDto": {
         "type": "object",
         "properties": {
@@ -17008,6 +20248,105 @@
         },
         "additionalProperties": false
       },
+      "UpsertSupplierContactRequest": {
+        "required": [
+          "fullName",
+          "isPrimary",
+          "supplierId"
+        ],
+        "type": "object",
+        "properties": {
+          "supplierId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "position": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "isPrimary": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpsertSupplierEvaluationRequest": {
+        "required": [
+          "defectRate",
+          "onTimeDeliveryRate",
+          "period",
+          "score",
+          "supplierId",
+          "warrantyCompletionRate"
+        ],
+        "type": "object",
+        "properties": {
+          "supplierId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "period": {
+            "type": "string"
+          },
+          "score": {
+            "type": "number",
+            "format": "double"
+          },
+          "onTimeDeliveryRate": {
+            "type": "number",
+            "format": "double"
+          },
+          "defectRate": {
+            "type": "number",
+            "format": "double"
+          },
+          "warrantyCompletionRate": {
+            "type": "number",
+            "format": "double"
+          },
+          "evaluatedAt": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpsertSupplierGroupRequest": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "UpsertSupplierRequest": {
         "required": [
           "maxDebtDays",
@@ -17030,6 +20369,10 @@
           "maxDebtDays": {
             "type": "integer",
             "format": "int32"
+          },
+          "paymentTerms": {
+            "type": "string",
+            "nullable": true
           },
           "rating": {
             "type": "string"
