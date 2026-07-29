@@ -14,7 +14,7 @@ import {
 } from '../services/adminUsersService';
 import { queryKeys } from '../services/queryKeys';
 
-const adminUsersQueryKey = [...queryKeys.employees.all, 'adminUsers'] as const;
+const adminUsersQueryKey = queryKeys.adminUsers.all;
 
 export function adminUsersListQueryKey(params: AdminUserListParams) {
   return [...adminUsersQueryKey, params] as const;
@@ -73,7 +73,7 @@ export function useAdminUsers(params: AdminUserListParams) {
 
 export function useAdminUser(id: string | undefined, source: AdminUserSource) {
   return useQuery({
-    queryKey: [...adminUsersQueryKey, 'detail', id, source] as const,
+    queryKey: queryKeys.adminUsers.detail(id ?? '', source),
     queryFn: () => adminUsersService.getById(id as string, source),
     enabled: Boolean(id),
   });
@@ -95,7 +95,10 @@ export function useProvisionAdminAccount() {
     mutationFn: (dto: ProvisionAccountDto) => adminUsersService.provisionAccount(dto),
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: adminUsersQueryKey });
-      qc.invalidateQueries({ queryKey: [...adminUsersQueryKey, 'detail', variables.employeeId, 'employee'] });
+      qc.invalidateQueries({ queryKey: queryKeys.employees.all });
+      qc.invalidateQueries({
+        queryKey: queryKeys.adminUsers.detail(variables.employeeId, 'employee'),
+      });
     },
   });
 }
@@ -125,7 +128,7 @@ export function useChangeAdminUserRole() {
         };
       });
       qc.setQueryData(
-        [...adminUsersQueryKey, 'detail', variables.toggleId, variables.source],
+        queryKeys.adminUsers.detail(variables.toggleId, variables.source),
         user,
       );
     },
@@ -156,7 +159,7 @@ export function useToggleAdminUserStatus(listParams?: AdminUserListParams) {
       }
 
       qc.setQueryData(
-        [...adminUsersQueryKey, 'detail', toggleId, source],
+        queryKeys.adminUsers.detail(toggleId, source),
         (old: AdminUserRow | undefined) => {
           if (!old) return old;
           return {

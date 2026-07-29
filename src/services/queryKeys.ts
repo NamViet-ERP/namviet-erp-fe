@@ -23,7 +23,9 @@ export const queryKeys = {
   defects: {
     all: ['defects'] as const,
     detail: (id: string) => ['defects', id] as const,
+    eligiblePos: ['defects', 'eligiblePos'] as const,
     poPreview: (poCode: string) => ['defects', 'poPreview', poCode] as const,
+    stockPreview: (projectCode: string) => ['defects', 'stockPreview', projectCode] as const,
   },
   candidates: {
     all: ['candidates'] as const,
@@ -58,6 +60,11 @@ export const queryKeys = {
   employees: {
     all: ['employees'] as const,
     detail: (id: string) => ['employees', id] as const,
+  },
+  /** Admin identity accounts — separate from HR employees list. */
+  adminUsers: {
+    all: ['adminUsers'] as const,
+    detail: (id: string, source: string) => ['adminUsers', 'detail', id, source] as const,
   },
   onboardingInvites: {
     all: ['onboardingInvites'] as const,
@@ -102,17 +109,47 @@ export const queryKeys = {
   suppliers: {
     all: ['suppliers'] as const,
   },
+  supplierGroups: {
+    all: ['supplierGroups'] as const,
+    members: (groupId: number) => ['supplierGroups', groupId, 'members'] as const,
+    ofSupplier: (supplierId: number) => ['supplierGroups', 'ofSupplier', supplierId] as const,
+  },
+  supplierContacts: {
+    all: ['supplierContacts'] as const,
+  },
+  supplierEvaluations: {
+    all: ['supplierEvaluations'] as const,
+  },
+  supplierModuleSettings: {
+    all: ['supplierModuleSettings'] as const,
+  },
+  suppliersDashboard: {
+    all: ['suppliersDashboard'] as const,
+    detail: (params: object) => ['suppliersDashboard', params] as const,
+  },
   purchasePlans: {
     all: ['purchasePlans'] as const,
     detail: (code: string) => ['purchasePlans', code] as const,
+    variance: (planCode?: string, projectCode?: string) =>
+      ['purchasePlans', 'variance', planCode ?? '', projectCode ?? ''] as const,
   },
   arrivalPlans: {
-    list: (daysAhead: number, projectCode?: string) =>
-      ['arrivalPlans', daysAhead, projectCode ?? ''] as const,
+    list: (
+      daysAhead: number,
+      params?: { projectCode?: string; lineStatus?: string; overdueLookbackDays?: number },
+    ) =>
+      [
+        'arrivalPlans',
+        daysAhead,
+        params?.projectCode ?? '',
+        params?.lineStatus ?? '',
+        params?.overdueLookbackDays ?? '',
+      ] as const,
   },
   purchaseOrders: {
     all: ['purchaseOrders'] as const,
     detail: (code: string) => ['purchaseOrders', code] as const,
+    attachments: (code: string) => ['purchaseOrders', code, 'attachments'] as const,
   },
   purchasePayments: {
     all: ['purchasePayments'] as const,

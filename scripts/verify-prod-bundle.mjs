@@ -40,6 +40,10 @@ if (mockChunks.length > 0) {
 
 const forbiddenBundlePatterns = [
   { name: 'purchasingMock', re: /\bpurchasingMock\b/ },
+  { name: 'purchasingStore', re: /\bpurchasingStore\b/ },
+  { name: 'usePurchasingStore', re: /\busePurchasingStore\b/ },
+  { name: 'createPurchasingSeed', re: /\bcreatePurchasingSeed\b/ },
+  { name: 'buildMockPdfBlob', re: /\bbuildMockPdfBlob\b/ },
   { name: 'suppliersMock', re: /\bsuppliersMock\b/ },
   { name: 'seed factory', re: /\bcreate[A-Za-z0-9]*Seed\b/ },
 ];

@@ -10,6 +10,7 @@
     "verify:no-mock": "node scripts/verify-no-mock-src.mjs",
     "verify:prod-bundle": "node scripts/verify-prod-bundle.mjs",
     "verify:prod": "npm run verify:prod-env && npm run verify:no-mock",
+    "verify:release-gates": "node scripts/verify-release-gates.mjs",
     "build:prod": "node scripts/build-prod.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
@@ -34,6 +35,7 @@
     "react-dom": "^19.2.6",
     "react-easy-crop": "^6.0.2",
     "react-hook-form": "^7.78.0",
+    "react-is": "^19.2.8",
     "react-router-dom": "^7.16.0",
     "recharts": "^3.8.1",
     "zod": "^4.4.3"

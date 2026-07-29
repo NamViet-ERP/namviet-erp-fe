@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Phase 1 guard — fail if mock layer or resolveMock remains in application source.
+ * Fail if mock layer, purchasing seed store, or resolveMock remains in application source.
  */
 
 import { readdir, readFile, stat } from 'node:fs/promises';
@@ -17,19 +17,13 @@ const FORBIDDEN_PATTERNS = [
   { name: 'USE_MOCK import', re: /import\s*\{[^}]*\bUSE_MOCK\b[^}]*\}\s*from/ },
   { name: 'mockNotifications', re: /\bmockNotifications\b/ },
   { name: 'Chức năng giả lập', re: /Chức năng giả lập/ },
-  { name: 'purchasingMock outside DEV graph', re: /\bpurchasingMock\b/, devOnlyAllowed: true },
-  { name: 'suppliersMock outside DEV graph', re: /\bsuppliersMock\b/, devOnlyAllowed: true },
-  { name: 'seed factory outside DEV graph', re: /\bcreate[A-Za-z0-9]*Seed\b/, devOnlyAllowed: true },
-];
-
-const DEV_ONLY_PREFIXES = [
-  'src/components/purchasing/',
-  'src/data/purchasingMock.ts',
-  'src/data/suppliersMock.ts',
-  'src/lib/purchasing/',
-  'src/pages/purchasing/',
-  'src/pages/suppliers/',
-  'src/routes/DevOnlyRoutes.tsx',
+  { name: 'purchasingMock', re: /\bpurchasingMock\b/ },
+  { name: 'purchasingStore', re: /\bpurchasingStore\b/ },
+  { name: 'usePurchasingStore', re: /\busePurchasingStore\b/ },
+  { name: 'createPurchasingSeed', re: /\bcreatePurchasingSeed\b/ },
+  { name: 'buildMockPdfBlob', re: /\bbuildMockPdfBlob\b/ },
+  { name: 'suppliersMock', re: /\bsuppliersMock\b/ },
+  { name: 'create*Seed factory', re: /\bcreate[A-Za-z0-9]*Seed\b/ },
 ];
 
 async function exists(p) {
@@ -53,7 +47,17 @@ async function walk(dir) {
 }
 
 if (await exists(mocksDir)) {
-  console.error('[verify-no-mock-src] FAIL: src/mocks/ still exists — remove mock layer (Phase 1).');
+  console.error('[verify-no-mock-src] FAIL: src/mocks/ still exists — remove mock layer.');
+  process.exit(1);
+}
+
+if (await exists(path.join(srcDir, 'data', 'purchasingMock.ts'))) {
+  console.error('[verify-no-mock-src] FAIL: src/data/purchasingMock.ts still exists.');
+  process.exit(1);
+}
+
+if (await exists(path.join(srcDir, 'lib', 'purchasing', 'purchasingStore.ts'))) {
+  console.error('[verify-no-mock-src] FAIL: src/lib/purchasing/purchasingStore.ts still exists.');
   process.exit(1);
 }
 
@@ -62,10 +66,9 @@ const violations = [];
 
 for (const file of files) {
   const rel = path.relative(root, file).replace(/\\/g, '/');
+  // Test fixtures may use local factories — still ban seed/mock names above.
   const content = await readFile(file, 'utf8');
-  const isDevOnly = DEV_ONLY_PREFIXES.some(prefix => rel.startsWith(prefix));
-  for (const { name, re, devOnlyAllowed } of FORBIDDEN_PATTERNS) {
-    if (devOnlyAllowed && isDevOnly) continue;
+  for (const { name, re } of FORBIDDEN_PATTERNS) {
     if (re.test(content)) {
       violations.push(`${rel}: ${name}`);
     }

@@ -45,13 +45,18 @@ dist-ssr
 /playwright/.cache/
 e2e/.auth/
 
-# Local scratch under docs/ — only DEPLOY.md is tracked
+# Local scratch under docs/ — allowlist tracked docs
 docs/*
 !docs/DEPLOY.md
+!docs/RELEASE_GATES.md
+!docs/UNSHIPPED_MODULES.md
 
-# Build scripts for production (verify + build-prod)
+# Build scripts for production (verify + build-prod + OpenAPI + release gates)
 scripts/*
 !scripts/verify-prod-env.mjs
 !scripts/verify-no-mock-src.mjs
 !scripts/verify-prod-bundle.mjs
 !scripts/build-prod.mjs
+!scripts/verify-release-gates.mjs
+!scripts/fetch-swagger.mjs
+!scripts/check-openapi-generated.mjs

@@ -71,7 +71,7 @@ Deploy job thật (làm sau khi chốt hosting): thêm job hoặc pipeline riên
 
 ## 4. Trước khi deploy FE
 
-- [ ] Backend đã chạy, `/health` trả 200  
+- [ ] Backend đã chạy: `/health` và `/health/ready` trả 200  
 - [ ] `VITE_API_BASE_URL` trỏ đúng domain API production  
 - [ ] CORS trên BE cho phép origin frontend (xem BE deploy doc)  
 - [ ] Đã chạy `npm run build:prod` thành công  
@@ -84,7 +84,11 @@ Deploy job thật (làm sau khi chốt hosting): thêm job hoặc pipeline riên
 - [ ] Mở app → trang login load  
 - [ ] Đăng nhập tài khoản thật (không quick-login mock)  
 - [ ] DevTools → Network: request tới `VITE_API_BASE_URL`, có `Authorization` sau login  
-- [ ] Thử một flow: danh sách nhân viên hoặc danh sách dự án kho  
+- [ ] Thử một flow Kho + một flow Mua hàng (sau login)  
+
+### Session / quyền trên FE
+
+`localStorage` (`nv-session-user`, permissions mirror) chỉ phục vụ **UI** (ẩn/hiện menu). **Server vẫn authoritative** — mọi API kiểm tra JWT + permission; không tin client để authorize.
 
 ---
 
