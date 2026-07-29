@@ -1,0 +1,48 @@
+# Manual publish helper — does not SSH to a server.
+# After hosting is chosen, extend this job to copy artifact to the host.
+name: CD publish FE
+
+on:
+  workflow_dispatch:
+    inputs:
+      api_base_url:
+        description: 'VITE_API_BASE_URL (empty = same-origin reverse proxy)'
+        required: false
+        default: ''
+      environment:
+        description: 'GitHub Environment name (secrets/protection)'
+        required: true
+        default: production
+
+jobs:
+  build-and-artifact:
+    name: Build production dist
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build with deploy URL
+        run: |
+          printf '%s\n' \
+            "VITE_API_BASE_URL=${{ inputs.api_base_url }}" \
+            'VITE_BASE_PATH=/' \
+            > .env.production
+          npm run build:prod
+        env:
+          VITE_API_BASE_URL: ${{ inputs.api_base_url }}
+
+      - name: Upload deployable dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: fe-dist-${{ inputs.environment }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14

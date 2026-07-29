@@ -60,3 +60,4 @@ scripts/*
 !scripts/verify-release-gates.mjs
 !scripts/fetch-swagger.mjs
 !scripts/check-openapi-generated.mjs
+.vercel

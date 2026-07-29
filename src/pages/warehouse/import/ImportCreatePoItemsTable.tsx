@@ -1,0 +1,123 @@
+import QtyStepper from '../../../components/ui/QtyStepper';
+import EmptyState from '../../../components/ui/EmptyState';
+import TableSkeletonRows from '../../../components/ui/TableSkeletonRows';
+import { formatCurrency } from '../../../utils/formatCurrency';
+import type { PoImportLinePreviewApiDto } from '../../../types/api/poImportApi';
+import type { PoLineDraft } from './importCreatePoDrafts';
+
+export interface ImportCreatePoItemsTableProps {
+  canViewPrices: boolean;
+  poLoading: boolean;
+  poPreviewLines: PoImportLinePreviewApiDto[];
+  poLineDrafts: Record<number, PoLineDraft>;
+  isPending: boolean;
+  formGrandTotal: number;
+  onSetPoLine: (poItemId: number, patch: Partial<PoLineDraft>) => void;
+}
+
+export default function ImportCreatePoItemsTable({
+  canViewPrices,
+  poLoading,
+  poPreviewLines,
+  poLineDrafts,
+  isPending,
+  formGrandTotal,
+  onSetPoLine,
+}: ImportCreatePoItemsTableProps) {
+  return (
+    <div className="overflow-x-auto table-scroll">
+      <table className="form-table import-items-table import-items-table--po-select text-xs">
+        <thead>
+          <tr>
+            <th className="table-header-cell w-10 text-center" />
+            <th className="table-header-cell text-center">Mặt hàng</th>
+            <th className="table-header-cell text-center">Đặt</th>
+            <th className="table-header-cell text-center">Đã nhận</th>
+            <th className="table-header-cell text-center">Chờ NK</th>
+            <th className="table-header-cell text-center">Còn lại</th>
+            {canViewPrices && <th className="table-header-cell text-center">Đơn giá</th>}
+            <th className="table-header-cell text-center">SL dự kiến</th>
+            {canViewPrices && <th className="table-header-cell text-center">Thành tiền</th>}
+          </tr>
+        </thead>
+        <tbody>
+          {poLoading ? (
+            <TableSkeletonRows rows={4} colSpan={canViewPrices ? 9 : 7} />
+          ) : poPreviewLines.length === 0 ? (
+            <tr>
+              <td colSpan={canViewPrices ? 9 : 7}>
+                <EmptyState message="PO không còn dòng hàng để nhập." />
+              </td>
+            </tr>
+          ) : (
+            poPreviewLines.map(line => {
+              const draft = poLineDrafts[line.poItemId] ?? { selected: false, qty: '0' };
+              const disabled = line.available <= 0;
+              const qty = Number(draft.qty) || 0;
+              const lineTotal = draft.selected && qty > 0 ? qty * line.unitPrice : 0;
+              return (
+                <tr key={line.poItemId} className={disabled ? 'opacity-60' : 'table-row'}>
+                  <td className="table-cell text-center">
+                    <input
+                      type="checkbox"
+                      checked={draft.selected && !disabled}
+                      disabled={disabled || isPending}
+                      onChange={e => onSetPoLine(line.poItemId, { selected: e.target.checked })}
+                      aria-label={`Chọn ${line.name}`}
+                    />
+                  </td>
+                  <td className="table-cell">
+                    <div className="font-medium text-[var(--md-on-surface)] leading-snug">{line.name}</div>
+                    <div className="mt-0.5 text-[10px] text-[var(--md-on-surface-variant)] leading-snug">
+                      {[line.materialCode, line.unit].filter(Boolean).join(' · ') || '—'}
+                    </div>
+                  </td>
+                  <td className="table-cell text-center tabular-nums">{line.ordered}</td>
+                  <td className="table-cell text-center tabular-nums">{line.received}</td>
+                  <td className="table-cell text-center tabular-nums">{line.reservedPending}</td>
+                  <td className="table-cell text-center tabular-nums font-semibold">{line.available}</td>
+                  {canViewPrices && (
+                    <td className="table-cell text-center tabular-nums">{formatCurrency(line.unitPrice)}</td>
+                  )}
+                  <td className="table-cell text-center">
+                    {disabled || !draft.selected ? (
+                      <div className="import-cell-placeholder import-cell-placeholder--center text-[var(--md-on-surface-variant)]">
+                        —
+                      </div>
+                    ) : (
+                      <div className="import-cell-placeholder import-cell-placeholder--center">
+                        <QtyStepper
+                          value={draft.qty}
+                          max={line.available}
+                          className="qty-stepper--compact"
+                          onChange={qtyVal => onSetPoLine(line.poItemId, { qty: qtyVal })}
+                        />
+                      </div>
+                    )}
+                  </td>
+                  {canViewPrices && (
+                    <td className="table-cell text-center tabular-nums font-semibold text-[var(--md-on-surface)]">
+                      {lineTotal > 0 ? formatCurrency(lineTotal) : '—'}
+                    </td>
+                  )}
+                </tr>
+              );
+            })
+          )}
+        </tbody>
+        {canViewPrices && (
+          <tfoot>
+            <tr className="border-t border-[var(--md-outline-variant)]">
+              <td colSpan={8} className="table-cell text-right font-bold text-[var(--md-on-surface-variant)] py-2">
+                Tổng cộng (đã chọn)
+              </td>
+              <td className="table-cell text-center font-bold tabular-nums text-[var(--md-primary)] py-2">
+                {formatCurrency(formGrandTotal)} đ
+              </td>
+            </tr>
+          </tfoot>
+        )}
+      </table>
+    </div>
+  );
+}

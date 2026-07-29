@@ -1,11 +1,11 @@
-# Runs on branch `production` — change `branches` when you switch to main/master.
+# Runs on production + feature branches used for purchasing work.
 name: CI
 
 on:
   push:
-    branches: [production]
+    branches: [production, feature/purchasing]
   pull_request:
-    branches: [production]
+    branches: [production, feature/purchasing]
 
 jobs:
   frontend:
@@ -35,18 +35,27 @@ jobs:
         env:
           NODE_ENV: test
 
-      - name: Write .env.production for CI build
+      - name: Write .env.production for CI build (same-origin)
         run: |
           printf '%s\n' \
-            'VITE_API_BASE_URL=https://api.ci-placeholder.local' \
+            'VITE_API_BASE_URL=' \
+            'VITE_BASE_PATH=/' \
             > .env.production
 
       - name: Verify production env
         run: npm run verify:prod
         env:
-          VITE_API_BASE_URL: https://api.ci-placeholder.local
+          VITE_API_BASE_URL: ''
 
       - name: Production build
         run: npm run build:prod
         env:
-          VITE_API_BASE_URL: https://api.ci-placeholder.local
+          VITE_API_BASE_URL: ''
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fe-dist
+          path: dist/
+          if-no-files-found: error
+          retention-days: 7

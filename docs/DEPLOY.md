@@ -9,10 +9,10 @@ Backend: file `docs/DEPLOY.md` trong repo **`WareHouse_Management_BE`** (cùng b
 
 | Được | Không được |
 |------|------------|
-| Gọi API thật qua `VITE_API_BASE_URL` | `VITE_USE_MOCK=true` (mock layer đã gỡ — build sẽ fail nếu set) |
+| Gọi API thật (same-origin proxy hoặc absolute URL) | `VITE_USE_MOCK=true` (mock layer đã gỡ — build sẽ fail nếu set) |
 | Build bằng `npm run build:prod` | `npm run build` thiếu `.env.production` / env shell |
 | Master data tùy chọn qua script SQL (BE) sau khi business chốt | Seed user / dữ liệu nghiệp vụ trong code hoặc migration tự chạy |
-| Tạo admin đầu tiên thủ công qua API | Tài khoản admin cứng trong repo |
+| Tạo admin đầu tiên thủ công (BE `BootstrapFirstAdmin`) | Tài khoản admin cứng trong repo |
 
 ---
 
@@ -28,10 +28,10 @@ Chỉnh `.env.production` (không commit file này nếu chứa URL nội bộ n
 
 | Biến | Bắt buộc | Ví dụ | Ghi chú |
 |------|----------|-------|---------|
-| `VITE_API_BASE_URL` | Có | `https://api.namviet.vn` | URL backend; **bake vào bundle lúc build** |
+| `VITE_API_BASE_URL` | Có (có thể **rỗng**) | `` (khuyến nghị) hoặc `https://api.namviet.vn` | **Khuyến nghị:** để trống + reverse proxy `/api` (và `/hubs`) cùng origin với SPA (cookie auth). Absolute URL chỉ khi cố ý gọi API theo host khác same-site. **Bake vào bundle lúc build.** |
 | `VITE_BASE_PATH` | Không | `/` hoặc `/wms/` | Nếu host dưới sub-path |
 
-**Lưu ý:** Mọi biến `VITE_*` lộ trong file JS client — không đặt secret ở đây.
+**Lưu ý:** Mọi biến `VITE_*` lộ trong file JS client — không đặt secret ở đây. Không set `VITE_E2E=true` trên production.
 
 ---
 
@@ -39,7 +39,7 @@ Chỉnh `.env.production` (không commit file này nếu chứa URL nội bộ n
 
 ```powershell
 cd WareHouse_Management
-# Đảm bảo .env.production hoặc shell có VITE_API_BASE_URL
+# .env.production: VITE_API_BASE_URL=  (same-origin) hoặc absolute URL
 npm ci
 npm run build:prod
 ```
@@ -48,34 +48,55 @@ Artifact: thư mục `dist/` — deploy lên static host (Nginx, IIS, CDN, …).
 
 ### Guard đã bật (P0 + Phase 1)
 
-- `verify-prod-env` — fail nếu `VITE_USE_MOCK=true` hoặc thiếu API URL  
-- `verify-no-mock-src` — fail nếu còn `src/mocks/` hoặc import mock trong `src/`  
+- `verify-prod-env` — fail nếu `VITE_USE_MOCK=true`; `VITE_API_BASE_URL` phải rỗng (same-origin), absolute http(s), hoặc path  
+- `verify-no-mock-src` — fail nếu còn mock/seed store trong `src/`  
 - `verify-prod-bundle` — fail nếu `dist/assets/` còn chunk `*.mock*.js`  
-- `vite.config.ts` — fail production build nếu mock bật hoặc thiếu URL  
-- `assertProductionConfig()` — runtime guard trong `main.tsx`  
-- CI (GitHub Actions): chạy trên branch `production`, dùng URL placeholder chỉ để **verify compile** — deploy thật phải build lại với URL API thật
+- `vite.config.ts` / `assertProductionConfig()` — chặn mock trên production  
+- CI: build same-origin (`VITE_API_BASE_URL` rỗng) + upload artifact `fe-dist`
+
+### Mẫu reverse proxy (same-origin)
+
+```nginx
+# SPA + API cùng host — FE build với VITE_API_BASE_URL=
+location /api/ {
+  proxy_pass http://127.0.0.1:8080/api/;
+  proxy_set_header Host $host;
+  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  proxy_set_header X-Forwarded-Proto $scheme;
+}
+location /hubs/ {
+  proxy_pass http://127.0.0.1:8080/hubs/;
+  proxy_http_version 1.1;
+  proxy_set_header Upgrade $http_upgrade;
+  proxy_set_header Connection "upgrade";
+}
+location / {
+  try_files $uri $uri/ /index.html;
+}
+```
 
 ---
 
-## 3. GitHub Actions (verify)
+## 3. GitHub Actions (CI + CD)
 
-Workflow: `.github/workflows/ci.yml`
+| Workflow | Khi chạy | Việc |
+|----------|----------|------|
+| `.github/workflows/ci.yml` | push/PR → `production`, `feature/purchasing` | api:check, typecheck, lint, test, `build:prod`, artifact `fe-dist` |
+| `.github/workflows/cd-publish.yml` | **workflow_dispatch** + GitHub Environment | Build deployable `dist/` (input `api_base_url`, mặc định rỗng = same-origin) |
 
-- Trigger: **push** và **pull request** vào branch **`production`**
-- Env CI: `VITE_API_BASE_URL=https://api.ci-placeholder.local` (không dùng cho user thật)
-- Khi đổi sang `main`/`master`: sửa `on.push.branches` / `pull_request.branches` trong file workflow
+Secrets / Environment (GitHub): không cần secret FE nếu same-origin. Nếu absolute API URL: truyền input `api_base_url` lúc dispatch.
 
-Deploy job thật (làm sau khi chốt hosting): thêm job hoặc pipeline riêng, set secret `VITE_API_BASE_URL` = URL production.
+Copy artifact lên host vẫn **thủ công** (hoặc mở rộng CD sau khi chốt hosting/SSH).
 
 ---
 
 ## 4. Trước khi deploy FE
 
 - [ ] Backend đã chạy: `/health` và `/health/ready` trả 200  
-- [ ] `VITE_API_BASE_URL` trỏ đúng domain API production  
-- [ ] CORS trên BE cho phép origin frontend (xem BE deploy doc)  
+- [ ] Same-origin: proxy `/api` (+ `/hubs`) đúng; hoặc `VITE_API_BASE_URL` absolute đúng  
+- [ ] CORS trên BE cho phép origin frontend (xem BE deploy doc + `.env.production.example`)  
 - [ ] Đã chạy `npm run build:prod` thành công  
-- [ ] Không deploy artifact từ CI placeholder URL (trừ môi trường test tạm)
+- [ ] Deploy đúng artifact (CI `fe-dist` same-origin hoặc CD publish với URL đã chốt)
 
 ---
 
