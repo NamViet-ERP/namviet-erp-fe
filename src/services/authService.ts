@@ -121,6 +121,19 @@ export const authService = {
 
   async ensureSession(): Promise<SessionCheckResult> {
     const token = getStoredToken();
+    const e2e = import.meta.env.VITE_E2E === 'true';
+
+    // Playwright persists access JWT in localStorage; refresh cookies rotate per test context.
+    // Prefer /me with the bearer token before cookie refresh so E2E storageState stays usable.
+    if (e2e && token && !isAccessTokenExpired(token)) {
+      const synced = await syncSessionUserFromApi();
+      if (synced === 'authenticated') return synced;
+      if (synced === 'recoverable-error') {
+        clearSessionUser();
+        return synced;
+      }
+    }
+
     if (!token || isAccessTokenExpired(token)) {
       const refreshResult = await refreshAccessToken();
       if (refreshResult === 'unavailable') {

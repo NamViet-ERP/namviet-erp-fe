@@ -39,6 +39,9 @@ export default defineConfig({
       // Same-origin cookie auth via Vite proxy
       VITE_API_BASE_URL: '',
       VITE_DEV_PROXY_TARGET: apiBaseURL,
+      // Persist access JWT in sessionStorage for Playwright storageState reuse
+      // (refresh-token rotation would otherwise invalidate a static cookie file).
+      VITE_E2E: 'true',
     },
   },
 });

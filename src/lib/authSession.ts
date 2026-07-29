@@ -14,6 +14,13 @@ export const REFRESH_KEY = 'nv-refresh-token';
 
 let memoryAccessToken: string | null = null;
 
+/** Playwright-only: access JWT in localStorage so storageState can reuse it across tests. */
+const E2E_ACCESS_TOKEN_KEY = 'nv-e2e-access-token';
+
+function isE2E(): boolean {
+  return import.meta.env.VITE_E2E === 'true';
+}
+
 export function clearLegacyTokenStorage(): void {
   for (const store of [localStorage, sessionStorage]) {
     store.removeItem(TOKEN_KEY);
@@ -25,6 +32,8 @@ export function clearLegacyTokenStorage(): void {
 
 export function clearAuthSession(): void {
   memoryAccessToken = null;
+  // Keep nv-e2e-access-token in E2E so Playwright storageState / same-tab recovery still work
+  // after a failed cookie refresh.
   clearLegacyTokenStorage();
   localStorage.removeItem('nv-logged-in');
   localStorage.removeItem('nv-session-user');
@@ -34,10 +43,28 @@ export function clearAuthSession(): void {
 
 export function setAccessToken(token: string | null): void {
   memoryAccessToken = token && token.trim() ? token : null;
+  if (!isE2E()) return;
+  try {
+    if (memoryAccessToken) localStorage.setItem(E2E_ACCESS_TOKEN_KEY, memoryAccessToken);
+    else localStorage.removeItem(E2E_ACCESS_TOKEN_KEY);
+  } catch {
+    // ignore
+  }
 }
 
 export function getStoredToken(): string | null {
-  return memoryAccessToken;
+  if (memoryAccessToken) return memoryAccessToken;
+  if (!isE2E()) return null;
+  try {
+    const fromLocal = localStorage.getItem(E2E_ACCESS_TOKEN_KEY);
+    if (fromLocal?.trim()) {
+      memoryAccessToken = fromLocal.trim();
+      return memoryAccessToken;
+    }
+  } catch {
+    // ignore
+  }
+  return null;
 }
 
 export function hasAuthSession(): boolean {
