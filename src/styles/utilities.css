@@ -394,6 +394,23 @@
     padding-bottom: 0;
   }
 
+  /* Cột trạng thái HL: căn giữa khối badge + user (khác list PO left-align) */
+  .defect-status-cell {
+    display: inline-flex;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .pur-erp--po.defect-status-cell .pur-erp__approve {
+    align-items: center;
+  }
+
+  .pur-erp--po.defect-status-cell .pur-erp__approve-user {
+    justify-content: center;
+    text-align: center;
+    max-width: none;
+  }
+
   .pending-evidence {
     position: relative;
     display: flex;

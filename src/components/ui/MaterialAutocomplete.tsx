@@ -18,6 +18,8 @@ interface MaterialAutocompleteProps {
   disabled?: boolean;
   /** Closed input label: full `code — name` (default) or name only. */
   displayLabel?: 'code-name' | 'name';
+  /** When value is not in materials list (vd. phiếu cũ), vẫn hiện nhãn này. */
+  fallbackLabel?: string;
 }
 
 function materialLabel(m: MaterialApiDto, displayLabel: 'code-name' | 'name') {
@@ -32,6 +34,7 @@ export default function MaterialAutocomplete({
   compact = false,
   disabled = false,
   displayLabel = 'code-name',
+  fallbackLabel,
 }: MaterialAutocompleteProps) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState('');
@@ -48,7 +51,11 @@ export default function MaterialAutocomplete({
     () => materials.find(m => m.materialCode === value),
     [materials, value],
   );
-  const closedLabel = selected ? materialLabel(selected, displayLabel) : '';
+  const closedLabel = selected
+    ? materialLabel(selected, displayLabel)
+    : (value && fallbackLabel
+      ? (displayLabel === 'name' ? fallbackLabel : `${value} — ${fallbackLabel}`)
+      : (value || ''));
   const inputValue = open ? draft : closedLabel;
 
   const filtered = useMemo(() => {

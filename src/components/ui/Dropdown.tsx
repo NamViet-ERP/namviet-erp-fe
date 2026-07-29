@@ -1,12 +1,14 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronDown } from 'lucide-react';
 import type { DropdownItem } from '../../types';
-import type { ReactNode } from 'react';
+import type { ReactNode, CSSProperties } from 'react';
 
 /**
  * MD3 Menu / Dropdown
  * Trigger: Tonal button · Menu: surface-container, shadow-3
+ * Placement: always opens downward and follows the trigger on scroll.
+ * Stacking: --z-dropdown (below app header) so menu slides under header when scrolling.
  */
 
 interface DropdownProps {
@@ -17,26 +19,40 @@ interface DropdownProps {
 
 export default function Dropdown({ trigger, items, className = '' }: DropdownProps) {
   const [open, setOpen] = useState(false);
-  const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
+  const [menuStyle, setMenuStyle] = useState<CSSProperties>({});
   const ref = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const calculatePosition = useCallback(() => {
     if (!ref.current) return;
     const rect = ref.current.getBoundingClientRect();
-    const spaceBelow = window.innerHeight - rect.bottom;
-    const menuHeight = Math.min(items.length * 48 + 16, 300);
-    const openUp = spaceBelow < menuHeight && rect.top > spaceBelow;
+
+    // Trigger left the viewport → close (do not pin menu to header).
+    if (rect.bottom < 0 || rect.top > window.innerHeight) {
+      setOpen(false);
+      return;
+    }
+
+    const gap = 4;
+    // Always follow the trigger downward — never clamp/stick under the header.
+    const top = rect.bottom + gap;
+    const right = Math.max(8, window.innerWidth - rect.right);
+    const spaceBelow = Math.max(48, window.innerHeight - top - 8);
 
     setMenuStyle({
       position: 'fixed',
-      top: openUp ? 'auto' : `${rect.bottom + 4}px`,
-      bottom: openUp ? `${window.innerHeight - rect.top + 4}px` : 'auto',
-      right: `${window.innerWidth - rect.right}px`,
+      top: `${top}px`,
+      left: 'auto',
+      right: `${right}px`,
+      bottom: 'auto',
       minWidth: `${Math.max(rect.width, 200)}px`,
-      zIndex: 99999,
+      maxHeight: `${Math.min(320, spaceBelow)}px`,
+      overflowY: 'auto',
+      transformOrigin: 'top right',
+      // Below .nv-header (--z-sidebar-flyout: 50) so scroll tucks menu under header.
+      zIndex: 'var(--z-dropdown)',
     });
-  }, [items.length]);
+  }, []);
 
   const handleToggle = () => {
     if (open) {
@@ -46,6 +62,11 @@ export default function Dropdown({ trigger, items, className = '' }: DropdownPro
     calculatePosition();
     setOpen(true);
   };
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    calculatePosition();
+  }, [open, calculatePosition]);
 
   useEffect(() => {
     const handleOutside = (e: MouseEvent) => {
@@ -59,15 +80,14 @@ export default function Dropdown({ trigger, items, className = '' }: DropdownPro
   }, [open]);
 
   useEffect(() => {
-    if (open) {
-      calculatePosition();
-      window.addEventListener('scroll', calculatePosition, true);
-      window.addEventListener('resize', calculatePosition);
-      return () => {
-        window.removeEventListener('scroll', calculatePosition, true);
-        window.removeEventListener('resize', calculatePosition);
-      };
-    }
+    if (!open) return;
+    const onReposition = () => calculatePosition();
+    window.addEventListener('scroll', onReposition, true);
+    window.addEventListener('resize', onReposition);
+    return () => {
+      window.removeEventListener('scroll', onReposition, true);
+      window.removeEventListener('resize', onReposition);
+    };
   }, [open, calculatePosition]);
 
   return (
@@ -76,6 +96,8 @@ export default function Dropdown({ trigger, items, className = '' }: DropdownPro
         type="button"
         onClick={handleToggle}
         className="btn btn-tonal nv-dropdown__trigger"
+        aria-expanded={open}
+        aria-haspopup="menu"
       >
         {trigger || 'TÁC VỤ'}
         <ChevronDown
@@ -89,6 +111,8 @@ export default function Dropdown({ trigger, items, className = '' }: DropdownPro
           ref={menuRef}
           style={menuStyle}
           className="nv-dropdown__menu animate-scale-in"
+          role="menu"
+          data-placement="bottom"
         >
           {items.map((item, i) => (
             item.divider ? (
@@ -97,6 +121,7 @@ export default function Dropdown({ trigger, items, className = '' }: DropdownPro
               <button
                 key={i}
                 type="button"
+                role="menuitem"
                 onClick={() => { item.onClick?.(); setOpen(false); }}
                 className={`nv-dropdown__item${item.danger ? ' nv-dropdown__item--danger' : ''}`}
               >

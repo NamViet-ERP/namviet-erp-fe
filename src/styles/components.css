@@ -278,8 +278,14 @@
     border-radius: 4px;
     box-shadow: var(--md-shadow-3);
     padding: 4px 0;
-    overflow: hidden;
+    overflow: auto;
     border: 1px solid var(--md-outline-variant02);
+    /* Placement is always below the trigger (inline top); never rely on bottom/up flip. */
+    transform-origin: top right;
+  }
+  .nv-dropdown__menu[data-placement='bottom'] {
+    /* Guard against any leftover bottom/up absolute rules */
+    bottom: auto !important;
   }
   .dark .nv-dropdown__menu {
     background: var(--md-surface-container-high);
@@ -7482,12 +7488,16 @@
     border: none;
   }
   .stock-col-code {
-    width: 5.5rem;
-    max-width: 5.5rem;
+    width: 12rem;
+    min-width: 12rem;
+    max-width: 14rem;
+    overflow: hidden;
   }
   .stock-col-name {
-    width: 8.5rem;
-    max-width: 8.5rem;
+    width: 10rem;
+    min-width: 9rem;
+    max-width: 14rem;
+    overflow: hidden;
   }
   .stock-col-project {
     width: 6.5rem;
