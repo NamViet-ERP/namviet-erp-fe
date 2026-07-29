@@ -195,6 +195,22 @@
   color: #9a3412;
 }
 
+.arrival-plans-pill--upcoming {
+  background: color-mix(in srgb, var(--md-primary) 12%, transparent);
+  color: var(--md-primary);
+}
+
+.arrival-plans-pill--due-today {
+  background: color-mix(in srgb, #b45309 14%, transparent);
+  color: #9a3412;
+}
+
+.arrival-plans-pill--overdue {
+  background: color-mix(in srgb, var(--md-error, #b3261e) 14%, transparent);
+  color: var(--md-error, #b3261e);
+  font-weight: 700;
+}
+
 .arrival-plans-project__chevron {
   color: var(--md-on-surface-variant);
   font-size: 0.875rem;

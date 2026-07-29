@@ -11,7 +11,7 @@ import { usePermission } from '../../hooks/usePermission';
 import { formatDateCell } from '../../lib/hrm/formatters';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { formatCurrencyFull } from '../../utils/formatCurrency';
-import type { ArrivalPlanProjectApiDto } from '../../services/arrivalPlansService';
+import type { ArrivalPlanLineStatus, ArrivalPlanProjectApiDto } from '../../services/arrivalPlansService';
 
 const DAY_PRESETS = [
   { days: 3, label: '3 ngày tới' },
@@ -19,6 +19,19 @@ const DAY_PRESETS = [
   { days: 14, label: '14 ngày tới' },
   { days: 30, label: '30 ngày tới' },
 ] as const;
+
+const STATUS_FILTERS: Array<{ value: ArrivalPlanLineStatus | 'all'; label: string }> = [
+  { value: 'all', label: 'Tất cả' },
+  { value: 'upcoming', label: 'Sắp về' },
+  { value: 'due_today', label: 'Đến hạn' },
+  { value: 'overdue', label: 'Quá hạn' },
+];
+
+const LINE_STATUS_META: Record<ArrivalPlanLineStatus, { label: string; className: string }> = {
+  upcoming: { label: 'Sắp về', className: 'arrival-plans-pill--upcoming' },
+  due_today: { label: 'Đến hạn', className: 'arrival-plans-pill--due-today' },
+  overdue: { label: 'Quá hạn', className: 'arrival-plans-pill--overdue' },
+};
 
 function fmtQty(n: number) {
   return n.toLocaleString('vi-VN', { maximumFractionDigits: 2 });
@@ -28,10 +41,13 @@ export default function ArrivalPlansPage() {
   const { has } = usePermission();
   const canViewPrices = has('wms.prices.view');
   const [daysAhead, setDaysAhead] = useState(7);
+  const [lineStatus, setLineStatus] = useState<ArrivalPlanLineStatus | 'all'>('all');
   const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState<string | null>(null);
 
-  const { data, isLoading, isError, error } = useArrivalPlans(daysAhead);
+  const { data, isLoading, isError, error } = useArrivalPlans(daysAhead, {
+    lineStatus: lineStatus === 'all' ? undefined : lineStatus,
+  });
   const projects = data?.projects ?? [];
 
   const filtered = useMemo(() => {
@@ -98,6 +114,22 @@ export default function ArrivalPlansPage() {
                 </button>
               ))}
             </div>
+            <div className="arrival-plans-day-chips" role="group" aria-label="Lọc trạng thái">
+              {STATUS_FILTERS.map(f => (
+                <button
+                  key={f.value}
+                  type="button"
+                  className={
+                    lineStatus === f.value
+                      ? 'arrival-plans-day-chip is-active'
+                      : 'arrival-plans-day-chip'
+                  }
+                  onClick={() => setLineStatus(f.value)}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
             <SearchBar
               value={search}
               onChange={setSearch}
@@ -121,7 +153,11 @@ export default function ArrivalPlansPage() {
           <EmptyState message={getApiErrorMessage(error, 'Không tải được kế hoạch hàng về')} icon={Truck} />
         ) : filtered.length === 0 ? (
           <EmptyState
-            message={`Không có hàng về trong ${daysAhead} ngày tới.`}
+            message={
+              lineStatus === 'all'
+                ? `Không có hàng về trong ${daysAhead} ngày tới (tính cả quá hạn trong ${data?.overdueLookbackDays ?? 30} ngày gần đây).`
+                : `Không có dòng "${STATUS_FILTERS.find(f => f.value === lineStatus)?.label}" trong ${daysAhead} ngày tới.`
+            }
             icon={CalendarClock}
           />
         ) : (
@@ -176,6 +212,16 @@ function ArrivalProjectCard({
               Sớm nhất {formatDateCell(project.earliestExpectedDate)}
             </span>
           )}
+          {project.overdueCount > 0 && (
+            <span className="arrival-plans-pill arrival-plans-pill--overdue">
+              Quá hạn {project.overdueCount}
+            </span>
+          )}
+          {project.dueTodayCount > 0 && (
+            <span className="arrival-plans-pill arrival-plans-pill--due-today">
+              Đến hạn {project.dueTodayCount}
+            </span>
+          )}
           <span className="arrival-plans-project__chevron" aria-hidden>
             {expanded ? '▾' : '▸'}
           </span>
@@ -193,6 +239,7 @@ function ArrivalProjectCard({
                   <th className="table-header-cell text-right">Còn lại</th>
                   <th className="table-header-cell">ĐVT</th>
                   <th className="table-header-cell whitespace-nowrap">Ngày DK</th>
+                  <th className="table-header-cell">Trạng thái</th>
                   <th className="table-header-cell">NCC</th>
                   {canViewPrices && <th className="table-header-cell text-right">Đơn giá</th>}
                   <th className="table-header-cell text-center">Thao tác</th>
@@ -226,6 +273,11 @@ function ArrivalProjectCard({
                     <td className="table-cell">{line.unit}</td>
                     <td className="table-cell tabular-nums whitespace-nowrap">
                       {formatDateCell(line.expectedDeliveryDate)}
+                    </td>
+                    <td className="table-cell whitespace-nowrap">
+                      <span className={`arrival-plans-pill ${LINE_STATUS_META[line.lineStatus as ArrivalPlanLineStatus].className}`}>
+                        {LINE_STATUS_META[line.lineStatus as ArrivalPlanLineStatus].label}
+                      </span>
                     </td>
                     <td className="table-cell max-w-[160px]">
                       <span className="line-clamp-2">{line.purchaseSupplierName || '—'}</span>
