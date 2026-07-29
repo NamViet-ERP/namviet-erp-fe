@@ -12,7 +12,8 @@ const wmsPages: Array<{ path: string; title: string | RegExp }> = [
   { path: '/warehouse/reports', title: 'Báo cáo kho' },
   { path: '/warehouse/settings/material-categories', title: 'Cây vật tư' },
   { path: '/warehouse/settings/material-units', title: 'Đơn vị tính' },
-  { path: '/purchasing/suppliers', title: 'Nhà cung cấp' },
+  { path: '/warehouse/defects', title: 'Hàng lỗi và Bảo hành' },
+  { path: '/warehouse/arrival-plans', title: 'Kế hoạch hàng về' },
   { path: '/stocktake/list', title: /KIỂM KÊ KHO DỰ ÁN/i },
 ];
 
@@ -34,7 +35,7 @@ test.describe('WMS pages', () => {
 
   test('stock matrix table renders', async ({ page }) => {
     await page.goto('/warehouse/stock');
-    await expect(page.getByRole('columnheader', { name: 'Mã VT' })).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: 'Mã vật tư' })).toBeVisible();
     await expect(page.getByRole('columnheader', { name: 'Tên vật tư' })).toBeVisible();
   });
 });

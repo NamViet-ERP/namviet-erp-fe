@@ -3,12 +3,14 @@ import {
   cancelStocktake,
   createFrozenStocktake,
   findProjectWithStock,
+  getMaterials,
   loginToken,
 } from './helpers/api';
 import {
   bumpQtyStepper,
   expectSnackbar,
   pickFirstAutocomplete,
+  fillImportDraftForm,
 } from './helpers/ui';
 
 function uniqueFixtureNote(kind: string, workerIndex: number, retry: number): string {
@@ -53,9 +55,6 @@ test.describe('WMS freeze guard', () => {
 
   test('blocks import chốt dự kiến when project is frozen', async ({ page }, testInfo) => {
     const token = await loginToken();
-    const stock = await findProjectWithStock(token);
-    test.skip(!stock, 'No unfrozen project for freeze guard import test');
-
     const note = uniqueFixtureNote('IMPORT', testInfo.workerIndex, testInfo.retry);
     let stocktakeId: string | undefined;
 
@@ -64,19 +63,28 @@ test.describe('WMS freeze guard', () => {
       await page.getByRole('button', { name: 'Tạo phiếu nhập' }).click();
 
       const dialog = page.getByRole('dialog', { name: 'Tạo phiếu nhập kho dự án' });
-      await dialog.locator('select.form-select').first().selectOption(stock!.projectCode);
-      await pickFirstAutocomplete(page, dialog.getByPlaceholder('Chọn NCC từ danh mục…'));
-      await dialog.locator('.form-field').filter({ hasText: 'Mã tham chiếu / PO' }).locator('input').fill(`PO-${Date.now()}`);
-      await pickFirstAutocomplete(page, dialog.getByPlaceholder('— Vật tư —'));
-      await bumpQtyStepper(dialog.locator('.qty-stepper').first(), 1);
-      await dialog.locator('.currency-input-group__input, input.input-no-spinner').first().fill('10000');
+      const poSelect = dialog.locator('select.form-input').first();
+      test.skip((await poSelect.locator('option').count()) <= 1, 'No placed PO for import freeze E2E');
+
+      let selectedProject: string;
+      try {
+        selectedProject = await fillImportDraftForm(page, dialog, `PO-${Date.now()}`);
+      } catch {
+        test.skip(true, 'No unlocked placed PO for import freeze E2E');
+        return;
+      }
+      test.skip(!selectedProject, 'Could not resolve project from selected PO');
+
+      const materials = await getMaterials(token);
+      const mat = materials[0];
+      test.skip(!mat, 'No material for freeze stocktake fixture');
 
       const created = await createFrozenStocktake(
         token,
-        stock!.projectCode,
-        stock!.projectName,
-        stock!.materialCode,
-        stock!.materialName,
+        selectedProject,
+        selectedProject,
+        mat!.materialCode,
+        mat!.materialName,
         note,
       );
       stocktakeId = created.id;

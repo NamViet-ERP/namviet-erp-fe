@@ -35,8 +35,8 @@ test.describe('WMS list filters', () => {
     test(`${list.path} search and date filter`, async ({ page }) => {
       await page.goto(list.path);
       await expect(page.getByPlaceholder(list.searchPlaceholder)).toBeVisible();
-      await expect(page.getByLabel('Lọc từ ngày tạo')).toBeVisible();
-      await expect(page.getByLabel('Lọc đến ngày tạo')).toBeVisible();
+      await expect(page.getByText('Từ ngày', { exact: true })).toBeVisible();
+      await expect(page.getByText('Đến ngày', { exact: true })).toBeVisible();
     });
   }
 

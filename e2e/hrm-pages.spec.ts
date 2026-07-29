@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { getEmployee, loginToken } from './helpers/api';
+import { e2eEnv } from './helpers/env';
 
 const hrmPages: Array<{ path: string; title: string | RegExp }> = [
   { path: '/dashboard', title: /Xin chào/ },
@@ -40,7 +41,14 @@ test.describe('HRM pages', () => {
 
   test('profile loads linked employee record', async ({ page }) => {
     const token = await loginToken();
-    const employee = await getEmployee(token, '3');
+    const meRes = await fetch(`${e2eEnv.apiBaseUrl}/api/auth/me`, {
+      headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+    });
+    if (!meRes.ok) throw new Error(`E2E /api/auth/me failed (${meRes.status})`);
+    const me = (await meRes.json()) as { employeeId?: string; name?: string };
+    test.skip(!me.employeeId, 'Logged-in user has no linked employee profile');
+
+    const employee = await getEmployee(token, me.employeeId!);
     await page.goto('/profile');
     await expect(page.getByRole('heading', { level: 1, name: employee.fullName })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Thông tin cơ bản' })).toBeVisible();
