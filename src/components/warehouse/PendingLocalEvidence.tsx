@@ -4,6 +4,7 @@ import type { PurchaseDefectAttachmentApiDto } from '../../types/api/poDefectApi
 import type { ImportAttachment } from '../../types';
 import { defectsService } from '../../services/defectsService';
 import { importsService } from '../../services/importsService';
+import { exportReturnsService } from '../../services/exportReturnsService';
 
 function formatBytes(size: number): string {
   if (size < 1024) return `${size} B`;
@@ -337,6 +338,121 @@ export function SavedImportPhotoGrid({
 
   return (
     <ul className="pending-evidence__photos" aria-label="Ảnh nhận hàng">
+      {photos.map(att => (
+        <li key={att.id} className="pending-evidence__photo">
+          {urls[att.id] ? (
+            <button
+              type="button"
+              className="pending-evidence__photo-open"
+              onClick={() => onDownload?.(att.id, att.fileName)}
+              title={`Tải ${att.fileName}`}
+            >
+              <img src={urls[att.id]} alt={att.fileName} className="pending-evidence__photo-img" />
+            </button>
+          ) : failed[att.id] ? (
+            <button
+              type="button"
+              className="pending-evidence__photo-img pending-evidence__photo-img--failed"
+              onClick={() => setReloadToken(t => t + 1)}
+              title="Thử tải lại ảnh"
+            >
+              Không tải được — bấm thử lại
+            </button>
+          ) : (
+            <div className="pending-evidence__photo-img pending-evidence__photo-img--loading">
+              Đang tải…
+            </div>
+          )}
+          <div className="pending-evidence__photo-meta">
+            <span className="pending-evidence__name" title={att.fileName}>{att.fileName}</span>
+          </div>
+          {canEdit && onDelete ? (
+            <button
+              type="button"
+              className="pending-evidence__remove"
+              aria-label={`Xóa ảnh ${att.fileName}`}
+              onClick={() => onDelete(att.id)}
+            >
+              <Trash2 size={14} />
+            </button>
+          ) : null}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+type SavedExportReturnPhotoGridProps = {
+  returnId: string;
+  attachments: ImportAttachment[];
+  canEdit?: boolean;
+  onDelete?: (attachmentId: string) => void;
+  onDownload?: (attachmentId: string, fileName: string) => void;
+};
+
+/** Ảnh đã lưu trên phiếu trả hàng — cùng chrome với PendingPhotoGrid. */
+export function SavedExportReturnPhotoGrid({
+  returnId,
+  attachments,
+  canEdit = false,
+  onDelete,
+  onDownload,
+}: SavedExportReturnPhotoGridProps) {
+  const photos = useMemo(
+    () => attachments.filter(a => a.kind === 'photo'),
+    [attachments],
+  );
+  const photoKey = photos.map(p => p.id).join(',');
+  const [urls, setUrls] = useState<Record<string, string>>({});
+  const [failed, setFailed] = useState<Record<string, boolean>>({});
+  const [reloadToken, setReloadToken] = useState(0);
+
+  useEffect(() => {
+    let alive = true;
+    const created: string[] = [];
+    if (photos.length === 0) {
+      setUrls({});
+      setFailed({});
+      return () => {
+        alive = false;
+      };
+    }
+    setFailed({});
+    void (async () => {
+      const next: Record<string, string> = {};
+      const nextFailed: Record<string, boolean> = {};
+      await Promise.all(
+        photos.map(async att => {
+          try {
+            const blob = await exportReturnsService.downloadAttachment(returnId, att.id);
+            if (!alive) return;
+            const url = URL.createObjectURL(blob);
+            created.push(url);
+            next[att.id] = url;
+          } catch {
+            nextFailed[att.id] = true;
+          }
+        }),
+      );
+      if (!alive) {
+        for (const url of created) URL.revokeObjectURL(url);
+        return;
+      }
+      setUrls(next);
+      setFailed(nextFailed);
+    })();
+    return () => {
+      alive = false;
+      for (const url of created) URL.revokeObjectURL(url);
+    };
+  }, [returnId, photoKey, reloadToken]);
+
+  if (photos.length === 0) {
+    return <p className="pending-evidence__empty">Chưa có ảnh.</p>;
+  }
+
+  return (
+    <ul className="pending-evidence__photos" aria-label="Ảnh trả hàng">
       {photos.map(att => (
         <li key={att.id} className="pending-evidence__photo">
           {urls[att.id] ? (
