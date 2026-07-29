@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { e2eEnv } from './env';
 
 type ApiMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
@@ -9,6 +11,29 @@ interface LoginResponse {
 }
 
 let cachedLoginToken: string | null = null;
+
+const authFile = path.join('e2e', '.auth', 'admin.json');
+
+function readAccessTokenFromAuthFile(): string | null {
+  try {
+    if (!fs.existsSync(authFile)) return null;
+    const raw = JSON.parse(fs.readFileSync(authFile, 'utf8')) as {
+      origins?: Array<{
+        localStorage?: Array<{ name: string; value: string }>;
+        sessionStorage?: Array<{ name: string; value: string }>;
+      }>;
+    };
+    for (const origin of raw.origins ?? []) {
+      for (const store of [origin.sessionStorage, origin.localStorage]) {
+        const hit = store?.find(e => e.name === 'nv-e2e-access-token');
+        if (hit?.value?.trim()) return hit.value.trim();
+      }
+    }
+  } catch {
+    // ignore corrupt auth file
+  }
+  return null;
+}
 
 export interface StocktakeApiDto {
   id: string;
@@ -92,6 +117,14 @@ async function apiRequest<T>(
 
 export async function loginToken(): Promise<string> {
   if (cachedLoginToken) return cachedLoginToken;
+
+  // Prefer token from auth.setup (VITE_E2E sessionStorage). Extra /login calls
+  // rotate refresh cookies and break Playwright storageState for UI tests.
+  const fromSetup = readAccessTokenFromAuthFile();
+  if (fromSetup) {
+    cachedLoginToken = fromSetup;
+    return fromSetup;
+  }
 
   const res = await fetch(`${e2eEnv.apiBaseUrl}/api/auth/login`, {
     method: 'POST',

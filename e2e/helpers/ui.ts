@@ -21,24 +21,45 @@ export async function pickFirstAutocomplete(page: Page, input: Locator): Promise
 export async function fillImportDraftForm(
   page: Page,
   dialog: Locator,
-  referenceCode: string,
+  _referenceCode: string,
   projectCode?: string,
-): Promise<void> {
-  const projectSelect = dialog.locator('select.form-select').first();
-  if (projectCode) {
-    await projectSelect.selectOption(projectCode);
-  } else {
-    await selectFirstProjectOption(projectSelect);
-  }
-  await pickFirstAutocomplete(page, dialog.getByPlaceholder('Chọn NCC từ danh mục…'));
-  await fieldInput(dialog, 'Mã tham chiếu / PO').fill(referenceCode);
-  await pickFirstAutocomplete(page, dialog.getByPlaceholder('— Vật tư —'));
-  await bumpQtyStepper(dialog.locator('.qty-stepper').first(), 1);
+): Promise<string> {
+  // Create flow is PO-bound: pick a placed PO whose project is not freeze-blocked.
+  const poSelect = dialog.locator('select.form-input').first();
+  await expect(async () => {
+    expect(await poSelect.locator('option').count()).toBeGreaterThan(1);
+  }).toPass({ timeout: 30_000 });
 
-  const priceInput = dialog.locator('.currency-input-group__input, input.input-no-spinner').first();
-  await priceInput.click();
-  await priceInput.fill('10000');
-  await priceInput.blur();
+  const options = poSelect.locator('option');
+  const count = await options.count();
+  const candidates: Array<{ value: string; projectCode: string }> = [];
+  for (let i = 0; i < count; i += 1) {
+    const opt = options.nth(i);
+    const value = (await opt.getAttribute('value'))?.trim() ?? '';
+    if (!value) continue;
+    const text = (await opt.textContent()) ?? '';
+    const projectFromOption = text.split('·').map(s => s.trim()).at(-1) ?? '';
+    candidates.push({ value, projectCode: projectFromOption });
+  }
+
+  const ordered = projectCode
+    ? [
+        ...candidates.filter(c => c.projectCode === projectCode || c.value.includes(projectCode)),
+        ...candidates.filter(c => c.projectCode !== projectCode && !c.value.includes(projectCode)),
+      ]
+    : candidates;
+
+  for (const candidate of ordered) {
+    await poSelect.selectOption(candidate.value);
+    try {
+      await expect(dialog.getByRole('button', { name: 'Lưu nháp' })).toBeEnabled({ timeout: 5_000 });
+      return candidate.projectCode || candidate.value;
+    } catch {
+      // Project likely freeze-blocked — try next PO.
+    }
+  }
+
+  throw new Error('No placed PO with an unlocked project available for import E2E');
 }
 
 export async function clickVoucherRow(page: Page, voucherCode: string): Promise<void> {
@@ -71,10 +92,12 @@ export async function bumpQtyStepper(scope: Locator, times = 1): Promise<void> {
 export async function openRowActions(page: Page, rowMatcher: string | RegExp): Promise<void> {
   const row = page.locator('tr').filter({ hasText: rowMatcher }).first();
   await row.getByRole('button', { name: 'TÁC VỤ' }).click();
+  await expect(page.locator('.nv-dropdown__menu')).toBeVisible();
 }
 
 export async function clickDropdownItem(page: Page, label: string | RegExp): Promise<void> {
-  await page.locator('.nv-dropdown__menu').getByRole('button', { name: label }).click();
+  // Menu items use role="menuitem" (not "button") in the a11y tree.
+  await page.locator('.nv-dropdown__menu').getByRole('menuitem', { name: label }).click();
 }
 
 export function extractVoucherCode(text: string | null, prefix: string): string | undefined {
