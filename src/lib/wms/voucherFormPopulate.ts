@@ -12,6 +12,8 @@ export function importToFormLines(items: Import['items']): MaterialQtyPriceLine[
   if (!items.length) return [{ ...emptyQtyPriceLine }];
   return items.map(it => ({
     materialCode: it.sku || it.productId,
+    materialName: it.name || undefined,
+    unit: it.unit || undefined,
     qty: String(it.qty),
     unitPrice: String(it.unitPrice ?? 0),
     notes: typeof it.notes === 'string' ? it.notes : undefined,

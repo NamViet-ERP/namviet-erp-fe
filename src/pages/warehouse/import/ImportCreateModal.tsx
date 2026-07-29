@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Download, FileText, Plus, Trash2, Upload } from 'lucide-react';
-import type { Material } from '../../../types';
+import type { Material, ImportAttachment } from '../../../types';
 import type { ImportParseErrorApiDto } from '../../../types/api/importParseApi';
 import type { PoImportLinePreviewApiDto } from '../../../types/api/poImportApi';
 import type { SupplierApiDto } from '../../../services/suppliersService';
@@ -23,6 +23,8 @@ import ProjectWarehouseSelect from '../../../components/warehouse/ProjectWarehou
 import {
   PendingDocList,
   PendingPhotoGrid,
+  SavedImportDocList,
+  SavedImportPhotoGrid,
 } from '../../../components/warehouse/PendingLocalEvidence';
 import EmptyState from '../../../components/ui/EmptyState';
 import TableSkeletonRows from '../../../components/ui/TableSkeletonRows';
@@ -67,6 +69,38 @@ function poDraftsToItems(
     });
 }
 
+function parsePoItemId(notes?: string | null): number | null {
+  if (!notes) return null;
+  const match = /^poItem:(\d+)$/i.exec(notes.trim());
+  return match ? Number(match[1]) : null;
+}
+
+/** Khôi phục tick/SL từ dòng phiếu đang sửa (notes poItem:{id}). */
+function draftsFromExistingItems(
+  lines: PoImportLinePreviewApiDto[],
+  items: MaterialQtyPriceLine[],
+): Record<number, PoLineDraft> {
+  const byPoItem = new Map<number, MaterialQtyPriceLine>();
+  for (const it of items) {
+    const id = parsePoItemId(it.notes);
+    if (id != null) byPoItem.set(id, it);
+  }
+  const next: Record<number, PoLineDraft> = {};
+  for (const line of lines) {
+    const existing = byPoItem.get(line.poItemId);
+    if (existing) {
+      const qty = Math.min(Number(existing.qty) || 0, line.available);
+      next[line.poItemId] = {
+        selected: qty > 0,
+        qty: qty > 0 ? String(qty) : '0',
+      };
+    } else {
+      next[line.poItemId] = { selected: false, qty: '0' };
+    }
+  }
+  return next;
+}
+
 interface ImportCreateModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -90,18 +124,24 @@ interface ImportCreateModalProps {
   frozenByProjectCode: FrozenProjectMap;
   importErrors?: ImportParseErrorApiDto[];
   onCreate: (status: 'draft' | 'pending', evidence?: { files: File[]; evaluation: string }) => void;
-  onSave?: () => void;
+  onSave?: (payload?: { evaluation: string }) => void;
   onDownloadTemplate?: () => Promise<void>;
   onImportFile?: (file: File) => Promise<void>;
   onMaterialLineChange?: (index: number, materialCode: string) => void;
   onDuplicateMaterialAttempt?: (lineIndex: number) => void;
-  editVoucher?: { code: string } | null;
+  editVoucher?: { code: string; receiptEvaluation?: string | null } | null;
   materialUnit: (code: string) => string;
   poOptions?: PurchaseOrderApiDto[];
   selectedPoCode?: string;
   onSelectedPoCodeChange?: (code: string) => void;
   poLoading?: boolean;
   poPreviewLines?: PoImportLinePreviewApiDto[];
+  /** Sửa phiếu: chứng từ đã lưu + upload ngay khi chọn file. */
+  editAttachments?: ImportAttachment[];
+  isEvidencePending?: boolean;
+  onUploadEditAttachment?: (file: File, kind: 'document' | 'photo') => Promise<void>;
+  onDeleteEditAttachment?: (attachmentId: string) => Promise<void>;
+  onDownloadEditAttachment?: (attachmentId: string, fileName: string) => Promise<void>;
 }
 
 export default function ImportCreateModal({
@@ -139,6 +179,11 @@ export default function ImportCreateModal({
   onSelectedPoCodeChange,
   poLoading = false,
   poPreviewLines = [],
+  editAttachments = [],
+  isEvidencePending = false,
+  onUploadEditAttachment,
+  onDeleteEditAttachment,
+  onDownloadEditAttachment,
 }: ImportCreateModalProps) {
   const { has } = usePermission();
   const canViewPrices = has('wms.prices.view');
@@ -151,6 +196,7 @@ export default function ImportCreateModal({
   const [evidencePhotos, setEvidencePhotos] = useState<File[]>([]);
   const [evidenceDocs, setEvidenceDocs] = useState<File[]>([]);
   const [evaluationDraft, setEvaluationDraft] = useState('');
+  const editPoSeedKeyRef = useRef('');
 
   useEffect(() => {
     if (!isOpen) {
@@ -158,8 +204,13 @@ export default function ImportCreateModal({
       setEvidenceDocs([]);
       setEvaluationDraft('');
       setSelectedFileName('');
+      editPoSeedKeyRef.current = '';
+      return;
     }
-  }, [isOpen]);
+    if (editVoucher) {
+      setEvaluationDraft(editVoucher.receiptEvaluation ?? '');
+    }
+  }, [isOpen, editVoucher?.code, editVoucher?.receiptEvaluation]);
 
   const resetItems = () => onItemsChange([{ ...emptyQtyPriceLine }]);
 
@@ -191,7 +242,10 @@ export default function ImportCreateModal({
 
   const importDisabled = !projectCode || isImportParsing || isPending;
   const submitBlocked = isProjectFrozen(frozenByProjectCode, projectCode);
-  const isCreateFromPoMode = !editVoucher;
+  const isCreateMode = !editVoucher;
+  /** Tạo từ PO (luôn) hoặc sửa phiếu đã gắn PO — chọn dòng theo PO, không chọn VT tự do. */
+  const isPoBoundEdit = Boolean(editVoucher && selectedPoCode);
+  const isPoLineMode = isCreateMode || isPoBoundEdit;
   const selectedPo = poOptions.find(po => po.code === selectedPoCode);
   const projectLabel = useMemo(() => {
     const code = selectedPo?.projectCode || projectCode;
@@ -212,8 +266,8 @@ export default function ImportCreateModal({
   );
 
   useEffect(() => {
-    if (!isCreateFromPoMode || !selectedPoCode) {
-      setPoLineDrafts({});
+    if (!isCreateMode || !selectedPoCode) {
+      if (isCreateMode) setPoLineDrafts({});
       return;
     }
     if (poPreviewLines.length === 0) {
@@ -225,7 +279,18 @@ export default function ImportCreateModal({
     setPoLineDrafts(nextDrafts);
     onItemsChange(poDraftsToItems(poPreviewLines, nextDrafts));
     // eslint-disable-next-line react-hooks/exhaustive-deps -- chỉ reset khi đổi PO/preview
-  }, [isCreateFromPoMode, selectedPoCode, poPreviewKey]);
+  }, [isCreateMode, selectedPoCode, poPreviewKey]);
+
+  useEffect(() => {
+    if (!isPoBoundEdit || !selectedPoCode || poPreviewLines.length === 0) return;
+    const key = `${editVoucher!.code}|${poPreviewKey}`;
+    if (editPoSeedKeyRef.current === key) return;
+    editPoSeedKeyRef.current = key;
+    const nextDrafts = draftsFromExistingItems(poPreviewLines, items);
+    setPoLineDrafts(nextDrafts);
+    onItemsChange(poDraftsToItems(poPreviewLines, nextDrafts));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- seed một lần khi mở sửa + preview sẵn
+  }, [isPoBoundEdit, selectedPoCode, poPreviewKey, editVoucher?.code]);
 
   const setPoLine = (poItemId: number, patch: Partial<PoLineDraft>) => {
     setPoLineDrafts(prev => {
@@ -253,7 +318,12 @@ export default function ImportCreateModal({
               <span className="font-bold text-[var(--md-primary)] tabular-nums">{formatCurrency(formGrandTotal)} đ</span>
             </div>
             {editVoucher ? (
-              <button type="button" className="btn btn-filled" disabled={isPending} onClick={onSave}>
+              <button
+                type="button"
+                className="btn btn-filled"
+                disabled={isPending}
+                onClick={() => onSave?.({ evaluation: evaluationDraft })}
+              >
                 Lưu thay đổi
               </button>
             ) : (
@@ -287,13 +357,13 @@ export default function ImportCreateModal({
       }
     >
       <div className="space-y-4 modal-form-bordered import-create-form">
-        {isCreateFromPoMode ? (
+        {isCreateMode || isPoBoundEdit ? (
           <>
             <FormField label="Phiếu PO" required error={errors?.referenceCode}>
               <select
                 className="form-input"
                 value={selectedPoCode}
-                disabled={poLoading}
+                disabled={isPoBoundEdit || poLoading}
                 onChange={e => onSelectedPoCodeChange?.(e.target.value)}
               >
                 <option value="">
@@ -359,12 +429,19 @@ export default function ImportCreateModal({
         </FormField>
 
         <div className="rounded-xl border border-[var(--md-outline-variant)] bg-[var(--md-surface-container-low)] px-3 py-2.5 text-xs leading-relaxed text-[var(--md-on-surface-variant)]">
-          {isCreateFromPoMode ? (
-            <>
-              Chọn PO trước — kho dự án và NCC lấy từ PO.
-              Tick mặt hàng còn SL và nhập <strong className="text-[var(--md-on-surface)]">SL dự kiến nhập kho</strong>.
-              Phiếu nháp không khóa PO; chốt dự kiến mới giữ SL trên PO.
-            </>
+          {isCreateMode || isPoBoundEdit ? (
+            isPoBoundEdit ? (
+              <>
+                Vật tư theo phiếu PO — tick dòng và chỉnh <strong className="text-[var(--md-on-surface)]">SL dự kiến</strong>.
+                Không thêm vật tư ngoài PO.
+              </>
+            ) : (
+              <>
+                Chọn PO trước — kho dự án và NCC lấy từ PO.
+                Tick mặt hàng còn SL và nhập <strong className="text-[var(--md-on-surface)]">SL dự kiến nhập kho</strong>.
+                Phiếu nháp không khóa PO; chốt dự kiến mới giữ SL trên PO.
+              </>
+            )
           ) : (
             <>
               Import Excel chỉ chấp nhận <strong className="text-[var(--md-on-surface)]">mã vật tư đã có trong danh mục</strong>.
@@ -377,9 +454,9 @@ export default function ImportCreateModal({
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div>
               <div className="text-xs font-bold uppercase text-[var(--md-on-surface-variant)]">
-                {isCreateFromPoMode ? 'Chọn vật tư dự kiến nhập' : 'Chi tiết vật tư'}
+                {isPoLineMode ? 'Chọn vật tư dự kiến nhập' : 'Chi tiết vật tư'}
               </div>
-              {isCreateFromPoMode && selectedPoCode ? (
+              {isPoLineMode && selectedPoCode ? (
                 <p className="mt-0.5 text-[11px] text-[var(--md-on-surface-variant)]">
                   {selectedPoLineCount > 0
                     ? `Đã chọn ${selectedPoLineCount} dòng · tick/bỏ tick và chỉnh SL trước khi lưu`
@@ -388,7 +465,7 @@ export default function ImportCreateModal({
               ) : null}
             </div>
             <div className="flex items-center gap-2 flex-wrap justify-end">
-              {!isCreateFromPoMode && onDownloadTemplate && onImportFile ? (
+              {!isPoLineMode && onDownloadTemplate && onImportFile ? (
                 <>
                   <button
                     type="button"
@@ -426,7 +503,7 @@ export default function ImportCreateModal({
                   </button>
                 </>
               ) : null}
-              {!isCreateFromPoMode ? (
+              {!isPoLineMode ? (
                 <button
                   type="button"
                   className="btn btn-outline btn-sm text-xs"
@@ -451,9 +528,9 @@ export default function ImportCreateModal({
               {importErrors.length > 20 ? <li>…và {importErrors.length - 20} lỗi khác</li> : null}
             </ul>
           ) : null}
-          {isCreateFromPoMode && !selectedPoCode ? (
+          {isPoLineMode && !selectedPoCode ? (
             <p className="text-[11px] text-[var(--md-on-surface-variant)]">Chọn PO để hiển thị danh sách hàng còn lại.</p>
-          ) : isCreateFromPoMode ? (
+          ) : isPoLineMode ? (
             <div className="overflow-x-auto table-scroll">
               <table className="form-table import-items-table import-items-table--po-select text-xs">
                 <thead>
@@ -570,21 +647,10 @@ export default function ImportCreateModal({
                   return (
                     <tr key={idx} className="table-row">
                       <td className="table-cell align-top">
-                        {isCreateFromPoMode ? (
-                          <div className="min-w-[10rem] py-1">
-                            <div className="text-xs font-medium text-[var(--md-on-surface)] leading-snug">
-                              {it.materialName?.trim() || it.materialCode || '—'}
-                            </div>
-                            {it.materialName?.trim() && it.materialCode?.trim() ? (
-                              <div className="mt-0.5 text-[10px] text-[var(--md-on-surface-variant)] truncate" title={it.materialCode}>
-                                {it.materialCode}
-                              </div>
-                            ) : null}
-                          </div>
-                        ) : (
                           <MaterialAutocomplete
                             compact
                             value={it.materialCode}
+                            fallbackLabel={it.materialName}
                             onChange={code => {
                               if (code.trim()) {
                                 const dupIdx = findDuplicateMaterialLineIndex(items, code, idx);
@@ -593,15 +659,20 @@ export default function ImportCreateModal({
                                   return;
                                 }
                               }
+                              const mat = materials.find(m => m.materialCode === code);
                               const next = [...items];
-                              next[idx] = { ...next[idx], materialCode: code };
+                              next[idx] = {
+                                ...next[idx],
+                                materialCode: code,
+                                materialName: mat?.materialName ?? next[idx].materialName,
+                                unit: mat?.unit ?? next[idx].unit,
+                              };
                               onItemsChange(next);
                               onMaterialLineChange?.(idx, code);
                             }}
                             materials={materials}
                             placeholder="— Vật tư —"
                           />
-                        )}
                         {lineErr?.materialCode && (
                           <p className="mt-0.5 text-[10px] text-[var(--md-error)]">{lineErr.materialCode}</p>
                         )}
@@ -685,7 +756,7 @@ export default function ImportCreateModal({
           )}
         </div>
 
-        {isCreateFromPoMode ? (
+        {isCreateMode ? (
           <div className="space-y-3">
             <FormField label="Đánh giá nhận hàng">
               <textarea
@@ -696,7 +767,7 @@ export default function ImportCreateModal({
                 placeholder="Mô tả tình trạng hàng khi nhận…"
               />
             </FormField>
-            <p className="text-[11px] text-[var(--md-on-surface-variant)] -mt-1">
+            <p className="text-[11px] text-[var(--md-on-surface-variant)] -mt-1 text-pretty">
               Có thể đính kèm ngay khi tạo. Duyệt thực tế bắt buộc có đánh giá + ảnh + file chứng từ.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -756,7 +827,110 @@ export default function ImportCreateModal({
               </div>
             </div>
           </div>
-        ) : null}
+        ) : (
+          <div className="space-y-3">
+            <FormField label="Đánh giá nhận hàng">
+              <textarea
+                className="form-input pending-evidence-note"
+                rows={3}
+                value={evaluationDraft}
+                onChange={e => setEvaluationDraft(e.target.value)}
+                placeholder="Mô tả tình trạng hàng khi nhận…"
+                disabled={isEvidencePending}
+              />
+            </FormField>
+            <p className="text-[11px] text-[var(--md-on-surface-variant)] text-pretty">
+              Thêm / xóa ảnh và file chứng từ tại đây. Màn chi tiết chỉ xem.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="pending-evidence">
+                <div className="pending-evidence__title">Ảnh nhận hàng</div>
+                <button
+                  type="button"
+                  className={`pending-evidence__zone${isEvidencePending ? ' is-disabled' : ''}`}
+                  disabled={isEvidencePending || !onUploadEditAttachment}
+                  onClick={() => evidenceInputRef.current?.click()}
+                >
+                  <Upload size={20} aria-hidden />
+                  <span className="pending-evidence__zone-hint">
+                    {isEvidencePending ? 'Đang tải…' : 'Chọn ảnh (có thể chọn nhiều)'}
+                  </span>
+                </button>
+                <input
+                  ref={evidenceInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="pending-evidence__input"
+                  disabled={isEvidencePending || !onUploadEditAttachment}
+                  onChange={e => {
+                    const files = Array.from(e.target.files ?? []);
+                    e.target.value = '';
+                    if (!onUploadEditAttachment || files.length === 0) return;
+                    void (async () => {
+                      for (const file of files) await onUploadEditAttachment(file, 'photo');
+                    })();
+                  }}
+                />
+                <SavedImportPhotoGrid
+                  importId={editVoucher?.code ?? 'edit'}
+                  attachments={editAttachments}
+                  canEdit={Boolean(onDeleteEditAttachment) && !isEvidencePending}
+                  onDelete={attachmentId => {
+                    if (!onDeleteEditAttachment) return;
+                    void onDeleteEditAttachment(attachmentId);
+                  }}
+                  onDownload={(attachmentId, fileName) => {
+                    if (!onDownloadEditAttachment) return;
+                    void onDownloadEditAttachment(attachmentId, fileName);
+                  }}
+                />
+              </div>
+              <div className="pending-evidence">
+                <div className="pending-evidence__title">File chứng từ</div>
+                <button
+                  type="button"
+                  className={`pending-evidence__zone${isEvidencePending ? ' is-disabled' : ''}`}
+                  disabled={isEvidencePending || !onUploadEditAttachment}
+                  onClick={() => evidenceDocInputRef.current?.click()}
+                >
+                  <FileText size={20} aria-hidden />
+                  <span className="pending-evidence__zone-hint">
+                    {isEvidencePending ? 'Đang tải…' : 'Chọn file PDF / Word / Excel'}
+                  </span>
+                </button>
+                <input
+                  ref={evidenceDocInputRef}
+                  type="file"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,application/pdf"
+                  multiple
+                  className="pending-evidence__input"
+                  disabled={isEvidencePending || !onUploadEditAttachment}
+                  onChange={e => {
+                    const files = Array.from(e.target.files ?? []);
+                    e.target.value = '';
+                    if (!onUploadEditAttachment || files.length === 0) return;
+                    void (async () => {
+                      for (const file of files) await onUploadEditAttachment(file, 'document');
+                    })();
+                  }}
+                />
+                <SavedImportDocList
+                  attachments={editAttachments}
+                  canEdit={Boolean(onDeleteEditAttachment) && !isEvidencePending}
+                  onDelete={attachmentId => {
+                    if (!onDeleteEditAttachment) return;
+                    void onDeleteEditAttachment(attachmentId);
+                  }}
+                  onDownload={(attachmentId, fileName) => {
+                    if (!onDownloadEditAttachment) return;
+                    void onDownloadEditAttachment(attachmentId, fileName);
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </Modal>
   );

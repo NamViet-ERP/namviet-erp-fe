@@ -1,9 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
 import type { Import } from '../../../types';
-import { FileText, Upload } from 'lucide-react';
+import { FileText, Pencil } from 'lucide-react';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import VoucherDetailModal from '../../../components/warehouse/VoucherDetailModal';
-import VoucherDetailFooter from '../../../components/warehouse/VoucherDetailFooter';
 import { displayValue } from '../../../components/warehouse/voucherDetailUtils';
 import FormField from '../../../components/ui/FormField';
 import {
@@ -21,14 +19,7 @@ interface ImportDetailModalProps {
   onClose: () => void;
   selected: Import | null;
   projectName: (code?: string) => string;
-  isSubmitPending: boolean;
-  isApprovePending: boolean;
-  isEvidencePending?: boolean;
-  onSubmit?: (imp: Import) => void;
-  onApprove?: (imp: Import, evaluation: string) => void | Promise<void>;
-  onSaveEvaluation?: (imp: Import, evaluation: string) => Promise<void>;
-  onUploadAttachment?: (imp: Import, file: File, kind: 'document' | 'photo') => Promise<void>;
-  onDeleteAttachment?: (imp: Import, attachmentId: string) => Promise<void>;
+  onEdit?: (imp: Import) => void;
   onDownloadAttachment?: (imp: Import, attachmentId: string, fileName: string) => Promise<void>;
 }
 
@@ -37,62 +28,14 @@ export default function ImportDetailModal({
   onClose,
   selected,
   projectName,
-  isSubmitPending,
-  isApprovePending,
-  isEvidencePending = false,
-  onSubmit,
-  onApprove,
-  onSaveEvaluation,
-  onUploadAttachment,
-  onDeleteAttachment,
+  onEdit,
   onDownloadAttachment,
 }: ImportDetailModalProps) {
-  const [evaluation, setEvaluation] = useState('');
-  const [showErrors, setShowErrors] = useState(false);
-  const photoInputRef = useRef<HTMLInputElement>(null);
-  const docInputRef = useRef<HTMLInputElement>(null);
-  const evaluationRef = useRef<HTMLTextAreaElement>(null);
-
-  useEffect(() => {
-    if (!selected) return;
-    setEvaluation(selected.receiptEvaluation ?? '');
-    setShowErrors(false);
-  }, [selected]);
-
   if (!selected) return null;
-  const canEditEvidence = selected.status !== 'approved';
+
+  const canEdit = Boolean(onEdit) && (selected.status === 'draft' || selected.status === 'pending');
   const attachments = selected.attachments ?? [];
-  const hasPhoto = attachments.some(a => a.kind === 'photo');
-  const hasDocument = attachments.some(a => a.kind === 'document');
-
-  const evaluationError =
-    showErrors && !evaluation.trim() ? 'Vui lòng nhập đánh giá nhận hàng' : undefined;
-  const photoError =
-    showErrors && !hasPhoto ? 'Vui lòng chọn ít nhất 1 ảnh nhận hàng' : undefined;
-  const documentError =
-    showErrors && !hasDocument ? 'Vui lòng chọn ít nhất 1 file chứng từ' : undefined;
-
-  const uploadFiles = async (files: File[], kind: 'document' | 'photo') => {
-    if (!onUploadAttachment || files.length === 0) return;
-    for (const file of files) {
-      await onUploadAttachment(selected, file, kind);
-    }
-  };
-
-  const tryApprove = () => {
-    if (!onApprove) return;
-    const evalOk = evaluation.trim().length > 0;
-    const photoOk = hasPhoto;
-    const documentOk = hasDocument;
-    if (!evalOk || !photoOk || !documentOk) {
-      setShowErrors(true);
-      if (!evalOk) {
-        requestAnimationFrame(() => evaluationRef.current?.focus());
-      }
-      return;
-    }
-    void onApprove(selected, evaluation);
-  };
+  const evaluation = (selected.receiptEvaluation ?? '').trim();
 
   return (
     <VoucherDetailModal
@@ -135,15 +78,11 @@ export default function ImportDetailModal({
           >
             <FileText size={14} /> In phiếu
           </button>
-          <div className="flex items-center gap-2">
-            <VoucherDetailFooter
-              status={selected.status}
-              isSubmitPending={isSubmitPending}
-              isApprovePending={isApprovePending}
-              onSubmit={onSubmit ? () => onSubmit(selected) : undefined}
-              onApprove={onApprove ? tryApprove : undefined}
-            />
-          </div>
+          {canEdit ? (
+            <button type="button" className="btn btn-filled" onClick={() => onEdit?.(selected)}>
+              <Pencil size={14} /> Sửa phiếu
+            </button>
+          ) : null}
         </div>
       }
     >
@@ -186,76 +125,29 @@ export default function ImportDetailModal({
         </table>
       </div>
 
-      <div className="mt-4 space-y-1">
-        <FormField label="Đánh giá nhận hàng" required error={evaluationError}>
-          <textarea
-            ref={evaluationRef}
-            className="form-input pending-evidence-note"
-            rows={3}
-            value={evaluation}
-            disabled={!canEditEvidence || isEvidencePending}
-            onChange={e => setEvaluation(e.target.value)}
-            placeholder="Mô tả tình trạng hàng khi nhận…"
-            aria-label="Đánh giá nhận hàng"
-            aria-invalid={Boolean(evaluationError)}
-          />
-        </FormField>
-        {canEditEvidence ? (
-          <div className="flex items-center justify-end gap-2 flex-wrap -mt-1 mb-2">
-            <button
-              type="button"
-              className="btn btn-outline btn-sm"
-              disabled={isEvidencePending}
-              onClick={() => onSaveEvaluation && void onSaveEvaluation(selected, evaluation)}
-            >
-              Lưu đánh giá
-            </button>
+      <div className="mt-4 space-y-3">
+        <FormField label="Đánh giá nhận hàng">
+          <div className="form-input pending-evidence-note min-h-[4.5rem] whitespace-pre-wrap text-pretty bg-[var(--md-surface-container-low)]">
+            {evaluation || '—'}
           </div>
-        ) : (
-          <p className="text-[11px] text-[var(--md-on-surface-variant)] -mt-1 mb-2">
+        </FormField>
+        {selected.status === 'approved' ? (
+          <p className="text-[11px] text-[var(--md-on-surface-variant)] -mt-1 text-pretty">
             Phiếu đã duyệt — chỉ xem chứng từ và ảnh.
           </p>
-        )}
+        ) : canEdit ? (
+          <p className="text-[11px] text-[var(--md-on-surface-variant)] -mt-1 text-pretty">
+            Chỉ xem. Chỉnh đánh giá / ảnh / file trong Sửa phiếu.
+          </p>
+        ) : null}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <FormField label="Ảnh nhận hàng" required error={photoError}>
-            <div className={`pending-evidence${photoError ? ' pending-evidence--error' : ''}`}>
-              {canEditEvidence ? (
-                <>
-                  <button
-                    type="button"
-                    className={`pending-evidence__zone${isEvidencePending ? ' is-disabled' : ''}`}
-                    disabled={isEvidencePending}
-                    onClick={() => photoInputRef.current?.click()}
-                  >
-                    <Upload size={20} aria-hidden />
-                    <span className="pending-evidence__zone-hint">
-                      {isEvidencePending ? 'Đang tải…' : 'Chọn ảnh (có thể chọn nhiều)'}
-                    </span>
-                  </button>
-                  <input
-                    ref={photoInputRef}
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    className="pending-evidence__input"
-                    disabled={isEvidencePending}
-                    onChange={e => {
-                      const files = Array.from(e.target.files ?? []);
-                      e.target.value = '';
-                      if (files.length) void uploadFiles(files, 'photo');
-                    }}
-                  />
-                </>
-              ) : null}
+          <FormField label="Ảnh nhận hàng">
+            <div className="pending-evidence">
               <SavedImportPhotoGrid
                 importId={selected.id}
                 attachments={attachments}
-                canEdit={canEditEvidence && !isEvidencePending}
-                onDelete={attachmentId => {
-                  if (!onDeleteAttachment) return;
-                  void onDeleteAttachment(selected, attachmentId);
-                }}
+                canEdit={false}
                 onDownload={(attachmentId, fileName) => {
                   if (!onDownloadAttachment) return;
                   void onDownloadAttachment(selected, attachmentId, fileName);
@@ -264,43 +156,11 @@ export default function ImportDetailModal({
             </div>
           </FormField>
 
-          <FormField label="File chứng từ" required error={documentError}>
-            <div className={`pending-evidence${documentError ? ' pending-evidence--error' : ''}`}>
-              {canEditEvidence ? (
-                <>
-                  <button
-                    type="button"
-                    className={`pending-evidence__zone${isEvidencePending ? ' is-disabled' : ''}`}
-                    disabled={isEvidencePending}
-                    onClick={() => docInputRef.current?.click()}
-                  >
-                    <FileText size={20} aria-hidden />
-                    <span className="pending-evidence__zone-hint">
-                      {isEvidencePending ? 'Đang tải…' : 'Chọn file PDF / Word / Excel'}
-                    </span>
-                  </button>
-                  <input
-                    ref={docInputRef}
-                    type="file"
-                    accept=".pdf,.doc,.docx,.xls,.xlsx,application/pdf"
-                    multiple
-                    className="pending-evidence__input"
-                    disabled={isEvidencePending}
-                    onChange={e => {
-                      const files = Array.from(e.target.files ?? []);
-                      e.target.value = '';
-                      if (files.length) void uploadFiles(files, 'document');
-                    }}
-                  />
-                </>
-              ) : null}
+          <FormField label="File chứng từ">
+            <div className="pending-evidence">
               <SavedImportDocList
                 attachments={attachments}
-                canEdit={canEditEvidence && !isEvidencePending}
-                onDelete={attachmentId => {
-                  if (!onDeleteAttachment) return;
-                  void onDeleteAttachment(selected, attachmentId);
-                }}
+                canEdit={false}
                 onDownload={(attachmentId, fileName) => {
                   if (!onDownloadAttachment) return;
                   void onDownloadAttachment(selected, attachmentId, fileName);

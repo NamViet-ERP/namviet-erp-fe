@@ -1,4 +1,4 @@
-import { Eye, Check, Send, Pencil } from 'lucide-react';
+import { Eye, Check, Send, Pencil, Trash2 } from 'lucide-react';
 import type { Import } from '../../../types';
 import VoucherStatusCell from '../../../components/warehouse/VoucherStatusCell';
 import VoucherCodeCell from '../../../components/warehouse/VoucherCodeCell';
@@ -19,9 +19,11 @@ interface ImportTableProps {
   onEdit?: (imp: Import) => void;
   onSubmit: (imp: Import) => void;
   onApprove: (imp: Import) => void;
+  onDelete?: (imp: Import) => void;
   canEdit?: boolean;
   canSubmit?: boolean;
   canApprove?: boolean;
+  canDelete?: boolean;
 }
 
 export default function ImportTable({
@@ -34,9 +36,11 @@ export default function ImportTable({
   onEdit,
   onSubmit,
   onApprove,
+  onDelete,
   canEdit = false,
   canSubmit = false,
   canApprove = false,
+  canDelete = false,
 }: ImportTableProps) {
   return (
     <div className="overflow-x-auto table-scroll wms-inventory-table-wrap">
@@ -107,6 +111,17 @@ export default function ImportTable({
                         : []),
                       ...(canApprove && imp.status === 'pending'
                         ? [{ label: 'Duyệt thực tế', icon: Check, onClick: () => onApprove(imp) }]
+                        : []),
+                      ...(canDelete && imp.status === 'draft'
+                        ? [
+                            { divider: true },
+                            {
+                              label: 'Xóa phiếu',
+                              icon: Trash2,
+                              danger: true,
+                              onClick: () => onDelete?.(imp),
+                            },
+                          ]
                         : []),
                     ]}
                   />

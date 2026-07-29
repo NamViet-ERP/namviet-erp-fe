@@ -56,10 +56,18 @@ export const importsService = {
     return apiClient.postForm<ImportParseResultApiDto>(`${ENDPOINT}/parse-import-file`, formData);
   },
 
-  /** SL còn lại trên PO (đã trừ Received + pending NK). */
-  async previewFromPurchaseOrder(poCode: string): Promise<PoImportPreviewApiDto> {
+  /** SL còn lại trên PO (đã trừ Received + pending NK). excludeTicketCode: bỏ qua phiếu đang sửa. */
+  async previewFromPurchaseOrder(
+    poCode: string,
+    options?: { excludeTicketCode?: string },
+  ): Promise<PoImportPreviewApiDto> {
+    const params = new URLSearchParams();
+    if (options?.excludeTicketCode) {
+      params.set('excludeTicketCode', options.excludeTicketCode);
+    }
+    const qs = params.toString();
     return apiClient.get<PoImportPreviewApiDto>(
-      `${ENDPOINT}/from-po/${encodeURIComponent(poCode)}/preview`,
+      `${ENDPOINT}/from-po/${encodeURIComponent(poCode)}/preview${qs ? `?${qs}` : ''}`,
     );
   },
 

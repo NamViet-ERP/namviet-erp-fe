@@ -54,6 +54,7 @@ import {
   useApproveImport,
 
   useSubmitImport,
+  useDeleteImport,
   useCreateImportFromPo,
   usePoImportPreview,
 
@@ -129,6 +130,8 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
   const [budgetExceeded, setBudgetExceeded] = useState<ImportBudgetExceededApiDto | null>(null);
 
+  const [deleteTarget, setDeleteTarget] = useState<Import | null>(null);
+
   const [editing, setEditing] = useState<Import | null>(null);
 
 
@@ -154,7 +157,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
     dateTo: dateTo || undefined,
   });
 
-  const { data: materialsPage } = useMaterials({ pageSize: 200 });
+  const { data: materialsPage } = useMaterials({ pageSize: 500 });
 
   const { data: projectsPage } = useProjects({ pageSize: 100, status: 'Active' });
 
@@ -169,11 +172,13 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
   const approveMutation = useApproveImport();
 
   const submitMutation = useSubmitImport();
+  const deleteMutation = useDeleteImport();
 
   const { has } = usePermission();
   const canEditImport = has('wms.imports.update');
   const canSubmitImport = has('wms.imports.update');
   const canApproveImport = has('wms.imports.approve');
+  const canDeleteImport = canEditImport;
 
 
 
@@ -191,7 +196,11 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
     () => (purchaseOrdersQuery.data?.items ?? []).filter(po => po.deliveryStatus !== 'complete'),
     [purchaseOrdersQuery.data?.items],
   );
-  const poPreviewQuery = usePoImportPreview(selectedPoCode || undefined, showCreate && !editing && Boolean(selectedPoCode));
+  const poPreviewQuery = usePoImportPreview(
+    selectedPoCode || undefined,
+    showCreate && Boolean(selectedPoCode),
+    editing?.voucherCode,
+  );
 
   const voucherTabs = getVoucherTabLabels('import');
 
@@ -530,7 +539,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
 
 
-  const handleUpdate = async () => {
+  const handleUpdate = async (payload?: { evaluation: string }) => {
 
     if (!editing) return;
 
@@ -543,6 +552,11 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
     try {
 
       await updateMutation.mutateAsync({ id: editing.id, dto: { ...dto, status: editing.status } });
+
+      const evaluation = (payload?.evaluation ?? '').trim();
+      if (evaluation !== (editing.receiptEvaluation ?? '').trim()) {
+        await importsService.updateReceiptEvaluation(editing.id, evaluation);
+      }
 
       showToast('success', `Đã cập nhật phiếu ${editing.voucherCode}.`);
 
@@ -562,6 +576,8 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
   const openEdit = (imp: Import) => {
 
+    setShowDetail(false);
+
     setEditing(imp);
 
     setProjectCode(imp.project ?? '');
@@ -569,7 +585,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
     setDefaultSupplier(imp.supplier);
 
     setReferenceCode(imp.referenceCode);
-    setSelectedPoCode('');
+    setSelectedPoCode(imp.referenceCode?.trim() || '');
 
     setNote(imp.note);
 
@@ -645,10 +661,10 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
       showToast(
         'error',
         !text
-          ? 'Thiếu đánh giá nhận hàng. Mở chi tiết phiếu để nhập đánh giá, ảnh và file chứng từ.'
+          ? 'Thiếu đánh giá nhận hàng. Mở chi tiết phiếu để nhập đánh giá.'
           : !hasPhoto
-            ? 'Thiếu ảnh nhận hàng. Mở chi tiết phiếu để tải ảnh.'
-            : 'Thiếu file chứng từ. Mở chi tiết phiếu để tải file.',
+            ? 'Thiếu ảnh nhận hàng. Mở Sửa phiếu để tải ảnh.'
+            : 'Thiếu file chứng từ. Mở Sửa phiếu để tải file.',
       );
       return;
     }
@@ -657,7 +673,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
       if ((imp.receiptEvaluation ?? '').trim() !== text) {
         setIsEvidencePending(true);
         await importsService.updateReceiptEvaluation(imp.id, text);
-        await reloadSelected(imp.id);
+        await reloadImport(imp.id);
       }
       await runApprove(imp, false);
     } catch (err) {
@@ -711,22 +727,35 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
   };
 
-  const reloadSelected = async (id: string) => {
-    const refreshed = await importsService.getById(id);
-    setSelected(refreshed);
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    if (deleteTarget.status !== 'draft') {
+      showToast('error', 'Chỉ phiếu nháp mới được xóa.');
+      setDeleteTarget(null);
+      return;
+    }
+    try {
+      await deleteMutation.mutateAsync(deleteTarget.id);
+      showToast('success', `Đã xóa ${deleteTarget.voucherCode}.`);
+      if (selected?.id === deleteTarget.id) {
+        setShowDetail(false);
+        setSelected(null);
+      }
+      if (editing?.id === deleteTarget.id) {
+        setEditing(null);
+        setShowCreate(false);
+      }
+      setDeleteTarget(null);
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không xóa được phiếu nhập.'));
+    }
   };
 
-  const handleSaveEvaluation = async (imp: Import, evaluation: string) => {
-    try {
-      setIsEvidencePending(true);
-      await importsService.updateReceiptEvaluation(imp.id, evaluation.trim());
-      await reloadSelected(imp.id);
-      showToast('success', 'Đã lưu đánh giá nhận hàng.');
-    } catch (err) {
-      showToast('error', getApiErrorMessage(err, 'Không lưu được đánh giá.'));
-    } finally {
-      setIsEvidencePending(false);
-    }
+  const reloadImport = async (id: string) => {
+    const refreshed = await importsService.getById(id);
+    setSelected(prev => (prev?.id === id ? refreshed : prev));
+    setEditing(prev => (prev?.id === id ? refreshed : prev));
+    return refreshed;
   };
 
   const handleUploadAttachment = async (
@@ -737,7 +766,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
     try {
       setIsEvidencePending(true);
       await importsService.uploadAttachment(imp.id, file, kind);
-      await reloadSelected(imp.id);
+      await reloadImport(imp.id);
       showToast('success', 'Đã tải file lên phiếu nhập.');
     } catch (err) {
       showToast('error', getApiErrorMessage(err, 'Không tải được file.'));
@@ -750,7 +779,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
     try {
       setIsEvidencePending(true);
       await importsService.deleteAttachment(imp.id, attachmentId);
-      await reloadSelected(imp.id);
+      await reloadImport(imp.id);
       showToast('success', 'Đã xóa file.');
     } catch (err) {
       showToast('error', getApiErrorMessage(err, 'Không xóa được file.'));
@@ -866,11 +895,15 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
           onApprove={handleApprove}
 
+          onDelete={setDeleteTarget}
+
           canEdit={canEditImport}
 
           canSubmit={canSubmitImport}
 
           canApprove={canApproveImport}
+
+          canDelete={canDeleteImport}
 
         />
 
@@ -956,10 +989,10 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
         items={items}
 
         onItemsChange={next => {
-          // Tạo từ PO: giữ nguyên notes poItem:* từ bảng chọn dòng.
-          // Sửa phiếu: đổi mã VT thì bỏ notes cũ để tránh khớp sai khi duyệt.
+          // Tạo từ PO / sửa theo PO: giữ notes poItem:* từ bảng chọn dòng.
+          // Sửa tự do (không PO): đổi mã VT thì bỏ notes cũ để tránh khớp sai khi duyệt.
           setItems(prev => {
-            if (!editing) return next;
+            if (!editing || selectedPoCode) return next;
             return next.map((line, idx) => {
               const prevLine = prev[idx];
               if (prevLine && prevLine.materialCode === line.materialCode) return line;
@@ -988,9 +1021,30 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
         onImportFile={handleImportFile}
 
-        editVoucher={editing ? { code: editing.voucherCode } : null}
+        editVoucher={
+          editing
+            ? { code: editing.voucherCode, receiptEvaluation: editing.receiptEvaluation }
+            : null
+        }
 
         materialUnit={materialUnit}
+        editAttachments={editing?.attachments ?? []}
+        isEvidencePending={isEvidencePending}
+        onUploadEditAttachment={
+          editing && canEditImport
+            ? (file, kind) => handleUploadAttachment(editing, file, kind)
+            : undefined
+        }
+        onDeleteEditAttachment={
+          editing && canEditImport
+            ? attachmentId => handleDeleteAttachment(editing, attachmentId)
+            : undefined
+        }
+        onDownloadEditAttachment={
+          editing
+            ? (attachmentId, fileName) => handleDownloadAttachment(editing, attachmentId, fileName)
+            : undefined
+        }
         poOptions={poOptions}
         selectedPoCode={selectedPoCode}
         onSelectedPoCodeChange={code => {
@@ -1029,22 +1083,37 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
         projectName={projectName}
 
-        isSubmitPending={submitMutation.isPending}
+        onEdit={canEditImport ? openEdit : undefined}
 
-        isApprovePending={approveMutation.isPending}
-        isEvidencePending={isEvidencePending}
-
-        onSubmit={canSubmitImport ? handleSubmit : undefined}
-
-        onApprove={canApproveImport ? handleApprove : undefined}
-        onSaveEvaluation={canEditImport ? handleSaveEvaluation : undefined}
-        onUploadAttachment={canEditImport ? handleUploadAttachment : undefined}
-        onDeleteAttachment={canEditImport ? handleDeleteAttachment : undefined}
         onDownloadAttachment={handleDownloadAttachment}
 
       />
 
 
+
+      <ConfirmDialog
+
+        isOpen={deleteTarget != null}
+
+        onClose={() => setDeleteTarget(null)}
+
+        onConfirm={() => void handleConfirmDelete()}
+
+        title="Xóa phiếu nhập kho"
+
+        variant="danger"
+
+        confirmLabel="Xóa phiếu"
+
+        isLoading={deleteMutation.isPending}
+
+        message={
+          deleteTarget
+            ? `Xóa phiếu nháp ${deleteTarget.voucherCode}? Thao tác không hoàn tác.`
+            : ''
+        }
+
+      />
 
       <ConfirmDialog
 
