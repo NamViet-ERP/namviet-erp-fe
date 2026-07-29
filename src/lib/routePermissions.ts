@@ -32,7 +32,6 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
   { match: p => p === '/warehouse/reports', permissions: ['wms.reports.view:all'] },
 
   { match: p => p === '/stocktake/list', permissions: ['wms.stocktakes.view:all'] },
-  { match: p => p === '/stocktake/settings', permissions: ['wms.stocktakes.settings.view'] },
 
   { match: p => p === '/members/list', permissions: ['hrm.employees.view:all'] },
   { match: p => p === '/members/new', permissions: ['hrm.employees.create'] },
@@ -65,9 +64,6 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
     permissions: ['admin.roles.view:all'],
   },
 
-  { match: p => p.startsWith('/technical/cskh'), permissions: ['tech.cskh.view'] },
-  { match: p => p === '/technical' || p.startsWith('/technical/'), permissions: ['tech.cskh.view'] },
-
   { match: p => p.startsWith('/suppliers') || p.startsWith('/purchasing/suppliers'), permissions: ['purchasing.suppliers.view', 'wms.suppliers.view:all'] },
   { match: p => p === '/purchasing/dashboard' || p === '/purchasing', permissions: ['purchasing.dashboard.view'] },
   { match: p => p === '/purchasing/plans', permissions: ['purchasing.plans.view'] },
@@ -87,7 +83,6 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
     match: p => p.startsWith('/purchasing/payments/'),
     permissions: ['purchasing.payments.view'],
   },
-  { match: p => p === '/purchasing/settings', permissions: ['purchasing.settings.view'] },
 ];
 
 export function getRequiredPermissionsForPath(pathname: string): PermissionKey[] | null {

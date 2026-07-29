@@ -54,11 +54,11 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
   const ModuleIcon = onBack ? Settings : (moduleIcons[currentModule] || WarehouseIcon);
   const headerLabel = contextLabel ?? moduleLabels[currentModule];
 
+  /** List + trang con (chi tiết/new) đều giữ active — vd. /purchasing/plans/KHMH-001. */
   const isPathActive = (menuPath: string, pathname: string) => {
     if (!menuPath) return false;
     if (pathname === menuPath) return true;
-    if (menuPath === '/warehouse/projects' && pathname.startsWith('/warehouse/projects/')) return true;
-    return false;
+    return pathname.startsWith(`${menuPath}/`);
   };
 
   const isActive = (path: string) => isPathActive(path, location.pathname);

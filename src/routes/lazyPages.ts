@@ -35,16 +35,7 @@ export const AdminUserDetailPage = lazy(() => import('../pages/admin/AdminUserDe
 export const AdminSettingsPage = lazy(() => import('../pages/admin/AdminSettingsPage'));
 export const AdminRolePermissionsPage = lazy(() => import('../pages/admin/AdminRolePermissionsPage'));
 export const StocktakeListPage = lazy(() => import('../pages/stocktake/StocktakeListPage'));
-export const StocktakeSettingsPage = lazy(() => import('../pages/stocktake/StocktakeSettingsPage'));
 export const WarehouseReportsPage = lazy(() => import('../pages/warehouse/WarehouseReportsPage'));
-
-export const AfterSalesClientsPage = lazy(() => import('../pages/technical/cskh/AfterSalesClientsPage'));
-export const CareHistoryPage = lazy(() => import('../pages/technical/cskh/CareHistoryPage'));
-export const CskhBirthdaysPage = lazy(() => import('../pages/technical/cskh/CskhBirthdaysPage'));
-export const CskhSettingsPage = lazy(() => import('../pages/technical/cskh/CskhSettingsPage'));
-export const ProjectIssuesPage = lazy(() => import('../pages/technical/cskh/ProjectIssuesPage'));
-export const CdtReportsPage = lazy(() => import('../pages/technical/cskh/CdtReportsPage'));
-export const InternalReportsPage = lazy(() => import('../pages/technical/cskh/InternalReportsPage'));
 
 export const PurchasePlansPage = lazy(() => import('../pages/purchasing/PurchasePlansPage'));
 export const PurchasePlanDetailPage = lazy(() => import('../pages/purchasing/PurchasePlanDetailPage'));
@@ -53,5 +44,3 @@ export const PurchaseOrderDetailPage = lazy(() => import('../pages/purchasing/Pu
 export const PurchasePaymentsPage = lazy(() => import('../pages/purchasing/PurchasePaymentsPage'));
 export const PurchasePaymentDetailPage = lazy(() => import('../pages/purchasing/PurchasePaymentDetailPage'));
 export const PurchasingDashboardPage = lazy(() => import('../pages/purchasing/PurchasingDashboardPage'));
-export const PurchasingSettingsPage = lazy(() => import('../pages/purchasing/PurchasingSettingsPage'));
-export const PurchasingSuppliersPage = lazy(() => import('../pages/purchasing/PurchasingSuppliersPage'));

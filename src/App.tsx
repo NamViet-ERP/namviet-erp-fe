@@ -7,7 +7,7 @@ import { getDefaultRoute } from './utils/getDefaultRoute';
 import { getActiveRole } from './lib/getActiveRole';
 import * as Pages from './routes/lazyPages';
 
-const SuppliersModuleRoutes = lazy(() => import('./routes/DevOnlyRoutes'));
+const SuppliersModuleRoutes = lazy(() => import('./routes/SuppliersModuleRoutes'));
 
 export default function App() {
   const role = getActiveRole();
@@ -45,7 +45,7 @@ export default function App() {
             <Route path="/warehouse/settings/suppliers" element={<Navigate to="/suppliers/list" replace />} />
 
             <Route path="/stocktake/list" element={<Pages.StocktakeListPage />} />
-            <Route path="/stocktake/settings" element={<Pages.StocktakeSettingsPage />} />
+            <Route path="/stocktake/settings" element={<Navigate to="/stocktake/list" replace />} />
 
             <Route path="/members/list" element={<Pages.MembersPage />} />
             <Route path="/members/settings" element={<Pages.MembersSettingsPage />} />
@@ -71,15 +71,8 @@ export default function App() {
             <Route path="/admin/settings" element={<Pages.AdminSettingsPage />} />
             <Route path="/admin/settings/roles/:code/permissions" element={<Pages.AdminRolePermissionsPage />} />
 
-            <Route path="/technical" element={<Navigate to="/technical/cskh/clients" replace />} />
-            <Route path="/technical/cskh" element={<Navigate to="/technical/cskh/clients" replace />} />
-            <Route path="/technical/cskh/clients" element={<Pages.AfterSalesClientsPage />} />
-            <Route path="/technical/cskh/history" element={<Pages.CareHistoryPage />} />
-            <Route path="/technical/cskh/project-issues" element={<Pages.ProjectIssuesPage />} />
-            <Route path="/technical/cskh/reports-cdt" element={<Pages.CdtReportsPage />} />
-            <Route path="/technical/cskh/reports-internal" element={<Pages.InternalReportsPage />} />
-            <Route path="/technical/cskh/birthdays" element={<Pages.CskhBirthdaysPage />} />
-            <Route path="/technical/cskh/settings" element={<Pages.CskhSettingsPage />} />
+            {/* CSKH / purchasing·stocktake settings — chưa ship API; redirect khỏi placeholder */}
+            <Route path="/technical/*" element={<Navigate to="/dashboard" replace />} />
 
             <Route path="/purchasing" element={<Navigate to="/purchasing/dashboard" replace />} />
             <Route path="/purchasing/dashboard" element={<Pages.PurchasingDashboardPage />} />
@@ -92,7 +85,7 @@ export default function App() {
             <Route path="/purchasing/payments/new" element={<Pages.PurchasePaymentDetailPage />} />
             <Route path="/purchasing/payments/:code" element={<Pages.PurchasePaymentDetailPage />} />
             <Route path="/purchasing/suppliers" element={<Navigate to="/suppliers/list" replace />} />
-            <Route path="/purchasing/settings" element={<Pages.PurchasingSettingsPage />} />
+            <Route path="/purchasing/settings" element={<Navigate to="/purchasing/dashboard" replace />} />
 
             <Route path="/suppliers/*" element={<SuppliersModuleRoutes />} />
 

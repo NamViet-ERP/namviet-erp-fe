@@ -10,8 +10,7 @@ import {
 
   Layers, FolderKanban, ArrowLeftRight, Building2, Ruler, BarChart3, RotateCcw, AlertTriangle,
 
-  Target, CalendarDays, DollarSign, Headphones, ShoppingCart, ClipboardList, FileText, Cake,
-  Star, Truck,
+  Target, CalendarDays, DollarSign, ShoppingCart, Star, Truck,
 
 } from 'lucide-react';
 
@@ -137,7 +136,7 @@ export const warehouseMenu: SidebarMenuItem[] = [
 
     id: 'defects',
 
-    label: 'Hàng lỗi',
+    label: 'Hàng lỗi và Bảo hành',
 
     icon: AlertTriangle,
 
@@ -248,20 +247,6 @@ export const stocktakeMenu: SidebarMenuItem[] = [
     path: '/stocktake/list',
 
     permission: 'wms.stocktakes.view:all',
-
-  },
-
-  {
-
-    id: 'st-settings',
-
-    label: 'Thiết lập',
-
-    icon: Settings,
-
-    path: '/stocktake/settings',
-
-    permission: 'wms.stocktakes.settings.view',
 
   },
 
@@ -455,58 +440,8 @@ export const adminMenu: SidebarMenuItem[] = [
 
 
 
-/** Kỹ thuật — chỉ CSKH (ERP cũ + yêu cầu sếp). */
-export const technicalMenu: SidebarMenuItem[] = [
-  {
-    id: 'cskh-clients',
-    label: 'Khách hàng sau bán',
-    icon: Headphones,
-    path: '/technical/cskh/clients',
-    permission: 'tech.cskh.view',
-  },
-  {
-    id: 'cskh-history',
-    label: 'Lịch sử chăm sóc',
-    icon: ClipboardList,
-    path: '/technical/cskh/history',
-    permission: 'tech.cskh.view',
-  },
-  {
-    id: 'cskh-issues',
-    label: 'Vấn đề theo dự án',
-    icon: FolderKanban,
-    path: '/technical/cskh/project-issues',
-    permission: 'tech.cskh.view',
-  },
-  {
-    id: 'cskh-cdt',
-    label: 'Báo cáo CĐT',
-    icon: FileText,
-    path: '/technical/cskh/reports-cdt',
-    permission: 'tech.cskh.view',
-  },
-  {
-    id: 'cskh-internal',
-    label: 'Báo cáo nội bộ',
-    icon: BarChart3,
-    path: '/technical/cskh/reports-internal',
-    permission: 'tech.cskh.view',
-  },
-  {
-    id: 'cskh-birthdays',
-    label: 'Sinh nhật hôm nay',
-    icon: Cake,
-    path: '/technical/cskh/birthdays',
-    permission: 'tech.cskh.view',
-  },
-  {
-    id: 'cskh-settings',
-    label: 'Thiết lập',
-    icon: Settings,
-    path: '/technical/cskh/settings',
-    permission: 'tech.cskh.view',
-  },
-];
+/** Kỹ thuật / CSKH — chưa ship API; giữ export rỗng để AppLayout không gãy. */
+export const technicalMenu: SidebarMenuItem[] = [];
 
 
 
@@ -563,6 +498,13 @@ export const suppliersMenu: SidebarMenuItem[] = [
     label: 'Nhà cung cấp',
     icon: Building2,
     path: '/suppliers/list',
+    permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
+  },
+  {
+    id: 'sup-contacts',
+    label: 'Liên hệ NCC',
+    icon: Users,
+    path: '/suppliers/contacts',
     permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
   },
   {
