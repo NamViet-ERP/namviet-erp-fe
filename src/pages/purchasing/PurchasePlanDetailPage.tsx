@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, FolderLock, FolderOpen } from 'lucide-react';
 import { HrmDetailHeader } from '../../components/hr/HrmPageChrome';
 import EmptyState from '../../components/ui/EmptyState';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
-import { usePurchasePlan } from '../../hooks/usePurchasePlans';
+import { showToast } from '../../components/ui/Toast';
+import { usePurchasePlan, useUpdatePurchasePlan } from '../../hooks/usePurchasePlans';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { formatDateCell, formatDateTimeVi } from '../../lib/hrm/formatters';
 import { formatCurrency } from '../../utils/formatCurrency';
@@ -79,19 +81,33 @@ export default function PurchasePlanDetailPage() {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
   const { data: plan, isLoading, isError, error, refetch } = usePurchasePlan(code);
+  const updateMutation = useUpdatePurchasePlan();
+  const [confirmClose, setConfirmClose] = useState(false);
   const back = () => navigate('/purchasing/plans');
 
   const lines = plan?.lines ?? [];
 
+  const setPlanStatus = async (next: 'active' | 'closed') => {
+    if (!plan) return;
+    try {
+      await updateMutation.mutateAsync({ code: plan.code, body: { status: next } });
+      showToast(
+        'success',
+        next === 'active' ? `Đã mở KHMH ${plan.code}.` : `Đã đóng KHMH ${plan.code}.`,
+      );
+      setConfirmClose(false);
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không đổi được trạng thái KHMH.'));
+    }
+  };
   const headerMeta = useMemo(() => {
     if (!plan) return [];
     return [
-      { label: 'Mã KHMH', value: plan.code, kind: 'text' as const },
-      { label: 'Dự án', value: plan.projectName || plan.projectCode || '—', kind: 'text' as const },
-      { label: 'Ngày tạo', value: formatDateTimeVi(plan.createdAt) ?? '—', kind: 'text' as const },
-      { label: 'Người tạo', value: plan.createdByName || '—', kind: 'text' as const },
-      { label: 'Trạng thái', value: plan.status || 'draft', kind: 'status' as const },
-      { label: 'Ghi chú', value: plan.note || '—', kind: 'text' as const },
+      { label: 'Mã KHMH', value: plan.code },
+      { label: 'Dự án', value: plan.projectName || plan.projectCode || '—' },
+      { label: 'Ngày tạo', value: formatDateTimeVi(plan.createdAt) ?? '—' },
+      { label: 'Người tạo', value: plan.createdByName || '—' },
+      { label: 'Ghi chú', value: plan.note || '—' },
     ];
   }, [plan]);
 
@@ -139,6 +155,8 @@ export default function PurchasePlanDetailPage() {
   }
 
   const projectSubtitle = plan.projectName || plan.projectCode || undefined;
+  const isActive = plan.status === 'active';
+  const isClosed = plan.status === 'closed';
 
   return (
     <div className="hrm-page w-full pur-detail">
@@ -146,7 +164,33 @@ export default function PurchasePlanDetailPage() {
         onBack={back}
         title={`KHMH ${plan.code}`}
         subtitle={projectSubtitle}
-        actions={<PlanStatusBadge status={plan.status} />}
+        actions={(
+          <div className="pur-detail__actions">
+            <PlanStatusBadge status={plan.status} />
+            {!isActive && (
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                disabled={updateMutation.isPending}
+                onClick={() => { void setPlanStatus('active'); }}
+              >
+                <FolderOpen size={15} strokeWidth={1.75} aria-hidden />
+                {isClosed ? 'Mở lại kế hoạch' : 'Mở kế hoạch'}
+              </button>
+            )}
+            {!isClosed && (
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                disabled={updateMutation.isPending}
+                onClick={() => setConfirmClose(true)}
+              >
+                <FolderLock size={15} strokeWidth={1.75} aria-hidden />
+                Đóng kế hoạch
+              </button>
+            )}
+          </div>
+        )}
       />
 
       <section className="pur-detail__card" aria-label="Thông tin kế hoạch">
@@ -154,9 +198,7 @@ export default function PurchasePlanDetailPage() {
           {headerMeta.map(m => (
             <div key={m.label} className="pur-detail__field">
               <div className="pur-detail__field-label">{m.label}</div>
-              <div className="pur-detail__field-value">
-                {m.kind === 'status' ? <PlanStatusBadge status={m.value} /> : m.value}
-              </div>
+              <div className="pur-detail__field-value">{m.value}</div>
             </div>
           ))}
         </div>
@@ -257,6 +299,19 @@ export default function PurchasePlanDetailPage() {
       </section>
 
       <p className="pur-detail__muted">Chưa có lịch sử thay đổi.</p>
+
+      <ConfirmDialog
+        isOpen={confirmClose}
+        onClose={() => setConfirmClose(false)}
+        onConfirm={() => { void setPlanStatus('closed'); }}
+        title="Đóng kế hoạch mua hàng"
+        message={plan
+          ? `Đóng KHMH ${plan.code}? Sau khi đóng sẽ không tạo được đơn mua hàng từ kế hoạch này.`
+          : ''}
+        confirmLabel="Đóng"
+        variant="danger"
+        isLoading={updateMutation.isPending}
+      />
     </div>
   );
 }

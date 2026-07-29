@@ -25,6 +25,7 @@ import {
 } from '../../lib/purchasing/purchaseOrderStatus';
 import { formatCurrency } from '../../utils/formatCurrency';
 import type { DropdownItem } from '../../types';
+import type { PurchaseOrderApiDto } from '../../types/api/purchasingApi';
 
 const PLACEMENT_OPTIONS = [
   { value: '', label: 'Tất cả' },
@@ -53,7 +54,82 @@ const WARNING_OPTIONS = [
   { value: 'false', label: 'Không cảnh báo' },
 ];
 
-const COL_COUNT = 12;
+const COL_COUNT = 13;
+
+function nameInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0] ?? ''}${parts[parts.length - 1]?.[0] ?? ''}`.toUpperCase();
+}
+
+function PoApprovalStatusCell({
+  row,
+  canApprove,
+  approving,
+  onApprove,
+}: {
+  row: PurchaseOrderApiDto;
+  canApprove: boolean;
+  approving: boolean;
+  onApprove: (code: string) => void;
+}) {
+  const approved = row.approvalStatus === 'approved';
+  if (!approved) {
+    if (canApprove) {
+      return (
+        <div className="pur-erp__approve">
+          <button
+            type="button"
+            className="pur-erp__pill pur-erp__pill--warn pur-erp__approve-btn"
+            title="Bạn có muốn duyệt phiếu?"
+            aria-label={`Duyệt PO ${row.code}`}
+            disabled={approving}
+            onClick={() => onApprove(row.code)}
+          >
+            Chưa duyệt
+            <span className="pur-erp__approve-mark" aria-hidden>
+              <Check size={10} strokeWidth={2.5} />
+            </span>
+          </button>
+        </div>
+      );
+    }
+    return (
+      <div className="pur-erp__approve">
+        <span className="pur-erp__pill pur-erp__pill--warn pur-erp__approve-btn pur-erp__approve-btn--static">
+          Chưa duyệt
+          <span className="pur-erp__approve-mark" aria-hidden>
+            <Check size={10} strokeWidth={2.5} />
+          </span>
+        </span>
+      </div>
+    );
+  }
+
+  const approver = row.approvedByName?.trim() || '—';
+  const tip = row.approvedAt
+    ? `Vào lúc: ${formatDateTimeVi(row.approvedAt) ?? row.approvedAt}`
+    : '';
+
+  return (
+    <div className="pur-erp__approve">
+      <span className="pur-erp__pill pur-erp__pill--ok">Đã duyệt</span>
+      <div className="pur-erp__approve-user">
+        <span
+          className="pur-erp__approve-avatar"
+          data-tip={tip || undefined}
+          tabIndex={tip ? 0 : undefined}
+          role={tip ? 'img' : undefined}
+          aria-label={tip || undefined}
+        >
+          {nameInitials(approver)}
+        </span>
+        <span className="pur-erp__approve-name" title={approver}>{approver}</span>
+      </div>
+    </div>
+  );
+}
 
 /** Danh sách đơn hàng PO — cột + bộ lọc theo spec. */
 export default function PurchaseOrdersPage() {
@@ -125,9 +201,6 @@ export default function PurchaseOrdersPage() {
 
   const rowActions = (row: (typeof items)[number]): DropdownItem[] => [
     { label: 'Xem chi tiết', icon: Eye, onClick: () => navigate(`/purchasing/orders/${encodeURIComponent(row.code)}`) },
-    ...(canApprove && row.approvalStatus === 'draft'
-      ? [{ label: 'Duyệt PO', icon: Check, onClick: () => void handleApprove(row.code) }]
-      : []),
     ...(canUnapprove && row.approvalStatus === 'approved' && row.orderPlacementStatus !== 'placed'
       ? [{ label: 'Hủy duyệt', icon: Undo2, onClick: () => void handleUnapprove(row.code) }]
       : []),
@@ -165,6 +238,7 @@ export default function PurchaseOrdersPage() {
       <th>Dự án</th>
       <th>Nhà cung cấp</th>
       <th className="pur-erp__th-num">Tổng tiền</th>
+      <th className="pur-erp__th-status">Trạng thái</th>
       <th className="pur-erp__th-status">Trạng thái đặt</th>
       <th className="pur-erp__th-status">Trạng thái giao</th>
       <th className="pur-erp__th-status">Tình trạng thanh toán</th>
@@ -327,6 +401,14 @@ export default function PurchaseOrdersPage() {
                         </td>
                         <td>{row.supplierName || '—'}</td>
                         <td className="pur-erp__td-num">{formatCurrency(row.totalAmount)} (VNĐ)</td>
+                          <td className="pur-erp__td-status">
+                            <PoApprovalStatusCell
+                              row={row}
+                              canApprove={canApprove}
+                              approving={approveMutation.isPending}
+                              onApprove={code => { void handleApprove(code); }}
+                            />
+                          </td>
                           <td className="pur-erp__td-status">
                             <PoStatusPill label={placement.label} tone={placement.tone} />
                           </td>

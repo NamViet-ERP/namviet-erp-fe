@@ -1,11 +1,16 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { Check, Pencil, Printer, X } from 'lucide-react';
 import { HrmDetailHeader } from '../../components/hr/HrmPageChrome';
 import EmptyState from '../../components/ui/EmptyState';
 import FormField from '../../components/ui/FormField';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { showToast } from '../../components/ui/Toast';
+import PoVoucherPreview, { type PoVoucherModel } from '../../components/purchasing/PoVoucherPreview';
+import { printPoSheet } from '../../lib/purchasing/printPoSheet';
+import PoAttachmentsPanel from '../../components/purchasing/PoAttachmentsPanel';
 import { usePurchasePlan, usePurchasePlans } from '../../hooks/usePurchasePlans';
 import {
   useApprovePurchaseOrder,
@@ -20,7 +25,6 @@ import { formatDateCell, formatDateTimeVi } from '../../lib/hrm/formatters';
 import { formatCurrency, formatCurrencyFull } from '../../utils/formatCurrency';
 import { findSupplierByName, suppliersService } from '../../services/suppliersService';
 import { usePermission } from '../../hooks/usePermission';
-import CreateImportFromPoModal from '../../components/purchasing/CreateImportFromPoModal';
 import Badge from '../../components/ui/Badge';
 import { useImports } from '../../hooks/useImports';
 import {
@@ -33,6 +37,14 @@ import {
 } from '../../lib/purchasing/purchaseOrderStatus';
 import type { PurchasePlanLineApiDto } from '../../types/api/purchasingApi';
 import type { StatusKey } from '../../types';
+
+function addDaysIso(days: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  const m = `${d.getMonth() + 1}`.padStart(2, '0');
+  const day = `${d.getDate()}`.padStart(2, '0');
+  return `${d.getFullYear()}-${m}-${day}`;
+}
 
 function supplierOf(line: PurchasePlanLineApiDto): string {
   return (
@@ -72,8 +84,6 @@ function PurchaseOrderDetailView({ code }: { code: string }) {
   const canUnapprove = has('purchasing.orders.unapprove');
   const canPlace = has('purchasing.orders.place');
   const canUpdate = has('purchasing.orders.update');
-  const canCreateImport = has('wms.imports.create');
-  const canCreatePayment = has('purchasing.payments.create');
   const lines = order?.lines ?? [];
   const actionBusy =
     approveMutation.isPending
@@ -83,10 +93,10 @@ function PurchaseOrderDetailView({ code }: { code: string }) {
   const isDraft = order?.approvalStatus === 'draft';
   const isApproved = order?.approvalStatus === 'approved';
   const isPlaced = order?.orderPlacementStatus === 'placed';
-  const deliveryIncomplete = order?.deliveryStatus !== 'complete';
 
-  const [importWizardOpen, setImportWizardOpen] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [attachDirty, setAttachDirty] = useState(false);
+  const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
   const importsQuery = useImports();
   const relatedImports = useMemo(
     () => (importsQuery.data ?? []).filter(
@@ -108,6 +118,43 @@ function PurchaseOrderDetailView({ code }: { code: string }) {
   const delivery = poDeliveryStatus(order?.deliveryStatus);
   const payment = poPaymentStatus(order?.paymentStatus);
   const paymentWarning = poPaymentWarningStatus(Boolean(order?.paymentWarning));
+
+  const printModel: PoVoucherModel | null = useMemo(() => {
+    if (!order) return null;
+    return {
+      code: order.code,
+      supplierName: order.supplierName || '',
+      projectLabel: order.projectName ? `${order.projectCode} — ${order.projectName}` : (order.projectCode || undefined),
+      planCode: order.planCode,
+      orderDateLabel: formatDateCell(order.orderDate) ?? '',
+      procurementStaff: order.createdByName ?? undefined,
+      paymentTermsDays: order.supplierPaymentTermsDays,
+      paymentDueDateLabel: order.paymentDueDate ?? undefined,
+      note: order.note ?? undefined,
+      totalAmount: order.totalAmount,
+      lines: order.lines.map(l => ({
+        name: l.name,
+        model: l.spec ?? undefined,
+        code: l.materialCode || l.sku || undefined,
+        unit: l.unit,
+        qty: l.ordered,
+        unitPrice: l.poPrice,
+        amount: l.lineAmount,
+        expectedDeliveryDate: l.expectedDeliveryDate ?? undefined,
+      })),
+    };
+  }, [order]);
+
+  const printDoc = () => {
+    const sheet = document.querySelector('.po-voucher-print-sheet');
+    if (!(sheet instanceof HTMLElement) || !printModel) {
+      showToast('error', 'Không mở được hộp thoại in. Vui lòng thử lại.');
+      return;
+    }
+    if (!printPoSheet(sheet, ' ')) {
+      showToast('error', 'Không mở được hộp thoại in. Vui lòng thử lại.');
+    }
+  };
 
   const startEdit = () => {
     if (!order) return;
@@ -167,10 +214,6 @@ function PurchaseOrderDetailView({ code }: { code: string }) {
     }
   };
 
-  const createImportFromPo = async () => {
-    setImportWizardOpen(true);
-  };
-
   const runAction = async (
     kind: 'approve' | 'unapprove' | 'place',
   ) => {
@@ -190,32 +233,51 @@ function PurchaseOrderDetailView({ code }: { code: string }) {
     }
   };
 
+  const goBackToOrders = () => navigate('/purchasing/orders');
+
+  const requestBack = () => {
+    if (attachDirty) {
+      setLeaveConfirmOpen(true);
+      return;
+    }
+    goBackToOrders();
+  };
+
   return (
     <div className="hrm-page w-full pur-detail">
+      <div className="no-print">
       <HrmDetailHeader
-        onBack={() => navigate('/purchasing/orders')}
+        onBack={requestBack}
         title={`PO ${code}`}
         subtitle={order?.supplierName || order?.planCode || undefined}
         actions={(
           <div className="pur-detail__actions">
+            {order ? (
+              <button type="button" className="btn btn-outline btn-sm" onClick={printDoc}>
+                <Printer size={15} strokeWidth={1.75} aria-hidden />
+                In phiếu
+              </button>
+            ) : null}
             {order && canUpdate && isDraft && !editing ? (
               <button
                 type="button"
-                className="btn btn-secondary btn-sm"
+                className="btn btn-outline btn-sm"
                 disabled={actionBusy}
                 onClick={startEdit}
               >
-                Sửa
+                <Pencil size={15} strokeWidth={1.75} aria-hidden />
+                Chỉnh sửa
               </button>
             ) : null}
             {order && editing ? (
               <>
                 <button
                   type="button"
-                  className="btn btn-secondary btn-sm"
+                  className="btn btn-outline btn-sm"
                   disabled={actionBusy}
                   onClick={cancelEdit}
                 >
+                  <X size={15} strokeWidth={1.75} aria-hidden />
                   Hủy
                 </button>
                 <button
@@ -224,7 +286,7 @@ function PurchaseOrderDetailView({ code }: { code: string }) {
                   disabled={actionBusy}
                   onClick={() => { void saveEdit(); }}
                 >
-                  {updateMutation.isPending ? 'Đang lưu…' : 'Lưu'}
+                  {updateMutation.isPending ? 'Đang lưu…' : 'Lưu thay đổi'}
                 </button>
               </>
             ) : null}
@@ -235,17 +297,18 @@ function PurchaseOrderDetailView({ code }: { code: string }) {
                 disabled={actionBusy}
                 onClick={() => { void runAction('approve'); }}
               >
-                Duyệt
+                <Check size={15} strokeWidth={1.75} aria-hidden />
+                Phê duyệt
               </button>
             ) : null}
             {order && canUnapprove && isApproved && !isPlaced ? (
               <button
                 type="button"
-                className="btn btn-secondary btn-sm"
+                className="btn btn-outline btn-sm"
                 disabled={actionBusy}
                 onClick={() => { void runAction('unapprove'); }}
               >
-                Hủy duyệt
+                Hủy phê duyệt
               </button>
             ) : null}
             {order && canPlace && isApproved && !isPlaced ? (
@@ -255,41 +318,11 @@ function PurchaseOrderDetailView({ code }: { code: string }) {
                 disabled={actionBusy}
                 onClick={() => { void runAction('place'); }}
               >
-                Đã đặt NCC
-              </button>
-            ) : null}
-            {order && canCreateImport && isPlaced && deliveryIncomplete ? (
-              <button
-                type="button"
-                className="btn btn-primary btn-sm"
-                disabled={actionBusy}
-                onClick={() => { void createImportFromPo(); }}
-              >
-                Tạo phiếu nhập kho
-              </button>
-            ) : null}
-            {order && canCreatePayment ? (
-              <button
-                type="button"
-                className="btn btn-secondary btn-sm"
-                disabled={actionBusy}
-                onClick={() => navigate(`/purchasing/payments/new?po=${encodeURIComponent(code)}`)}
-              >
-                Tạo DNTT
+                Xác nhận đã đặt NCC
               </button>
             ) : null}
           </div>
         )}
-      />
-
-      <CreateImportFromPoModal
-        isOpen={importWizardOpen}
-        poCode={code}
-        onClose={() => setImportWizardOpen(false)}
-        onCreated={voucherCode => {
-          showToast('success', `Đã tạo phiếu nhập ${voucherCode} từ PO ${code}.`);
-          navigate('/warehouse/import');
-        }}
       />
 
       {isError ? (
@@ -561,8 +594,36 @@ function PurchaseOrderDetailView({ code }: { code: string }) {
               </div>
             )}
           </section>
+
+          <PoAttachmentsPanel
+            poCode={code}
+            canUpload={canUpdate}
+            onDirtyChange={setAttachDirty}
+          />
         </>
       )}
+      </div>
+
+      <ConfirmDialog
+        isOpen={leaveConfirmOpen}
+        onClose={() => setLeaveConfirmOpen(false)}
+        onConfirm={() => {
+          setLeaveConfirmOpen(false);
+          setAttachDirty(false);
+          goBackToOrders();
+        }}
+        title="Chưa lưu hồ sơ đính kèm"
+        message="Bạn đang có tệp chưa lưu. Thoát trang sẽ mất các tệp này. Bạn có chắc muốn thoát?"
+        confirmLabel="Thoát không lưu"
+        cancelLabel="Ở lại"
+        variant="danger"
+      />
+
+      {printModel ? (
+        <div className="po-voucher-print-sheet">
+          <PoVoucherPreview model={printModel} />
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -607,6 +668,7 @@ function CreatePurchaseOrderForm({ onCreated }: { onCreated: (code: string) => v
   const [note, setNote] = useState('');
   const [selectedLineIds, setSelectedLineIds] = useState<number[]>([]);
   const [qtyByLine, setQtyByLine] = useState<Record<number, string>>({});
+  const [productSearch, setProductSearch] = useState('');
 
   const { data: plan, isLoading: planLoading, isError: planError, error: planErr } = usePurchasePlan(
     planCode || undefined,
@@ -630,22 +692,39 @@ function CreatePurchaseOrderForm({ onCreated }: { onCreated: (code: string) => v
     return allLines.filter(l => supplierOf(l) === supplierName && l.remainingOrderableQty > 0);
   }, [allLines, supplierName]);
 
+  const visibleSupplierLines = useMemo(() => {
+    const q = productSearch.trim().toLowerCase();
+    if (!q) return supplierLines;
+    return supplierLines.filter(l => l.productName.toLowerCase().includes(q));
+  }, [supplierLines, productSearch]);
+
   const matchedSupplier = useMemo(
     () => findSupplierByName(masterSuppliers, supplierName),
     [masterSuppliers, supplierName],
   );
+
+  const dueDatePreview = useMemo(
+    () => (matchedSupplier ? addDaysIso(matchedSupplier.maxDebtDays) : null),
+    [matchedSupplier],
+  );
+
+  const allVisibleSelected = visibleSupplierLines.length > 0
+    && visibleSupplierLines.every(l => selectedLineIds.includes(l.id));
+  const someVisibleSelected = visibleSupplierLines.some(l => selectedLineIds.includes(l.id));
 
   const selectPlan = (next: string) => {
     setPlanCode(next);
     setSupplierName('');
     setSelectedLineIds([]);
     setQtyByLine({});
+    setProductSearch('');
   };
 
   const selectSupplier = (next: string) => {
     setSupplierName(next);
     setSelectedLineIds([]);
     setQtyByLine({});
+    setProductSearch('');
   };
 
   const toggleLine = (id: number, checked: boolean) => {
@@ -655,6 +734,22 @@ function CreatePurchaseOrderForm({ onCreated }: { onCreated: (code: string) => v
       if (line) {
         setQtyByLine(prev => ({ ...prev, [id]: String(line.remainingOrderableQty) }));
       }
+    }
+  };
+
+  const toggleSelectAllVisible = (checked: boolean) => {
+    const visibleIds = visibleSupplierLines.map(l => l.id);
+    if (checked) {
+      setSelectedLineIds(prev => [...new Set([...prev, ...visibleIds])]);
+      setQtyByLine(prev => {
+        const next = { ...prev };
+        for (const line of visibleSupplierLines) {
+          next[line.id] = next[line.id] ?? String(line.remainingOrderableQty);
+        }
+        return next;
+      });
+    } else {
+      setSelectedLineIds(prev => prev.filter(id => !visibleIds.includes(id)));
     }
   };
 
@@ -722,7 +817,7 @@ function CreatePurchaseOrderForm({ onCreated }: { onCreated: (code: string) => v
             disabled={createMutation.isPending}
             onClick={() => { void submit(); }}
           >
-            {createMutation.isPending ? 'Đang lưu…' : 'Lưu PO'}
+            {createMutation.isPending ? 'Đang lưu…' : 'Tạo Đơn Hàng'}
           </button>
         )}
       />
@@ -787,9 +882,26 @@ function CreatePurchaseOrderForm({ onCreated }: { onCreated: (code: string) => v
           </p>
         ) : null}
         {matchedSupplier ? (
-          <p className="pur-detail__muted">
-            Điều khoản thanh toán: {matchedSupplier.maxDebtDays} ngày (theo danh mục NCC).
-          </p>
+          <div className="pur-dntt__po-card" aria-label="Điều khoản thanh toán NCC">
+            <div className="pur-dntt__po-tile">
+              <div>
+                <span>NCC đối chiếu</span>
+                <strong>{matchedSupplier.supplierName}</strong>
+              </div>
+            </div>
+            <div className="pur-dntt__po-tile">
+              <div>
+                <span>Hạn công nợ (MaxDebtDays)</span>
+                <strong>{matchedSupplier.maxDebtDays} ngày</strong>
+              </div>
+            </div>
+            <div className="pur-dntt__po-tile pur-dntt__po-tile--money">
+              <div>
+                <span>Hạn thanh toán dự kiến</span>
+                <strong>{dueDatePreview ? formatDateCell(dueDatePreview) : '—'}</strong>
+              </div>
+            </div>
+          </div>
         ) : (
           <p className="pur-detail__muted">
             Công nợ và điều khoản thanh toán hiển thị trên phiếu PO sau khi đối chiếu NCC master.
@@ -798,9 +910,22 @@ function CreatePurchaseOrderForm({ onCreated }: { onCreated: (code: string) => v
       </section>
 
       <section className="pur-detail__card">
-        <h2 className="purchasing-section-title">
-          Mặt hàng {supplierName ? `- ${supplierName}` : ''}
-        </h2>
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+          <h2 className="purchasing-section-title mb-0">
+            Mặt hàng {supplierName ? `- ${supplierName}` : ''}
+          </h2>
+          {supplierLines.length > 0 ? (
+            <div className="flex flex-wrap items-center gap-3">
+              <input
+                className="form-input max-w-xs"
+                value={productSearch}
+                onChange={e => setProductSearch(e.target.value)}
+                placeholder="Tìm tên hàng…"
+                aria-label="Tìm tên hàng"
+              />
+            </div>
+          ) : null}
+        </div>
         {!planCode ? (
           <EmptyState message="Chọn mã KHMH để xem mặt hàng." />
         ) : planLoading ? (
@@ -809,12 +934,24 @@ function CreatePurchaseOrderForm({ onCreated }: { onCreated: (code: string) => v
           <EmptyState message="Chọn nhà cung cấp. Đổi NCC sẽ xóa lựa chọn dòng hiện tại." />
         ) : supplierLines.length === 0 ? (
           <EmptyState message="Không còn dòng hàng khả dụng cho NCC này." />
+        ) : visibleSupplierLines.length === 0 ? (
+          <EmptyState message="Không có mặt hàng khớp tìm kiếm." />
         ) : (
           <div className="pur-detail__table-wrap overflow-x-auto table-scroll">
             <table className="pur-erp__table">
               <thead>
                 <tr>
-                  <th className="pur-erp__th-check">Chọn</th>
+                  <th className="pur-erp__th-check">
+                    <input
+                      type="checkbox"
+                      checked={allVisibleSelected}
+                      ref={el => {
+                        if (el) el.indeterminate = someVisibleSelected && !allVisibleSelected;
+                      }}
+                      onChange={e => toggleSelectAllVisible(e.target.checked)}
+                      aria-label="Chọn tất cả mặt hàng"
+                    />
+                  </th>
                   <th>Hệ</th>
                   <th>Danh mục</th>
                   <th>Tên hàng</th>
@@ -826,7 +963,7 @@ function CreatePurchaseOrderForm({ onCreated }: { onCreated: (code: string) => v
                 </tr>
               </thead>
               <tbody>
-                {supplierLines.map(line => {
+                {visibleSupplierLines.map(line => {
                   const checked = selectedLineIds.includes(line.id);
                   return (
                     <tr key={line.id} className={checked ? 'is-selected' : undefined}>

@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react';
+import { AlertTriangle, Eye, FolderLock, FolderOpen, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import CreatePurchasePlanModal from '../../components/purchasing/CreatePurchasePlanModal';
+import PurchasePlanVariancePanel from '../../components/purchasing/PurchasePlanVariancePanel';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Dropdown from '../../components/ui/Dropdown';
 import EmptyState from '../../components/ui/EmptyState';
@@ -12,7 +13,7 @@ import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import { showToast } from '../../components/ui/Toast';
 import VoucherDateFilter from '../../components/warehouse/VoucherDateFilter';
 import { DEFAULT_LIST_PAGE_SIZE, type ListPageSize } from '../../constants/pagination';
-import { useDeletePurchasePlan, usePurchasePlans } from '../../hooks/usePurchasePlans';
+import { useDeletePurchasePlan, usePurchasePlans, useUpdatePurchasePlan } from '../../hooks/usePurchasePlans';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { formatDateTimeVi } from '../../lib/hrm/formatters';
 import type { DropdownItem, TabItem } from '../../types';
@@ -54,7 +55,10 @@ export default function PurchasePlansPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editCode, setEditCode] = useState<string | null>(null);
   const [deleteCode, setDeleteCode] = useState<string | null>(null);
+  const [closeCode, setCloseCode] = useState<string | null>(null);
+  const [showVariance, setShowVariance] = useState(false);
   const deleteMutation = useDeletePurchasePlan();
+  const updateMutation = useUpdatePurchasePlan();
 
   const status = activeTab === 'all' ? '' : activeTab;
 
@@ -88,6 +92,19 @@ export default function PurchasePlansPage() {
     setPage(1);
   };
 
+  const setPlanStatus = async (code: string, next: 'active' | 'closed') => {
+    try {
+      await updateMutation.mutateAsync({ code, body: { status: next } });
+      showToast(
+        'success',
+        next === 'active' ? `Đã mở KHMH ${code}.` : `Đã đóng KHMH ${code}.`,
+      );
+      setCloseCode(null);
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không đổi được trạng thái KHMH.'));
+    }
+  };
+
   const confirmDelete = async () => {
     if (!deleteCode) return;
     try {
@@ -109,6 +126,14 @@ export default function PurchasePlansPage() {
         <div className="pur-erp__head-actions">
           <button
             type="button"
+            className="pur-erp__action pur-erp__action--history"
+            onClick={() => setShowVariance(v => !v)}
+          >
+            <AlertTriangle size={14} aria-hidden />
+            {showVariance ? 'Ẩn cảnh báo lệch' : 'Cảnh báo lệch KHMH'}
+          </button>
+          <button
+            type="button"
             className="pur-erp__action pur-erp__action--primary"
             onClick={() => { setEditCode(null); setCreateOpen(true); }}
           >
@@ -119,6 +144,8 @@ export default function PurchasePlansPage() {
       </header>
 
       <div className="pur-erp__workspace">
+        {showVariance ? <PurchasePlanVariancePanel /> : null}
+
         <div className="pur-erp__filter-card pur-erp__filter-card--plan">
           <div className="pur-erp__tabs-row">
             <TabFilter
@@ -215,15 +242,32 @@ export default function PurchasePlansPage() {
                   <tbody>
                     {items.map(row => {
                       const isDraft = row.status === 'draft';
+                      const isActive = row.status === 'active';
+                      const isClosed = row.status === 'closed';
                       const actionItems: DropdownItem[] = [
                         {
                           label: 'Xem chi tiết',
                           icon: Eye,
                           onClick: () => navigate(`/purchasing/plans/${encodeURIComponent(row.code)}`),
                         },
+                        ...(!isActive
+                          ? [{
+                              label: isClosed ? 'Mở lại' : 'Mở kế hoạch',
+                              icon: FolderOpen,
+                              onClick: () => { void setPlanStatus(row.code, 'active'); },
+                            }]
+                          : []),
+                        ...(!isClosed
+                          ? [{
+                              label: 'Đóng kế hoạch',
+                              icon: FolderLock,
+                              danger: true,
+                              onClick: () => setCloseCode(row.code),
+                            }]
+                          : []),
                         ...(isDraft
                           ? [
-                              { 
+                              {
                                 label: 'Sửa',
                                 icon: Pencil,
                                 onClick: () => { setEditCode(row.code); setCreateOpen(true); },
@@ -292,6 +336,21 @@ export default function PurchasePlansPage() {
           showToast('success', `Đã lưu ${code}.`);
           void refetch();
         }}
+      />
+
+      <ConfirmDialog
+        isOpen={Boolean(closeCode)}
+        onClose={() => setCloseCode(null)}
+        onConfirm={() => {
+          if (closeCode) void setPlanStatus(closeCode, 'closed');
+        }}
+        title="Đóng kế hoạch mua hàng"
+        message={closeCode
+          ? `Đóng KHMH ${closeCode}? Sau khi đóng sẽ không tạo được đơn mua hàng từ kế hoạch này.`
+          : ''}
+        confirmLabel="Đóng"
+        variant="danger"
+        isLoading={updateMutation.isPending}
       />
 
       <ConfirmDialog

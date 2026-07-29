@@ -4,13 +4,16 @@ import {
   Banknote,
   Building2,
   CalendarDays,
+  CircleCheck,
   ClipboardList,
   Eye,
   FileText,
   FolderKanban,
   Printer,
   Save,
+  Send,
   ShoppingCart,
+  XCircle,
 } from 'lucide-react';
 import DnttVoucherPreview, { type DnttPreviewModel } from '../../components/purchasing/DnttVoucherPreview';
 import PoAutocomplete from '../../components/purchasing/PoAutocomplete';
@@ -19,7 +22,13 @@ import EmptyState from '../../components/ui/EmptyState';
 import FormField from '../../components/ui/FormField';
 import HrmDatePicker from '../../components/hr/HrmDatePicker';
 import { showToast } from '../../components/ui/Toast';
-import { useCreatePurchasePayment, usePurchasePayment } from '../../hooks/usePurchasePayments';
+import {
+  useCancelPurchasePayment,
+  useCreatePurchasePayment,
+  usePayPurchasePayment,
+  usePurchasePayment,
+  useSubmitPurchasePayment,
+} from '../../hooks/usePurchasePayments';
 import { usePurchaseOrder, usePurchaseOrders } from '../../hooks/usePurchaseOrders';
 import { usePermission } from '../../hooks/usePermission';
 import { getApiErrorMessage } from '../../lib/apiClient';
@@ -51,8 +60,11 @@ export default function PurchasePaymentDetailPage() {
   const [searchParams] = useSearchParams();
   const isCreate = !code || code === 'new';
   const navigate = useNavigate();
-  const { has } = usePermission();
+  const { has, hasAny } = usePermission();
   const canCreate = has('purchasing.payments.create');
+  const canSubmit = hasAny(['purchasing.payments.submit', 'purchasing.payments.create']);
+  const canPay = hasAny(['purchasing.payments.pay', 'purchasing.payments.create']);
+  const canCancel = hasAny(['purchasing.payments.cancel', 'purchasing.payments.create']);
   const sessionUser = getSessionUser();
 
   const [poCode, setPoCode] = useState(searchParams.get('po')?.trim() || '');
@@ -62,6 +74,9 @@ export default function PurchasePaymentDetailPage() {
   const [note, setNote] = useState('');
 
   const createMutation = useCreatePurchasePayment();
+  const submitMutation = useSubmitPurchasePayment();
+  const payMutation = usePayPurchasePayment();
+  const cancelMutation = useCancelPurchasePayment();
   const paymentQuery = usePurchasePayment(isCreate ? undefined : code);
   const ordersQuery = usePurchaseOrders({ page: 1, pageSize: 200 });
   const orderQuery = usePurchaseOrder(poCode || undefined);
@@ -153,6 +168,36 @@ export default function PurchasePaymentDetailPage() {
     }
   };
 
+  const onSubmitPayment = async () => {
+    if (!payment) return;
+    try {
+      await submitMutation.mutateAsync(payment.code);
+      showToast('success', `Đã gửi DNTT ${payment.code}.`);
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không gửi được DNTT.'));
+    }
+  };
+
+  const onPayPayment = async () => {
+    if (!payment) return;
+    try {
+      await payMutation.mutateAsync(payment.code);
+      showToast('success', `Đã ghi nhận thanh toán ${payment.code}.`);
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không ghi nhận được thanh toán.'));
+    }
+  };
+
+  const onCancelPayment = async () => {
+    if (!payment) return;
+    try {
+      await cancelMutation.mutateAsync(payment.code);
+      showToast('success', `Đã hủy DNTT ${payment.code}.`);
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không hủy được DNTT.'));
+    }
+  };
+
   const back = () => navigate('/purchasing/payments');
   const printDoc = () => window.print();
 
@@ -212,6 +257,43 @@ export default function PurchasePaymentDetailPage() {
                   <Save size={15} strokeWidth={1.75} aria-hidden />
                   {createMutation.isPending ? 'Đang lưu…' : 'Lưu DNTT'}
                 </button>
+              ) : null}
+              {!isCreate && payment?.status === 'draft' && canSubmit ? (
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  disabled={submitMutation.isPending}
+                  onClick={() => { void onSubmitPayment(); }}
+                >
+                  <Send size={15} strokeWidth={1.75} aria-hidden />
+                  {submitMutation.isPending ? 'Đang gửi…' : 'Gửi'}
+                </button>
+              ) : null}
+              {!isCreate && payment?.status === 'submitted' ? (
+                <>
+                  {canCancel ? (
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      disabled={cancelMutation.isPending}
+                      onClick={() => { void onCancelPayment(); }}
+                    >
+                      <XCircle size={15} strokeWidth={1.75} aria-hidden />
+                      {cancelMutation.isPending ? 'Đang hủy…' : 'Hủy'}
+                    </button>
+                  ) : null}
+                  {canPay ? (
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-sm"
+                      disabled={payMutation.isPending}
+                      onClick={() => { void onPayPayment(); }}
+                    >
+                      <CircleCheck size={15} strokeWidth={1.75} aria-hidden />
+                      {payMutation.isPending ? 'Đang xử lý…' : 'Thanh toán'}
+                    </button>
+                  ) : null}
+                </>
               ) : null}
             </div>
           )}
