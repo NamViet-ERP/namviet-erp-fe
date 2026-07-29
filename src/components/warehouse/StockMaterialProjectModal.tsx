@@ -36,7 +36,7 @@ function StockMaterialProjectContent({ row, onClose }: { row: StockMatrixRowApiD
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2">
         <div className="stock-modal-stat">
           <span className="stock-modal-stat-label">{GENERAL_WAREHOUSE_LABEL}</span>
           <span className="stock-modal-stat-value tabular-nums">{row.generalActualQty}</span>
@@ -56,6 +56,12 @@ function StockMaterialProjectContent({ row, onClose }: { row: StockMatrixRowApiD
         <div className="stock-modal-stat">
           <span className="stock-modal-stat-label">Tồn thực tế</span>
           <span className="stock-modal-stat-value tabular-nums">{projectActualTotal}</span>
+        </div>
+        <div className="stock-modal-stat">
+          <span className="stock-modal-stat-label">Hàng lỗi</span>
+          <span className="stock-modal-stat-value tabular-nums stock-qty--reserved">
+            {fmtStockQtyOrDash(Number(row.defectedQty) || 0)}
+          </span>
         </div>
         <div className="stock-modal-stat">
           <span className="stock-modal-stat-label">Tồn dự kiến</span>

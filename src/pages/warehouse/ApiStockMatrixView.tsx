@@ -23,7 +23,7 @@ import { WMS_EMPTY, WMS_ERROR } from '../../lib/wms/messages';
 import type { StockMatrixRowApiDto } from '../../types/wms';
 import { formatCurrency } from '../../utils/formatCurrency';
 
-const STOCK_COL_SPAN = 11;
+const STOCK_COL_SPAN = 12;
 
 export default function ApiStockMatrixView() {
   const { data: rows = [], isLoading, isError } = useStockMatrix();
@@ -82,7 +82,7 @@ export default function ApiStockMatrixView() {
           <table className="wms-inventory-table stock-matrix-table">
             <thead>
               <tr>
-                <th className="table-header-cell text-left stock-col-code">Mã VT</th>
+                <th className="table-header-cell text-left stock-col-code">Mã vật tư</th>
                 <th className="table-header-cell text-left stock-col-name">Tên vật tư</th>
                 <th className="table-header-cell text-center w-14">ĐVT</th>
                 <th className="table-header-cell text-right w-20">{GENERAL_WAREHOUSE_LABEL}</th>
@@ -90,6 +90,12 @@ export default function ApiStockMatrixView() {
                 <th className="table-header-cell text-right w-20">Nhập dự kiến</th>
                 <th className="table-header-cell text-right w-20">Xuất dự kiến</th>
                 <th className="table-header-cell text-right stock-col-project whitespace-nowrap">Tồn thực tế</th>
+                <th
+                  className="table-header-cell text-right w-20 whitespace-nowrap"
+                  title="Tổng SL phiếu hàng lỗi (HL) chưa từ chối theo mã vật tư"
+                >
+                  Hàng lỗi
+                </th>
                 <th className="table-header-cell text-right stock-col-project whitespace-nowrap" title="Tồn thực tế + nhập/hoàn trả/chuyển kho dự kiến">Tồn dự kiến</th>
                 <th className="table-header-cell text-right w-24" title="WAC từ phiếu nhập đã duyệt trong 12 tháng (ngày duyệt)">Giá BQ</th>
                 <th className="table-header-cell text-center w-14">Dự án</th>
@@ -157,6 +163,9 @@ export default function ApiStockMatrixView() {
                       </td>
                       <td className="table-cell text-right font-bold tabular-nums">
                         {projectActual}
+                      </td>
+                      <td className="table-cell text-right tabular-nums stock-qty--reserved">
+                        {fmtStockQtyOrDash(Number(row.defectedQty) || 0)}
                       </td>
                       <td className="table-cell text-right font-semibold tabular-nums">
                         {fmtPlannedStock(projectActual, plannedImport)}
