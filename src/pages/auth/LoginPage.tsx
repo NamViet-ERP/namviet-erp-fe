@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Eye, EyeOff, ShieldAlert, FileText, Loader2 } from 'lucide-react';
 import { showToast } from '../../components/ui/Toast';
 import ToastContainer from '../../components/ui/Toast';
+import PageLoader from '../../components/ui/PageLoader';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { UI_ERROR } from '../../lib/uiMessages';
 import { authService } from '../../services/authService';
@@ -20,9 +21,30 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  /** Đóng tab mất access token trong RAM — thử lại bằng cookie refresh trước khi hiện form. */
+  const [restoring, setRestoring] = useState(HAS_API);
   const [searchParams] = useSearchParams();
   const sessionExpired = searchParams.get('expired') === '1';
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!HAS_API) {
+      setRestoring(false);
+      return;
+    }
+    let cancelled = false;
+    void authService.ensureSession().then(result => {
+      if (cancelled) return;
+      if (result === 'authenticated') {
+        navigate(getDefaultRoute(getActiveRole()), { replace: true });
+        return;
+      }
+      setRestoring(false);
+    }).catch(() => {
+      if (!cancelled) setRestoring(false);
+    });
+    return () => { cancelled = true; };
+  }, [navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +84,8 @@ export default function LoginPage() {
 
   const alertMessage = error || (sessionExpired ? 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.' : '');
   const alertVariant = error ? 'error' : 'warning';
+
+  if (restoring) return <PageLoader />;
 
   return (
     <div className="login-page">

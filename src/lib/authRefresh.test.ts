@@ -37,4 +37,28 @@ describe('refreshAccessToken', () => {
     );
     await expect(refreshAccessToken()).resolves.toBe('rejected');
   });
+
+  it('coalesces concurrent refreshes into one request', async () => {
+    let resolveFetch!: (value: unknown) => void;
+    const fetchMock = vi.fn().mockImplementation(
+      () => new Promise(resolve => {
+        resolveFetch = resolve;
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const first = refreshAccessToken();
+    const second = refreshAccessToken();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    resolveFetch({
+      ok: true,
+      json: async () => ({ accessToken: 'shared-access' }),
+    });
+
+    await expect(first).resolves.toBe('refreshed');
+    await expect(second).resolves.toBe('refreshed');
+    expect(getStoredToken()).toBe('shared-access');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
 });

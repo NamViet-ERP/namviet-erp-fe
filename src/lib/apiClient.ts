@@ -7,7 +7,7 @@
  */
 
 import { clearAuthSession } from './authSession';
-import { refreshAccessToken } from './authRefresh';
+import { refreshAccessToken, type AuthRefreshResult } from './authRefresh';
 import { UI_ERROR } from './uiMessages';
 import { translateErrorMessage, isTechnicalUserMessage, formatUserMessages } from './translateErrorMessage';
 
@@ -158,15 +158,13 @@ function buildUrl(path: string, params?: RequestOptions['params']): string {
   return url.toString();
 }
 
-let refreshInFlight: Promise<boolean> | null = null;
+let refreshInFlight: Promise<AuthRefreshResult> | null = null;
 
-async function tryRefreshSession(): Promise<boolean> {
+async function tryRefreshSession(): Promise<AuthRefreshResult> {
   if (!refreshInFlight) {
-    refreshInFlight = refreshAccessToken()
-      .then(result => result === 'refreshed')
-      .finally(() => {
-        refreshInFlight = null;
-      });
+    refreshInFlight = refreshAccessToken().finally(() => {
+      refreshInFlight = null;
+    });
   }
   return refreshInFlight;
 }
@@ -181,6 +179,22 @@ function throwResponseError(response: Response, data: unknown, options?: { force
   const message = parseApiError(data, fallbackForStatus(response.status));
   if (response.status === 401 && options?.forceLogout !== false) forceLogoutExpired();
   throw new ApiError(message, response.status, data);
+}
+
+async function handleUnauthorizedRetry<T>(
+  retry: () => Promise<T>,
+  onRejected: () => never,
+): Promise<T> {
+  const refreshResult = await tryRefreshSession();
+  if (refreshResult === 'refreshed') return retry();
+  // Mạng/API tạm lỗi: giữ phiên, không đá về login.
+  if (refreshResult === 'unavailable') {
+    throw new ApiError(
+      'Không kết nối được máy chủ để gia hạn phiên. Thử lại sau.',
+      503,
+    );
+  }
+  onRejected();
 }
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
@@ -208,14 +222,17 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     || path.includes('/api/auth/logout');
 
   if (response.status === 401 && !_retried && !skipRefresh) {
-    const refreshed = await tryRefreshSession();
-    if (refreshed) {
-      return request<T>(path, { ...options, _retried: true });
-    }
+    return handleUnauthorizedRetry(
+      () => request<T>(path, { ...options, _retried: true }),
+      () => {
+        const allowLogout = !path.includes('/api/auth/me');
+        throwResponseError(response, data, { forceLogout: allowLogout });
+      },
+    );
   }
 
   if (!response.ok) {
-    const forceLogout = !path.includes('/api/auth/me') && !skipRefresh;
+    const forceLogout = response.status === 401 && !path.includes('/api/auth/me') && !skipRefresh;
     throwResponseError(response, data, { forceLogout });
   }
 
@@ -251,8 +268,12 @@ export const apiClient = {
       const data = await readResponseBody(response);
 
       if (response.status === 401 && !retried) {
-        const refreshed = await tryRefreshSession();
-        if (refreshed) return run(true);
+        return handleUnauthorizedRetry(
+          () => run(true),
+          () => {
+            throwResponseError(response, data);
+          },
+        );
       }
 
       if (!response.ok) {
@@ -282,8 +303,13 @@ export const apiClient = {
       });
 
       if (response.status === 401 && !retried) {
-        const refreshed = await tryRefreshSession();
-        if (refreshed) return run(true);
+        const data = await readResponseBody(response);
+        return handleUnauthorizedRetry(
+          () => run(true),
+          () => {
+            throwResponseError(response, data);
+          },
+        );
       }
 
       if (!response.ok) {

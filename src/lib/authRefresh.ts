@@ -17,8 +17,10 @@ interface TokenPairResponse {
   token?: string;
 }
 
-/** Refresh via HttpOnly cookie; puts new access JWT into memory. */
-export async function refreshAccessToken(): Promise<AuthRefreshResult> {
+/** Coalesce concurrent refresh calls — rotation is single-use; a losing race clears the new cookie. */
+let refreshInFlight: Promise<AuthRefreshResult> | null = null;
+
+async function refreshAccessTokenOnce(): Promise<AuthRefreshResult> {
   try {
     const response = await fetch(refreshUrl(), {
       method: 'POST',
@@ -49,4 +51,14 @@ export async function refreshAccessToken(): Promise<AuthRefreshResult> {
   } catch {
     return 'unavailable';
   }
+}
+
+/** Refresh via HttpOnly cookie; puts new access JWT into memory. */
+export async function refreshAccessToken(): Promise<AuthRefreshResult> {
+  if (!refreshInFlight) {
+    refreshInFlight = refreshAccessTokenOnce().finally(() => {
+      refreshInFlight = null;
+    });
+  }
+  return refreshInFlight;
 }
