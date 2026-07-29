@@ -233,6 +233,7 @@ export interface ExportReturn {
   note: string;
   approvedBy?: string;
   approvedAt?: string;
+  attachments?: ImportAttachment[];
 }
 
 export interface ExportReturnableExport {

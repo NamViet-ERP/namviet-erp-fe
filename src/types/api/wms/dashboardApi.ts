@@ -1,41 +1,14 @@
-/** Wire types for GET /api/dashboard/* (camelCase JSON). */
+/**
+ * WMS home dashboard — OpenAPI aliases.
+ * Regenerate: `npm run api:sync` (BE must be up).
+ */
+import type { components } from '../../generated/openapi';
 
-export interface DashboardKpiApiDto {
-  totalStock: number;
-  totalValue: number;
-  activeWarehouses: number;
-  todayImports: number;
-  todayExports: number;
-  pendingApprovals: number;
-}
+type Schemas = components['schemas'];
 
-export interface DashboardTrendApiDto {
-  month: string;
-  importValue: number;
-  exportValue: number;
-}
-
-export interface DashboardCategoryApiDto {
-  category: string;
-  value: number;
-}
-
-export interface DashboardActivityApiDto {
-  type: string;
-  code: string;
-  description: string;
-  time: string;
-}
-
-export interface BirthdayApiDto {
-  name: string;
-  department: string;
-  day: number;
-}
-
-export interface TopProductApiDto {
-  sku: string;
-  name: string;
-  qty: number;
-  value: number;
-}
+export type DashboardKpiApiDto = Schemas['DashboardKpiDto'];
+export type DashboardTrendApiDto = Schemas['DashboardTrendDto'];
+export type DashboardCategoryApiDto = Schemas['DashboardCategoryDto'];
+export type DashboardActivityApiDto = Schemas['DashboardActivityDto'];
+export type BirthdayApiDto = Schemas['BirthdayDto'];
+export type TopProductApiDto = Schemas['TopProductDto'];

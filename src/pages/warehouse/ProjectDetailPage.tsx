@@ -32,7 +32,7 @@ import {
 import { useProject, useProjectInventory, useProjectLedger, useCloseProject, useUpdateProject, useUpdateProjectInventoryMinStock } from '../../hooks/useProjects';
 import PermissionGate from '../../components/auth/PermissionGate';
 import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
-import type { WarehouseProjectApiDto, ProjectWarehouseKeeperDto } from '../../types/wms';
+import type { WarehouseProjectApiDto, ProjectWarehouseKeeperDto, UpdateWarehouseProjectRequest } from '../../types/wms';
 import WarehouseKeeperMultiSelect from '../../components/warehouse/WarehouseKeeperMultiSelect';
 import { usePermission } from '../../hooks/usePermission';
 
@@ -141,7 +141,7 @@ export default function ProjectDetailPage() {
             || '—',
           endDate: editForm.endDate || null,
           materialBudget: parseCurrencyInput(editForm.materialBudget),
-          status: project.status,
+          status: project.status as UpdateWarehouseProjectRequest['status'],
           warehouseKeepers: editForm.warehouseKeepers,
         },
       });

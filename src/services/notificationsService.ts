@@ -1,23 +1,10 @@
 import { apiClient } from '../lib/apiClient';
+import type { WmsPendingNotificationsApiDto } from '../types/api/wms/opsApi';
 
-export interface WmsNotificationItemApiDto {
-  id: string;
-  kind: string;
-  voucherCode: string;
-  title: string;
-  message: string;
-  route: string;
-  timeLabel: string;
-}
-
-export interface WmsPendingNotificationsApiDto {
-  totalCount: number;
-  importCount: number;
-  exportCount: number;
-  transferCount: number;
-  stocktakeCount: number;
-  items: WmsNotificationItemApiDto[];
-}
+export type {
+  WmsNotificationItemApiDto,
+  WmsPendingNotificationsApiDto,
+} from '../types/api/wms/opsApi';
 
 const ENDPOINT = '/api/warehouse/notifications';
 

@@ -1,23 +1,11 @@
-export interface ImportParsedLineApiDto {
-  rowNumber: number;
-  materialCode: string;
-  materialName: string;
-  unit: string;
-  qty: number;
-  unitPrice: number;
-  isValid: boolean;
-}
+/**
+ * Import Excel parse — OpenAPI aliases.
+ * Regenerate: `npm run api:sync` (BE must be up).
+ */
+import type { components } from '../generated/openapi';
 
-export interface ImportParseErrorApiDto {
-  rowNumber: number;
-  field: string;
-  message: string;
-}
+type Schemas = components['schemas'];
 
-export interface ImportParseResultApiDto {
-  totalRows: number;
-  validRowCount: number;
-  errorRowCount: number;
-  lines: ImportParsedLineApiDto[];
-  errors: ImportParseErrorApiDto[];
-}
+export type ImportParsedLineApiDto = Schemas['ImportParsedLineDto'];
+export type ImportParseErrorApiDto = Schemas['ImportParseErrorDto'];
+export type ImportParseResultApiDto = Schemas['ImportParseResultDto'];

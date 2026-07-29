@@ -156,6 +156,7 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
         unit: createForm.unit.trim(),
         technicalSpec: createForm.technicalSpec.trim() || null,
         qualityStandard: createForm.qualityStandard.trim() || null,
+        isConsumable: false,
       });
       showToast('success', 'Đã tạo mã vật tư mới');
       setShowCreate(false);

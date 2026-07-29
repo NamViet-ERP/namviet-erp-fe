@@ -1,13 +1,10 @@
-export interface ImportBudgetExceededApiDto {
-  code: string;
-  message: string;
-  projectCode: string;
-  materialBudget: number;
-  approvedImportValue: number;
-  importValue: number;
-  overflowAmount: number;
-}
+/**
+ * Import budget exceed (409 on approve) — OpenAPI aliases.
+ * Regenerate: `npm run api:sync` (BE must be up).
+ */
+import type { components } from '../generated/openapi';
 
-export interface ApproveImportRequestApiDto {
-  confirmOverBudget?: boolean;
-}
+type Schemas = components['schemas'];
+
+export type ImportBudgetExceededApiDto = Schemas['ImportBudgetExceededDto'];
+export type ApproveImportRequestApiDto = Schemas['ApproveImportRequest'];

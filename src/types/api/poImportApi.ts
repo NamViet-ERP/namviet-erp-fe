@@ -1,30 +1,12 @@
-/** Preview / create NK từ PO — khớp BE PoImportDtos. */
+/**
+ * PO → NK preview/create — OpenAPI aliases.
+ * Regenerate: `npm run api:sync` (BE must be up).
+ */
+import type { components } from '../generated/openapi';
 
-export interface PoImportLinePreviewApiDto {
-  poItemId: number;
-  name: string;
-  materialCode?: string | null;
-  unit: string;
-  ordered: number;
-  received: number;
-  reservedPending: number;
-  available: number;
-  unitPrice: number;
-}
+type Schemas = components['schemas'];
 
-export interface PoImportPreviewApiDto {
-  poCode: string;
-  planCode: string;
-  projectCode: string;
-  supplierName: string;
-  lines: PoImportLinePreviewApiDto[];
-}
-
-export interface CreateImportFromPoLineRequest {
-  poItemId: number;
-  qty: number;
-}
-
-export interface CreateImportFromPoRequest {
-  items?: CreateImportFromPoLineRequest[] | null;
-}
+export type PoImportLinePreviewApiDto = Schemas['PoImportLinePreviewDto'];
+export type PoImportPreviewApiDto = Schemas['PoImportPreviewDto'];
+export type CreateImportFromPoLineRequest = Schemas['CreateImportFromPoLineRequest'];
+export type CreateImportFromPoRequest = Schemas['CreateImportFromPoRequest'];

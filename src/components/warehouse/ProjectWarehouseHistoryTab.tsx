@@ -7,19 +7,18 @@ import { useProjectLedger } from '../../hooks/useProjects';
 import { formatCurrency } from '../../utils/formatCurrency';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { WMS_ERROR } from '../../lib/wms/messages';
-import type { ProjectLedgerKind } from '../../types/wms';
 
 interface Props {
   projectCode: string;
 }
 
-function kindLabel(kind: ProjectLedgerKind) {
+function kindLabel(kind: string) {
   if (kind === 'import') return 'Nhập';
   if (kind === 'export') return 'Xuất';
   return 'Hoàn trả';
 }
 
-function summaryLabel(kind: ProjectLedgerKind, itemQty: number, totalValue: number | null) {
+function summaryLabel(kind: string, itemQty: number, totalValue: number | null | undefined) {
   if (kind === 'import' && totalValue != null) return `${formatCurrency(totalValue)} đ`;
   return `${itemQty} VT`;
 }

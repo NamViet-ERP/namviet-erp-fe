@@ -1,22 +1,9 @@
 import { apiClient } from '../lib/apiClient';
-import type { PagedApiResult } from '../types/wms';
+import type { PagedApiResult, SupplierApiDto, UpsertSupplierRequest } from '../types/wms';
 
-export interface SupplierApiDto {
-  id: number;
-  supplierCode: string;
-  supplierName: string;
-  contactPhone: string | null;
-  maxDebtDays: number;
-  rating: string;
-}
-
-export interface UpsertSupplierBody {
-  supplierCode: string;
-  supplierName: string;
-  contactPhone?: string | null;
-  maxDebtDays?: number;
-  rating?: string;
-}
+export type { SupplierApiDto } from '../types/wms';
+/** @deprecated Prefer UpsertSupplierRequest from types/wms */
+export type UpsertSupplierBody = UpsertSupplierRequest;
 
 const ENDPOINT = '/api/warehouse/suppliers';
 
@@ -46,12 +33,13 @@ export const suppliersService = {
     });
   },
 
-  async create(body: UpsertSupplierBody) {
+  async create(body: UpsertSupplierRequest) {
     await apiClient.post(ENDPOINT, {
       supplierCode: body.supplierCode,
       supplierName: body.supplierName,
       contactPhone: body.contactPhone ?? null,
       maxDebtDays: body.maxDebtDays ?? 30,
+      paymentTerms: body.paymentTerms ?? null,
       rating: body.rating ?? 'A',
     });
     const page = await suppliersService.list({ pageSize: 200 });
@@ -60,12 +48,13 @@ export const suppliersService = {
     return found;
   },
 
-  async update(id: number, body: UpsertSupplierBody) {
+  async update(id: number, body: UpsertSupplierRequest) {
     await apiClient.put(`${ENDPOINT}/${id}`, {
       supplierCode: body.supplierCode,
       supplierName: body.supplierName,
       contactPhone: body.contactPhone ?? null,
       maxDebtDays: body.maxDebtDays ?? 30,
+      paymentTerms: body.paymentTerms ?? null,
       rating: body.rating ?? 'A',
     });
     return apiClient.get<SupplierApiDto>(`${ENDPOINT}/${id}`);

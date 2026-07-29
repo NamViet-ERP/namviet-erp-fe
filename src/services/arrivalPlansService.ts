@@ -1,42 +1,24 @@
 import { apiClient } from '../lib/apiClient';
+import type {
+  ArrivalPlanListApiDto,
+  ArrivalPlansListParams,
+} from '../types/api/arrivalPlansApi';
 
-export interface ArrivalPlanLineApiDto {
-  lineId: number;
-  planCode: string;
-  materialCode: string | null;
-  productName: string;
-  unit: string;
-  quantity: number;
-  orderedQty: number;
-  receivedQty: number;
-  remainingQty: number;
-  expectedDeliveryDate: string;
-  purchaseSupplierName: string | null;
-  unitPrice: number | null;
-}
-
-export interface ArrivalPlanProjectApiDto {
-  projectCode: string;
-  projectName: string;
-  hasArrivalInWindow: boolean;
-  earliestExpectedDate: string | null;
-  lineCount: number;
-  totalRemainingQty: number;
-  lines: ArrivalPlanLineApiDto[];
-}
-
-export interface ArrivalPlanListApiDto {
-  daysAhead: number;
-  windowFrom: string;
-  windowTo: string;
-  projects: ArrivalPlanProjectApiDto[];
-}
+export type {
+  ArrivalPlanLineApiDto,
+  ArrivalPlanProjectApiDto,
+  ArrivalPlanListApiDto,
+  ArrivalPlanLineStatus,
+  ArrivalPlansListParams,
+} from '../types/api/arrivalPlansApi';
 
 export const arrivalPlansService = {
-  list(daysAhead: number, projectCode?: string): Promise<ArrivalPlanListApiDto> {
+  list(daysAhead: number, params: ArrivalPlansListParams = {}): Promise<ArrivalPlanListApiDto> {
     return apiClient.get<ArrivalPlanListApiDto>('/api/purchasing/arrival-plans', {
       daysAhead,
-      projectCode: projectCode || undefined,
+      projectCode: params.projectCode || undefined,
+      lineStatus: params.lineStatus || undefined,
+      overdueLookbackDays: params.overdueLookbackDays,
     });
   },
 };

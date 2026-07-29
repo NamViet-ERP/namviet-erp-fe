@@ -1,5 +1,5 @@
 import { apiClient } from '../lib/apiClient';
-import type { MaterialApiDto, PagedApiResult } from '../types/wms';
+import type { MaterialApiDto, PagedApiResult, UpsertMaterialRequest } from '../types/wms';
 
 const ENDPOINT = '/api/warehouse/materials';
 
@@ -16,15 +16,7 @@ export interface MaterialListParams {
   includeInactive?: boolean;
 }
 
-export interface UpsertMaterialRequest {
-  materialCode: string;
-  materialName: string;
-  categoryId: number;
-  unit: string;
-  technicalSpec?: string | null;
-  qualityStandard?: string | null;
-  isConsumable?: boolean;
-}
+export type { UpsertMaterialRequest };
 
 const emptyPath = () => ({
   danhMuc: null,

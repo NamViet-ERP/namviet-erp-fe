@@ -1,15 +1,7 @@
 import { apiClient } from '../lib/apiClient';
+import type { WmsLowStockAlertApiDto } from '../types/api/wms/opsApi';
 
-export interface WmsLowStockAlertApiDto {
-  projectCode: string;
-  projectName: string;
-  materialCode: string;
-  materialName: string;
-  unit: string;
-  actualQty: number;
-  minStockQty: number;
-  shortageQty: number;
-}
+export type { WmsLowStockAlertApiDto } from '../types/api/wms/opsApi';
 
 const ENDPOINT = '/api/warehouse/alerts';
 

@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { importsService, type CreateImportDto, type UpdateImportDto } from '../services/importsService';
-import type { ApproveImportRequestApiDto } from '../types/api/importBudgetApi';
 import type { CreateImportFromPoRequest } from '../types/api/poImportApi';
 import { queryKeys } from '../services/queryKeys';
 import type { Import } from '../types';
@@ -43,11 +42,23 @@ export function useCreateImport() {
   });
 }
 
-/** Preview dòng PO còn nhập được (trừ pending NK). */
-export function usePoImportPreview(poCode: string | undefined, enabled = true) {
+/** Preview dòng PO còn nhập được (trừ pending NK). excludeTicketCode khi sửa phiếu. */
+export function usePoImportPreview(
+  poCode: string | undefined,
+  enabled = true,
+  excludeTicketCode?: string,
+) {
   return useQuery({
-    queryKey: [...queryKeys.imports.all, 'from-po-preview', poCode ?? ''] as const,
-    queryFn: () => importsService.previewFromPurchaseOrder(poCode as string),
+    queryKey: [
+      ...queryKeys.imports.all,
+      'from-po-preview',
+      poCode ?? '',
+      excludeTicketCode ?? '',
+    ] as const,
+    queryFn: () =>
+      importsService.previewFromPurchaseOrder(poCode as string, {
+        excludeTicketCode,
+      }),
     enabled: Boolean(poCode) && enabled,
   });
 }
@@ -89,7 +100,7 @@ export function useApproveImport() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, confirmOverBudget }: { id: string; confirmOverBudget?: boolean }) =>
-      importsService.approve(id, { confirmOverBudget } satisfies ApproveImportRequestApiDto),
+      importsService.approve(id, { confirmOverBudget: confirmOverBudget ?? false }),
     onSuccess: (data, { id }) => {
       invalidateImportSideEffects(qc, data);
       qc.invalidateQueries({ queryKey: queryKeys.imports.detail(id) });

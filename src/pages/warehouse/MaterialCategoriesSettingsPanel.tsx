@@ -111,7 +111,7 @@ export default function MaterialCategoriesSettingsPanel() {
           code: item.code,
           name: item.name,
           level: item.level,
-          parentId: item.parentId,
+          parentId: item.parentId ?? null,
           sortOrder: item.sortOrder,
           isActive: !item.isActive,
         },
@@ -139,7 +139,7 @@ export default function MaterialCategoriesSettingsPanel() {
           code: item.code,
           name,
           level: item.level,
-          parentId: item.parentId,
+          parentId: item.parentId ?? null,
           sortOrder: item.sortOrder,
           isActive: item.isActive,
         },
@@ -312,7 +312,7 @@ export default function MaterialCategoriesSettingsPanel() {
                     </td>
                     {activeLevel > 1 && (
                       <td className="table-cell text-[var(--md-on-surface-variant)]">
-                        {parentName(categories, item.parentId)}
+                        {parentName(categories, item.parentId ?? null)}
                       </td>
                     )}
                     <td className="table-cell text-center">

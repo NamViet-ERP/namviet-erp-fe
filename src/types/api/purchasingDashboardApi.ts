@@ -1,58 +1,20 @@
-/** Wire types for GET /api/purchasing/dashboard/* */
+/**
+ * Purchasing dashboard wire types — OpenAPI aliases.
+ * Regenerate: `npm run api:sync` (BE must be up).
+ */
+import type { components } from '../generated/openapi';
 
-export interface PurchasingKpiMetricApiDto {
-  count: number;
-  amount: number;
-}
+type Schemas = components['schemas'];
 
-export interface PurchasingDashboardSummaryApiDto {
-  plans: PurchasingKpiMetricApiDto;
-  orders: PurchasingKpiMetricApiDto;
-  imports: PurchasingKpiMetricApiDto;
-  from: string;
-  to: string;
-  period: string;
-  generatedAt: string;
-}
+export type PurchasingKpiMetricApiDto = Schemas['PurchasingKpiMetricDto'];
+export type PurchasingDashboardSummaryApiDto = Schemas['PurchasingDashboardSummaryDto'];
+export type PurchasingDashboardChartBarApiDto = Schemas['PurchasingDashboardChartBarDto'];
+export type PurchasingDashboardChartApiDto = Schemas['PurchasingDashboardChartDto'];
+export type PurchasingActivityItemApiDto = Schemas['PurchasingActivityItemDto'];
+export type PurchasingActivityPagedApiDto = Schemas['PurchasingActivityPagedResponse'];
+export type PurchasingActivityActorApiDto = Schemas['PurchasingActivityActorDto'];
 
-export interface PurchasingDashboardChartBarApiDto {
-  key: string;
-  label: string;
-  amount: number;
-}
-
-export interface PurchasingDashboardChartApiDto {
-  bars: PurchasingDashboardChartBarApiDto[];
-  from: string;
-  to: string;
-  period: string;
-  generatedAt: string;
-}
-
-export interface PurchasingActivityItemApiDto {
-  id: number;
-  occurredAt: string;
-  actorUserId: string | null;
-  actorName: string;
-  module: string;
-  action: string;
-  entityType: string | null;
-  entityCode: string | null;
-  message: string;
-  categoryLabel: string;
-}
-
-export interface PurchasingActivityPagedApiDto {
-  items: PurchasingActivityItemApiDto[];
-  nextCursor: number | null;
-  hasMore: boolean;
-}
-
-export interface PurchasingActivityActorApiDto {
-  userId: string;
-  name: string;
-}
-
+/** FE query helpers (not OpenAPI request bodies). */
 export type PurchasingDashboardPeriod =
   | 'all'
   | 'week'
