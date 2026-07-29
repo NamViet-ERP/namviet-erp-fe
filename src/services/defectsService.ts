@@ -1,9 +1,13 @@
 import { apiClient, saveBlob } from '../lib/apiClient';
 import type {
   CreateDefectFromPoRequest,
+  CreateDefectFromStockRequest,
+  PoDefectEligiblePurchaseOrderApiDto,
   PoDefectPreviewApiDto,
   PurchaseDefectApiDto,
   PurchaseDefectAttachmentApiDto,
+  StockDefectPreviewApiDto,
+  UpdateDefectProcessingRequest,
 } from '../types/api/poDefectApi';
 
 const ENDPOINT = '/api/defects';
@@ -15,6 +19,10 @@ export const defectsService = {
 
   getById(id: string): Promise<PurchaseDefectApiDto> {
     return apiClient.get<PurchaseDefectApiDto>(`${ENDPOINT}/${encodeURIComponent(id)}`);
+  },
+
+  listEligiblePurchaseOrders(): Promise<PoDefectEligiblePurchaseOrderApiDto[]> {
+    return apiClient.get<PoDefectEligiblePurchaseOrderApiDto[]>(`${ENDPOINT}/eligible-purchase-orders`);
   },
 
   previewFromPo(poCode: string): Promise<PoDefectPreviewApiDto> {
@@ -30,6 +38,16 @@ export const defectsService = {
     );
   },
 
+  previewFromStock(projectCode: string): Promise<StockDefectPreviewApiDto> {
+    return apiClient.get<StockDefectPreviewApiDto>(
+      `${ENDPOINT}/from-stock/${encodeURIComponent(projectCode)}/preview`,
+    );
+  },
+
+  createFromStock(request: CreateDefectFromStockRequest): Promise<PurchaseDefectApiDto> {
+    return apiClient.post<PurchaseDefectApiDto>(`${ENDPOINT}/from-stock`, request);
+  },
+
   submit(id: string): Promise<PurchaseDefectApiDto> {
     return apiClient.post<PurchaseDefectApiDto>(`${ENDPOINT}/${encodeURIComponent(id)}/submit`);
   },
@@ -42,6 +60,13 @@ export const defectsService = {
     return apiClient.put<PurchaseDefectApiDto>(`${ENDPOINT}/${encodeURIComponent(id)}/reason`, {
       reason,
     });
+  },
+
+  updateProcessing(id: string, request: UpdateDefectProcessingRequest): Promise<PurchaseDefectApiDto> {
+    return apiClient.put<PurchaseDefectApiDto>(
+      `${ENDPOINT}/${encodeURIComponent(id)}/processing`,
+      request,
+    );
   },
 
   async uploadAttachment(

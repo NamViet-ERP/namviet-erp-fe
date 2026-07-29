@@ -8,7 +8,8 @@ export const STOCK_FORMULA_LEGEND =
   'Tồn thực tế = tồn hiện tại + nhập/hoàn trả/chuyển kho đã duyệt. ' +
   'Khả dụng = Tồn thực tế − xuất dự kiến − chuyển kho dự kiến. ' +
   'Tồn dự kiến = Tồn thực tế + nhập/hoàn trả/chuyển kho dự kiến. ' +
+  'Hàng lỗi = tổng SL phiếu HL chưa từ chối (nháp/chờ duyệt/đã duyệt) theo mã vật tư. ' +
   'Giá BQ = WAC từ phiếu nhập đã duyệt trong 12 tháng (theo ngày duyệt).';
 
 export const STOCK_FORMULA_LEGEND_SHORT =
-  'Tồn TT = đã duyệt · Khả dụng = TT − xuất/CK DK · Tồn DK = TT + nhập/HT/CK DK · Giá BQ = WAC 12 tháng';
+  'Tồn TT = đã duyệt · Khả dụng = TT − xuất/CK DK · Tồn DK = TT + nhập/HT/CK DK · Hàng lỗi = HL chưa từ chối · Giá BQ = WAC 12 tháng';
