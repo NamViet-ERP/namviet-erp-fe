@@ -7,6 +7,7 @@ import type {
   PurchasePlanPagedApiDto,
   UpdatePurchasePlanRequest,
 } from '../types/api/purchasingApi';
+import type { PurchasePlanVarianceApiDto } from '../types/api/purchasePlanVarianceApi';
 
 const ENDPOINT = '/api/purchasing/plans';
 
@@ -64,5 +65,12 @@ export const purchasePlansService = {
 
   async importConfirm(body: PurchasePlanImportConfirmRequest): Promise<PurchasePlanDetailApiDto> {
     return apiClient.post<PurchasePlanDetailApiDto>(`${ENDPOINT}/import/confirm`, body);
+  },
+
+  async getVariance(params: { planCode?: string; projectCode?: string } = {}): Promise<PurchasePlanVarianceApiDto[]> {
+    return apiClient.get<PurchasePlanVarianceApiDto[]>(`${ENDPOINT}/variance`, {
+      planCode: params.planCode || undefined,
+      projectCode: params.projectCode || undefined,
+    });
   },
 };

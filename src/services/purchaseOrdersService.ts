@@ -5,6 +5,10 @@ import type {
   PurchaseOrderPagedApiDto,
   UpdatePurchaseOrderRequest,
 } from '../types/api/purchasingApi';
+import type {
+  PurchaseOrderAttachmentApiDto,
+  PurchaseOrderDocType,
+} from '../types/api/purchaseOrderAttachmentApi';
 
 const ENDPOINT = '/api/purchasing/orders';
 
@@ -60,5 +64,35 @@ export const purchaseOrdersService = {
 
   async update(code: string, body: UpdatePurchaseOrderRequest): Promise<PurchaseOrderDetailApiDto> {
     return apiClient.put<PurchaseOrderDetailApiDto>(`${ENDPOINT}/${encodeURIComponent(code)}`, body);
+  },
+
+  async listAttachments(code: string): Promise<PurchaseOrderAttachmentApiDto[]> {
+    return apiClient.get<PurchaseOrderAttachmentApiDto[]>(
+      `${ENDPOINT}/${encodeURIComponent(code)}/attachments`,
+    );
+  },
+
+  async uploadAttachment(
+    code: string,
+    file: File,
+    docType: PurchaseOrderDocType = 'other',
+  ): Promise<PurchaseOrderAttachmentApiDto> {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('docType', docType);
+    return apiClient.postForm<PurchaseOrderAttachmentApiDto>(
+      `${ENDPOINT}/${encodeURIComponent(code)}/attachments`,
+      form,
+    );
+  },
+
+  async deleteAttachment(code: string, attachmentId: string): Promise<void> {
+    return apiClient.delete(`${ENDPOINT}/${encodeURIComponent(code)}/attachments/${attachmentId}`);
+  },
+
+  async downloadAttachment(code: string, attachmentId: string): Promise<Blob> {
+    return apiClient.getBlob(
+      `${ENDPOINT}/${encodeURIComponent(code)}/attachments/${attachmentId}/download`,
+    );
   },
 };

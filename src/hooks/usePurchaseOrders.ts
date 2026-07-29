@@ -72,3 +72,11 @@ export function usePlacePurchaseOrder() {
     onSuccess: order => invalidatePurchaseOrders(qc, order.code),
   });
 }
+
+export function usePurchaseOrderAttachments(code: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.purchaseOrders.attachments(code ?? ''),
+    queryFn: () => purchaseOrdersService.listAttachments(code as string),
+    enabled: Boolean(code),
+  });
+}

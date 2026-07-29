@@ -32,3 +32,36 @@ export function useCreatePurchasePayment() {
     },
   });
 }
+
+function useInvalidatePurchasePaymentQueries() {
+  const qc = useQueryClient();
+  return () => {
+    qc.invalidateQueries({ queryKey: queryKeys.purchasePayments.all });
+    qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all });
+    qc.invalidateQueries({ queryKey: queryKeys.purchasingDashboard.all });
+  };
+}
+
+export function useSubmitPurchasePayment() {
+  const invalidate = useInvalidatePurchasePaymentQueries();
+  return useMutation({
+    mutationFn: (code: string) => purchasePaymentsService.submit(code),
+    onSuccess: invalidate,
+  });
+}
+
+export function usePayPurchasePayment() {
+  const invalidate = useInvalidatePurchasePaymentQueries();
+  return useMutation({
+    mutationFn: (code: string) => purchasePaymentsService.pay(code),
+    onSuccess: invalidate,
+  });
+}
+
+export function useCancelPurchasePayment() {
+  const invalidate = useInvalidatePurchasePaymentQueries();
+  return useMutation({
+    mutationFn: (code: string) => purchasePaymentsService.cancel(code),
+    onSuccess: invalidate,
+  });
+}

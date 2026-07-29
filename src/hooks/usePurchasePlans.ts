@@ -79,3 +79,10 @@ export function usePurchasePlanImportConfirm() {
     },
   });
 }
+
+export function usePurchasePlanVariance(params: { planCode?: string; projectCode?: string } = {}) {
+  return useQuery({
+    queryKey: queryKeys.purchasePlans.variance(params.planCode, params.projectCode),
+    queryFn: () => purchasePlansService.getVariance(params),
+  });
+}

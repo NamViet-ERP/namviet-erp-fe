@@ -33,4 +33,16 @@ export const purchasePaymentsService = {
   async create(body: CreatePurchasePaymentRequest): Promise<PurchasePaymentApiDto> {
     return apiClient.post<PurchasePaymentApiDto>(ENDPOINT, body);
   },
+
+  async submit(code: string): Promise<PurchasePaymentApiDto> {
+    return apiClient.post<PurchasePaymentApiDto>(`${ENDPOINT}/${encodeURIComponent(code)}/submit`);
+  },
+
+  async pay(code: string): Promise<PurchasePaymentApiDto> {
+    return apiClient.post<PurchasePaymentApiDto>(`${ENDPOINT}/${encodeURIComponent(code)}/pay`);
+  },
+
+  async cancel(code: string): Promise<PurchasePaymentApiDto> {
+    return apiClient.post<PurchasePaymentApiDto>(`${ENDPOINT}/${encodeURIComponent(code)}/cancel`);
+  },
 };
