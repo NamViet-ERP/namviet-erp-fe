@@ -729,6 +729,70 @@
     justify-content: flex-start;
   }
 
+  /* Nhà cung cấp master — nhóm ngành hàng (multi) */
+  .ncc-master-table {
+    min-width: 1400px;
+  }
+  .ncc-master-groups {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    align-items: center;
+    max-width: 16rem;
+    white-space: normal;
+  }
+  .ncc-master-groups__chip {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    background: var(--md-surface-container-high);
+    color: var(--md-on-surface);
+    font-size: 0.75rem;
+    line-height: 1.35;
+    white-space: normal;
+    word-break: break-word;
+  }
+  .ncc-master-groups__more {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    border: 1px dashed var(--md-outline-variant);
+    color: var(--md-on-surface-variant);
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .ncc-master-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+  }
+  @media (min-width: 640px) {
+    .ncc-master-detail-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  .ncc-master-detail-label {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--md-on-surface-variant);
+  }
+  .ncc-master-detail-value {
+    font-size: 0.875rem;
+    color: var(--md-on-surface);
+    text-wrap: pretty;
+  }
+  .ncc-master-detail-span {
+    grid-column: 1 / -1;
+  }
+
   .suppliers-finance-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -2703,14 +2767,18 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.2rem;
-    height: 22px;
-    min-height: 22px;
-    padding: 0 0.5rem;
+    gap: 0.35rem;
+    height: 24px;
+    min-height: 24px;
+    padding: 0 0.55rem 0 0.65rem;
+    border-radius: 999px;
     font-size: 11px;
     font-weight: 600;
     line-height: 1;
     cursor: pointer;
+  }
+  .pur-erp--po .pur-erp__approve-btn--static {
+    cursor: default;
   }
   .pur-erp--po .pur-erp__approve-btn:hover:not(:disabled) {
     filter: brightness(0.97);
@@ -2718,6 +2786,21 @@
   .pur-erp--po .pur-erp__approve-btn:disabled {
     opacity: 0.65;
     cursor: wait;
+  }
+  .pur-erp--po .pur-erp__approve-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 1.5px dashed #9aa3af;
+    color: #8b95a1;
+    box-sizing: border-box;
+  }
+  .pur-erp--po .pur-erp__approve-mark svg {
+    display: block;
   }
   .pur-erp--po .pur-erp__approve-check {
     flex-shrink: 0;
@@ -3055,12 +3138,12 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.2rem;
+    gap: 0.35rem;
     max-width: 100%;
-    height: 22px;
-    min-height: 22px;
-    padding: 0 0.5rem;
-    border-radius: 3px;
+    height: 24px;
+    min-height: 24px;
+    padding: 0 0.65rem;
+    border-radius: 999px;
     border: 1px solid transparent;
     background: var(--md-surface-container-high);
     font-size: 11px;
@@ -3115,18 +3198,18 @@
   .pur-erp--po .pur-erp__approve {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     gap: 4px;
     width: 100%;
     font-size: 11px;
     color: var(--md-on-surface);
-    text-align: center;
+    text-align: left;
   }
   .pur-erp--po .pur-erp__approve-user {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 5px;
     max-width: 10rem;
     text-align: left;
@@ -3157,9 +3240,12 @@
     font-weight: 500;
     line-height: 1.25;
     color: var(--md-on-surface);
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: normal;
   }
   .pur-erp--po .pur-erp__approve-avatar[data-tip]:hover::after,
   .pur-erp--po .pur-erp__approve-avatar[data-tip]:focus-visible::after {
@@ -5900,6 +5986,18 @@
     box-sizing: border-box;
     padding-inline: 2px;
   }
+
+  /* Header + cards nằm trong .no-print — cần gap riêng (gap của .pur-detail không len vào). */
+  .pur-detail > .no-print {
+    display: flex;
+    flex-direction: column;
+    gap: 1.35rem;
+  }
+
+  .pur-detail .hrm-detail-header {
+    padding-bottom: 0.25rem;
+  }
+
   .pur-detail__card {
     background: var(--md-surface-container);
     border: 1px solid var(--md-outline-variant02);
@@ -5907,6 +6005,144 @@
     padding: 1.35rem 1.5rem 1.4rem;
     box-shadow: var(--md-shadow-1);
   }
+
+  .po-attach-panel__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .po-attach-panel__unsaved {
+    color: var(--md-error);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .po-attach-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.85rem;
+    width: 100%;
+    align-items: start;
+  }
+
+  .po-attach-slot {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    border: 1px solid var(--md-outline-variant02);
+    border-radius: 10px;
+    background: var(--md-surface);
+    padding: 0.75rem 0.8rem 0.85rem;
+  }
+
+  .po-attach-slot__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .po-attach-slot__title {
+    display: flex;
+    align-items: baseline;
+    gap: 0.35rem;
+    min-width: 0;
+  }
+
+  .po-attach-slot__name {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--md-on-surface);
+    line-height: 1.25;
+  }
+
+  .po-attach-slot__count {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--md-on-surface-variant);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .po-attach-slot__empty {
+    margin: 0;
+    padding: 0.55rem 0.25rem 0.35rem;
+    font-size: 0.75rem;
+    line-height: 1.35;
+    color: var(--md-on-surface-variant);
+    text-wrap: pretty;
+  }
+
+  .po-attach-slot__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  .po-attach-slot__item {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.4rem;
+    padding: 0.4rem 0.35rem;
+    border-radius: 8px;
+    background: var(--md-surface-container-low);
+  }
+
+  .po-attach-slot__item--pending {
+    border: 1px dashed color-mix(in srgb, var(--md-primary) 35%, var(--md-outline-variant));
+    background: color-mix(in srgb, var(--md-primary) 6%, var(--md-surface));
+  }
+
+  .po-attach-slot__file {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+    min-width: 0;
+  }
+
+  .po-attach-slot__filename {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--md-on-surface);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .po-attach-slot__meta {
+    margin-top: 0.1rem;
+    font-size: 0.625rem;
+    color: var(--md-on-surface-variant);
+    line-height: 1.3;
+  }
+
+  .po-attach-slot__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 1100px) {
+    .po-attach-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 640px) {
+    .po-attach-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
   .pur-detail__meta {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -6580,7 +6816,43 @@
     flex-wrap: wrap;
     gap: 8px;
     align-items: center;
+    justify-content: flex-end;
   }
+
+  .pur-detail__actions .btn {
+    min-height: 36px;
+    padding: 0 14px;
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    gap: 6px;
+  }
+
+  .pur-detail__actions .btn-outline {
+    background: var(--md-surface);
+    border-color: var(--md-outline);
+    color: var(--md-on-surface);
+  }
+
+  .pur-detail__actions .btn-outline:hover:not(:disabled) {
+    border-color: var(--md-primary);
+    color: var(--md-primary);
+    background: color-mix(in srgb, var(--md-primary) 6%, var(--md-surface));
+  }
+
+  .pur-detail__actions .btn-primary {
+    box-shadow: none;
+  }
+
+  .pur-detail__actions .pur-erp__pill {
+    align-self: center;
+    min-height: 36px;
+    padding-inline: 12px;
+    display: inline-flex;
+    align-items: center;
+  }
+
   .pur-detail__quote-list {
     margin: 4px 0 0;
     padding-left: 16px;
@@ -7095,6 +7367,218 @@
   background: var(--md-surface-container-high);
   border-color: var(--md-outline-variant02);
 }
+
+/* Print-only PO voucher — hidden on screen, shown via @media print below. */
+.po-voucher-print-sheet {
+  display: none;
+}
+
+/* ===== PO sheet — layout theo mẫu Excel Mayzer Purchase Order ===== */
+.po-sheet {
+  color: #111;
+  font-family: Calibri, 'Calibri Light', Arial, 'Segoe UI', sans-serif;
+  font-size: 10pt;
+  line-height: 1.35;
+  padding: 8mm 10mm 12mm;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+/* Hình 1: logo trái — thông tin công ty phải, căn giữa theo chiều dọc */
+.po-sheet__brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 8px;
+}
+
+.po-sheet__logo {
+  display: block;
+  height: 120px;
+  width: auto;
+  max-width: 320px;
+  object-fit: contain;
+  object-position: left center;
+  flex-shrink: 0;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.po-sheet__brand-text {
+  flex: 0 1 auto;
+  max-width: 58%;
+  min-width: 0;
+  text-align: left;
+  padding-top: 0;
+  line-height: 1.35;
+}
+
+.po-sheet__company {
+  margin: 0;
+  font-size: 12pt;
+  font-weight: 700;
+  color: #1a5fa8;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.po-sheet__addr,
+.po-sheet__web {
+  margin: 2px 0 0;
+  font-size: 9pt;
+  font-style: italic;
+  color: #1a5fa8;
+  line-height: 1.35;
+}
+
+.po-sheet__addr strong,
+.po-sheet__web strong {
+  font-style: italic;
+  font-weight: 700;
+}
+
+/* Hình 2: tiêu đề to, căn giữa */
+.po-sheet__title {
+  margin: 16px 0 18px;
+  text-align: center;
+  font-size: 22pt;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #111;
+}
+
+.po-sheet__parties {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 32px;
+  margin-bottom: 14px;
+}
+
+.po-sheet__row {
+  display: grid;
+  grid-template-columns: 9.2rem 0.55rem 1fr;
+  align-items: baseline;
+  gap: 0 4px;
+  margin: 0 0 2px;
+  min-height: 1.2em;
+}
+
+.po-sheet__label {
+  white-space: nowrap;
+}
+
+.po-sheet__colon {
+  text-align: center;
+}
+
+.po-sheet__value {
+  font-weight: 400;
+  word-break: break-word;
+}
+
+.po-sheet__row strong.po-sheet__value {
+  font-weight: 700;
+}
+
+.po-sheet__table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin: 0 0 10px;
+  font-size: 9.5pt;
+}
+
+.po-sheet__table th,
+.po-sheet__table td {
+  border: 1px solid #111;
+  padding: 3px 4px;
+  vertical-align: middle;
+}
+
+.po-sheet__table th {
+  font-weight: 700;
+  text-align: center;
+  background: #fff;
+}
+
+.po-sheet__col-no { width: 5%; }
+.po-sheet__col-desc { width: 24%; }
+.po-sheet__col-model { width: 20%; }
+.po-sheet__col-unit { width: 8%; }
+.po-sheet__col-qty { width: 10%; }
+.po-sheet__col-price { width: 16%; }
+.po-sheet__col-amt { width: 17%; }
+
+.po-sheet__center { text-align: center; }
+.po-sheet__num { text-align: right; font-variant-numeric: tabular-nums; }
+.po-sheet__desc { text-align: left; white-space: pre-line; }
+
+.po-sheet__sum {
+  width: auto;
+  margin: 0 0 14px auto;
+  border-collapse: collapse;
+  font-size: 10pt;
+}
+
+.po-sheet__sum th,
+.po-sheet__sum td {
+  border: 1px solid #111;
+  padding: 3px 8px;
+  vertical-align: middle;
+}
+
+.po-sheet__sum th {
+  text-align: right;
+  font-weight: 700;
+  white-space: nowrap;
+  min-width: 6.5rem;
+}
+
+.po-sheet__sum td {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  min-width: 7.5rem;
+}
+
+.po-sheet__sum-grand th,
+.po-sheet__sum-grand td {
+  font-weight: 700;
+}
+
+.po-sheet__terms {
+  margin: 0 0 22px;
+}
+
+.po-sheet__terms .po-sheet__row {
+  grid-template-columns: 10.5rem 0.55rem 1fr;
+  margin-bottom: 4px;
+}
+
+.po-sheet__signs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 8px;
+  page-break-inside: avoid;
+}
+
+.po-sheet__sign {
+  text-align: center;
+}
+
+.po-sheet__sign strong {
+  display: block;
+  font-size: 10.5pt;
+  letter-spacing: 0.02em;
+}
+
+.po-sheet__sign-space {
+  display: block;
+  height: 64px;
+}
+
 .dark .pur-dntt__desk {
   background: color-mix(in srgb, var(--md-on-surface) 6%, var(--md-surface-container));
 }
@@ -7434,16 +7918,66 @@
     size: A4;
     margin: 12mm;
   }
+
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    background: #fff !important;
+    overflow: visible !important;
+  }
+
+  /* Sidebar / chrome vẫn chiếm layout khi chỉ visibility:hidden → lệch phải trên giấy. */
+  .app-sidebar,
+  .app-header,
+  .no-print {
+    display: none !important;
+  }
+
+  .app-shell,
+  .app-main,
+  .app-main__inner,
+  .page-shell,
+  .hrm-page,
+  .pur-detail {
+    display: block !important;
+    position: static !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    transform: none !important;
+    overflow: visible !important;
+  }
+
   body * {
     visibility: hidden !important;
   }
   .pur-dntt__preview-sheet,
-  .pur-dntt__preview-sheet * {
+  .pur-dntt__preview-sheet *,
+  .po-voucher-print-sheet,
+  .po-voucher-print-sheet * {
     visibility: visible !important;
   }
-  .no-print {
-    display: none !important;
+
+  .po-voucher-print-sheet,
+  .pur-dntt__preview-sheet {
+    display: block !important;
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: #fff !important;
   }
+
   .pur-dntt__desk,
   .pur-dntt__preview {
     background: transparent !important;
@@ -7452,17 +7986,18 @@
     max-height: none !important;
     overflow: visible !important;
   }
-  .pur-dntt__preview-sheet {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100% !important;
-    max-width: none !important;
-    border: none !important;
-    box-shadow: none !important;
-  }
   .dntt05 {
     padding: 0;
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+  }
+
+  .po-sheet {
+    padding: 0;
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
   }
   .dntt05__words,
   .dntt05__ref,
