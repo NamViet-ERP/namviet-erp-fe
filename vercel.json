@@ -1,0 +1,25 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://namviet-erp-api.onrender.com/api/:path*"
+    },
+    {
+      "source": "/hubs/:path*",
+      "destination": "https://namviet-erp-api.onrender.com/hubs/:path*"
+    },
+    {
+      "source": "/health",
+      "destination": "https://namviet-erp-api.onrender.com/health"
+    },
+    {
+      "source": "/health/ready",
+      "destination": "https://namviet-erp-api.onrender.com/health/ready"
+    },
+    {
+      "source": "/((?!assets/).*)",
+      "destination": "/index.html"
+    }
+  ]
+}
