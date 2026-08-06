@@ -7,6 +7,7 @@ import type { components } from '../generated/openapi';
 type Schemas = components['schemas'];
 
 /** OpenAPI aliases — Purchase Plans */
+export type PurchasePlanKind = 'plan' | 'adhoc';
 export type PurchasePlanApiDto = Schemas['PurchasePlanDto'];
 export type PurchasePlanLineQuoteApiDto = Schemas['PurchasePlanLineQuoteDto'];
 export type PurchasePlanLineApiDto = Schemas['PurchasePlanLineDto'];
@@ -23,6 +24,7 @@ export type CreatePurchasePlanLineQuoteRequest = Schemas['CreatePurchasePlanLine
 export type CreatePurchasePlanLineRequest = Schemas['CreatePurchasePlanLineRequest'];
 export type CreatePurchasePlanRequest = Schemas['CreatePurchasePlanRequest'];
 export type UpdatePurchasePlanRequest = Schemas['UpdatePurchasePlanRequest'];
+export type RejectPurchasePlanRequest = Schemas['RejectPurchasePlanRequest'];
 
 /** OpenAPI aliases — Purchase Orders */
 export type PurchaseOrderApiDto = Schemas['PurchaseOrderDto'];
@@ -32,11 +34,18 @@ export type PurchaseOrderPagedApiDto = Schemas['PurchaseOrderPagedResponse'];
 export type CreatePurchaseOrderLineRequest = Schemas['CreatePurchaseOrderLineRequest'];
 export type CreatePurchaseOrderRequest = Schemas['CreatePurchaseOrderRequest'];
 export type UpdatePurchaseOrderRequest = Schemas['UpdatePurchaseOrderRequest'];
+export type PurchaseOrderInstallmentApiDto = Schemas['PurchaseOrderInstallmentDto'];
+export type PurchaseOrderInstallmentDocumentApiDto = Schemas['PurchaseOrderInstallmentDocumentDto'];
+export type PurchaseOrderInstallmentRequest = Schemas['PurchaseOrderInstallmentRequest'];
 
 /** OpenAPI aliases — Purchase Payments (also re-exported from poPaymentApi) */
 export type PurchasePaymentApiDto = Schemas['PurchasePaymentDto'];
 export type PurchasePaymentPagedApiDto = Schemas['PurchasePaymentPagedResponse'];
 export type CreatePurchasePaymentRequest = Schemas['CreatePurchasePaymentRequest'];
+export type PurchasePaymentPlanStageApiDto = Schemas['PurchasePaymentPlanStageDto'];
+export type PurchasePaymentPlanRowApiDto = Schemas['PurchasePaymentPlanRowDto'];
+export type PurchasePaymentPlanPagedApiDto = Schemas['PurchasePaymentPlanPagedResponse'];
+export type PurchasePaymentNextStageApiDto = Schemas['PurchasePaymentNextStageDto'];
 
 /** OpenAPI aliases — PO attachments + plan variance */
 export type PurchaseOrderAttachmentApiDto = Schemas['PurchaseOrderAttachmentDto'];

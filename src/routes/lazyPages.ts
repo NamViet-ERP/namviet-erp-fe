@@ -38,9 +38,14 @@ export const StocktakeListPage = lazy(() => import('../pages/stocktake/Stocktake
 export const WarehouseReportsPage = lazy(() => import('../pages/warehouse/WarehouseReportsPage'));
 
 export const PurchasePlansPage = lazy(() => import('../pages/purchasing/PurchasePlansPage'));
+export const PurchaseAdhocPlansPage = lazy(() => import('../pages/purchasing/PurchaseAdhocPlansPage'));
 export const PurchasePlanDetailPage = lazy(() => import('../pages/purchasing/PurchasePlanDetailPage'));
 export const PurchaseOrdersPage = lazy(() => import('../pages/purchasing/PurchaseOrdersPage'));
 export const PurchaseOrderDetailPage = lazy(() => import('../pages/purchasing/PurchaseOrderDetailPage'));
 export const PurchasePaymentsPage = lazy(() => import('../pages/purchasing/PurchasePaymentsPage'));
 export const PurchasePaymentDetailPage = lazy(() => import('../pages/purchasing/PurchasePaymentDetailPage'));
+export const PurchasePaymentPlansPage = lazy(() => import('../pages/purchasing/PurchasePaymentPlansPage'));
 export const PurchasingDashboardPage = lazy(() => import('../pages/purchasing/PurchasingDashboardPage'));
+
+export const OperationsDashboardPage = lazy(() => import('../pages/operations/OperationsDashboardPage'));
+export const OperationsProjectsPage = lazy(() => import('../pages/operations/OperationsProjectsPage'));

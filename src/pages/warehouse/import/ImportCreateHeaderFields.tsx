@@ -10,6 +10,7 @@ import type { FrozenProjectMap } from '../../../lib/wms/stocktakeFreeze';
 export interface ImportCreateHeaderFieldsProps {
   isCreateMode: boolean;
   isPoBoundEdit: boolean;
+  poLocked?: boolean;
   errors?: ImportFormFieldErrors;
   poOptions: PurchaseOrderApiDto[];
   selectedPoCode: string;
@@ -34,6 +35,7 @@ export interface ImportCreateHeaderFieldsProps {
 export default function ImportCreateHeaderFields({
   isCreateMode,
   isPoBoundEdit,
+  poLocked = false,
   errors,
   poOptions,
   selectedPoCode,
@@ -59,21 +61,34 @@ export default function ImportCreateHeaderFields({
       {isCreateMode || isPoBoundEdit ? (
         <>
           <FormField label="Phiếu PO" required error={errors?.referenceCode}>
-            <select
-              className="form-input"
-              value={selectedPoCode}
-              disabled={isPoBoundEdit || poLoading}
-              onChange={e => onSelectedPoCodeChange?.(e.target.value)}
-            >
-              <option value="">
-                {poLoading ? 'Đang tải PO…' : '— Chọn PO đã đặt NCC —'}
-              </option>
-              {poOptions.map(po => (
-                <option key={po.code} value={po.code}>
-                  {po.code} · {po.supplierName || 'NCC'} · {po.planCode} · {po.projectCode}
+            {isPoBoundEdit || poLocked ? (
+              <input
+                className="form-input"
+                value={
+                  selectedPo
+                    ? `${selectedPo.code} · ${selectedPo.supplierName || 'NCC'} · ${selectedPo.planCode} · ${selectedPo.projectCode}`
+                    : selectedPoCode
+                }
+                readOnly
+                aria-label="Phiếu PO"
+              />
+            ) : (
+              <select
+                className="form-input"
+                value={selectedPoCode}
+                disabled={poLoading}
+                onChange={e => onSelectedPoCodeChange?.(e.target.value)}
+              >
+                <option value="">
+                  {poLoading ? 'Đang tải PO…' : '— Chọn PO đã đặt NCC —'}
                 </option>
-              ))}
-            </select>
+                {poOptions.map(po => (
+                  <option key={po.code} value={po.code}>
+                    {po.code} · {po.supplierName || 'NCC'} · {po.planCode} · {po.projectCode}
+                  </option>
+                ))}
+              </select>
+            )}
           </FormField>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField label="Kho dự án (từ PO)" required error={errors?.projectCode}>
@@ -139,6 +154,7 @@ export default function ImportCreateHeaderFields({
               Chọn PO trước — kho dự án và NCC lấy từ PO.
               Tick mặt hàng còn SL và nhập <strong className="text-[var(--md-on-surface)]">SL dự kiến nhập kho</strong>.
               Phiếu nháp không khóa PO; chốt dự kiến mới giữ SL trên PO.
+              Khi duyệt thực tế, thủ kho chỉnh SL thành số thực nhận (tối đa phần còn lại trên PO).
             </>
           )
         ) : (

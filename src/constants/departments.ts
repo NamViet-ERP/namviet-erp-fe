@@ -9,6 +9,7 @@ import {
   ClipboardCheck,
   ShoppingCart,
   Building2,
+  Activity,
 } from 'lucide-react';
 
 export interface DepartmentSubItem {
@@ -22,19 +23,33 @@ export interface DepartmentSubItem {
 export interface Department {
   title: string;
   icon: LucideIcon;
+  /** Color tone for portal / mega-menu cards (SCM-EPC palette). */
+  tone: 'operations' | 'purchasing' | 'warehouse' | 'hrm' | 'admin';
   items: DepartmentSubItem[];
 }
 
 /**
  * Portal + Header mega-menu — chỉ phân hệ đã ship (có API).
- * MUA HÀNG: Nhà cung cấp + Mua hàng
- * KỸ THUẬT / CSKH: chưa ship — không đưa vào menu (xem docs nội bộ).
- * Thứ tự: Mua hàng → Kho → HRM → Admin
+ * Thứ tự: Vận hành → Mua hàng → Kho → HRM → Admin
  */
 export const departments: Department[] = [
   {
+    title: 'VẬN HÀNH',
+    icon: Activity,
+    tone: 'operations',
+    items: [
+      {
+        label: 'Vận hành',
+        icon: Activity,
+        path: '/operations/dashboard',
+        permission: 'wms.projects.view:all',
+      },
+    ],
+  },
+  {
     title: 'MUA HÀNG',
     icon: ShoppingCart,
+    tone: 'purchasing',
     items: [
       {
         label: 'Nhà cung cấp',
@@ -53,6 +68,7 @@ export const departments: Department[] = [
   {
     title: 'KHO HÀNG',
     icon: Warehouse,
+    tone: 'warehouse',
     items: [
       {
         label: 'Kho hàng',
@@ -71,6 +87,7 @@ export const departments: Department[] = [
   {
     title: 'HRM',
     icon: Users,
+    tone: 'hrm',
     items: [
       {
         label: 'Nhân viên',
@@ -90,6 +107,7 @@ export const departments: Department[] = [
   {
     title: 'ADMIN',
     icon: ShieldCheck,
+    tone: 'admin',
     items: [
       {
         label: 'Quản lý người dùng',

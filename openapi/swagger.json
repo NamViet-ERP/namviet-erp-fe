@@ -7922,6 +7922,326 @@
         }
       }
     },
+    "/api/purchasing/orders/{code}/installments/{stageNumber}/documents": {
+      "get": {
+        "tags": [
+          "PurchaseOrders"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "stageNumber",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PurchaseOrderInstallmentDocumentDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PurchaseOrderInstallmentDocumentDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PurchaseOrderInstallmentDocumentDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "PurchaseOrders"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "stageNumber",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "docType": {
+                    "type": "string"
+                  }
+                }
+              },
+              "encoding": {
+                "file": {
+                  "style": "form"
+                },
+                "docType": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseOrderInstallmentDocumentDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseOrderInstallmentDocumentDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseOrderInstallmentDocumentDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/orders/{code}/installments/{stageNumber}/documents/{documentId}/download": {
+      "get": {
+        "tags": [
+          "PurchaseOrders"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "stageNumber",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchasing/orders/{code}/installments/{stageNumber}/documents/{documentId}": {
+      "delete": {
+        "tags": [
+          "PurchaseOrders"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "stageNumber",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchasing/orders/{code}/installments/{stageNumber}/complete": {
+      "post": {
+        "tags": [
+          "PurchaseOrders"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "stageNumber",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseOrderInstallmentDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseOrderInstallmentDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseOrderInstallmentDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/payment-plans": {
+      "get": {
+        "tags": [
+          "PurchasePaymentPlans"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "projectCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasePaymentPlanPagedResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasePaymentPlanPagedResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasePaymentPlanPagedResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/purchasing/payments": {
       "get": {
         "tags": [
@@ -8031,6 +8351,44 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PurchasePaymentDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/payments/next-stage": {
+      "get": {
+        "tags": [
+          "PurchasePayments"
+        ],
+        "parameters": [
+          {
+            "name": "poCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasePaymentNextStageDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasePaymentNextStageDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasePaymentNextStageDto"
                 }
               }
             }
@@ -8260,6 +8618,13 @@
             "schema": {
               "type": "string",
               "format": "date"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -8498,6 +8863,220 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchasing/plans/{code}/submit": {
+      "post": {
+        "tags": [
+          "PurchasePlans"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasePlanDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasePlanDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasePlanDetailDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/plans/{code}/approve-l1": {
+      "post": {
+        "tags": [
+          "PurchasePlans"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasePlanDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasePlanDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasePlanDetailDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/plans/{code}/approve-l2": {
+      "post": {
+        "tags": [
+          "PurchasePlans"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasePlanDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasePlanDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasePlanDetailDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/plans/{code}/reject": {
+      "post": {
+        "tags": [
+          "PurchasePlans"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectPurchasePlanRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectPurchasePlanRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectPurchasePlanRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasePlanDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasePlanDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasePlanDetailDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/plans/{code}/remake": {
+      "post": {
+        "tags": [
+          "PurchasePlans"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasePlanDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasePlanDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasePlanDetailDto"
+                }
+              }
+            }
           }
         }
       }
@@ -10390,6 +10969,143 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/warehouse/supplier-delivery-evaluations": {
+      "get": {
+        "tags": [
+          "SupplierDeliveryEvaluations"
+        ],
+        "parameters": [
+          {
+            "name": "supplierId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "poCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierDeliveryEvaluationPagedResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierDeliveryEvaluationPagedResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierDeliveryEvaluationPagedResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/warehouse/supplier-delivery-evaluations/{id}/complete": {
+      "put": {
+        "tags": [
+          "SupplierDeliveryEvaluations"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteSupplierDeliveryEvaluationRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteSupplierDeliveryEvaluationRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteSupplierDeliveryEvaluationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierDeliveryEvaluationDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierDeliveryEvaluationDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierDeliveryEvaluationDto"
+                }
+              }
+            }
           }
         }
       }
@@ -12991,6 +13707,43 @@
         },
         "additionalProperties": false
       },
+      "CompleteSupplierDeliveryEvaluationRequest": {
+        "required": [
+          "defectRate",
+          "onTimeDeliveryRate",
+          "score",
+          "warrantyCompletionRate"
+        ],
+        "type": "object",
+        "properties": {
+          "score": {
+            "type": "number",
+            "format": "double"
+          },
+          "onTimeDeliveryRate": {
+            "type": "number",
+            "format": "double"
+          },
+          "defectRate": {
+            "type": "number",
+            "format": "double"
+          },
+          "warrantyCompletionRate": {
+            "type": "number",
+            "format": "double"
+          },
+          "evaluatedAt": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "ConfirmPurchasePlanImportRequest": {
         "required": [
           "lines",
@@ -13849,6 +14602,14 @@
               "$ref": "#/components/schemas/ProjectWarehouseKeeperDto"
             },
             "nullable": true
+          },
+          "clientName": {
+            "type": "string",
+            "nullable": true
+          },
+          "scMembers": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -13914,6 +14675,18 @@
             "items": {
               "$ref": "#/components/schemas/CreatePurchaseOrderLineRequest"
             }
+          },
+          "installmentCount": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "installments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PurchaseOrderInstallmentRequest"
+            },
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -14153,6 +14926,7 @@
       },
       "CreatePurchasePlanRequest": {
         "required": [
+          "kind",
           "projectCode"
         ],
         "type": "object",
@@ -14163,6 +14937,9 @@
           "note": {
             "type": "string",
             "nullable": true
+          },
+          "kind": {
+            "type": "string"
           },
           "lines": {
             "type": "array",
@@ -15986,6 +16763,14 @@
           "status": {
             "type": "string"
           },
+          "clientName": {
+            "type": "string",
+            "nullable": true
+          },
+          "scMembers": {
+            "type": "string",
+            "nullable": true
+          },
           "stockActualQty": {
             "type": "number",
             "format": "double"
@@ -16507,6 +17292,7 @@
           "code",
           "createdAt",
           "deliveryStatus",
+          "installments",
           "lines",
           "orderDate",
           "orderPlacementStatus",
@@ -16613,6 +17399,12 @@
             "items": {
               "$ref": "#/components/schemas/PurchaseOrderLineDto"
             }
+          },
+          "installments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PurchaseOrderInstallmentDto"
+            }
           }
         },
         "additionalProperties": false
@@ -16717,6 +17509,115 @@
           "createdByName": {
             "type": "string",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchaseOrderInstallmentDocumentDto": {
+        "required": [
+          "contentType",
+          "docType",
+          "fileName",
+          "id",
+          "installmentId",
+          "storagePath",
+          "uploadedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "installmentId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "docType": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "contentType": {
+            "type": "string"
+          },
+          "storagePath": {
+            "type": "string"
+          },
+          "uploadedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "uploadedByName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchaseOrderInstallmentDto": {
+        "required": [
+          "documents",
+          "id",
+          "percent",
+          "requiredDocTypes",
+          "stageNumber",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "stageNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "percent": {
+            "type": "number",
+            "format": "double"
+          },
+          "status": {
+            "type": "string"
+          },
+          "requiredDocTypes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "documents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PurchaseOrderInstallmentDocumentDto"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchaseOrderInstallmentRequest": {
+        "required": [
+          "percent",
+          "requiredDocTypes",
+          "stageNumber"
+        ],
+        "type": "object",
+        "properties": {
+          "stageNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "percent": {
+            "type": "number",
+            "format": "double"
+          },
+          "requiredDocTypes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "additionalProperties": false
@@ -16835,6 +17736,7 @@
           "createdAt",
           "dueDate",
           "poCode",
+          "stageNumber",
           "status"
         ],
         "type": "object",
@@ -16844,6 +17746,10 @@
           },
           "poCode": {
             "type": "string"
+          },
+          "stageNumber": {
+            "type": "integer",
+            "format": "int32"
           },
           "supplierId": {
             "type": "integer",
@@ -16884,6 +17790,50 @@
         },
         "additionalProperties": false
       },
+      "PurchasePaymentNextStageDto": {
+        "required": [
+          "amount",
+          "missingDocTypes",
+          "percent",
+          "poCode",
+          "poTotalAmount",
+          "stageNumber",
+          "totalStages"
+        ],
+        "type": "object",
+        "properties": {
+          "poCode": {
+            "type": "string"
+          },
+          "stageNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalStages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "percent": {
+            "type": "number",
+            "format": "double"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "poTotalAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "missingDocTypes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
       "PurchasePaymentPagedResponse": {
         "required": [
           "items",
@@ -16919,11 +17869,128 @@
         },
         "additionalProperties": false
       },
+      "PurchasePaymentPlanPagedResponse": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount",
+          "totalPages"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PurchasePaymentPlanRowDto"
+            }
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchasePaymentPlanRowDto": {
+        "required": [
+          "completedStages",
+          "poApprovalStatus",
+          "poCode",
+          "poPaymentStatus",
+          "poTotalAmount",
+          "stages",
+          "totalStages"
+        ],
+        "type": "object",
+        "properties": {
+          "poCode": {
+            "type": "string"
+          },
+          "projectCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "projectName": {
+            "type": "string",
+            "nullable": true
+          },
+          "poTotalAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "poApprovalStatus": {
+            "type": "string"
+          },
+          "poPaymentStatus": {
+            "type": "string"
+          },
+          "completedStages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalStages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "stages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PurchasePaymentPlanStageDto"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchasePaymentPlanStageDto": {
+        "required": [
+          "amount",
+          "paymentStatus",
+          "percent",
+          "stageNumber"
+        ],
+        "type": "object",
+        "properties": {
+          "stageNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "percent": {
+            "type": "number",
+            "format": "double"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "paymentStatus": {
+            "type": "string"
+          },
+          "paymentCode": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "PurchasePlanDetailDto": {
         "required": [
           "budgetTotal",
           "code",
           "createdAt",
+          "kind",
           "lines",
           "paidTotal",
           "projectCode",
@@ -16971,6 +18038,9 @@
           "status": {
             "type": "string"
           },
+          "kind": {
+            "type": "string"
+          },
           "note": {
             "type": "string",
             "nullable": true
@@ -16984,6 +18054,50 @@
             "items": {
               "$ref": "#/components/schemas/PurchasePlanLineDto"
             }
+          },
+          "submittedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "l1ApprovedByName": {
+            "type": "string",
+            "nullable": true
+          },
+          "l1ApprovedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "l2ApprovedByName": {
+            "type": "string",
+            "nullable": true
+          },
+          "l2ApprovedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "rejectedByName": {
+            "type": "string",
+            "nullable": true
+          },
+          "rejectedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "rejectReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "remadeFromCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "remadeToCode": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -16993,6 +18107,7 @@
           "budgetTotal",
           "code",
           "createdAt",
+          "kind",
           "paidTotal",
           "projectCode",
           "proposalTotal",
@@ -17034,12 +18149,45 @@
           "status": {
             "type": "string"
           },
+          "kind": {
+            "type": "string"
+          },
           "note": {
             "type": "string",
             "nullable": true
           },
           "createdByName": {
             "type": "string",
+            "nullable": true
+          },
+          "rejectReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "remadeFromCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "remadeToCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "l1ApprovedByName": {
+            "type": "string",
+            "nullable": true
+          },
+          "l1ApprovedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "l2ApprovedByName": {
+            "type": "string",
+            "nullable": true
+          },
+          "l2ApprovedAt": {
+            "type": "string",
+            "format": "date-time",
             "nullable": true
           }
         },
@@ -18386,6 +19534,16 @@
         },
         "additionalProperties": false
       },
+      "RejectPurchasePlanRequest": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "ResetAdminPasswordRequest": {
         "required": [
           "password"
@@ -18816,6 +19974,126 @@
           "remaining": {
             "type": "number",
             "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupplierDeliveryEvaluationDto": {
+        "required": [
+          "dueAt",
+          "id",
+          "importTicketCode",
+          "isOverdue",
+          "poCode",
+          "receivedAt",
+          "status",
+          "supplierId",
+          "supplierName"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "supplierId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "supplierName": {
+            "type": "string"
+          },
+          "poCode": {
+            "type": "string"
+          },
+          "importTicketCode": {
+            "type": "string"
+          },
+          "receivedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "dueAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string"
+          },
+          "isOverdue": {
+            "type": "boolean"
+          },
+          "score": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "grade": {
+            "type": "string",
+            "nullable": true
+          },
+          "onTimeDeliveryRate": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "defectRate": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "warrantyCompletionRate": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "evaluatedByName": {
+            "type": "string",
+            "nullable": true
+          },
+          "evaluatedAt": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupplierDeliveryEvaluationPagedResponse": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount",
+          "totalPages"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupplierDeliveryEvaluationDto"
+            }
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false
@@ -19729,6 +21007,14 @@
               "$ref": "#/components/schemas/ProjectWarehouseKeeperDto"
             },
             "nullable": true
+          },
+          "clientName": {
+            "type": "string",
+            "nullable": true
+          },
+          "scMembers": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -19753,6 +21039,18 @@
             "items": {
               "$ref": "#/components/schemas/CreatePurchaseOrderLineRequest"
             }
+          },
+          "installmentCount": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "installments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PurchaseOrderInstallmentRequest"
+            },
+            "nullable": true
           }
         },
         "additionalProperties": false

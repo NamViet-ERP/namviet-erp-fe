@@ -14,7 +14,7 @@ export default function SettingsPage() {
 
   return (
     <div className="page-shell">
-      <PageHeader eyebrow="Thiết lập" title={title} subtitle={subtitle} />
+      <PageHeader eyebrow="Vận hành · Thiết lập" title={title} subtitle={subtitle} />
       {isUnits ? <MaterialUnitsSettingsPanel /> : <MaterialCategoriesSettingsPanel />}
     </div>
   );

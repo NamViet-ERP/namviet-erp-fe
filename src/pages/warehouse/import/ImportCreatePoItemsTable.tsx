@@ -13,6 +13,8 @@ export interface ImportCreatePoItemsTableProps {
   isPending: boolean;
   formGrandTotal: number;
   onSetPoLine: (poItemId: number, patch: Partial<PoLineDraft>) => void;
+  /** Khi thủ kho duyệt: cột SL đổi nhãn thành thực nhận */
+  qtyColumnLabel?: string;
 }
 
 export default function ImportCreatePoItemsTable({
@@ -23,6 +25,7 @@ export default function ImportCreatePoItemsTable({
   isPending,
   formGrandTotal,
   onSetPoLine,
+  qtyColumnLabel = 'SL dự kiến',
 }: ImportCreatePoItemsTableProps) {
   return (
     <div className="overflow-x-auto table-scroll">
@@ -36,7 +39,7 @@ export default function ImportCreatePoItemsTable({
             <th className="table-header-cell text-center">Chờ NK</th>
             <th className="table-header-cell text-center">Còn lại</th>
             {canViewPrices && <th className="table-header-cell text-center">Đơn giá</th>}
-            <th className="table-header-cell text-center">SL dự kiến</th>
+            <th className="table-header-cell text-center">{qtyColumnLabel}</th>
             {canViewPrices && <th className="table-header-cell text-center">Thành tiền</th>}
           </tr>
         </thead>

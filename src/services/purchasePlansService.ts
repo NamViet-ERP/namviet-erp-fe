@@ -4,7 +4,9 @@ import type {
   PurchasePlanDetailApiDto,
   PurchasePlanImportConfirmRequest,
   PurchasePlanImportPreviewApiDto,
+  PurchasePlanKind,
   PurchasePlanPagedApiDto,
+  RejectPurchasePlanRequest,
   UpdatePurchasePlanRequest,
 } from '../types/api/purchasingApi';
 import type { PurchasePlanVarianceApiDto } from '../types/api/purchasePlanVarianceApi';
@@ -20,6 +22,7 @@ export interface PurchasePlanListParams {
   status?: string;
   dateFrom?: string;
   dateTo?: string;
+  kind?: PurchasePlanKind | string;
 }
 
 export const purchasePlansService = {
@@ -33,6 +36,7 @@ export const purchasePlansService = {
       status: params.status,
       dateFrom: params.dateFrom,
       dateTo: params.dateTo,
+      kind: params.kind,
     });
   },
 
@@ -50,6 +54,29 @@ export const purchasePlansService = {
 
   async delete(code: string): Promise<void> {
     await apiClient.delete(`${ENDPOINT}/${encodeURIComponent(code)}`);
+  },
+
+  async submit(code: string): Promise<PurchasePlanDetailApiDto> {
+    return apiClient.post<PurchasePlanDetailApiDto>(`${ENDPOINT}/${encodeURIComponent(code)}/submit`);
+  },
+
+  async approveL1(code: string): Promise<PurchasePlanDetailApiDto> {
+    return apiClient.post<PurchasePlanDetailApiDto>(`${ENDPOINT}/${encodeURIComponent(code)}/approve-l1`);
+  },
+
+  async approveL2(code: string): Promise<PurchasePlanDetailApiDto> {
+    return apiClient.post<PurchasePlanDetailApiDto>(`${ENDPOINT}/${encodeURIComponent(code)}/approve-l2`);
+  },
+
+  async reject(code: string, body: RejectPurchasePlanRequest = {}): Promise<PurchasePlanDetailApiDto> {
+    return apiClient.post<PurchasePlanDetailApiDto>(
+      `${ENDPOINT}/${encodeURIComponent(code)}/reject`,
+      body,
+    );
+  },
+
+  async remake(code: string): Promise<PurchasePlanDetailApiDto> {
+    return apiClient.post<PurchasePlanDetailApiDto>(`${ENDPOINT}/${encodeURIComponent(code)}/remake`);
   },
 
   async downloadImportTemplate(): Promise<Blob> {

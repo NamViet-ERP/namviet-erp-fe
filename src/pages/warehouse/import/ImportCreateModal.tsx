@@ -53,6 +53,7 @@ export default function ImportCreateModal({
   poOptions = [],
   selectedPoCode = '',
   onSelectedPoCodeChange,
+  poLocked = false,
   poLoading = false,
   poPreviewLines = [],
   editAttachments = [],
@@ -60,6 +61,9 @@ export default function ImportCreateModal({
   onUploadEditAttachment,
   onDeleteEditAttachment,
   onDownloadEditAttachment,
+  canApprove = false,
+  onApprove,
+  isApproving = false,
 }: ImportCreateModalProps) {
   const { has } = usePermission();
   const canViewPrices = has('wms.prices.view');
@@ -72,6 +76,7 @@ export default function ImportCreateModal({
   const [evidencePhotos, setEvidencePhotos] = useState<File[]>([]);
   const [evidenceDocs, setEvidenceDocs] = useState<File[]>([]);
   const [evaluationDraft, setEvaluationDraft] = useState('');
+  const [showEvidenceErrors, setShowEvidenceErrors] = useState(false);
   const editPoSeedKeyRef = useRef('');
 
   useEffect(() => {
@@ -79,11 +84,13 @@ export default function ImportCreateModal({
       setEvidencePhotos([]);
       setEvidenceDocs([]);
       setEvaluationDraft('');
+      setShowEvidenceErrors(false);
       setSelectedFileName('');
       editPoSeedKeyRef.current = '';
       return;
     }
     if (editVoucher) setEvaluationDraft(editVoucher.receiptEvaluation ?? '');
+    setShowEvidenceErrors(false);
   }, [isOpen, editVoucher?.code, editVoucher?.receiptEvaluation]);
 
   const resetItems = () => onItemsChange([{ ...emptyQtyPriceLine }]);
@@ -114,6 +121,37 @@ export default function ImportCreateModal({
   const isPoBoundEdit = Boolean(editVoucher && selectedPoCode);
   const isPoLineMode = isCreateMode || isPoBoundEdit;
   const selectedPo = poOptions.find(po => po.code === selectedPoCode);
+  const markEvidenceRequired = Boolean(
+    canApprove && editVoucher?.status === 'pending',
+  );
+  const hasEvidencePhoto = isCreateMode
+    ? evidencePhotos.length > 0
+    : editAttachments.some(a => a.kind === 'photo');
+  const hasEvidenceDocument = isCreateMode
+    ? evidenceDocs.length > 0
+    : editAttachments.some(a => a.kind === 'document');
+  const evidenceErrors = showEvidenceErrors
+    ? {
+        evaluation: !evaluationDraft.trim()
+          ? 'Vui lòng nhập đánh giá nhận hàng'
+          : undefined,
+        photo: !hasEvidencePhoto
+          ? 'Vui lòng chọn ít nhất 1 ảnh nhận hàng'
+          : undefined,
+        document: !hasEvidenceDocument
+          ? 'Vui lòng chọn ít nhất 1 file chứng từ'
+          : undefined,
+      }
+    : undefined;
+
+  const tryApproveFromEdit = () => {
+    const evalOk = evaluationDraft.trim().length > 0;
+    if (!evalOk || !hasEvidencePhoto || !hasEvidenceDocument) {
+      setShowEvidenceErrors(true);
+      return;
+    }
+    onApprove?.({ evaluation: evaluationDraft });
+  };
   const projectLabel = useMemo(() => {
     const code = selectedPo?.projectCode || projectCode;
     if (!code) return '';
@@ -181,13 +219,35 @@ export default function ImportCreateModal({
           <button type="button" className="btn btn-outline" onClick={onClose}>Hủy</button>
           <div className="flex items-center gap-3 flex-wrap md-dialog__footer-actions">
             <div className="text-sm mr-1">
-              <span className="text-[var(--md-on-surface-variant)]">Tổng giá trị: </span>
-              <span className="font-bold text-[var(--md-primary)] tabular-nums">{formatCurrency(formGrandTotal)} đ</span>
+              {canViewPrices ? (
+                <>
+                  <span className="text-[var(--md-on-surface-variant)]">Tổng giá trị: </span>
+                  <span className="font-bold text-[var(--md-primary)] tabular-nums">{formatCurrency(formGrandTotal)} đ</span>
+                </>
+              ) : (
+                <span className="text-[var(--md-on-surface-variant)]">
+                  {selectedPoLineCount > 0
+                    ? `${selectedPoLineCount} dòng vật tư`
+                    : 'Không hiển thị giá'}
+                </span>
+              )}
             </div>
             {editVoucher ? (
-              <button type="button" className="btn btn-filled" disabled={isPending} onClick={() => onSave?.({ evaluation: evaluationDraft })}>
-                Lưu thay đổi
-              </button>
+              <>
+                <button type="button" className="btn btn-filled" disabled={isPending || isApproving} onClick={() => onSave?.({ evaluation: evaluationDraft })}>
+                  Lưu thay đổi
+                </button>
+                {canApprove && editVoucher.status === 'pending' ? (
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    disabled={isPending || isApproving || submitBlocked}
+                    onClick={tryApproveFromEdit}
+                  >
+                    Lưu SL thực nhận &amp; Duyệt
+                  </button>
+                ) : null}
+              </>
             ) : (
               <>
                 <button
@@ -216,6 +276,7 @@ export default function ImportCreateModal({
         <ImportCreateHeaderFields
           isCreateMode={isCreateMode}
           isPoBoundEdit={isPoBoundEdit}
+          poLocked={poLocked}
           errors={errors}
           poOptions={poOptions}
           selectedPoCode={selectedPoCode}
@@ -274,6 +335,9 @@ export default function ImportCreateModal({
               isPending={isPending}
               formGrandTotal={formGrandTotal}
               onSetPoLine={setPoLine}
+              qtyColumnLabel={
+                canApprove && editVoucher?.status === 'pending' ? 'SL thực nhận' : 'SL dự kiến'
+              }
             />
           ) : !projectCode ? (
             <p className="text-[11px] text-[var(--md-on-surface-variant)]">Chọn kho dự án trước khi thêm vật tư.</p>
@@ -286,14 +350,25 @@ export default function ImportCreateModal({
               formGrandTotal={formGrandTotal}
               errors={errors}
               materialUnit={materialUnit}
+              qtyColumnLabel={
+                canApprove && editVoucher?.status === 'pending' ? 'SL thực nhận' : 'SL'
+              }
               onMaterialLineChange={onMaterialLineChange}
               onDuplicateMaterialAttempt={onDuplicateMaterialAttempt}
             />
           )}
+          {canApprove && editVoucher?.status === 'pending' ? (
+            <p className="text-[11px] text-[var(--md-on-surface-variant)] text-pretty rounded-md border border-dashed border-[var(--md-outline-variant)] bg-[var(--md-surface-container-low)] px-2.5 py-2">
+              Chỉnh <strong>SL thực nhận</strong> nếu khác dự kiến (tối đa phần còn lại trên PO).
+              Phần thiếu nhập lần sau; hàng lỗi/thiếu nghiêm trọng → <strong>Hàng lỗi và Bảo hành</strong>.
+            </p>
+          ) : null}
         </div>
 
         <ImportCreateEvidenceSection
           isCreateMode={isCreateMode}
+          markRequired={markEvidenceRequired}
+          evidenceErrors={evidenceErrors}
           evaluationDraft={evaluationDraft}
           onEvaluationChange={setEvaluationDraft}
           evidencePhotos={evidencePhotos}

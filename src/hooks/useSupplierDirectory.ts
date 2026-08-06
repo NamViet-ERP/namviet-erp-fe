@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   supplierContactsService,
+  supplierDeliveryEvaluationsService,
   supplierEvaluationsService,
   supplierGroupsService,
   supplierModuleSettingsService,
@@ -10,6 +11,7 @@ import {
 } from '../services/supplierDirectoryService';
 import { queryKeys } from '../services/queryKeys';
 import type {
+  CompleteSupplierDeliveryEvaluationRequest,
   UpdateSupplierModuleSettingsRequest,
   UpsertSupplierContactRequest,
   UpsertSupplierEvaluationRequest,
@@ -156,6 +158,59 @@ export function useDeleteSupplierEvaluation() {
     mutationFn: (id: number) => supplierEvaluationsService.remove(id),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.supplierEvaluations.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.suppliers.all });
+    },
+  });
+}
+
+export function useSupplierDeliveryEvaluations(
+  params: SupplierDirectoryListParams & {
+    supplierId?: number;
+    poCode?: string;
+    status?: string;
+  } = {},
+) {
+  const {
+    supplierId,
+    poCode = '',
+    status = '',
+    search = '',
+    page = 1,
+    pageSize = 50,
+  } = params;
+  return useQuery({
+    queryKey: [
+      ...queryKeys.supplierDeliveryEvaluations.all,
+      supplierId ?? 0,
+      poCode,
+      status,
+      page,
+      pageSize,
+      search,
+    ] as const,
+    queryFn: () => supplierDeliveryEvaluationsService.list({
+      supplierId,
+      poCode: poCode || undefined,
+      status: status || undefined,
+      search,
+      page,
+      pageSize,
+    }),
+  });
+}
+
+export function useCompleteSupplierDeliveryEvaluation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      body,
+    }: {
+      id: number;
+      body: CompleteSupplierDeliveryEvaluationRequest;
+    }) => supplierDeliveryEvaluationsService.complete(id, body),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.supplierDeliveryEvaluations.all });
       void qc.invalidateQueries({ queryKey: queryKeys.suppliers.all });
     },
   });

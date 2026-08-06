@@ -11,11 +11,15 @@
     z-index: 1;
     padding: 14px 16px;
     border-radius: 12px;
-    border: 1px solid color-mix(in srgb, var(--md-outline-variant02) 85%, transparent);
+    border: 1px solid color-mix(in srgb, var(--nv-steel) 20%, var(--md-outline-variant02));
     background:
-      linear-gradient(135deg, color-mix(in srgb, var(--md-primary) 5%, transparent) 0%, transparent 55%),
-      var(--md-surface-container);
-    box-shadow: var(--md-shadow-1);
+      linear-gradient(
+        105deg,
+        color-mix(in srgb, var(--nv-navy) 8%, #fff) 0%,
+        color-mix(in srgb, var(--nv-steel) 4%, #fff) 62%,
+        #fff 100%
+      );
+    box-shadow: 0 2px 8px rgba(19, 42, 69, 0.07);
   }
   .dark .portal-greeting {
     background:
@@ -82,19 +86,50 @@
   }
 
   .portal-dept-card {
+    --dept-accent: var(--nv-steel);
+    --dept-tint: var(--nv-steel-light);
+    --dept-fill-start: color-mix(in srgb, var(--nv-sidebar-bg) 8%, #fff);
+    --dept-fill-end: color-mix(in srgb, var(--dept-accent) 5%, #fff);
     display: flex;
     flex-direction: column;
     gap: 0;
     padding: 14px;
     border-radius: 12px;
-    border: 1px solid color-mix(in srgb, var(--md-outline-variant02) 88%, transparent);
-    background: var(--md-surface-container);
-    box-shadow: var(--md-shadow-1);
-    transition: border-color 160ms ease-out, box-shadow 160ms ease-out;
+    border: 1px solid color-mix(in srgb, var(--dept-accent) 24%, var(--md-outline-variant02));
+    border-left: 3px solid var(--dept-accent);
+    background:
+      linear-gradient(
+        145deg,
+        color-mix(in srgb, var(--dept-accent) 5%, var(--dept-fill-start)) 0%,
+        var(--dept-fill-start) 46%,
+        var(--dept-fill-end) 100%
+      );
+    box-shadow: 0 3px 10px rgba(19, 42, 69, 0.09);
+    transition: border-color 160ms ease-out, box-shadow 160ms ease-out, transform 140ms ease-out;
   }
   .portal-dept-card:hover {
-    border-color: color-mix(in srgb, var(--md-secondary) 28%, var(--md-outline-variant02));
-    box-shadow: var(--md-shadow-2);
+    border-color: color-mix(in srgb, var(--dept-accent) 44%, var(--md-outline-variant02));
+    box-shadow: 0 5px 14px rgba(19, 42, 69, 0.12);
+  }
+  .portal-dept-card--operations {
+    --dept-accent: var(--nv-steel);
+    --dept-tint: var(--nv-steel-light);
+  }
+  .portal-dept-card--purchasing {
+    --dept-accent: var(--nv-amber);
+    --dept-tint: var(--md-tertiary-container);
+  }
+  .portal-dept-card--warehouse {
+    --dept-accent: var(--md-success);
+    --dept-tint: var(--md-success-container);
+  }
+  .portal-dept-card--hrm {
+    --dept-accent: var(--md-warning);
+    --dept-tint: var(--md-warning-container);
+  }
+  .portal-dept-card--admin {
+    --dept-accent: var(--nv-navy);
+    --dept-tint: var(--nv-steel-light);
   }
   .portal-dept-card__head {
     display: flex;
@@ -102,18 +137,19 @@
     gap: 10px;
     margin-bottom: 10px;
     padding-bottom: 10px;
-    border-bottom: 1px solid var(--md-outline-variant02);
+    border-bottom: 1px solid color-mix(in srgb, var(--dept-accent) 18%, var(--md-outline-variant02));
   }
   .portal-dept-card__icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
     flex-shrink: 0;
     border-radius: 10px;
-    background: color-mix(in srgb, var(--md-secondary) 14%, var(--md-surface-container));
-    color: var(--md-secondary);
+    background: color-mix(in srgb, var(--dept-accent) 13%, #fff);
+    color: color-mix(in srgb, var(--dept-accent) 82%, var(--nv-navy));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--dept-accent) 18%, transparent);
   }
   .portal-dept-card__title {
     margin: 0;
@@ -121,7 +157,7 @@
     font-weight: 700;
     letter-spacing: 0.03em;
     text-transform: uppercase;
-    color: var(--md-primary);
+    color: color-mix(in srgb, var(--dept-accent) 78%, var(--nv-navy));
     line-height: 1.25;
     text-wrap: balance;
   }
@@ -138,8 +174,8 @@
     width: 100%;
     padding: 9px 10px;
     border-radius: 8px;
-    border: 1px solid color-mix(in srgb, var(--md-outline-variant02) 80%, transparent);
-    background: var(--md-surface-container-high);
+    border: 1px solid color-mix(in srgb, var(--dept-accent) 14%, var(--md-outline-variant02));
+    background: color-mix(in srgb, #fff 86%, var(--dept-fill-start));
     color: var(--md-on-surface);
     text-align: left;
     transition:
@@ -148,8 +184,8 @@
       transform 120ms ease-out;
   }
   .portal-dept-card__item:not(.mega-menu-item--locked):hover {
-    background: color-mix(in srgb, var(--md-secondary) 8%, var(--md-surface-container-high));
-    border-color: color-mix(in srgb, var(--md-secondary) 35%, var(--md-outline-variant02));
+    background: color-mix(in srgb, var(--dept-accent) 9%, #fff);
+    border-color: color-mix(in srgb, var(--dept-accent) 36%, var(--md-outline-variant02));
     transform: translateX(2px);
   }
   .portal-dept-card__item:not(.mega-menu-item--locked):active {
@@ -163,10 +199,10 @@
   }
   .portal-dept-card__item-icon {
     flex-shrink: 0;
-    color: var(--md-on-surface-variant);
+    color: color-mix(in srgb, var(--dept-accent) 72%, var(--md-on-surface-variant));
   }
   .portal-dept-card__item:not(.mega-menu-item--locked):hover .portal-dept-card__item-icon {
-    color: var(--md-secondary);
+    color: var(--dept-accent);
   }
   .portal-dept-card__item-label {
     font-size: 0.8125rem;
@@ -187,16 +223,22 @@
     opacity: 0.75;
   }
   .portal-dept-card__item:not(.mega-menu-item--locked):hover .portal-dept-card__item-chevron {
-    color: var(--md-secondary);
+    color: var(--dept-accent);
     transform: translateX(2px);
   }
   .dark .portal-dept-card {
-    background: var(--md-surface-container);
-    border-color: var(--md-outline-variant02);
+    background:
+      linear-gradient(
+        145deg,
+        color-mix(in srgb, var(--dept-accent) 12%, var(--md-surface-container)) 0%,
+        var(--md-surface-container) 52%,
+        var(--md-surface-container-high) 100%
+      );
+    border-color: color-mix(in srgb, var(--dept-accent) 28%, var(--md-outline-variant02));
   }
   .dark .portal-dept-card__item {
-    background: var(--md-surface-container-high);
-    border-color: var(--md-outline-variant02);
+    background: color-mix(in srgb, var(--dept-accent) 9%, var(--md-surface-container-high));
+    border-color: color-mix(in srgb, var(--dept-accent) 20%, var(--md-outline-variant02));
   }
   .portal-sidebar {
     display: flex;
@@ -220,10 +262,15 @@
     padding: 14px 16px;
     border-radius: 12px;
     text-align: left;
-    border: 1px solid var(--md-outline-variant02);
-    background: var(--md-surface-container);
+    border: 1px solid color-mix(in srgb, var(--nv-steel) 22%, var(--md-outline-variant02));
+    background:
+      linear-gradient(
+        120deg,
+        color-mix(in srgb, var(--nv-navy) 7%, #fff) 0%,
+        color-mix(in srgb, var(--nv-steel) 4%, #fff) 100%
+      );
     color: var(--md-on-surface);
-    box-shadow: var(--md-shadow-1);
+    box-shadow: 0 2px 8px rgba(19, 42, 69, 0.07);
     transition: transform 150ms var(--md-easing), background-color 150ms var(--md-easing), border-color 150ms var(--md-easing);
   }
   .portal-pending-card:hover {
@@ -255,8 +302,9 @@
     align-items: center;
     justify-content: center;
     border-radius: 12px;
-    background: var(--md-secondary-container);
-    color: var(--md-secondary);
+    background: color-mix(in srgb, var(--nv-steel) 13%, #fff);
+    color: var(--nv-navy);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--nv-steel) 14%, transparent);
   }
   .portal-pending-card--active .portal-pending-card__icon-wrap {
     background: color-mix(in srgb, var(--md-on-secondary) 15%, transparent);
@@ -294,9 +342,14 @@
     gap: 12px;
     padding: 14px 16px;
     border-radius: 12px;
-    background: var(--md-surface-container);
-    border: 1px solid var(--md-outline-variant02);
-    box-shadow: var(--md-shadow-1);
+    background:
+      linear-gradient(
+        145deg,
+        color-mix(in srgb, var(--nv-steel) 7%, #fff) 0%,
+        color-mix(in srgb, var(--nv-navy) 3%, #fff) 100%
+      );
+    border: 1px solid color-mix(in srgb, var(--nv-steel) 22%, var(--md-outline-variant02));
+    box-shadow: 0 2px 8px rgba(19, 42, 69, 0.07);
   }
   .dark .portal-birthday-card {
     background: var(--md-surface-container-high);
@@ -323,8 +376,8 @@
   .portal-birthday-stat {
     padding: 8px 12px;
     border-radius: 12px;
-    background: var(--md-surface-container-high);
-    border: 1px solid var(--md-outline-variant);
+    background: color-mix(in srgb, #fff 82%, var(--nv-steel-light));
+    border: 1px solid color-mix(in srgb, var(--nv-steel) 18%, var(--md-outline-variant));
   }
   .portal-birthday-stat__label {
     font-size: 11px;
@@ -361,6 +414,75 @@
   }
   .portal-page .surface-panel--table {
     border-color: color-mix(in srgb, var(--md-outline-variant02) 90%, var(--md-primary));
+  }
+
+  /* ── Operations dashboard: restrained brand-tinted summary surfaces ── */
+  .operations-dashboard .page-header {
+    border-color: color-mix(in srgb, var(--nv-steel) 20%, var(--md-outline-variant02));
+    background:
+      linear-gradient(
+        105deg,
+        color-mix(in srgb, var(--nv-navy) 7%, #fff) 0%,
+        color-mix(in srgb, var(--nv-steel) 3%, #fff) 68%,
+        #fff 100%
+      );
+    box-shadow: 0 2px 8px rgba(19, 42, 69, 0.07);
+  }
+
+  .operations-dashboard .dashboard-kpi-grid .kpi-card {
+    border-color: color-mix(in srgb, var(--nv-steel) 20%, var(--md-outline-variant02));
+    background:
+      linear-gradient(
+        145deg,
+        color-mix(in srgb, var(--nv-steel) 7%, #fff) 0%,
+        color-mix(in srgb, var(--nv-navy) 3%, #fff) 100%
+      );
+    box-shadow: 0 3px 10px rgba(19, 42, 69, 0.08);
+  }
+
+  .operations-dashboard .dashboard-kpi-grid .kpi-card--accent-amber {
+    background:
+      linear-gradient(
+        145deg,
+        color-mix(in srgb, var(--md-warning) 7%, #fff) 0%,
+        color-mix(in srgb, var(--nv-navy) 2%, #fff) 100%
+      );
+  }
+
+  .operations-dashboard .dashboard-kpi-grid .kpi-card--accent-teal {
+    background:
+      linear-gradient(
+        145deg,
+        color-mix(in srgb, var(--md-secondary) 8%, #fff) 0%,
+        color-mix(in srgb, var(--nv-navy) 2%, #fff) 100%
+      );
+  }
+
+  .operations-dashboard .dashboard-ops-card {
+    border-color: color-mix(
+      in srgb,
+      var(--ops-color, var(--nv-steel)) 18%,
+      var(--md-outline-variant02)
+    );
+    background:
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--ops-color, var(--nv-steel)) 6%, #fff) 0%,
+        color-mix(in srgb, var(--nv-navy) 2%, #fff) 100%
+      );
+    box-shadow: 0 2px 8px rgba(19, 42, 69, 0.07);
+  }
+
+  .dark .operations-dashboard .page-header,
+  .dark .operations-dashboard .dashboard-kpi-grid .kpi-card,
+  .dark .operations-dashboard .dashboard-ops-card {
+    background:
+      linear-gradient(
+        145deg,
+        color-mix(in srgb, var(--nv-steel) 10%, var(--md-surface-container)) 0%,
+        var(--md-surface-container-high) 100%
+      );
+    border-color: color-mix(in srgb, var(--nv-steel) 25%, var(--md-outline-variant02));
   }
 
   .portal-calendar-nav__btn {

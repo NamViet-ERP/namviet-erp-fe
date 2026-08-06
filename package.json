@@ -21,7 +21,7 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report",
     "api:fetch": "node scripts/fetch-swagger.mjs",
-    "api:gen": "openapi-typescript openapi/swagger.json -o src/types/generated/openapi.ts",
+    "api:gen": "node scripts/gen-openapi.mjs",
     "api:sync": "npm run api:fetch && npm run api:gen",
     "api:check": "node scripts/check-openapi-generated.mjs"
   },

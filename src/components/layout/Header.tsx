@@ -18,7 +18,7 @@ import { useDarkMode } from '../../hooks/useDarkMode';
 import type { WmsNotificationItemApiDto } from '../../services/notificationsService';
 import DepartmentCard from './DepartmentCard';
 
-type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin' | 'technical' | 'purchasing' | 'suppliers';
+type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin' | 'technical' | 'purchasing' | 'suppliers' | 'operations';
 type NotifType = 'warning' | 'import' | 'export' | 'info' | 'transfer' | 'stocktake';
 
 const NOTIF_READ_KEY = 'nv-wms-notif-read';
@@ -201,7 +201,7 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
 
   const moduleMenuOpen = showModuleMenu || moduleMenuClosing;
   const notifications = useMemo(
-    () => pendingNotifications?.items.map(item => mapApiNotification(item, readNotificationIds)) ?? [],
+    () => pendingNotifications?.items?.map(item => mapApiNotification(item, readNotificationIds)) ?? [],
     [pendingNotifications, readNotificationIds],
   );
   const unreadCount = notifications.filter(n => !n.read).length;

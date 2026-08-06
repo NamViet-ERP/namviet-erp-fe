@@ -14,7 +14,7 @@ interface DepartmentCardProps {
 export default function DepartmentCard({ dept, permissions, onItemClick }: DepartmentCardProps) {
   const DeptIcon = dept.icon;
   return (
-    <article className="portal-dept-card">
+    <article className={`portal-dept-card portal-dept-card--${dept.tone}`}>
       <header className="portal-dept-card__head">
         <div className="portal-dept-card__icon" aria-hidden>
           <DeptIcon size={ICON_SIZE.base} />

@@ -19,6 +19,7 @@ export interface ImportCreateManualItemsTableProps {
   materialUnit: (code: string) => string;
   onMaterialLineChange?: (index: number, materialCode: string) => void;
   onDuplicateMaterialAttempt?: (lineIndex: number) => void;
+  qtyColumnLabel?: string;
 }
 
 export default function ImportCreateManualItemsTable({
@@ -31,6 +32,7 @@ export default function ImportCreateManualItemsTable({
   materialUnit,
   onMaterialLineChange,
   onDuplicateMaterialAttempt,
+  qtyColumnLabel = 'SL',
 }: ImportCreateManualItemsTableProps) {
   return (
     <div className="overflow-x-auto table-scroll">
@@ -38,7 +40,7 @@ export default function ImportCreateManualItemsTable({
         <thead>
           <tr>
             <th className="table-header-cell">Vật tư</th>
-            <th className="table-header-cell text-right">SL</th>
+            <th className="table-header-cell text-right">{qtyColumnLabel}</th>
             <th className="table-header-cell text-center">ĐVT</th>
             {canViewPrices && <th className="table-header-cell text-right">Đơn giá</th>}
             {canViewPrices && <th className="table-header-cell text-right">Thành tiền</th>}

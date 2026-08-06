@@ -11,6 +11,8 @@ type Props = {
   planLoading: boolean;
   planError: boolean;
   planErr: unknown;
+  sourceKind: 'plan' | 'adhoc';
+  onSelectSourceKind: (kind: 'plan' | 'adhoc') => void;
   planCode: string;
   supplierName: string;
   suppliers: string[];
@@ -29,6 +31,8 @@ export function CreatePoFormFields({
   planLoading,
   planError,
   planErr,
+  sourceKind,
+  onSelectSourceKind,
   planCode,
   supplierName,
   suppliers,
@@ -39,18 +43,32 @@ export function CreatePoFormFields({
   matchedSupplier,
   dueDatePreview,
 }: Props) {
+  const sourceLabel = sourceKind === 'adhoc' ? 'Mua hàng phát sinh' : 'KHMH';
   return (
     <section className="pur-detail__card">
       <div className="pur-detail__form-grid">
-        <FormField label="Mã KHMH" required>
+        <FormField label="Nguồn" required>
+          <select
+            className="form-input form-input-md"
+            value={sourceKind}
+            onChange={e => onSelectSourceKind(e.target.value as 'plan' | 'adhoc')}
+            aria-label="Nguồn phiếu"
+          >
+            <option value="plan">Kế hoạch mua hàng</option>
+            <option value="adhoc">Mua hàng phát sinh</option>
+          </select>
+        </FormField>
+        <FormField label={`Mã ${sourceLabel}`} required>
           <select
             className="form-input form-input-md"
             value={planCode}
             disabled={plansLoading}
             onChange={e => onSelectPlan(e.target.value)}
-            aria-label="Mã KHMH"
+            aria-label={`Mã ${sourceLabel}`}
           >
-            <option value="">{plansLoading ? 'Đang tải…' : 'Chọn KHMH'}</option>
+            <option value="">
+              {plansLoading ? 'Đang tải…' : `Chọn ${sourceLabel} đã duyệt`}
+            </option>
             {plans.map(p => (
               <option key={p.code} value={p.code}>
                 {p.code} — {p.projectCode}
@@ -58,15 +76,15 @@ export function CreatePoFormFields({
             ))}
           </select>
         </FormField>
-        <FormField label="Nhà cung cấp (theo KHMH)" required>
+        <FormField label={`Nhà cung cấp (theo ${sourceLabel})`} required>
           <select
             className="form-input form-input-md"
             value={supplierName}
             disabled={!planCode || planLoading}
             onChange={e => onSelectSupplier(e.target.value)}
-            aria-label="Nhà cung cấp theo KHMH"
+            aria-label={`Nhà cung cấp theo ${sourceLabel}`}
           >
-            <option value="">{!planCode ? 'Chọn KHMH trước' : 'Chọn NCC'}</option>
+            <option value="">{!planCode ? `Chọn ${sourceLabel} trước` : 'Chọn NCC'}</option>
             {suppliers.map(s => (
               <option key={s} value={s}>{s}</option>
             ))}
@@ -77,7 +95,7 @@ export function CreatePoFormFields({
             className="form-input form-input-md"
             readOnly
             value={plan ? (plan.projectName ? `${plan.projectCode} — ${plan.projectName}` : plan.projectCode) : ''}
-            aria-label="Dự án (tự lấy từ KHMH)"
+            aria-label={`Dự án (tự lấy từ ${sourceLabel})`}
           />
         </FormField>
         <FormField label="Ghi chú">
@@ -91,7 +109,7 @@ export function CreatePoFormFields({
       </div>
       {planError ? (
         <p role="alert" className="pur-detail__alert">
-          {getApiErrorMessage(planErr, 'Không tải được chi tiết KHMH.')}
+          {getApiErrorMessage(planErr, `Không tải được chi tiết ${sourceLabel}.`)}
         </p>
       ) : null}
       {supplierName && !matchedSupplier ? (

@@ -36,11 +36,13 @@ export interface ImportCreateModalProps {
   onImportFile?: (file: File) => Promise<void>;
   onMaterialLineChange?: (index: number, materialCode: string) => void;
   onDuplicateMaterialAttempt?: (lineIndex: number) => void;
-  editVoucher?: { code: string; receiptEvaluation?: string | null } | null;
+  editVoucher?: { code: string; receiptEvaluation?: string | null; status?: string } | null;
   materialUnit: (code: string) => string;
   poOptions?: PurchaseOrderApiDto[];
   selectedPoCode?: string;
   onSelectedPoCodeChange?: (code: string) => void;
+  /** Khi true (tạo từ chi tiết PO): khóa chọn PO. */
+  poLocked?: boolean;
   poLoading?: boolean;
   poPreviewLines?: PoImportLinePreviewApiDto[];
   /** Sửa phiếu: chứng từ đã lưu + upload ngay khi chọn file. */
@@ -49,4 +51,8 @@ export interface ImportCreateModalProps {
   onUploadEditAttachment?: (file: File, kind: 'document' | 'photo') => Promise<void>;
   onDeleteEditAttachment?: (attachmentId: string) => Promise<void>;
   onDownloadEditAttachment?: (attachmentId: string, fileName: string) => Promise<void>;
+  /** Duyệt thực tế từ form sửa (phiếu pending). */
+  canApprove?: boolean;
+  onApprove?: (payload?: { evaluation: string }) => void;
+  isApproving?: boolean;
 }

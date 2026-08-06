@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { HrmDetailHeader } from '../../../components/hr/HrmPageChrome';
 import { CreatePoFormFields } from './CreatePoFormFields';
 import { CreatePoLinePicker } from './CreatePoLinePicker';
+import { PoInstallmentCreatePanels } from './PoInstallmentCreatePanels';
 import { useCreatePurchaseOrderForm } from './useCreatePurchaseOrderForm';
 
 export function CreatePurchaseOrderForm({ onCreated }: { onCreated: (code: string) => void }) {
@@ -13,7 +14,7 @@ export function CreatePurchaseOrderForm({ onCreated }: { onCreated: (code: strin
       <HrmDetailHeader
         onBack={() => navigate('/purchasing/orders')}
         title="Tạo đơn hàng"
-        subtitle="Chọn KHMH → NCC (theo dòng KHMH) → mặt hàng còn lại"
+        subtitle="Chọn nguồn (KHMH hoặc phát sinh đã duyệt) → NCC → mặt hàng còn lại"
         actions={(
           <button
             type="button"
@@ -33,6 +34,8 @@ export function CreatePurchaseOrderForm({ onCreated }: { onCreated: (code: strin
         planLoading={f.planLoading}
         planError={f.planError}
         planErr={f.planErr}
+        sourceKind={f.sourceKind}
+        onSelectSourceKind={f.selectSourceKind}
         planCode={f.planCode}
         supplierName={f.supplierName}
         suppliers={f.suppliers}
@@ -59,6 +62,16 @@ export function CreatePurchaseOrderForm({ onCreated }: { onCreated: (code: strin
         someVisibleSelected={f.someVisibleSelected}
         onToggleLine={f.toggleLine}
         onToggleSelectAllVisible={f.toggleSelectAllVisible}
+      />
+
+      <PoInstallmentCreatePanels
+        installmentCount={f.installmentCount}
+        installments={f.installments}
+        onCountChange={f.changeInstallmentCount}
+        onPercentChange={f.changeInstallmentPercent}
+        onAddDocType={f.addInstallmentDocType}
+        onDocTypeChange={f.changeInstallmentDocType}
+        onRemoveDocType={f.removeInstallmentDocType}
       />
     </div>
   );

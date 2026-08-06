@@ -120,6 +120,9 @@ export const queryKeys = {
   supplierEvaluations: {
     all: ['supplierEvaluations'] as const,
   },
+  supplierDeliveryEvaluations: {
+    all: ['supplierDeliveryEvaluations'] as const,
+  },
   supplierModuleSettings: {
     all: ['supplierModuleSettings'] as const,
   },
@@ -154,6 +157,10 @@ export const queryKeys = {
   purchasePayments: {
     all: ['purchasePayments'] as const,
     detail: (code: string) => ['purchasePayments', code] as const,
+  },
+  purchasePaymentPlans: {
+    all: ['purchasePaymentPlans'] as const,
+    nextStage: (poCode: string) => ['purchasePaymentPlans', 'nextStage', poCode] as const,
   },
   purchasingDashboard: {
     all: ['purchasingDashboard'] as const,

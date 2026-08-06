@@ -1,4 +1,4 @@
-import { Eye, Check, Send, Pencil, Trash2 } from 'lucide-react';
+import { Eye, Send, Pencil, Trash2 } from 'lucide-react';
 import type { Import } from '../../../types';
 import VoucherStatusCell from '../../../components/warehouse/VoucherStatusCell';
 import VoucherCodeCell from '../../../components/warehouse/VoucherCodeCell';
@@ -18,12 +18,12 @@ interface ImportTableProps {
   onOpenDetail: (imp: Import) => void;
   onEdit?: (imp: Import) => void;
   onSubmit: (imp: Import) => void;
-  onApprove: (imp: Import) => void;
   onDelete?: (imp: Import) => void;
   canEdit?: boolean;
   canSubmit?: boolean;
-  canApprove?: boolean;
   canDelete?: boolean;
+  /** Ẩn cột tổng giá trị khi không có wms.prices.view */
+  showPrices?: boolean;
 }
 
 export default function ImportTable({
@@ -35,13 +35,13 @@ export default function ImportTable({
   onOpenDetail,
   onEdit,
   onSubmit,
-  onApprove,
   onDelete,
   canEdit = false,
   canSubmit = false,
-  canApprove = false,
   canDelete = false,
+  showPrices = true,
 }: ImportTableProps) {
+  const colSpan = showPrices ? 8 : 7;
   return (
     <div className="overflow-x-auto table-scroll wms-inventory-table-wrap">
       <table className="wms-inventory-table">
@@ -52,23 +52,25 @@ export default function ImportTable({
             <th className="table-header-cell text-center">Nhà cung cấp</th>
             <th className="table-header-cell text-center">Mã đơn hàng</th>
             <th className="table-header-cell text-center">Mã KHMH</th>
-            <th className="table-header-cell text-center">Tổng giá trị</th>
+            {showPrices ? (
+              <th className="table-header-cell text-center">Tổng giá trị</th>
+            ) : null}
             <th className="table-header-cell text-center">Trạng thái</th>
             <th className="table-header-cell text-center w-16">Tác vụ</th>
           </tr>
         </thead>
         <tbody>
           {isLoading ? (
-            <TableSkeletonRows colSpan={8} />
+            <TableSkeletonRows colSpan={colSpan} />
           ) : isError ? (
             <tr>
-              <td colSpan={8}>
+              <td colSpan={colSpan}>
                 <EmptyState message={getApiErrorMessage(error, WMS_ERROR.loadImports)} />
               </td>
             </tr>
           ) : rows.length === 0 ? (
             <tr>
-              <td colSpan={8}>
+              <td colSpan={colSpan}>
                 <EmptyState message={WMS_EMPTY.noImports} />
               </td>
             </tr>
@@ -90,7 +92,9 @@ export default function ImportTable({
                 <td className="table-cell text-center">{imp.supplier || '—'}</td>
                 <td className="table-cell text-center">{imp.referenceCode || '—'}</td>
                 <td className="table-cell text-center">{imp.planCode?.trim() || '—'}</td>
-                <td className="table-cell text-center tabular-nums">{formatCurrency(imp.totalValue)}</td>
+                {showPrices ? (
+                  <td className="table-cell text-center tabular-nums">{formatCurrency(imp.totalValue)}</td>
+                ) : null}
                 <td className="table-cell text-center">
                   <VoucherStatusCell
                     voucherKind="import"
@@ -108,9 +112,6 @@ export default function ImportTable({
                         : []),
                       ...(canSubmit && imp.status === 'draft'
                         ? [{ label: 'Chốt dự kiến', icon: Send, onClick: () => onSubmit(imp) }]
-                        : []),
-                      ...(canApprove && imp.status === 'pending'
-                        ? [{ label: 'Duyệt thực tế', icon: Check, onClick: () => onApprove(imp) }]
                         : []),
                       ...(canDelete && imp.status === 'draft'
                         ? [

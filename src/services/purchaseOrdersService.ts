@@ -2,6 +2,8 @@ import { apiClient } from '../lib/apiClient';
 import type {
   CreatePurchaseOrderRequest,
   PurchaseOrderDetailApiDto,
+  PurchaseOrderInstallmentApiDto,
+  PurchaseOrderInstallmentDocumentApiDto,
   PurchaseOrderPagedApiDto,
   UpdatePurchaseOrderRequest,
 } from '../types/api/purchasingApi';
@@ -93,6 +95,59 @@ export const purchaseOrdersService = {
   async downloadAttachment(code: string, attachmentId: string): Promise<Blob> {
     return apiClient.getBlob(
       `${ENDPOINT}/${encodeURIComponent(code)}/attachments/${attachmentId}/download`,
+    );
+  },
+
+  async listInstallmentDocuments(
+    code: string,
+    stageNumber: number,
+  ): Promise<PurchaseOrderInstallmentDocumentApiDto[]> {
+    return apiClient.get<PurchaseOrderInstallmentDocumentApiDto[]>(
+      `${ENDPOINT}/${encodeURIComponent(code)}/installments/${stageNumber}/documents`,
+    );
+  },
+
+  async uploadInstallmentDocument(
+    code: string,
+    stageNumber: number,
+    file: File,
+    docType: string,
+  ): Promise<PurchaseOrderInstallmentDocumentApiDto> {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('docType', docType);
+    return apiClient.putForm<PurchaseOrderInstallmentDocumentApiDto>(
+      `${ENDPOINT}/${encodeURIComponent(code)}/installments/${stageNumber}/documents`,
+      form,
+    );
+  },
+
+  async downloadInstallmentDocument(
+    code: string,
+    stageNumber: number,
+    documentId: number,
+  ): Promise<Blob> {
+    return apiClient.getBlob(
+      `${ENDPOINT}/${encodeURIComponent(code)}/installments/${stageNumber}/documents/${documentId}/download`,
+    );
+  },
+
+  async deleteInstallmentDocument(
+    code: string,
+    stageNumber: number,
+    documentId: number,
+  ): Promise<void> {
+    return apiClient.delete(
+      `${ENDPOINT}/${encodeURIComponent(code)}/installments/${stageNumber}/documents/${documentId}`,
+    );
+  },
+
+  async completeInstallment(
+    code: string,
+    stageNumber: number,
+  ): Promise<PurchaseOrderInstallmentApiDto> {
+    return apiClient.post<PurchaseOrderInstallmentApiDto>(
+      `${ENDPOINT}/${encodeURIComponent(code)}/installments/${stageNumber}/complete`,
     );
   },
 };

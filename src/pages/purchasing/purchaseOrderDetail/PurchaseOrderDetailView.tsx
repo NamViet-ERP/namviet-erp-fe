@@ -8,7 +8,9 @@ import { getApiErrorMessage } from '../../../lib/apiClient';
 import { PoDetailHeaderActions } from './PoDetailHeaderActions';
 import { PoDetailLinesTable } from './PoDetailLinesTable';
 import { PoDetailSummaryCard } from './PoDetailSummaryCard';
+import { PoInstallmentsSection } from './PoInstallmentsSection';
 import { PoRelatedImportsSection } from './PoRelatedImportsSection';
+import { PoDeliveryEvaluationsSection } from './PoDeliveryEvaluationsSection';
 import { usePurchaseOrderDetail } from './usePurchaseOrderDetail';
 
 export function PurchaseOrderDetailView({ code }: { code: string }) {
@@ -80,9 +82,17 @@ export function PurchaseOrderDetailView({ code }: { code: string }) {
             />
 
             <PoRelatedImportsSection
-              relatedImports={d.relatedImports}
-              importsLoading={d.importsLoading}
-              onNavigateImport={() => d.navigate('/warehouse/import')}
+              poCode={code}
+              order={d.order}
+            />
+
+            <PoDeliveryEvaluationsSection poCode={code} />
+
+            <PoInstallmentsSection
+              poCode={code}
+              installments={d.order.installments}
+              canManage={d.canUpdate}
+              onRefresh={d.refetch}
             />
 
             <PoAttachmentsPanel

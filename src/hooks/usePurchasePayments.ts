@@ -27,6 +27,7 @@ export function useCreatePurchasePayment() {
     mutationFn: (body: CreatePurchasePaymentRequest) => purchasePaymentsService.create(body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.purchasePayments.all });
+      qc.invalidateQueries({ queryKey: queryKeys.purchasePaymentPlans.all });
       qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all });
       qc.invalidateQueries({ queryKey: queryKeys.purchasingDashboard.all });
     },
@@ -37,6 +38,7 @@ function useInvalidatePurchasePaymentQueries() {
   const qc = useQueryClient();
   return () => {
     qc.invalidateQueries({ queryKey: queryKeys.purchasePayments.all });
+    qc.invalidateQueries({ queryKey: queryKeys.purchasePaymentPlans.all });
     qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all });
     qc.invalidateQueries({ queryKey: queryKeys.purchasingDashboard.all });
   };

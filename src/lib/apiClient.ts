@@ -239,6 +239,39 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   return data as T;
 }
 
+function requestForm<T>(path: string, formData: FormData, method: 'POST' | 'PUT'): Promise<T> {
+  const run = async (retried = false): Promise<T> => {
+    const token = authTokenProvider();
+    const url = buildUrl(path);
+    const response = await fetch(url, {
+      method,
+      credentials: 'include',
+      signal: AbortSignal.timeout(20_000),
+      headers: {
+        Accept: 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: formData,
+    });
+    const data = await readResponseBody(response);
+
+    if (response.status === 401 && !retried) {
+      return handleUnauthorizedRetry(
+        () => run(true),
+        () => {
+          throwResponseError(response, data);
+        },
+      );
+    }
+
+    if (!response.ok) {
+      throwResponseError(response, data);
+    }
+    return data as T;
+  };
+  return run();
+}
+
 export const apiClient = {
   get: <T>(path: string, params?: RequestOptions['params']) =>
     request<T>(path, { method: 'GET', params }),
@@ -251,38 +284,10 @@ export const apiClient = {
   delete: <T>(path: string) =>
     request<T>(path, { method: 'DELETE' }),
 
-  postForm: <T>(path: string, formData: FormData) => {
-    const run = async (retried = false): Promise<T> => {
-      const token = authTokenProvider();
-      const url = buildUrl(path);
-      const response = await fetch(url, {
-        method: 'POST',
-        credentials: 'include',
-        signal: AbortSignal.timeout(20_000),
-        headers: {
-          Accept: 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: formData,
-      });
-      const data = await readResponseBody(response);
-
-      if (response.status === 401 && !retried) {
-        return handleUnauthorizedRetry(
-          () => run(true),
-          () => {
-            throwResponseError(response, data);
-          },
-        );
-      }
-
-      if (!response.ok) {
-        throwResponseError(response, data);
-      }
-      return data as T;
-    };
-    return run();
-  },
+  postForm: <T>(path: string, formData: FormData) =>
+    requestForm<T>(path, formData, 'POST'),
+  putForm: <T>(path: string, formData: FormData) =>
+    requestForm<T>(path, formData, 'PUT'),
 
   getBlob: (
     path: string,

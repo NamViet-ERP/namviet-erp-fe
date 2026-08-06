@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { ChevronDown, ChevronRight, FolderLock, FolderOpen } from 'lucide-react';
 import { HrmDetailHeader } from '../../components/hr/HrmPageChrome';
 import EmptyState from '../../components/ui/EmptyState';
@@ -25,7 +25,11 @@ function qty(v: number | null | undefined): string {
 function planStatusLabel(status: string | null | undefined): string {
   switch (status) {
     case 'draft': return 'Nháp';
-    case 'active': return 'Đang mở';
+    case 'pending_l1': return 'Chờ duyệt cấp 1';
+    case 'pending_l2': return 'Chờ duyệt cấp 2';
+    case 'approved':
+    case 'active': return 'Đã duyệt';
+    case 'rejected': return 'Từ chối';
     case 'closed': return 'Đã đóng';
     default: return status || '—';
   }
@@ -33,8 +37,12 @@ function planStatusLabel(status: string | null | undefined): string {
 
 function planStatusPillClass(status: string | null | undefined): string {
   switch (status) {
+    case 'approved':
     case 'active': return 'pur-erp__pill pur-erp__pill--ok';
-    case 'closed': return 'pur-erp__pill pur-erp__pill--danger';
+    case 'closed':
+    case 'rejected': return 'pur-erp__pill pur-erp__pill--danger';
+    case 'pending_l1':
+    case 'pending_l2': return 'pur-erp__pill pur-erp__pill--warn';
     default: return 'pur-erp__pill pur-erp__pill--warn';
   }
 }
@@ -80,20 +88,26 @@ function LineQuotes({ line }: { line: PurchasePlanLineApiDto }) {
 export default function PurchasePlanDetailPage() {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { data: plan, isLoading, isError, error, refetch } = usePurchasePlan(code);
   const updateMutation = useUpdatePurchasePlan();
   const [confirmClose, setConfirmClose] = useState(false);
-  const back = () => navigate('/purchasing/plans');
+  const isAdhoc =
+    location.pathname.startsWith('/purchasing/adhoc')
+    || plan?.kind === 'adhoc'
+    || (code ?? '').toUpperCase().startsWith('MHPS-');
+  const listPath = isAdhoc ? '/purchasing/adhoc' : '/purchasing/plans';
+  const back = () => navigate(listPath);
 
   const lines = plan?.lines ?? [];
 
-  const setPlanStatus = async (next: 'active' | 'closed') => {
+  const setPlanStatus = async (next: 'approved' | 'closed') => {
     if (!plan) return;
     try {
       await updateMutation.mutateAsync({ code: plan.code, body: { status: next } });
       showToast(
         'success',
-        next === 'active' ? `Đã mở KHMH ${plan.code}.` : `Đã đóng KHMH ${plan.code}.`,
+        next === 'approved' ? `Đã mở lại KHMH ${plan.code}.` : `Đã đóng KHMH ${plan.code}.`,
       );
       setConfirmClose(false);
     } catch (err) {
@@ -155,7 +169,7 @@ export default function PurchasePlanDetailPage() {
   }
 
   const projectSubtitle = plan.projectName || plan.projectCode || undefined;
-  const isActive = plan.status === 'active';
+  const isApproved = plan.status === 'approved' || plan.status === 'active';
   const isClosed = plan.status === 'closed';
 
   return (
@@ -167,18 +181,18 @@ export default function PurchasePlanDetailPage() {
         actions={(
           <div className="pur-detail__actions">
             <PlanStatusBadge status={plan.status} />
-            {!isActive && (
+            {isClosed ? (
               <button
                 type="button"
                 className="btn btn-primary btn-sm"
                 disabled={updateMutation.isPending}
-                onClick={() => { void setPlanStatus('active'); }}
+                onClick={() => { void setPlanStatus('approved'); }}
               >
                 <FolderOpen size={15} strokeWidth={1.75} aria-hidden />
-                {isClosed ? 'Mở lại kế hoạch' : 'Mở kế hoạch'}
+                Mở lại kế hoạch
               </button>
-            )}
-            {!isClosed && (
+            ) : null}
+            {isApproved ? (
               <button
                 type="button"
                 className="btn btn-outline btn-sm"
@@ -188,7 +202,7 @@ export default function PurchasePlanDetailPage() {
                 <FolderLock size={15} strokeWidth={1.75} aria-hidden />
                 Đóng kế hoạch
               </button>
-            )}
+            ) : null}
           </div>
         )}
       />

@@ -1,450 +1,207 @@
 import type { SidebarMenuItem } from '../types';
-
 import {
-
   LayoutDashboard, Package,
-
   PackagePlus, PackageMinus, Settings,
-
   ClipboardCheck, Users, UserCheck, UserCog,
-
   Layers, FolderKanban, ArrowLeftRight, Building2, Ruler, BarChart3, RotateCcw, AlertTriangle,
-
-  Target, CalendarDays, DollarSign, ShoppingCart, Star, Truck,
-
+  Target, CalendarDays, DollarSign, ShoppingCart, ShoppingBag, Star, Truck, WalletCards,
 } from 'lucide-react';
-
-
-
 /** Thứ tự theo luồng nghiệp vụ: kho dự án → tồn → nhập/xuất/chuyển → danh mục */
-
 export const warehouseMenu: SidebarMenuItem[] = [
-
   {
-
     id: 'dashboard',
-
     label: 'Tổng quan',
-
     icon: LayoutDashboard,
-
     path: '/warehouse/dashboard-warehouse',
-
     permission: 'wms.dashboard.view',
-
   },
-
   {
-
     id: 'projects',
-
     label: 'Kho dự án',
-
     icon: FolderKanban,
-
     path: '/warehouse/projects',
-
     permission: 'wms.projects.view:all',
-
   },
-
   {
-
     id: 'stock',
-
     label: 'Tồn kho',
-
     icon: Layers,
-
     path: '/warehouse/stock',
-
     permission: 'wms.stock.view:all',
-
   },
-
   {
-
     id: 'arrival-plans',
-
     label: 'Kế hoạch hàng về',
-
     icon: Truck,
-
     path: '/warehouse/arrival-plans',
-
     permission: 'purchasing.arrival_plans.view',
-
   },
-
   {
-
     id: 'import',
-
     label: 'Nhập kho',
-
     icon: PackagePlus,
-
     path: '/warehouse/import',
-
     permission: 'wms.imports.view:all',
-
   },
-
   {
-
     id: 'export',
-
     label: 'Xuất kho',
-
     icon: PackageMinus,
-
     path: '/warehouse/export',
-
     permission: 'wms.exports.view:all',
-
   },
-
   {
-
     id: 'transfer',
-
     label: 'Chuyển kho',
-
     icon: ArrowLeftRight,
-
     path: '/warehouse/transfer',
-
     permission: 'wms.transfers.view:all',
-
   },
-
   {
-
     id: 'material-return',
-
     label: 'Hoàn trả vật tư',
-
     icon: RotateCcw,
-
     path: '/warehouse/material-return',
-
     permission: 'wms.export_returns.view:all',
-
   },
-
   {
-
     id: 'defects',
-
     label: 'Hàng lỗi và Bảo hành',
-
     icon: AlertTriangle,
-
     path: '/warehouse/defects',
-
     permission: 'wms.defects.view:all',
-
   },
-
   {
-
-    id: 'materials',
-
-    label: 'Danh mục vật tư',
-
-    icon: Package,
-
-    path: '/warehouse/materials',
-
-    permission: 'wms.materials.view:all',
-
-  },
-
-  {
-
     id: 'reports',
-
     label: 'Báo cáo kho',
-
     icon: BarChart3,
-
     path: '/warehouse/reports',
-
     permission: 'wms.reports.view:all',
-
   },
-
-  {
-
-    id: 'settings',
-
-    label: 'Thiết lập',
-
-    icon: Settings,
-
-    path: '/warehouse/settings',
-
-    permission: [
-
-      'wms.categories.view:all',
-
-      'wms.material_units.view:all',
-
-    ],
-
-  },
-
 ];
 
-
-
-/** Sidebar khi đang trong Thiết lập kho hàng */
-
-export const warehouseSettingsMenu: SidebarMenuItem[] = [
-
+/** Sidebar khi đang trong Thiết lập Vận hành (cây VT / ĐVT) */
+export const operationsSettingsMenu: SidebarMenuItem[] = [
   {
-
-    id: 'wh-settings-categories',
-
+    id: 'ops-settings-categories',
     label: 'Cây vật tư',
-
     icon: Package,
-
-    path: '/warehouse/settings/material-categories',
-
+    path: '/operations/settings/material-categories',
     permission: 'wms.categories.view:all',
-
   },
-
   {
-
-    id: 'wh-settings-units',
-
+    id: 'ops-settings-units',
     label: 'Đơn vị tính',
-
     icon: Ruler,
-
-    path: '/warehouse/settings/material-units',
-
+    path: '/operations/settings/material-units',
     permission: 'wms.material_units.view:all',
-
   },
-
 ];
 
-
+/** @deprecated Alias — dùng operationsSettingsMenu */
+export const warehouseSettingsMenu = operationsSettingsMenu;
 
 export const stocktakeMenu: SidebarMenuItem[] = [
-
   {
-
     id: 'stocktake',
-
     label: 'Kiểm kê kho',
-
     icon: ClipboardCheck,
-
     path: '/stocktake/list',
-
     permission: 'wms.stocktakes.view:all',
-
   },
-
 ];
-
-
-
 export const recruitmentMenu: SidebarMenuItem[] = [
-
   {
-
     id: 'recruitment-dashboard',
-
     label: 'Tổng quan',
-
     icon: LayoutDashboard,
-
     path: '/recruitment/dashboard',
-
     permission: 'hrm.candidates.view:all',
-
   },
-
   {
-
     id: 'recruitment-plans',
-
     label: 'Kế hoạch & Tiến độ',
-
     icon: Target,
-
     path: '/recruitment/plans',
-
     permission: 'hrm.recruitment.plans.view',
-
   },
-
   {
-
     id: 'recruitment-costs',
-
     label: 'Chi phí',
-
     icon: DollarSign,
-
     path: '/recruitment/costs',
-
     permission: 'hrm.recruitment.costs.view',
-
   },
-
   {
-
     id: 'candidates-list',
-
     label: 'Quản lý ứng viên',
-
     icon: UserCheck,
-
     path: '/recruitment/candidates',
-
     permission: 'hrm.candidates.view:all',
-
   },
-
   {
-
     id: 'recruitment-calendar',
-
     label: 'Lịch PV',
-
     icon: CalendarDays,
-
     path: '/recruitment/calendar',
-
     permission: 'hrm.candidates.view:all',
-
   },
-
   {
-
     id: 'recruitment-reports',
-
     label: 'Báo cáo',
-
     icon: BarChart3,
-
     path: '/recruitment/reports',
-
     permission: 'hrm.recruitment.reports.view',
-
   },
-
   {
-
     id: 'recruitment-hr-stats',
-
     label: 'Thống kê nhân sự',
-
     icon: UserCog,
-
     path: '/recruitment/hr-stats',
-
     permission: 'hrm.candidates.view:all',
-
   },
-
   {
-
     id: 'recruitment-settings',
-
     label: 'Thiết lập',
-
     icon: Settings,
-
     path: '/recruitment/settings',
-
     permission: 'hrm.recruitment.positions.view',
-
   },
-
 ];
-
-
-
 export const membersMenu: SidebarMenuItem[] = [
-
   {
-
     id: 'members-list',
-
     label: 'Hồ sơ nhân sự',
-
     icon: Users,
-
     path: '/members/list',
-
     permission: 'hrm.employees.view:all',
-
   },
-
   {
-
     id: 'members-settings',
-
     label: 'Thiết lập',
-
     icon: Settings,
-
     path: '/members/settings',
-
     permission: 'hrm.members.settings.view',
-
   },
-
 ];
-
-
-
 export const adminMenu: SidebarMenuItem[] = [
-
   {
-
     id: 'admin-users',
-
     label: 'Quản lý người dùng',
-
     icon: UserCog,
-
     path: '/admin/users',
-
     permission: 'admin.users.view:all',
-
   },
-
   {
-
     id: 'admin-settings',
-
     label: 'Thiết lập',
-
     icon: Settings,
-
     path: '/admin/settings',
-
     permission: 'admin.roles.view:all',
-
   },
-
 ];
-
-
-
 /** Kỹ thuật / CSKH — chưa ship API; giữ export rỗng để AppLayout không gãy. */
 export const technicalMenu: SidebarMenuItem[] = [];
-
-
-
 /** Mua hàng — Dashboard + KHMH + Đơn hàng (NCC nằm module Nhà cung cấp). */
 export const purchasingMenu: SidebarMenuItem[] = [
   {
@@ -462,11 +219,25 @@ export const purchasingMenu: SidebarMenuItem[] = [
     permission: 'purchasing.plans.view',
   },
   {
+    id: 'pur-adhoc',
+    label: 'Mua hàng phát sinh',
+    icon: ShoppingBag,
+    path: '/purchasing/adhoc',
+    permission: 'purchasing.plans.view',
+  },
+  {
     id: 'pur-orders',
     label: 'Đơn hàng',
     icon: ShoppingCart,
     path: '/purchasing/orders',
     permission: 'purchasing.orders.view',
+  },
+  {
+    id: 'pur-payment-plans',
+    label: 'Kế hoạch thanh toán',
+    icon: WalletCards,
+    path: '/purchasing/payment-plans',
+    permission: 'purchasing.payments.view',
   },
   {
     id: 'pur-payments',
@@ -476,7 +247,6 @@ export const purchasingMenu: SidebarMenuItem[] = [
     permission: 'purchasing.payments.view',
   },
 ];
-
 /** Nhà cung cấp — menu giống ERP /admin/suppliers. */
 export const suppliersMenu: SidebarMenuItem[] = [
   {
@@ -522,4 +292,37 @@ export const suppliersMenu: SidebarMenuItem[] = [
     permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
   },
 ];
-
+/** Vận hành — Tổng quan, Dự án EPC, Danh mục vật tư, Thiết lập cây VT. */
+export const operationsMenu: SidebarMenuItem[] = [
+  {
+    id: 'ops-dashboard',
+    label: 'Tổng quan',
+    icon: LayoutDashboard,
+    path: '/operations/dashboard',
+    permission: 'wms.projects.view:all',
+  },
+  {
+    id: 'ops-projects',
+    label: 'Dự án',
+    icon: FolderKanban,
+    path: '/operations/projects',
+    permission: 'wms.projects.view:all',
+  },
+  {
+    id: 'ops-materials',
+    label: 'Danh mục vật tư',
+    icon: Package,
+    path: '/operations/materials',
+    permission: 'wms.materials.view:all',
+  },
+  {
+    id: 'ops-settings',
+    label: 'Thiết lập',
+    icon: Settings,
+    path: '/operations/settings',
+    permission: [
+      'wms.categories.view:all',
+      'wms.material_units.view:all',
+    ],
+  },
+];

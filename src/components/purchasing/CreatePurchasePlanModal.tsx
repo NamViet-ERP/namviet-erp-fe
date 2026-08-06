@@ -65,6 +65,8 @@ interface CreatePurchasePlanModalProps {
   editCode?: string | null;
   onCreated?: (planCode: string) => void;
   onSaved?: (planCode: string) => void;
+  /** plan = KHMH; adhoc = mua hàng phát sinh */
+  kind?: 'plan' | 'adhoc';
 }
 
 function emptyLine(): DraftLine {
@@ -200,8 +202,11 @@ export default function CreatePurchasePlanModal({
   editCode,
   onCreated,
   onSaved,
+  kind = 'plan',
 }: CreatePurchasePlanModalProps) {
   const isEdit = Boolean(editCode);
+  const isAdhoc = kind === 'adhoc';
+  const entityLabel = isAdhoc ? 'mua hàng phát sinh' : 'KHMH';
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { data: projectsPage } = useProjects({ page: 1, pageSize: 200, status: 'Active' });
   const { data: suppliersPage } = useSuppliers({ all: true });
@@ -344,7 +349,7 @@ export default function CreatePurchasePlanModal({
           code: editCode,
           body: { note: note.trim() || null, lines: apiLines },
         });
-        showToast('success', `Đã cập nhật KHMH ${plan.code}.`);
+        showToast('success', `Đã cập nhật ${entityLabel} ${plan.code}.`);
         reset();
         onClose();
         onSaved?.(plan.code);
@@ -353,14 +358,15 @@ export default function CreatePurchasePlanModal({
       const plan = await createMutation.mutateAsync({
         projectCode,
         note: note.trim() || null,
+        kind,
         lines: apiLines.length > 0 ? apiLines : null,
       });
-      showToast('success', `Đã tạo KHMH ${plan.code}.`);
+      showToast('success', `Đã tạo ${entityLabel} ${plan.code}.`);
       reset();
       onClose();
       onCreated?.(plan.code);
     } catch (err) {
-      showToast('error', getApiErrorMessage(err, isEdit ? 'Không cập nhật được KHMH.' : 'Không tạo được KHMH.'));
+      showToast('error', getApiErrorMessage(err, isEdit ? `Không cập nhật được ${entityLabel}.` : `Không tạo được ${entityLabel}.`));
     }
   };
 
@@ -418,7 +424,7 @@ export default function CreatePurchasePlanModal({
     <Modal
       isOpen={open}
       onClose={handleClose}
-      title={isEdit ? `Sửa KHMH ${editCode}` : 'Tạo kế hoạch mua hàng'}
+      title={isEdit ? `Sửa ${entityLabel} ${editCode}` : (isAdhoc ? 'Tạo mua hàng phát sinh' : 'Tạo kế hoạch mua hàng')}
       size="xl"
       footer={(
         <>
@@ -428,7 +434,7 @@ export default function CreatePurchasePlanModal({
           <button type="button" className="btn btn-primary" onClick={() => { void saveManual(); }} disabled={busy}>
             {busy
               ? (isEdit ? 'Đang lưu…' : 'Đang tạo…')
-              : (isEdit ? 'Lưu thay đổi' : 'Tạo KHMH')}
+              : (isEdit ? 'Lưu thay đổi' : (isAdhoc ? 'Tạo phiếu' : 'Tạo KHMH'))}
           </button>
         </>
       )}

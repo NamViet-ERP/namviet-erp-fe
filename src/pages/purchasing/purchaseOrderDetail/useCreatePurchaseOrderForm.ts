@@ -6,21 +6,43 @@ import { useCreatePurchaseOrder } from '../../../hooks/usePurchaseOrders';
 import { getApiErrorMessage } from '../../../lib/apiClient';
 import { findSupplierByName, suppliersService } from '../../../services/suppliersService';
 import { addDaysIso, supplierOf, unitPriceOf } from './poDetailHelpers';
+import type { PoInstallmentDraft } from './PoInstallmentCreatePanels';
+
+const INSTALLMENT_DOC_TYPES = ['CO', 'CQ', 'DNTT', 'CONTRACT', 'INVOICE', 'BBNT', 'BBGH', 'OTHER'];
+
+function createInstallmentDrafts(count: number): PoInstallmentDraft[] {
+  const base = Math.floor((100 / count) * 100) / 100;
+  const remainder = Number((100 - base * count).toFixed(2));
+  return Array.from({ length: count }, (_, index) => ({
+    percent: String(Number((base + (index === 0 ? remainder : 0)).toFixed(2))),
+    requiredDocTypes: [],
+  }));
+}
 
 export function useCreatePurchaseOrderForm(onCreated: (code: string) => void) {
   const createMutation = useCreatePurchaseOrder();
-  const { data: plansPage, isLoading: plansLoading } = usePurchasePlans({ page: 1, pageSize: 200 });
-  const { data: suppliersPage } = useQuery({
-    queryKey: ['warehouse-suppliers', 'po-create'],
-    queryFn: () => suppliersService.list({ page: 1, pageSize: 200 }),
-  });
-
+  const [sourceKind, setSourceKind] = useState<'plan' | 'adhoc'>('plan');
   const [planCode, setPlanCode] = useState('');
   const [supplierName, setSupplierName] = useState('');
   const [note, setNote] = useState('');
   const [selectedLineIds, setSelectedLineIds] = useState<number[]>([]);
   const [qtyByLine, setQtyByLine] = useState<Record<number, string>>({});
   const [productSearch, setProductSearch] = useState('');
+  const [installmentCount, setInstallmentCount] = useState(1);
+  const [installments, setInstallments] = useState<PoInstallmentDraft[]>(
+    () => createInstallmentDrafts(1),
+  );
+
+  const { data: plansPage, isLoading: plansLoading } = usePurchasePlans({
+    page: 1,
+    pageSize: 200,
+    kind: sourceKind,
+    status: 'approved',
+  });
+  const { data: suppliersPage } = useQuery({
+    queryKey: ['warehouse-suppliers', 'po-create'],
+    queryFn: () => suppliersService.list({ page: 1, pageSize: 200 }),
+  });
 
   const { data: plan, isLoading: planLoading, isError: planError, error: planErr } = usePurchasePlan(
     planCode || undefined,
@@ -72,6 +94,11 @@ export function useCreatePurchaseOrderForm(onCreated: (code: string) => void) {
     setProductSearch('');
   };
 
+  const selectSourceKind = (next: 'plan' | 'adhoc') => {
+    setSourceKind(next);
+    selectPlan('');
+  };
+
   const selectSupplier = (next: string) => {
     setSupplierName(next);
     setSelectedLineIds([]);
@@ -105,13 +132,63 @@ export function useCreatePurchaseOrderForm(onCreated: (code: string) => void) {
     }
   };
 
+  const changeInstallmentCount = (count: number) => {
+    setInstallmentCount(count);
+    setInstallments(createInstallmentDrafts(count));
+  };
+
+  const changeInstallmentPercent = (index: number, value: string) => {
+    setInstallments(prev => prev.map((item, itemIndex) => (
+      itemIndex === index ? { ...item, percent: value } : item
+    )));
+  };
+
+  const addInstallmentDocType = (index: number) => {
+    setInstallments(prev => prev.map((item, itemIndex) => {
+      if (itemIndex !== index) return item;
+      const nextType = INSTALLMENT_DOC_TYPES.find(
+        type => !item.requiredDocTypes.includes(type),
+      ) ?? 'OTHER';
+      return { ...item, requiredDocTypes: [...item.requiredDocTypes, nextType] };
+    }));
+  };
+
+  const changeInstallmentDocType = (
+    installmentIndex: number,
+    docIndex: number,
+    value: string,
+  ) => {
+    setInstallments(prev => prev.map((item, itemIndex) => {
+      if (itemIndex !== installmentIndex) return item;
+      return {
+        ...item,
+        requiredDocTypes: item.requiredDocTypes.map(
+          (docType, currentDocIndex) => currentDocIndex === docIndex ? value : docType,
+        ),
+      };
+    }));
+  };
+
+  const removeInstallmentDocType = (installmentIndex: number, docIndex: number) => {
+    setInstallments(prev => prev.map((item, itemIndex) => (
+      itemIndex === installmentIndex
+        ? {
+            ...item,
+            requiredDocTypes: item.requiredDocTypes.filter((_, index) => index !== docIndex),
+          }
+        : item
+    )));
+  };
+
   const submit = async () => {
     if (!planCode) {
-      showToast('warning', 'Vui lòng chọn mã KHMH.');
+      showToast('warning', sourceKind === 'adhoc'
+        ? 'Vui lòng chọn phiếu mua hàng phát sinh.'
+        : 'Vui lòng chọn mã KHMH.');
       return;
     }
     if (!supplierName) {
-      showToast('warning', 'Vui lòng chọn nhà cung cấp theo KHMH.');
+      showToast('warning', 'Vui lòng chọn nhà cung cấp theo phiếu nguồn.');
       return;
     }
     if (!matchedSupplier) {
@@ -142,12 +219,37 @@ export function useCreatePurchaseOrderForm(onCreated: (code: string) => void) {
       return;
     }
 
+    const installmentPercents = installments.map(item => Number(item.percent));
+    if (installments.length < 1) {
+      showToast('warning', 'PO phải có ít nhất một đợt thanh toán.');
+      return;
+    }
+    if (installmentPercents.some(percent => !Number.isFinite(percent) || percent <= 0 || percent > 100)) {
+      showToast('warning', 'Tỷ lệ mỗi đợt phải lớn hơn 0 và không vượt quá 100%.');
+      return;
+    }
+    const installmentTotal = installmentPercents.reduce((sum, percent) => sum + percent, 0);
+    if (Math.abs(installmentTotal - 100) >= 0.001) {
+      showToast('warning', 'Tổng tỷ lệ các đợt thanh toán phải bằng 100%.');
+      return;
+    }
+    if (installments.some(item => item.requiredDocTypes.length === 0)) {
+      showToast('warning', 'Mỗi đợt thanh toán phải có ít nhất một loại chứng từ bắt buộc.');
+      return;
+    }
+
     try {
       const created = await createMutation.mutateAsync({
         planCode,
         supplierId: matchedSupplier.id,
         note: note.trim() || null,
         lines,
+        // BE: chỉ một trong hai — gửi chi tiết đợt (có % + chứng từ), không kèm installmentCount
+        installments: installments.map((item, index) => ({
+          stageNumber: index + 1,
+          percent: Number(item.percent),
+          requiredDocTypes: [...new Set(item.requiredDocTypes)],
+        })),
       });
       showToast('success', `Đã tạo PO ${created.code}.`);
       onCreated(created.code);
@@ -158,6 +260,8 @@ export function useCreatePurchaseOrderForm(onCreated: (code: string) => void) {
 
   return {
     createPending: createMutation.isPending,
+    sourceKind,
+    selectSourceKind,
     plans,
     plansLoading,
     plan,
@@ -174,6 +278,8 @@ export function useCreatePurchaseOrderForm(onCreated: (code: string) => void) {
     selectedLineIds,
     qtyByLine,
     setQtyByLine,
+    installmentCount,
+    installments,
     supplierLines,
     visibleSupplierLines,
     matchedSupplier,
@@ -184,6 +290,11 @@ export function useCreatePurchaseOrderForm(onCreated: (code: string) => void) {
     selectSupplier,
     toggleLine,
     toggleSelectAllVisible,
+    changeInstallmentCount,
+    changeInstallmentPercent,
+    addInstallmentDocType,
+    changeInstallmentDocType,
+    removeInstallmentDocType,
     submit,
   };
 }

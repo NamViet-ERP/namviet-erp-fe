@@ -34,6 +34,18 @@ function pathCell(m: MaterialApiDto, key: keyof MaterialApiDto['categoryPath']) 
   return m.categoryPath?.[key]?.trim() || '—';
 }
 
+/** Tách mã theo dấu `-` để hiển thị chip phân đoạn (prototype SCM-EPC). */
+function materialCodeParts(code: string): string[] {
+  return code.split('-').map(p => p.trim()).filter(Boolean);
+}
+
+function materialNameSubline(m: MaterialApiDto): string {
+  return [m.qualityStandard, m.technicalSpec]
+    .map(s => s?.trim())
+    .filter(Boolean)
+    .join(', ');
+}
+
 function isRequiredOnCreate(level: number) {
   return (MATERIAL_CREATE_REQUIRED_LEVELS as readonly number[]).includes(level);
 }
@@ -178,7 +190,7 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
   return (
     <div className="page-shell">
       <PageHeader
-        eyebrow="Kho hàng"
+        eyebrow="Vận hành"
         title="Danh mục vật tư"
         actions={
           <PermissionGate permission="wms.materials.create">
@@ -282,28 +294,51 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
                   </td>
                 </tr>
               ) : (
-                items.map(m => (
+                items.map(m => {
+                  const codeParts = materialCodeParts(m.materialCode);
+                  const nameSub = materialNameSubline(m);
+                  return (
                   <tr
                     key={m.materialCode}
                     className="table-row border-b border-[var(--md-outline-variant)] cursor-pointer hover:bg-[var(--md-surface-container-high)]"
                     onClick={() => setDetailCode(m.materialCode)}
                   >
+                    <td className="table-cell">
+                      <div className="mat-code-cell">
+                        <span className="mat-code-cell__badge">{m.materialCode}</span>
+                        {codeParts.length > 1 && (
+                          <div className="mat-code-cell__parts" aria-hidden>
+                            {codeParts.map((part, i) => (
+                              <span
+                                key={`${m.materialCode}-${i}`}
+                                className={`mat-code-cell__part mat-code-cell__part--${(i % 4) + 1}`}
+                              >
+                                {part}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        {m.isActive === false && (
+                          <span className="wms-badge-inactive">Ngừng SD</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="table-cell">
+                      <div className="mat-name-cell">
+                        <span className="mat-name-cell__title">{m.materialName}</span>
+                        {nameSub ? <span className="mat-name-cell__sub">{nameSub}</span> : null}
+                      </div>
+                    </td>
                     <td className="table-cell">{pathCell(m, 'danhMuc')}</td>
                     <td className="table-cell">{pathCell(m, 'nhomVatTu')}</td>
                     <td className="table-cell">{pathCell(m, 'loaiVatTu')}</td>
                     <td className="table-cell">{pathCell(m, 'phanLoai')}</td>
                     <td className="table-cell">{pathCell(m, 'kieu')}</td>
-                    <td className="table-cell font-mono font-bold text-[var(--md-primary)]">
-                      {m.materialCode}
-                      {m.isActive === false && (
-                        <span className="wms-badge-inactive">Ngừng SD</span>
-                      )}
-                    </td>
-                    <td className="table-cell font-semibold">{m.materialName}</td>
                     <td className="table-cell">{m.technicalSpec ?? '—'}</td>
                     <td className="table-cell">{m.qualityStandard ?? '—'}</td>
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -350,7 +385,7 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
         <div className="space-y-4 modal-form-bordered">
           {!createCategoriesLoading && (createOptions[0]?.length ?? 0) === 0 && (
             <p className="alert-banner alert-banner--error text-xs">
-              Chưa có dữ liệu cây vật tư. Vào <strong>Thiết lập → Cây vật tư</strong> để khai báo trước khi tạo vật tư mới.
+              Chưa có dữ liệu cây vật tư. Vào <strong>Vận hành → Thiết lập → Cây vật tư</strong> để khai báo trước khi tạo vật tư mới.
             </p>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">

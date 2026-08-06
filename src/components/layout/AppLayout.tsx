@@ -5,7 +5,7 @@ import Sidebar from './Sidebar';
 import ToastContainer, { showToast } from '../ui/Toast';
 import {
   warehouseMenu,
-  warehouseSettingsMenu,
+  operationsSettingsMenu,
   stocktakeMenu,
   membersMenu,
   recruitmentMenu,
@@ -13,6 +13,7 @@ import {
   technicalMenu,
   purchasingMenu,
   suppliersMenu,
+  operationsMenu,
 } from '../../constants/sidebarMenus';
 import { getSessionUser, canUserLogin, getSessionPermissions } from '../../constants/systemUsers';
 import { authService } from '../../services/authService';
@@ -26,7 +27,7 @@ import type { SidebarMenuItem } from '../../types';
 import PageLoader from '../ui/PageLoader';
 import type { SessionCheckResult } from '../../services/authService';
 
-type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin' | 'technical' | 'purchasing' | 'suppliers';
+type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin' | 'technical' | 'purchasing' | 'suppliers' | 'operations';
 
 export default function AppLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -107,6 +108,7 @@ export default function AppLayout() {
   }
 
   const currentModule: Module =
+    location.pathname.startsWith('/operations') ? 'operations' :
     location.pathname.startsWith('/stocktake') ? 'stocktake' :
     location.pathname.startsWith('/recruitment') ? 'recruitment' :
     location.pathname.startsWith('/members') ? 'members' :
@@ -115,22 +117,26 @@ export default function AppLayout() {
     location.pathname.startsWith('/suppliers') ? 'suppliers' :
     location.pathname.startsWith('/purchasing') ? 'purchasing' : 'warehouse';
 
-  const isWarehouseSettings =
-    currentModule === 'warehouse' && location.pathname.startsWith('/warehouse/settings');
+  const isOperationsSettings =
+    currentModule === 'operations' && location.pathname.startsWith('/operations/settings');
 
   const menuItems: SidebarMenuItem[] =
-    isWarehouseSettings ? warehouseSettingsMenu :
+    isOperationsSettings ? operationsSettingsMenu :
     currentModule === 'stocktake' ? stocktakeMenu :
     currentModule === 'recruitment' ? recruitmentMenu :
     currentModule === 'members' ? membersMenu :
     currentModule === 'admin' ? adminMenu :
     currentModule === 'technical' ? technicalMenu :
     currentModule === 'suppliers' ? suppliersMenu :
-    currentModule === 'purchasing' ? purchasingMenu : warehouseMenu;
+    currentModule === 'purchasing' ? purchasingMenu :
+    currentModule === 'operations' ? operationsMenu : warehouseMenu;
 
   const hideSidebar = location.pathname === '/profile' || location.pathname === '/warehouse/dashboard' || location.pathname === '/dashboard';
   const isPortalDashboard = hideSidebar;
-  const isWmsModule = currentModule === 'warehouse' || currentModule === 'stocktake';
+  const isWmsModule =
+    currentModule === 'warehouse'
+    || currentModule === 'stocktake'
+    || currentModule === 'operations';
   const shellModuleClass = isWmsModule ? 'app-shell--module app-shell--wms' : 'app-shell--module';
 
   const mainClass = [
@@ -148,8 +154,8 @@ export default function AppLayout() {
           menuItems={menuItems}
           permissions={permissions}
           currentModule={currentModule}
-          contextLabel={isWarehouseSettings ? 'Thiết lập' : undefined}
-          onBack={isWarehouseSettings ? () => navigate('/warehouse/dashboard-warehouse') : undefined}
+          contextLabel={isOperationsSettings ? 'Thiết lập' : undefined}
+          onBack={isOperationsSettings ? () => navigate('/operations/materials') : undefined}
         />
       )}
       <main className={mainClass}>

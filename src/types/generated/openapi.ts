@@ -6835,6 +6835,234 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/purchasing/orders/{code}/installments/{stageNumber}/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                    stageNumber: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseOrderInstallmentDocumentDto"][];
+                        "application/json": components["schemas"]["PurchaseOrderInstallmentDocumentDto"][];
+                        "text/json": components["schemas"]["PurchaseOrderInstallmentDocumentDto"][];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                    stageNumber: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file?: string;
+                        docType?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseOrderInstallmentDocumentDto"];
+                        "application/json": components["schemas"]["PurchaseOrderInstallmentDocumentDto"];
+                        "text/json": components["schemas"]["PurchaseOrderInstallmentDocumentDto"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/orders/{code}/installments/{stageNumber}/documents/{documentId}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                    stageNumber: number;
+                    documentId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/orders/{code}/installments/{stageNumber}/documents/{documentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                    stageNumber: number;
+                    documentId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/orders/{code}/installments/{stageNumber}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                    stageNumber: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseOrderInstallmentDto"];
+                        "application/json": components["schemas"]["PurchaseOrderInstallmentDto"];
+                        "text/json": components["schemas"]["PurchaseOrderInstallmentDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/payment-plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                    search?: string;
+                    projectCode?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchasePaymentPlanPagedResponse"];
+                        "application/json": components["schemas"]["PurchasePaymentPlanPagedResponse"];
+                        "text/json": components["schemas"]["PurchasePaymentPlanPagedResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/purchasing/payments": {
         parameters: {
             query?: never;
@@ -6899,6 +7127,45 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/payments/next-stage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    poCode?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchasePaymentNextStageDto"];
+                        "application/json": components["schemas"]["PurchasePaymentNextStageDto"];
+                        "text/json": components["schemas"]["PurchasePaymentNextStageDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -7079,6 +7346,7 @@ export interface paths {
                     search?: string;
                     dateFrom?: string;
                     dateTo?: string;
+                    kind?: string;
                 };
                 header?: never;
                 path?: never;
@@ -7256,6 +7524,207 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/plans/{code}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchasePlanDetailDto"];
+                        "application/json": components["schemas"]["PurchasePlanDetailDto"];
+                        "text/json": components["schemas"]["PurchasePlanDetailDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/plans/{code}/approve-l1": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchasePlanDetailDto"];
+                        "application/json": components["schemas"]["PurchasePlanDetailDto"];
+                        "text/json": components["schemas"]["PurchasePlanDetailDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/plans/{code}/approve-l2": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchasePlanDetailDto"];
+                        "application/json": components["schemas"]["PurchasePlanDetailDto"];
+                        "text/json": components["schemas"]["PurchasePlanDetailDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/plans/{code}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["RejectPurchasePlanRequest"];
+                    "text/json": components["schemas"]["RejectPurchasePlanRequest"];
+                    "application/*+json": components["schemas"]["RejectPurchasePlanRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchasePlanDetailDto"];
+                        "application/json": components["schemas"]["PurchasePlanDetailDto"];
+                        "text/json": components["schemas"]["PurchasePlanDetailDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/plans/{code}/remake": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchasePlanDetailDto"];
+                        "application/json": components["schemas"]["PurchasePlanDetailDto"];
+                        "text/json": components["schemas"]["PurchasePlanDetailDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -8807,6 +9276,95 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/supplier-delivery-evaluations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    supplierId?: number;
+                    poCode?: string;
+                    status?: string;
+                    search?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierDeliveryEvaluationPagedResponse"];
+                        "application/json": components["schemas"]["SupplierDeliveryEvaluationPagedResponse"];
+                        "text/json": components["schemas"]["SupplierDeliveryEvaluationPagedResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/supplier-delivery-evaluations/{id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CompleteSupplierDeliveryEvaluationRequest"];
+                    "text/json": components["schemas"]["CompleteSupplierDeliveryEvaluationRequest"];
+                    "application/*+json": components["schemas"]["CompleteSupplierDeliveryEvaluationRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierDeliveryEvaluationDto"];
+                        "application/json": components["schemas"]["SupplierDeliveryEvaluationDto"];
+                        "text/json": components["schemas"]["SupplierDeliveryEvaluationDto"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -10567,6 +11125,19 @@ export interface components {
             /** Format: int32 */
             readonly totalPages: number;
         };
+        CompleteSupplierDeliveryEvaluationRequest: {
+            /** Format: double */
+            score: number;
+            /** Format: double */
+            onTimeDeliveryRate: number;
+            /** Format: double */
+            defectRate: number;
+            /** Format: double */
+            warrantyCompletionRate: number;
+            /** Format: date */
+            evaluatedAt?: string | null;
+            note?: string | null;
+        };
         ConfirmPurchasePlanImportRequest: {
             projectCode: string;
             note?: string | null;
@@ -10802,6 +11373,8 @@ export interface components {
             /** Format: double */
             materialBudget: number;
             warehouseKeepers?: components["schemas"]["ProjectWarehouseKeeperDto"][] | null;
+            clientName?: string | null;
+            scMembers?: string | null;
         };
         CreatePurchaseOrderLineRequest: {
             /** Format: int32 */
@@ -10822,6 +11395,9 @@ export interface components {
             orderDate?: string | null;
             note?: string | null;
             lines: components["schemas"]["CreatePurchaseOrderLineRequest"][];
+            /** Format: int32 */
+            installmentCount?: number | null;
+            installments?: components["schemas"]["PurchaseOrderInstallmentRequest"][] | null;
         };
         CreatePurchasePaymentRequest: {
             poCode: string;
@@ -10900,6 +11476,7 @@ export interface components {
         CreatePurchasePlanRequest: {
             projectCode: string;
             note?: string | null;
+            kind: string;
             lines?: components["schemas"]["CreatePurchasePlanLineRequest"][] | null;
         };
         CreateRecruitmentCostRequest: {
@@ -11401,6 +11978,8 @@ export interface components {
             /** Format: double */
             materialBudget: number;
             status: string;
+            clientName?: string | null;
+            scMembers?: string | null;
             /** Format: double */
             stockActualQty: number;
             /** Format: double */
@@ -11585,6 +12164,7 @@ export interface components {
             placedAt?: string | null;
             createdByName?: string | null;
             lines: components["schemas"]["PurchaseOrderLineDto"][];
+            installments: components["schemas"]["PurchaseOrderInstallmentDto"][];
         };
         PurchaseOrderDto: {
             code: string;
@@ -11617,6 +12197,37 @@ export interface components {
             /** Format: date-time */
             placedAt?: string | null;
             createdByName?: string | null;
+        };
+        PurchaseOrderInstallmentDocumentDto: {
+            /** Format: int32 */
+            id: number;
+            /** Format: int32 */
+            installmentId: number;
+            docType: string;
+            fileName: string;
+            contentType: string;
+            storagePath: string;
+            /** Format: date-time */
+            uploadedAt: string;
+            uploadedByName?: string | null;
+        };
+        PurchaseOrderInstallmentDto: {
+            /** Format: int32 */
+            id: number;
+            /** Format: int32 */
+            stageNumber: number;
+            /** Format: double */
+            percent: number;
+            status: string;
+            requiredDocTypes: string[];
+            documents: components["schemas"]["PurchaseOrderInstallmentDocumentDto"][];
+        };
+        PurchaseOrderInstallmentRequest: {
+            /** Format: int32 */
+            stageNumber: number;
+            /** Format: double */
+            percent: number;
+            requiredDocTypes: string[];
         };
         PurchaseOrderLineDto: {
             /** Format: int32 */
@@ -11657,6 +12268,8 @@ export interface components {
             code: string;
             poCode: string;
             /** Format: int32 */
+            stageNumber: number;
+            /** Format: int32 */
             supplierId?: number | null;
             supplierName?: string | null;
             invoiceNo?: string | null;
@@ -11670,6 +12283,20 @@ export interface components {
             createdAt: string;
             createdByName?: string | null;
         };
+        PurchasePaymentNextStageDto: {
+            poCode: string;
+            /** Format: int32 */
+            stageNumber: number;
+            /** Format: int32 */
+            totalStages: number;
+            /** Format: double */
+            percent: number;
+            /** Format: double */
+            amount: number;
+            /** Format: double */
+            poTotalAmount: number;
+            missingDocTypes: string[];
+        };
         PurchasePaymentPagedResponse: {
             items: components["schemas"]["PurchasePaymentDto"][];
             /** Format: int32 */
@@ -11680,6 +12307,41 @@ export interface components {
             pageSize: number;
             /** Format: int32 */
             totalPages: number;
+        };
+        PurchasePaymentPlanPagedResponse: {
+            items: components["schemas"]["PurchasePaymentPlanRowDto"][];
+            /** Format: int32 */
+            totalCount: number;
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalPages: number;
+        };
+        PurchasePaymentPlanRowDto: {
+            poCode: string;
+            projectCode?: string | null;
+            projectName?: string | null;
+            /** Format: double */
+            poTotalAmount: number;
+            poApprovalStatus: string;
+            poPaymentStatus: string;
+            /** Format: int32 */
+            completedStages: number;
+            /** Format: int32 */
+            totalStages: number;
+            stages: components["schemas"]["PurchasePaymentPlanStageDto"][];
+        };
+        PurchasePaymentPlanStageDto: {
+            /** Format: int32 */
+            stageNumber: number;
+            /** Format: double */
+            percent: number;
+            /** Format: double */
+            amount: number;
+            paymentStatus: string;
+            paymentCode?: string | null;
         };
         PurchasePlanDetailDto: {
             code: string;
@@ -11698,9 +12360,24 @@ export interface components {
             /** Format: double */
             paidTotal: number;
             status: string;
+            kind: string;
             note?: string | null;
             createdByName?: string | null;
             lines: components["schemas"]["PurchasePlanLineDto"][];
+            /** Format: date-time */
+            submittedAt?: string | null;
+            l1ApprovedByName?: string | null;
+            /** Format: date-time */
+            l1ApprovedAt?: string | null;
+            l2ApprovedByName?: string | null;
+            /** Format: date-time */
+            l2ApprovedAt?: string | null;
+            rejectedByName?: string | null;
+            /** Format: date-time */
+            rejectedAt?: string | null;
+            rejectReason?: string | null;
+            remadeFromCode?: string | null;
+            remadeToCode?: string | null;
         };
         PurchasePlanDto: {
             code: string;
@@ -11717,8 +12394,18 @@ export interface components {
             /** Format: double */
             paidTotal: number;
             status: string;
+            kind: string;
             note?: string | null;
             createdByName?: string | null;
+            rejectReason?: string | null;
+            remadeFromCode?: string | null;
+            remadeToCode?: string | null;
+            l1ApprovedByName?: string | null;
+            /** Format: date-time */
+            l1ApprovedAt?: string | null;
+            l2ApprovedByName?: string | null;
+            /** Format: date-time */
+            l2ApprovedAt?: string | null;
         };
         PurchasePlanImportColumnMapDto: {
             field: string;
@@ -12133,6 +12820,9 @@ export interface components {
             department?: string | null;
             role: string;
         };
+        RejectPurchasePlanRequest: {
+            reason?: string | null;
+        };
         ResetAdminPasswordRequest: {
             password: string;
         };
@@ -12255,6 +12945,45 @@ export interface components {
             paid: number;
             /** Format: double */
             remaining: number;
+        };
+        SupplierDeliveryEvaluationDto: {
+            /** Format: int32 */
+            id: number;
+            /** Format: int32 */
+            supplierId: number;
+            supplierName: string;
+            poCode: string;
+            importTicketCode: string;
+            /** Format: date-time */
+            receivedAt: string;
+            /** Format: date-time */
+            dueAt: string;
+            status: string;
+            isOverdue: boolean;
+            /** Format: double */
+            score?: number | null;
+            grade?: string | null;
+            /** Format: double */
+            onTimeDeliveryRate?: number | null;
+            /** Format: double */
+            defectRate?: number | null;
+            /** Format: double */
+            warrantyCompletionRate?: number | null;
+            note?: string | null;
+            evaluatedByName?: string | null;
+            /** Format: date */
+            evaluatedAt?: string | null;
+        };
+        SupplierDeliveryEvaluationPagedResponse: {
+            items: components["schemas"]["SupplierDeliveryEvaluationDto"][];
+            /** Format: int32 */
+            totalCount: number;
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalPages: number;
         };
         SupplierDto: {
             /** Format: int32 */
@@ -12524,12 +13253,17 @@ export interface components {
             materialBudget: number;
             status: components["schemas"]["ProjectStatus"];
             warehouseKeepers?: components["schemas"]["ProjectWarehouseKeeperDto"][] | null;
+            clientName?: string | null;
+            scMembers?: string | null;
         };
         UpdatePurchaseOrderRequest: {
             note?: string | null;
             /** Format: date */
             orderDate?: string | null;
             lines: components["schemas"]["CreatePurchaseOrderLineRequest"][];
+            /** Format: int32 */
+            installmentCount?: number | null;
+            installments?: components["schemas"]["PurchaseOrderInstallmentRequest"][] | null;
         };
         UpdatePurchasePlanRequest: {
             note?: string | null;

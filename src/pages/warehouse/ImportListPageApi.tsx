@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { useLocation } from 'react-router-dom';
 
-import { Plus, Download } from 'lucide-react';
+import { Download } from 'lucide-react';
 
 import type { ImportBudgetExceededApiDto } from '../../types/api/importBudgetApi';
 import type { Import } from '../../types';
@@ -16,7 +16,6 @@ import Pagination from '../../components/ui/Pagination';
 
 import PageHeader from '../../components/ui/PageHeader';
 
-import PermissionGate from '../../components/auth/PermissionGate';
 import { usePermission } from '../../hooks/usePermission';
 
 import HrmPanel from '../../components/hr/HrmPanel';
@@ -54,7 +53,6 @@ import {
   useApproveImport,
 
   useSubmitImport,
-  useDeleteImport,
   useCreateImportFromPo,
   usePoImportPreview,
 
@@ -119,7 +117,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
   const [pageSize, setPageSize] = useState(DEFAULT_LIST_PAGE_SIZE);
 
-  const [showCreate, setShowCreate] = useState(!!initialProjectCode);
+  const [showCreate, setShowCreate] = useState(false);
 
   const [showDetail, setShowDetail] = useState(false);
 
@@ -129,8 +127,6 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
   const [budgetConfirmImport, setBudgetConfirmImport] = useState<Import | null>(null);
 
   const [budgetExceeded, setBudgetExceeded] = useState<ImportBudgetExceededApiDto | null>(null);
-
-  const [deleteTarget, setDeleteTarget] = useState<Import | null>(null);
 
   const [editing, setEditing] = useState<Import | null>(null);
 
@@ -172,13 +168,12 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
   const approveMutation = useApproveImport();
 
   const submitMutation = useSubmitImport();
-  const deleteMutation = useDeleteImport();
 
   const { has } = usePermission();
   const canEditImport = has('wms.imports.update');
-  const canSubmitImport = has('wms.imports.update');
   const canApproveImport = has('wms.imports.approve');
-  const canDeleteImport = canEditImport;
+  const canViewPrices = has('wms.prices.view');
+  // Màn Kho hàng: không tạo / chốt dự kiến / xóa — làm trên PO.
 
 
 
@@ -204,15 +199,19 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
   const voucherTabs = getVoucherTabLabels('import');
 
+  // Thủ kho: chỉ dự kiến + thực tế (phiếu nháp quản lý trên PO).
+  const warehouseImports = useMemo(
+    () => imports.filter(i => i.status === 'pending' || i.status === 'approved'),
+    [imports],
+  );
+
   const tabs = [
 
-    { id: 'all', label: 'Tất cả', count: imports.length },
+    { id: 'all', label: 'Tất cả', count: warehouseImports.length },
 
-    { id: 'draft', label: voucherTabs.draft, count: imports.filter(i => i.status === 'draft').length },
+    { id: 'pending', label: voucherTabs.pending, count: warehouseImports.filter(i => i.status === 'pending').length },
 
-    { id: 'pending', label: voucherTabs.pending, count: imports.filter(i => i.status === 'pending').length },
-
-    { id: 'approved', label: voucherTabs.approved, count: imports.filter(i => i.status === 'approved').length },
+    { id: 'approved', label: voucherTabs.approved, count: warehouseImports.filter(i => i.status === 'approved').length },
 
   ];
 
@@ -220,7 +219,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
   const filtered = useMemo(() => {
 
-    let list = imports;
+    let list = warehouseImports;
 
     if (activeTab !== 'all') list = list.filter(i => i.status === activeTab);
 
@@ -246,7 +245,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
     return list;
 
-  }, [imports, activeTab, search]);
+  }, [warehouseImports, activeTab, search]);
 
 
 
@@ -683,6 +682,44 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
     }
   };
 
+  /** Lưu thay đổi (nếu có) rồi duyệt thực tế từ form sửa. */
+  const handleApproveFromEdit = async (payload?: { evaluation: string }) => {
+    if (!editing || editing.status !== 'pending') return;
+
+    const dto = buildDto('pending');
+    if (!dto) return;
+
+    const evaluation = (payload?.evaluation ?? '').trim();
+    const hasPhoto = (editing.attachments ?? []).some(a => a.kind === 'photo');
+    const hasDocument = (editing.attachments ?? []).some(a => a.kind === 'document');
+    if (!evaluation || !hasPhoto || !hasDocument) {
+      showToast(
+        'error',
+        !evaluation
+          ? 'Thiếu đánh giá nhận hàng trước khi duyệt.'
+          : !hasPhoto
+            ? 'Thiếu ảnh nhận hàng. Tải ảnh trong phần chứng từ.'
+            : 'Thiếu file chứng từ. Tải file trong phần chứng từ.',
+      );
+      return;
+    }
+
+    try {
+      await updateMutation.mutateAsync({ id: editing.id, dto: { ...dto, status: editing.status } });
+      let toApprove = editing;
+      if (evaluation !== (editing.receiptEvaluation ?? '').trim()) {
+        toApprove = await importsService.updateReceiptEvaluation(editing.id, evaluation);
+      } else {
+        toApprove = await importsService.getById(editing.id);
+      }
+      await runApprove(toApprove, false);
+      setShowCreate(false);
+      resetForm();
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không thể duyệt phiếu'));
+    }
+  };
+
 
 
   const handleExportExcel = async () => {
@@ -725,30 +762,6 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
     setShowDetail(true);
 
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!deleteTarget) return;
-    if (deleteTarget.status !== 'draft') {
-      showToast('error', 'Chỉ phiếu nháp mới được xóa.');
-      setDeleteTarget(null);
-      return;
-    }
-    try {
-      await deleteMutation.mutateAsync(deleteTarget.id);
-      showToast('success', `Đã xóa ${deleteTarget.voucherCode}.`);
-      if (selected?.id === deleteTarget.id) {
-        setShowDetail(false);
-        setSelected(null);
-      }
-      if (editing?.id === deleteTarget.id) {
-        setEditing(null);
-        setShowCreate(false);
-      }
-      setDeleteTarget(null);
-    } catch (err) {
-      showToast('error', getApiErrorMessage(err, 'Không xóa được phiếu nhập.'));
-    }
   };
 
   const reloadImport = async (id: string) => {
@@ -811,7 +824,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
         title="Nhập kho"
 
-        subtitle="Nhập vật tư từ NCC vào kho dự án — chọn NCC, thêm vật tư và đơn giá."
+        subtitle="Phiếu nhập dự kiến chờ duyệt thực tế và phiếu đã nhập — tạo phiếu nháp/dự kiến trên đơn hàng PO."
 
         actions={
 
@@ -822,22 +835,6 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
               <Download size={14} /> {isExporting ? 'Đang xuất…' : 'Xuất Excel'}
 
             </button>
-
-            <PermissionGate permission="wms.imports.create">
-              <button
-
-                type="button"
-
-                className="btn btn-primary flex items-center gap-2 rounded-full px-5"
-
-                onClick={() => { resetForm(); setShowCreate(true); }}
-
-              >
-
-                <Plus size={16} /> Tạo phiếu nhập
-
-              </button>
-            </PermissionGate>
 
           </>
 
@@ -893,17 +890,13 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
           onSubmit={handleSubmit}
 
-          onApprove={handleApprove}
-
-          onDelete={setDeleteTarget}
-
           canEdit={canEditImport}
 
-          canSubmit={canSubmitImport}
+          canSubmit={false}
 
-          canApprove={canApproveImport}
+          canDelete={false}
 
-          canDelete={canDeleteImport}
+          showPrices={canViewPrices}
 
         />
 
@@ -943,7 +936,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
         onClose={() => { setShowCreate(false); resetForm(); }}
 
-        isPending={createMutation.isPending || createFromPoMutation.isPending || updateMutation.isPending}
+        isPending={createMutation.isPending || createFromPoMutation.isPending || updateMutation.isPending || approveMutation.isPending}
 
         isImportParsing={isImportParsing}
 
@@ -1023,13 +1016,20 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
         editVoucher={
           editing
-            ? { code: editing.voucherCode, receiptEvaluation: editing.receiptEvaluation }
+            ? {
+                code: editing.voucherCode,
+                receiptEvaluation: editing.receiptEvaluation,
+                status: editing.status,
+              }
             : null
         }
 
         materialUnit={materialUnit}
         editAttachments={editing?.attachments ?? []}
         isEvidencePending={isEvidencePending}
+        canApprove={canApproveImport}
+        onApprove={payload => { void handleApproveFromEdit(payload); }}
+        isApproving={approveMutation.isPending}
         onUploadEditAttachment={
           editing && canEditImport
             ? (file, kind) => handleUploadAttachment(editing, file, kind)
@@ -1085,33 +1085,13 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
         onEdit={canEditImport ? openEdit : undefined}
 
+        onApprove={canApproveImport ? (imp) => { void handleApprove(imp); } : undefined}
+
+        isApproving={approveMutation.isPending}
+
         onDownloadAttachment={handleDownloadAttachment}
 
-      />
-
-
-
-      <ConfirmDialog
-
-        isOpen={deleteTarget != null}
-
-        onClose={() => setDeleteTarget(null)}
-
-        onConfirm={() => void handleConfirmDelete()}
-
-        title="Xóa phiếu nhập kho"
-
-        variant="danger"
-
-        confirmLabel="Xóa phiếu"
-
-        isLoading={deleteMutation.isPending}
-
-        message={
-          deleteTarget
-            ? `Xóa phiếu nháp ${deleteTarget.voucherCode}? Thao tác không hoàn tác.`
-            : ''
-        }
+        showPrices={canViewPrices}
 
       />
 

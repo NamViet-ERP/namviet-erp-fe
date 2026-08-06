@@ -9,6 +9,7 @@ import {
   Eye,
   FileText,
   FolderKanban,
+  AlertTriangle,
   Printer,
   Save,
   Send,
@@ -29,6 +30,7 @@ import {
   usePurchasePayment,
   useSubmitPurchasePayment,
 } from '../../hooks/usePurchasePayments';
+import { usePurchasePaymentNextStage } from '../../hooks/usePurchasePaymentPlans';
 import { usePurchaseOrder, usePurchaseOrders } from '../../hooks/usePurchaseOrders';
 import { usePermission } from '../../hooks/usePermission';
 import { getApiErrorMessage } from '../../lib/apiClient';
@@ -80,11 +82,20 @@ export default function PurchasePaymentDetailPage() {
   const paymentQuery = usePurchasePayment(isCreate ? undefined : code);
   const ordersQuery = usePurchaseOrders({ page: 1, pageSize: 200 });
   const orderQuery = usePurchaseOrder(poCode || undefined);
+  const nextStageQuery = usePurchasePaymentNextStage(isCreate ? poCode || undefined : undefined);
 
   const orders = ordersQuery.data?.items ?? [];
   const payment = paymentQuery.data;
   const order = orderQuery.data;
+  const nextStage = nextStageQuery.data;
   const hasPoContext = Boolean(order || payment);
+
+  const missingDocTypes = useMemo(() => {
+    if (!isCreate || !nextStage) return [] as string[];
+    return nextStage.missingDocTypes;
+  }, [isCreate, nextStage]);
+
+  const docsGateBlocked = isCreate && Boolean(nextStage) && missingDocTypes.length > 0;
 
   useEffect(() => {
     if (!isCreate && payment) {
@@ -98,15 +109,19 @@ export default function PurchasePaymentDetailPage() {
 
   useEffect(() => {
     if (!isCreate || !order) return;
-    setAmount(formatCurrencyInput(order.totalAmount ?? 0));
+    if (nextStage) {
+      setAmount(formatCurrencyInput(nextStage.amount));
+    } else {
+      setAmount(formatCurrencyInput(order.totalAmount ?? 0));
+    }
     setDueDate(order.paymentDueDate ? String(order.paymentDueDate).slice(0, 10) : todayIso());
-  }, [isCreate, order]);
+  }, [isCreate, order, nextStage]);
 
   const amountNum = useMemo(() => {
     const n = parseCurrencyInput(amount);
     if (n > 0) return n;
-    return order?.totalAmount ?? payment?.amount ?? 0;
-  }, [amount, order?.totalAmount, payment?.amount]);
+    return nextStage?.amount ?? order?.totalAmount ?? payment?.amount ?? 0;
+  }, [amount, nextStage?.amount, order?.totalAmount, payment?.amount]);
 
   const previewModel: DnttPreviewModel = useMemo(() => {
     const lines = (order?.lines ?? []).map(l => ({
@@ -153,11 +168,22 @@ export default function PurchasePaymentDetailPage() {
       showToast('warning', 'Số tiền phải > 0.');
       return;
     }
+    if (!nextStage) {
+      showToast('warning', 'PO này không còn đợt cần tạo DNTT (chưa duyệt / đã đủ / đang chờ đợt hiện tại).');
+      return;
+    }
+    if (missingDocTypes.length > 0) {
+      showToast(
+        'warning',
+        `Chưa đủ chứng từ bắt buộc đợt ${nextStage.stageNumber}: ${missingDocTypes.join(', ')}.`,
+      );
+      return;
+    }
     try {
       const created = await createMutation.mutateAsync({
         poCode: poCode.trim(),
         invoiceNo: invoiceNo.trim() || null,
-        amount: amountNum,
+        amount: nextStage.amount,
         dueDate,
         note: note.trim() || null,
       });
@@ -251,7 +277,12 @@ export default function PurchasePaymentDetailPage() {
                 <button
                   type="button"
                   className="btn btn-primary btn-sm"
-                  disabled={createMutation.isPending}
+                  disabled={createMutation.isPending || docsGateBlocked}
+                  title={
+                    docsGateBlocked
+                      ? `Thiếu chứng từ: ${missingDocTypes.join(', ')}`
+                      : undefined
+                  }
                   onClick={() => { void onSave(); }}
                 >
                   <Save size={15} strokeWidth={1.75} aria-hidden />
@@ -266,7 +297,7 @@ export default function PurchasePaymentDetailPage() {
                   onClick={() => { void onSubmitPayment(); }}
                 >
                   <Send size={15} strokeWidth={1.75} aria-hidden />
-                  {submitMutation.isPending ? 'Đang gửi…' : 'Gửi'}
+                  {submitMutation.isPending ? 'Đang gửi…' : 'Gửi đề nghị'}
                 </button>
               ) : null}
               {!isCreate && payment?.status === 'submitted' ? (
@@ -279,7 +310,7 @@ export default function PurchasePaymentDetailPage() {
                       onClick={() => { void onCancelPayment(); }}
                     >
                       <XCircle size={15} strokeWidth={1.75} aria-hidden />
-                      {cancelMutation.isPending ? 'Đang hủy…' : 'Hủy'}
+                      {cancelMutation.isPending ? 'Đang hủy…' : 'Hủy đề nghị'}
                     </button>
                   ) : null}
                   {canPay ? (
@@ -290,7 +321,7 @@ export default function PurchasePaymentDetailPage() {
                       onClick={() => { void onPayPayment(); }}
                     >
                       <CircleCheck size={15} strokeWidth={1.75} aria-hidden />
-                      {payMutation.isPending ? 'Đang xử lý…' : 'Thanh toán'}
+                      {payMutation.isPending ? 'Đang xử lý…' : 'Ghi nhận đã thanh toán'}
                     </button>
                   ) : null}
                 </>
@@ -390,6 +421,52 @@ export default function PurchasePaymentDetailPage() {
                   </div>
                 </div>
               )}
+
+              {isCreate && poCode && nextStage ? (
+                <div className="pur-dntt__stage-banner" role="status">
+                  <CircleCheck size={16} strokeWidth={1.75} aria-hidden />
+                  <div>
+                    <strong>
+                      Đợt {nextStage.stageNumber}/{nextStage.totalStages}
+                    </strong>
+                    <p>
+                      DNTT tuần tự — số tiền đề xuất {formatCurrencyFull(nextStage.amount)}
+                      {' '}({nextStage.percent}% giá trị PO).
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+              {docsGateBlocked ? (
+                <div className="pur-dntt__stage-banner pur-dntt__stage-banner--warn" role="alert">
+                  <AlertTriangle size={16} strokeWidth={1.75} aria-hidden />
+                  <div>
+                    <strong>Chưa đủ chứng từ đợt {nextStage?.stageNumber}</strong>
+                    <p>
+                      Thiếu: {missingDocTypes.join(', ')}. Tải đủ file trên chi tiết PO trước khi tạo DNTT.
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+              {isCreate && poCode && order && !nextStageQuery.isLoading && !nextStage ? (
+                <div className="pur-dntt__stage-banner pur-dntt__stage-banner--warn" role="status">
+                  <AlertTriangle size={16} strokeWidth={1.75} aria-hidden />
+                  <div>
+                    <strong>Không còn đợt cần tạo DNTT</strong>
+                    <p>
+                      PO chưa duyệt, chưa có đợt, đã đủ DNTT, hoặc đang chờ thanh toán đợt hiện tại.
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+              {!isCreate && payment ? (
+                <div className="pur-dntt__stage-banner" role="status">
+                  <CircleCheck size={16} strokeWidth={1.75} aria-hidden />
+                  <div>
+                    <strong>Đợt {payment.stageNumber}</strong>
+                    <p>DNTT gắn đợt thanh toán số {payment.stageNumber} của {payment.poCode}.</p>
+                  </div>
+                </div>
+              ) : null}
 
               <div className="pur-dntt__grid2">
                 <FormField label="Số hóa đơn NCC" className="pur-dntt__ff">

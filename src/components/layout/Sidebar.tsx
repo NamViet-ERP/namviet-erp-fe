@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
-import { ChevronDown, ChevronsLeft, ChevronLeft, Warehouse as WarehouseIcon, ClipboardCheck, Users, UserCheck, ShieldCheck, Settings, Wrench, ShoppingCart, Building2 } from 'lucide-react';
+import { ChevronDown, ChevronsLeft, ChevronLeft, Warehouse as WarehouseIcon, ClipboardCheck, Users, UserCheck, ShieldCheck, Settings, Wrench, ShoppingCart, Building2, Activity } from 'lucide-react';
 import type { SidebarMenuItem } from '../../types';
 import type { LucideIcon } from 'lucide-react';
 import type { PermissionKey } from '../../lib/permissions';
 import { handlePermissionNavClick, isNavItemAccessible } from '../../lib/protectedNavigation';
 
-type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin' | 'technical' | 'purchasing' | 'suppliers';
+type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin' | 'technical' | 'purchasing' | 'suppliers' | 'operations';
 
 const moduleIcons: Record<Module, LucideIcon> = { 
   warehouse: WarehouseIcon, 
@@ -18,6 +18,7 @@ const moduleIcons: Record<Module, LucideIcon> = {
   technical: Wrench,
   purchasing: ShoppingCart,
   suppliers: Building2,
+  operations: Activity,
 };
 const moduleLabels: Record<Module, string> = {
   warehouse: 'KHO HÀNG',
@@ -28,6 +29,7 @@ const moduleLabels: Record<Module, string> = {
   technical: 'KỸ THUẬT',
   purchasing: 'MUA HÀNG',
   suppliers: 'NHÀ CUNG CẤP',
+  operations: 'VẬN HÀNH',
 };
 
 interface SidebarProps {
@@ -48,6 +50,7 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [activePopover, setActivePopover] = useState<string | null>(null);
   const [flyoutStyle, setFlyoutStyle] = useState<React.CSSProperties>({});
+  const [tipStyle, setTipStyle] = useState<React.CSSProperties>({});
   const hoverTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const itemRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -129,6 +132,16 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
     if (hoverTimeout.current) clearTimeout(hoverTimeout.current);
     setHoveredItem(item.id);
     if (activePopover && activePopover !== item.id) setActivePopover(null);
+    if (!(item.children?.length) && itemRefs.current[item.id]) {
+      const rect = itemRefs.current[item.id]!.getBoundingClientRect();
+      setTipStyle({
+        position: 'fixed',
+        top: `${rect.top + rect.height / 2}px`,
+        left: `${rect.right + 8}px`,
+        transform: 'translateY(-50%)',
+        zIndex: 99999,
+      });
+    }
   };
   const handleItemMouseLeave = () => {
     if (!collapsed) return;
@@ -148,6 +161,10 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
   const popoverItemId = activePopover || hoveredItem;
   const popoverItemRaw = collapsed && popoverItemId ? menuItems.find(i => i.id === popoverItemId) : null;
   const popoverItem = (popoverItemRaw?.children?.length ?? 0) > 0 ? popoverItemRaw : null;
+  const tipItem =
+    collapsed && hoveredItem && !activePopover && !popoverItem
+      ? menuItems.find(i => i.id === hoveredItem && !(i.children?.length)) ?? null
+      : null;
 
   const updateFlyoutPosition = useCallback(() => {
     if (!popoverItem || !popoverItemId || !itemRefs.current[popoverItemId]) return;
@@ -161,6 +178,18 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
     });
   }, [popoverItem, popoverItemId]);
 
+  const updateTipPosition = useCallback(() => {
+    if (!tipItem || !itemRefs.current[tipItem.id]) return;
+    const rect = itemRefs.current[tipItem.id]!.getBoundingClientRect();
+    setTipStyle({
+      position: 'fixed',
+      top: `${rect.top + rect.height / 2}px`,
+      left: `${rect.right + 8}px`,
+      transform: 'translateY(-50%)',
+      zIndex: 99999,
+    });
+  }, [tipItem]);
+
   useEffect(() => {
     if (popoverItem) {
       updateFlyoutPosition();
@@ -172,6 +201,18 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
       };
     }
   }, [popoverItem, updateFlyoutPosition]);
+
+  useEffect(() => {
+    if (tipItem) {
+      updateTipPosition();
+      window.addEventListener('scroll', updateTipPosition, true);
+      window.addEventListener('resize', updateTipPosition);
+      return () => {
+        window.removeEventListener('scroll', updateTipPosition, true);
+        window.removeEventListener('resize', updateTipPosition);
+      };
+    }
+  }, [tipItem, updateTipPosition]);
 
   const isModuleAlt =
     currentModule === 'warehouse' || currentModule === 'stocktake'
@@ -228,7 +269,7 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
           const hasChildren = (item.children?.length ?? 0) > 0;
           const isExpanded = !!expandedItems[item.id];
           const isPopoverOpen = collapsed && hasChildren && (activePopover === item.id || hoveredItem === item.id);
-          const active = isActive(item.path) || isParentActive(item) || isPopoverOpen || (!collapsed && isExpanded);
+          const active = isActive(item.path) || isParentActive(item) || isPopoverOpen;
           const locked = !isNavItemAccessible(permissions, item);
 
           return (
@@ -256,7 +297,7 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
                   }
                 }}
                 className={`sidebar-item${active ? ' active' : ''}${locked ? ' sidebar-item--locked' : ''}`}
-                title={collapsed ? item.label : undefined}
+                aria-label={collapsed ? item.label : undefined}
               >
                 <Icon size={18} className="sidebar-item__icon" />
                 <span className={`sidebar-item__label sidebar-label flex-1 text-left${collapsed ? ' collapsed' : ''}`}>
@@ -326,6 +367,18 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
               ))}
             </div>
           </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ── Label tip (collapsed leaf items) — vertically centered with icon ── */}
+      {tipItem && createPortal(
+        <div
+          role="tooltip"
+          style={tipStyle}
+          className="sidebar-collapsed-tip"
+        >
+          {tipItem.label}
         </div>,
         document.body
       )}

@@ -1,18 +1,25 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Eye, Plus, RefreshCw } from 'lucide-react';
+import { CircleCheck, Eye, Plus, RefreshCw, Send, XCircle } from 'lucide-react';
+import Dropdown from '../../components/ui/Dropdown';
 import EmptyState from '../../components/ui/EmptyState';
 import Pagination from '../../components/ui/Pagination';
 import SearchBar from '../../components/ui/SearchBar';
 import TabFilter from '../../components/ui/TabFilter';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
+import { showToast } from '../../components/ui/Toast';
 import { DEFAULT_LIST_PAGE_SIZE, type ListPageSize } from '../../constants/pagination';
-import { usePurchasePayments } from '../../hooks/usePurchasePayments';
+import {
+  useCancelPurchasePayment,
+  usePayPurchasePayment,
+  usePurchasePayments,
+  useSubmitPurchasePayment,
+} from '../../hooks/usePurchasePayments';
 import { usePermission } from '../../hooks/usePermission';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { formatDateCell, formatDateTimeVi } from '../../lib/hrm/formatters';
 import { formatCurrency } from '../../utils/formatCurrency';
-import type { TabItem } from '../../types';
+import type { DropdownItem, TabItem } from '../../types';
 
 const STATUS_TABS: TabItem[] = [
   { id: 'all', label: 'Tất cả' },
@@ -41,7 +48,7 @@ function paymentStatusBadgeClass(status: string | null | undefined): string {
   }
 }
 
-const COL_COUNT = 9;
+const COL_COUNT = 10;
 
 /** Danh sách đề nghị thanh toán (DNTT). */
 export default function PurchasePaymentsPage() {
@@ -52,8 +59,15 @@ export default function PurchasePaymentsPage() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<ListPageSize>(DEFAULT_LIST_PAGE_SIZE);
-  const { has } = usePermission();
+  const { has, hasAny } = usePermission();
   const canCreate = has('purchasing.payments.create');
+  const canSubmit = hasAny(['purchasing.payments.submit', 'purchasing.payments.create']);
+  const canPay = hasAny(['purchasing.payments.pay', 'purchasing.payments.create']);
+  const canCancel = hasAny(['purchasing.payments.cancel', 'purchasing.payments.create']);
+
+  const submitMutation = useSubmitPurchasePayment();
+  const payMutation = usePayPurchasePayment();
+  const cancelMutation = useCancelPurchasePayment();
 
   useEffect(() => {
     if (!createPo) return;
@@ -81,12 +95,59 @@ export default function PurchasePaymentsPage() {
     return 'Chưa có đề nghị thanh toán. Tạo DNTT từ đơn hàng PO.';
   }, [hasFilters]);
 
+  const runAction = async (okMsg: string, fn: () => Promise<unknown>) => {
+    try {
+      await fn();
+      showToast('success', okMsg);
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Thao tác thất bại.'));
+    }
+  };
+
+  const rowActions = (row: (typeof items)[number]): DropdownItem[] => [
+    {
+      label: 'Xem chi tiết',
+      icon: Eye,
+      onClick: () => navigate(`/purchasing/payments/${encodeURIComponent(row.code)}`),
+    },
+    ...(row.status === 'draft' && canSubmit
+      ? [{
+          label: 'Gửi đề nghị',
+          icon: Send,
+          onClick: () => {
+            void runAction(`Đã gửi DNTT ${row.code}.`, () => submitMutation.mutateAsync(row.code));
+          },
+        }]
+      : []),
+    ...(row.status === 'submitted' && canPay
+      ? [{
+          label: 'Ghi nhận đã thanh toán',
+          icon: CircleCheck,
+          onClick: () => {
+            void runAction(`Đã ghi nhận thanh toán ${row.code}.`, () => payMutation.mutateAsync(row.code));
+          },
+        }]
+      : []),
+    ...(row.status === 'submitted' && canCancel
+      ? [{
+          label: 'Hủy đề nghị',
+          icon: XCircle,
+          danger: true,
+          onClick: () => {
+            void runAction(`Đã hủy DNTT ${row.code}.`, () => cancelMutation.mutateAsync(row.code));
+          },
+        }]
+      : []),
+  ];
+
   return (
     <div className="page-shell pur-erp pur-erp--plan pur-erp--po pur-erp--payment">
       <header className="pur-erp__head">
         <div className="pur-erp__head-text">
           <h1 className="pur-erp__title">Đề nghị thanh toán</h1>
-          <p className="pur-erp__subtitle">DNTT chi nhà cung cấp — tạo từ đơn hàng PO</p>
+          <p className="pur-erp__subtitle">
+            DNTT chi NCC theo đợt PO — Nháp → Gửi đề nghị → Ghi nhận đã thanh toán
+          </p>
         </div>
         <div className="pur-erp__head-actions">
           <button
@@ -149,13 +210,14 @@ export default function PurchasePaymentsPage() {
                     <tr>
                       <th>Mã DNTT</th>
                       <th>Mã PO</th>
+                      <th className="pur-erp__th-num">Đợt</th>
                       <th>Nhà cung cấp</th>
                       <th>Hóa đơn</th>
                       <th className="pur-erp__th-num">Số tiền</th>
                       <th>Hạn TT</th>
                       <th className="pur-erp__th-status">Trạng thái</th>
                       <th>Ngày tạo</th>
-                      <th>Tác vụ</th>
+                      <th className="pur-erp__th-actions">Tác vụ</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -176,6 +238,7 @@ export default function PurchasePaymentsPage() {
                         >
                           <td className="pur-erp__td-code">{row.code}</td>
                           <td className="pur-erp__td-code">{row.poCode}</td>
+                          <td className="pur-erp__td-num">{row.stageNumber ?? '—'}</td>
                           <td>{row.supplierName || '—'}</td>
                           <td>{row.invoiceNo || '—'}</td>
                           <td className="pur-erp__td-num">{formatCurrency(row.amount)}</td>
@@ -186,18 +249,11 @@ export default function PurchasePaymentsPage() {
                             </span>
                           </td>
                           <td className="pur-erp__td-datetime">{formatDateTimeVi(row.createdAt)}</td>
-                          <td className="pur-erp__td-actions">
-                            <button
-                              type="button"
-                              className="pur-erp__icon-btn"
-                              title="Xem phiếu"
-                              onClick={e => {
-                                e.stopPropagation();
-                                navigate(`/purchasing/payments/${encodeURIComponent(row.code)}`);
-                              }}
-                            >
-                              <Eye size={14} aria-hidden />
-                            </button>
+                          <td
+                            className="pur-erp__td-actions text-center"
+                            onClick={e => e.stopPropagation()}
+                          >
+                            <Dropdown trigger="Tác vụ" items={rowActions(row)} />
                           </td>
                         </tr>
                       ))

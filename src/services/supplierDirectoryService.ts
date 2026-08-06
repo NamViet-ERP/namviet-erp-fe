@@ -1,9 +1,12 @@
 import { apiClient } from '../lib/apiClient';
 import type {
+  CompleteSupplierDeliveryEvaluationRequest,
   SetSupplierGroupMembersRequest,
   SetSupplierGroupsRequest,
   SupplierContactApiDto,
   SupplierContactPagedApiDto,
+  SupplierDeliveryEvaluationApiDto,
+  SupplierDeliveryEvaluationPagedApiDto,
   SupplierEvaluationApiDto,
   SupplierEvaluationPagedApiDto,
   SupplierGroupApiDto,
@@ -21,6 +24,7 @@ import type {
 const GROUPS = '/api/warehouse/supplier-groups';
 const CONTACTS = '/api/warehouse/supplier-contacts';
 const EVALUATIONS = '/api/warehouse/supplier-evaluations';
+const DELIVERY_EVALUATIONS = '/api/warehouse/supplier-delivery-evaluations';
 const SETTINGS = '/api/warehouse/supplier-settings';
 const DASHBOARD = '/api/warehouse/suppliers/dashboard';
 const SUPPLIERS = '/api/warehouse/suppliers';
@@ -121,6 +125,31 @@ export const supplierEvaluationsService = {
 
   remove(id: number) {
     return apiClient.delete(`${EVALUATIONS}/${id}`);
+  },
+};
+
+export const supplierDeliveryEvaluationsService = {
+  list(params: SupplierDirectoryListParams & {
+    supplierId?: number;
+    poCode?: string;
+    status?: string;
+  } = {}) {
+    const { supplierId, poCode, status, search, page = 1, pageSize = 50 } = params;
+    return apiClient.get<SupplierDeliveryEvaluationPagedApiDto>(DELIVERY_EVALUATIONS, {
+      supplierId: supplierId ?? undefined,
+      poCode: poCode || undefined,
+      status: status || undefined,
+      search: search || undefined,
+      page,
+      pageSize,
+    });
+  },
+
+  complete(id: number, body: CompleteSupplierDeliveryEvaluationRequest) {
+    return apiClient.put<SupplierDeliveryEvaluationApiDto>(
+      `${DELIVERY_EVALUATIONS}/${id}/complete`,
+      body,
+    );
   },
 };
 

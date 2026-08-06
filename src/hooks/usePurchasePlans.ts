@@ -80,6 +80,55 @@ export function usePurchasePlanImportConfirm() {
   });
 }
 
+function invalidatePlan(qc: ReturnType<typeof useQueryClient>, code: string) {
+  qc.invalidateQueries({ queryKey: queryKeys.purchasePlans.all });
+  qc.invalidateQueries({ queryKey: queryKeys.purchasePlans.detail(code) });
+}
+
+export function useSubmitPurchasePlan() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (code: string) => purchasePlansService.submit(code),
+    onSuccess: (_d, code) => invalidatePlan(qc, code),
+  });
+}
+
+export function useApprovePurchasePlanL1() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (code: string) => purchasePlansService.approveL1(code),
+    onSuccess: (_d, code) => invalidatePlan(qc, code),
+  });
+}
+
+export function useApprovePurchasePlanL2() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (code: string) => purchasePlansService.approveL2(code),
+    onSuccess: (_d, code) => invalidatePlan(qc, code),
+  });
+}
+
+export function useRejectPurchasePlan() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ code, reason }: { code: string; reason?: string }) =>
+      purchasePlansService.reject(code, { reason }),
+    onSuccess: (_d, vars) => invalidatePlan(qc, vars.code),
+  });
+}
+
+export function useRemakePurchasePlan() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (code: string) => purchasePlansService.remake(code),
+    onSuccess: (created, sourceCode) => {
+      invalidatePlan(qc, sourceCode);
+      qc.invalidateQueries({ queryKey: queryKeys.purchasePlans.detail(created.code) });
+    },
+  });
+}
+
 export function usePurchasePlanVariance(params: { planCode?: string; projectCode?: string } = {}) {
   return useQuery({
     queryKey: queryKeys.purchasePlans.variance(params.planCode, params.projectCode),

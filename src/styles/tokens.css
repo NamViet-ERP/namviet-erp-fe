@@ -1,139 +1,145 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   NamViet WMS — Material Design 3 (Material You)
-   Seed Color: #0E3063 (Navy Blue)
-   ─────────────────────────────────────────────────────────────────────
-   Light mode: Warm off-white surfaces, tonal depth hierarchy
-   Dark mode:  Rich dark surfaces, expressive tonal palettes
+   NamViet WMS — brand palette aligned to SCM-EPC (QuanLyCungUng_EPC)
+   Seed: navy #132A45 · steel #3C6285 · amber #E0821C
    ═══════════════════════════════════════════════════════════════════════ */
 
-/* ═══════════════════════════════════════════════════════════
-   DESIGN TOKENS — CSS Custom Properties
-   ═══════════════════════════════════════════════════════════ */
 :root {
-  /* ── Header custom tokens ── */
-  --nv-header-bg:                #0E3063;
+  /* ── Brand primitives (SCM-EPC) ── */
+  --nv-navy:                     #132A45;
+  --nv-navy-2:                   #1D3A5F;
+  --nv-steel:                    #3C6285;
+  --nv-steel-light:              #EAF0F5;
+  --nv-amber:                    #E0821C;
+  --nv-amber-dark:               #B3660F;
+  --nv-epc-bg:                   #F2F4F7;
+  --nv-epc-border:               #DEE3EA;
+  --nv-epc-muted:                #6B7686;
+  --nv-epc-text:                 #182433;
+
+  /* ── Header ── */
+  --nv-header-bg:                var(--nv-navy);
   --nv-header-on-bg:             #FFFFFF;
   --nv-header-icon:              rgba(255, 255, 255, 0.75);
   --nv-header-icon-hover:        #FFFFFF;
   --nv-header-icon-active:       #FFFFFF;
   --nv-header-icon-active-bg:    rgba(255, 255, 255, 0.15);
   --nv-header-search-bg:         #FFFFFF;
-  --nv-header-search-text:       #323a45;
-  --nv-header-search-placeholder:#999fc0;
+  --nv-header-search-text:       var(--nv-epc-text);
+  --nv-header-search-placeholder:#8A94A3;
   --nv-header-border:            rgba(255, 255, 255, 0.15);
 
-  /* ── Table Header custom tokens ── */
-  --nv-table-header-bg:          #0E3063;
+  /* ── Table Header ── */
+  --nv-table-header-bg:          var(--nv-navy);
   --nv-table-header-text:        #FFFFFF;
 
-  /* ── Badge Draft custom tokens ── */
-  --nv-badge-draft-bg:           #f1f5f9;
-  --nv-badge-draft-text:         #475569;
-  --nv-badge-draft-border:       #cbd5e1;
+  /* ── Badge Draft / muted ── */
+  --nv-badge-draft-bg:           #EEF0F3;
+  --nv-badge-draft-text:         var(--nv-epc-muted);
+  --nv-badge-draft-border:       var(--nv-epc-border);
 
-  /* ── Primary ── */
-  --md-primary:                  #0E3063;
+  /* ── Primary (navy) ── */
+  --md-primary:                  var(--nv-navy);
   --md-on-primary:               #FFFFFF;
-  --md-primary-container:        #d9edf7;
-  --md-on-primary-container:     #0E3063;
+  --md-primary-container:        var(--nv-steel-light);
+  --md-on-primary-container:     var(--nv-navy);
 
-  /* ── Secondary ── */
-  --md-secondary:                #008ece;
+  /* ── Secondary (steel) ── */
+  --md-secondary:                var(--nv-steel);
   --md-on-secondary:             #FFFFFF;
-  --md-secondary-container:      #d9edf7;
-  --md-on-secondary-container:   #0E3063;
+  --md-secondary-container:      var(--nv-steel-light);
+  --md-on-secondary-container:   var(--nv-navy);
 
-  /* ── Tertiary — blue accent (aligned with brand, not pink) ── */
-  --md-tertiary:                 #006B9A;
+  /* ── Tertiary (amber accent) ── */
+  --md-tertiary:                 var(--nv-amber);
   --md-on-tertiary:              #FFFFFF;
-  --md-tertiary-container:       #B8E4F5;
-  --md-on-tertiary-container:    #003547;
+  --md-tertiary-container:       #FCF0DC;
+  --md-on-tertiary-container:    var(--nv-amber-dark);
 
   /* ── Surface System ── */
-  --md-surface:                  #f4f4f4;
-  --md-on-surface:               #323a45;
-  --md-surface-variant:          #ffffff;
+  --md-surface:                  var(--nv-epc-bg);
+  --md-on-surface:               var(--nv-epc-text);
+  --md-surface-variant:          #FFFFFF;
   --md-surface-variant_purple:   #B5BAFF;
-  --md-on-surface-variant:       #362e2e;
-  --md-surface-container:        #ffffff;
-  --md-surface-container-low:    #ffffff;
-  --md-surface-container-lowest:   #ffffff;
-  --md-surface-container-high:   #f4f4f4;
-  --md-inverse-surface:          #323a45;
-  --md-inverse-on-surface:       #f4f4f4;
+  --md-on-surface-variant:       var(--nv-epc-muted);
+  --md-surface-container:        #FFFFFF;
+  --md-surface-container-low:    #FFFFFF;
+  --md-surface-container-lowest: #FFFFFF;
+  --md-surface-container-high:   var(--nv-epc-bg);
+  --md-inverse-surface:          var(--nv-epc-text);
+  --md-inverse-on-surface:       #F2F4F7;
 
   /* ── Outline ── */
-  --md-outline:          #f0f0f0;
-  --md-outline-variant:  #f0f0f0;
-  --md-outline-variant02: #cedae6;
-  /* ── Error ── */
-  --md-error:                #B3261E;
+  --md-outline:                  #C9D2DC;
+  --md-outline-variant:          #DEE3EA;
+  --md-outline-variant02:        var(--nv-epc-border);
+
+  /* ── Error / danger (EPC) ── */
+  --md-error:                #C0392B;
   --md-on-error:             #FFFFFF;
-  --md-error-container:      #F9DEDC;
-  --md-on-error-container:   #410E0B;
+  --md-error-container:      #FBEAE8;
+  --md-on-error-container:   #7A241C;
 
-  /* ── Status ── */
-  --md-success:              #386A20;
-  --md-success-container:    #C4EFA4;
-  --md-on-success-container: #072100;
-  --md-warning:              #7A5100;
-  --md-warning-container:    #FFDEA1;
-  --md-on-warning-container: #261900;
-  --md-info:                 #005DB6;
-  --md-info-container:       #D5E3FF;
-  --md-on-info-container:    #001B3D;
+  /* ── Status (EPC success / warn / info) ── */
+  --md-success:              #2C8659;
+  --md-success-container:    #E5F4EC;
+  --md-on-success-container: #1A5A3A;
+  --md-warning:              #C77700;
+  --md-warning-container:    #FCF0DC;
+  --md-on-warning-container: #7A4A00;
+  --md-info:                 var(--nv-steel);
+  --md-info-container:       var(--nv-steel-light);
+  --md-on-info-container:    var(--nv-navy);
 
-  /* ── Status accents (icons / dots / chart strokes) — readable on surface ── */
-  --status-success: #6FAF4F;
-  --status-warning: #D97706;
-  --status-info:    #005DB6;
-  --status-error:   #B3261E;
+  /* ── Status accents ── */
+  --status-success: #2C8659;
+  --status-warning: #C77700;
+  --status-info:    var(--nv-steel);
+  --status-error:   #C0392B;
 
-  /* ── Status accents for inverse-surface bg (toasts/snackbars) — light mode bg is dark ── */
-  --status-success-on-inverse: #9ED580;
-  --status-warning-on-inverse: #FFD170;
-  --status-info-on-inverse:    #A8C8FF;
-  --status-error-on-inverse:   #F2B8B5;
+  --status-success-on-inverse: #7BC49A;
+  --status-warning-on-inverse: #F0C36D;
+  --status-info-on-inverse:    #9BB6CC;
+  --status-error-on-inverse:   #F0A8A0;
 
-  /* ── State-layer tints (hover/active/soft fills) — adapt to dark mode ── */
-  --tint-primary-weak:   rgba(14, 48, 99, 0.04);
-  --tint-primary-soft:   rgba(14, 48, 99, 0.06);
-  --tint-primary-hover:  rgba(14, 48, 99, 0.08);
-  --tint-primary-active: rgba(14, 48, 99, 0.12);
-  --tint-success-soft:   rgba(56, 106, 32, 0.10);
-  --tint-success-border: rgba(56, 106, 32, 0.15);
-  --tint-warning-soft:   rgba(122, 81, 0, 0.15);
-  --tint-warning-border: rgba(122, 81, 0, 0.25);
-  --tint-error-soft:     rgba(179, 38, 30, 0.08);
-  --tint-error-strong:   rgba(179, 38, 30, 0.12);
+  /* ── State-layer tints ── */
+  --tint-primary-weak:   rgba(19, 42, 69, 0.04);
+  --tint-primary-soft:   rgba(19, 42, 69, 0.06);
+  --tint-primary-hover:  rgba(19, 42, 69, 0.08);
+  --tint-primary-active: rgba(19, 42, 69, 0.12);
+  --tint-success-soft:   rgba(44, 134, 89, 0.10);
+  --tint-success-border: rgba(44, 134, 89, 0.18);
+  --tint-warning-soft:   rgba(199, 119, 0, 0.12);
+  --tint-warning-border: rgba(199, 119, 0, 0.22);
+  --tint-error-soft:     rgba(192, 57, 43, 0.08);
+  --tint-error-strong:   rgba(192, 57, 43, 0.14);
 
-  /* ── Chart series palette — harmonious, adapts in dark mode ── */
-  --chart-1: #0E3063;
-  --chart-2: #008ece;
-  --chart-3: #386A20;
-  --chart-4: #7A5100;
-  --chart-5: #5BC4F0;
-  --chart-6: #B3261E;
+  /* ── Chart series ── */
+  --chart-1: #132A45;
+  --chart-2: #3C6285;
+  --chart-3: #2C8659;
+  --chart-4: #E0821C;
+  --chart-5: #C77700;
+  --chart-6: #C0392B;
 
   /* ── Icons ── */
   --icon-stroke: 1.75;
 
   /* ── Modal scrim ── */
-  --md-scrim: rgba(14, 48, 99, 0.45);
+  --md-scrim: rgba(19, 42, 69, 0.55);
 
   /* ── Elevation shadows ── */
-  --md-shadow-1: 0 1px 2px 0 rgba(0,0,0,0.05);
-  --md-shadow-2: 0 2px 4px 0 rgba(0,0,0,0.05);
-  --md-shadow-3: 0 4px 8px 0 rgba(0,0,0,0.05);
-  --md-shadow-4: 0 8px 16px 0 rgba(0,0,0,0.05);
+  --md-shadow-1: 0 1px 2px 0 rgba(19, 42, 69, 0.06);
+  --md-shadow-2: 0 2px 4px 0 rgba(19, 42, 69, 0.07);
+  --md-shadow-3: 0 4px 10px 0 rgba(19, 42, 69, 0.08);
+  --md-shadow-4: 0 8px 18px 0 rgba(19, 42, 69, 0.10);
 
   /* ── Transition ── */
   --md-easing: cubic-bezier(0.2, 0, 0, 1);
   --md-duration-fast: 150ms;
-  --md-duration:      200ms;  /* base */
+  --md-duration:      200ms;
   --md-duration-slow: 300ms;
 
-  /* ── Semantic aliases (used by components) ── */
+  /* ── Semantic aliases ── */
   --surface:            var(--md-surface);
   --on-surface:         var(--md-on-surface);
   --surface-container:  var(--md-surface-container);
@@ -151,12 +157,12 @@
   --z-popover: 1050;
   --z-toast: 1100;
 
-  /* Legacy shims — prevents broken styles during migration */
+  /* Legacy shims ── */
   --nv-surface-page:     var(--md-surface);
   --nv-surface-card:     var(--md-surface-container);
   --nv-surface-raised:   var(--md-surface-container);
   --nv-surface-subtle:   var(--md-surface-container-low);
-  --nv-surface-hover:    rgba(14, 48, 99, 0.08);
+  --nv-surface-hover:    rgba(19, 42, 69, 0.08);
   --nv-border-default:   var(--md-outline-variant);
   --nv-border-subtle:    var(--md-outline-variant);
   --nv-text-primary:     var(--md-on-surface);
@@ -164,7 +170,7 @@
   --nv-text-tertiary:    var(--md-on-surface-variant);
   --nv-text-muted:       var(--md-on-surface-variant);
   --nv-accent:           var(--md-primary);
-  --nv-accent-hover:     var(--md-primary);
+  --nv-accent-hover:     var(--nv-navy-2);
   --nv-success-bg:       var(--md-success-container);
   --nv-success-text:     var(--md-success);
   --nv-warning-bg:       var(--md-warning-container);
@@ -176,31 +182,32 @@
   --nv-shadow-card:      var(--md-shadow-1);
   --nv-shadow-md:        var(--md-shadow-2);
   --nv-shadow-lg:        var(--md-shadow-3);
-  --nv-sidebar-bg:       var(--md-surface-container);
-  --nv-sidebar-bg-alt:   #e5e7eb;
-  --nv-sidebar-border:   transparent;
-  --nv-sidebar-item-hover:       rgba(0, 142, 206, 0.08);
-  --nv-sidebar-item-active-bg:   rgba(0, 142, 206, 0.12);
+  --nv-sidebar-bg:       var(--nv-navy);
+  --nv-sidebar-bg-alt:   var(--nv-navy-2);
+  --nv-sidebar-border:   rgba(255, 255, 255, 0.12);
+  --nv-sidebar-accent:   var(--nv-amber);
+  --nv-sidebar-on:       rgba(255, 255, 255, 0.72);
+  --nv-sidebar-on-strong:#FFFFFF;
+  --nv-sidebar-on-muted: rgba(255, 255, 255, 0.42);
+  --nv-sidebar-item-hover:       rgba(255, 255, 255, 0.07);
+  --nv-sidebar-item-active-bg:   rgba(255, 255, 255, 0.11);
   --nv-chrome-bg:        var(--md-surface-container);
   --nv-chrome-border:    var(--md-outline-variant);
   --nv-chrome-text:      var(--md-on-surface);
-  --nv-chrome-bg-hover:  rgba(14, 48, 99, 0.08);
+  --nv-chrome-bg-hover:  rgba(19, 42, 69, 0.08);
   --sidebar-bg:          var(--md-surface-container);
-  --nv-scrollbar-thumb:  #84bed0;
-  --nv-scrollbar-thumb-hover: #6ba8bd;
+  --nv-scrollbar-thumb:  #7A9BB5;
+  --nv-scrollbar-thumb-hover: #5E829E;
 }
 
 /* ── Dark Mode Token Overrides ── */
 .dark {
-  /* ── Header custom tokens (Dark Mode) — keep brand navy ── */
-  --nv-header-bg:                #0E3063;
+  --nv-header-bg:                var(--nv-navy);
   --nv-header-on-bg:             #FFFFFF;
 
-  /* ── Table Header custom tokens (Dark Mode) ── */
-  --nv-table-header-bg:          #0E3063;
+  --nv-table-header-bg:          var(--nv-navy);
   --nv-table-header-text:        #FFFFFF;
 
-  /* ── Badge Draft custom tokens (Dark Mode) ── */
   --nv-badge-draft-bg:           #1e3a5f;
   --nv-badge-draft-text:         #b0c4d8;
   --nv-badge-draft-border:       #2a4a6f;
@@ -213,18 +220,18 @@
   --nv-header-search-placeholder:var(--md-on-surface-variant);
   --nv-header-border:            rgba(255, 255, 255, 0.12);
 
-  --md-primary:                  #7EC8F5;
-  --md-on-primary:               #042A42;
+  --md-primary:                  #9BB6CC;
+  --md-on-primary:               #0C1E33;
   --md-primary-container:        #1A3D5C;
-  --md-on-primary-container:     #C5E8FF;
-  --md-secondary:                #56B8E8;
-  --md-on-secondary:             #042A42;
-  --md-secondary-container:      #1E4A66;
-  --md-on-secondary-container:   #B8E4F8;
-  --md-tertiary:                 #5BC4F0;
-  --md-on-tertiary:              #003547;
-  --md-tertiary-container:       #004157;
-  --md-on-tertiary-container:    #C5E9FF;
+  --md-on-primary-container:     #D5E4F0;
+  --md-secondary:                #A8C0D4;
+  --md-on-secondary:             #0C1E33;
+  --md-secondary-container:      #2A4A66;
+  --md-on-secondary-container:   #D8E6F0;
+  --md-tertiary:                 #F0B06A;
+  --md-on-tertiary:              #3A2200;
+  --md-tertiary-container:       #5C3A08;
+  --md-on-tertiary-container:    #FCF0DC;
   --md-surface:                  #0A0F18;
   --md-on-surface:               #E8EFF7;
   --md-surface-variant:          #243247;
@@ -238,51 +245,47 @@
   --md-outline:                  #506278;
   --md-outline-variant:          #2A3A4E;
   --md-outline-variant02:        #364B62;
-  --md-error:                    #F2B8B5;
-  --md-on-error:                 #601410;
-  --md-error-container:          #8C1D18;
-  --md-on-error-container:       #F9DEDC;
-  --md-success:                  #8FCE6E;
-  --md-success-container:        #1A4006;
-  --md-on-success-container:     #C4EFA4;
-  --md-warning:                  #F0C060;
-  --md-warning-container:        #3D2800;
-  --md-on-warning-container:     #FFDEA1;
-  --md-info:                     #6EB8F0;
-  --md-info-container:           #00306B;
-  --md-on-info-container:        #D5E3FF;
+  --md-error:                    #F0A8A0;
+  --md-on-error:                 #5C1812;
+  --md-error-container:          #8C241C;
+  --md-on-error-container:       #FBEAE8;
+  --md-success:                  #7BC49A;
+  --md-success-container:        #1A4030;
+  --md-on-success-container:     #E5F4EC;
+  --md-warning:                  #F0C36D;
+  --md-warning-container:        #4A3200;
+  --md-on-warning-container:     #FCF0DC;
+  --md-info:                     #9BB6CC;
+  --md-info-container:           #1A3D5C;
+  --md-on-info-container:        #EAF0F5;
 
-  /* ── Status accents (Dark Mode) — brighter for contrast on dark surface ── */
-  --status-success: #9ED580;
-  --status-warning: #FFD170;
-  --status-info:    #7FD0FF;
-  --status-error:   #F2B8B5;
+  --status-success: #7BC49A;
+  --status-warning: #F0C36D;
+  --status-info:    #9BB6CC;
+  --status-error:   #F0A8A0;
 
-  /* ── Status accents for inverse-surface bg (Dark Mode bg is light) ── */
-  --status-success-on-inverse: #386A20;
-  --status-warning-on-inverse: #7A5100;
-  --status-info-on-inverse:    #005DB6;
-  --status-error-on-inverse:   #B3261E;
+  --status-success-on-inverse: #2C8659;
+  --status-warning-on-inverse: #C77700;
+  --status-info-on-inverse:    #3C6285;
+  --status-error-on-inverse:   #C0392B;
 
-  /* ── State-layer tints (Dark Mode) — brand cyan-blue (#008ece family) ── */
-  --tint-primary-weak:   rgba(0, 142, 206, 0.06);
-  --tint-primary-soft:   rgba(0, 142, 206, 0.08);
-  --tint-primary-hover:  rgba(0, 142, 206, 0.10);
-  --tint-primary-active: rgba(0, 142, 206, 0.14);
-  --tint-success-soft:   rgba(158, 213, 128, 0.12);
-  --tint-success-border: rgba(158, 213, 128, 0.22);
-  --tint-warning-soft:   rgba(255, 209, 112, 0.15);
-  --tint-warning-border: rgba(255, 209, 112, 0.28);
-  --tint-error-soft:     rgba(242, 184, 181, 0.12);
-  --tint-error-strong:   rgba(242, 184, 181, 0.18);
+  --tint-primary-weak:   rgba(155, 182, 204, 0.06);
+  --tint-primary-soft:   rgba(155, 182, 204, 0.08);
+  --tint-primary-hover:  rgba(155, 182, 204, 0.10);
+  --tint-primary-active: rgba(155, 182, 204, 0.14);
+  --tint-success-soft:   rgba(123, 196, 154, 0.12);
+  --tint-success-border: rgba(123, 196, 154, 0.22);
+  --tint-warning-soft:   rgba(240, 195, 109, 0.15);
+  --tint-warning-border: rgba(240, 195, 109, 0.28);
+  --tint-error-soft:     rgba(240, 168, 160, 0.12);
+  --tint-error-strong:   rgba(240, 168, 160, 0.18);
 
-  /* ── Chart series palette (Dark Mode) ── */
-  --chart-1: #7FD0FF;
-  --chart-2: #5BC4F0;
-  --chart-3: #9ED580;
-  --chart-4: #FFD170;
-  --chart-5: #008ece;
-  --chart-6: #4DA8DA;
+  --chart-1: #9BB6CC;
+  --chart-2: #A8C0D4;
+  --chart-3: #7BC49A;
+  --chart-4: #F0B06A;
+  --chart-5: #F0C36D;
+  --chart-6: #F0A8A0;
 
   --md-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.42), 0 0 0 1px rgba(255, 255, 255, 0.04);
   --md-shadow-2: 0 2px 6px rgba(0, 0, 0, 0.38), 0 0 0 1px rgba(255, 255, 255, 0.04);
@@ -292,13 +295,17 @@
   --nv-scrollbar-thumb:          #3A5268;
   --nv-scrollbar-thumb-hover:    #4D6780;
 
-  --nv-surface-hover:            rgba(0, 142, 206, 0.08);
-  --nv-sidebar-bg:               var(--md-surface-container-low);
-  --nv-sidebar-bg-alt:           var(--md-surface-container-low);
-  --nv-sidebar-item-hover:       rgba(0, 142, 206, 0.10);
-  --nv-sidebar-item-active-bg:   rgba(0, 142, 206, 0.16);
-  --nv-chrome-bg-hover:          rgba(0, 142, 206, 0.08);
+  --nv-surface-hover:            rgba(155, 182, 204, 0.08);
+  --nv-sidebar-bg:               #0F243C;
+  --nv-sidebar-bg-alt:           #173352;
+  --nv-sidebar-border:           rgba(255, 255, 255, 0.10);
+  --nv-sidebar-accent:           var(--nv-amber);
+  --nv-sidebar-on:               rgba(255, 255, 255, 0.70);
+  --nv-sidebar-on-strong:        #FFFFFF;
+  --nv-sidebar-on-muted:         rgba(255, 255, 255, 0.40);
+  --nv-sidebar-item-hover:       rgba(255, 255, 255, 0.08);
+  --nv-sidebar-item-active-bg:   rgba(255, 255, 255, 0.12);
+  --nv-chrome-bg-hover:          rgba(155, 182, 204, 0.08);
 
-  /* ── Modal scrim (Dark Mode) ── */
   --md-scrim: rgba(11, 18, 32, 0.62);
 }

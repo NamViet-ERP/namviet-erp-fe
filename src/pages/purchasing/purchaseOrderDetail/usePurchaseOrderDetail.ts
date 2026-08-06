@@ -9,7 +9,6 @@ import {
   useUnapprovePurchaseOrder,
   useUpdatePurchaseOrder,
 } from '../../../hooks/usePurchaseOrders';
-import { useImports } from '../../../hooks/useImports';
 import { usePermission } from '../../../hooks/usePermission';
 import { getApiErrorMessage } from '../../../lib/apiClient';
 import { formatDateCell } from '../../../lib/hrm/formatters';
@@ -54,13 +53,6 @@ export function usePurchaseOrderDetail(code: string) {
   const [editing, setEditing] = useState(false);
   const [attachDirty, setAttachDirty] = useState(false);
   const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
-  const importsQuery = useImports();
-  const relatedImports = useMemo(
-    () => (importsQuery.data ?? []).filter(
-      imp => (imp.referenceCode ?? '').trim().toLowerCase() === code.trim().toLowerCase(),
-    ),
-    [importsQuery.data, code],
-  );
   const [editNote, setEditNote] = useState('');
   const [editOrderDate, setEditOrderDate] = useState('');
   const [editLines, setEditLines] = useState<Record<number, PoEditLineDraft>>({});
@@ -208,8 +200,6 @@ export function usePurchaseOrderDetail(code: string) {
     error,
     refetch,
     lines,
-    relatedImports,
-    importsLoading: importsQuery.isLoading,
     approval,
     placement,
     delivery,
