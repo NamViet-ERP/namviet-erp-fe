@@ -7835,6 +7835,22 @@
   .project-warehouse-table .table-cell {
     font-size: 0.75rem;
   }
+
+  /* Project detail — light density (this page only) */
+  .project-detail-page .project-detail-stat-grid {
+    gap: 0.5rem;
+  }
+  .app-shell--wms .project-detail-page .project-detail-stat-grid .hrm-stat-card {
+    padding: 11px 14px;
+  }
+  .project-detail-page .project-detail-stock-table thead .table-header-cell {
+    padding-top: 0.45rem;
+    padding-bottom: 0.45rem;
+  }
+  .project-detail-page .project-detail-stock-table tbody .table-cell {
+    padding-top: 0.4rem;
+    padding-bottom: 0.4rem;
+  }
   .project-warehouse-table .project-col-code {
     width: 9rem;
     max-width: 9rem;

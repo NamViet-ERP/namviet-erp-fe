@@ -9447,7 +9447,30 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierEvaluationDto"];
+                        "application/json": components["schemas"]["SupplierEvaluationDto"];
+                        "text/json": components["schemas"]["SupplierEvaluationDto"];
+                    };
+                };
+            };
+        };
         put: {
             parameters: {
                 query?: never;
@@ -9873,6 +9896,8 @@ export interface paths {
                     pageSize?: number;
                     search?: string;
                     rating?: string;
+                    groupId?: number;
+                    isBlacklisted?: boolean;
                 };
                 header?: never;
                 path?: never;
@@ -9918,6 +9943,43 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/suppliers/blacklist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierBlacklistDto"][];
+                        "application/json": components["schemas"]["SupplierBlacklistDto"][];
+                        "text/json": components["schemas"]["SupplierBlacklistDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -9999,6 +10061,74 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/suppliers/{id}/blacklist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["BlacklistSupplierRequest"];
+                    "text/json": components["schemas"]["BlacklistSupplierRequest"];
+                    "application/*+json": components["schemas"]["BlacklistSupplierRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierDto"];
+                        "application/json": components["schemas"]["SupplierDto"];
+                        "text/json": components["schemas"]["SupplierDto"];
+                    };
+                };
+            };
+        };
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierDto"];
+                        "application/json": components["schemas"]["SupplierDto"];
+                        "text/json": components["schemas"]["SupplierDto"];
+                    };
                 };
             };
         };
@@ -11040,6 +11170,8 @@ export interface components {
             /** Format: int32 */
             overdueLookbackDays: number;
             /** Format: date */
+            asOfDate: string;
+            /** Format: date */
             windowFrom: string;
             /** Format: date */
             windowTo: string;
@@ -11068,6 +11200,9 @@ export interface components {
             department: string;
             /** Format: int32 */
             day: number;
+        };
+        BlacklistSupplierRequest: {
+            reason: string;
         };
         CandidateDto: {
             id: string;
@@ -11127,13 +11262,15 @@ export interface components {
         };
         CompleteSupplierDeliveryEvaluationRequest: {
             /** Format: double */
-            score: number;
+            quality: number;
             /** Format: double */
-            onTimeDeliveryRate: number;
+            delivery: number;
             /** Format: double */
-            defectRate: number;
+            price: number;
             /** Format: double */
-            warrantyCompletionRate: number;
+            service: number;
+            /** Format: double */
+            compliance: number;
             /** Format: date */
             evaluatedAt?: string | null;
             note?: string | null;
@@ -12911,6 +13048,18 @@ export interface components {
             /** Format: double */
             diff: number;
         };
+        SupplierBlacklistDto: {
+            /** Format: int32 */
+            id: number;
+            supplierCode: string;
+            supplierName: string;
+            contactPhone?: string | null;
+            rating: string;
+            /** Format: date-time */
+            blacklistedAt: string;
+            blacklistedByName?: string | null;
+            blacklistReason?: string | null;
+        };
         SupplierContactDto: {
             /** Format: int32 */
             id: number;
@@ -12954,6 +13103,7 @@ export interface components {
             supplierName: string;
             poCode: string;
             importTicketCode: string;
+            projectCode?: string | null;
             /** Format: date-time */
             receivedAt: string;
             /** Format: date-time */
@@ -12961,14 +13111,19 @@ export interface components {
             status: string;
             isOverdue: boolean;
             /** Format: double */
+            quality?: number | null;
+            /** Format: double */
+            delivery?: number | null;
+            /** Format: double */
+            price?: number | null;
+            /** Format: double */
+            service?: number | null;
+            /** Format: double */
+            compliance?: number | null;
+            /** Format: double */
             score?: number | null;
             grade?: string | null;
-            /** Format: double */
-            onTimeDeliveryRate?: number | null;
-            /** Format: double */
-            defectRate?: number | null;
-            /** Format: double */
-            warrantyCompletionRate?: number | null;
+            gradeLabel?: string | null;
             note?: string | null;
             evaluatedByName?: string | null;
             /** Format: date */
@@ -12995,6 +13150,11 @@ export interface components {
             maxDebtDays: number;
             paymentTerms?: string | null;
             rating: string;
+            isBlacklisted: boolean;
+            blacklistReason?: string | null;
+            /** Format: date-time */
+            blacklistedAt?: string | null;
+            blacklistedByName?: string | null;
             /** Format: double */
             purchasedRevenue: number;
             industryGroups: string[];
@@ -13023,14 +13183,12 @@ export interface components {
             /** Format: double */
             score: number;
             grade: string;
+            gradeLabel: string;
             /** Format: date */
             evaluatedAt: string;
-            /** Format: double */
-            onTimeDeliveryRate: number;
-            /** Format: double */
-            defectRate: number;
-            /** Format: double */
-            warrantyCompletionRate: number;
+            criteriaScores: {
+                [key: string]: number;
+            };
             note?: string | null;
             evaluatedByName?: string | null;
         };
@@ -13080,14 +13238,9 @@ export interface components {
             /** Format: double */
             score: number;
             grade: string;
+            gradeLabel: string;
             /** Format: date */
             evaluatedAt: string;
-            /** Format: double */
-            onTimeDeliveryRate: number;
-            /** Format: double */
-            defectRate: number;
-            /** Format: double */
-            warrantyCompletionRate: number;
         };
         SupplierModuleSettingsDto: {
             /** Format: double */
@@ -13429,14 +13582,9 @@ export interface components {
             /** Format: int32 */
             supplierId: number;
             period: string;
-            /** Format: double */
-            score: number;
-            /** Format: double */
-            onTimeDeliveryRate: number;
-            /** Format: double */
-            defectRate: number;
-            /** Format: double */
-            warrantyCompletionRate: number;
+            criteriaScores: {
+                [key: string]: number;
+            };
             /** Format: date */
             evaluatedAt?: string | null;
             note?: string | null;
@@ -13452,7 +13600,6 @@ export interface components {
             /** Format: int32 */
             maxDebtDays: number;
             paymentTerms?: string | null;
-            rating: string;
         };
         WarehouseDto: {
             id: string;

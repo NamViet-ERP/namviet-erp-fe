@@ -39,6 +39,8 @@ import { usePermission } from '../../hooks/usePermission';
 type DetailTab = 'stock' | 'history' | 'info';
 
 const EMPTY_PM_ID = '00000000-0000-0000-0000-000000000000';
+const MAX_MIN_STOCK_QTY = 1_000_000_000;
+const MIN_STOCK_INVALID_MSG = 'Tồn tối thiểu không hợp lệ';
 
 const tabs = [
   { id: 'stock', label: 'Tồn kho' },
@@ -49,6 +51,20 @@ const tabs = [
 function toDateInputValue(value: string | null | undefined): string {
   if (!value) return '';
   return value.slice(0, 10);
+}
+
+/** Integer ≥ 0 and ≤ MAX; empty rejected (require explicit 0). */
+function parseMinStockQty(raw: string): number | null {
+  const trimmed = raw.trim();
+  if (trimmed === '') return null;
+  if (!/^\d+$/.test(trimmed)) return null;
+  const n = Number(trimmed);
+  if (!Number.isSafeInteger(n) || n < 0 || n > MAX_MIN_STOCK_QTY) return null;
+  return n;
+}
+
+function minStockDisplayValue(qty: number): string {
+  return qty > 0 ? String(qty) : '';
 }
 
 function validateEditForm(form: {
@@ -93,6 +109,9 @@ export default function ProjectDetailPage() {
   const canViewPrices = has('wms.prices.view');
   const [stockPageRaw, setStockPage] = useState(1);
   const [stockPageSize, setStockPageSize] = useState(DEFAULT_LIST_PAGE_SIZE);
+  /** Per-row draft for Tồn tối thiểu — key = materialCode */
+  const [minStockDrafts, setMinStockDrafts] = useState<Record<string, string>>({});
+  const [savingMinStockCode, setSavingMinStockCode] = useState<string | null>(null);
   const { data: project, isLoading, isError } = useProject(code);
   const { data: inventory = [], isLoading: invLoading } = useProjectInventory(code);
   const { data: ledger = [] } = useProjectLedger(code);
@@ -199,28 +218,56 @@ export default function ProjectDetailPage() {
     stockPage * stockPageSize,
   );
 
-  const handleMinStockBlur = async (materialCode: string, rawValue: string, current: number) => {
+  const beginMinStockEdit = (materialCode: string, current: number) => {
+    setMinStockDrafts(prev => {
+      if (prev[materialCode] !== undefined) return prev;
+      return { ...prev, [materialCode]: String(current) };
+    });
+  };
+
+  const cancelMinStockEdit = (materialCode: string) => {
+    setMinStockDrafts(prev => {
+      const next = { ...prev };
+      delete next[materialCode];
+      return next;
+    });
+  };
+
+  const saveMinStock = async (materialCode: string, current: number) => {
     if (!code) return;
-    const parsed = Number(rawValue);
-    const next = Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
-    if (next === current) return;
+    const raw = minStockDrafts[materialCode];
+    if (raw === undefined) return;
+    const next = parseMinStockQty(raw);
+    if (next === null) {
+      showToast('error', MIN_STOCK_INVALID_MSG);
+      return;
+    }
+    if (next === current) {
+      cancelMinStockEdit(materialCode);
+      return;
+    }
+    setSavingMinStockCode(materialCode);
     try {
       await minStockMutation.mutateAsync({ projectCode: code, materialCode, minStockQty: next });
+      cancelMinStockEdit(materialCode);
+      showToast('success', 'Đã cập nhật tồn tối thiểu.');
     } catch (err) {
       showToast('error', getApiErrorMessage(err, 'Không thể cập nhật tồn tối thiểu'));
+    } finally {
+      setSavingMinStockCode(null);
     }
   };
 
   if (isLoading) {
     return (
-      <div className="hrm-page">
-        <div className="mb-6 space-y-3">
-          <div className="hrm-table-skeleton h-8 w-72 max-w-full" />
-          <div className="hrm-table-skeleton h-4 w-40 max-w-full" />
+      <div className="hrm-page project-detail-page">
+        <div className="mb-4 space-y-2">
+          <div className="hrm-table-skeleton h-7 w-72 max-w-full" />
+          <div className="hrm-table-skeleton h-3.5 w-40 max-w-full" />
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-4">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="hrm-table-skeleton h-20 rounded-2xl" />
+            <div key={i} className="hrm-table-skeleton h-16 rounded-xl" />
           ))}
         </div>
         <HrmPanel noPadding>
@@ -260,7 +307,7 @@ export default function ProjectDetailPage() {
   const isClosed = project.status === 'Closed';
 
   return (
-    <div className="hrm-page">
+    <div className="hrm-page project-detail-page">
       <HrmDetailHeader
         onBack={goBack}
         title={project.projectName}
@@ -306,7 +353,7 @@ export default function ProjectDetailPage() {
         }
       />
 
-      <div className="hrm-stat-grid">
+      <div className="hrm-stat-grid project-detail-stat-grid">
         <HrmStatCard
           label="Tồn thực tế"
           value={totalActualQty}
@@ -347,7 +394,7 @@ export default function ProjectDetailPage() {
       </div>
 
       <HrmPanel noPadding>
-        <div className="px-4 pt-3 pb-1 border-b border-[var(--md-outline-variant02)]">
+        <div className="px-3 pt-2 pb-0 border-b border-[var(--md-outline-variant02)]">
           <TabFilter tabs={tabs} activeTab={activeTab} onChange={id => setActiveTab(id as DetailTab)} />
         </div>
 
@@ -369,7 +416,7 @@ export default function ProjectDetailPage() {
           ) : (
             <>
               {belowMinRows.length > 0 && (
-                <div className="mx-4 mt-3 mb-1 rounded-xl border border-[var(--md-warning)]/40 bg-[var(--md-warning-container)]/30 px-3 py-2.5 flex items-start gap-2 text-sm text-[var(--md-on-surface)]">
+                <div className="mx-3 mt-2 mb-0 rounded-lg border border-[var(--md-warning)]/40 bg-[var(--md-warning-container)]/30 px-3 py-2 flex items-start gap-2 text-sm text-[var(--md-on-surface)]">
                   <AlertTriangle size={16} className="text-[var(--md-warning)] shrink-0 mt-0.5" aria-hidden />
                   <p>
                     <strong>{belowMinRows.length}</strong> mặt hàng đang dưới tồn tối thiểu.
@@ -378,7 +425,7 @@ export default function ProjectDetailPage() {
                 </div>
               )}
               <div className="overflow-x-auto table-scroll wms-inventory-table-wrap">
-                <table className="wms-inventory-table project-warehouse-table">
+                <table className="wms-inventory-table project-warehouse-table project-detail-stock-table">
                   <thead>
                     <tr>
                       <th className="table-header-cell whitespace-nowrap">Mã VT</th>
@@ -394,6 +441,9 @@ export default function ProjectDetailPage() {
                   <tbody>
                     {paginatedStock.map(row => {
                       const isBelowMin = row.minStockQty > 0 && row.actualInventoryQty < row.minStockQty;
+                      const draft = minStockDrafts[row.materialCode];
+                      const isEditing = draft !== undefined;
+                      const isSavingRow = savingMinStockCode === row.materialCode;
                       return (
                       <tr key={row.materialCode} className={`table-row wms-inventory-row--interactive${isBelowMin ? ' bg-[color-mix(in_srgb,var(--md-warning)_8%,transparent)]' : ''}`}>
                         <td className="table-cell font-mono text-sm text-[var(--md-primary)] whitespace-nowrap">
@@ -406,20 +456,56 @@ export default function ProjectDetailPage() {
                         <td className={`table-cell text-right font-semibold tabular-nums${isBelowMin ? ' text-[var(--md-warning)]' : ''}`}>
                           {row.actualInventoryQty}
                         </td>
-                        <td className="table-cell text-right align-top">
+                        <td className="table-cell text-right align-middle">
                           <PermissionGate permission="wms.projects.update" fallback={
                             <span className="tabular-nums">{row.minStockQty > 0 ? row.minStockQty : '—'}</span>
                           }>
-                            <input
-                              type="number"
-                              min={0}
-                              step="any"
-                              className="form-input w-24 text-right text-xs ml-auto"
-                              defaultValue={row.minStockQty > 0 ? row.minStockQty : ''}
-                              placeholder="0"
-                              disabled={minStockMutation.isPending}
-                              onBlur={e => handleMinStockBlur(row.materialCode, e.target.value, row.minStockQty)}
-                            />
+                            <div className="inline-flex items-center justify-end gap-1 min-w-[7.5rem]">
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                className="form-input w-[4.5rem] text-right text-xs tabular-nums py-1 px-1.5"
+                                value={isEditing ? draft : minStockDisplayValue(row.minStockQty)}
+                                placeholder="0"
+                                disabled={isSavingRow}
+                                aria-label={`Tồn tối thiểu ${row.materialCode}`}
+                                onFocus={() => beginMinStockEdit(row.materialCode, row.minStockQty)}
+                                onChange={e => {
+                                  const next = e.target.value;
+                                  setMinStockDrafts(prev => ({ ...prev, [row.materialCode]: next }));
+                                }}
+                                onKeyDown={e => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    void saveMinStock(row.materialCode, row.minStockQty);
+                                  } else if (e.key === 'Escape') {
+                                    e.preventDefault();
+                                    cancelMinStockEdit(row.materialCode);
+                                  }
+                                }}
+                              />
+                              {isEditing && (
+                                <span className="inline-flex items-center gap-0.5 shrink-0">
+                                  <button
+                                    type="button"
+                                    className="btn btn-text btn-sm px-1 py-0.5 text-[0.6875rem] font-semibold leading-none"
+                                    disabled={isSavingRow}
+                                    onClick={() => void saveMinStock(row.materialCode, row.minStockQty)}
+                                  >
+                                    {isSavingRow ? '…' : 'Lưu'}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="btn btn-text btn-sm px-1 py-0.5 text-[0.6875rem] leading-none text-[var(--md-on-surface-variant)]"
+                                    disabled={isSavingRow}
+                                    onClick={() => cancelMinStockEdit(row.materialCode)}
+                                  >
+                                    Hủy
+                                  </button>
+                                </span>
+                              )}
+                            </div>
                           </PermissionGate>
                         </td>
                         <td className="table-cell text-right tabular-nums stock-qty--pending">

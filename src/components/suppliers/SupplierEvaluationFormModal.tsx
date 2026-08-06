@@ -3,265 +3,189 @@ import Modal from '../ui/Modal';
 import FormField from '../ui/FormField';
 import HrmDatePicker from '../hr/HrmDatePicker';
 import { useSuppliers } from '../../hooks/useSuppliers';
+import {
+  KPI_GROUPS,
+  KPI_MAX,
+  KPI_MIN,
+  computeKpiOverall,
+  emptyKpiScores,
+  kpiCriterionKey,
+  kpiGradeLabel,
+  previewKpiGrade,
+} from '../../lib/suppliers/kpiCriteriaCatalog';
 import type {
   SupplierEvaluationApiDto,
-  SupplierModuleSettingsApiDto,
   UpsertSupplierEvaluationRequest,
 } from '../../types/api/supplierDirectoryApi';
 
-interface SupplierEvaluationFormModalProps {
+const FORM_ID = 'supplier-evaluation-form';
+const SCORE_LABELS = ['Rất yếu', 'Yếu', 'Trung bình', 'Tốt', 'Xuất sắc'] as const;
+
+interface Props {
   isOpen: boolean;
   editing: SupplierEvaluationApiDto | null;
-  settings?: SupplierModuleSettingsApiDto;
   isSaving: boolean;
   onClose: () => void;
   onSubmit: (body: UpsertSupplierEvaluationRequest) => void;
 }
 
-const FORM_ID = 'supplier-evaluation-form';
-
-/** Xếp hạng do BE suy ra từ ngưỡng — hiển thị trước để người đánh giá biết kết quả. */
-function previewGrade(score: number, settings?: SupplierModuleSettingsApiDto) {
-  if (!settings || Number.isNaN(score)) return null;
-  const ladder: Array<[number, string]> = [
-    [settings.gradeAMinScore, 'A'],
-    [settings.gradeBMinScore, 'B'],
-    [settings.gradeCMinScore, 'C'],
-    [settings.gradeDMinScore, 'D'],
-    [settings.gradeEMinScore, 'E'],
-    [settings.gradeFMinScore, 'F'],
-    [settings.gradeGMinScore, 'G'],
-    [settings.gradeHMinScore, 'H'],
-  ];
-  for (const [min, grade] of ladder) {
-    if (score >= min) return grade;
-  }
-  return 'H';
-}
-
-function rateError(raw: string, emptyMsg: string): string | undefined {
-  if (raw.trim() === '') return emptyMsg;
-  const n = Number(raw);
-  if (Number.isNaN(n) || n < 0 || n > 100) return 'Giá trị phải từ 0 đến 100.';
-  return undefined;
-}
-
 export default function SupplierEvaluationFormModal({
   isOpen,
   editing,
-  settings,
   isSaving,
   onClose,
   onSubmit,
-}: SupplierEvaluationFormModalProps) {
+}: Props) {
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={editing ? 'Sửa đánh giá nhà cung cấp' : 'Thêm đánh giá nhà cung cấp'}
+      title={editing ? 'Sửa đánh giá định kỳ (KPI)' : 'Tạo đánh giá định kỳ (KPI)'}
       size="xl"
-      footer={
+      footer={(
         <>
-          <button type="button" className="btn btn-outline" onClick={onClose}>Hủy</button>
-          <button type="submit" form={FORM_ID} className="btn btn-filled" disabled={isSaving}>
-            Lưu
+          <button type="button" className="btn btn-secondary" onClick={onClose} disabled={isSaving}>
+            Hủy
+          </button>
+          <button type="submit" form={FORM_ID} className="btn btn-primary" disabled={isSaving}>
+            {isSaving ? 'Đang lưu…' : 'Lưu đánh giá'}
           </button>
         </>
-      }
+      )}
     >
-      <EvaluationForm editing={editing} settings={settings} onSubmit={onSubmit} />
+      <EvaluationForm key={editing?.id ?? 'new'} editing={editing} onSubmit={onSubmit} />
     </Modal>
   );
 }
 
-/** Modal chỉ render khi mở nên state khởi tạo lại mỗi lần mở — không cần đồng bộ qua effect. */
 function EvaluationForm({
   editing,
-  settings,
   onSubmit,
-}: Pick<SupplierEvaluationFormModalProps, 'editing' | 'settings' | 'onSubmit'>) {
-  const [form, setForm] = useState({
-    supplierId: editing ? String(editing.supplierId) : '',
-    period: editing?.period ?? '',
-    score: editing ? String(editing.score) : '',
-    onTimeDeliveryRate: editing ? String(editing.onTimeDeliveryRate) : '',
-    defectRate: editing ? String(editing.defectRate) : '',
-    warrantyCompletionRate: editing ? String(editing.warrantyCompletionRate) : '',
-    evaluatedAt: editing?.evaluatedAt?.slice(0, 10) ?? '',
-    note: editing?.note ?? '',
-  });
-  const [errors, setErrors] = useState<{
-    supplierId?: string;
-    period?: string;
-    score?: string;
-    onTimeDeliveryRate?: string;
-    defectRate?: string;
-    warrantyCompletionRate?: string;
-  }>({});
+}: Pick<Props, 'editing' | 'onSubmit'>) {
   const { data: suppliers } = useSuppliers({ all: true });
+  const [supplierId, setSupplierId] = useState(editing ? String(editing.supplierId) : '');
+  const [period, setPeriod] = useState(editing?.period ?? '');
+  const [evaluatedAt, setEvaluatedAt] = useState(editing?.evaluatedAt?.slice(0, 10) ?? '');
+  const [note, setNote] = useState(editing?.note ?? '');
+  const [scores, setScores] = useState<Record<string, number>>(
+    () => ({ ...emptyKpiScores(3), ...(editing?.criteriaScores ?? {}) }),
+  );
+  const [errors, setErrors] = useState<{ supplierId?: string; period?: string }>({});
 
-  const grade = previewGrade(Number(form.score), settings);
-
-  const clearError = (key: keyof typeof errors) => {
-    setErrors(prev => {
-      if (!prev[key]) return prev;
-      const next = { ...prev };
-      delete next[key];
-      return next;
-    });
-  };
+  const overall = computeKpiOverall(scores);
+  const grade = previewKpiGrade(overall);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const next: typeof errors = {};
-    const supplierId = Number(form.supplierId);
-    const period = form.period.trim();
-    const score = Number(form.score);
-    const onTimeDeliveryRate = Number(form.onTimeDeliveryRate);
-    const defectRate = Number(form.defectRate);
-    const warrantyCompletionRate = Number(form.warrantyCompletionRate);
-
-    if (!supplierId) next.supplierId = 'Vui lòng chọn nhà cung cấp.';
-    if (!period) next.period = 'Vui lòng nhập kỳ đánh giá.';
-    if (form.score.trim() === '') next.score = 'Vui lòng nhập điểm.';
-    else if (Number.isNaN(score) || score < 0 || score > 100) next.score = 'Điểm phải từ 0 đến 100.';
-
-    const onTimeErr = rateError(form.onTimeDeliveryRate, 'Vui lòng nhập tỷ lệ giao đúng hạn.');
-    if (onTimeErr) next.onTimeDeliveryRate = onTimeErr;
-    const defectErr = rateError(form.defectRate, 'Vui lòng nhập tỷ lệ hàng lỗi.');
-    if (defectErr) next.defectRate = defectErr;
-    const warrantyErr = rateError(form.warrantyCompletionRate, 'Vui lòng nhập tỷ lệ hoàn thành bảo hành.');
-    if (warrantyErr) next.warrantyCompletionRate = warrantyErr;
-
+    const sid = Number(supplierId);
+    if (!sid) next.supplierId = 'Vui lòng chọn nhà cung cấp.';
+    if (!period.trim()) next.period = 'Vui lòng nhập kỳ đánh giá.';
     setErrors(next);
     if (Object.keys(next).length > 0) return;
 
     onSubmit({
-      supplierId,
-      period,
-      score,
-      onTimeDeliveryRate,
-      defectRate,
-      warrantyCompletionRate,
-      evaluatedAt: form.evaluatedAt || null,
-      note: form.note.trim() || null,
+      supplierId: sid,
+      period: period.trim(),
+      criteriaScores: scores,
+      evaluatedAt: evaluatedAt || null,
+      note: note.trim() || null,
     });
   };
 
   return (
     <form id={FORM_ID} className="space-y-3 modal-form-bordered" noValidate onSubmit={handleSubmit}>
-      <FormField label="Nhà cung cấp" required error={errors.supplierId}>
-        <select
-          className="form-select"
-          value={form.supplierId}
-          disabled={Boolean(editing)}
-          onChange={e => {
-            setForm(f => ({ ...f, supplierId: e.target.value }));
-            clearError('supplierId');
-          }}
-        >
-          <option value="">— Chọn nhà cung cấp —</option>
-          {(suppliers?.items ?? []).map(s => (
-            <option key={s.id} value={s.id}>
-              {s.supplierCode} — {s.supplierName}
-            </option>
-          ))}
-        </select>
-      </FormField>
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <FormField label="Nhà cung cấp" required error={errors.supplierId}>
+          <select
+            className="form-select"
+            value={supplierId}
+            disabled={Boolean(editing)}
+            onChange={e => {
+              setSupplierId(e.target.value);
+              setErrors(prev => ({ ...prev, supplierId: undefined }));
+            }}
+          >
+            <option value="">— Chọn nhà cung cấp —</option>
+            {(suppliers?.items ?? []).map(s => (
+              <option key={s.id} value={s.id}>
+                {s.supplierCode} — {s.supplierName}
+              </option>
+            ))}
+          </select>
+        </FormField>
         <FormField label="Kỳ đánh giá" required error={errors.period}>
           <input
             className="form-input"
-            value={form.period}
+            value={period}
             disabled={Boolean(editing)}
             onChange={e => {
-              setForm(f => ({ ...f, period: e.target.value }));
-              clearError('period');
+              setPeriod(e.target.value);
+              setErrors(prev => ({ ...prev, period: undefined }));
             }}
-            placeholder="VD: Q2/2026"
-          />
-        </FormField>
-        <FormField label="Điểm (0–100)" required error={errors.score}>
-          <input
-            type="number"
-            inputMode="decimal"
-            step="0.01"
-            className="form-input tabular-nums"
-            value={form.score}
-            onChange={e => {
-              setForm(f => ({ ...f, score: e.target.value }));
-              clearError('score');
-            }}
+            placeholder="VD: Quý 2/2026"
           />
         </FormField>
         <FormField label="Ngày đánh giá">
-          <HrmDatePicker
-            value={form.evaluatedAt}
-            onChange={v => setForm(f => ({ ...f, evaluatedAt: v }))}
-            placeholder="Chọn ngày"
+          <HrmDatePicker value={evaluatedAt} onChange={setEvaluatedAt} placeholder="Chọn ngày" />
+        </FormField>
+        <FormField label="Điểm tổng / xếp hạng (tự tính)">
+          <input
+            className="form-input"
+            value={`${overall}/5 — ${kpiGradeLabel(grade)}`}
+            disabled
+            readOnly
           />
         </FormField>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <FormField label="Tỷ lệ giao đúng hạn (%)" required error={errors.onTimeDeliveryRate}>
-          <input
-            type="number"
-            inputMode="decimal"
-            step="0.01"
-            className="form-input tabular-nums"
-            value={form.onTimeDeliveryRate}
-            onChange={e => {
-              setForm(f => ({ ...f, onTimeDeliveryRate: e.target.value }));
-              clearError('onTimeDeliveryRate');
-            }}
-          />
-        </FormField>
-        <FormField label="Tỷ lệ hàng lỗi (%)" required error={errors.defectRate}>
-          <input
-            type="number"
-            inputMode="decimal"
-            step="0.01"
-            className="form-input tabular-nums"
-            value={form.defectRate}
-            onChange={e => {
-              setForm(f => ({ ...f, defectRate: e.target.value }));
-              clearError('defectRate');
-            }}
-          />
-        </FormField>
-        <FormField label="Tỷ lệ hoàn thành bảo hành (%)" required error={errors.warrantyCompletionRate}>
-          <input
-            type="number"
-            inputMode="decimal"
-            step="0.01"
-            className="form-input tabular-nums"
-            value={form.warrantyCompletionRate}
-            onChange={e => {
-              setForm(f => ({ ...f, warrantyCompletionRate: e.target.value }));
-              clearError('warrantyCompletionRate');
-            }}
-          />
-        </FormField>
-      </div>
+      {KPI_GROUPS.map(group => (
+        <section key={group.key} className="space-y-2">
+          <h3 className="purchasing-section-title mb-0 text-sm">{group.name}</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse hrm-table">
+              <tbody>
+                {group.criteria.map((label, i) => {
+                  const key = kpiCriterionKey(group.key, i);
+                  return (
+                    <tr key={key} className="table-row">
+                      <td className="table-cell text-pretty">{label}</td>
+                      <td className="table-cell text-right whitespace-nowrap" style={{ width: 140 }}>
+                        <select
+                          className="form-select"
+                          aria-label={label}
+                          value={scores[key] ?? 3}
+                          onChange={e => {
+                            const n = Number(e.target.value);
+                            setScores(prev => ({ ...prev, [key]: n }));
+                          }}
+                        >
+                          {Array.from({ length: KPI_MAX - KPI_MIN + 1 }, (_, idx) => {
+                            const n = KPI_MIN + idx;
+                            return (
+                              <option key={n} value={n}>
+                                {n} — {SCORE_LABELS[n - 1]}
+                              </option>
+                            );
+                          })}
+                        </select>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      ))}
 
-      {grade && (
-        <p className="text-xs text-[var(--md-on-surface-variant)] text-pretty">
-          Xếp hạng dự kiến: <strong className="text-[var(--md-on-surface)]">{grade}</strong>
-          {settings
-            ? ` (A≥${settings.gradeAMinScore}, B≥${settings.gradeBMinScore}, C≥${settings.gradeCMinScore}, … H≥${settings.gradeHMinScore})`
-            : ''}
-        </p>
-      )}
-
-      <FormField label="Ghi chú">
+      <FormField label="Nhận xét tổng thể">
         <textarea
           className="form-input"
           rows={3}
-          value={form.note}
-          onChange={e => setForm(f => ({ ...f, note: e.target.value }))}
-          placeholder="Nhận xét về chất lượng, tiến độ, thái độ phối hợp"
+          value={note}
+          onChange={e => setNote(e.target.value)}
+          placeholder="Nhận xét về năng lực hợp tác lâu dài"
         />
       </FormField>
     </form>

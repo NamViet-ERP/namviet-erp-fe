@@ -11228,6 +11228,44 @@
       }
     },
     "/api/warehouse/supplier-evaluations/{id}": {
+      "get": {
+        "tags": [
+          "SupplierEvaluations"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierEvaluationDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierEvaluationDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierEvaluationDto"
+                }
+              }
+            }
+          }
+        }
+      },
       "put": {
         "tags": [
           "SupplierEvaluations"
@@ -11869,6 +11907,21 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "groupId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "isBlacklisted",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
@@ -11920,6 +11973,44 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/warehouse/suppliers/blacklist": {
+      "get": {
+        "tags": [
+          "Suppliers"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SupplierBlacklistDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SupplierBlacklistDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SupplierBlacklistDto"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -12021,6 +12112,103 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/warehouse/suppliers/{id}/blacklist": {
+      "post": {
+        "tags": [
+          "Suppliers"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BlacklistSupplierRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BlacklistSupplierRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/BlacklistSupplierRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Suppliers"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierDto"
+                }
+              }
+            }
           }
         }
       }
@@ -13389,6 +13577,7 @@
       },
       "ArrivalPlanListResponse": {
         "required": [
+          "asOfDate",
           "daysAhead",
           "overdueLookbackDays",
           "projects",
@@ -13404,6 +13593,10 @@
           "overdueLookbackDays": {
             "type": "integer",
             "format": "int32"
+          },
+          "asOfDate": {
+            "type": "string",
+            "format": "date"
           },
           "windowFrom": {
             "type": "string",
@@ -13496,6 +13689,18 @@
           "day": {
             "type": "integer",
             "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "BlacklistSupplierRequest": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -13709,26 +13914,31 @@
       },
       "CompleteSupplierDeliveryEvaluationRequest": {
         "required": [
-          "defectRate",
-          "onTimeDeliveryRate",
-          "score",
-          "warrantyCompletionRate"
+          "compliance",
+          "delivery",
+          "price",
+          "quality",
+          "service"
         ],
         "type": "object",
         "properties": {
-          "score": {
+          "quality": {
             "type": "number",
             "format": "double"
           },
-          "onTimeDeliveryRate": {
+          "delivery": {
             "type": "number",
             "format": "double"
           },
-          "defectRate": {
+          "price": {
             "type": "number",
             "format": "double"
           },
-          "warrantyCompletionRate": {
+          "service": {
+            "type": "number",
+            "format": "double"
+          },
+          "compliance": {
             "type": "number",
             "format": "double"
           },
@@ -19865,6 +20075,48 @@
         },
         "additionalProperties": false
       },
+      "SupplierBlacklistDto": {
+        "required": [
+          "blacklistedAt",
+          "id",
+          "rating",
+          "supplierCode",
+          "supplierName"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "supplierCode": {
+            "type": "string"
+          },
+          "supplierName": {
+            "type": "string"
+          },
+          "contactPhone": {
+            "type": "string",
+            "nullable": true
+          },
+          "rating": {
+            "type": "string"
+          },
+          "blacklistedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "blacklistedByName": {
+            "type": "string",
+            "nullable": true
+          },
+          "blacklistReason": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "SupplierContactDto": {
         "required": [
           "fullName",
@@ -20009,6 +20261,10 @@
           "importTicketCode": {
             "type": "string"
           },
+          "projectCode": {
+            "type": "string",
+            "nullable": true
+          },
           "receivedAt": {
             "type": "string",
             "format": "date-time"
@@ -20023,6 +20279,31 @@
           "isOverdue": {
             "type": "boolean"
           },
+          "quality": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "delivery": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "price": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "service": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "compliance": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
           "score": {
             "type": "number",
             "format": "double",
@@ -20032,19 +20313,8 @@
             "type": "string",
             "nullable": true
           },
-          "onTimeDeliveryRate": {
-            "type": "number",
-            "format": "double",
-            "nullable": true
-          },
-          "defectRate": {
-            "type": "number",
-            "format": "double",
-            "nullable": true
-          },
-          "warrantyCompletionRate": {
-            "type": "number",
-            "format": "double",
+          "gradeLabel": {
+            "type": "string",
             "nullable": true
           },
           "note": {
@@ -20102,6 +20372,7 @@
         "required": [
           "id",
           "industryGroups",
+          "isBlacklisted",
           "maxDebtDays",
           "purchasedRevenue",
           "rating",
@@ -20134,6 +20405,22 @@
           },
           "rating": {
             "type": "string"
+          },
+          "isBlacklisted": {
+            "type": "boolean"
+          },
+          "blacklistReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "blacklistedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "blacklistedByName": {
+            "type": "string",
+            "nullable": true
           },
           "purchasedRevenue": {
             "type": "number",
@@ -20199,16 +20486,15 @@
       },
       "SupplierEvaluationDto": {
         "required": [
-          "defectRate",
+          "criteriaScores",
           "evaluatedAt",
           "grade",
+          "gradeLabel",
           "id",
-          "onTimeDeliveryRate",
           "period",
           "score",
           "supplierId",
-          "supplierName",
-          "warrantyCompletionRate"
+          "supplierName"
         ],
         "type": "object",
         "properties": {
@@ -20233,21 +20519,19 @@
           "grade": {
             "type": "string"
           },
+          "gradeLabel": {
+            "type": "string"
+          },
           "evaluatedAt": {
             "type": "string",
             "format": "date"
           },
-          "onTimeDeliveryRate": {
-            "type": "number",
-            "format": "double"
-          },
-          "defectRate": {
-            "type": "number",
-            "format": "double"
-          },
-          "warrantyCompletionRate": {
-            "type": "number",
-            "format": "double"
+          "criteriaScores": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int32"
+            }
           },
           "note": {
             "type": "string",
@@ -20396,13 +20680,11 @@
       },
       "SupplierLatestEvaluationDto": {
         "required": [
-          "defectRate",
           "evaluatedAt",
           "grade",
-          "onTimeDeliveryRate",
+          "gradeLabel",
           "period",
-          "score",
-          "warrantyCompletionRate"
+          "score"
         ],
         "type": "object",
         "properties": {
@@ -20416,21 +20698,12 @@
           "grade": {
             "type": "string"
           },
+          "gradeLabel": {
+            "type": "string"
+          },
           "evaluatedAt": {
             "type": "string",
             "format": "date"
-          },
-          "onTimeDeliveryRate": {
-            "type": "number",
-            "format": "double"
-          },
-          "defectRate": {
-            "type": "number",
-            "format": "double"
-          },
-          "warrantyCompletionRate": {
-            "type": "number",
-            "format": "double"
           }
         },
         "additionalProperties": false
@@ -21585,12 +21858,9 @@
       },
       "UpsertSupplierEvaluationRequest": {
         "required": [
-          "defectRate",
-          "onTimeDeliveryRate",
+          "criteriaScores",
           "period",
-          "score",
-          "supplierId",
-          "warrantyCompletionRate"
+          "supplierId"
         ],
         "type": "object",
         "properties": {
@@ -21601,21 +21871,12 @@
           "period": {
             "type": "string"
           },
-          "score": {
-            "type": "number",
-            "format": "double"
-          },
-          "onTimeDeliveryRate": {
-            "type": "number",
-            "format": "double"
-          },
-          "defectRate": {
-            "type": "number",
-            "format": "double"
-          },
-          "warrantyCompletionRate": {
-            "type": "number",
-            "format": "double"
+          "criteriaScores": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int32"
+            }
           },
           "evaluatedAt": {
             "type": "string",
@@ -21648,7 +21909,6 @@
       "UpsertSupplierRequest": {
         "required": [
           "maxDebtDays",
-          "rating",
           "supplierCode",
           "supplierName"
         ],
@@ -21671,9 +21931,6 @@
           "paymentTerms": {
             "type": "string",
             "nullable": true
-          },
-          "rating": {
-            "type": "string"
           }
         },
         "additionalProperties": false

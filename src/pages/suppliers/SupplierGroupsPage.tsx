@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Pencil, Plus, Trash2, Users } from 'lucide-react';
 import PurchasingListLayout from '../../components/purchasing/PurchasingListLayout';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
@@ -151,7 +152,15 @@ export default function SupplierGroupsPage() {
                   <td className="table-cell whitespace-nowrap tabular-nums">
                     {(page - 1) * pageSize + i + 1}
                   </td>
-                  <td className="table-cell font-semibold text-[var(--md-primary)]">{row.name}</td>
+                  <td className="table-cell">
+                    <Link
+                      to={`/suppliers/list?groupId=${row.id}`}
+                      className="font-semibold text-[var(--md-primary)] hover:underline"
+                      title={`Xem NCC trong nhóm ${row.name}`}
+                    >
+                      {row.name}
+                    </Link>
+                  </td>
                   <td className="table-cell">{row.description || '—'}</td>
                   <td className="table-cell whitespace-nowrap text-right tabular-nums">
                     {row.supplierCount}

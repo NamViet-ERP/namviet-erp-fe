@@ -38,3 +38,7 @@ export type UpdateSupplierModuleSettingsRequest = Schemas['UpdateSupplierModuleS
 export type SuppliersDashboardApiDto = Schemas['SuppliersDashboardDto'];
 export type SupplierDebtRowApiDto = Schemas['SupplierDebtRowDto'];
 export type SupplierTrendPointApiDto = Schemas['SupplierTrendPointDto'];
+
+/** Blacklist NCC */
+export type BlacklistSupplierRequest = Schemas['BlacklistSupplierRequest'];
+export type SupplierBlacklistApiDto = Schemas['SupplierBlacklistDto'];

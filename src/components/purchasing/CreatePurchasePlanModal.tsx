@@ -25,6 +25,9 @@ import type {
 } from '../../types/api/purchasingApi';
 import { formatCurrency } from '../../utils/formatCurrency';
 
+/** Trần đơn giá ngân sách (VNĐ) — tránh overflow / nhập nhầm. */
+const MAX_BUDGET_UNIT_PRICE = 1_000_000_000_000;
+
 interface DraftQuote {
   key: string;
   sortOrder: number;
@@ -337,6 +340,17 @@ export default function CreatePurchasePlanModal({
       showToast('warning', 'Vui lòng chọn dự án.');
       return;
     }
+    for (let i = 0; i < lines.length; i += 1) {
+      const price = parseNum(lines[i].budgetUnitPrice);
+      if (price == null) continue;
+      if (price < 0 || price > MAX_BUDGET_UNIT_PRICE) {
+        showToast(
+          'warning',
+          `Dòng ${i + 1}: Đơn giá ngân sách phải từ 0 đến ${formatCurrency(MAX_BUDGET_UNIT_PRICE)}.`,
+        );
+        return;
+      }
+    }
     const apiLines = toApiLines(lines);
     const hasPartial = lines.some(l => l.materialCode.trim() || l.productName.trim() || l.unit.trim());
     if (hasPartial && apiLines.length === 0) {
@@ -643,6 +657,8 @@ export default function CreatePurchasePlanModal({
                           <CurrencyInput
                             className="form-input form-input-sm text-right input-no-spinner"
                             value={line.budgetUnitPrice}
+                            min={0}
+                            max={MAX_BUDGET_UNIT_PRICE}
                             onChange={(_raw, numeric) => {
                               if (linesLocked) return;
                               updateLine(line.key, {

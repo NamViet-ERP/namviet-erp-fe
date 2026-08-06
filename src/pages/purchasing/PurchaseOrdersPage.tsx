@@ -5,6 +5,7 @@ import EmptyState from '../../components/ui/EmptyState';
 import Pagination from '../../components/ui/Pagination';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import Dropdown from '../../components/ui/Dropdown';
+import ProjectAutocomplete from '../../components/purchasing/ProjectAutocomplete';
 import { showToast } from '../../components/ui/Toast';
 import { DEFAULT_LIST_PAGE_SIZE, type ListPageSize } from '../../constants/pagination';
 import {
@@ -14,6 +15,7 @@ import {
   useUnapprovePurchaseOrder,
 } from '../../hooks/usePurchaseOrders';
 import { usePermission } from '../../hooks/usePermission';
+import { useProjects } from '../../hooks/useProjects';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { formatDateTimeVi } from '../../lib/hrm/formatters';
 import {
@@ -150,6 +152,8 @@ export default function PurchaseOrdersPage() {
   const canApprove = has('purchasing.orders.approve');
   const canUnapprove = has('purchasing.orders.unapprove');
   const canPlace = has('purchasing.orders.place');
+  const { data: projectsPage } = useProjects({ page: 1, pageSize: 200, status: 'Active' });
+  const projects = projectsPage?.items ?? [];
 
   const listParams = useMemo(() => ({
     page,
@@ -293,12 +297,12 @@ export default function PurchaseOrdersPage() {
               </label>
               <label className="pur-erp__field">
                 <span>Dự án</span>
-                <input
-                  className="pur-erp__select"
+                <ProjectAutocomplete
                   value={projectCode}
-                  onChange={e => { setProjectCode(e.target.value); setPage(1); }}
-                  placeholder="Mã dự án"
-                  aria-label="Lọc dự án"
+                  onChange={code => { setProjectCode(code); setPage(1); }}
+                  projects={projects}
+                  placeholder="Mã / tên dự án"
+                  compact
                 />
               </label>
               <label className="pur-erp__field">

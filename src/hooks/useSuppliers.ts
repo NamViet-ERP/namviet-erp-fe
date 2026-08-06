@@ -18,6 +18,8 @@ export function useSuppliers(params: SupplierListParams & { all?: boolean } = {}
       pageSize,
       params.search ?? '',
       params.rating ?? '',
+      params.groupId ?? 0,
+      params.isBlacklisted ?? '',
     ] as const,
     queryFn: () =>
       suppliersService.list({
@@ -25,6 +27,8 @@ export function useSuppliers(params: SupplierListParams & { all?: boolean } = {}
         pageSize,
         search: params.search,
         rating: params.rating,
+        groupId: params.groupId,
+        isBlacklisted: params.isBlacklisted,
       }),
   });
 }

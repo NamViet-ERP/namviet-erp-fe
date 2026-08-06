@@ -2,10 +2,16 @@ import { useState } from 'react';
 import Modal from '../ui/Modal';
 import FormField from '../ui/FormField';
 import { useSuppliers } from '../../hooks/useSuppliers';
+import {
+  sanitizePhoneField,
+  validateVietnamPhoneMessage,
+} from '../../lib/hrm/sanitizeInput';
 import type {
   SupplierContactApiDto,
   UpsertSupplierContactRequest,
 } from '../../types/api/supplierDirectoryApi';
+
+const POSITION_MAX_LENGTH = 150;
 
 interface SupplierContactFormModalProps {
   isOpen: boolean;
@@ -58,7 +64,13 @@ function ContactForm({
     note: editing?.note ?? '',
     isPrimary: editing?.isPrimary ?? false,
   });
-  const [errors, setErrors] = useState<{ supplierId?: string; fullName?: string; email?: string }>({});
+  const [errors, setErrors] = useState<{
+    supplierId?: string;
+    fullName?: string;
+    position?: string;
+    phone?: string;
+    email?: string;
+  }>({});
   const { data: suppliers } = useSuppliers({ all: true });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -66,9 +78,19 @@ function ContactForm({
     const next: typeof errors = {};
     const supplierId = Number(form.supplierId);
     const fullName = form.fullName.trim();
+    const position = form.position.trim();
     const email = form.email.trim();
+    const phoneRaw = form.phone.trim();
+    const phone = phoneRaw ? sanitizePhoneField(phoneRaw) : '';
     if (!supplierId) next.supplierId = 'Chọn nhà cung cấp.';
     if (!fullName) next.fullName = 'Họ tên là bắt buộc.';
+    if (position.length > POSITION_MAX_LENGTH) {
+      next.position = `Chức vụ tối đa ${POSITION_MAX_LENGTH} ký tự.`;
+    }
+    if (phone) {
+      const phoneMsg = validateVietnamPhoneMessage(phone);
+      if (phoneMsg) next.phone = phoneMsg;
+    }
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) next.email = 'Email không hợp lệ.';
     setErrors(next);
     if (Object.keys(next).length > 0) return;
@@ -76,8 +98,8 @@ function ContactForm({
     onSubmit({
       supplierId,
       fullName,
-      position: form.position.trim() || null,
-      phone: form.phone.trim() || null,
+      position: position || null,
+      phone: phone || null,
       email: email || null,
       note: form.note.trim() || null,
       isPrimary: form.isPrimary,
@@ -110,19 +132,24 @@ function ContactForm({
             onChange={e => setForm(f => ({ ...f, fullName: e.target.value }))}
           />
         </FormField>
-        <FormField label="Chức vụ">
+        <FormField label="Chức vụ" error={errors.position}>
           <input
             className="form-input"
             value={form.position}
+            maxLength={POSITION_MAX_LENGTH}
             onChange={e => setForm(f => ({ ...f, position: e.target.value }))}
             placeholder="VD: Trưởng phòng kinh doanh"
           />
         </FormField>
-        <FormField label="Điện thoại">
+        <FormField label="Điện thoại" error={errors.phone}>
           <input
             className="form-input"
             value={form.phone}
             onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+            onBlur={() => {
+              if (!form.phone.trim()) return;
+              setForm(f => ({ ...f, phone: sanitizePhoneField(f.phone) }));
+            }}
           />
         </FormField>
         <FormField label="Email" error={errors.email}>

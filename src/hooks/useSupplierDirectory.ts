@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  supplierBlacklistService,
   supplierContactsService,
   supplierDeliveryEvaluationsService,
   supplierEvaluationsService,
@@ -11,6 +12,7 @@ import {
 } from '../services/supplierDirectoryService';
 import { queryKeys } from '../services/queryKeys';
 import type {
+  BlacklistSupplierRequest,
   CompleteSupplierDeliveryEvaluationRequest,
   UpdateSupplierModuleSettingsRequest,
   UpsertSupplierContactRequest,
@@ -129,6 +131,14 @@ export function useSupplierEvaluations(
   });
 }
 
+export function useSupplierEvaluation(id: number | null) {
+  return useQuery({
+    queryKey: queryKeys.supplierEvaluations.detail(id ?? 0),
+    queryFn: () => supplierEvaluationsService.getById(id as number),
+    enabled: id !== null,
+  });
+}
+
 export function useCreateSupplierEvaluation() {
   const qc = useQueryClient();
   return useMutation({
@@ -212,9 +222,46 @@ export function useCompleteSupplierDeliveryEvaluation() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.supplierDeliveryEvaluations.all });
       void qc.invalidateQueries({ queryKey: queryKeys.suppliers.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.suppliersDashboard.all });
     },
   });
 }
+
+export function useSupplierBlacklist() {
+  return useQuery({
+    queryKey: queryKeys.supplierBlacklist.all,
+    queryFn: () => supplierBlacklistService.list(),
+  });
+}
+
+export function useAddSupplierToBlacklist() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, body }: { id: number; body: BlacklistSupplierRequest }) =>
+      supplierBlacklistService.add(id, body),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.supplierBlacklist.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.suppliers.all });
+    },
+  });
+}
+
+/** @deprecated Prefer useAddSupplierToBlacklist */
+export const useAddSupplierBlacklist = useAddSupplierToBlacklist;
+
+export function useRemoveSupplierFromBlacklist() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => supplierBlacklistService.remove(id),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.supplierBlacklist.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.suppliers.all });
+    },
+  });
+}
+
+/** @deprecated Prefer useRemoveSupplierFromBlacklist */
+export const useRemoveSupplierBlacklist = useRemoveSupplierFromBlacklist;
 
 export function useSupplierModuleSettings() {
   return useQuery({
@@ -230,8 +277,8 @@ export function useUpdateSupplierModuleSettings() {
       supplierModuleSettingsService.update(body),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.supplierModuleSettings.all });
-      // Ngưỡng điểm đổi thì xếp hạng của đánh giá mới sẽ khác.
       void qc.invalidateQueries({ queryKey: queryKeys.supplierEvaluations.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.supplierDeliveryEvaluations.all });
     },
   });
 }

@@ -118,10 +118,13 @@ export default function PurchasePaymentDetailPage() {
   }, [isCreate, order, nextStage]);
 
   const amountNum = useMemo(() => {
+    if (isCreate) {
+      return nextStage?.amount ?? 0;
+    }
     const n = parseCurrencyInput(amount);
     if (n > 0) return n;
-    return nextStage?.amount ?? order?.totalAmount ?? payment?.amount ?? 0;
-  }, [amount, nextStage?.amount, order?.totalAmount, payment?.amount]);
+    return payment?.amount ?? 0;
+  }, [isCreate, amount, nextStage?.amount, payment?.amount]);
 
   const previewModel: DnttPreviewModel = useMemo(() => {
     const lines = (order?.lines ?? []).map(l => ({
@@ -497,8 +500,7 @@ export default function PurchasePaymentDetailPage() {
                   <input
                     className="form-input form-input-md pur-dntt__amount"
                     value={amount}
-                    readOnly={!isCreate}
-                    onChange={e => setAmount(formatCurrencyInput(parseCurrencyInput(e.target.value)))}
+                    readOnly
                     placeholder={order ? formatCurrency(order.totalAmount) : '0'}
                     inputMode="numeric"
                     aria-label="Số tiền đề nghị"

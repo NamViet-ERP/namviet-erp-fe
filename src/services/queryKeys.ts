@@ -119,10 +119,15 @@ export const queryKeys = {
   },
   supplierEvaluations: {
     all: ['supplierEvaluations'] as const,
+    detail: (id: number) => ['supplierEvaluations', id] as const,
   },
   supplierDeliveryEvaluations: {
     all: ['supplierDeliveryEvaluations'] as const,
   },
+  supplierBlacklist: {
+    all: ['supplierBlacklist'] as const,
+  },
+
   supplierModuleSettings: {
     all: ['supplierModuleSettings'] as const,
   },

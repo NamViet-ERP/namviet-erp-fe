@@ -2,6 +2,16 @@ import { useState } from 'react';
 import Modal from '../ui/Modal';
 import FormField from '../ui/FormField';
 import HrmDatePicker from '../hr/HrmDatePicker';
+import {
+  ORDER_EVAL_LABELS,
+  ORDER_EVAL_MAX,
+  ORDER_EVAL_MIN,
+  ORDER_EVAL_WEIGHTS,
+  computeOrderEvalScore,
+  orderGradeLabel,
+  previewOrderGrade,
+  type OrderEvalCriteria,
+} from '../../lib/suppliers/orderEvalScoring';
 import type {
   CompleteSupplierDeliveryEvaluationRequest,
   SupplierDeliveryEvaluationApiDto,
@@ -18,30 +28,10 @@ type Props = {
 };
 
 const FORM_ID = 'supplier-delivery-evaluation-form';
+const CRITERIA_KEYS = Object.keys(ORDER_EVAL_LABELS) as Array<keyof OrderEvalCriteria>;
 
-function previewGrade(score: number, settings?: SupplierModuleSettingsApiDto) {
-  if (!settings || Number.isNaN(score)) return null;
-  const ladder: Array<[number, string]> = [
-    [settings.gradeAMinScore, 'A'],
-    [settings.gradeBMinScore, 'B'],
-    [settings.gradeCMinScore, 'C'],
-    [settings.gradeDMinScore, 'D'],
-    [settings.gradeEMinScore, 'E'],
-    [settings.gradeFMinScore, 'F'],
-    [settings.gradeGMinScore, 'G'],
-    [settings.gradeHMinScore, 'H'],
-  ];
-  for (const [min, grade] of ladder) {
-    if (score >= min) return grade;
-  }
-  return 'H';
-}
-
-function rateError(raw: string, emptyMsg: string): string | undefined {
-  if (raw.trim() === '') return emptyMsg;
-  const n = Number(raw);
-  if (Number.isNaN(n) || n < 0 || n > 100) return 'Giá trị phải từ 0 đến 100.';
-  return undefined;
+function defaultCriteria(): OrderEvalCriteria {
+  return { quality: 8, delivery: 8, price: 8, service: 8, compliance: 8 };
 }
 
 export default function CompleteDeliveryEvaluationModal({
@@ -56,7 +46,7 @@ export default function CompleteDeliveryEvaluationModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Đánh giá nhận hàng"
+      title="Đánh giá nhà cung cấp"
       size="md"
       footer={(
         <>
@@ -90,139 +80,93 @@ function CompleteForm({
   settings?: SupplierModuleSettingsApiDto;
   onSubmit: (body: CompleteSupplierDeliveryEvaluationRequest) => void;
 }) {
-  const [form, setForm] = useState({
-    score: '',
-    onTimeDeliveryRate: '',
-    defectRate: '',
-    warrantyCompletionRate: '',
-    evaluatedAt: '',
-    note: '',
-  });
-  const [errors, setErrors] = useState<{
-    score?: string;
-    onTimeDeliveryRate?: string;
-    defectRate?: string;
-    warrantyCompletionRate?: string;
-  }>({});
+  const [criteria, setCriteria] = useState<OrderEvalCriteria>(defaultCriteria);
+  const [evaluatedAt, setEvaluatedAt] = useState('');
+  const [note, setNote] = useState('');
+  const [errors, setErrors] = useState<Partial<Record<keyof OrderEvalCriteria, string>>>({});
 
-  const grade = previewGrade(Number(form.score), settings);
-
-  const clearError = (key: keyof typeof errors) => {
-    setErrors(prev => {
-      if (!prev[key]) return prev;
-      const next = { ...prev };
-      delete next[key];
-      return next;
-    });
-  };
+  const score = computeOrderEvalScore(criteria);
+  const grade = settings ? previewOrderGrade(score, settings) : null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const next: typeof errors = {};
-    const score = Number(form.score);
-    if (form.score.trim() === '') next.score = 'Vui lòng nhập điểm.';
-    else if (Number.isNaN(score) || score < 0 || score > 100) next.score = 'Điểm phải từ 0 đến 100.';
-
-    const onTimeErr = rateError(form.onTimeDeliveryRate, 'Vui lòng nhập tỷ lệ giao đúng hạn.');
-    if (onTimeErr) next.onTimeDeliveryRate = onTimeErr;
-    const defectErr = rateError(form.defectRate, 'Vui lòng nhập tỷ lệ hàng lỗi.');
-    if (defectErr) next.defectRate = defectErr;
-    const warrantyErr = rateError(form.warrantyCompletionRate, 'Vui lòng nhập tỷ lệ hoàn thành bảo hành.');
-    if (warrantyErr) next.warrantyCompletionRate = warrantyErr;
-
+    for (const key of CRITERIA_KEYS) {
+      const n = Number(criteria[key]);
+      if (Number.isNaN(n) || n < ORDER_EVAL_MIN || n > ORDER_EVAL_MAX) {
+        next[key] = `Điểm phải từ ${ORDER_EVAL_MIN} đến ${ORDER_EVAL_MAX}.`;
+      }
+    }
     setErrors(next);
     if (Object.keys(next).length > 0) return;
 
     onSubmit({
-      score,
-      onTimeDeliveryRate: Number(form.onTimeDeliveryRate),
-      defectRate: Number(form.defectRate),
-      warrantyCompletionRate: Number(form.warrantyCompletionRate),
-      evaluatedAt: form.evaluatedAt || null,
-      note: form.note.trim() || null,
+      ...criteria,
+      evaluatedAt: evaluatedAt || null,
+      note: note.trim() || null,
     });
   };
 
   return (
     <form id={FORM_ID} className="space-y-3 modal-form-bordered" noValidate onSubmit={handleSubmit}>
-      <p className="text-sm text-[var(--md-on-surface-variant)]">
-        {evaluation.supplierName} · PO {evaluation.poCode} · NK {evaluation.importTicketCode}
+      <p className="text-sm text-pretty text-[var(--md-on-surface-variant)]">
+        {evaluation.supplierName} · PO {evaluation.poCode} · NK {evaluation.importTicketCode}.
+        Mỗi tiêu chí chấm theo thang {ORDER_EVAL_MIN}–{ORDER_EVAL_MAX}. Điểm tổng và xếp hạng tự tính theo trọng số.
       </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <FormField label="Điểm (0–100)" required error={errors.score}>
+      {CRITERIA_KEYS.map(key => (
+        <FormField
+          key={key}
+          label={`${ORDER_EVAL_LABELS[key]} (trọng số ${Math.round(ORDER_EVAL_WEIGHTS[key] * 100)}%)`}
+          required
+          error={errors[key]}
+        >
           <input
             type="number"
-            inputMode="decimal"
-            step="0.01"
+            inputMode="numeric"
+            min={ORDER_EVAL_MIN}
+            max={ORDER_EVAL_MAX}
+            step="1"
             className="form-input tabular-nums"
-            value={form.score}
+            value={criteria[key]}
             onChange={e => {
-              setForm(f => ({ ...f, score: e.target.value }));
-              clearError('score');
+              const n = Number(e.target.value);
+              setCriteria(c => ({ ...c, [key]: Number.isNaN(n) ? 0 : n }));
+              setErrors(prev => {
+                if (!prev[key]) return prev;
+                const copy = { ...prev };
+                delete copy[key];
+                return copy;
+              });
             }}
           />
+        </FormField>
+      ))}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <FormField label="Điểm tổng (tự tính)">
+          <input className="form-input tabular-nums" value={`${score}/10`} disabled readOnly />
         </FormField>
         <FormField label="Xếp hạng (tự tính)">
-          <input className="form-input" value={grade ?? '—'} disabled readOnly />
-        </FormField>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <FormField label="Giao đúng hạn %" required error={errors.onTimeDeliveryRate}>
           <input
-            type="number"
-            inputMode="decimal"
-            step="0.01"
-            className="form-input tabular-nums"
-            value={form.onTimeDeliveryRate}
-            onChange={e => {
-              setForm(f => ({ ...f, onTimeDeliveryRate: e.target.value }));
-              clearError('onTimeDeliveryRate');
-            }}
-          />
-        </FormField>
-        <FormField label="Hàng lỗi %" required error={errors.defectRate}>
-          <input
-            type="number"
-            inputMode="decimal"
-            step="0.01"
-            className="form-input tabular-nums"
-            value={form.defectRate}
-            onChange={e => {
-              setForm(f => ({ ...f, defectRate: e.target.value }));
-              clearError('defectRate');
-            }}
-          />
-        </FormField>
-        <FormField label="Hoàn thành BH %" required error={errors.warrantyCompletionRate}>
-          <input
-            type="number"
-            inputMode="decimal"
-            step="0.01"
-            className="form-input tabular-nums"
-            value={form.warrantyCompletionRate}
-            onChange={e => {
-              setForm(f => ({ ...f, warrantyCompletionRate: e.target.value }));
-              clearError('warrantyCompletionRate');
-            }}
+            className="form-input"
+            value={grade ? orderGradeLabel(grade) : '—'}
+            disabled
+            readOnly
           />
         </FormField>
       </div>
 
       <FormField label="Ngày đánh giá">
-        <HrmDatePicker
-          value={form.evaluatedAt}
-          onChange={value => setForm(f => ({ ...f, evaluatedAt: value }))}
-        />
+        <HrmDatePicker value={evaluatedAt} onChange={setEvaluatedAt} />
       </FormField>
 
-      <FormField label="Ghi chú">
+      <FormField label="Nhận xét">
         <textarea
           className="form-input"
           rows={3}
-          value={form.note}
-          onChange={e => setForm(f => ({ ...f, note: e.target.value }))}
+          value={note}
+          onChange={e => setNote(e.target.value)}
         />
       </FormField>
     </form>

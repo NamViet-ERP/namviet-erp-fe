@@ -69,8 +69,8 @@ function SettingsForm({ initial }: { initial: SupplierModuleSettingsApiDto }) {
     for (const key of GRADE_KEYS) {
       const raw = grades[key].trim();
       const n = Number(raw);
-      if (raw === '' || Number.isNaN(n) || n < 0 || n > 100) {
-        next[key] = `Vui lòng nhập ngưỡng hạng ${key} (0–100).`;
+      if (raw === '' || Number.isNaN(n) || n < 0 || n > 10) {
+        next[key] = `Vui lòng nhập ngưỡng hạng ${key} (thang 0–10).`;
       } else {
         values[key] = n;
       }
@@ -139,7 +139,7 @@ function SettingsForm({ initial }: { initial: SupplierModuleSettingsApiDto }) {
       </div>
 
       <p className="text-xs text-[var(--md-on-surface-variant)] text-pretty">
-        Điểm từ ngưỡng hạng tương ứng trở lên xếp hạng đó (A cao nhất → H thấp nhất).
+        Đánh giá theo đơn hàng dùng thang điểm 0–10. Điểm từ ngưỡng hạng tương ứng trở lên xếp hạng đó (A cao nhất → H thấp nhất).
         Ngưỡng phải giảm dần A &gt; B &gt; C &gt; D &gt; E &gt; F &gt; G &gt; H.
         Đổi ngưỡng chỉ ảnh hưởng các đánh giá lưu sau đó.
       </p>

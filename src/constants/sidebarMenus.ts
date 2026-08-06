@@ -4,7 +4,7 @@ import {
   PackagePlus, PackageMinus, Settings,
   ClipboardCheck, Users, UserCheck, UserCog,
   Layers, FolderKanban, ArrowLeftRight, Building2, Ruler, BarChart3, RotateCcw, AlertTriangle,
-  Target, CalendarDays, DollarSign, ShoppingCart, ShoppingBag, Star, Truck, WalletCards,
+  Target, CalendarDays, DollarSign, ShoppingCart, ShoppingBag, Star, Truck, WalletCards, Ban,
 } from 'lucide-react';
 /** Thứ tự theo luồng nghiệp vụ: kho dự án → tồn → nhập/xuất/chuyển → danh mục */
 export const warehouseMenu: SidebarMenuItem[] = [
@@ -282,6 +282,13 @@ export const suppliersMenu: SidebarMenuItem[] = [
     label: 'Đánh giá NCC',
     icon: Star,
     path: '/suppliers/evaluations',
+    permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
+  },
+  {
+    id: 'sup-blacklist',
+    label: 'Danh sách blacklist',
+    icon: Ban,
+    path: '/suppliers/blacklist',
     permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
   },
   {

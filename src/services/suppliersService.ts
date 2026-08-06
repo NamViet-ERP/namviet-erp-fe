@@ -20,16 +20,20 @@ export interface SupplierListParams {
   pageSize?: number;
   search?: string;
   rating?: string;
+  groupId?: number;
+  isBlacklisted?: boolean;
 }
 
 export const suppliersService = {
   async list(params: SupplierListParams = {}) {
-    const { page = 1, pageSize = 20, search, rating } = params;
+    const { page = 1, pageSize = 20, search, rating, groupId, isBlacklisted } = params;
     return apiClient.get<PagedApiResult<SupplierApiDto>>(ENDPOINT, {
       page,
       pageSize,
       search: search || undefined,
       rating: rating || undefined,
+      groupId: groupId ?? undefined,
+      isBlacklisted: isBlacklisted ?? undefined,
     });
   },
 
@@ -40,7 +44,6 @@ export const suppliersService = {
       contactPhone: body.contactPhone ?? null,
       maxDebtDays: body.maxDebtDays ?? 30,
       paymentTerms: body.paymentTerms ?? null,
-      rating: body.rating ?? 'A',
     });
     const page = await suppliersService.list({ pageSize: 200 });
     const found = page.items.find((s) => s.supplierCode === body.supplierCode);
@@ -55,7 +58,6 @@ export const suppliersService = {
       contactPhone: body.contactPhone ?? null,
       maxDebtDays: body.maxDebtDays ?? 30,
       paymentTerms: body.paymentTerms ?? null,
-      rating: body.rating ?? 'A',
     });
     return apiClient.get<SupplierApiDto>(`${ENDPOINT}/${id}`);
   },

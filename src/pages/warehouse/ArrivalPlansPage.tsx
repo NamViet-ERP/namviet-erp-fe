@@ -138,7 +138,17 @@ export default function ArrivalPlansPage() {
           </div>
           {data && (
             <div className="arrival-plans-window text-sm text-[var(--md-on-surface-variant)] tabular-nums">
-              Cửa sổ: {formatDateCell(data.windowFrom)} → {formatDateCell(data.windowTo)}
+              <span>
+                Hôm nay {formatDateCell(data.asOfDate ?? data.windowTo)}
+                {' → '}
+                {daysAhead} ngày tới ({formatDateCell(data.windowTo)})
+              </span>
+              {(data.overdueLookbackDays ?? 0) > 0 ? (
+                <span className="ml-2 opacity-80">
+                  · Kèm quá hạn tối đa {data.overdueLookbackDays} ngày
+                  (từ {formatDateCell(data.windowFrom)})
+                </span>
+              ) : null}
             </div>
           )}
         </div>

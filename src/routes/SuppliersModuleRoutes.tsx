@@ -5,6 +5,7 @@ const SuppliersDashboardPage = lazy(() => import('../pages/suppliers/SuppliersDa
 const SupplierGroupsPage = lazy(() => import('../pages/suppliers/SupplierGroupsPage'));
 const SupplierContactsPage = lazy(() => import('../pages/suppliers/SupplierContactsPage'));
 const SupplierEvaluationsPage = lazy(() => import('../pages/suppliers/SupplierEvaluationsPage'));
+const SupplierBlacklistPage = lazy(() => import('../pages/suppliers/SupplierBlacklistPage'));
 const SupplierSettingsPage = lazy(() => import('../pages/suppliers/SupplierSettingsPage'));
 const SupplierMasterPage = lazy(() => import('../pages/suppliers/SupplierMasterPage'));
 
@@ -18,6 +19,7 @@ export default function SuppliersModuleRoutes() {
       <Route path="list" element={<SupplierMasterPage />} />
       <Route path="contacts" element={<SupplierContactsPage />} />
       <Route path="evaluations" element={<SupplierEvaluationsPage />} />
+      <Route path="blacklist" element={<SupplierBlacklistPage />} />
       <Route path="settings" element={<SupplierSettingsPage />} />
       <Route path="*" element={<Navigate to="dashboard" replace />} />
     </Routes>

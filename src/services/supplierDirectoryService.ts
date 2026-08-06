@@ -1,8 +1,10 @@
 import { apiClient } from '../lib/apiClient';
 import type {
+  BlacklistSupplierRequest,
   CompleteSupplierDeliveryEvaluationRequest,
   SetSupplierGroupMembersRequest,
   SetSupplierGroupsRequest,
+  SupplierBlacklistApiDto,
   SupplierContactApiDto,
   SupplierContactPagedApiDto,
   SupplierDeliveryEvaluationApiDto,
@@ -20,6 +22,7 @@ import type {
   UpsertSupplierEvaluationRequest,
   UpsertSupplierGroupRequest,
 } from '../types/api/supplierDirectoryApi';
+import type { SupplierApiDto } from '../types/wms';
 
 const GROUPS = '/api/warehouse/supplier-groups';
 const CONTACTS = '/api/warehouse/supplier-contacts';
@@ -115,6 +118,10 @@ export const supplierEvaluationsService = {
     });
   },
 
+  getById(id: number) {
+    return apiClient.get<SupplierEvaluationApiDto>(`${EVALUATIONS}/${id}`);
+  },
+
   create(body: UpsertSupplierEvaluationRequest) {
     return apiClient.post<SupplierEvaluationApiDto>(EVALUATIONS, body);
   },
@@ -125,6 +132,20 @@ export const supplierEvaluationsService = {
 
   remove(id: number) {
     return apiClient.delete(`${EVALUATIONS}/${id}`);
+  },
+};
+
+export const supplierBlacklistService = {
+  list() {
+    return apiClient.get<SupplierBlacklistApiDto[]>(`${SUPPLIERS}/blacklist`);
+  },
+
+  add(id: number, body: BlacklistSupplierRequest) {
+    return apiClient.post<SupplierApiDto>(`${SUPPLIERS}/${id}/blacklist`, body);
+  },
+
+  remove(id: number) {
+    return apiClient.delete<SupplierApiDto>(`${SUPPLIERS}/${id}/blacklist`);
   },
 };
 
