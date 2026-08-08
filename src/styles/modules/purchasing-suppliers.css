@@ -8604,4 +8604,96 @@
   font-weight: 700;
 }
 
+/* Supplier spend + price history */
+.sup-analytics__help {
+  margin: 0 0 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--md-primary) 8%, var(--md-surface));
+  color: var(--md-on-surface);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+.sup-analytics__head {
+  margin-bottom: 0.85rem;
+}
+.sup-analytics__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--md-on-surface);
+}
+.sup-analytics__desc {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--md-on-surface-variant);
+  line-height: 1.4;
+}
+.sup-analytics__table {
+  width: 100%;
+}
+.sup-analytics__code {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  background: var(--md-primary);
+  color: var(--md-on-primary, #fff);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  vertical-align: baseline;
+}
+.sup-analytics__share {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 10rem;
+}
+.sup-analytics__share-track {
+  flex: 1;
+  height: 8px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--md-primary) 14%, var(--md-surface-container));
+}
+.sup-analytics__share-fill {
+  height: 100%;
+  background: var(--md-primary);
+  border-radius: 8px;
+}
+.sup-analytics__share-pct {
+  flex-shrink: 0;
+  min-width: 3rem;
+  text-align: right;
+  font-size: 0.8125rem;
+  color: var(--md-on-surface-variant);
+}
+.sup-analytics__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  margin-bottom: 0.85rem;
+  align-items: flex-end;
+}
+.sup-analytics__filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 12rem;
+  flex: 1 1 12rem;
+  max-width: 20rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--md-on-surface-variant);
+}
+.sup-analytics__filter-field select {
+  font-weight: 500;
+  color: var(--md-on-surface);
+}
+.sup-analytics__filter-actions {
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 0.1rem;
+}
+
 

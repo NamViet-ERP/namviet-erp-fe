@@ -1,11 +1,22 @@
-import type { SidebarMenuItem } from '../types';
+import type { SidebarChildItem, SidebarMenuItem } from '../types';
 import {
   LayoutDashboard, Package,
   PackagePlus, PackageMinus, Settings,
   ClipboardCheck, Users, UserCheck, UserCog,
   Layers, FolderKanban, ArrowLeftRight, Building2, Ruler, BarChart3, RotateCcw, AlertTriangle,
   Target, CalendarDays, DollarSign, ShoppingCart, ShoppingBag, Star, Truck, WalletCards, Ban,
+  History, PieChart, Activity, Warehouse, ShieldCheck,
 } from 'lucide-react';
+
+function toSidebarChildren(items: SidebarMenuItem[]): SidebarChildItem[] {
+  return items.map(item => ({
+    id: item.id,
+    label: item.label,
+    path: item.path,
+    icon: item.icon,
+    permission: item.permission,
+  }));
+}
 /** Thứ tự theo luồng nghiệp vụ: kho dự án → tồn → nhập/xuất/chuyển → danh mục */
 export const warehouseMenu: SidebarMenuItem[] = [
   {
@@ -278,6 +289,20 @@ export const suppliersMenu: SidebarMenuItem[] = [
     permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
   },
   {
+    id: 'sup-spend',
+    label: 'Chi tiêu theo NCC',
+    icon: PieChart,
+    path: '/suppliers/spend',
+    permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
+  },
+  {
+    id: 'sup-price-history',
+    label: 'Lịch sử giá',
+    icon: History,
+    path: '/suppliers/price-history',
+    permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
+  },
+  {
     id: 'sup-evaluate',
     label: 'Đánh giá NCC',
     icon: Star,
@@ -331,5 +356,54 @@ export const operationsMenu: SidebarMenuItem[] = [
       'wms.categories.view:all',
       'wms.material_units.view:all',
     ],
+  },
+];
+
+/**
+ * Sidebar thống nhất — mọi phân hệ dạng accordion (mục lớn → mục nhỏ).
+ * Portal card `/dashboard` đã tắt; điều hướng chỉ qua menu này.
+ */
+export const unifiedSidebarMenu: SidebarMenuItem[] = [
+  {
+    id: 'mod-operations',
+    label: 'Vận hành',
+    icon: Activity,
+    path: '/operations/dashboard',
+    children: toSidebarChildren(operationsMenu),
+  },
+  {
+    id: 'mod-purchasing',
+    label: 'Mua hàng',
+    icon: ShoppingCart,
+    path: '/purchasing/dashboard',
+    children: toSidebarChildren(purchasingMenu),
+  },
+  {
+    id: 'mod-suppliers',
+    label: 'Nhà cung cấp',
+    icon: Building2,
+    path: '/suppliers/dashboard',
+    children: toSidebarChildren(suppliersMenu),
+  },
+  {
+    id: 'mod-warehouse',
+    label: 'Kho hàng',
+    icon: Warehouse,
+    path: '/warehouse/dashboard-warehouse',
+    children: toSidebarChildren([...warehouseMenu, ...stocktakeMenu]),
+  },
+  {
+    id: 'mod-hrm',
+    label: 'HRM',
+    icon: Users,
+    path: '/members/list',
+    children: toSidebarChildren([...membersMenu, ...recruitmentMenu]),
+  },
+  {
+    id: 'mod-admin',
+    label: 'Admin',
+    icon: ShieldCheck,
+    path: '/admin/users',
+    children: toSidebarChildren(adminMenu),
   },
 ];

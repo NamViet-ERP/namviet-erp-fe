@@ -1,22 +1,19 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { NAMVIET_GROUP_LOGO_URL } from '../../constants/branding';
 import {
-  Search, Grid3X3, Settings, BarChart3, Bell, ChevronDown,
+  Search, Settings, BarChart3, Bell, ChevronDown,
   User, LogOut, X, PackagePlus, PackageMinus, ArrowLeftRight, ClipboardCheck,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { showToast } from '../ui/Toast';
-import { departments } from '../../constants/departments';
-import { getSessionUser, clearSessionUser, getSessionPermissions } from '../../constants/systemUsers';
+import { getSessionUser, clearSessionUser } from '../../constants/systemUsers';
 import { authService } from '../../services/authService';
 import { UI_COMING_SOON } from '../../lib/uiMessages';
-import { handlePermissionNavClick } from '../../lib/protectedNavigation';
 import { useWmsNotifications } from '../../hooks/useWmsNotifications';
 import { useDarkMode } from '../../hooks/useDarkMode';
 import type { WmsNotificationItemApiDto } from '../../services/notificationsService';
-import DepartmentCard from './DepartmentCard';
 
 type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin' | 'technical' | 'purchasing' | 'suppliers' | 'operations';
 type NotifType = 'warning' | 'import' | 'export' | 'info' | 'transfer' | 'stocktake';
@@ -150,11 +147,7 @@ interface HeaderProps {
 export default function Header({ currentModule: _currentModule, onModuleSwitch: _onModuleSwitch }: HeaderProps) {
   const navigate = useNavigate();
   const sessionUser = getSessionUser();
-  const sessionPermissions = getSessionPermissions();
-  const visibleDepartments = departments;
   const currentUser = sessionUser ?? { name: 'User', initials: 'U', roleLabel: '', email: '' };
-  const [showModuleMenu, setShowModuleMenu] = useState(false);
-  const [moduleMenuClosing, setModuleMenuClosing] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [readNotificationIds, setReadNotificationIds] = useState(readStoredNotifIds);
@@ -164,42 +157,7 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
 
   const userMenuRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
-  const moduleMenuRef = useRef<HTMLDivElement>(null);
 
-  const moduleMenuTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const closeModuleMenu = useCallback(() => {
-    if (!showModuleMenu || moduleMenuClosing) return;
-    setModuleMenuClosing(true);
-    moduleMenuTimer.current = setTimeout(() => {
-      setShowModuleMenu(false);
-      setModuleMenuClosing(false);
-    }, 280);
-  }, [showModuleMenu, moduleMenuClosing]);
-
-  const openModuleMenu = useCallback(() => {
-    if (moduleMenuTimer.current) clearTimeout(moduleMenuTimer.current);
-    setModuleMenuClosing(false);
-    setShowModuleMenu(true);
-  }, []);
-
-  const toggleModuleMenu = useCallback(() => {
-    if (showModuleMenu) closeModuleMenu();
-    else openModuleMenu();
-  }, [showModuleMenu, closeModuleMenu, openModuleMenu]);
-
-  useEffect(() => () => {
-    if (moduleMenuTimer.current) clearTimeout(moduleMenuTimer.current);
-  }, []);
-
-  const handleModuleItemClick = useCallback((item: { path?: string; label: string; permission?: string | string[] }, deptTitle: string) => {
-    handlePermissionNavClick(sessionPermissions, item, navigate, {
-      deptTitle,
-      onAfter: closeModuleMenu,
-    });
-  }, [navigate, closeModuleMenu, sessionPermissions]);
-
-  const moduleMenuOpen = showModuleMenu || moduleMenuClosing;
   const notifications = useMemo(
     () => pendingNotifications?.items?.map(item => mapApiNotification(item, readNotificationIds)) ?? [],
     [pendingNotifications, readNotificationIds],
@@ -210,11 +168,10 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
     const handleClick = (e: MouseEvent) => {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) setShowUserMenu(false);
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) setShowNotifications(false);
-      if (moduleMenuRef.current && !moduleMenuRef.current.contains(e.target as Node)) closeModuleMenu();
     };
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
-  }, [closeModuleMenu]);
+  }, []);
 
   const markAllRead = () => {
     notifications.forEach(n => persistNotifRead(n.id));
@@ -240,7 +197,7 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
         <button
           type="button"
           className="nv-header__brand"
-          onClick={() => navigate('/warehouse/dashboard')}
+          onClick={() => navigate('/operations/dashboard')}
           aria-label="Về trang chủ"
         >
           <img
@@ -263,44 +220,6 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
         </div>
 
         <div className="nv-header__actions">
-          <div className="nv-header__cluster">
-            <div className="nv-header-anchor" ref={moduleMenuRef}>
-              <IconBtn title="Chuyển module" active={moduleMenuOpen} onClick={toggleModuleMenu}>
-                <Grid3X3 size={18} />
-              </IconBtn>
-              {moduleMenuOpen && (
-                <>
-                  <div
-                    className={moduleMenuClosing ? 'mega-menu-scrim mega-menu-scrim--out' : 'mega-menu-scrim'}
-                    onClick={closeModuleMenu}
-                    aria-hidden
-                  />
-                  <div
-                    className={`mega-menu-panel ${moduleMenuClosing ? 'animate-scale-out' : 'animate-scale-in'}`}
-                  >
-                    <div className="mega-menu-panel__header">
-                      <h2 className="mega-menu-panel__title">Truy cập phân hệ</h2>
-                      <p className="mega-menu-panel__subtitle">Chọn module để điều hướng nhanh trong hệ thống</p>
-                    </div>
-
-                    <div className="portal-modules">
-                      {visibleDepartments.map((dept) => (
-                        <DepartmentCard
-                          key={dept.title}
-                          dept={dept}
-                          permissions={sessionPermissions}
-                          onItemClick={(item) => handleModuleItemClick(item, dept.title)}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-
-          <div className="nv-header__divider" aria-hidden />
-
           <button
             type="button"
             className="nv-header-report-btn"

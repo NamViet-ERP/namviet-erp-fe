@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import EntityCodeLink from '../../components/ui/EntityCodeLink';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -440,7 +441,12 @@ export default function PurchasePlansPage({ kind = 'plan' }: Props) {
                       return (
                         <tr key={row.code} className={isRejected ? 'pur-erp__row--rejected' : undefined}>
                           <td className="tabular-nums">{formatDateTimeVi(row.createdAt) ?? '—'}</td>
-                          <td className="pur-erp__td-code">{row.code}</td>
+                          <td className="pur-erp__td-code">
+                            <EntityCodeLink
+                              code={row.code}
+                              to={`${detailBase}/${encodeURIComponent(row.code)}`}
+                            />
+                          </td>
                           <td className="pur-erp__td-project">
                             {row.projectName
                               ? `${row.projectName} (${row.projectCode})`

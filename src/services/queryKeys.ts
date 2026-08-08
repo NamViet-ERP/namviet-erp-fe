@@ -135,6 +135,12 @@ export const queryKeys = {
     all: ['suppliersDashboard'] as const,
     detail: (params: object) => ['suppliersDashboard', params] as const,
   },
+  supplierSpend: {
+    all: ['supplierSpend'] as const,
+  },
+  supplierPriceHistory: {
+    all: ['supplierPriceHistory'] as const,
+  },
   purchasePlans: {
     all: ['purchasePlans'] as const,
     detail: (code: string) => ['purchasePlans', code] as const,

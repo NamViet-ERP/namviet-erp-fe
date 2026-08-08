@@ -1,11 +1,15 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
-import { ChevronDown, ChevronsLeft, ChevronLeft, Warehouse as WarehouseIcon, ClipboardCheck, Users, UserCheck, ShieldCheck, Settings, Wrench, ShoppingCart, Building2, Activity } from 'lucide-react';
+import { ChevronDown, ChevronsLeft, ChevronLeft, Warehouse as WarehouseIcon, ClipboardCheck, Users, UserCheck, ShieldCheck, Settings, Wrench, ShoppingCart, Building2, Activity, LayoutDashboard } from 'lucide-react';
 import type { SidebarMenuItem } from '../../types';
 import type { LucideIcon } from 'lucide-react';
 import type { PermissionKey } from '../../lib/permissions';
-import { handlePermissionNavClick, isNavItemAccessible } from '../../lib/protectedNavigation';
+import {
+  handlePermissionNavClick,
+  isNavItemAccessible,
+  type PermissionNavItem,
+} from '../../lib/protectedNavigation';
 
 type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin' | 'technical' | 'purchasing' | 'suppliers' | 'operations';
 
@@ -54,8 +58,14 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
   const hoverTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const itemRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  const ModuleIcon = onBack ? Settings : (moduleIcons[currentModule] || WarehouseIcon);
-  const headerLabel = contextLabel ?? moduleLabels[currentModule];
+  /** Sidebar thống nhất: luôn hiện nhãn hệ thống; contextLabel (vd. Thiết lập) vẫn ưu tiên. */
+  const isUnifiedNav = menuItems.some(item => (item.children?.length ?? 0) > 0);
+  const ModuleIcon = onBack
+    ? Settings
+    : isUnifiedNav
+      ? LayoutDashboard
+      : (moduleIcons[currentModule] || WarehouseIcon);
+  const headerLabel = contextLabel ?? (isUnifiedNav ? 'HỆ THỐNG' : moduleLabels[currentModule]);
 
   /** List + trang con (chi tiết/new) đều giữ active — vd. /purchasing/plans/KHMH-001. */
   const isPathActive = (menuPath: string, pathname: string) => {
@@ -70,7 +80,7 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
       ? item.children.some(c => isPathActive(c.path, location.pathname))
       : isPathActive(item.path, location.pathname);
 
-  const navigateMenuItem = (item: SidebarMenuItem) => {
+  const navigateMenuItem = (item: PermissionNavItem) => {
     handlePermissionNavClick(permissions, item, navigate);
   };
 
@@ -263,14 +273,16 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
         )}
       </div>
 
-      <nav key={currentModule} className="sidebar-nav sidebar-nav-enter">
+      <nav key={isUnifiedNav ? 'unified' : currentModule} className="sidebar-nav sidebar-nav-enter">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const hasChildren = (item.children?.length ?? 0) > 0;
           const isExpanded = !!expandedItems[item.id];
           const isPopoverOpen = collapsed && hasChildren && (activePopover === item.id || hoveredItem === item.id);
-          const active = isActive(item.path) || isParentActive(item) || isPopoverOpen;
-          const locked = !isNavItemAccessible(permissions, item);
+          const active = isParentActive(item) || isPopoverOpen || (!hasChildren && isActive(item.path));
+          const locked = hasChildren
+            ? !item.children!.some(c => isNavItemAccessible(permissions, c))
+            : !isNavItemAccessible(permissions, item);
 
           return (
             <div
@@ -286,11 +298,11 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
                   if (collapsed) {
                     if (!hasChildren) navigateMenuItem(item);
                     else setActivePopover(p => p === item.id ? null : item.id);
+                  } else if (hasChildren) {
+                    toggleExpand(item.id);
                   } else {
-                    if (hasChildren) {
-                      toggleExpand(item.id);
-                    } else {
-                      navigateMenuItem(item);
+                    navigateMenuItem(item);
+                    if (!isUnifiedNav) {
                       setExpandedItems({});
                       setUserCollapsed(new Set());
                     }
@@ -298,6 +310,7 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
                 }}
                 className={`sidebar-item${active ? ' active' : ''}${locked ? ' sidebar-item--locked' : ''}`}
                 aria-label={collapsed ? item.label : undefined}
+                aria-expanded={hasChildren ? isExpanded : undefined}
               >
                 <Icon size={18} className="sidebar-item__icon" />
                 <span className={`sidebar-item__label sidebar-label flex-1 text-left${collapsed ? ' collapsed' : ''}`}>
@@ -315,18 +328,27 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
                 <div className={`submenu-wrapper ${isExpanded ? 'expanded' : ''}`}>
                   <div className="submenu-content">
                     <div className="sidebar-subnav">
-                      {item.children!.map(c => (
-                        <button
-                          key={c.id}
-                          type="button"
-                          onClick={() => navigateMenuItem({ ...item, path: c.path, label: c.label })}
-                          className={`sidebar-subitem${isActive(c.path) ? ' sidebar-subitem--active' : ''}${
-                            !isNavItemAccessible(permissions, item) ? ' sidebar-subitem--locked' : ''
-                          }`}
-                        >
-                          {c.label}
-                        </button>
-                      ))}
+                      {item.children!.map(c => {
+                        const ChildIcon = c.icon;
+                        const childLocked = !isNavItemAccessible(permissions, c);
+                        return (
+                          <button
+                            key={c.id}
+                            type="button"
+                            onClick={() => navigateMenuItem({
+                              label: c.label,
+                              path: c.path,
+                              permission: c.permission,
+                            })}
+                            className={`sidebar-subitem${isActive(c.path) ? ' sidebar-subitem--active' : ''}${
+                              childLocked ? ' sidebar-subitem--locked' : ''
+                            }`}
+                          >
+                            {ChildIcon ? <ChildIcon size={15} className="sidebar-subitem__icon" aria-hidden /> : null}
+                            <span>{c.label}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -353,12 +375,16 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
                   key={c.id}
                   type="button"
                   onClick={() => {
-                    navigateMenuItem({ ...popoverItem, path: c.path, label: c.label });
+                    navigateMenuItem({
+                      label: c.label,
+                      path: c.path,
+                      permission: c.permission,
+                    });
                     setHoveredItem(null);
                     setActivePopover(null);
                   }}
                   className={`sidebar-flyout-item${isActive(c.path) ? ' sidebar-flyout-item--active' : ''}${
-                    !isNavItemAccessible(permissions, popoverItem) ? ' sidebar-flyout-item--locked' : ''
+                    !isNavItemAccessible(permissions, c) ? ' sidebar-flyout-item--locked' : ''
                   }`}
                 >
                   <span className="sidebar-flyout-item__dot" aria-hidden />

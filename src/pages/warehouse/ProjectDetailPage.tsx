@@ -70,9 +70,13 @@ function minStockDisplayValue(qty: number): string {
 function validateEditForm(form: {
   projectName: string;
   materialBudget: string;
+  warehouseKeepers: ProjectWarehouseKeeperDto[];
 }): Record<string, string> {
   const errs: Record<string, string> = {};
   if (!form.projectName.trim()) errs.projectName = 'Vui lòng nhập tên công trình';
+  if (form.warehouseKeepers.length < 1) {
+    errs.warehouseKeepers = 'Chọn ít nhất 1 thủ kho phụ trách';
+  }
   if (parseCurrencyInput(form.materialBudget) <= 0) {
     errs.materialBudget = 'Vui lòng nhập ngân sách vật tư';
   } else if (parseCurrencyInput(form.materialBudget) > MAX_MATERIAL_BUDGET) {
@@ -639,11 +643,20 @@ export default function ProjectDetailPage() {
               }}
             />
           </FormField>
-          <FormField label="Người phụ trách dự án (Thủ kho)">
+          <FormField label="Người phụ trách dự án (Thủ kho)" required error={editErrors.warehouseKeepers}>
             <WarehouseKeeperMultiSelect
               value={editForm.warehouseKeepers}
-              onChange={warehouseKeepers => setEditForm({ ...editForm, warehouseKeepers })}
-              placeholder="Tên thủ kho phụ trách"
+              onChange={warehouseKeepers => {
+                setEditForm({ ...editForm, warehouseKeepers });
+                if (editErrors.warehouseKeepers) {
+                  setEditErrors(prev => {
+                    const next = { ...prev };
+                    delete next.warehouseKeepers;
+                    return next;
+                  });
+                }
+              }}
+              placeholder="Chọn ≥1 thủ kho…"
             />
           </FormField>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

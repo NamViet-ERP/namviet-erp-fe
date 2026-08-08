@@ -1,7 +1,6 @@
 /**
- * Helper utility to get the default route based on user role.
- * Currently, all roles are directed to the main dashboard.
+ * Trang mặc định sau đăng nhập — Tổng quan Vận hành (portal card đã tắt).
  */
 export function getDefaultRoute(_role?: string): string {
-  return '/dashboard';
+  return '/operations/dashboard';
 }

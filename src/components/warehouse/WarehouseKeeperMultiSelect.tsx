@@ -21,7 +21,7 @@ export default function WarehouseKeeperMultiSelect({
   value,
   onChange,
   disabled = false,
-  placeholder = 'Gõ tên thủ kho…',
+  placeholder = 'Chọn ≥1 thủ kho…',
 }: WarehouseKeeperMultiSelectProps) {
   const [options, setOptions] = useState<ProjectWarehouseKeeperDto[]>([]);
   const [open, setOpen] = useState(false);
@@ -98,7 +98,7 @@ export default function WarehouseKeeperMultiSelect({
   };
 
   const panel =
-    open && filtered.length > 0
+    open
       ? createPortal(
           <ul
             id={listId}
@@ -106,24 +106,34 @@ export default function WarehouseKeeperMultiSelect({
             style={panelStyle}
             role="listbox"
           >
-            {filtered.slice(0, 12).map((opt, idx) => (
-              <li key={opt.userId}>
-                <button
-                  type="button"
-                  className={
-                    idx === highlight
-                      ? 'warehouse-keeper-multi__option is-active'
-                      : 'warehouse-keeper-multi__option'
-                  }
-                  onMouseDown={e => e.preventDefault()}
-                  onClick={() => add(opt)}
-                  role="option"
-                  aria-selected={idx === highlight}
-                >
-                  {opt.displayName}
-                </button>
+            {filtered.length === 0 ? (
+              <li className="warehouse-keeper-multi__empty" role="presentation">
+                {options.length === 0
+                  ? 'Chưa có tài khoản thủ kho. Gán role Thủ kho trong Quản trị.'
+                  : selectedIds.size === options.length
+                    ? 'Đã chọn hết thủ kho trong danh sách.'
+                    : 'Không tìm thấy thủ kho phù hợp.'}
               </li>
-            ))}
+            ) : (
+              filtered.slice(0, 12).map((opt, idx) => (
+                <li key={opt.userId}>
+                  <button
+                    type="button"
+                    className={
+                      idx === highlight
+                        ? 'warehouse-keeper-multi__option is-active'
+                        : 'warehouse-keeper-multi__option'
+                    }
+                    onMouseDown={e => e.preventDefault()}
+                    onClick={() => add(opt)}
+                    role="option"
+                    aria-selected={idx === highlight}
+                  >
+                    {opt.displayName}
+                  </button>
+                </li>
+              ))
+            )}
           </ul>,
           document.body,
         )

@@ -22,9 +22,9 @@ export default function App() {
           <Route path="/employee/onboarding" element={<Pages.EmployeeOnboardPage />} />
           <Route element={<AppLayout />}>
             <Route path="/" element={<Navigate to={getDefaultRoute(role)} replace />} />
-            <Route path="/dashboard" element={<Pages.DashboardPage />} />
-
-            <Route path="/warehouse/dashboard" element={<Pages.DashboardPage />} />
+            {/* Portal card đã tắt — chuyển về Tổng quan Vận hành */}
+            <Route path="/dashboard" element={<Navigate to="/operations/dashboard" replace />} />
+            <Route path="/warehouse/dashboard" element={<Navigate to="/operations/dashboard" replace />} />
             <Route path="/warehouse/dashboard-warehouse" element={<Pages.DashboardWarehousePage />} />
             <Route path="/warehouse/list" element={<Navigate to="/warehouse/projects" replace />} />
             <Route path="/warehouse/locations" element={<Navigate to="/warehouse/projects" replace />} />
@@ -81,7 +81,7 @@ export default function App() {
             <Route path="/admin/settings/roles/:code/permissions" element={<Pages.AdminRolePermissionsPage />} />
 
             {/* CSKH / purchasing·stocktake settings — chưa ship API; redirect khỏi placeholder */}
-            <Route path="/technical/*" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/technical/*" element={<Navigate to="/operations/dashboard" replace />} />
 
             <Route path="/purchasing" element={<Navigate to="/purchasing/dashboard" replace />} />
             <Route path="/purchasing/dashboard" element={<Pages.PurchasingDashboardPage />} />
@@ -101,7 +101,8 @@ export default function App() {
 
             <Route path="/suppliers/*" element={<SuppliersModuleRoutes />} />
 
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />          </Route>
+            <Route path="*" element={<Navigate to={getDefaultRoute(role)} replace />} />
+          </Route>
         </Routes>
       </Suspense>
       {import.meta.env.DEV && (

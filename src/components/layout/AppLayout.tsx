@@ -3,18 +3,7 @@ import { Outlet, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import ToastContainer, { showToast } from '../ui/Toast';
-import {
-  warehouseMenu,
-  operationsSettingsMenu,
-  stocktakeMenu,
-  membersMenu,
-  recruitmentMenu,
-  adminMenu,
-  technicalMenu,
-  purchasingMenu,
-  suppliersMenu,
-  operationsMenu,
-} from '../../constants/sidebarMenus';
+import { unifiedSidebarMenu } from '../../constants/sidebarMenus';
 import { getSessionUser, canUserLogin, getSessionPermissions } from '../../constants/systemUsers';
 import { authService } from '../../services/authService';
 import {
@@ -23,7 +12,6 @@ import {
 } from '../../lib/routePermissions';
 import { hasAnyPermission } from '../../lib/permissions';
 import { UI_PERMISSION_DENIED } from '../../lib/uiMessages';
-import type { SidebarMenuItem } from '../../types';
 import PageLoader from '../ui/PageLoader';
 import type { SessionCheckResult } from '../../services/authService';
 
@@ -117,22 +105,7 @@ export default function AppLayout() {
     location.pathname.startsWith('/suppliers') ? 'suppliers' :
     location.pathname.startsWith('/purchasing') ? 'purchasing' : 'warehouse';
 
-  const isOperationsSettings =
-    currentModule === 'operations' && location.pathname.startsWith('/operations/settings');
-
-  const menuItems: SidebarMenuItem[] =
-    isOperationsSettings ? operationsSettingsMenu :
-    currentModule === 'stocktake' ? stocktakeMenu :
-    currentModule === 'recruitment' ? recruitmentMenu :
-    currentModule === 'members' ? membersMenu :
-    currentModule === 'admin' ? adminMenu :
-    currentModule === 'technical' ? technicalMenu :
-    currentModule === 'suppliers' ? suppliersMenu :
-    currentModule === 'purchasing' ? purchasingMenu :
-    currentModule === 'operations' ? operationsMenu : warehouseMenu;
-
-  const hideSidebar = location.pathname === '/profile' || location.pathname === '/warehouse/dashboard' || location.pathname === '/dashboard';
-  const isPortalDashboard = hideSidebar;
+  const hideSidebar = location.pathname === '/profile';
   const isWmsModule =
     currentModule === 'warehouse'
     || currentModule === 'stocktake'
@@ -151,15 +124,13 @@ export default function AppLayout() {
         <Sidebar
           collapsed={sidebarCollapsed}
           onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-          menuItems={menuItems}
+          menuItems={unifiedSidebarMenu}
           permissions={permissions}
           currentModule={currentModule}
-          contextLabel={isOperationsSettings ? 'Thiết lập' : undefined}
-          onBack={isOperationsSettings ? () => navigate('/operations/materials') : undefined}
         />
       )}
       <main className={mainClass}>
-        <div className={isPortalDashboard ? 'app-main__inner app-main__inner--portal' : 'app-main__inner'}>
+        <div className="app-main__inner">
           <div key={location.pathname} className="page-route-enter">
             <Outlet />
           </div>

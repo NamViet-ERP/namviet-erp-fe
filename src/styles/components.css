@@ -1955,7 +1955,14 @@
     color: var(--nv-sidebar-on);
     cursor: pointer;
     transition: background 200ms var(--md-easing), color 200ms var(--md-easing);
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sidebar-subitem__icon {
+    flex-shrink: 0;
+    color: var(--nv-sidebar-accent, #e8a23a);
+    opacity: 0.95;
   }
   .sidebar-subitem:hover {
     background: var(--nv-sidebar-item-hover);

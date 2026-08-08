@@ -23,6 +23,7 @@ import { useProjects, useCreateProject } from '../../hooks/useProjects';
 import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
 import type { WarehouseProjectApiDto, ProjectWarehouseKeeperDto } from '../../types/wms';
 import WarehouseKeeperMultiSelect from '../../components/warehouse/WarehouseKeeperMultiSelect';
+import EntityCodeLink from '../../components/ui/EntityCodeLink';
 
 const EMPTY_PM_ID = '00000000-0000-0000-0000-000000000000';
 
@@ -40,10 +41,14 @@ function validateCreateForm(form: {
   projectName: string;
   startDate: string;
   materialBudget: string;
+  warehouseKeepers: ProjectWarehouseKeeperDto[];
 }): Record<string, string> {
   const errs: Record<string, string> = {};
   if (!form.projectCode.trim()) errs.projectCode = 'Vui lòng nhập mã kho dự án';
   if (!form.projectName.trim()) errs.projectName = 'Vui lòng nhập tên công trình';
+  if (form.warehouseKeepers.length < 1) {
+    errs.warehouseKeepers = 'Chọn ít nhất 1 thủ kho phụ trách';
+  }
   if (!form.startDate) errs.startDate = 'Vui lòng chọn ngày bắt đầu';
   if (parseCurrencyInput(form.materialBudget) <= 0) {
     errs.materialBudget = 'Vui lòng nhập ngân sách vật tư';
@@ -279,8 +284,11 @@ export default function ProjectsPage() {
                     className="table-row wms-inventory-row--interactive"
                     onClick={() => navigate(`/warehouse/projects/${encodeURIComponent(p.projectCode)}`)}
                   >
-                    <td className="table-cell font-mono text-sm text-[var(--md-primary)] whitespace-nowrap project-col-code">
-                      {p.projectCode}
+                    <td className="table-cell whitespace-nowrap project-col-code">
+                      <EntityCodeLink
+                        code={p.projectCode}
+                        to={`/warehouse/projects/${encodeURIComponent(p.projectCode)}`}
+                      />
                     </td>
                     <td className="table-cell font-semibold max-w-[260px]">
                       <span className="line-clamp-2" title={p.projectName}>{p.projectName}</span>
@@ -370,11 +378,14 @@ export default function ProjectsPage() {
               placeholder="VD: Dự án Nhiệt điện Long Phú 1"
             />
           </FormField>
-          <FormField label="Người phụ trách dự án (Thủ kho)">
+          <FormField label="Người phụ trách dự án (Thủ kho)" required error={errors.warehouseKeepers}>
             <WarehouseKeeperMultiSelect
               value={form.warehouseKeepers}
-              onChange={warehouseKeepers => setForm({ ...form, warehouseKeepers })}
-              placeholder="Tên thủ kho phụ trách"
+              onChange={warehouseKeepers => {
+                setForm({ ...form, warehouseKeepers });
+                clearFieldError(setErrors, 'warehouseKeepers');
+              }}
+              placeholder="Chọn ≥1 thủ kho…"
             />
           </FormField>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

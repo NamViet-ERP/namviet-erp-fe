@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check, Eye, Plus, RefreshCw, Send, Undo2 } from 'lucide-react';
 import EmptyState from '../../components/ui/EmptyState';
+import EntityCodeLink from '../../components/ui/EntityCodeLink';
 import Pagination from '../../components/ui/Pagination';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import Dropdown from '../../components/ui/Dropdown';
@@ -396,8 +397,26 @@ export default function PurchaseOrdersPage() {
                       return (
                         <tr key={row.code}>
                           <td className="pur-erp__td-datetime">{formatDateTimeVi(row.createdAt) ?? '—'}</td>
-                          <td className="pur-erp__td-code">{row.code}</td>
-                        <td className="pur-erp__td-code">{row.planCode}</td>
+                          <td className="pur-erp__td-code">
+                            <EntityCodeLink
+                              code={row.code}
+                              to={`/purchasing/orders/${encodeURIComponent(row.code)}`}
+                            />
+                          </td>
+                        <td className="pur-erp__td-code">
+                          {row.planCode ? (
+                            <EntityCodeLink
+                              code={row.planCode}
+                              to={
+                                row.planCode.toUpperCase().startsWith('MHPS-')
+                                  ? `/purchasing/adhoc/${encodeURIComponent(row.planCode)}`
+                                  : `/purchasing/plans/${encodeURIComponent(row.planCode)}`
+                              }
+                            />
+                          ) : (
+                            '—'
+                          )}
+                        </td>
                         <td className="pur-erp__td-project">
                           {row.projectName
                             ? `${row.projectName} (${row.projectCode})`

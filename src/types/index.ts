@@ -325,6 +325,9 @@ export interface SidebarChildItem {
   id: string;
   label: string;
   path: string;
+  icon?: LucideIcon;
+  /** Any one of these permission keys grants access. */
+  permission?: string | string[];
 }
 
 export interface SidebarMenuItem {

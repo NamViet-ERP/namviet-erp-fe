@@ -100,8 +100,9 @@ export function getRequiredPermissionsForPath(pathname: string): PermissionKey[]
 }
 
 export function getFallbackRoute(permissions: readonly PermissionKey[]): string {
-  if (permissions.includes('core.dashboard.view')) return '/dashboard';
+  if (permissions.includes('wms.projects.view:all')) return '/operations/dashboard';
   if (permissions.includes('wms.dashboard.view')) return '/warehouse/dashboard-warehouse';
+  if (permissions.includes('purchasing.dashboard.view')) return '/purchasing/dashboard';
   if (permissions.includes('core.profile.view')) return '/profile';
   return '/login';
 }

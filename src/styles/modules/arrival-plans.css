@@ -76,6 +76,13 @@
   background: color-mix(in srgb, var(--md-primary) 10%, transparent);
 }
 
+.warehouse-keeper-multi__empty {
+  padding: 10px 12px;
+  font-size: 0.8125rem;
+  color: var(--md-on-surface-variant, #5f6368);
+  line-height: 1.35;
+}
+
 .arrival-plans-toolbar {
   flex-wrap: wrap;
   gap: 12px;

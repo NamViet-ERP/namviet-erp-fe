@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import TabFilter from '../../components/ui/TabFilter';
 import SearchBar from '../../components/ui/SearchBar';
@@ -43,6 +43,7 @@ interface MaterialReturnPageProps {
 }
 
 function MaterialReturnPage({ initialProjectCode }: MaterialReturnPageProps) {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('all');
   const [search, setSearch] = useState('');
   const [dateFrom, setDateFrom] = useState('');
@@ -302,6 +303,12 @@ function MaterialReturnPage({ initialProjectCode }: MaterialReturnPageProps) {
           isError={returnsError}
           error={returnsQueryError}
           onOpenDetail={row => { setSelected(row); setShowDetail(true); }}
+          onOpenSourceExport={row => {
+            if (!row.sourceExportCode) return;
+            navigate('/warehouse/export', {
+              state: { openVoucherCode: row.sourceExportCode },
+            });
+          }}
           onEdit={openEdit}
           onSubmit={row => void handleSubmit(row)}
           onApprove={row => void handleApprove(row)}

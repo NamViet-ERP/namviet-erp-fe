@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Plus, Download } from 'lucide-react';
 import type { Export } from '../../types';
@@ -36,15 +36,22 @@ import ExportDetailModal from './export/ExportDetailModal';
 import VoucherDateFilter from '../../components/warehouse/VoucherDateFilter';
 export default function ExportListPageRoute() {
   const location = useLocation();
-  const initialProjectCode = (location.state as { projectCode?: string } | null)?.projectCode;
-  return <ExportListPageApi key={location.key} initialProjectCode={initialProjectCode} />;
+  const state = location.state as { projectCode?: string; openVoucherCode?: string } | null;
+  return (
+    <ExportListPageApi
+      key={location.key}
+      initialProjectCode={state?.projectCode}
+      openVoucherCode={state?.openVoucherCode}
+    />
+  );
 }
 
 interface ExportListPageApiProps {
   initialProjectCode?: string;
+  openVoucherCode?: string;
 }
 
-function ExportListPageApi({ initialProjectCode }: ExportListPageApiProps) {
+function ExportListPageApi({ initialProjectCode, openVoucherCode }: ExportListPageApiProps) {
   const [activeTab, setActiveTab] = useState('all');
   const [search, setSearch] = useState('');
   const [dateFrom, setDateFrom] = useState('');
@@ -241,6 +248,18 @@ function ExportListPageApi({ initialProjectCode }: ExportListPageApiProps) {
     setSelected(exp);
     setShowDetail(true);
   };
+
+  useEffect(() => {
+    if (!openVoucherCode || isLoading || exports.length === 0) return;
+    const match = exports.find(
+      e => e.voucherCode.toLowerCase() === openVoucherCode.toLowerCase(),
+    );
+    if (match) {
+      setSelected(match);
+      setShowDetail(true);
+      setSearch(openVoucherCode);
+    }
+  }, [openVoucherCode, isLoading, exports]);
 
   const handleExportExcel = async () => {
     setIsExporting(true);

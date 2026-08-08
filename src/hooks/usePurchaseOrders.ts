@@ -27,6 +27,8 @@ export function usePurchaseOrder(code: string | undefined) {
 function invalidatePurchaseOrders(qc: ReturnType<typeof useQueryClient>, code?: string) {
   qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all });
   qc.invalidateQueries({ queryKey: queryKeys.purchasePlans.all });
+  qc.invalidateQueries({ queryKey: queryKeys.supplierSpend.all });
+  qc.invalidateQueries({ queryKey: queryKeys.supplierPriceHistory.all });
   if (code) qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.detail(code) });
 }
 
