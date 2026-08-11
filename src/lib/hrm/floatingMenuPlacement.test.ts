@@ -32,9 +32,10 @@ describe('computeFloatingMenuLayout', () => {
     expect(layout.top).toBe(244);
   });
 
-  it('opens upward only when below is tight and above has more space', () => {
+  it('still opens downward when space below is tight', () => {
     Object.defineProperty(window, 'innerHeight', { configurable: true, value: 500 });
     const layout = computeFloatingMenuLayout(mockRect(420, 460), 280, 280);
-    expect(layout.placement).toBe('top');
+    expect(layout.placement).toBe('bottom');
+    expect(layout.top).toBe(464);
   });
 });

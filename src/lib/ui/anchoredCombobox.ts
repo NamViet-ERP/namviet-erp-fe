@@ -60,17 +60,7 @@ export function computeAnchoredPanelStyle(
   compact: boolean,
 ): { placement: ComboboxPlacement; style: CSSProperties } {
   const spaceBelow = window.innerHeight - rect.bottom - COMBOBOX_GAP - COMBOBOX_VIEWPORT_PAD;
-  const spaceAbove = rect.top - COMBOBOX_GAP - COMBOBOX_VIEWPORT_PAD;
-  const minComfortBelow = compact ? 120 : 140;
-
-  const openBelow =
-    spaceBelow >= minComfortBelow ||
-    (spaceBelow >= COMBOBOX_PANEL_MIN_H && spaceBelow >= spaceAbove);
-
-  const available = Math.max(
-    COMBOBOX_PANEL_MIN_H,
-    openBelow ? spaceBelow : spaceAbove,
-  );
+  const available = Math.max(COMBOBOX_PANEL_MIN_H, spaceBelow);
   const maxHeight = Math.min(COMBOBOX_PANEL_MAX_H, available);
   const minPanelWidth = compact ? 280 : 260;
   const width = Math.max(rect.width, minPanelWidth);
@@ -83,26 +73,16 @@ export function computeAnchoredPanelStyle(
     );
   }
 
-  const placement: ComboboxPlacement = openBelow ? 'below' : 'above';
-  const style: CSSProperties = openBelow
-    ? {
-        position: 'fixed',
-        top: rect.bottom + COMBOBOX_GAP,
-        left,
-        width,
-        maxHeight,
-        transform: 'none',
-        zIndex: 1200,
-      }
-    : {
-        position: 'fixed',
-        top: rect.top - COMBOBOX_GAP,
-        left,
-        width,
-        maxHeight,
-        transform: 'translateY(-100%)',
-        zIndex: 1200,
-      };
+  const placement: ComboboxPlacement = 'below';
+  const style: CSSProperties = {
+    position: 'fixed',
+    top: rect.bottom + COMBOBOX_GAP,
+    left,
+    width,
+    maxHeight,
+    transform: 'none',
+    zIndex: 1200,
+  };
 
   return { placement, style };
 }

@@ -26,6 +26,8 @@ import {
   materialSelectError,
 } from '../../constants/materialCategoryLevels';
 import { categoryLevel, resolveLeafCategoryId } from '../../lib/wms/materialCategoryTree';
+import CurrencyInput from '../../components/ui/CurrencyInput';
+import { formatCurrencyFull } from '../../utils/formatCurrency';
 import type { MaterialApiDto } from '../../types/wms';
 
 const emptySelection: Array<number | ''> = ['', '', '', '', ''];
@@ -72,6 +74,8 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
     unit: '',
     technicalSpec: '',
     qualityStandard: '',
+    ceilingPrice: '',
+    abcClass: '',
   });
   const [createErrors, setCreateErrors] = useState<Record<string, string>>({});
 
@@ -121,6 +125,8 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
       unit: '',
       technicalSpec: '',
       qualityStandard: '',
+      ceilingPrice: '',
+      abcClass: '',
     });
     setCreateErrors({});
   };
@@ -168,6 +174,10 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
         unit: createForm.unit.trim(),
         technicalSpec: createForm.technicalSpec.trim() || null,
         qualityStandard: createForm.qualityStandard.trim() || null,
+        ceilingPrice: createForm.ceilingPrice
+          ? Number(String(createForm.ceilingPrice).replace(/[^\d.-]/g, '')) || null
+          : null,
+        abcClass: createForm.abcClass || null,
         isConsumable: false,
       });
       showToast('success', 'Đã tạo mã vật tư mới');
@@ -336,6 +346,10 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
                     <td className="table-cell">{pathCell(m, 'kieu')}</td>
                     <td className="table-cell">{m.technicalSpec ?? '—'}</td>
                     <td className="table-cell">{m.qualityStandard ?? '—'}</td>
+                    <td className="table-cell text-right tabular-nums">
+                      {m.ceilingPrice != null ? formatCurrencyFull(m.ceilingPrice) : '—'}
+                    </td>
+                    <td className="table-cell">{m.abcClass || '—'}</td>
                   </tr>
                   );
                 })
@@ -454,6 +468,25 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
                 onChange={e => setCreateForm(f => ({ ...f, qualityStandard: e.target.value }))}
                 placeholder={MATERIAL_FIELD_PLACEHOLDERS.qualityStandard}
               />
+            </FormField>
+            <FormField label="Giá trần tham chiếu">
+              <CurrencyInput
+                value={createForm.ceilingPrice}
+                onChange={ceilingPrice => setCreateForm(f => ({ ...f, ceilingPrice }))}
+                placeholder="Dùng cảnh báo khi mua vượt giá"
+              />
+            </FormField>
+            <FormField label="Phân loại ABC">
+              <select
+                className="form-select w-full text-sm"
+                value={createForm.abcClass}
+                onChange={e => setCreateForm(f => ({ ...f, abcClass: e.target.value }))}
+              >
+                <option value="">— Không xếp —</option>
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+              </select>
             </FormField>
           </div>
         </div>

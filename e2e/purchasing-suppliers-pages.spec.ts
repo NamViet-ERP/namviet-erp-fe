@@ -6,6 +6,8 @@ const purchasingPages: Array<{ path: string; title: string | RegExp }> = [
   { path: '/purchasing/plans', title: 'Kế hoạch mua hàng' },
   { path: '/purchasing/orders', title: 'Đơn hàng' },
   { path: '/purchasing/payments', title: 'Đề nghị thanh toán' },
+  { path: '/purchasing/estimate-procurement', title: 'Mua hàng dự toán' },
+  { path: '/purchasing/price-book', title: 'Sổ giá & Phân tích' },
   { path: '/suppliers/dashboard', title: 'Dashboard' },
   { path: '/suppliers/list', title: 'Nhà cung cấp' },
   { path: '/suppliers/groups', title: 'Nhóm nhà cung cấp' },

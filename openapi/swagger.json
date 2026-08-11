@@ -7384,6 +7384,103 @@
         }
       }
     },
+    "/api/public/purchase-estimates/{token}": {
+      "get": {
+        "tags": [
+          "PublicPurchaseEstimates"
+        ],
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicPurchaseEstimateDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicPurchaseEstimateDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicPurchaseEstimateDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/purchase-estimates/{token}/submit": {
+      "post": {
+        "tags": [
+          "PublicPurchaseEstimates"
+        ],
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitPublicPurchaseEstimateRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitPublicPurchaseEstimateRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitPublicPurchaseEstimateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicPurchaseEstimateDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicPurchaseEstimateDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicPurchaseEstimateDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/purchasing/contracts": {
       "get": {
         "tags": [
@@ -7823,6 +7920,439 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PurchaseDocumentPagedResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/estimates": {
+      "get": {
+        "tags": [
+          "PurchaseEstimates"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          },
+          {
+            "name": "projectCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseEstimatePagedResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseEstimatePagedResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseEstimatePagedResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "PurchaseEstimates"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePurchaseEstimateRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePurchaseEstimateRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePurchaseEstimateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseEstimateDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseEstimateDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseEstimateDetailDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/estimates/{id}": {
+      "get": {
+        "tags": [
+          "PurchaseEstimates"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseEstimateDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseEstimateDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseEstimateDetailDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "PurchaseEstimates"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePurchaseEstimateRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePurchaseEstimateRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePurchaseEstimateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseEstimateDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseEstimateDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseEstimateDetailDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/estimates/{id}/share-link": {
+      "post": {
+        "tags": [
+          "PurchaseEstimates"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseEstimateShareLinkDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseEstimateShareLinkDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseEstimateShareLinkDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/estimates/{id}/review": {
+      "post": {
+        "tags": [
+          "PurchaseEstimates"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseEstimateDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseEstimateDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseEstimateDetailDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/estimates/{id}/submit-approval": {
+      "post": {
+        "tags": [
+          "PurchaseEstimates"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseEstimateDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseEstimateDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseEstimateDetailDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/estimates/{id}/decide": {
+      "post": {
+        "tags": [
+          "PurchaseEstimates"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecidePurchaseEstimateApprovalRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecidePurchaseEstimateApprovalRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecidePurchaseEstimateApprovalRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseEstimateDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseEstimateDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseEstimateDetailDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/estimates/{id}/convert-plan": {
+      "post": {
+        "tags": [
+          "PurchaseEstimates"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConvertPurchaseEstimateResult"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConvertPurchaseEstimateResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConvertPurchaseEstimateResult"
                 }
               }
             }
@@ -9692,6 +10222,587 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PurchasePlanDetailDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/price-book/items": {
+      "get": {
+        "tags": [
+          "PurchasePriceBook"
+        ],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "categoryId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PriceBookItemDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PriceBookItemDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PriceBookItemDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/price-book/items/{code}": {
+      "get": {
+        "tags": [
+          "PurchasePriceBook"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceBookItemDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceBookItemDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceBookItemDetailDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/price-book/matrix": {
+      "get": {
+        "tags": [
+          "PurchasePriceBook"
+        ],
+        "parameters": [
+          {
+            "name": "categoryId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceBookMatrixDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceBookMatrixDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceBookMatrixDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/price-book/categories": {
+      "get": {
+        "tags": [
+          "PurchasePriceBook"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PriceBookCategoryRowDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PriceBookCategoryRowDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PriceBookCategoryRowDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/price-book/margins": {
+      "get": {
+        "tags": [
+          "PurchasePriceBook"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PriceBookMarginRowDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PriceBookMarginRowDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PriceBookMarginRowDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/price-book/sell-prices": {
+      "post": {
+        "tags": [
+          "PurchasePriceBook"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertPurchaseSellPriceRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertPurchaseSellPriceRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertPurchaseSellPriceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseSellPriceDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseSellPriceDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseSellPriceDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/rfq-quotes": {
+      "get": {
+        "tags": [
+          "PurchaseRfqQuotes"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          },
+          {
+            "name": "supplierId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "year",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "quarter",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseRfqQuotePagedResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseRfqQuotePagedResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseRfqQuotePagedResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "PurchaseRfqQuotes"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertPurchaseRfqQuoteRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertPurchaseRfqQuoteRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertPurchaseRfqQuoteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseRfqQuoteDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseRfqQuoteDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseRfqQuoteDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/rfq-quotes/averages": {
+      "get": {
+        "tags": [
+          "PurchaseRfqQuotes"
+        ],
+        "parameters": [
+          {
+            "name": "groupBy",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "quarter"
+            }
+          },
+          {
+            "name": "year",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PurchaseRfqAverageDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PurchaseRfqAverageDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PurchaseRfqAverageDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/rfq-quotes/win-rates": {
+      "get": {
+        "tags": [
+          "PurchaseRfqQuotes"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PurchaseRfqWinRateDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PurchaseRfqWinRateDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PurchaseRfqWinRateDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/rfq-quotes/{id}": {
+      "get": {
+        "tags": [
+          "PurchaseRfqQuotes"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseRfqQuoteDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseRfqQuoteDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseRfqQuoteDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "PurchaseRfqQuotes"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertPurchaseRfqQuoteRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertPurchaseRfqQuoteRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertPurchaseRfqQuoteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseRfqQuoteDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseRfqQuoteDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseRfqQuoteDto"
                 }
               }
             }
@@ -14957,6 +16068,18 @@
         },
         "additionalProperties": false
       },
+      "ConvertPurchaseEstimateResult": {
+        "required": [
+          "planCode"
+        ],
+        "type": "object",
+        "properties": {
+          "planCode": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "CreateAdminRequestRequest": {
         "required": [
           "employeeId",
@@ -15761,6 +16884,29 @@
         },
         "additionalProperties": false
       },
+      "CreatePurchaseEstimateRequest": {
+        "required": [
+          "projectCode",
+          "title"
+        ],
+        "type": "object",
+        "properties": {
+          "projectCode": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PurchaseEstimateLineInput"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "CreatePurchaseOrderLineRequest": {
         "required": [
           "planLineId",
@@ -16527,6 +17673,27 @@
           "exportValue": {
             "type": "number",
             "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DecidePurchaseEstimateApprovalRequest": {
+        "required": [
+          "decision",
+          "level"
+        ],
+        "type": "object",
+        "properties": {
+          "level": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "decision": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -17600,6 +18767,15 @@
             "type": "string",
             "nullable": true
           },
+          "ceilingPrice": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "abcClass": {
+            "type": "string",
+            "nullable": true
+          },
           "isConsumable": {
             "type": "boolean"
           },
@@ -17901,6 +19077,319 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/PoImportLinePreviewDto"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "PriceBookCategoryRowDto": {
+        "required": [
+          "categoryCode",
+          "categoryId",
+          "categoryName",
+          "itemCount",
+          "poCount",
+          "sharePct",
+          "supplierCount",
+          "totalSpend"
+        ],
+        "type": "object",
+        "properties": {
+          "categoryId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "categoryCode": {
+            "type": "string"
+          },
+          "categoryName": {
+            "type": "string"
+          },
+          "itemCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "supplierCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "poCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalSpend": {
+            "type": "number",
+            "format": "double"
+          },
+          "sharePct": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PriceBookHistoryRowDto": {
+        "required": [
+          "date",
+          "kind",
+          "unitPrice"
+        ],
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "supplierId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "supplierName": {
+            "type": "string",
+            "nullable": true
+          },
+          "unitPrice": {
+            "type": "number",
+            "format": "double"
+          },
+          "poRef": {
+            "type": "string",
+            "nullable": true
+          },
+          "projectCode": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PriceBookItemDetailDto": {
+        "required": [
+          "history",
+          "item"
+        ],
+        "type": "object",
+        "properties": {
+          "item": {
+            "$ref": "#/components/schemas/PriceBookItemDto"
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PriceBookHistoryRowDto"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "PriceBookItemDto": {
+        "required": [
+          "categoryId",
+          "materialCode",
+          "materialName",
+          "overCeiling",
+          "supplierCount"
+        ],
+        "type": "object",
+        "properties": {
+          "materialCode": {
+            "type": "string"
+          },
+          "materialName": {
+            "type": "string"
+          },
+          "categoryId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "categoryName": {
+            "type": "string",
+            "nullable": true
+          },
+          "ceilingPrice": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "abcClass": {
+            "type": "string",
+            "nullable": true
+          },
+          "latestPrice": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "latestDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "latestSupplierName": {
+            "type": "string",
+            "nullable": true
+          },
+          "minPrice": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "maxPrice": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "avgPrice": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "supplierCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "trendPct": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "overCeiling": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PriceBookMarginRowDto": {
+        "required": [
+          "effectiveDate",
+          "materialCode",
+          "materialName",
+          "sellHistoryCount",
+          "sellPrice"
+        ],
+        "type": "object",
+        "properties": {
+          "materialCode": {
+            "type": "string"
+          },
+          "materialName": {
+            "type": "string"
+          },
+          "projectCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "sellPrice": {
+            "type": "number",
+            "format": "double"
+          },
+          "effectiveDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "purchaseAvg": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "purchaseLatest": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "margin": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "marginPct": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "sellHistoryCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PriceBookMatrixCellDto": {
+        "required": [
+          "isMin",
+          "supplierId",
+          "supplierName"
+        ],
+        "type": "object",
+        "properties": {
+          "supplierId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "supplierName": {
+            "type": "string"
+          },
+          "unitPrice": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "isMin": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PriceBookMatrixDto": {
+        "required": [
+          "categoryId",
+          "categoryName",
+          "rows"
+        ],
+        "type": "object",
+        "properties": {
+          "categoryId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "categoryName": {
+            "type": "string"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PriceBookMatrixRowDto"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "PriceBookMatrixRowDto": {
+        "required": [
+          "cells",
+          "materialCode",
+          "materialName"
+        ],
+        "type": "object",
+        "properties": {
+          "materialCode": {
+            "type": "string"
+          },
+          "materialName": {
+            "type": "string"
+          },
+          "cells": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PriceBookMatrixCellDto"
             }
           }
         },
@@ -18264,6 +19753,122 @@
           "cvFileUrl": {
             "type": "string",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PublicPurchaseEstimateDto": {
+        "required": [
+          "canFill",
+          "code",
+          "lines",
+          "preparers",
+          "projectCode",
+          "proposals",
+          "status",
+          "title"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "projectCode": {
+            "type": "string"
+          },
+          "projectName": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string"
+          },
+          "canFill": {
+            "type": "boolean"
+          },
+          "preparerName": {
+            "type": "string",
+            "nullable": true
+          },
+          "preparerDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicPurchaseEstimateLineDto"
+            }
+          },
+          "proposals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PurchaseEstimateProposalDto"
+            }
+          },
+          "preparers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicPurchaseEstimatePreparerDto"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "PublicPurchaseEstimateLineDto": {
+        "required": [
+          "materialCode",
+          "materialName",
+          "qty",
+          "unit"
+        ],
+        "type": "object",
+        "properties": {
+          "materialCode": {
+            "type": "string"
+          },
+          "materialName": {
+            "type": "string"
+          },
+          "categoryName": {
+            "type": "string",
+            "nullable": true
+          },
+          "unit": {
+            "type": "string"
+          },
+          "qty": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PublicPurchaseEstimatePreparerDto": {
+        "required": [
+          "id",
+          "name",
+          "role",
+          "roleLabel"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "roleLabel": {
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -18647,6 +20252,425 @@
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchaseEstimateApprovalDto": {
+        "required": [
+          "id",
+          "level",
+          "name",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "level": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "actionByName": {
+            "type": "string",
+            "nullable": true
+          },
+          "actionAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchaseEstimateDetailDto": {
+        "required": [
+          "approvals",
+          "code",
+          "createdAt",
+          "createdByName",
+          "currentVersion",
+          "id",
+          "lines",
+          "projectCode",
+          "proposals",
+          "status",
+          "title",
+          "updatedAt",
+          "updatedByName",
+          "versions",
+          "viewedVersion"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "projectCode": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "currentVersion": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "viewedVersion": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "shareToken": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "preparerName": {
+            "type": "string",
+            "nullable": true
+          },
+          "preparerDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "reviewedByName": {
+            "type": "string",
+            "nullable": true
+          },
+          "reviewedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "convertedPlanCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdByName": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedByName": {
+            "type": "string"
+          },
+          "versions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PurchaseEstimateVersionSummaryDto"
+            }
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PurchaseEstimateLineDto"
+            }
+          },
+          "proposals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PurchaseEstimateProposalDto"
+            }
+          },
+          "approvals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PurchaseEstimateApprovalDto"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchaseEstimateLineDto": {
+        "required": [
+          "id",
+          "materialCode",
+          "materialName",
+          "newQty",
+          "oldQty",
+          "unit"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "materialCode": {
+            "type": "string"
+          },
+          "materialName": {
+            "type": "string"
+          },
+          "categoryName": {
+            "type": "string",
+            "nullable": true
+          },
+          "unit": {
+            "type": "string"
+          },
+          "oldQty": {
+            "type": "number",
+            "format": "double"
+          },
+          "newQty": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchaseEstimateLineInput": {
+        "required": [
+          "materialCode",
+          "newQty"
+        ],
+        "type": "object",
+        "properties": {
+          "materialCode": {
+            "type": "string"
+          },
+          "newQty": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchaseEstimateListItemDto": {
+        "required": [
+          "code",
+          "createdAt",
+          "createdByName",
+          "currentVersion",
+          "filledLineCount",
+          "id",
+          "lineCount",
+          "projectCode",
+          "status",
+          "title",
+          "updatedAt",
+          "updatedByName"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "projectCode": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "currentVersion": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "filledLineCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lineCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "preparerName": {
+            "type": "string",
+            "nullable": true
+          },
+          "preparerDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdByName": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedByName": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchaseEstimatePagedResponse": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount",
+          "totalPages"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PurchaseEstimateListItemDto"
+            }
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchaseEstimateProposalDto": {
+        "required": [
+          "id",
+          "name",
+          "qty",
+          "unit"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "spec": {
+            "type": "string",
+            "nullable": true
+          },
+          "unit": {
+            "type": "string"
+          },
+          "qty": {
+            "type": "number",
+            "format": "double"
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchaseEstimateProposalInput": {
+        "required": [
+          "name",
+          "qty",
+          "unit"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "spec": {
+            "type": "string",
+            "nullable": true
+          },
+          "unit": {
+            "type": "string"
+          },
+          "qty": {
+            "type": "number",
+            "format": "double"
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchaseEstimateShareLinkDto": {
+        "required": [
+          "path",
+          "token"
+        ],
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchaseEstimateVersionSummaryDto": {
+        "required": [
+          "createdAt",
+          "id",
+          "updatedByName",
+          "versionNumber"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "versionNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedByName": {
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -20270,6 +22294,218 @@
         },
         "additionalProperties": false
       },
+      "PurchaseRfqAverageDto": {
+        "required": [
+          "averagePrice",
+          "period",
+          "quoteCount",
+          "year"
+        ],
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "string"
+          },
+          "year": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "quarter": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "averagePrice": {
+            "type": "number",
+            "format": "double"
+          },
+          "quoteCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchaseRfqQuoteDto": {
+        "required": [
+          "id",
+          "materialCode",
+          "materialName",
+          "quoteDate",
+          "status",
+          "supplierId",
+          "supplierName",
+          "unitPrice"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "materialCode": {
+            "type": "string"
+          },
+          "materialName": {
+            "type": "string"
+          },
+          "supplierId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "supplierName": {
+            "type": "string"
+          },
+          "projectCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "quoteDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "unitPrice": {
+            "type": "number",
+            "format": "double"
+          },
+          "validUntil": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "leadTimeDays": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "paymentTerm": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string"
+          },
+          "poRef": {
+            "type": "string",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchaseRfqQuotePagedResponse": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount",
+          "totalPages"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PurchaseRfqQuoteDto"
+            }
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchaseRfqWinRateDto": {
+        "required": [
+          "rate",
+          "supplierId",
+          "supplierName",
+          "total",
+          "won"
+        ],
+        "type": "object",
+        "properties": {
+          "supplierId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "supplierName": {
+            "type": "string"
+          },
+          "won": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rate": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchaseSellPriceDto": {
+        "required": [
+          "createdByName",
+          "effectiveDate",
+          "id",
+          "materialCode",
+          "materialName",
+          "sellPrice"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "materialCode": {
+            "type": "string"
+          },
+          "materialName": {
+            "type": "string"
+          },
+          "projectCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "sellPrice": {
+            "type": "number",
+            "format": "double"
+          },
+          "effectiveDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "createdByName": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "PurchaseWarrantyClaimDto": {
         "required": [
           "createdAt",
@@ -21546,6 +23782,32 @@
           "diff": {
             "type": "number",
             "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SubmitPublicPurchaseEstimateRequest": {
+        "required": [
+          "lines",
+          "preparerName"
+        ],
+        "type": "object",
+        "properties": {
+          "preparerName": {
+            "type": "string"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PurchaseEstimateLineInput"
+            }
+          },
+          "proposals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PurchaseEstimateProposalInput"
+            },
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -22918,6 +25180,25 @@
         },
         "additionalProperties": false
       },
+      "UpdatePurchaseEstimateRequest": {
+        "required": [
+          "lines"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PurchaseEstimateLineInput"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
       "UpdatePurchaseOrderRequest": {
         "required": [
           "lines"
@@ -23422,6 +25703,15 @@
             "type": "string",
             "nullable": true
           },
+          "ceilingPrice": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "abcClass": {
+            "type": "string",
+            "nullable": true
+          },
           "isConsumable": {
             "type": "boolean"
           }
@@ -23464,6 +25754,89 @@
             "format": "int32"
           },
           "level": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpsertPurchaseRfqQuoteRequest": {
+        "required": [
+          "materialCode",
+          "quoteDate",
+          "supplierId",
+          "unitPrice"
+        ],
+        "type": "object",
+        "properties": {
+          "materialCode": {
+            "type": "string"
+          },
+          "supplierId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "projectCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "quoteDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "unitPrice": {
+            "type": "number",
+            "format": "double"
+          },
+          "validUntil": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "leadTimeDays": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "paymentTerm": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpsertPurchaseSellPriceRequest": {
+        "required": [
+          "effectiveDate",
+          "materialCode",
+          "sellPrice"
+        ],
+        "type": "object",
+        "properties": {
+          "materialCode": {
+            "type": "string"
+          },
+          "projectCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "sellPrice": {
+            "type": "number",
+            "format": "double"
+          },
+          "effectiveDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "note": {
             "type": "string",
             "nullable": true
           }

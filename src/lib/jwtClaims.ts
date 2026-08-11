@@ -7,6 +7,8 @@ const IDENTITY_TO_CLIENT_ROLE: Record<string, string> = {
   PM: 'pm',
   HR: 'hr',
   Staff: 'staff',
+  Project: 'project',
+  Production: 'production',
   Employee: 'employee',
 };
 

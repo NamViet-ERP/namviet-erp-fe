@@ -6432,6 +6432,90 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/public/purchase-estimates/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    token: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PublicPurchaseEstimateDto"];
+                        "application/json": components["schemas"]["PublicPurchaseEstimateDto"];
+                        "text/json": components["schemas"]["PublicPurchaseEstimateDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/purchase-estimates/{token}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    token: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SubmitPublicPurchaseEstimateRequest"];
+                    "text/json": components["schemas"]["SubmitPublicPurchaseEstimateRequest"];
+                    "application/*+json": components["schemas"]["SubmitPublicPurchaseEstimateRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PublicPurchaseEstimateDto"];
+                        "application/json": components["schemas"]["PublicPurchaseEstimateDto"];
+                        "text/json": components["schemas"]["PublicPurchaseEstimateDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/purchasing/contracts": {
         parameters: {
             query?: never;
@@ -6748,6 +6832,346 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/estimates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                    projectCode?: string;
+                    search?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseEstimatePagedResponse"];
+                        "application/json": components["schemas"]["PurchaseEstimatePagedResponse"];
+                        "text/json": components["schemas"]["PurchaseEstimatePagedResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreatePurchaseEstimateRequest"];
+                    "text/json": components["schemas"]["CreatePurchaseEstimateRequest"];
+                    "application/*+json": components["schemas"]["CreatePurchaseEstimateRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseEstimateDetailDto"];
+                        "application/json": components["schemas"]["PurchaseEstimateDetailDto"];
+                        "text/json": components["schemas"]["PurchaseEstimateDetailDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/estimates/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    version?: number;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseEstimateDetailDto"];
+                        "application/json": components["schemas"]["PurchaseEstimateDetailDto"];
+                        "text/json": components["schemas"]["PurchaseEstimateDetailDto"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdatePurchaseEstimateRequest"];
+                    "text/json": components["schemas"]["UpdatePurchaseEstimateRequest"];
+                    "application/*+json": components["schemas"]["UpdatePurchaseEstimateRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseEstimateDetailDto"];
+                        "application/json": components["schemas"]["PurchaseEstimateDetailDto"];
+                        "text/json": components["schemas"]["PurchaseEstimateDetailDto"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/estimates/{id}/share-link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseEstimateShareLinkDto"];
+                        "application/json": components["schemas"]["PurchaseEstimateShareLinkDto"];
+                        "text/json": components["schemas"]["PurchaseEstimateShareLinkDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/estimates/{id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseEstimateDetailDto"];
+                        "application/json": components["schemas"]["PurchaseEstimateDetailDto"];
+                        "text/json": components["schemas"]["PurchaseEstimateDetailDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/estimates/{id}/submit-approval": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseEstimateDetailDto"];
+                        "application/json": components["schemas"]["PurchaseEstimateDetailDto"];
+                        "text/json": components["schemas"]["PurchaseEstimateDetailDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/estimates/{id}/decide": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["DecidePurchaseEstimateApprovalRequest"];
+                    "text/json": components["schemas"]["DecidePurchaseEstimateApprovalRequest"];
+                    "application/*+json": components["schemas"]["DecidePurchaseEstimateApprovalRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseEstimateDetailDto"];
+                        "application/json": components["schemas"]["PurchaseEstimateDetailDto"];
+                        "text/json": components["schemas"]["PurchaseEstimateDetailDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/estimates/{id}/convert-plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ConvertPurchaseEstimateResult"];
+                        "application/json": components["schemas"]["ConvertPurchaseEstimateResult"];
+                        "text/json": components["schemas"]["ConvertPurchaseEstimateResult"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -8210,6 +8634,458 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/price-book/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    search?: string;
+                    categoryId?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PriceBookItemDto"][];
+                        "application/json": components["schemas"]["PriceBookItemDto"][];
+                        "text/json": components["schemas"]["PriceBookItemDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/price-book/items/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PriceBookItemDetailDto"];
+                        "application/json": components["schemas"]["PriceBookItemDetailDto"];
+                        "text/json": components["schemas"]["PriceBookItemDetailDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/price-book/matrix": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    categoryId?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PriceBookMatrixDto"];
+                        "application/json": components["schemas"]["PriceBookMatrixDto"];
+                        "text/json": components["schemas"]["PriceBookMatrixDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/price-book/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PriceBookCategoryRowDto"][];
+                        "application/json": components["schemas"]["PriceBookCategoryRowDto"][];
+                        "text/json": components["schemas"]["PriceBookCategoryRowDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/price-book/margins": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PriceBookMarginRowDto"][];
+                        "application/json": components["schemas"]["PriceBookMarginRowDto"][];
+                        "text/json": components["schemas"]["PriceBookMarginRowDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/price-book/sell-prices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpsertPurchaseSellPriceRequest"];
+                    "text/json": components["schemas"]["UpsertPurchaseSellPriceRequest"];
+                    "application/*+json": components["schemas"]["UpsertPurchaseSellPriceRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseSellPriceDto"];
+                        "application/json": components["schemas"]["PurchaseSellPriceDto"];
+                        "text/json": components["schemas"]["PurchaseSellPriceDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/rfq-quotes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                    supplierId?: number;
+                    status?: string;
+                    year?: number;
+                    quarter?: number;
+                    search?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseRfqQuotePagedResponse"];
+                        "application/json": components["schemas"]["PurchaseRfqQuotePagedResponse"];
+                        "text/json": components["schemas"]["PurchaseRfqQuotePagedResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpsertPurchaseRfqQuoteRequest"];
+                    "text/json": components["schemas"]["UpsertPurchaseRfqQuoteRequest"];
+                    "application/*+json": components["schemas"]["UpsertPurchaseRfqQuoteRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseRfqQuoteDto"];
+                        "application/json": components["schemas"]["PurchaseRfqQuoteDto"];
+                        "text/json": components["schemas"]["PurchaseRfqQuoteDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/rfq-quotes/averages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    groupBy?: string;
+                    year?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseRfqAverageDto"][];
+                        "application/json": components["schemas"]["PurchaseRfqAverageDto"][];
+                        "text/json": components["schemas"]["PurchaseRfqAverageDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/rfq-quotes/win-rates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseRfqWinRateDto"][];
+                        "application/json": components["schemas"]["PurchaseRfqWinRateDto"][];
+                        "text/json": components["schemas"]["PurchaseRfqWinRateDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/rfq-quotes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseRfqQuoteDto"];
+                        "application/json": components["schemas"]["PurchaseRfqQuoteDto"];
+                        "text/json": components["schemas"]["PurchaseRfqQuoteDto"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpsertPurchaseRfqQuoteRequest"];
+                    "text/json": components["schemas"]["UpsertPurchaseRfqQuoteRequest"];
+                    "application/*+json": components["schemas"]["UpsertPurchaseRfqQuoteRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseRfqQuoteDto"];
+                        "application/json": components["schemas"]["PurchaseRfqQuoteDto"];
+                        "text/json": components["schemas"]["PurchaseRfqQuoteDto"];
+                    };
+                };
+            };
+        };
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -11952,6 +12828,9 @@ export interface components {
             unit: string;
             reason: string;
         };
+        ConvertPurchaseEstimateResult: {
+            planCode: string;
+        };
         CreateAdminRequestRequest: {
             type: string;
             /** Format: int32 */
@@ -12178,6 +13057,11 @@ export interface components {
             amount?: number | null;
             note?: string | null;
         };
+        CreatePurchaseEstimateRequest: {
+            projectCode: string;
+            title: string;
+            lines?: components["schemas"]["PurchaseEstimateLineInput"][] | null;
+        };
         CreatePurchaseOrderLineRequest: {
             /** Format: int32 */
             planLineId: number;
@@ -12398,6 +13282,12 @@ export interface components {
             importValue: number;
             /** Format: double */
             exportValue: number;
+        };
+        DecidePurchaseEstimateApprovalRequest: {
+            /** Format: int32 */
+            level: number;
+            decision: string;
+            note?: string | null;
         };
         EmployeeDto: {
             id: string;
@@ -12690,6 +13580,9 @@ export interface components {
             unit: string;
             technicalSpec?: string | null;
             qualityStandard?: string | null;
+            /** Format: double */
+            ceilingPrice?: number | null;
+            abcClass?: string | null;
             isConsumable: boolean;
             isActive: boolean;
         };
@@ -12779,6 +13672,103 @@ export interface components {
             projectCode: string;
             supplierName: string;
             lines: components["schemas"]["PoImportLinePreviewDto"][];
+        };
+        PriceBookCategoryRowDto: {
+            /** Format: int32 */
+            categoryId: number;
+            categoryCode: string;
+            categoryName: string;
+            /** Format: int32 */
+            itemCount: number;
+            /** Format: int32 */
+            supplierCount: number;
+            /** Format: int32 */
+            poCount: number;
+            /** Format: double */
+            totalSpend: number;
+            /** Format: double */
+            sharePct: number;
+        };
+        PriceBookHistoryRowDto: {
+            /** Format: date */
+            date: string;
+            kind: string;
+            status?: string | null;
+            /** Format: int32 */
+            supplierId?: number | null;
+            supplierName?: string | null;
+            /** Format: double */
+            unitPrice: number;
+            poRef?: string | null;
+            projectCode?: string | null;
+        };
+        PriceBookItemDetailDto: {
+            item: components["schemas"]["PriceBookItemDto"];
+            history: components["schemas"]["PriceBookHistoryRowDto"][];
+        };
+        PriceBookItemDto: {
+            materialCode: string;
+            materialName: string;
+            /** Format: int32 */
+            categoryId: number;
+            categoryName?: string | null;
+            /** Format: double */
+            ceilingPrice?: number | null;
+            abcClass?: string | null;
+            /** Format: double */
+            latestPrice?: number | null;
+            /** Format: date */
+            latestDate?: string | null;
+            latestSupplierName?: string | null;
+            /** Format: double */
+            minPrice?: number | null;
+            /** Format: double */
+            maxPrice?: number | null;
+            /** Format: double */
+            avgPrice?: number | null;
+            /** Format: int32 */
+            supplierCount: number;
+            /** Format: double */
+            trendPct?: number | null;
+            overCeiling: boolean;
+        };
+        PriceBookMarginRowDto: {
+            materialCode: string;
+            materialName: string;
+            projectCode?: string | null;
+            /** Format: double */
+            sellPrice: number;
+            /** Format: date */
+            effectiveDate: string;
+            /** Format: double */
+            purchaseAvg?: number | null;
+            /** Format: double */
+            purchaseLatest?: number | null;
+            /** Format: double */
+            margin?: number | null;
+            /** Format: double */
+            marginPct?: number | null;
+            /** Format: int32 */
+            sellHistoryCount: number;
+        };
+        PriceBookMatrixCellDto: {
+            /** Format: int32 */
+            supplierId: number;
+            supplierName: string;
+            /** Format: double */
+            unitPrice?: number | null;
+            isMin: boolean;
+        };
+        PriceBookMatrixDto: {
+            /** Format: int32 */
+            categoryId: number;
+            categoryName: string;
+            rows: components["schemas"]["PriceBookMatrixRowDto"][];
+        };
+        PriceBookMatrixRowDto: {
+            materialCode: string;
+            materialName: string;
+            cells: components["schemas"]["PriceBookMatrixCellDto"][];
         };
         ProjectDto: {
             projectCode: string;
@@ -12886,6 +13876,35 @@ export interface components {
             cvFileName?: string | null;
             cvFileSize?: string | null;
             cvFileUrl?: string | null;
+        };
+        PublicPurchaseEstimateDto: {
+            code: string;
+            title: string;
+            projectCode: string;
+            projectName?: string | null;
+            status: string;
+            canFill: boolean;
+            preparerName?: string | null;
+            /** Format: date-time */
+            preparerDate?: string | null;
+            lines: components["schemas"]["PublicPurchaseEstimateLineDto"][];
+            proposals: components["schemas"]["PurchaseEstimateProposalDto"][];
+            preparers: components["schemas"]["PublicPurchaseEstimatePreparerDto"][];
+        };
+        PublicPurchaseEstimateLineDto: {
+            materialCode: string;
+            materialName: string;
+            categoryName?: string | null;
+            unit: string;
+            /** Format: double */
+            qty: number;
+        };
+        PublicPurchaseEstimatePreparerDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            role: string;
+            roleLabel: string;
         };
         PurchaseContractDto: {
             /** Format: uuid */
@@ -12999,6 +14018,131 @@ export interface components {
             pageSize: number;
             /** Format: int32 */
             totalPages: number;
+        };
+        PurchaseEstimateApprovalDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int32 */
+            level: number;
+            name: string;
+            status: string;
+            actionByName?: string | null;
+            /** Format: date-time */
+            actionAt?: string | null;
+            note?: string | null;
+        };
+        PurchaseEstimateDetailDto: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            projectCode: string;
+            title: string;
+            status: string;
+            /** Format: int32 */
+            currentVersion: number;
+            /** Format: int32 */
+            viewedVersion: number;
+            /** Format: uuid */
+            shareToken?: string | null;
+            preparerName?: string | null;
+            /** Format: date-time */
+            preparerDate?: string | null;
+            reviewedByName?: string | null;
+            /** Format: date-time */
+            reviewedAt?: string | null;
+            convertedPlanCode?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            createdByName: string;
+            /** Format: date-time */
+            updatedAt: string;
+            updatedByName: string;
+            versions: components["schemas"]["PurchaseEstimateVersionSummaryDto"][];
+            lines: components["schemas"]["PurchaseEstimateLineDto"][];
+            proposals: components["schemas"]["PurchaseEstimateProposalDto"][];
+            approvals: components["schemas"]["PurchaseEstimateApprovalDto"][];
+        };
+        PurchaseEstimateLineDto: {
+            /** Format: uuid */
+            id: string;
+            materialCode: string;
+            materialName: string;
+            categoryName?: string | null;
+            unit: string;
+            /** Format: double */
+            oldQty: number;
+            /** Format: double */
+            newQty: number;
+        };
+        PurchaseEstimateLineInput: {
+            materialCode: string;
+            /** Format: double */
+            newQty: number;
+        };
+        PurchaseEstimateListItemDto: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            projectCode: string;
+            title: string;
+            status: string;
+            /** Format: int32 */
+            currentVersion: number;
+            /** Format: int32 */
+            filledLineCount: number;
+            /** Format: int32 */
+            lineCount: number;
+            preparerName?: string | null;
+            /** Format: date-time */
+            preparerDate?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            createdByName: string;
+            /** Format: date-time */
+            updatedAt: string;
+            updatedByName: string;
+        };
+        PurchaseEstimatePagedResponse: {
+            items: components["schemas"]["PurchaseEstimateListItemDto"][];
+            /** Format: int32 */
+            totalCount: number;
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalPages: number;
+        };
+        PurchaseEstimateProposalDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            spec?: string | null;
+            unit: string;
+            /** Format: double */
+            qty: number;
+            note?: string | null;
+        };
+        PurchaseEstimateProposalInput: {
+            name: string;
+            spec?: string | null;
+            unit: string;
+            /** Format: double */
+            qty: number;
+            note?: string | null;
+        };
+        PurchaseEstimateShareLinkDto: {
+            token: string;
+            path: string;
+        };
+        PurchaseEstimateVersionSummaryDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int32 */
+            versionNumber: number;
+            /** Format: date-time */
+            createdAt: string;
+            updatedByName: string;
         };
         PurchaseOrderAttachmentDto: {
             /** Format: uuid */
@@ -13500,6 +14644,74 @@ export interface components {
             varianceReceivedPct: number;
             status: string;
         };
+        PurchaseRfqAverageDto: {
+            period: string;
+            /** Format: int32 */
+            year: number;
+            /** Format: int32 */
+            quarter?: number | null;
+            /** Format: double */
+            averagePrice: number;
+            /** Format: int32 */
+            quoteCount: number;
+        };
+        PurchaseRfqQuoteDto: {
+            /** Format: uuid */
+            id: string;
+            materialCode: string;
+            materialName: string;
+            /** Format: int32 */
+            supplierId: number;
+            supplierName: string;
+            projectCode?: string | null;
+            /** Format: date */
+            quoteDate: string;
+            /** Format: double */
+            unitPrice: number;
+            /** Format: date */
+            validUntil?: string | null;
+            /** Format: int32 */
+            leadTimeDays?: number | null;
+            paymentTerm?: string | null;
+            status: string;
+            poRef?: string | null;
+            note?: string | null;
+        };
+        PurchaseRfqQuotePagedResponse: {
+            items: components["schemas"]["PurchaseRfqQuoteDto"][];
+            /** Format: int32 */
+            totalCount: number;
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalPages: number;
+        };
+        PurchaseRfqWinRateDto: {
+            /** Format: int32 */
+            supplierId: number;
+            supplierName: string;
+            /** Format: int32 */
+            won: number;
+            /** Format: int32 */
+            total: number;
+            /** Format: int32 */
+            rate: number;
+        };
+        PurchaseSellPriceDto: {
+            /** Format: uuid */
+            id: string;
+            materialCode: string;
+            materialName: string;
+            projectCode?: string | null;
+            /** Format: double */
+            sellPrice: number;
+            /** Format: date */
+            effectiveDate: string;
+            createdByName: string;
+            note?: string | null;
+        };
         PurchaseWarrantyClaimDto: {
             /** Format: uuid */
             id: string;
@@ -13881,6 +15093,11 @@ export interface components {
             actualQty: number;
             /** Format: double */
             diff: number;
+        };
+        SubmitPublicPurchaseEstimateRequest: {
+            preparerName: string;
+            lines: components["schemas"]["PurchaseEstimateLineInput"][];
+            proposals?: components["schemas"]["PurchaseEstimateProposalInput"][] | null;
         };
         SupplierBlacklistDto: {
             /** Format: int32 */
@@ -14288,6 +15505,10 @@ export interface components {
             amount?: number | null;
             note?: string | null;
         };
+        UpdatePurchaseEstimateRequest: {
+            title?: string | null;
+            lines: components["schemas"]["PurchaseEstimateLineInput"][];
+        };
         UpdatePurchaseOrderRequest: {
             note?: string | null;
             /** Format: date */
@@ -14442,6 +15663,9 @@ export interface components {
             unit: string;
             technicalSpec?: string | null;
             qualityStandard?: string | null;
+            /** Format: double */
+            ceilingPrice?: number | null;
+            abcClass?: string | null;
             isConsumable: boolean;
         };
         UpsertMaterialUnitRequest: {
@@ -14455,6 +15679,32 @@ export interface components {
             /** Format: int32 */
             departmentId: number;
             level?: string | null;
+        };
+        UpsertPurchaseRfqQuoteRequest: {
+            materialCode: string;
+            /** Format: int32 */
+            supplierId: number;
+            projectCode?: string | null;
+            /** Format: date */
+            quoteDate: string;
+            /** Format: double */
+            unitPrice: number;
+            /** Format: date */
+            validUntil?: string | null;
+            /** Format: int32 */
+            leadTimeDays?: number | null;
+            paymentTerm?: string | null;
+            status?: string | null;
+            note?: string | null;
+        };
+        UpsertPurchaseSellPriceRequest: {
+            materialCode: string;
+            projectCode?: string | null;
+            /** Format: double */
+            sellPrice: number;
+            /** Format: date */
+            effectiveDate: string;
+            note?: string | null;
         };
         UpsertSupplierContactRequest: {
             /** Format: int32 */

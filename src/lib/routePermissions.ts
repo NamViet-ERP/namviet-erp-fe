@@ -85,6 +85,15 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
     match: p => p.startsWith('/purchasing/orders/'),
     permissions: ['purchasing.orders.view'],
   },
+  {
+    match: p => p === '/purchasing/estimate-procurement',
+    permissions: ['purchasing.estimates.view', 'purchasing.rfq.view'],
+  },
+  {
+    match: p => p.startsWith('/purchasing/estimate-procurement/'),
+    permissions: ['purchasing.estimates.view'],
+  },
+  { match: p => p === '/purchasing/price-book', permissions: ['purchasing.pricebook.view'] },
   { match: p => p === '/purchasing/contracts', permissions: ['purchasing.contracts.view'] },
   { match: p => p === '/purchasing/documents', permissions: ['purchasing.documents.view'] },
   { match: p => p === '/purchasing/warranties', permissions: ['purchasing.warranties.view'] },

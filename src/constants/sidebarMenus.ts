@@ -6,6 +6,7 @@ import {
   Layers, FolderKanban, ArrowLeftRight, Building2, Ruler, BarChart3, RotateCcw, AlertTriangle,
   Target, CalendarDays, DollarSign, ShoppingCart, ShoppingBag, Star, Truck, WalletCards, Ban,
   History, PieChart, Activity, Warehouse, ShieldCheck, FolderOpen, ScrollText,
+  Calculator, BookOpen,
 } from 'lucide-react';
 
 function toSidebarChildren(items: SidebarMenuItem[]): SidebarChildItem[] {
@@ -242,6 +243,20 @@ export const purchasingMenu: SidebarMenuItem[] = [
     icon: ShoppingCart,
     path: '/purchasing/orders',
     permission: 'purchasing.orders.view',
+  },
+  {
+    id: 'pur-estimate-procurement',
+    label: 'Mua hàng dự toán',
+    icon: Calculator,
+    path: '/purchasing/estimate-procurement',
+    permission: ['purchasing.estimates.view', 'purchasing.rfq.view'],
+  },
+  {
+    id: 'pur-price-book',
+    label: 'Sổ giá',
+    icon: BookOpen,
+    path: '/purchasing/price-book',
+    permission: 'purchasing.pricebook.view',
   },
   {
     id: 'pur-contracts',

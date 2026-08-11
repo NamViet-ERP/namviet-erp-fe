@@ -20,6 +20,7 @@ export default function App() {
           <Route path="/login" element={<Pages.LoginPage />} />
           <Route path="/recruitment/apply" element={<Pages.CandidateApplyPage />} />
           <Route path="/employee/onboarding" element={<Pages.EmployeeOnboardPage />} />
+          <Route path="/estimates/fill/:token" element={<Pages.PurchaseEstimateFillPage />} />
           <Route element={<AppLayout />}>
             <Route path="/" element={<Navigate to={getDefaultRoute(role)} replace />} />
             {/* Portal card đã tắt — chuyển về Tổng quan Vận hành */}
@@ -92,6 +93,9 @@ export default function App() {
             <Route path="/purchasing/orders" element={<Pages.PurchaseOrdersPage />} />
             <Route path="/purchasing/orders/new" element={<Pages.PurchaseOrderDetailPage />} />
             <Route path="/purchasing/orders/:code" element={<Pages.PurchaseOrderDetailPage />} />
+            <Route path="/purchasing/estimate-procurement" element={<Pages.PurchaseEstimateProcurementPage />} />
+            <Route path="/purchasing/estimate-procurement/:id" element={<Pages.PurchaseEstimateDetailPage />} />
+            <Route path="/purchasing/price-book" element={<Pages.PurchasePriceBookPage />} />
             <Route path="/purchasing/contracts" element={<Pages.PurchaseContractsPage />} />
             <Route path="/purchasing/documents" element={<Pages.PurchaseDocumentsPage />} />
             <Route path="/purchasing/warranties" element={<Pages.PurchaseWarrantiesPage />} />

@@ -76,6 +76,16 @@ describe('routePermissions', () => {
       'purchasing.orders.view',
     ]);
     expect(getRequiredPermissionsForPath('/purchasing/orders/PO-001')).toEqual(['purchasing.orders.view']);
+    expect(getRequiredPermissionsForPath('/purchasing/estimate-procurement')).toEqual([
+      'purchasing.estimates.view',
+      'purchasing.rfq.view',
+    ]);
+    expect(getRequiredPermissionsForPath('/purchasing/estimate-procurement/abc')).toEqual([
+      'purchasing.estimates.view',
+    ]);
+    expect(getRequiredPermissionsForPath('/purchasing/price-book')).toEqual([
+      'purchasing.pricebook.view',
+    ]);
     expect(getRequiredPermissionsForPath('/purchasing/payments')).toEqual(['purchasing.payments.view']);
     expect(getRequiredPermissionsForPath('/purchasing/payments/new')).toEqual([
       'purchasing.payments.create',

@@ -14,6 +14,7 @@ interface PurchasingListLayoutProps {
   search: string;
   onSearchChange: (value: string) => void;
   searchPlaceholder?: string;
+  hideSearch?: boolean;
   filters?: ReactNode;
   hasFilters?: boolean;
   onResetFilters?: () => void;
@@ -30,38 +31,44 @@ export default function PurchasingListLayout({
   search,
   onSearchChange,
   searchPlaceholder = 'Tìm kiếm…',
+  hideSearch = false,
   filters,
   hasFilters,
   onResetFilters,
   children,
 }: PurchasingListLayoutProps) {
+  const showToolbar = !hideSearch || Boolean(filters) || Boolean(hasFilters && onResetFilters);
   return (
     <div className="page-shell">
       <PageHeader eyebrow={eyebrow} title={title} subtitle={subtitle} actions={actions} />
       {intro}
       <HrmPanel noPadding>
-        <div className="hrm-list-toolbar">
-          <div className="hrm-list-toolbar__filters">
-            <SearchBar
-              value={search}
-              onChange={onSearchChange}
-              placeholder={searchPlaceholder}
-            />
-            {filters && (
-              <div className="hrm-list-toolbar__filter-row hrm-list-toolbar__filter-row--selects">
-                {filters}
-              </div>
-            )}
-            {hasFilters && onResetFilters && (
-              <div className="hrm-list-toolbar__filter-row">
-                <button type="button" onClick={onResetFilters} className="hrm-filter-reset">
-                  <RotateCcw size={14} aria-hidden />
-                  Xóa lọc
-                </button>
-              </div>
-            )}
+        {showToolbar ? (
+          <div className="hrm-list-toolbar">
+            <div className="hrm-list-toolbar__filters">
+              {hideSearch ? null : (
+                <SearchBar
+                  value={search}
+                  onChange={onSearchChange}
+                  placeholder={searchPlaceholder}
+                />
+              )}
+              {filters && (
+                <div className="hrm-list-toolbar__filter-row hrm-list-toolbar__filter-row--selects">
+                  {filters}
+                </div>
+              )}
+              {hasFilters && onResetFilters && (
+                <div className="hrm-list-toolbar__filter-row">
+                  <button type="button" onClick={onResetFilters} className="hrm-filter-reset">
+                    <RotateCcw size={14} aria-hidden />
+                    Xóa lọc
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        ) : null}
         {children}
       </HrmPanel>
     </div>

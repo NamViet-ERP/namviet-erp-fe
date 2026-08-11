@@ -75,3 +75,35 @@ export type ClosePurchaseWarrantyClaimRequest = Schemas['ClosePurchaseWarrantyCl
 export type SupplierMaterialRiskPairRequest = Schemas['SupplierMaterialRiskPairRequest'];
 export type SupplierMaterialRiskLookupRequest = Schemas['SupplierMaterialRiskLookupRequest'];
 export type SupplierMaterialRiskApiDto = Schemas['SupplierMaterialRiskDto'];
+
+/** OpenAPI aliases — Estimates / RFQ / Price book */
+export type PurchaseEstimateListItemApiDto = Schemas['PurchaseEstimateListItemDto'];
+export type PurchaseEstimatePagedApiDto = Schemas['PurchaseEstimatePagedResponse'];
+export type PurchaseEstimateDetailApiDto = Schemas['PurchaseEstimateDetailDto'];
+export type PurchaseEstimateLineApiDto = Schemas['PurchaseEstimateLineDto'];
+export type PurchaseEstimateVersionSummaryApiDto = Schemas['PurchaseEstimateVersionSummaryDto'];
+export type PurchaseEstimateProposalApiDto = Schemas['PurchaseEstimateProposalDto'];
+export type PurchaseEstimateApprovalApiDto = Schemas['PurchaseEstimateApprovalDto'];
+export type CreatePurchaseEstimateRequest = Schemas['CreatePurchaseEstimateRequest'];
+export type UpdatePurchaseEstimateRequest = Schemas['UpdatePurchaseEstimateRequest'];
+export type PurchaseEstimateLineInput = Schemas['PurchaseEstimateLineInput'];
+export type PurchaseEstimateProposalInput = Schemas['PurchaseEstimateProposalInput'];
+export type PurchaseEstimateShareLinkApiDto = Schemas['PurchaseEstimateShareLinkDto'];
+export type DecidePurchaseEstimateApprovalRequest = Schemas['DecidePurchaseEstimateApprovalRequest'];
+export type ConvertPurchaseEstimateResult = Schemas['ConvertPurchaseEstimateResult'];
+export type PublicPurchaseEstimateApiDto = Schemas['PublicPurchaseEstimateDto'];
+export type PublicPurchaseEstimatePreparerApiDto = Schemas['PublicPurchaseEstimatePreparerDto'];
+export type SubmitPublicPurchaseEstimateRequest = Schemas['SubmitPublicPurchaseEstimateRequest'];
+
+export type PurchaseRfqQuoteApiDto = Schemas['PurchaseRfqQuoteDto'];
+export type PurchaseRfqQuotePagedApiDto = Schemas['PurchaseRfqQuotePagedResponse'];
+export type UpsertPurchaseRfqQuoteRequest = Schemas['UpsertPurchaseRfqQuoteRequest'];
+export type PurchaseRfqAverageApiDto = Schemas['PurchaseRfqAverageDto'];
+export type PurchaseRfqWinRateApiDto = Schemas['PurchaseRfqWinRateDto'];
+
+export type PriceBookItemApiDto = Schemas['PriceBookItemDto'];
+export type PriceBookItemDetailApiDto = Schemas['PriceBookItemDetailDto'];
+export type PriceBookMatrixApiDto = Schemas['PriceBookMatrixDto'];
+export type PriceBookCategoryRowApiDto = Schemas['PriceBookCategoryRowDto'];
+export type PriceBookMarginRowApiDto = Schemas['PriceBookMarginRowDto'];
+export type UpsertPurchaseSellPriceRequest = Schemas['UpsertPurchaseSellPriceRequest'];

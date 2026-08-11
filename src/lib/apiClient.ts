@@ -60,9 +60,14 @@ export function getApiFieldErrors(err: unknown): Record<string, string> {
   return result;
 }
 
+function isPublicApiPath(path: string): boolean {
+  return path.includes('/api/public/');
+}
+
 function forceLogoutExpired(): void {
   if (typeof window === 'undefined') return;
   if (window.location.pathname.startsWith('/login')) return;
+  if (window.location.pathname.startsWith('/estimates/fill')) return;
   const logoutUrl = buildUrl('/api/auth/logout');
   void fetch(logoutUrl, {
     method: 'POST',
@@ -200,6 +205,7 @@ async function handleUnauthorizedRetry<T>(
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { body, params, headers, _retried, ...rest } = options;
   const token = authTokenProvider();
+  const publicApi = isPublicApiPath(path);
 
   const response = await fetch(buildUrl(path, params), {
     ...rest,
@@ -208,7 +214,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(token && !publicApi ? { Authorization: `Bearer ${token}` } : {}),
       ...headers,
     },
     body: body !== undefined ? JSON.stringify(body) : undefined,
@@ -217,7 +223,8 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   const data = await readResponseBody(response);
 
   const skipRefresh =
-    path.includes('/api/auth/login')
+    publicApi
+    || path.includes('/api/auth/login')
     || path.includes('/api/auth/refresh')
     || path.includes('/api/auth/logout');
 

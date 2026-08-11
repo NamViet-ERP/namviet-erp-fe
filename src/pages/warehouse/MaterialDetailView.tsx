@@ -25,6 +25,8 @@ import {
   resolveLeafCategoryId,
   selectionFromCategoryId,
 } from '../../lib/wms/materialCategoryTree';
+import CurrencyInput from '../../components/ui/CurrencyInput';
+import { formatCurrencyFull } from '../../utils/formatCurrency';
 import type { MaterialApiDto } from '../../types/wms';
 
 const emptySelection: Array<number | ''> = ['', '', '', '', ''];
@@ -57,6 +59,8 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
     unit: '',
     technicalSpec: '',
     qualityStandard: '',
+    ceilingPrice: '',
+    abcClass: '',
   });
   const [editErrors, setEditErrors] = useState<Record<string, string>>({});
 
@@ -90,6 +94,8 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
       unit: material.unit,
       technicalSpec: material.technicalSpec ?? '',
       qualityStandard: material.qualityStandard ?? '',
+      ceilingPrice: material.ceilingPrice != null ? String(material.ceilingPrice) : '',
+      abcClass: material.abcClass ?? '',
     });
     setEditErrors({});
     setIsEditing(true);
@@ -102,6 +108,8 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
       unit: material.unit,
       technicalSpec: material.technicalSpec ?? '',
       qualityStandard: material.qualityStandard ?? '',
+      ceilingPrice: material.ceilingPrice != null ? String(material.ceilingPrice) : '',
+      abcClass: material.abcClass ?? '',
     });
     setEditErrors({});
     setIsEditing(false);
@@ -141,6 +149,10 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
           unit: editForm.unit.trim(),
           technicalSpec: editForm.technicalSpec.trim() || null,
           qualityStandard: editForm.qualityStandard.trim() || null,
+          ceilingPrice: editForm.ceilingPrice
+            ? Number(String(editForm.ceilingPrice).replace(/[^\d.-]/g, '')) || null
+            : null,
+          abcClass: editForm.abcClass || null,
           isConsumable: material.isConsumable,
         },
       });
@@ -263,6 +275,27 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
               onChange={v => setEditForm(f => ({ ...f, qualityStandard: v }))}
               placeholder={MATERIAL_FIELD_PLACEHOLDERS.qualityStandard}
             />
+            <div className="hrm-field">
+              <span className="hrm-field__label">Giá trần tham chiếu</span>
+              <CurrencyInput
+                value={editForm.ceilingPrice}
+                onChange={ceilingPrice => setEditForm(f => ({ ...f, ceilingPrice }))}
+                placeholder="Cảnh báo khi mua vượt giá"
+              />
+            </div>
+            <div className="hrm-field">
+              <span className="hrm-field__label">Phân loại ABC</span>
+              <select
+                className="hrm-field-select"
+                value={editForm.abcClass}
+                onChange={e => setEditForm(f => ({ ...f, abcClass: e.target.value }))}
+              >
+                <option value="">— Không xếp —</option>
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+              </select>
+            </div>
           </DetailFieldGrid>
         ) : (
           <DetailFieldGrid layout="responsive">
@@ -271,6 +304,11 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
             <FieldView label="Đơn vị tính" value={material.unit} />
             <FieldView label="Quy cách" value={material.technicalSpec ?? undefined} />
             <FieldView label="Tiêu chuẩn chất lượng" value={material.qualityStandard ?? undefined} />
+            <FieldView
+              label="Giá trần tham chiếu"
+              value={material.ceilingPrice != null ? formatCurrencyFull(material.ceilingPrice) : undefined}
+            />
+            <FieldView label="Phân loại ABC" value={material.abcClass ?? undefined} />
           </DetailFieldGrid>
         )}
       </DetailSection>
