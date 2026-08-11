@@ -5,7 +5,6 @@ import {
 } from '../services/purchaseEstimatesService';
 import type {
   CreatePurchaseEstimateRequest,
-  DecidePurchaseEstimateApprovalRequest,
   SubmitPublicPurchaseEstimateRequest,
   UpdatePurchaseEstimateRequest,
 } from '../types/api/purchasingApi';
@@ -58,6 +57,16 @@ export function useShareEstimateLink() {
   });
 }
 
+export function useRevokeEstimateShare() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => purchaseEstimatesService.revokeShare(id),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: LIST_KEY });
+    },
+  });
+}
+
 export function useReviewPurchaseEstimate() {
   const qc = useQueryClient();
   return useMutation({
@@ -78,11 +87,33 @@ export function useSubmitEstimateApproval() {
   });
 }
 
-export function useDecideEstimateApproval() {
+export function useApproveEstimateL1() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, body }: { id: string; body: DecidePurchaseEstimateApprovalRequest }) =>
-      purchaseEstimatesService.decide(id, body),
+    mutationFn: ({ id, note }: { id: string; note?: string | null }) =>
+      purchaseEstimatesService.approveL1(id, { note }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: LIST_KEY });
+    },
+  });
+}
+
+export function useApproveEstimateL2() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, note }: { id: string; note?: string | null }) =>
+      purchaseEstimatesService.approveL2(id, { note }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: LIST_KEY });
+    },
+  });
+}
+
+export function useRejectEstimateApproval() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, note }: { id: string; note?: string | null }) =>
+      purchaseEstimatesService.reject(id, { note }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: LIST_KEY });
     },

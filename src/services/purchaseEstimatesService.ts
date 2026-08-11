@@ -2,11 +2,11 @@ import { apiClient } from '../lib/apiClient';
 import type {
   ConvertPurchaseEstimateResult,
   CreatePurchaseEstimateRequest,
-  DecidePurchaseEstimateApprovalRequest,
   PublicPurchaseEstimateApiDto,
   PurchaseEstimateDetailApiDto,
   PurchaseEstimatePagedApiDto,
   PurchaseEstimateShareLinkApiDto,
+  RejectPurchaseEstimateRequest,
   SubmitPublicPurchaseEstimateRequest,
   UpdatePurchaseEstimateRequest,
 } from '../types/api/purchasingApi';
@@ -49,6 +49,10 @@ export const purchaseEstimatesService = {
     return apiClient.post<PurchaseEstimateShareLinkApiDto>(`${ENDPOINT}/${encodeURIComponent(id)}/share-link`);
   },
 
+  revokeShare(id: string) {
+    return apiClient.post<PurchaseEstimateDetailApiDto>(`${ENDPOINT}/${encodeURIComponent(id)}/revoke-share`);
+  },
+
   review(id: string) {
     return apiClient.post<PurchaseEstimateDetailApiDto>(`${ENDPOINT}/${encodeURIComponent(id)}/review`);
   },
@@ -57,8 +61,22 @@ export const purchaseEstimatesService = {
     return apiClient.post<PurchaseEstimateDetailApiDto>(`${ENDPOINT}/${encodeURIComponent(id)}/submit-approval`);
   },
 
-  decide(id: string, body: DecidePurchaseEstimateApprovalRequest) {
-    return apiClient.post<PurchaseEstimateDetailApiDto>(`${ENDPOINT}/${encodeURIComponent(id)}/decide`, body);
+  approveL1(id: string, body: RejectPurchaseEstimateRequest = {}) {
+    return apiClient.post<PurchaseEstimateDetailApiDto>(
+      `${ENDPOINT}/${encodeURIComponent(id)}/approve-l1`,
+      body,
+    );
+  },
+
+  approveL2(id: string, body: RejectPurchaseEstimateRequest = {}) {
+    return apiClient.post<PurchaseEstimateDetailApiDto>(
+      `${ENDPOINT}/${encodeURIComponent(id)}/approve-l2`,
+      body,
+    );
+  },
+
+  reject(id: string, body: RejectPurchaseEstimateRequest = {}) {
+    return apiClient.post<PurchaseEstimateDetailApiDto>(`${ENDPOINT}/${encodeURIComponent(id)}/reject`, body);
   },
 
   convertPlan(id: string) {

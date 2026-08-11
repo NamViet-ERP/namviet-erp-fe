@@ -8181,6 +8181,46 @@
         }
       }
     },
+    "/api/purchasing/estimates/{id}/revoke-share": {
+      "post": {
+        "tags": [
+          "PurchaseEstimates"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseEstimateDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseEstimateDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseEstimateDetailDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/purchasing/estimates/{id}/review": {
       "post": {
         "tags": [
@@ -8261,7 +8301,7 @@
         }
       }
     },
-    "/api/purchasing/estimates/{id}/decide": {
+    "/api/purchasing/estimates/{id}/approve-l1": {
       "post": {
         "tags": [
           "PurchaseEstimates"
@@ -8281,17 +8321,135 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/DecidePurchaseEstimateApprovalRequest"
+                "$ref": "#/components/schemas/RejectPurchaseEstimateRequest"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/DecidePurchaseEstimateApprovalRequest"
+                "$ref": "#/components/schemas/RejectPurchaseEstimateRequest"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/DecidePurchaseEstimateApprovalRequest"
+                "$ref": "#/components/schemas/RejectPurchaseEstimateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseEstimateDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseEstimateDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseEstimateDetailDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/estimates/{id}/approve-l2": {
+      "post": {
+        "tags": [
+          "PurchaseEstimates"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectPurchaseEstimateRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectPurchaseEstimateRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectPurchaseEstimateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseEstimateDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseEstimateDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseEstimateDetailDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/estimates/{id}/reject": {
+      "post": {
+        "tags": [
+          "PurchaseEstimates"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectPurchaseEstimateRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectPurchaseEstimateRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectPurchaseEstimateRequest"
               }
             }
           }
@@ -17677,27 +17835,6 @@
         },
         "additionalProperties": false
       },
-      "DecidePurchaseEstimateApprovalRequest": {
-        "required": [
-          "decision",
-          "level"
-        ],
-        "type": "object",
-        "properties": {
-          "level": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "decision": {
-            "type": "string"
-          },
-          "note": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
       "EmployeeDto": {
         "required": [
           "birthDate",
@@ -20344,6 +20481,11 @@
             "format": "uuid",
             "nullable": true
           },
+          "shareExpiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "preparerName": {
             "type": "string",
             "nullable": true
@@ -20634,6 +20776,7 @@
       },
       "PurchaseEstimateShareLinkDto": {
         "required": [
+          "expiresAt",
           "path",
           "token"
         ],
@@ -20644,6 +20787,10 @@
           },
           "path": {
             "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
           }
         },
         "additionalProperties": false
@@ -23451,6 +23598,16 @@
           },
           "role": {
             "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RejectPurchaseEstimateRequest": {
+        "type": "object",
+        "properties": {
+          "note": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false

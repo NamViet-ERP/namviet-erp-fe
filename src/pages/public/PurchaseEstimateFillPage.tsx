@@ -119,8 +119,10 @@ export default function PurchaseEstimateFillPage() {
   } else if (publicQuery.isError || !row) {
     body = (
       <div role="alert">
-        <h3 className="font-semibold">Không tìm thấy dự toán</h3>
-        <p className="text-[var(--md-on-surface-variant)]">Link có thể đã hết hạn hoặc sai mã dự toán.</p>
+        <h3 className="font-semibold">Không mở được dự toán</h3>
+        <p className="text-[var(--md-on-surface-variant)]">
+          {getApiErrorMessage(publicQuery.error, 'Link đã hết hạn, đã bị thu hồi hoặc sai mã dự toán. Liên hệ phòng Cung ứng để cấp lại.')}
+        </p>
       </div>
     );
   } else if (!row.canFill) {

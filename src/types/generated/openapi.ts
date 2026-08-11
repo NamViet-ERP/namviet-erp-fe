@@ -7016,6 +7016,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/purchasing/estimates/{id}/revoke-share": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseEstimateDetailDto"];
+                        "application/json": components["schemas"]["PurchaseEstimateDetailDto"];
+                        "text/json": components["schemas"]["PurchaseEstimateDetailDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/purchasing/estimates/{id}/review": {
         parameters: {
             query?: never;
@@ -7094,7 +7133,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/purchasing/estimates/{id}/decide": {
+    "/api/purchasing/estimates/{id}/approve-l1": {
         parameters: {
             query?: never;
             header?: never;
@@ -7114,9 +7153,99 @@ export interface paths {
             };
             requestBody?: {
                 content: {
-                    "application/json": components["schemas"]["DecidePurchaseEstimateApprovalRequest"];
-                    "text/json": components["schemas"]["DecidePurchaseEstimateApprovalRequest"];
-                    "application/*+json": components["schemas"]["DecidePurchaseEstimateApprovalRequest"];
+                    "application/json": components["schemas"]["RejectPurchaseEstimateRequest"];
+                    "text/json": components["schemas"]["RejectPurchaseEstimateRequest"];
+                    "application/*+json": components["schemas"]["RejectPurchaseEstimateRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseEstimateDetailDto"];
+                        "application/json": components["schemas"]["PurchaseEstimateDetailDto"];
+                        "text/json": components["schemas"]["PurchaseEstimateDetailDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/estimates/{id}/approve-l2": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["RejectPurchaseEstimateRequest"];
+                    "text/json": components["schemas"]["RejectPurchaseEstimateRequest"];
+                    "application/*+json": components["schemas"]["RejectPurchaseEstimateRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseEstimateDetailDto"];
+                        "application/json": components["schemas"]["PurchaseEstimateDetailDto"];
+                        "text/json": components["schemas"]["PurchaseEstimateDetailDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/estimates/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["RejectPurchaseEstimateRequest"];
+                    "text/json": components["schemas"]["RejectPurchaseEstimateRequest"];
+                    "application/*+json": components["schemas"]["RejectPurchaseEstimateRequest"];
                 };
             };
             responses: {
@@ -13283,12 +13412,6 @@ export interface components {
             /** Format: double */
             exportValue: number;
         };
-        DecidePurchaseEstimateApprovalRequest: {
-            /** Format: int32 */
-            level: number;
-            decision: string;
-            note?: string | null;
-        };
         EmployeeDto: {
             id: string;
             code?: string | null;
@@ -14044,6 +14167,8 @@ export interface components {
             viewedVersion: number;
             /** Format: uuid */
             shareToken?: string | null;
+            /** Format: date-time */
+            shareExpiresAt?: string | null;
             preparerName?: string | null;
             /** Format: date-time */
             preparerDate?: string | null;
@@ -14134,6 +14259,8 @@ export interface components {
         PurchaseEstimateShareLinkDto: {
             token: string;
             path: string;
+            /** Format: date-time */
+            expiresAt: string;
         };
         PurchaseEstimateVersionSummaryDto: {
             /** Format: uuid */
@@ -15002,6 +15129,9 @@ export interface components {
             password: string;
             department?: string | null;
             role: string;
+        };
+        RejectPurchaseEstimateRequest: {
+            note?: string | null;
         };
         RejectPurchasePlanRequest: {
             reason?: string | null;

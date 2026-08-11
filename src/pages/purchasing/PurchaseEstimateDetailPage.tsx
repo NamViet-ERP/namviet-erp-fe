@@ -8,10 +8,13 @@ import Modal from '../../components/ui/Modal';
 import PageHeader from '../../components/ui/PageHeader';
 import { showToast } from '../../components/ui/Toast';
 import {
+  useApproveEstimateL1,
+  useApproveEstimateL2,
   useConvertEstimateToPlan,
-  useDecideEstimateApproval,
   usePurchaseEstimate,
+  useRejectEstimateApproval,
   useReviewPurchaseEstimate,
+  useRevokeEstimateShare,
   useShareEstimateLink,
   useSubmitEstimateApproval,
   useUpdatePurchaseEstimate,
@@ -52,21 +55,26 @@ export default function PurchaseEstimateDetailPage() {
   const navigate = useNavigate();
   const { has } = usePermission();
   const canEdit = has('purchasing.estimates.update');
-  const canApprove = has('purchasing.estimates.approve');
+  const canApproveL1 = has('purchasing.estimates.approve_l1');
+  const canApproveL2 = has('purchasing.estimates.approve_l2');
   const canConvert = has('purchasing.plans.create');
   const [viewVersion, setViewVersion] = useState<number | undefined>(undefined);
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState('');
   const [draftLines, setDraftLines] = useState<DraftLine[]>([]);
   const [shareUrl, setShareUrl] = useState('');
+  const [shareExpiresAt, setShareExpiresAt] = useState<string | null>(null);
   const [decideNote, setDecideNote] = useState('');
 
   const detail = usePurchaseEstimate(id, viewVersion);
   const updateMutation = useUpdatePurchaseEstimate();
   const shareMutation = useShareEstimateLink();
+  const revokeShareMutation = useRevokeEstimateShare();
   const reviewMutation = useReviewPurchaseEstimate();
   const submitMutation = useSubmitEstimateApproval();
-  const decideMutation = useDecideEstimateApproval();
+  const approveL1Mutation = useApproveEstimateL1();
+  const approveL2Mutation = useApproveEstimateL2();
+  const rejectMutation = useRejectEstimateApproval();
   const convertMutation = useConvertEstimateToPlan();
   const { data: materialsPage } = useMaterials({ page: 1, pageSize: 200 });
   const materials = materialsPage?.items ?? [];
@@ -120,6 +128,7 @@ export default function PurchaseEstimateDetailPage() {
     try {
       const link = await shareMutation.mutateAsync(id);
       setShareUrl(`${window.location.origin}${link.path}`);
+      setShareExpiresAt(link.expiresAt ?? null);
     } catch (err) {
       showToast('error', getApiErrorMessage(err, 'Không lấy được link điền.'));
     }
@@ -154,17 +163,42 @@ export default function PurchaseEstimateDetailPage() {
     }
   };
 
-  const runDecide = async (decision: 'approved' | 'rejected') => {
+  const runApprove = async () => {
     if (!id || !nextApproval) return;
+    const note = decideNote.trim() || null;
     try {
-      await decideMutation.mutateAsync({
-        id,
-        body: { level: nextApproval.level, decision, note: decideNote.trim() || null },
-      });
-      showToast('success', decision === 'approved' ? `Đã duyệt cấp ${nextApproval.level}.` : `Đã từ chối cấp ${nextApproval.level}.`);
+      if (nextApproval.level <= 1) {
+        await approveL1Mutation.mutateAsync({ id, note });
+      } else {
+        await approveL2Mutation.mutateAsync({ id, note });
+      }
+      showToast('success', `Đã duyệt cấp ${nextApproval.level}.`);
       setDecideNote('');
     } catch (err) {
       showToast('error', getApiErrorMessage(err, 'Không duyệt được.'));
+    }
+  };
+
+  const runReject = async () => {
+    if (!id || !nextApproval) return;
+    try {
+      await rejectMutation.mutateAsync({ id, note: decideNote.trim() || null });
+      showToast('success', `Đã từ chối cấp ${nextApproval.level}.`);
+      setDecideNote('');
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không từ chối được.'));
+    }
+  };
+
+  const runRevokeShare = async () => {
+    if (!id) return;
+    try {
+      await revokeShareMutation.mutateAsync(id);
+      setShareUrl('');
+      setShareExpiresAt(null);
+      showToast('success', 'Đã thu hồi link điền.');
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không thu hồi được link.'));
     }
   };
 
@@ -184,11 +218,20 @@ export default function PurchaseEstimateDetailPage() {
     return `Tạo ${formatDateTimeVi(row.createdAt)} · ${row.createdByName} · Sửa ${formatDateTimeVi(row.updatedAt)} · ${row.updatedByName}`;
   }, [row]);
 
+  const activeShareExpiresAt = shareExpiresAt ?? row?.shareExpiresAt ?? null;
+  const canDecideCurrent = Boolean(
+    nextApproval
+    && ((nextApproval.level <= 1 && canApproveL1) || (nextApproval.level > 1 && canApproveL2)),
+  );
+
   const busy = updateMutation.isPending
     || shareMutation.isPending
+    || revokeShareMutation.isPending
     || reviewMutation.isPending
     || submitMutation.isPending
-    || decideMutation.isPending
+    || approveL1Mutation.isPending
+    || approveL2Mutation.isPending
+    || rejectMutation.isPending
     || convertMutation.isPending;
 
   return (
@@ -204,7 +247,12 @@ export default function PurchaseEstimateDetailPage() {
             </button>
             {canEdit && viewingLatest && !editing && canShareEstimate(row?.status) ? (
               <button type="button" className="btn btn-outline btn-sm" disabled={busy} onClick={() => void openShare()}>
-                Lấy link điền
+                {activeShareExpiresAt ? 'Cấp lại link điền' : 'Lấy link điền'}
+              </button>
+            ) : null}
+            {canEdit && viewingLatest && !editing && activeShareExpiresAt ? (
+              <button type="button" className="btn btn-outline btn-sm" disabled={busy} onClick={() => void runRevokeShare()}>
+                Thu hồi link
               </button>
             ) : null}
             {canEdit && viewingLatest && !editing && canEditEstimate(row?.status) ? (
@@ -245,6 +293,11 @@ export default function PurchaseEstimateDetailPage() {
             <span className={`badge ${estimateStatusBadge(row.status)}`}>{estimateStatusLabel(row.status)}</span>
             <span className="text-[length:var(--fs-sm)]">Người lập: <strong>{row.preparerName || 'Chưa có'}</strong></span>
             <span className="text-[length:var(--fs-sm)]">SC kiểm tra: <strong>{row.reviewedByName || 'Chưa kiểm tra'}</strong></span>
+            {activeShareExpiresAt ? (
+              <span className="text-[length:var(--fs-sm)] text-[var(--md-on-surface-variant)]">
+                Link điền hết hạn: <strong className="tabular-nums">{formatDateTimeVi(activeShareExpiresAt)}</strong>
+              </span>
+            ) : null}
             {row.convertedPlanCode ? (
               <button
                 type="button"
@@ -421,7 +474,7 @@ export default function PurchaseEstimateDetailPage() {
                       </tbody>
                     </table>
                   </div>
-                  {canApprove && row.status === 'pending_approval' && nextApproval ? (
+                  {canDecideCurrent && row.status === 'pending_approval' && nextApproval ? (
                     <div className="flex flex-wrap gap-2 items-end">
                       <FormField label={`Ý kiến cấp ${nextApproval.level} (${nextApproval.name})`}>
                         <input
@@ -431,10 +484,10 @@ export default function PurchaseEstimateDetailPage() {
                           placeholder="Ghi chú (tuỳ chọn)"
                         />
                       </FormField>
-                      <button type="button" className="btn btn-primary btn-sm" disabled={busy} onClick={() => void runDecide('approved')}>
-                        Duyệt
+                      <button type="button" className="btn btn-primary btn-sm" disabled={busy} onClick={() => void runApprove()}>
+                        Duyệt cấp {nextApproval.level}
                       </button>
-                      <button type="button" className="btn btn-outline btn-sm" disabled={busy} onClick={() => void runDecide('rejected')}>
+                      <button type="button" className="btn btn-outline btn-sm" disabled={busy} onClick={() => void runReject()}>
                         Từ chối
                       </button>
                     </div>
@@ -449,13 +502,21 @@ export default function PurchaseEstimateDetailPage() {
       <Modal isOpen={Boolean(shareUrl)} onClose={() => setShareUrl('')} title={`Link điền dự toán - ${row?.code ?? ''}`} size="md">
         <div className="space-y-3">
           <p className="text-[length:var(--fs-sm)] text-[var(--md-on-surface-variant)]">
-            Sao chép link rồi gửi Zalo / email cho người lập dự toán. Họ không cần tài khoản. Sau khi Double check và gửi, dữ liệu cập nhật ngay tại đây.
+            Link mới thay thế link cũ. Hết hạn sau 7 ngày. Sao chép rồi gửi Zalo / email cho người lập dự toán. Họ không cần tài khoản.
           </p>
           <FormField label="Đường dẫn chia sẻ">
             <input className="form-input font-mono" value={shareUrl} readOnly onFocus={e => e.target.select()} />
           </FormField>
+          {shareExpiresAt ? (
+            <p className="text-[length:var(--fs-sm)]">
+              Hết hạn: <strong className="tabular-nums">{formatDateTimeVi(shareExpiresAt)}</strong>
+            </p>
+          ) : null}
           <div className="flex justify-end gap-2">
             <button type="button" className="btn btn-outline btn-sm" onClick={() => setShareUrl('')}>Đóng</button>
+            <button type="button" className="btn btn-outline btn-sm" disabled={busy} onClick={() => void runRevokeShare()}>
+              Thu hồi
+            </button>
             <a className="btn btn-outline btn-sm" href={shareUrl} target="_blank" rel="noreferrer">Mở thử</a>
             <button type="button" className="btn btn-primary btn-sm" onClick={() => void copyShare()}>Sao chép link</button>
           </div>
