@@ -42,6 +42,9 @@ export const PurchaseAdhocPlansPage = lazy(() => import('../pages/purchasing/Pur
 export const PurchasePlanDetailPage = lazy(() => import('../pages/purchasing/PurchasePlanDetailPage'));
 export const PurchaseOrdersPage = lazy(() => import('../pages/purchasing/PurchaseOrdersPage'));
 export const PurchaseOrderDetailPage = lazy(() => import('../pages/purchasing/PurchaseOrderDetailPage'));
+export const PurchaseDocumentsPage = lazy(() => import('../pages/purchasing/PurchaseDocumentsPage'));
+export const PurchaseContractsPage = lazy(() => import('../pages/purchasing/PurchaseContractsPage'));
+export const PurchaseWarrantiesPage = lazy(() => import('../pages/purchasing/PurchaseWarrantiesPage'));
 export const PurchasePaymentsPage = lazy(() => import('../pages/purchasing/PurchasePaymentsPage'));
 export const PurchasePaymentDetailPage = lazy(() => import('../pages/purchasing/PurchasePaymentDetailPage'));
 export const PurchasePaymentPlansPage = lazy(() => import('../pages/purchasing/PurchasePaymentPlansPage'));

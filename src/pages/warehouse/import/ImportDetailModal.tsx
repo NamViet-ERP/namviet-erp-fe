@@ -81,6 +81,7 @@ export default function ImportDetailModal({
                 buildImportPrintPayload(
                   selected,
                   selected.project ? projectName(selected.project) : '—',
+                  { showPrices },
                 ),
               )
             }

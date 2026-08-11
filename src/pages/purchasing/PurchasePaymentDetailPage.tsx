@@ -272,10 +272,6 @@ export default function PurchasePaymentDetailPage() {
           }
           actions={(
             <div className="pur-detail__actions">
-              <button type="button" className="btn btn-secondary btn-sm" onClick={printDoc}>
-                <Printer size={15} strokeWidth={1.75} aria-hidden />
-                In giấy
-              </button>
               {isCreate && canCreate ? (
                 <button
                   type="button"

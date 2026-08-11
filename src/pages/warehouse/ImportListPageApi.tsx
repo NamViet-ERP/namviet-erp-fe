@@ -32,6 +32,7 @@ import { formatCurrencyFull } from '../../utils/formatCurrency';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 
 import { validateImportCreate, getImportFormFieldErrors, isImportLineComplete, type ImportFormFieldErrors } from '../../lib/wms/importFormSchema';
+import { useCanViewWmsPrices } from '../../lib/wms/priceVisibility';
 import { DUPLICATE_MATERIAL_MESSAGE } from '../../lib/wms/voucherDuplicateMaterial';
 import { getFrozenProjectError } from '../../lib/wms/stocktakeFreeze';
 import { useFrozenProjects } from '../../hooks/useFrozenProjects';
@@ -172,7 +173,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
   const { has } = usePermission();
   const canEditImport = has('wms.imports.update');
   const canApproveImport = has('wms.imports.approve');
-  const canViewPrices = has('wms.prices.view');
+  const canViewPrices = useCanViewWmsPrices();
   // Màn Kho hàng: không tạo / chốt dự kiến / xóa — làm trên PO.
 
 
@@ -353,8 +354,9 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
   };
 
   const buildDto = (status: 'draft' | 'pending'): CreateImportDto | null => {
+    const priceOpts = { requireUnitPrice: canViewPrices };
 
-    const validItems = items.filter(isImportLineComplete);
+    const validItems = items.filter(line => isImportLineComplete(line, priceOpts));
 
     const supplierValid = Boolean(findSupplierByName(suppliers, defaultSupplier));
 
@@ -365,6 +367,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
       supplierValid,
       items,
       frozenByProjectCode,
+      priceOpts,
     );
 
     if (Object.keys(fieldErrors).length > 0) {
@@ -374,7 +377,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
     setCreateErrors({});
 
-    const validation = validateImportCreate(projectCode.trim(), validItems);
+    const validation = validateImportCreate(projectCode.trim(), validItems, priceOpts);
 
     if (!validation.success) {
 

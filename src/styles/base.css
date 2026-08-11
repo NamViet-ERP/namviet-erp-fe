@@ -75,14 +75,14 @@
   }
 
   body {
-    font-family: 'Roboto', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
-    font-weight: 400;
+    font-family: var(--font-sans);
+    font-weight: var(--fw-regular);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background-color: var(--md-surface);
     color: var(--md-on-surface);
-    line-height: 18.5714px;
-    font-size: 13px;
+    line-height: var(--lh-normal);
+    font-size: var(--fs-sm);
     transition: background-color 0.45s cubic-bezier(0.4, 0, 0.2, 1),
                 color 0.45s cubic-bezier(0.4, 0, 0.2, 1);
   }

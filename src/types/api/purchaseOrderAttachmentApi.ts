@@ -4,4 +4,14 @@
  */
 export type { PurchaseOrderAttachmentApiDto } from './purchasingApi';
 
-export type PurchaseOrderDocType = 'contract' | 'invoice' | 'co' | 'cq' | 'bbgh' | 'bbnt' | 'other';
+export type PurchaseOrderDocType =
+  | 'contract'
+  | 'invoice'
+  | 'co'
+  | 'cq'
+  | 'bbgh'
+  | 'bbnt'
+  | 'cnxk'
+  | 'tokhai'
+  | 'pl'
+  | 'other';

@@ -34,7 +34,7 @@ import PermissionGate from '../../components/auth/PermissionGate';
 import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
 import type { WarehouseProjectApiDto, ProjectWarehouseKeeperDto, UpdateWarehouseProjectRequest } from '../../types/wms';
 import WarehouseKeeperMultiSelect from '../../components/warehouse/WarehouseKeeperMultiSelect';
-import { usePermission } from '../../hooks/usePermission';
+import { useCanViewWmsPrices } from '../../lib/wms/priceVisibility';
 
 type DetailTab = 'stock' | 'history' | 'info';
 
@@ -109,8 +109,7 @@ export default function ProjectDetailPage() {
     warehouseKeepers: [] as ProjectWarehouseKeeperDto[],
   });
   const [editErrors, setEditErrors] = useState<Record<string, string>>({});
-  const { has } = usePermission();
-  const canViewPrices = has('wms.prices.view');
+  const canViewPrices = useCanViewWmsPrices();
   const [stockPageRaw, setStockPage] = useState(1);
   const [stockPageSize, setStockPageSize] = useState(DEFAULT_LIST_PAGE_SIZE);
   /** Per-row draft for Tồn tối thiểu — key = materialCode */

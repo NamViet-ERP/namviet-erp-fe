@@ -34,7 +34,7 @@
   border-radius: 999px;
   background: color-mix(in srgb, var(--md-primary) 12%, transparent);
   color: var(--md-primary);
-  font-size: 0.8125rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
 }
 
@@ -78,7 +78,7 @@
 
 .warehouse-keeper-multi__empty {
   padding: 10px 12px;
-  font-size: 0.8125rem;
+  font-size: var(--fs-sm);
   color: var(--md-on-surface-variant, #5f6368);
   line-height: 1.35;
 }
@@ -107,7 +107,7 @@
   color: var(--md-on-surface, #1a1c1e);
   border-radius: 999px;
   padding: 6px 12px;
-  font-size: 0.8125rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   cursor: pointer;
 }
@@ -163,7 +163,7 @@
 }
 
 .arrival-plans-project__code {
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   color: var(--md-primary);
   letter-spacing: 0.02em;
@@ -187,7 +187,7 @@
   padding: 3px 8px;
   border-radius: 6px;
   background: var(--md-surface-container, #f0f1f0);
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   color: var(--md-on-surface-variant, #444746);
 }
@@ -220,7 +220,7 @@
 
 .arrival-plans-project__chevron {
   color: var(--md-on-surface-variant);
-  font-size: 0.875rem;
+  font-size: var(--fs-md);
   margin-left: 4px;
 }
 
@@ -230,7 +230,7 @@
 
 .arrival-plans-hint {
   margin: 10px 0 0;
-  font-size: 0.8125rem;
+  font-size: var(--fs-sm);
   color: var(--md-on-surface-variant);
   line-height: 1.45;
 }

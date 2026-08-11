@@ -7,6 +7,7 @@ import { queryKeys } from '../services/queryKeys';
 import type {
   CreatePurchasePlanRequest,
   PurchasePlanImportConfirmRequest,
+  SupplierMaterialRiskLookupRequest,
   UpdatePurchasePlanRequest,
 } from '../types/api/purchasingApi';
 
@@ -133,5 +134,18 @@ export function usePurchasePlanVariance(params: { planCode?: string; projectCode
   return useQuery({
     queryKey: queryKeys.purchasePlans.variance(params.planCode, params.projectCode),
     queryFn: () => purchasePlansService.getVariance(params),
+  });
+}
+
+export function useSupplierMaterialRisks(
+  pairs: SupplierMaterialRiskLookupRequest['pairs'],
+  enabled = true,
+) {
+  const body: SupplierMaterialRiskLookupRequest = { pairs };
+  return useQuery({
+    queryKey: [...queryKeys.purchasePlans.all, 'supplier-material-risks', pairs] as const,
+    queryFn: () => purchasePlansService.lookupSupplierMaterialRisks(body),
+    enabled: enabled && pairs.length > 0,
+    staleTime: 30_000,
   });
 }

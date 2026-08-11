@@ -51,3 +51,27 @@ export type PurchasePaymentNextStageApiDto = Schemas['PurchasePaymentNextStageDt
 export type PurchaseOrderAttachmentApiDto = Schemas['PurchaseOrderAttachmentDto'];
 export type PurchasePlanVarianceApiDto = Schemas['PurchasePlanVarianceDto'];
 export type PurchasePlanVarianceLineApiDto = Schemas['PurchasePlanVarianceLineDto'];
+
+/** OpenAPI aliases — Purchase documents (cross-PO list) */
+export type PurchaseDocumentApiDto = Schemas['PurchaseDocumentDto'];
+export type PurchaseDocumentPagedApiDto = Schemas['PurchaseDocumentPagedResponse'];
+
+/** OpenAPI aliases — Purchase Contracts */
+export type PurchaseContractApiDto = Schemas['PurchaseContractDto'];
+export type PurchaseContractPagedApiDto = Schemas['PurchaseContractPagedResponse'];
+export type CreatePurchaseContractRequest = Schemas['CreatePurchaseContractRequest'];
+export type UpdatePurchaseContractRequest = Schemas['UpdatePurchaseContractRequest'];
+export type ImportPurchaseContractsFromPoResult = Schemas['ImportPurchaseContractsFromPoResult'];
+
+/** OpenAPI aliases — Purchase Warranties */
+export type PurchaseWarrantyApiDto = Schemas['PurchaseWarrantyDto'];
+export type PurchaseWarrantyDetailApiDto = Schemas['PurchaseWarrantyDetailDto'];
+export type PurchaseWarrantyClaimApiDto = Schemas['PurchaseWarrantyClaimDto'];
+export type UpdatePurchaseWarrantyRequest = Schemas['UpdatePurchaseWarrantyRequest'];
+export type CreatePurchaseWarrantyClaimRequest = Schemas['CreatePurchaseWarrantyClaimRequest'];
+export type ClosePurchaseWarrantyClaimRequest = Schemas['ClosePurchaseWarrantyClaimRequest'];
+
+/** OpenAPI aliases — KHMH soft risk (NCC + vật tư) */
+export type SupplierMaterialRiskPairRequest = Schemas['SupplierMaterialRiskPairRequest'];
+export type SupplierMaterialRiskLookupRequest = Schemas['SupplierMaterialRiskLookupRequest'];
+export type SupplierMaterialRiskApiDto = Schemas['SupplierMaterialRiskDto'];

@@ -92,6 +92,9 @@ export default function App() {
             <Route path="/purchasing/orders" element={<Pages.PurchaseOrdersPage />} />
             <Route path="/purchasing/orders/new" element={<Pages.PurchaseOrderDetailPage />} />
             <Route path="/purchasing/orders/:code" element={<Pages.PurchaseOrderDetailPage />} />
+            <Route path="/purchasing/contracts" element={<Pages.PurchaseContractsPage />} />
+            <Route path="/purchasing/documents" element={<Pages.PurchaseDocumentsPage />} />
+            <Route path="/purchasing/warranties" element={<Pages.PurchaseWarrantiesPage />} />
             <Route path="/purchasing/payment-plans" element={<Pages.PurchasePaymentPlansPage />} />
             <Route path="/purchasing/payments" element={<Pages.PurchasePaymentsPage />} />
             <Route path="/purchasing/payments/new" element={<Pages.PurchasePaymentDetailPage />} />

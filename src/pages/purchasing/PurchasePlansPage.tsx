@@ -81,7 +81,7 @@ function planApprovalMeta(row: {
   if (!isApproved) return null;
   const approver = (row.l2ApprovedByName || row.l1ApprovedByName)?.trim() || '';
   const approvedAt = row.l2ApprovedAt || row.l1ApprovedAt;
-  const approvedTime = formatDateTimeVi(approvedAt);
+  const approvedTime = formatDateTimeVi(approvedAt ?? undefined);
   if (!approver && !approvedTime) return null;
   return { approver, approvedTime };
 }

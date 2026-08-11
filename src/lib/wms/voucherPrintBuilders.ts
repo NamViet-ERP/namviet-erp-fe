@@ -7,7 +7,9 @@ import { getVoucherCreatedAt } from './voucherDateUtils';
 export function buildImportPrintPayload(
   imp: Import,
   projectLabel: string,
+  options: { showPrices?: boolean } = {},
 ): VoucherPrintPayload {
+  const showPrices = options.showPrices !== false;
   return {
     title: 'Phiếu nhập kho',
     voucherCode: imp.voucherCode,
@@ -20,16 +22,19 @@ export function buildImportPrintPayload(
       { label: 'Tạo lúc', value: formatDateTimeVi(getVoucherCreatedAt(imp)?.toISOString()) || '—' },
       { label: 'Ghi chú', value: imp.note || '—' },
     ],
-    columns: ['Vật tư', 'SL', 'ĐVT', 'Đơn giá', 'Thành tiền'],
+    columns: showPrices
+      ? ['Vật tư', 'SL', 'ĐVT', 'Đơn giá', 'Thành tiền']
+      : ['Vật tư', 'SL', 'ĐVT'],
     lines: imp.items.map(it => ({
       name: it.name,
       code: it.sku || it.productId,
       qty: it.qty,
       unit: it.unit,
-      unitPrice: it.unitPrice,
-      lineTotal: it.qty * it.unitPrice,
+      ...(showPrices
+        ? { unitPrice: it.unitPrice, lineTotal: it.qty * it.unitPrice }
+        : {}),
     })),
-    grandTotal: imp.totalValue,
+    ...(showPrices ? { grandTotal: imp.totalValue } : {}),
   };
 }
 

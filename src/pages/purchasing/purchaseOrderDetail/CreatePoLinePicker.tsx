@@ -15,6 +15,10 @@ type Props = {
   selectedLineIds: number[];
   qtyByLine: Record<number, string>;
   onQtyChange: (updater: (prev: Record<number, string>) => Record<number, string>) => void;
+  warrantyMonthsByLine: Record<number, string>;
+  onWarrantyMonthsChange: (updater: (prev: Record<number, string>) => Record<number, string>) => void;
+  warrantyAnchorByLine: Record<number, string>;
+  onWarrantyAnchorChange: (updater: (prev: Record<number, string>) => Record<number, string>) => void;
   allVisibleSelected: boolean;
   someVisibleSelected: boolean;
   onToggleLine: (id: number, checked: boolean) => void;
@@ -32,6 +36,10 @@ export function CreatePoLinePicker({
   selectedLineIds,
   qtyByLine,
   onQtyChange,
+  warrantyMonthsByLine,
+  onWarrantyMonthsChange,
+  warrantyAnchorByLine,
+  onWarrantyAnchorChange,
   allVisibleSelected,
   someVisibleSelected,
   onToggleLine,
@@ -89,6 +97,8 @@ export function CreatePoLinePicker({
                 <th className="pur-erp__th-num">Còn lại</th>
                 <th className="pur-erp__th-num">SL đặt</th>
                 <th className="pur-erp__th-num">Đơn giá</th>
+                <th className="pur-erp__th-num">Tháng BH</th>
+                <th>Mốc BH</th>
               </tr>
             </thead>
             <tbody>
@@ -121,6 +131,36 @@ export function CreatePoLinePicker({
                       />
                     </td>
                     <td className="pur-erp__td-num">{formatCurrency(unitPriceOf(line))}</td>
+                    <td className="pur-erp__td-num">
+                      <input
+                        className="pur-erp__planing-input"
+                        type="number"
+                        min={0}
+                        max={120}
+                        disabled={!checked}
+                        value={warrantyMonthsByLine[line.id] ?? '0'}
+                        onChange={e => onWarrantyMonthsChange(prev => ({
+                          ...prev,
+                          [line.id]: e.target.value,
+                        }))}
+                        aria-label={`Tháng bảo hành ${line.productName}`}
+                      />
+                    </td>
+                    <td>
+                      <select
+                        className="form-input form-input-sm"
+                        disabled={!checked}
+                        value={warrantyAnchorByLine[line.id] ?? 'delivery'}
+                        onChange={e => onWarrantyAnchorChange(prev => ({
+                          ...prev,
+                          [line.id]: e.target.value,
+                        }))}
+                        aria-label={`Mốc bảo hành ${line.productName}`}
+                      >
+                        <option value="delivery">Giao hàng</option>
+                        <option value="acceptance">Nghiệm thu</option>
+                      </select>
+                    </td>
                   </tr>
                 );
               })}

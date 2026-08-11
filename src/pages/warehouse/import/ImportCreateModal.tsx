@@ -3,7 +3,7 @@ import Modal from '../../../components/ui/Modal';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { emptyQtyPriceLine } from '../voucher/voucherFormTypes';
 import { isProjectFrozen } from '../../../lib/wms/stocktakeFreeze';
-import { usePermission } from '../../../hooks/usePermission';
+import { useCanViewWmsPrices } from '../../../lib/wms/priceVisibility';
 import type { ImportCreateModalProps } from './ImportCreateModal.types';
 import {
   defaultPoLineDrafts,
@@ -65,8 +65,7 @@ export default function ImportCreateModal({
   onApprove,
   isApproving = false,
 }: ImportCreateModalProps) {
-  const { has } = usePermission();
-  const canViewPrices = has('wms.prices.view');
+  const canViewPrices = useCanViewWmsPrices();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const evidenceInputRef = useRef<HTMLInputElement>(null);
   const evidenceDocInputRef = useRef<HTMLInputElement>(null);

@@ -38,7 +38,10 @@ export type CardAccent = 'amber' | 'blue' | 'teal' | 'purple';
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 
 /** Modal size options */
-export type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | 'full';
+export type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | 'full' | 'wide';
+
+/** Visual variant — `branded` gives the navy document header. */
+export type ModalVariant = 'plain' | 'branded';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Status Config

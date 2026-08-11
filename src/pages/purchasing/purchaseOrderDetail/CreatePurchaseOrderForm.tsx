@@ -58,6 +58,10 @@ export function CreatePurchaseOrderForm({ onCreated }: { onCreated: (code: strin
         selectedLineIds={f.selectedLineIds}
         qtyByLine={f.qtyByLine}
         onQtyChange={f.setQtyByLine}
+        warrantyMonthsByLine={f.warrantyMonthsByLine}
+        onWarrantyMonthsChange={f.setWarrantyMonthsByLine}
+        warrantyAnchorByLine={f.warrantyAnchorByLine}
+        onWarrantyAnchorChange={f.setWarrantyAnchorByLine}
         allVisibleSelected={f.allVisibleSelected}
         someVisibleSelected={f.someVisibleSelected}
         onToggleLine={f.toggleLine}

@@ -12,14 +12,10 @@ import type {
   PurchaseOrderAttachmentApiDto,
   PurchaseOrderDocType,
 } from '../../types/api/purchaseOrderAttachmentApi';
+import { PURCHASE_DOC_TYPE_OPTIONS } from '../../lib/purchasing/purchaseDocTypes';
 
-/** 4 ô hồ sơ chính trên chi tiết PO (hàng ngang). */
-const ATTACHMENT_SLOTS: Array<{ value: PurchaseOrderDocType; label: string }> = [
-  { value: 'co', label: 'C/O' },
-  { value: 'cq', label: 'C/Q' },
-  { value: 'contract', label: 'Hợp đồng' },
-  { value: 'bbnt', label: 'Biên bản nghiệm thu' },
-];
+/** Ô hồ sơ trên chi tiết PO — đủ loại Phase 3. */
+const ATTACHMENT_SLOTS = PURCHASE_DOC_TYPE_OPTIONS;
 
 interface PendingAttachment {
   localId: string;

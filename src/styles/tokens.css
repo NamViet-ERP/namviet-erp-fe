@@ -4,6 +4,41 @@
    ═══════════════════════════════════════════════════════════════════════ */
 
 :root {
+  /* ── Typography scale — single source of truth (ERP density, base 13px) ──
+     Hierarchy comes from weight + color first, size second. */
+  --font-sans: 'Roboto', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Code', 'Segoe UI Mono', 'Roboto Mono', monospace;
+
+  --fs-micro: 11px;   /* badge, eyebrow, chip, helper */
+  --fs-xs:    12px;   /* table header, meta, caption */
+  --fs-sm:    13px;   /* body, table cell — default */
+  --fs-md:    14px;   /* field value, emphasis */
+  --fs-lg:    15px;   /* section heading */
+  --fs-xl:    17px;   /* page title, modal title */
+  --fs-2xl:   20px;   /* KPI / stat number */
+  --fs-3xl:   24px;   /* portal / dashboard headline */
+  --fs-4xl:   28px;   /* hero stat only */
+
+  --fw-regular:  400;
+  --fw-medium:   500;
+  --fw-semibold: 600;
+  --fw-bold:     700;
+
+  --lh-tight:  1.2;
+  --lh-normal: 1.45;
+
+  /* ── Density — table paddings ── */
+  --table-header-py: 8px;
+  --table-header-px: 10px;
+  --table-cell-py:   8px;
+  --table-cell-px:   10px;
+
+  /* ── Shape — one radius scale (concentric: nested = outer − padding) ── */
+  --radius-xs: 4px;   /* input, chip, badge */
+  --radius-sm: 6px;   /* button */
+  --radius-md: 8px;   /* card, panel, table wrapper */
+  --radius-lg: 12px;  /* modal */
+
   /* ── Brand primitives (SCM-EPC) ── */
   --nv-navy:                     #132A45;
   --nv-navy-2:                   #1D3A5F;

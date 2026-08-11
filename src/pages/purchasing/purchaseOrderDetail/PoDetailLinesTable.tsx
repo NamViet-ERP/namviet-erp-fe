@@ -36,6 +36,8 @@ export function PoDetailLinesTable({
               <col className="pur-po-col pur-po-col--amount" />
               <col className="pur-po-col pur-po-col--date" />
               <col className="pur-po-col pur-po-col--recv" />
+              <col className="pur-po-col pur-po-col--qty" />
+              <col className="pur-po-col pur-po-col--date" />
               <col className="pur-po-col pur-po-col--note" />
             </colgroup>
             <thead>
@@ -48,6 +50,8 @@ export function PoDetailLinesTable({
                 <th className="pur-erp__th-num pur-detail__th pur-detail__th--base">Thành tiền</th>
                 <th className="pur-detail__th pur-detail__th--track">Ngày DK giao</th>
                 <th className="pur-erp__th-num pur-detail__th pur-detail__th--track">Đã nhận</th>
+                <th className="pur-erp__th-num pur-detail__th pur-detail__th--track">Tháng BH</th>
+                <th className="pur-detail__th pur-detail__th--track">Mốc BH</th>
                 <th className="pur-detail__th pur-detail__th--track">Ghi chú</th>
               </tr>
             </thead>
@@ -110,6 +114,38 @@ export function PoDetailLinesTable({
                       ) : formatDateCell(line.expectedDeliveryDate ?? undefined)}
                     </td>
                     <td className="pur-erp__td-num">{line.received}</td>
+                    <td className="pur-erp__td-num">
+                      {editing ? (
+                        <input
+                          className="form-input"
+                          type="number"
+                          min={0}
+                          max={120}
+                          value={draft?.warrantyMonths ?? ''}
+                          onChange={e => onEditLinesChange(prev => ({
+                            ...prev,
+                            [line.id]: { ...prev[line.id]!, warrantyMonths: e.target.value },
+                          }))}
+                        />
+                      ) : (line.warrantyMonths ?? 0)}
+                    </td>
+                    <td>
+                      {editing ? (
+                        <select
+                          className="form-input"
+                          value={draft?.warrantyAnchorType ?? 'delivery'}
+                          onChange={e => onEditLinesChange(prev => ({
+                            ...prev,
+                            [line.id]: { ...prev[line.id]!, warrantyAnchorType: e.target.value },
+                          }))}
+                        >
+                          <option value="delivery">Giao hàng</option>
+                          <option value="acceptance">Nghiệm thu</option>
+                        </select>
+                      ) : (
+                        line.warrantyAnchorType === 'acceptance' ? 'Nghiệm thu' : 'Giao hàng'
+                      )}
+                    </td>
                     <td>
                       {editing ? (
                         <input

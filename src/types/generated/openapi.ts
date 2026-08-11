@@ -6432,6 +6432,328 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/purchasing/contracts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                    projectCode?: string;
+                    supplierId?: number;
+                    poCode?: string;
+                    status?: string;
+                    search?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseContractPagedResponse"];
+                        "application/json": components["schemas"]["PurchaseContractPagedResponse"];
+                        "text/json": components["schemas"]["PurchaseContractPagedResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreatePurchaseContractRequest"];
+                    "text/json": components["schemas"]["CreatePurchaseContractRequest"];
+                    "application/*+json": components["schemas"]["CreatePurchaseContractRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseContractDto"];
+                        "application/json": components["schemas"]["PurchaseContractDto"];
+                        "text/json": components["schemas"]["PurchaseContractDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/contracts/import-from-po-attachments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ImportPurchaseContractsFromPoResult"];
+                        "application/json": components["schemas"]["ImportPurchaseContractsFromPoResult"];
+                        "text/json": components["schemas"]["ImportPurchaseContractsFromPoResult"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/contracts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseContractDto"];
+                        "application/json": components["schemas"]["PurchaseContractDto"];
+                        "text/json": components["schemas"]["PurchaseContractDto"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdatePurchaseContractRequest"];
+                    "text/json": components["schemas"]["UpdatePurchaseContractRequest"];
+                    "application/*+json": components["schemas"]["UpdatePurchaseContractRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseContractDto"];
+                        "application/json": components["schemas"]["PurchaseContractDto"];
+                        "text/json": components["schemas"]["PurchaseContractDto"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/contracts/{id}/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseContractDto"];
+                        "application/json": components["schemas"]["PurchaseContractDto"];
+                        "text/json": components["schemas"]["PurchaseContractDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/contracts/{id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                    poCode?: string;
+                    projectCode?: string;
+                    supplierId?: number;
+                    docType?: string;
+                    search?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseDocumentPagedResponse"];
+                        "application/json": components["schemas"]["PurchaseDocumentPagedResponse"];
+                        "text/json": components["schemas"]["PurchaseDocumentPagedResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/purchasing/orders": {
         parameters: {
             query?: never;
@@ -7442,6 +7764,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/purchasing/plans/supplier-material-risks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SupplierMaterialRiskLookupRequest"];
+                    "text/json": components["schemas"]["SupplierMaterialRiskLookupRequest"];
+                    "application/*+json": components["schemas"]["SupplierMaterialRiskLookupRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierMaterialRiskDto"][];
+                        "application/json": components["schemas"]["SupplierMaterialRiskDto"][];
+                        "text/json": components["schemas"]["SupplierMaterialRiskDto"][];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/purchasing/plans/{code}": {
         parameters: {
             query?: never;
@@ -7841,6 +8206,283 @@ export interface paths {
                         "text/plain": components["schemas"]["PurchasePlanDetailDto"];
                         "application/json": components["schemas"]["PurchasePlanDetailDto"];
                         "text/json": components["schemas"]["PurchasePlanDetailDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/warranties": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    projectCode?: string;
+                    materialCode?: string;
+                    supplierId?: number;
+                    status?: string;
+                    search?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseWarrantyDto"][];
+                        "application/json": components["schemas"]["PurchaseWarrantyDto"][];
+                        "text/json": components["schemas"]["PurchaseWarrantyDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/warranties/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseWarrantyDetailDto"];
+                        "application/json": components["schemas"]["PurchaseWarrantyDetailDto"];
+                        "text/json": components["schemas"]["PurchaseWarrantyDetailDto"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdatePurchaseWarrantyRequest"];
+                    "text/json": components["schemas"]["UpdatePurchaseWarrantyRequest"];
+                    "application/*+json": components["schemas"]["UpdatePurchaseWarrantyRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseWarrantyDetailDto"];
+                        "application/json": components["schemas"]["PurchaseWarrantyDetailDto"];
+                        "text/json": components["schemas"]["PurchaseWarrantyDetailDto"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/warranties/{id}/claims": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreatePurchaseWarrantyClaimRequest"];
+                    "text/json": components["schemas"]["CreatePurchaseWarrantyClaimRequest"];
+                    "application/*+json": components["schemas"]["CreatePurchaseWarrantyClaimRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseWarrantyClaimDto"];
+                        "application/json": components["schemas"]["PurchaseWarrantyClaimDto"];
+                        "text/json": components["schemas"]["PurchaseWarrantyClaimDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/warranties/claims/{claimId}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    claimId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseWarrantyClaimDto"];
+                        "application/json": components["schemas"]["PurchaseWarrantyClaimDto"];
+                        "text/json": components["schemas"]["PurchaseWarrantyClaimDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/warranties/claims/{claimId}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    claimId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ClosePurchaseWarrantyClaimRequest"];
+                    "text/json": components["schemas"]["ClosePurchaseWarrantyClaimRequest"];
+                    "application/*+json": components["schemas"]["ClosePurchaseWarrantyClaimRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseWarrantyClaimDto"];
+                        "application/json": components["schemas"]["PurchaseWarrantyClaimDto"];
+                        "text/json": components["schemas"]["PurchaseWarrantyClaimDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/warranties/sync-from-receipts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SyncPurchaseWarrantiesResult"];
+                        "application/json": components["schemas"]["SyncPurchaseWarrantiesResult"];
+                        "text/json": components["schemas"]["SyncPurchaseWarrantiesResult"];
                     };
                 };
             };
@@ -11260,6 +11902,11 @@ export interface components {
             /** Format: int32 */
             readonly totalPages: number;
         };
+        ClosePurchaseWarrantyClaimRequest: {
+            /** Format: int32 */
+            serviceRating: number;
+            serviceNote?: string | null;
+        };
         CompleteSupplierDeliveryEvaluationRequest: {
             /** Format: double */
             quality: number;
@@ -11513,6 +12160,24 @@ export interface components {
             clientName?: string | null;
             scMembers?: string | null;
         };
+        CreatePurchaseContractRequest: {
+            contractNo: string;
+            title: string;
+            poCode?: string | null;
+            projectCode?: string | null;
+            /** Format: int32 */
+            supplierId?: number | null;
+            status?: string | null;
+            /** Format: date */
+            signedDate?: string | null;
+            /** Format: date */
+            effectiveFrom?: string | null;
+            /** Format: date */
+            effectiveTo?: string | null;
+            /** Format: double */
+            amount?: number | null;
+            note?: string | null;
+        };
         CreatePurchaseOrderLineRequest: {
             /** Format: int32 */
             planLineId: number;
@@ -11523,6 +12188,9 @@ export interface components {
             /** Format: date */
             expectedDeliveryDate?: string | null;
             note?: string | null;
+            /** Format: int32 */
+            warrantyMonths: number;
+            warrantyAnchorType?: string | null;
         };
         CreatePurchaseOrderRequest: {
             planCode: string;
@@ -11615,6 +12283,11 @@ export interface components {
             note?: string | null;
             kind: string;
             lines?: components["schemas"]["CreatePurchasePlanLineRequest"][] | null;
+        };
+        CreatePurchaseWarrantyClaimRequest: {
+            reason: string;
+            note?: string | null;
+            submit: boolean;
         };
         CreateRecruitmentCostRequest: {
             source: string;
@@ -11960,6 +12633,12 @@ export interface components {
             unitPrice: number;
             isValid: boolean;
         };
+        ImportPurchaseContractsFromPoResult: {
+            /** Format: int32 */
+            imported: number;
+            /** Format: int32 */
+            skipped: number;
+        };
         LendingLogDto: {
             id: string;
             voucherCode: string;
@@ -12208,6 +12887,46 @@ export interface components {
             cvFileSize?: string | null;
             cvFileUrl?: string | null;
         };
+        PurchaseContractDto: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            contractNo: string;
+            title: string;
+            poCode?: string | null;
+            projectCode?: string | null;
+            /** Format: int32 */
+            supplierId?: number | null;
+            supplierName?: string | null;
+            status: string;
+            /** Format: date */
+            signedDate?: string | null;
+            /** Format: date */
+            effectiveFrom?: string | null;
+            /** Format: date */
+            effectiveTo?: string | null;
+            /** Format: double */
+            amount?: number | null;
+            note?: string | null;
+            fileName?: string | null;
+            hasFile: boolean;
+            /** Format: date-time */
+            uploadedAt?: string | null;
+            uploadedByName?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        PurchaseContractPagedResponse: {
+            items: components["schemas"]["PurchaseContractDto"][];
+            /** Format: int32 */
+            totalCount: number;
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalPages: number;
+        };
         PurchaseDefectAttachmentDto: {
             /** Format: uuid */
             id: string;
@@ -12255,6 +12974,31 @@ export interface components {
             /** Format: double */
             quantity: number;
             lineReason?: string | null;
+        };
+        PurchaseDocumentDto: {
+            /** Format: uuid */
+            id: string;
+            poCode: string;
+            projectCode?: string | null;
+            /** Format: int32 */
+            supplierId?: number | null;
+            supplierName?: string | null;
+            docType: string;
+            fileName: string;
+            /** Format: date-time */
+            uploadedAt: string;
+            uploadedByName?: string | null;
+        };
+        PurchaseDocumentPagedResponse: {
+            items: components["schemas"]["PurchaseDocumentDto"][];
+            /** Format: int32 */
+            totalCount: number;
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalPages: number;
         };
         PurchaseOrderAttachmentDto: {
             /** Format: uuid */
@@ -12389,6 +13133,9 @@ export interface components {
             /** Format: date */
             expectedDeliveryDate?: string | null;
             note?: string | null;
+            /** Format: int32 */
+            warrantyMonths: number;
+            warrantyAnchorType: string;
         };
         PurchaseOrderPagedResponse: {
             items: components["schemas"]["PurchaseOrderDto"][];
@@ -12752,6 +13499,93 @@ export interface components {
             /** Format: double */
             varianceReceivedPct: number;
             status: string;
+        };
+        PurchaseWarrantyClaimDto: {
+            /** Format: uuid */
+            id: string;
+            ticketCode: string;
+            /** Format: uuid */
+            warrantyId: string;
+            status: string;
+            reason: string;
+            note?: string | null;
+            /** Format: uuid */
+            createdById: string;
+            createdByName: string;
+            /** Format: date-time */
+            submittedAt?: string | null;
+            /** Format: date-time */
+            closedAt?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: int32 */
+            serviceRating?: number | null;
+            serviceNote?: string | null;
+        };
+        PurchaseWarrantyDetailDto: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            poCode: string;
+            /** Format: int32 */
+            poItemId: number;
+            projectCode?: string | null;
+            planCode?: string | null;
+            /** Format: int32 */
+            supplierId?: number | null;
+            supplierName?: string | null;
+            materialCode?: string | null;
+            materialName: string;
+            unit: string;
+            /** Format: double */
+            quantity: number;
+            /** Format: int32 */
+            warrantyMonths: number;
+            anchorType: string;
+            /** Format: date */
+            deliveryDate?: string | null;
+            /** Format: date */
+            acceptanceDate?: string | null;
+            /** Format: date */
+            warrantyEndDate?: string | null;
+            status: string;
+            importTicketCode?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            claims: components["schemas"]["PurchaseWarrantyClaimDto"][];
+        };
+        PurchaseWarrantyDto: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            poCode: string;
+            /** Format: int32 */
+            poItemId: number;
+            projectCode?: string | null;
+            planCode?: string | null;
+            /** Format: int32 */
+            supplierId?: number | null;
+            supplierName?: string | null;
+            materialCode?: string | null;
+            materialName: string;
+            unit: string;
+            /** Format: double */
+            quantity: number;
+            /** Format: int32 */
+            warrantyMonths: number;
+            anchorType: string;
+            /** Format: date */
+            deliveryDate?: string | null;
+            /** Format: date */
+            acceptanceDate?: string | null;
+            /** Format: date */
+            warrantyEndDate?: string | null;
+            status: string;
+            importTicketCode?: string | null;
+            /** Format: int32 */
+            claimCount: number;
+            /** Format: date-time */
+            createdAt: string;
         };
         PurchasingActivityActorDto: {
             /** Format: uuid */
@@ -13242,6 +14076,27 @@ export interface components {
             /** Format: date */
             evaluatedAt: string;
         };
+        SupplierMaterialRiskDto: {
+            /** Format: int32 */
+            supplierId?: number | null;
+            supplierName?: string | null;
+            materialCode: string;
+            /** Format: int32 */
+            defectCount3m: number;
+            /** Format: int32 */
+            warrantyClaimCount: number;
+            warn: boolean;
+            reasons: string[];
+        };
+        SupplierMaterialRiskLookupRequest: {
+            pairs: components["schemas"]["SupplierMaterialRiskPairRequest"][];
+        };
+        SupplierMaterialRiskPairRequest: {
+            /** Format: int32 */
+            supplierId?: number | null;
+            supplierName?: string | null;
+            materialCode: string;
+        };
         SupplierModuleSettingsDto: {
             /** Format: double */
             gradeAMinScore: number;
@@ -13291,6 +14146,12 @@ export interface components {
             period: string;
             /** Format: date-time */
             generatedAt: string;
+        };
+        SyncPurchaseWarrantiesResult: {
+            /** Format: int32 */
+            created: number;
+            /** Format: int32 */
+            updated: number;
         };
         TopProductDto: {
             sku: string;
@@ -13409,6 +14270,24 @@ export interface components {
             clientName?: string | null;
             scMembers?: string | null;
         };
+        UpdatePurchaseContractRequest: {
+            contractNo?: string | null;
+            title?: string | null;
+            poCode?: string | null;
+            projectCode?: string | null;
+            /** Format: int32 */
+            supplierId?: number | null;
+            status?: string | null;
+            /** Format: date */
+            signedDate?: string | null;
+            /** Format: date */
+            effectiveFrom?: string | null;
+            /** Format: date */
+            effectiveTo?: string | null;
+            /** Format: double */
+            amount?: number | null;
+            note?: string | null;
+        };
         UpdatePurchaseOrderRequest: {
             note?: string | null;
             /** Format: date */
@@ -13422,6 +14301,15 @@ export interface components {
             note?: string | null;
             status?: string | null;
             lines?: components["schemas"]["CreatePurchasePlanLineRequest"][] | null;
+        };
+        UpdatePurchaseWarrantyRequest: {
+            /** Format: int32 */
+            warrantyMonths?: number | null;
+            anchorType?: string | null;
+            /** Format: date */
+            acceptanceDate?: string | null;
+            /** Format: date */
+            deliveryDate?: string | null;
         };
         UpdateRecruitmentBudgetRequest: {
             /** Format: int32 */

@@ -26,6 +26,8 @@ export type PoEditLineDraft = {
   unitPrice: string;
   note: string;
   expectedDeliveryDate: string;
+  warrantyMonths: string;
+  warrantyAnchorType: string;
 };
 
 export function usePurchaseOrderDetail(code: string) {
@@ -113,6 +115,8 @@ export function usePurchaseOrderDetail(code: string) {
         expectedDeliveryDate: line.expectedDeliveryDate
           ? String(line.expectedDeliveryDate).slice(0, 10)
           : '',
+        warrantyMonths: String(line.warrantyMonths ?? 0),
+        warrantyAnchorType: line.warrantyAnchorType || 'delivery',
       };
     }
     setEditLines(next);
@@ -140,6 +144,9 @@ export function usePurchaseOrderDetail(code: string) {
           ? draft.expectedDeliveryDate.trim()
           : null,
         note: draft?.note?.trim() ? draft.note.trim() : null,
+        warrantyMonths: Number(draft?.warrantyMonths ?? line.warrantyMonths ?? 0),
+        warrantyAnchorType:
+          draft?.warrantyAnchorType || line.warrantyAnchorType || 'delivery',
       };
     });
     try {

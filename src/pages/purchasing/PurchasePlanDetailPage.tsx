@@ -1,16 +1,23 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { ChevronDown, ChevronRight, FolderLock, FolderOpen } from 'lucide-react';
+import { AlertTriangle, ChevronDown, ChevronRight, FolderLock, FolderOpen } from 'lucide-react';
 import { HrmDetailHeader } from '../../components/hr/HrmPageChrome';
 import EmptyState from '../../components/ui/EmptyState';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import { showToast } from '../../components/ui/Toast';
-import { usePurchasePlan, useUpdatePurchasePlan } from '../../hooks/usePurchasePlans';
+import {
+  usePurchasePlan,
+  useSupplierMaterialRisks,
+  useUpdatePurchasePlan,
+} from '../../hooks/usePurchasePlans';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { formatDateCell, formatDateTimeVi } from '../../lib/hrm/formatters';
 import { formatCurrency } from '../../utils/formatCurrency';
-import type { PurchasePlanLineApiDto } from '../../types/api/purchasingApi';
+import type {
+  PurchasePlanLineApiDto,
+  SupplierMaterialRiskPairRequest,
+} from '../../types/api/purchasingApi';
 
 function money(v: number | null | undefined): string {
   if (v == null) return '—';
@@ -100,6 +107,33 @@ export default function PurchasePlanDetailPage() {
   const back = () => navigate(listPath);
 
   const lines = plan?.lines ?? [];
+
+  const riskPairs = useMemo((): SupplierMaterialRiskPairRequest[] => {
+    const seen = new Set<string>();
+    const pairs: SupplierMaterialRiskPairRequest[] = [];
+    for (const line of lines) {
+      const materialCode = line.materialCode?.trim();
+      if (!materialCode) continue;
+      const names = [
+        line.selectedSupplierName,
+        line.purchaseSupplierName,
+        line.proposalSupplierName,
+        ...(line.quotes ?? []).map(q => q.supplierName),
+      ]
+        .map(n => (n ?? '').trim())
+        .filter(Boolean);
+      for (const supplierName of names) {
+        const key = `${materialCode.toLowerCase()}|${supplierName.toLowerCase()}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        pairs.push({ materialCode, supplierName });
+      }
+    }
+    return pairs;
+  }, [lines]);
+
+  const { data: riskRows = [] } = useSupplierMaterialRisks(riskPairs, Boolean(plan));
+  const warnRisks = useMemo(() => riskRows.filter(r => r.warn), [riskRows]);
 
   const setPlanStatus = async (next: 'approved' | 'closed') => {
     if (!plan) return;
@@ -229,6 +263,28 @@ export default function PurchasePlanDetailPage() {
           ))}
         </div>
       </section>
+
+      {warnRisks.length > 0 ? (
+        <section className="pur-create-plan__risk-list" aria-label="Cảnh báo NCC và vật tư" role="status">
+          {warnRisks.map(risk => (
+            <div
+              key={`${risk.materialCode}|${risk.supplierId ?? ''}|${risk.supplierName ?? ''}`}
+              className="pur-create-plan__risk-banner"
+            >
+              <AlertTriangle size={16} aria-hidden />
+              <div>
+                <strong>
+                  Cảnh báo NCC {risk.supplierName || '—'} / {risk.materialCode}
+                </strong>
+                {risk.reasons.map(reason => (
+                  <p key={reason}>{reason}</p>
+                ))}
+                <p>Chỉ cảnh báo mềm - không chặn duyệt.</p>
+              </div>
+            </div>
+          ))}
+        </section>
+      ) : null}
 
       <section className="pur-detail__card" aria-label="Danh sách mặt hàng">
         <h2 className="pur-detail__section-title">Danh sách mặt hàng</h2>

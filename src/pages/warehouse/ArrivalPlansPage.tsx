@@ -7,9 +7,9 @@ import HrmStatCard from '../../components/hr/HrmStatCard';
 import EmptyState from '../../components/ui/EmptyState';
 import SearchBar from '../../components/ui/SearchBar';
 import { useArrivalPlans } from '../../hooks/useArrivalPlans';
-import { usePermission } from '../../hooks/usePermission';
 import { formatDateCell } from '../../lib/hrm/formatters';
 import { getApiErrorMessage } from '../../lib/apiClient';
+import { useCanViewWmsPrices } from '../../lib/wms/priceVisibility';
 import { formatCurrencyFull } from '../../utils/formatCurrency';
 import type { ArrivalPlanLineStatus, ArrivalPlanProjectApiDto } from '../../services/arrivalPlansService';
 
@@ -38,8 +38,7 @@ function fmtQty(n: number) {
 }
 
 export default function ArrivalPlansPage() {
-  const { has } = usePermission();
-  const canViewPrices = has('wms.prices.view');
+  const canViewPrices = useCanViewWmsPrices();
   const [daysAhead, setDaysAhead] = useState(7);
   const [lineStatus, setLineStatus] = useState<ArrivalPlanLineStatus | 'all'>('all');
   const [search, setSearch] = useState('');

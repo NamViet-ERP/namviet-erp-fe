@@ -20,7 +20,7 @@ import { formatCurrencyShort } from '../../utils/formatCurrency';
 import { fmtStockQty } from '../../lib/wms/stockQtyFormat';
 import { useWarehouseDashboard } from '../../hooks/useWarehouseDashboard';
 import { useLowStockAlerts } from '../../hooks/useLowStockAlerts';
-import { usePermission } from '../../hooks/usePermission';
+import { useCanViewWmsPrices } from '../../lib/wms/priceVisibility';
 import type {
   CategoryDataPoint,
   DashboardActivityItem,
@@ -217,8 +217,7 @@ function DashboardWarehouseContent({
   isRetrying = false,
 }: DashboardWarehouseContentProps) {
   const [activityExpanded, setActivityExpanded] = useState(false);
-  const { has } = usePermission();
-  const canViewPrices = has('wms.prices.view');
+  const canViewPrices = useCanViewWmsPrices();
   const { data: lowStockAlerts = [] } = useLowStockAlerts(undefined, 8);
   const activityItems = activityExpanded
     ? data.recentActivity

@@ -27,6 +27,8 @@ export function useCreatePurchaseOrderForm(onCreated: (code: string) => void) {
   const [note, setNote] = useState('');
   const [selectedLineIds, setSelectedLineIds] = useState<number[]>([]);
   const [qtyByLine, setQtyByLine] = useState<Record<number, string>>({});
+  const [warrantyMonthsByLine, setWarrantyMonthsByLine] = useState<Record<number, string>>({});
+  const [warrantyAnchorByLine, setWarrantyAnchorByLine] = useState<Record<number, string>>({});
   const [productSearch, setProductSearch] = useState('');
   const [installmentCount, setInstallmentCount] = useState(1);
   const [installments, setInstallments] = useState<PoInstallmentDraft[]>(
@@ -91,6 +93,8 @@ export function useCreatePurchaseOrderForm(onCreated: (code: string) => void) {
     setSupplierName('');
     setSelectedLineIds([]);
     setQtyByLine({});
+    setWarrantyMonthsByLine({});
+    setWarrantyAnchorByLine({});
     setProductSearch('');
   };
 
@@ -103,6 +107,8 @@ export function useCreatePurchaseOrderForm(onCreated: (code: string) => void) {
     setSupplierName(next);
     setSelectedLineIds([]);
     setQtyByLine({});
+    setWarrantyMonthsByLine({});
+    setWarrantyAnchorByLine({});
     setProductSearch('');
   };
 
@@ -112,6 +118,8 @@ export function useCreatePurchaseOrderForm(onCreated: (code: string) => void) {
       const line = supplierLines.find(l => l.id === id);
       if (line) {
         setQtyByLine(prev => ({ ...prev, [id]: String(line.remainingOrderableQty) }));
+        setWarrantyMonthsByLine(prev => ({ ...prev, [id]: prev[id] ?? '0' }));
+        setWarrantyAnchorByLine(prev => ({ ...prev, [id]: prev[id] ?? 'delivery' }));
       }
     }
   };
@@ -124,6 +132,20 @@ export function useCreatePurchaseOrderForm(onCreated: (code: string) => void) {
         const next = { ...prev };
         for (const line of visibleSupplierLines) {
           next[line.id] = next[line.id] ?? String(line.remainingOrderableQty);
+        }
+        return next;
+      });
+      setWarrantyMonthsByLine(prev => {
+        const next = { ...prev };
+        for (const line of visibleSupplierLines) {
+          next[line.id] = next[line.id] ?? '0';
+        }
+        return next;
+      });
+      setWarrantyAnchorByLine(prev => {
+        const next = { ...prev };
+        for (const line of visibleSupplierLines) {
+          next[line.id] = next[line.id] ?? 'delivery';
         }
         return next;
       });
@@ -211,6 +233,8 @@ export function useCreatePurchaseOrderForm(onCreated: (code: string) => void) {
         qty,
         unitPrice: unitPriceOf(line),
         note: line.lineNote ?? null,
+        warrantyMonths: Math.max(0, Math.min(120, Number(warrantyMonthsByLine[id] ?? 0) || 0)),
+        warrantyAnchorType: warrantyAnchorByLine[id] || 'delivery',
       };
     });
 
@@ -278,6 +302,10 @@ export function useCreatePurchaseOrderForm(onCreated: (code: string) => void) {
     selectedLineIds,
     qtyByLine,
     setQtyByLine,
+    warrantyMonthsByLine,
+    setWarrantyMonthsByLine,
+    warrantyAnchorByLine,
+    setWarrantyAnchorByLine,
     installmentCount,
     installments,
     supplierLines,

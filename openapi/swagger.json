@@ -7384,6 +7384,452 @@
         }
       }
     },
+    "/api/purchasing/contracts": {
+      "get": {
+        "tags": [
+          "PurchaseContracts"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          },
+          {
+            "name": "projectCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "supplierId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "poCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseContractPagedResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseContractPagedResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseContractPagedResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "PurchaseContracts"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePurchaseContractRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePurchaseContractRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePurchaseContractRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseContractDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseContractDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseContractDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/contracts/import-from-po-attachments": {
+      "post": {
+        "tags": [
+          "PurchaseContracts"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportPurchaseContractsFromPoResult"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportPurchaseContractsFromPoResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportPurchaseContractsFromPoResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/contracts/{id}": {
+      "get": {
+        "tags": [
+          "PurchaseContracts"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseContractDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseContractDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseContractDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "PurchaseContracts"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePurchaseContractRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePurchaseContractRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePurchaseContractRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseContractDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseContractDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseContractDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "PurchaseContracts"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchasing/contracts/{id}/upload": {
+      "post": {
+        "tags": [
+          "PurchaseContracts"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              },
+              "encoding": {
+                "file": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseContractDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseContractDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseContractDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/contracts/{id}/download": {
+      "get": {
+        "tags": [
+          "PurchaseContracts"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchasing/documents": {
+      "get": {
+        "tags": [
+          "PurchaseDocuments"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          },
+          {
+            "name": "poCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "projectCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "supplierId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "docType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseDocumentPagedResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseDocumentPagedResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseDocumentPagedResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/purchasing/orders": {
       "get": {
         "tags": [
@@ -8752,6 +9198,63 @@
         }
       }
     },
+    "/api/purchasing/plans/supplier-material-risks": {
+      "post": {
+        "tags": [
+          "PurchasePlans"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupplierMaterialRiskLookupRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupplierMaterialRiskLookupRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupplierMaterialRiskLookupRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SupplierMaterialRiskDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SupplierMaterialRiskDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SupplierMaterialRiskDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/purchasing/plans/{code}": {
       "get": {
         "tags": [
@@ -9189,6 +9692,366 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PurchasePlanDetailDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/warranties": {
+      "get": {
+        "tags": [
+          "PurchaseWarranties"
+        ],
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "materialCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "supplierId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PurchaseWarrantyDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PurchaseWarrantyDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PurchaseWarrantyDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/warranties/{id}": {
+      "get": {
+        "tags": [
+          "PurchaseWarranties"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseWarrantyDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseWarrantyDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseWarrantyDetailDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "PurchaseWarranties"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePurchaseWarrantyRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePurchaseWarrantyRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePurchaseWarrantyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseWarrantyDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseWarrantyDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseWarrantyDetailDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/warranties/{id}/claims": {
+      "post": {
+        "tags": [
+          "PurchaseWarranties"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePurchaseWarrantyClaimRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePurchaseWarrantyClaimRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePurchaseWarrantyClaimRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseWarrantyClaimDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseWarrantyClaimDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseWarrantyClaimDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/warranties/claims/{claimId}/submit": {
+      "post": {
+        "tags": [
+          "PurchaseWarranties"
+        ],
+        "parameters": [
+          {
+            "name": "claimId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseWarrantyClaimDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseWarrantyClaimDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseWarrantyClaimDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/warranties/claims/{claimId}/close": {
+      "post": {
+        "tags": [
+          "PurchaseWarranties"
+        ],
+        "parameters": [
+          {
+            "name": "claimId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClosePurchaseWarrantyClaimRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClosePurchaseWarrantyClaimRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClosePurchaseWarrantyClaimRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseWarrantyClaimDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseWarrantyClaimDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseWarrantyClaimDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/warranties/sync-from-receipts": {
+      "post": {
+        "tags": [
+          "PurchaseWarranties"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncPurchaseWarrantiesResult"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncPurchaseWarrantiesResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncPurchaseWarrantiesResult"
                 }
               }
             }
@@ -13912,6 +14775,23 @@
         },
         "additionalProperties": false
       },
+      "ClosePurchaseWarrantyClaimRequest": {
+        "required": [
+          "serviceRating"
+        ],
+        "type": "object",
+        "properties": {
+          "serviceRating": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "serviceNote": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "CompleteSupplierDeliveryEvaluationRequest": {
         "required": [
           "compliance",
@@ -14824,11 +15704,69 @@
         },
         "additionalProperties": false
       },
+      "CreatePurchaseContractRequest": {
+        "required": [
+          "contractNo",
+          "title"
+        ],
+        "type": "object",
+        "properties": {
+          "contractNo": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "poCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "projectCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "supplierId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "signedDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "effectiveFrom": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "effectiveTo": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "amount": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "CreatePurchaseOrderLineRequest": {
         "required": [
           "planLineId",
           "qty",
-          "unitPrice"
+          "unitPrice",
+          "warrantyMonths"
         ],
         "type": "object",
         "properties": {
@@ -14850,6 +15788,14 @@
             "nullable": true
           },
           "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "warrantyMonths": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "warrantyAnchorType": {
             "type": "string",
             "nullable": true
           }
@@ -15157,6 +16103,26 @@
               "$ref": "#/components/schemas/CreatePurchasePlanLineRequest"
             },
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreatePurchaseWarrantyClaimRequest": {
+        "required": [
+          "reason",
+          "submit"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "submit": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false
@@ -16429,6 +17395,24 @@
         },
         "additionalProperties": false
       },
+      "ImportPurchaseContractsFromPoResult": {
+        "required": [
+          "imported",
+          "skipped"
+        ],
+        "type": "object",
+        "properties": {
+          "imported": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "skipped": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
       "LendingLogDto": {
         "required": [
           "borrowingProjectId",
@@ -17284,6 +18268,133 @@
         },
         "additionalProperties": false
       },
+      "PurchaseContractDto": {
+        "required": [
+          "code",
+          "contractNo",
+          "createdAt",
+          "hasFile",
+          "id",
+          "status",
+          "title"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "contractNo": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "poCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "projectCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "supplierId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "supplierName": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string"
+          },
+          "signedDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "effectiveFrom": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "effectiveTo": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "amount": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "fileName": {
+            "type": "string",
+            "nullable": true
+          },
+          "hasFile": {
+            "type": "boolean"
+          },
+          "uploadedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "uploadedByName": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchaseContractPagedResponse": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount",
+          "totalPages"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PurchaseContractDto"
+            }
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
       "PurchaseDefectAttachmentDto": {
         "required": [
           "fileName",
@@ -17454,6 +18565,88 @@
           "lineReason": {
             "type": "string",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchaseDocumentDto": {
+        "required": [
+          "docType",
+          "fileName",
+          "id",
+          "poCode",
+          "uploadedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "poCode": {
+            "type": "string"
+          },
+          "projectCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "supplierId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "supplierName": {
+            "type": "string",
+            "nullable": true
+          },
+          "docType": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "uploadedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "uploadedByName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchaseDocumentPagedResponse": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount",
+          "totalPages"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PurchaseDocumentDto"
+            }
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false
@@ -17842,7 +19035,9 @@
           "poPrice",
           "received",
           "sku",
-          "unit"
+          "unit",
+          "warrantyAnchorType",
+          "warrantyMonths"
         ],
         "type": "object",
         "properties": {
@@ -17900,6 +19095,13 @@
           "note": {
             "type": "string",
             "nullable": true
+          },
+          "warrantyMonths": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "warrantyAnchorType": {
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -19064,6 +20266,279 @@
           },
           "status": {
             "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchaseWarrantyClaimDto": {
+        "required": [
+          "createdAt",
+          "createdById",
+          "createdByName",
+          "id",
+          "reason",
+          "status",
+          "ticketCode",
+          "warrantyId"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ticketCode": {
+            "type": "string"
+          },
+          "warrantyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdById": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdByName": {
+            "type": "string"
+          },
+          "submittedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "closedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "serviceRating": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "serviceNote": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchaseWarrantyDetailDto": {
+        "required": [
+          "anchorType",
+          "claims",
+          "code",
+          "createdAt",
+          "id",
+          "materialName",
+          "poCode",
+          "poItemId",
+          "quantity",
+          "status",
+          "unit",
+          "warrantyMonths"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "poCode": {
+            "type": "string"
+          },
+          "poItemId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "projectCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "planCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "supplierId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "supplierName": {
+            "type": "string",
+            "nullable": true
+          },
+          "materialCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "materialName": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "warrantyMonths": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "anchorType": {
+            "type": "string"
+          },
+          "deliveryDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "acceptanceDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "warrantyEndDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "status": {
+            "type": "string"
+          },
+          "importTicketCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "claims": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PurchaseWarrantyClaimDto"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchaseWarrantyDto": {
+        "required": [
+          "anchorType",
+          "claimCount",
+          "code",
+          "createdAt",
+          "id",
+          "materialName",
+          "poCode",
+          "poItemId",
+          "quantity",
+          "status",
+          "unit",
+          "warrantyMonths"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "poCode": {
+            "type": "string"
+          },
+          "poItemId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "projectCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "planCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "supplierId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "supplierName": {
+            "type": "string",
+            "nullable": true
+          },
+          "materialCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "materialName": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "warrantyMonths": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "anchorType": {
+            "type": "string"
+          },
+          "deliveryDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "acceptanceDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "warrantyEndDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "status": {
+            "type": "string"
+          },
+          "importTicketCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "claimCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
           }
         },
         "additionalProperties": false
@@ -20708,6 +22183,84 @@
         },
         "additionalProperties": false
       },
+      "SupplierMaterialRiskDto": {
+        "required": [
+          "defectCount3m",
+          "materialCode",
+          "reasons",
+          "warn",
+          "warrantyClaimCount"
+        ],
+        "type": "object",
+        "properties": {
+          "supplierId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "supplierName": {
+            "type": "string",
+            "nullable": true
+          },
+          "materialCode": {
+            "type": "string"
+          },
+          "defectCount3m": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "warrantyClaimCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "warn": {
+            "type": "boolean"
+          },
+          "reasons": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupplierMaterialRiskLookupRequest": {
+        "required": [
+          "pairs"
+        ],
+        "type": "object",
+        "properties": {
+          "pairs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupplierMaterialRiskPairRequest"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupplierMaterialRiskPairRequest": {
+        "required": [
+          "materialCode"
+        ],
+        "type": "object",
+        "properties": {
+          "supplierId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "supplierName": {
+            "type": "string",
+            "nullable": true
+          },
+          "materialCode": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "SupplierModuleSettingsDto": {
         "required": [
           "evaluationCycle",
@@ -20853,6 +22406,24 @@
           "generatedAt": {
             "type": "string",
             "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SyncPurchaseWarrantiesResult": {
+        "required": [
+          "created",
+          "updated"
+        ],
+        "type": "object",
+        "properties": {
+          "created": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "updated": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false
@@ -21292,6 +22863,61 @@
         },
         "additionalProperties": false
       },
+      "UpdatePurchaseContractRequest": {
+        "type": "object",
+        "properties": {
+          "contractNo": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "poCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "projectCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "supplierId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "signedDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "effectiveFrom": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "effectiveTo": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "amount": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "UpdatePurchaseOrderRequest": {
         "required": [
           "lines"
@@ -21344,6 +22970,31 @@
             "items": {
               "$ref": "#/components/schemas/CreatePurchasePlanLineRequest"
             },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdatePurchaseWarrantyRequest": {
+        "type": "object",
+        "properties": {
+          "warrantyMonths": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "anchorType": {
+            "type": "string",
+            "nullable": true
+          },
+          "acceptanceDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "deliveryDate": {
+            "type": "string",
+            "format": "date",
             "nullable": true
           }
         },

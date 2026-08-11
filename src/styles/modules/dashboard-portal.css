@@ -28,7 +28,7 @@
     border-color: var(--md-outline-variant02);
   }
   .portal-greeting__title {
-    font-size: 1.25rem;
+    font-size: var(--fs-2xl);
     font-weight: 700;
     color: var(--md-on-surface);
     text-wrap: balance;
@@ -36,7 +36,7 @@
   }
   .portal-greeting__sub {
     margin-top: 4px;
-    font-size: 0.875rem;
+    font-size: var(--fs-md);
     color: var(--md-on-surface-variant);
     text-wrap: pretty;
   }
@@ -44,7 +44,7 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 0.75rem;
+    font-size: var(--fs-xs);
     color: var(--md-on-surface-variant);
     flex-shrink: 0;
   }
@@ -153,7 +153,7 @@
   }
   .portal-dept-card__title {
     margin: 0;
-    font-size: 0.8125rem;
+    font-size: var(--fs-sm);
     font-weight: 700;
     letter-spacing: 0.03em;
     text-transform: uppercase;
@@ -205,7 +205,7 @@
     color: var(--dept-accent);
   }
   .portal-dept-card__item-label {
-    font-size: 0.8125rem;
+    font-size: var(--fs-sm);
     font-weight: 500;
     color: var(--md-on-surface);
     white-space: nowrap;
@@ -311,7 +311,7 @@
     color: var(--md-on-secondary);
   }
   .portal-pending-card__count {
-    font-size: 1.5rem;
+    font-size: var(--fs-3xl);
     font-weight: 700;
     line-height: 1.2;
     font-variant-numeric: tabular-nums;
@@ -321,7 +321,7 @@
     color: var(--md-on-secondary);
   }
   .portal-pending-card__label {
-    font-size: 13px;
+    font-size: var(--fs-sm);
     font-weight: 500;
     color: var(--md-on-surface-variant);
   }
@@ -356,7 +356,7 @@
     border-color: var(--md-outline-variant);
   }
   .portal-birthday-card__title {
-    font-size: 0.875rem;
+    font-size: var(--fs-md);
     font-weight: 700;
     color: var(--md-primary);
     display: flex;
@@ -380,18 +380,18 @@
     border: 1px solid color-mix(in srgb, var(--nv-steel) 18%, var(--md-outline-variant));
   }
   .portal-birthday-stat__label {
-    font-size: 11px;
+    font-size: var(--fs-micro);
     color: var(--md-on-surface-variant);
   }
   .portal-birthday-stat__value {
-    font-size: 1.125rem;
+    font-size: var(--fs-xl);
     font-weight: 700;
     font-variant-numeric: tabular-nums;
   }
   .portal-birthday-stat__value--employees { color: var(--md-secondary); }
   .portal-birthday-stat__value--customers { color: var(--md-primary); }
   .portal-birthday-card__footer {
-    font-size: 0.75rem;
+    font-size: var(--fs-xs);
     text-align: center;
     color: var(--md-on-surface-variant);
     text-wrap: pretty;
@@ -542,7 +542,7 @@
     flex-shrink: 0;
     padding: 3px 10px;
     border-radius: 9999px;
-    font-size: 0.6875rem;
+    font-size: var(--fs-micro);
     font-weight: 700;
     letter-spacing: 0.02em;
     color: var(--md-on-secondary-container);
@@ -566,7 +566,7 @@
     border: 1px solid color-mix(in srgb, var(--md-secondary) 30%, var(--md-outline-variant02));
     background: var(--md-surface-container);
     color: var(--md-secondary);
-    font-size: 0.75rem;
+    font-size: var(--fs-xs);
     font-weight: 700;
     cursor: pointer;
     transition: background-color 140ms ease-out, border-color 140ms ease-out;
@@ -620,7 +620,7 @@
   .portal-bday-cal__month {
     min-width: 7.5rem;
     padding: 0 6px;
-    font-size: 0.875rem;
+    font-size: var(--fs-md);
     font-weight: 600;
     color: var(--md-on-surface);
     text-align: center;
@@ -632,7 +632,7 @@
   .portal-bday-cal__fetching-slot {
     flex: 1 1 auto;
     min-width: 0;
-    font-size: 0.6875rem;
+    font-size: var(--fs-micro);
     font-weight: 600;
     color: var(--md-on-surface-variant);
     white-space: nowrap;
@@ -640,7 +640,7 @@
   }
   .portal-bday-cal__status {
     padding: 20px 16px;
-    font-size: 0.8125rem;
+    font-size: var(--fs-sm);
     color: var(--md-on-surface-variant);
   }
   .portal-bday-cal__content {
@@ -662,7 +662,7 @@
     gap: 6px;
     margin-bottom: 6px;
     text-align: center;
-    font-size: 0.625rem;
+    font-size: var(--fs-micro);
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -690,7 +690,7 @@
     border-radius: 10px;
     border: 1px solid transparent;
     background: var(--md-surface-container-high);
-    font-size: 0.75rem;
+    font-size: var(--fs-xs);
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     color: var(--md-on-surface);
@@ -735,7 +735,7 @@
     padding: 8px 10px;
     min-height: 34px;
     border-radius: 8px;
-    font-size: 0.75rem;
+    font-size: var(--fs-xs);
     font-weight: 600;
     color: var(--md-on-surface-variant);
     background: var(--md-surface-container-high);
@@ -756,7 +756,7 @@
     align-items: center;
     gap: 6px;
     margin: 0 0 10px;
-    font-size: 0.75rem;
+    font-size: var(--fs-xs);
     font-weight: 700;
     letter-spacing: 0.02em;
     text-transform: uppercase;
@@ -791,7 +791,7 @@
     border: none;
     border-bottom: 1px solid var(--md-outline-variant02);
     background: color-mix(in srgb, var(--chart-5) 6%, var(--md-surface-container-high));
-    font-size: 0.8125rem;
+    font-size: var(--fs-sm);
     font-weight: 700;
     color: var(--md-primary);
     text-align: left;
@@ -816,7 +816,7 @@
     min-width: 22px;
     padding: 2px 7px;
     border-radius: 9999px;
-    font-size: 0.6875rem;
+    font-size: var(--fs-micro);
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     color: var(--md-on-secondary-container);
@@ -849,7 +849,7 @@
     align-items: center;
     justify-content: center;
     border-radius: 9999px;
-    font-size: 0.625rem;
+    font-size: var(--fs-micro);
     font-weight: 800;
     letter-spacing: 0.02em;
     color: var(--md-on-secondary);
@@ -863,14 +863,14 @@
     gap: 2px;
   }
   .portal-bday-cal__person-name {
-    font-size: 0.8125rem;
+    font-size: var(--fs-sm);
     font-weight: 700;
     color: var(--md-on-surface);
     line-height: 1.3;
     text-wrap: pretty;
   }
   .portal-bday-cal__person-dept {
-    font-size: 0.6875rem;
+    font-size: var(--fs-micro);
     font-weight: 500;
     color: var(--md-on-surface-variant);
     overflow: hidden;
@@ -883,7 +883,7 @@
     min-height: 200px;
     padding: 16px 12px;
     border-radius: 8px;
-    font-size: 0.75rem;
+    font-size: var(--fs-xs);
     color: var(--md-on-surface-variant);
     text-align: center;
     text-wrap: pretty;

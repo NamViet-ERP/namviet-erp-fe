@@ -7,6 +7,8 @@ import type {
   PurchasePlanKind,
   PurchasePlanPagedApiDto,
   RejectPurchasePlanRequest,
+  SupplierMaterialRiskApiDto,
+  SupplierMaterialRiskLookupRequest,
   UpdatePurchasePlanRequest,
 } from '../types/api/purchasingApi';
 import type { PurchasePlanVarianceApiDto } from '../types/api/purchasePlanVarianceApi';
@@ -99,5 +101,11 @@ export const purchasePlansService = {
       planCode: params.planCode || undefined,
       projectCode: params.projectCode || undefined,
     });
+  },
+
+  async lookupSupplierMaterialRisks(
+    body: SupplierMaterialRiskLookupRequest,
+  ): Promise<SupplierMaterialRiskApiDto[]> {
+    return apiClient.post<SupplierMaterialRiskApiDto[]>(`${ENDPOINT}/supplier-material-risks`, body);
   },
 };

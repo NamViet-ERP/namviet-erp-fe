@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronDown, Download, FileSpreadsheet, Plus, Trash2, Upload } from 'lucide-react';
+import { AlertTriangle, ChevronDown, Download, FileSpreadsheet, Plus, Trash2, Upload } from 'lucide-react';
 import Modal from '../ui/Modal';
 import FormField from '../ui/FormField';
 import CurrencyInput from '../ui/CurrencyInput';
@@ -16,12 +16,16 @@ import {
   usePurchasePlan,
   usePurchasePlanImportPreview,
   usePurchasePlanImportTemplate,
+  useSupplierMaterialRisks,
   useUpdatePurchasePlan,
 } from '../../hooks/usePurchasePlans';
+import { findSupplierByName } from '../../services/suppliersService';
 import type {
   CreatePurchasePlanLineRequest,
   PurchasePlanImportLinePreviewApiDto,
   PurchasePlanImportPreviewApiDto,
+  SupplierMaterialRiskApiDto,
+  SupplierMaterialRiskPairRequest,
 } from '../../types/api/purchasingApi';
 import { formatCurrency } from '../../utils/formatCurrency';
 
@@ -253,6 +257,67 @@ export default function CreatePurchasePlanModal({
     }
     return { budget, proposal, purchase, filled };
   }, [lines]);
+
+  const riskPairs = useMemo((): SupplierMaterialRiskPairRequest[] => {
+    const seen = new Set<string>();
+    const pairs: SupplierMaterialRiskPairRequest[] = [];
+    for (const line of lines) {
+      const materialCode = line.materialCode.trim();
+      if (!materialCode) continue;
+      const names = [
+        line.selectedSupplierName,
+        line.purchaseSupplierName,
+        line.proposalSupplierName,
+        ...line.quotes.map(q => q.supplierName),
+      ]
+        .map(n => n.trim())
+        .filter(Boolean);
+      for (const supplierName of names) {
+        const key = `${materialCode.toLowerCase()}|${supplierName.toLowerCase()}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const matched = findSupplierByName(suppliers, supplierName);
+        pairs.push({
+          materialCode,
+          supplierName,
+          supplierId: matched?.id ?? null,
+        });
+      }
+    }
+    return pairs;
+  }, [lines, suppliers]);
+
+  const { data: riskRows = [] } = useSupplierMaterialRisks(riskPairs, open);
+
+  const risksByLineKey = useMemo(() => {
+    const map = new Map<string, SupplierMaterialRiskApiDto[]>();
+    if (riskRows.length === 0) return map;
+    for (const line of lines) {
+      const materialCode = line.materialCode.trim();
+      if (!materialCode) continue;
+      const names = new Set(
+        [
+          line.selectedSupplierName,
+          line.purchaseSupplierName,
+          line.proposalSupplierName,
+          ...line.quotes.map(q => q.supplierName),
+        ]
+          .map(n => n.trim().toLowerCase())
+          .filter(Boolean),
+      );
+      const matched = riskRows.filter(r =>
+        r.warn
+        && r.materialCode.toLowerCase() === materialCode.toLowerCase()
+        && (
+          (r.supplierName && names.has(r.supplierName.toLowerCase()))
+          || (r.supplierId != null && suppliers.some(s =>
+            s.id === r.supplierId && names.has(s.supplierName.trim().toLowerCase())))
+        ),
+      );
+      if (matched.length > 0) map.set(line.key, matched);
+    }
+    return map;
+  }, [lines, riskRows, suppliers]);
 
   const reset = () => {
     setProjectCode('');
@@ -801,6 +866,28 @@ export default function CreatePurchasePlanModal({
                                       </div>
                                     ))}
                                   </div>
+                                </div>
+                              ) : null}
+
+                              {(risksByLineKey.get(line.key) ?? []).length > 0 ? (
+                                <div className="pur-create-plan__risk-list" role="status">
+                                  {(risksByLineKey.get(line.key) ?? []).map(risk => (
+                                    <div
+                                      key={`${risk.materialCode}|${risk.supplierId ?? ''}|${risk.supplierName ?? ''}`}
+                                      className="pur-create-plan__risk-banner"
+                                    >
+                                      <AlertTriangle size={16} aria-hidden />
+                                      <div>
+                                        <strong>
+                                          Cảnh báo NCC {risk.supplierName || '—'} / {risk.materialCode}
+                                        </strong>
+                                        {risk.reasons.map(reason => (
+                                          <p key={reason}>{reason}</p>
+                                        ))}
+                                        <p>Chỉ cảnh báo mềm - vẫn lưu / duyệt bình thường.</p>
+                                      </div>
+                                    </div>
+                                  ))}
                                 </div>
                               ) : null}
                             </div>

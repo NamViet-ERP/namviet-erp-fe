@@ -6,6 +6,7 @@ import EmptyState from '../../components/ui/EmptyState';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import StockMaterialProjectModal from '../../components/warehouse/StockMaterialProjectModal';
 import { useStockMatrix } from '../../hooks/useStockMatrix';
+import { useCanViewWmsPrices } from '../../lib/wms/priceVisibility';
 import { fmtPlannedStock, fmtStockQtyOrDash } from '../../lib/wms/stockQtyFormat';
 import {
   countActiveProjects,
@@ -23,10 +24,11 @@ import { WMS_EMPTY, WMS_ERROR } from '../../lib/wms/messages';
 import type { StockMatrixRowApiDto } from '../../types/wms';
 import { formatCurrency } from '../../utils/formatCurrency';
 
-const STOCK_COL_SPAN = 12;
-
 export default function ApiStockMatrixView() {
   const { data: rows = [], isLoading, isError } = useStockMatrix();
+  /** Thủ kho không bao giờ thấy Giá BQ (BE PriceVisibility cũng mask). */
+  const canViewPrices = useCanViewWmsPrices();
+  const colSpan = canViewPrices ? 12 : 11;
   const [search, setSearch] = useState('');
   const [projectFilter, setProjectFilter] = useState('all');
   const [page, setPage] = useState(1);
@@ -97,22 +99,24 @@ export default function ApiStockMatrixView() {
                   Hàng lỗi
                 </th>
                 <th className="table-header-cell text-right stock-col-project whitespace-nowrap" title="Tồn thực tế + nhập/hoàn trả/chuyển kho dự kiến">Tồn dự kiến</th>
-                <th className="table-header-cell text-right w-24" title="WAC từ phiếu nhập đã duyệt trong 12 tháng (ngày duyệt)">Giá BQ</th>
+                {canViewPrices ? (
+                  <th className="table-header-cell text-right w-24" title="WAC từ phiếu nhập đã duyệt trong 12 tháng (ngày duyệt)">Giá BQ</th>
+                ) : null}
                 <th className="table-header-cell text-center w-14">Dự án</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
-                <TableSkeletonRows colSpan={STOCK_COL_SPAN} />
+                <TableSkeletonRows colSpan={colSpan} />
               ) : isError ? (
                 <tr>
-                  <td colSpan={STOCK_COL_SPAN}>
+                  <td colSpan={colSpan}>
                     <EmptyState message={WMS_ERROR.loadStock} />
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={STOCK_COL_SPAN}>
+                  <td colSpan={colSpan}>
                     <EmptyState message={WMS_EMPTY.noStock} />
                   </td>
                 </tr>
@@ -170,11 +174,13 @@ export default function ApiStockMatrixView() {
                       <td className="table-cell text-right font-semibold tabular-nums">
                         {fmtPlannedStock(projectActual, plannedImport)}
                       </td>
-                      <td className="table-cell text-right tabular-nums text-[var(--md-on-surface)]">
-                        {row.weightedAverageUnitCost > 0
-                          ? formatCurrency(row.weightedAverageUnitCost)
-                          : '—'}
-                      </td>
+                      {canViewPrices ? (
+                        <td className="table-cell text-right tabular-nums text-[var(--md-on-surface)]">
+                          {row.weightedAverageUnitCost > 0
+                            ? formatCurrency(row.weightedAverageUnitCost)
+                            : '—'}
+                        </td>
+                      ) : null}
                       <td className="table-cell text-center">
                         {activeCount > 0 ? (
                           <span className="stock-project-badge tabular-nums">{activeCount}</span>

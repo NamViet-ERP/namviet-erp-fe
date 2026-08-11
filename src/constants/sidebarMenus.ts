@@ -5,7 +5,7 @@ import {
   ClipboardCheck, Users, UserCheck, UserCog,
   Layers, FolderKanban, ArrowLeftRight, Building2, Ruler, BarChart3, RotateCcw, AlertTriangle,
   Target, CalendarDays, DollarSign, ShoppingCart, ShoppingBag, Star, Truck, WalletCards, Ban,
-  History, PieChart, Activity, Warehouse, ShieldCheck,
+  History, PieChart, Activity, Warehouse, ShieldCheck, FolderOpen, ScrollText,
 } from 'lucide-react';
 
 function toSidebarChildren(items: SidebarMenuItem[]): SidebarChildItem[] {
@@ -242,6 +242,27 @@ export const purchasingMenu: SidebarMenuItem[] = [
     icon: ShoppingCart,
     path: '/purchasing/orders',
     permission: 'purchasing.orders.view',
+  },
+  {
+    id: 'pur-contracts',
+    label: 'Hợp đồng',
+    icon: ScrollText,
+    path: '/purchasing/contracts',
+    permission: 'purchasing.contracts.view',
+  },
+  {
+    id: 'pur-documents',
+    label: 'Hồ sơ mua hàng',
+    icon: FolderOpen,
+    path: '/purchasing/documents',
+    permission: 'purchasing.documents.view',
+  },
+  {
+    id: 'pur-warranties',
+    label: 'Bảo hành',
+    icon: ShieldCheck,
+    path: '/purchasing/warranties',
+    permission: 'purchasing.warranties.view',
   },
   {
     id: 'pur-payment-plans',

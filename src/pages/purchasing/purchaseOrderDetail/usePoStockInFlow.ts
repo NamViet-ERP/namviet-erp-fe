@@ -19,6 +19,7 @@ import {
   isImportLineComplete,
   validateImportCreate,
 } from '../../../lib/wms/importFormSchema';
+import { useCanViewWmsPrices } from '../../../lib/wms/priceVisibility';
 import { importToFormLines } from '../../../lib/wms/voucherFormPopulate';
 import { findSupplierByName } from '../../../services/suppliersService';
 import { importsService, type CreateImportDto } from '../../../services/importsService';
@@ -41,7 +42,7 @@ export function usePoStockInFlow({ poCode, order }: Props) {
   const { has } = usePermission();
   const canCreate = has('wms.imports.create');
   const canUpdate = has('wms.imports.update');
-  const canViewPrices = has('wms.prices.view');
+  const canViewPrices = useCanViewWmsPrices();
 
   const importsQuery = useImports();
   const relatedImports = useMemo(
@@ -184,7 +185,8 @@ export function usePoStockInFlow({ poCode, order }: Props) {
       setCreateErrors(e => ({ ...e, projectCode: 'PO thiếu mã dự án — không thể lưu phiếu nhập.' }));
       return null;
     }
-    const validItems = items.filter(isImportLineComplete);
+    const priceOpts = { requireUnitPrice: canViewPrices };
+    const validItems = items.filter(line => isImportLineComplete(line, priceOpts));
     const supplierValid = Boolean(findSupplierByName(suppliers, defaultSupplier));
     const fieldErrors = getImportFormFieldErrors(
       lockedProject,
@@ -193,13 +195,14 @@ export function usePoStockInFlow({ poCode, order }: Props) {
       supplierValid,
       items,
       frozenByProjectCode,
+      priceOpts,
     );
     if (Object.keys(fieldErrors).length > 0) {
       setCreateErrors(fieldErrors);
       return null;
     }
     setCreateErrors({});
-    const validation = validateImportCreate(lockedProject, validItems);
+    const validation = validateImportCreate(lockedProject, validItems, priceOpts);
     if (!validation.success) {
       showToast('error', validation.error.issues[0]?.message ?? 'Dữ liệu không hợp lệ');
       return null;
