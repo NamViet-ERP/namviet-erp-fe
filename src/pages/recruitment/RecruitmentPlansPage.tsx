@@ -24,6 +24,7 @@ import PermissionGate from '../../components/auth/PermissionGate';
 const EMPTY_FORM = {
   positionName: '',
   departmentName: '',
+  departmentId: 0,
   headcount: 1,
   reason: '',
   period: '',
@@ -33,14 +34,14 @@ const EMPTY_FORM = {
 };
 
 export default function RecruitmentPlansPage() {
-  const [filterDepartment, setFilterDepartment] = useState('');
+  const [filterDepartmentId, setFilterDepartmentId] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterPeriod, setFilterPeriod] = useState('');
   const [filterOpenMonth, setFilterOpenMonth] = useState('');
   const monthOptions = useMemo(() => buildRecentMonthFilterOptions(), []);
 
   const { data: plans = [], isLoading } = useRecruitmentPlans({
-    department: filterDepartment || undefined,
+    departmentId: filterDepartmentId ? Number(filterDepartmentId) : undefined,
     status: filterStatus || undefined,
     period: filterPeriod || undefined,
     openMonth: filterOpenMonth || undefined,
@@ -65,10 +66,12 @@ export default function RecruitmentPlansPage() {
 
   const openCreate = () => {
     setEditing(null);
+    const first = departments[0];
     setForm({
       ...EMPTY_FORM,
       positionName: positionOptions[0] ?? '',
-      departmentName: departments[0]?.name ?? '',
+      departmentName: first?.name ?? '',
+      departmentId: first?.id ?? 0,
     });
     setFormOpen(true);
   };
@@ -78,6 +81,7 @@ export default function RecruitmentPlansPage() {
     setForm({
       positionName: plan.positionName,
       departmentName: plan.departmentName,
+      departmentId: plan.departmentId ?? departments.find(d => d.name === plan.departmentName)?.id ?? 0,
       headcount: plan.headcount,
       reason: plan.reason ?? '',
       period: plan.period ?? '',
@@ -90,13 +94,14 @@ export default function RecruitmentPlansPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.positionName.trim() || !form.departmentName.trim()) {
+    if (!form.positionName.trim() || !form.departmentId) {
       showToast('warning', 'Vui lòng chọn vị trí và phòng ban');
       return;
     }
     const payload = {
       positionName: form.positionName.trim(),
       departmentName: form.departmentName.trim(),
+      departmentId: form.departmentId,
       headcount: Math.max(1, form.headcount),
       reason: form.reason.trim() || undefined,
       period: form.period.trim() || undefined,
@@ -163,9 +168,9 @@ export default function RecruitmentPlansPage() {
           <div className="hrm-list-toolbar__filters">
             <div className="hrm-list-toolbar__filters-right">
               <div className="hrm-filter-select-wrap">
-                <select className="hrm-filter-select" value={filterDepartment} onChange={e => setFilterDepartment(e.target.value)}>
+                <select className="hrm-filter-select" value={filterDepartmentId} onChange={e => setFilterDepartmentId(e.target.value)}>
                   <option value="">Tất cả Phòng ban</option>
-                  {departments.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
+                  {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                 </select>
               </div>
               <div className="hrm-filter-select-wrap">
@@ -303,13 +308,21 @@ export default function RecruitmentPlansPage() {
               <span className="font-medium">Phòng ban</span>
               <select
                 className="form-input form-input-md"
-                value={form.departmentName}
-                onChange={e => setForm(f => ({ ...f, departmentName: e.target.value }))}
+                value={form.departmentId || ''}
+                onChange={e => {
+                  const id = Number(e.target.value) || 0;
+                  const dept = departments.find(d => d.id === id);
+                  setForm(f => ({
+                    ...f,
+                    departmentId: id,
+                    departmentName: dept?.name ?? '',
+                  }));
+                }}
                 required
               >
                 <option value="">— Chọn —</option>
                 {departments.map(d => (
-                  <option key={d.id} value={d.name}>{d.name}</option>
+                  <option key={d.id} value={d.id}>{d.name}</option>
                 ))}
               </select>
             </label>

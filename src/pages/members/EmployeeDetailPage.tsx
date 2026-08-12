@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Clock } from 'lucide-react';
 import { showToast } from '../../components/ui/Toast';
 import { useEmployee, useUpdateEmployee } from '../../hooks/useEmployees';
+import { useDepartments } from '../../hooks/useDepartments';
 import { getSuggestedEmployeeCode } from '../../services/employeesService';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { UI_ERROR } from '../../lib/uiMessages';
@@ -34,6 +35,7 @@ export default function EmployeeDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: employee, isLoading, isError } = useEmployee(id);
+  const { data: departments = [] } = useDepartments(true);
   const updateMutation = useUpdateEmployee();
   const { isEditing, setIsEditing, form, setForm, setField, cancelEdit } = useEditableForm(employee);
   const [codeError, setCodeError] = useState('');
@@ -196,7 +198,33 @@ export default function EmployeeDetailPage() {
               )}
               <FieldInput label="Mảng" value={form.segment ?? ''} onChange={v => setField('segment', v)} />
               <FieldInput label="Chi nhánh" value={form.branch ?? ''} onChange={v => setField('branch', v)} />
-              <FieldInput label="Bộ phận" value={form.department ?? ''} onChange={v => setField('department', v)} />
+              <div className="hrm-field">
+                <label className="hrm-field__label" htmlFor="emp-department">Phòng ban</label>
+                <select
+                  id="emp-department"
+                  className="hrm-field-input"
+                  value={form.departmentId != null ? String(form.departmentId) : ''}
+                  onChange={e => {
+                    const raw = e.target.value;
+                    if (!raw) {
+                      setForm({ ...form, departmentId: null, department: undefined });
+                      return;
+                    }
+                    const deptId = Number(raw);
+                    const dept = departments.find(d => d.id === deptId);
+                    setForm({
+                      ...form,
+                      departmentId: deptId,
+                      department: dept?.name,
+                    });
+                  }}
+                >
+                  <option value="">Chưa phân phòng</option>
+                  {departments.map(d => (
+                    <option key={d.id} value={d.id}>{d.name}</option>
+                  ))}
+                </select>
+              </div>
               <FieldInput label="Chức vụ" value={form.position ?? ''} onChange={v => setField('position', v)} />
               <FieldInput label="Ngày chính thức" value={form.officialDate ?? ''} onChange={v => setField('officialDate', v)} type="date" />
               <FieldSelect label="Trạng thái" value={form.status} onChange={v => setField('status', v as Employee['status'])} options={[...EMPLOYEE_STATUSES]} />
@@ -207,7 +235,7 @@ export default function EmployeeDetailPage() {
               <FieldView label="Mã nhân viên" value={form.code} />
               <FieldView label="Mảng" value={form.segment} />
               <FieldView label="Chi nhánh" value={form.branch} />
-              <FieldView label="Bộ phận" value={form.department} />
+              <FieldView label="Phòng ban" value={form.department || 'Chưa phân phòng'} />
               <FieldView label="Chức vụ" value={form.position} />
               <FieldView label="Ngày chính thức" value={formatDateVi(form.officialDate)} />
               <FieldView label="Trạng thái" value={form.status} />

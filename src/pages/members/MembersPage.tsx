@@ -170,7 +170,7 @@ export default function MembersPage() {
                     <td className="table-cell whitespace-nowrap tabular-nums">{formatDateCell(emp.birthDate)}</td>
                     <td className="table-cell"><EmptyCell value={emp.segment} /></td>
                     <td className="table-cell"><EmptyCell value={emp.branch} /></td>
-                    <td className="table-cell">{emp.department || <span className="hrm-empty-cell">—</span>}</td>
+                    <td className="table-cell">{emp.department || <span className="hrm-empty-cell">Chưa phân phòng</span>}</td>
                     <td className="table-cell"><EmptyCell value={emp.position} /></td>
                     <td className="table-cell whitespace-nowrap tabular-nums">{formatDateCell(emp.joinDate)}</td>
                     <td className="table-cell whitespace-nowrap tabular-nums">{formatDateCell(emp.officialDate)}</td>

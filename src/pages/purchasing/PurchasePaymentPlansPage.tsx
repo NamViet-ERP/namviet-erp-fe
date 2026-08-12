@@ -23,8 +23,9 @@ function stageStatusLabel(status: string): string {
 }
 
 function stageTone(status: string): 'paid' | 'busy' | 'open' {
-  if (status === 'paid') return 'paid';
-  if (status === 'in_progress') return 'busy';
+  const s = status.trim().toLowerCase();
+  if (s === 'paid') return 'paid';
+  if (s === 'in_progress') return 'busy';
   return 'open';
 }
 

@@ -2985,6 +2985,69 @@
         }
       }
     },
+    "/api/hr/departments/{id}/employees": {
+      "get": {
+        "tags": [
+          "Departments"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Departments"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignDepartmentMembersRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignDepartmentMembersRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignDepartmentMembersRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/hr/onboarding-invites": {
       "get": {
         "tags": [
@@ -12297,6 +12360,14 @@
             }
           },
           {
+            "name": "departmentId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
             "name": "status",
             "in": "query",
             "schema": {
@@ -16039,6 +16110,22 @@
         },
         "additionalProperties": false
       },
+      "AssignDepartmentMembersRequest": {
+        "required": [
+          "employeeIds"
+        ],
+        "type": "object",
+        "properties": {
+          "employeeIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
       "BirthdayDto": {
         "required": [
           "day",
@@ -16691,7 +16778,6 @@
         "required": [
           "birthDate",
           "code",
-          "departmentId",
           "education",
           "fullName",
           "gender",
@@ -16741,7 +16827,8 @@
           },
           "departmentId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "positionId": {
             "type": "integer",
@@ -17712,7 +17799,6 @@
       },
       "CreateRecruitmentPlanRequest": {
         "required": [
-          "departmentName",
           "headcount",
           "positionName",
           "status"
@@ -17723,7 +17809,8 @@
             "type": "string"
           },
           "departmentName": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "headcount": {
             "type": "integer",
@@ -17747,6 +17834,11 @@
           },
           "status": {
             "type": "string"
+          },
+          "departmentId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -18229,6 +18321,11 @@
           },
           "linkedAccountStatus": {
             "type": "string",
+            "nullable": true
+          },
+          "departmentId": {
+            "type": "integer",
+            "format": "int32",
             "nullable": true
           }
         },
@@ -23766,6 +23863,11 @@
           },
           "status": {
             "type": "string"
+          },
+          "departmentId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -24368,7 +24470,8 @@
         "required": [
           "fullName",
           "id",
-          "isPrimary",
+          "role",
+          "roleLabel",
           "supplierId",
           "supplierName"
         ],
@@ -24404,8 +24507,11 @@
             "type": "string",
             "nullable": true
           },
-          "isPrimary": {
-            "type": "boolean"
+          "role": {
+            "type": "string"
+          },
+          "roleLabel": {
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -25509,7 +25615,6 @@
       },
       "UpdateEmployeeRequest": {
         "required": [
-          "departmentId",
           "fullName",
           "status"
         ],
@@ -25540,7 +25645,8 @@
           },
           "departmentId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "positionId": {
             "type": "integer",
@@ -25871,7 +25977,6 @@
       },
       "UpdateRecruitmentPlanRequest": {
         "required": [
-          "departmentName",
           "headcount",
           "positionName",
           "status"
@@ -25882,7 +25987,8 @@
             "type": "string"
           },
           "departmentName": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "headcount": {
             "type": "integer",
@@ -25906,6 +26012,11 @@
           },
           "status": {
             "type": "string"
+          },
+          "departmentId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -26402,7 +26513,7 @@
       "UpsertSupplierContactRequest": {
         "required": [
           "fullName",
-          "isPrimary",
+          "role",
           "supplierId"
         ],
         "type": "object",
@@ -26430,8 +26541,8 @@
             "type": "string",
             "nullable": true
           },
-          "isPrimary": {
-            "type": "boolean"
+          "role": {
+            "type": "string"
           }
         },
         "additionalProperties": false

@@ -1,27 +1,22 @@
 import { apiClient } from '../lib/apiClient';
+import type {
+  CreateRecruitmentPlanRequest,
+  DepartmentApiDto,
+  RecruitmentPlanApiDto,
+  UpdateRecruitmentPlanRequest,
+} from '../types/api/hrApi';
 import type { CreateRecruitmentPlanDto, RecruitmentPlan, UpdateRecruitmentPlanDto } from '../types/hr';
 
 const ENDPOINT = '/api/recruitment/plans';
 
+export type { RecruitmentPlanApiDto };
+
 export interface RecruitmentPlanListParams {
   department?: string;
+  departmentId?: number;
   status?: string;
   period?: string;
   openMonth?: string;
-}
-
-export interface RecruitmentPlanApiDto {
-  id: string;
-  positionName: string;
-  departmentName: string;
-  headcount: number;
-  hiredCount: number;
-  remainingCount: number;
-  reason?: string;
-  period?: string;
-  openDate?: string;
-  deadlineDate?: string;
-  status: string;
 }
 
 function fromApi(dto: RecruitmentPlanApiDto): RecruitmentPlan {
@@ -29,26 +24,30 @@ function fromApi(dto: RecruitmentPlanApiDto): RecruitmentPlan {
     id: dto.id,
     positionName: dto.positionName,
     departmentName: dto.departmentName,
+    departmentId: dto.departmentId ?? undefined,
     headcount: dto.headcount,
     hiredCount: dto.hiredCount,
     remainingCount: dto.remainingCount,
-    reason: dto.reason,
-    period: dto.period,
-    openDate: dto.openDate,
-    deadlineDate: dto.deadlineDate,
+    reason: dto.reason ?? undefined,
+    period: dto.period ?? undefined,
+    openDate: dto.openDate ?? undefined,
+    deadlineDate: dto.deadlineDate ?? undefined,
     status: dto.status,
   };
 }
 
-function toApi(dto: CreateRecruitmentPlanDto | UpdateRecruitmentPlanDto) {
+function toApi(
+  dto: CreateRecruitmentPlanDto | UpdateRecruitmentPlanDto,
+): CreateRecruitmentPlanRequest | UpdateRecruitmentPlanRequest {
   return {
     positionName: dto.positionName,
-    departmentName: dto.departmentName,
+    departmentName: dto.departmentName || null,
+    departmentId: dto.departmentId ?? null,
     headcount: dto.headcount,
-    reason: dto.reason,
-    period: dto.period,
-    openDate: dto.openDate,
-    deadlineDate: dto.deadlineDate,
+    reason: dto.reason ?? null,
+    period: dto.period ?? null,
+    openDate: dto.openDate ?? null,
+    deadlineDate: dto.deadlineDate ?? null,
     status: dto.status,
   };
 }
@@ -57,6 +56,7 @@ export const recruitmentPlansService = {
   async list(params: RecruitmentPlanListParams = {}): Promise<RecruitmentPlan[]> {
     const items = await apiClient.get<RecruitmentPlanApiDto[]>(ENDPOINT, {
       department: params.department || undefined,
+      departmentId: params.departmentId || undefined,
       status: params.status || undefined,
       period: params.period || undefined,
       openMonth: params.openMonth || undefined,
@@ -84,8 +84,6 @@ export interface DepartmentOption {
 }
 
 export async function fetchDepartmentOptions(): Promise<DepartmentOption[]> {
-  const items = await apiClient.get<Array<{ id: number; name: string; code: string }>>(
-    '/api/hr/departments',
-  );
+  const items = await apiClient.get<DepartmentApiDto[]>('/api/hr/departments');
   return items.map(d => ({ id: d.id, name: d.name, code: d.code }));
 }

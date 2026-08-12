@@ -33,6 +33,20 @@ const STATUS_OPTIONS = [
 
 const COL_COUNT = 10;
 
+function statusTone(status: string): 'ok' | 'warn' | 'danger' | 'neutral' {
+  switch (status) {
+    case 'active':
+      return 'ok';
+    case 'pending_anchor':
+      return 'warn';
+    case 'expired':
+    case 'void':
+      return 'danger';
+    default:
+      return 'neutral';
+  }
+}
+
 function statusLabel(status: string): string {
   switch (status) {
     case 'pending_anchor':
@@ -330,9 +344,11 @@ export default function PurchaseWarrantiesPage() {
                       {formatDateCell(row.warrantyEndDate ?? undefined)}
                     </td>
                     <td className="table-cell">
-                      <span className="pur-erp__pill">{statusLabel(row.status)}</span>
+                      <span className={`pur-erp__pill pur-erp__pill--${statusTone(row.status)}`}>
+                        {statusLabel(row.status)}
+                      </span>
                       {row.claimCount > 0 ? (
-                        <span className="ml-2 text-xs text-[var(--md-on-surface-variant)]">
+                        <span className="pur-erp__pill pur-erp__pill--info ml-2">
                           {row.claimCount} phiếu
                         </span>
                       ) : null}

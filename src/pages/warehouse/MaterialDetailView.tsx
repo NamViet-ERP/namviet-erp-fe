@@ -60,7 +60,6 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
     technicalSpec: '',
     qualityStandard: '',
     ceilingPrice: '',
-    abcClass: '',
   });
   const [editErrors, setEditErrors] = useState<Record<string, string>>({});
 
@@ -95,7 +94,6 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
       technicalSpec: material.technicalSpec ?? '',
       qualityStandard: material.qualityStandard ?? '',
       ceilingPrice: material.ceilingPrice != null ? String(material.ceilingPrice) : '',
-      abcClass: material.abcClass ?? '',
     });
     setEditErrors({});
     setIsEditing(true);
@@ -109,7 +107,6 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
       technicalSpec: material.technicalSpec ?? '',
       qualityStandard: material.qualityStandard ?? '',
       ceilingPrice: material.ceilingPrice != null ? String(material.ceilingPrice) : '',
-      abcClass: material.abcClass ?? '',
     });
     setEditErrors({});
     setIsEditing(false);
@@ -152,7 +149,6 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
           ceilingPrice: editForm.ceilingPrice
             ? Number(String(editForm.ceilingPrice).replace(/[^\d.-]/g, '')) || null
             : null,
-          abcClass: editForm.abcClass || null,
           isConsumable: material.isConsumable,
         },
       });
@@ -283,19 +279,6 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
                 placeholder="Cảnh báo khi mua vượt giá"
               />
             </div>
-            <div className="hrm-field">
-              <span className="hrm-field__label">Phân loại ABC</span>
-              <select
-                className="hrm-field-select"
-                value={editForm.abcClass}
-                onChange={e => setEditForm(f => ({ ...f, abcClass: e.target.value }))}
-              >
-                <option value="">— Không xếp —</option>
-                <option value="A">A</option>
-                <option value="B">B</option>
-                <option value="C">C</option>
-              </select>
-            </div>
           </DetailFieldGrid>
         ) : (
           <DetailFieldGrid layout="responsive">
@@ -308,7 +291,6 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
               label="Giá trần tham chiếu"
               value={material.ceilingPrice != null ? formatCurrencyFull(material.ceilingPrice) : undefined}
             />
-            <FieldView label="Phân loại ABC" value={material.abcClass ?? undefined} />
           </DetailFieldGrid>
         )}
       </DetailSection>

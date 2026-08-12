@@ -3,9 +3,8 @@ import { Link } from 'react-router-dom';
 import { Link2, Copy, Check, ExternalLink, Shield, FileText, Users, Plus, Ban } from 'lucide-react';
 
 import PageHeader from '../../components/ui/PageHeader';
-
 import HrmPanel from '../../components/hr/HrmPanel';
-
+import DepartmentsSettingsPanel from '../../components/hr/DepartmentsSettingsPanel';
 import { showToast } from '../../components/ui/Toast';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { usePermission } from '../../hooks/usePermission';
@@ -15,8 +14,6 @@ import {
   useRevokeOnboardingInvite,
 } from '../../hooks/useOnboardingInvites';
 import type { OnboardingInviteDto } from '../../services/onboardingInvitesService';
-
-
 
 const ONBOARDING_PATH = '/employee/onboarding';
 
@@ -47,8 +44,6 @@ function formatDateTime(value: string): string {
         minute: '2-digit',
       });
 }
-
-
 
 export default function MembersSettingsPage() {
   const [copied, setCopied] = useState(false);
@@ -101,48 +96,29 @@ export default function MembersSettingsPage() {
   };
 
   return (
-
     <div className="hrm-page">
-
       <PageHeader
-
         eyebrow="Nhân sự"
-
         title="Thiết lập nhân sự"
-
-        subtitle="Cấu hình form khai báo và quy tắc hiển thị thông tin nhạy cảm trong module nhân viên."
-
+        subtitle="Quản lý phòng ban, gán nhân viên, liên kết khai báo và quy tắc thông tin nhạy cảm."
       />
 
-
-
       <div className="hrm-settings-grid">
+        <DepartmentsSettingsPanel canUpdate={canUpdate} />
 
         <HrmPanel className="hrm-settings-card hrm-settings-card--featured">
-
           <div className="hrm-settings-card__head">
-
             <div className="hrm-settings-card__icon hrm-settings-card__icon--primary">
-
               <Link2 size={20} />
-
             </div>
-
             <div>
-
               <h2 className="hrm-settings-card__title">Form khai báo thông tin nhân viên</h2>
-
               <p className="hrm-settings-card__desc">
-
                 Gửi liên kết cho nhân viên mới để họ tự điền hồ sơ: ảnh, CCCD, liên hệ, học vấn, ngân hàng.
-
+                Onboard công khai chưa gán phòng ban - HR gán sau tại mục Phòng ban.
               </p>
-
             </div>
-
           </div>
-
-
 
           <div className="hrm-settings-card__actions">
             {canUpdate && (
@@ -237,110 +213,59 @@ export default function MembersSettingsPage() {
               );
             })}
           </div>
-
         </HrmPanel>
 
-
-
         <HrmPanel className="hrm-settings-card">
-
           <div className="hrm-settings-card__head">
-
             <div className="hrm-settings-card__icon hrm-settings-card__icon--shield">
-
               <Shield size={20} />
-
             </div>
-
             <div>
-
               <h2 className="hrm-settings-card__title">Bảo mật thông tin nhạy cảm</h2>
-
               <p className="hrm-settings-card__desc">
-
                 Trên hồ sơ nhân viên, dữ liệu sau được che mặc định:
-
               </p>
-
             </div>
-
           </div>
-
           <ul className="hrm-settings-list">
-
-            <li>Số CMND / CCCD — chỉ hiện 3 số đầu và 3 số cuối</li>
-
-            <li>Ảnh CCCD & bằng cấp — làm mờ, cần bấm &quot;Xem ảnh&quot; mới hiện rõ</li>
-
-            <li>Số tài khoản, BHXH, mã số thuế — che tương tự số giấy tờ</li>
-
+            <li>Số CMND / CCCD - chỉ hiện 3 số đầu và 3 số cuối</li>
+            <li>Ảnh CCCD &amp; bằng cấp - làm mờ, cần bấm &quot;Xem ảnh&quot; mới hiện rõ</li>
+            <li>Số tài khoản, BHXH, mã số thuế - che tương tự số giấy tờ</li>
           </ul>
-
           <p className="hrm-settings-note">
-
             HR có thể xem đầy đủ khi cần; nhân viên khác không truy cập được trang chi tiết nếu không có quyền.
-
           </p>
-
         </HrmPanel>
 
-
-
         <HrmPanel className="hrm-settings-card">
-
           <div className="hrm-settings-card__head">
-
             <div className="hrm-settings-card__icon hrm-settings-card__icon--neutral">
-
               <FileText size={20} />
-
             </div>
-
             <div>
-
               <h2 className="hrm-settings-card__title">Quy trình gợi ý</h2>
-
               <p className="hrm-settings-card__desc">Luồng làm việc phổ biến với module nhân viên:</p>
-
             </div>
-
           </div>
-
           <ol className="hrm-settings-steps">
-
             <li>
-
               <span className="hrm-settings-steps__num">1</span>
-
-              <span>Gửi link form cho nhân viên mới khai báo hồ sơ</span>
-
+              <span>Tạo phòng ban và gán nhân viên hàng loạt</span>
             </li>
-
             <li>
-
               <span className="hrm-settings-steps__num">2</span>
-
-              <span>Kiểm tra danh sách, gán mã NV và bổ sung thông tin HR</span>
-
+              <span>Gửi link form cho nhân viên mới khai báo hồ sơ</span>
             </li>
-
             <li>
-
               <span className="hrm-settings-steps__num">3</span>
-
-              <span>Mở hồ sơ chi tiết → Chỉnh sửa để cập nhật ảnh / CCCD nếu thiếu</span>
-
+              <span>Kiểm tra danh sách, gán mã NV và bổ sung thông tin HR</span>
             </li>
-
           </ol>
-
           <Link to="/members/list" className="hrm-settings-link">
             <Users size={15} />
             Đi tới danh sách nhân viên
           </Link>
-
         </HrmPanel>
-
       </div>
 
       <ConfirmDialog
@@ -352,11 +277,6 @@ export default function MembersSettingsPage() {
         confirmLabel="Thu hồi"
         isLoading={revokeInvite.isPending}
       />
-
     </div>
-
   );
-
 }
-
-

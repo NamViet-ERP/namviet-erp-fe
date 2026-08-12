@@ -97,15 +97,19 @@ export default function RfqQuotesPanel({
       page,
       pageSize,
       search: search.trim() || undefined,
-      year: year === '' ? undefined : year,
-      quarter: quarter === '' ? undefined : quarter,
+      year:
+        groupBy === 'year'
+          ? year === '' ? undefined : year
+          : year === '' ? THIS_YEAR : year,
+      quarter: groupBy === 'quarter' && quarter !== '' ? quarter : undefined,
       status: status || undefined,
     }),
-    [page, pageSize, search, year, quarter, status],
+    [page, pageSize, search, year, quarter, status, groupBy],
   );
 
   const list = usePurchaseRfqQuotes(params);
-  const averages = usePurchaseRfqAverages(groupBy, year === '' ? undefined : year);
+  const averagesYear = groupBy === 'year' ? (year === '' ? undefined : year) : (year === '' ? THIS_YEAR : year);
+  const averages = usePurchaseRfqAverages(groupBy, averagesYear);
   const winRates = usePurchaseRfqWinRates();
   const createMutation = useCreatePurchaseRfqQuote();
   const updateMutation = useUpdatePurchaseRfqQuote();
@@ -308,43 +312,59 @@ export default function RfqQuotesPanel({
             <option value="lost">Thua thầu</option>
           </select>
         </FormField>
-        <FormField label="Năm">
+        <FormField label="Gom giá TB">
           <select
             className="form-input"
-            value={year}
+            value={groupBy}
             onChange={e => {
-              setYear(e.target.value ? Number(e.target.value) : '');
+              const next = e.target.value as 'quarter' | 'year';
+              setGroupBy(next);
+              if (next === 'year') {
+                setQuarter('');
+                if (year === '') setYear(THIS_YEAR);
+              } else if (year === '') {
+                setYear(THIS_YEAR);
+              }
               setPage(1);
             }}
           >
-            <option value="">Tất cả (5 năm)</option>
-            {YEARS.map(y => (
-              <option key={y} value={y}>{y}</option>
-            ))}
+            <option value="quarter">Theo quý</option>
+            <option value="year">Theo năm</option>
           </select>
         </FormField>
-        <FormField label="Quý">
-          <select
-            className="form-input"
-            value={quarter}
-            disabled={year === ''}
-            onChange={e => {
-              setQuarter(e.target.value ? Number(e.target.value) : '');
-              setPage(1);
-            }}
-          >
-            <option value="">Cả năm</option>
-            {[1, 2, 3, 4].map(q => (
-              <option key={q} value={q}>Quý {q}</option>
-            ))}
-          </select>
-        </FormField>
-        <FormField label="Giá TB theo">
-          <select className="form-input" value={groupBy} onChange={e => setGroupBy(e.target.value as 'quarter' | 'year')}>
-            <option value="quarter">Quý</option>
-            <option value="year">Năm</option>
-          </select>
-        </FormField>
+        {groupBy === 'quarter' ? (
+          <FormField label="Quý">
+            <select
+              className="form-input"
+              value={quarter}
+              onChange={e => {
+                setQuarter(e.target.value ? Number(e.target.value) : '');
+                setPage(1);
+              }}
+            >
+              <option value="">Tất cả quý</option>
+              {[1, 2, 3, 4].map(q => (
+                <option key={q} value={q}>Quý {q}</option>
+              ))}
+            </select>
+          </FormField>
+        ) : (
+          <FormField label="Năm">
+            <select
+              className="form-input"
+              value={year}
+              onChange={e => {
+                setYear(e.target.value ? Number(e.target.value) : '');
+                setPage(1);
+              }}
+            >
+              <option value="">Tất cả (5 năm)</option>
+              {YEARS.map(y => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+          </FormField>
+        )}
       </div>
 
       {averages.data && averages.data.length > 0 ? (

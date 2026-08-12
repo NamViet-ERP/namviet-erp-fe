@@ -6,6 +6,7 @@ import {
   restrictVnPhoneInput,
   validateOptionalVietnamPhone,
 } from '../../lib/suppliers/supplierStatus';
+import { SUPPLIER_CONTACT_ROLES } from '../../lib/suppliers/supplierContactRole';
 import type {
   SupplierContactApiDto,
   UpsertSupplierContactRequest,
@@ -65,7 +66,7 @@ function ContactForm({
     phone: restrictVnPhoneInput(editing?.phone ?? ''),
     email: editing?.email ?? '',
     note: editing?.note ?? '',
-    isPrimary: editing?.isPrimary ?? false,
+    role: editing?.role ?? 'secondary',
   });
   const [errors, setErrors] = useState<{
     supplierId?: string;
@@ -102,7 +103,7 @@ function ContactForm({
       phone: phone || null,
       email: email || null,
       note: form.note.trim() || null,
-      isPrimary: form.isPrimary,
+      role: form.role,
     });
   };
 
@@ -115,10 +116,10 @@ function ContactForm({
           disabled={Boolean(editing)}
           onChange={e => setForm(f => ({ ...f, supplierId: e.target.value }))}
         >
-          <option value="">— Chọn nhà cung cấp —</option>
+          <option value="">- Chọn nhà cung cấp -</option>
           {(suppliers?.items ?? []).map(s => (
             <option key={s.id} value={s.id}>
-              {s.supplierCode} — {s.supplierName}
+              {s.supplierCode} - {s.supplierName}
             </option>
           ))}
         </select>
@@ -171,6 +172,19 @@ function ContactForm({
         </FormField>
       </div>
 
+      <FormField label="Vai trò liên hệ" required>
+        <select
+          className="form-select"
+          value={form.role}
+          onChange={e => setForm(f => ({ ...f, role: e.target.value }))}
+          aria-label="Vai trò liên hệ"
+        >
+          {SUPPLIER_CONTACT_ROLES.map(r => (
+            <option key={r.value} value={r.value}>{r.label}</option>
+          ))}
+        </select>
+      </FormField>
+
       <FormField label="Ghi chú">
         <textarea
           className="form-input"
@@ -179,16 +193,6 @@ function ContactForm({
           onChange={e => setForm(f => ({ ...f, note: e.target.value }))}
         />
       </FormField>
-
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          className="form-checkbox"
-          checked={form.isPrimary}
-          onChange={e => setForm(f => ({ ...f, isPrimary: e.target.checked }))}
-        />
-        Là liên hệ chính của nhà cung cấp
-      </label>
     </form>
   );
 }

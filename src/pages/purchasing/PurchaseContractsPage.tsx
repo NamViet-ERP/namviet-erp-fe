@@ -41,6 +41,21 @@ const STATUS_OPTIONS = [
   { value: 'cancelled', label: 'Đã hủy' },
 ];
 
+function statusTone(status: string): 'ok' | 'warn' | 'danger' | 'info' | 'neutral' {
+  switch (status) {
+    case 'active':
+      return 'ok';
+    case 'draft':
+      return 'warn';
+    case 'expired':
+    case 'void':
+    case 'cancelled':
+      return 'danger';
+    default:
+      return 'neutral';
+  }
+}
+
 function statusLabel(status: string): string {
   switch (status) {
     case 'draft':
@@ -378,9 +393,11 @@ export default function PurchaseContractsPage() {
                           {row.amount != null ? formatCurrency(row.amount) : '—'}
                         </td>
                         <td className="table-cell">
-                          <span className="pur-erp__pill">{statusLabel(row.status)}</span>
+                          <span className={`pur-erp__pill pur-erp__pill--${statusTone(row.status)}`}>
+                            {statusLabel(row.status)}
+                          </span>
                           {row.hasFile ? (
-                            <span className="ml-2 text-xs text-[var(--md-on-surface-variant)]">
+                            <span className="pur-erp__pill pur-erp__pill--info ml-2">
                               Có file
                             </span>
                           ) : null}

@@ -165,7 +165,7 @@ export default function PurchasePlanDetailPage() {
       { label: 'Dự toán', value: money(plan.budgetTotal), tone: 'budget', bg: '#d7eaf3', border: '#9cc9de' },
       { label: 'Đề xuất', value: money(plan.proposalTotal), tone: 'proposal', bg: '#d8eee5', border: '#9dceb8' },
       { label: 'Mua hàng', value: money(plan.purchaseTotal), tone: 'purchase', bg: '#f3e6cc', border: '#dfc28a' },
-      { label: 'Tổng chi', value: money(plan.paidTotal), tone: 'paid', bg: '#f3d9d5', border: '#e0a89f' },
+      { label: 'Tổng chi', value: money(plan.paidTotal), tone: 'paid', bg: '#E5F4EC', border: '#9dceb8' },
     ];
   }, [plan]);
 

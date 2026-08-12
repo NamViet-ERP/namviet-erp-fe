@@ -21,7 +21,6 @@ export const MATERIAL_TABLE_COLUMNS = [
   { key: 'technicalSpec', label: 'Quy cách' },
   { key: 'qualityStandard', label: 'Tiêu chuẩn chất lượng' },
   { key: 'ceilingPrice', label: 'Giá trần' },
-  { key: 'abcClass', label: 'ABC' },
 ] as const;
 
 /** Placeholder chung cho mọi dropdown trong form vật tư */

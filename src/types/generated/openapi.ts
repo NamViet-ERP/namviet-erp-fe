@@ -2589,6 +2589,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/hr/departments/{id}/employees": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["AssignDepartmentMembersRequest"];
+                    "text/json": components["schemas"]["AssignDepartmentMembersRequest"];
+                    "application/*+json": components["schemas"]["AssignDepartmentMembersRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/hr/onboarding-invites": {
         parameters: {
             query?: never;
@@ -10258,6 +10318,7 @@ export interface paths {
             parameters: {
                 query?: {
                     department?: string;
+                    departmentId?: number;
                     status?: string;
                     period?: string;
                     openMonth?: string;
@@ -13044,6 +13105,9 @@ export interface components {
             overdueCount: number;
             lines: components["schemas"]["ArrivalPlanLineDto"][];
         };
+        AssignDepartmentMembersRequest: {
+            employeeIds: number[];
+        };
         BirthdayDto: {
             name: string;
             department: string;
@@ -13235,7 +13299,7 @@ export interface components {
             addressPermanent?: string | null;
             addressCurrent?: string | null;
             /** Format: int32 */
-            departmentId: number;
+            departmentId?: number | null;
             /** Format: int32 */
             positionId?: number | null;
             /** Format: int32 */
@@ -13520,7 +13584,7 @@ export interface components {
         };
         CreateRecruitmentPlanRequest: {
             positionName: string;
-            departmentName: string;
+            departmentName?: string | null;
             /** Format: int32 */
             headcount: number;
             reason?: string | null;
@@ -13528,6 +13592,8 @@ export interface components {
             openDate?: string | null;
             deadlineDate?: string | null;
             status: string;
+            /** Format: int32 */
+            departmentId?: number | null;
         };
         CreateStocktakeDto: {
             voucherCode?: string | null;
@@ -13654,6 +13720,8 @@ export interface components {
             cccdBackUrl?: string | null;
             degreePhotoUrl?: string | null;
             linkedAccountStatus?: string | null;
+            /** Format: int32 */
+            departmentId?: number | null;
         };
         EmployeeOnboardingInviteDto: {
             /** Format: int32 */
@@ -15319,6 +15387,8 @@ export interface components {
             openDate?: string | null;
             deadlineDate?: string | null;
             status: string;
+            /** Format: int32 */
+            departmentId?: number | null;
         };
         RecruitmentPositionDto: {
             name: string;
@@ -15494,7 +15564,8 @@ export interface components {
             phone?: string | null;
             email?: string | null;
             note?: string | null;
-            isPrimary: boolean;
+            role: string;
+            roleLabel: string;
         };
         SupplierContactPagedResponse: {
             items: components["schemas"]["SupplierContactDto"][];
@@ -15830,7 +15901,7 @@ export interface components {
             addressPermanent?: string | null;
             addressCurrent?: string | null;
             /** Format: int32 */
-            departmentId: number;
+            departmentId?: number | null;
             /** Format: int32 */
             positionId?: number | null;
             /** Format: int32 */
@@ -15930,7 +16001,7 @@ export interface components {
         };
         UpdateRecruitmentPlanRequest: {
             positionName: string;
-            departmentName: string;
+            departmentName?: string | null;
             /** Format: int32 */
             headcount: number;
             reason?: string | null;
@@ -15938,6 +16009,8 @@ export interface components {
             openDate?: string | null;
             deadlineDate?: string | null;
             status: string;
+            /** Format: int32 */
+            departmentId?: number | null;
         };
         UpdateRolePermissionsRequest: {
             permissions: string[];
@@ -16099,7 +16172,7 @@ export interface components {
             phone?: string | null;
             email?: string | null;
             note?: string | null;
-            isPrimary: boolean;
+            role: string;
         };
         UpsertSupplierEvaluationRequest: {
             /** Format: int32 */

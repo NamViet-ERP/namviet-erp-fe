@@ -61,6 +61,7 @@ export interface RecruitmentPlan {
   id: string;
   positionName: string;
   departmentName: string;
+  departmentId?: number;
   headcount: number;
   hiredCount: number;
   remainingCount: number;
@@ -97,6 +98,7 @@ export interface Employee {
   segment?: string;
   branch?: string;
   department?: string;
+  departmentId?: number | null;
   position?: string;
   profilePhoto?: FileAttachment;
   // CMND

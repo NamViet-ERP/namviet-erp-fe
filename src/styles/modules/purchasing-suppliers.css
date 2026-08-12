@@ -3858,9 +3858,9 @@
   }
 
   .pur-pay-plan__stage--paid {
-    --stage-accent: var(--md-success);
-    --stage-tint: var(--md-success-container);
-    --stage-edge: color-mix(in srgb, var(--md-success) 35%, var(--md-outline-variant02));
+    --stage-accent: var(--md-success, #2C8659);
+    --stage-tint: var(--md-success-container, #E5F4EC);
+    --stage-edge: color-mix(in srgb, var(--md-success, #2C8659) 35%, var(--md-outline-variant02));
   }
 
   .pur-pay-plan__stage-money {
@@ -3926,9 +3926,9 @@
   }
 
   .pur-pay-plan__badge--paid {
-    color: var(--md-success);
-    border-color: color-mix(in srgb, var(--md-success) 35%, #b8d9c6);
-    background: var(--md-success-container);
+    color: var(--md-success, #2C8659);
+    border-color: color-mix(in srgb, var(--md-success, #2C8659) 35%, #b8d9c6);
+    background: var(--md-success-container, #E5F4EC);
   }
 
   .pur-pay-plan__total {

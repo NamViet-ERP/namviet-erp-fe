@@ -1,49 +1,9 @@
 import type { CreateEmployeeDto, Employee, UpdateEmployeeDto } from '../../types/hr';
+import type { EmployeeApiDto } from '../../types/api/hrApi';
 
-/** API payload shape (camelCase from ASP.NET JSON). */
-export interface EmployeeApiDto {
-  id: string;
-  code?: string;
-  fullName: string;
-  gender: string;
-  birthDate: string;
-  joinDate: string;
-  officialDate?: string;
-  status: string;
-  resignDate?: string;
-  segment?: string;
-  branch?: string;
-  department?: string;
-  position?: string;
-  personalEmail?: string;
-  personalPhone?: string;
-  permanentAddress?: string;
-  temporaryAddress?: string;
-  education?: string;
-  school?: string;
-  major?: string;
-  bankAccountName?: string;
-  bankAccountNumber?: string;
-  bankName?: string;
-  bankBranch?: string;
-  hadSocialInsurance?: string;
-  siNumber?: string;
-  cccdNumber?: string;
-  cccdIssueDate?: string;
-  cccdIssuePlace?: string;
-  cmndNumber?: string;
-  cmndIssueDate?: string;
-  cmndIssuePlace?: string;
-  maritalStatus?: string;
-  taxCode?: unknown;
-  photoUrl?: string | null;
-  cccdFrontUrl?: string | null;
-  cccdBackUrl?: string | null;
-  degreePhotoUrl?: string | null;
-  linkedAccountStatus?: string;
-}
+export type { EmployeeApiDto };
 
-function apiDateToInput(value?: string): string | undefined {
+function apiDateToInput(value?: string | null): string | undefined {
   if (!value) return undefined;
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
   const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value);
@@ -86,31 +46,32 @@ export function fromApi(dto: EmployeeApiDto): Employee {
     officialDate: apiDateToInput(dto.officialDate),
     status: dto.status as Employee['status'],
     resignDate: apiDateToInput(dto.resignDate),
-    segment: dto.segment,
-    branch: dto.branch,
-    department: dto.department,
-    position: dto.position,
-    personalEmail: dto.personalEmail,
-    personalPhone: dto.personalPhone,
-    permanentAddress: dto.permanentAddress,
-    temporaryAddress: dto.temporaryAddress,
-    education: dto.education,
-    school: dto.school,
-    major: dto.major,
-    bankAccountName: dto.bankAccountName,
-    bankAccountNumber: dto.bankAccountNumber,
-    bankName: dto.bankName,
-    bankBranch: dto.bankBranch,
-    hadSocialInsurance: dto.hadSocialInsurance as Employee['hadSocialInsurance'],
-    siNumber: dto.siNumber,
-    cmndNumber: dto.cmndNumber,
+    segment: dto.segment ?? undefined,
+    branch: dto.branch ?? undefined,
+    department: dto.department ?? undefined,
+    departmentId: dto.departmentId ?? null,
+    position: dto.position ?? undefined,
+    personalEmail: dto.personalEmail ?? undefined,
+    personalPhone: dto.personalPhone ?? undefined,
+    permanentAddress: dto.permanentAddress ?? undefined,
+    temporaryAddress: dto.temporaryAddress ?? undefined,
+    education: dto.education ?? undefined,
+    school: dto.school ?? undefined,
+    major: dto.major ?? undefined,
+    bankAccountName: dto.bankAccountName ?? undefined,
+    bankAccountNumber: dto.bankAccountNumber ?? undefined,
+    bankName: dto.bankName ?? undefined,
+    bankBranch: dto.bankBranch ?? undefined,
+    hadSocialInsurance: (dto.hadSocialInsurance ?? undefined) as Employee['hadSocialInsurance'],
+    siNumber: dto.siNumber ?? undefined,
+    cmndNumber: dto.cmndNumber ?? undefined,
     cmndIssueDate: apiDateToInput(dto.cmndIssueDate),
-    cmndIssuePlace: dto.cmndIssuePlace,
-    cccdNumber: dto.cccdNumber,
+    cmndIssuePlace: dto.cmndIssuePlace ?? undefined,
+    cccdNumber: dto.cccdNumber ?? undefined,
     cccdIssueDate: apiDateToInput(dto.cccdIssueDate),
-    cccdIssuePlace: dto.cccdIssuePlace,
-    maritalStatus: dto.maritalStatus,
-    taxCode: dto.taxCode as Employee['taxCode'],
+    cccdIssuePlace: dto.cccdIssuePlace ?? undefined,
+    maritalStatus: dto.maritalStatus ?? undefined,
+    taxCode: (dto.taxCode ?? undefined) as Employee['taxCode'],
     profilePhoto: urlToAttachment(dto.photoUrl, 'profile'),
     cccdFront: urlToAttachment(dto.cccdFrontUrl, 'cccd-front'),
     cccdBack: urlToAttachment(dto.cccdBackUrl, 'cccd-back'),
@@ -142,6 +103,7 @@ export function toApi(employee: CreateEmployeeDto | UpdateEmployeeDto, id = ''):
     segment: e.segment,
     branch: e.branch,
     department: e.department,
+    departmentId: e.departmentId ?? null,
     position: e.position,
     personalEmail: e.personalEmail,
     personalPhone: e.personalPhone,

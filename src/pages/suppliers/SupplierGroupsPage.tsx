@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Pencil, Plus, Trash2, Users } from 'lucide-react';
 import PurchasingListLayout from '../../components/purchasing/PurchasingListLayout';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
+import Dropdown from '../../components/ui/Dropdown';
 import EmptyState from '../../components/ui/EmptyState';
 import Pagination from '../../components/ui/Pagination';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
@@ -18,6 +19,7 @@ import {
   useSupplierGroups,
   useUpdateSupplierGroup,
 } from '../../hooks/useSupplierDirectory';
+import type { DropdownItem } from '../../types';
 import type { SupplierGroupApiDto } from '../../types/api/supplierDirectoryApi';
 
 export default function SupplierGroupsPage() {
@@ -48,6 +50,25 @@ export default function SupplierGroupsPage() {
     setEditing(group);
     setShowForm(true);
   };
+
+  const rowActions = (row: SupplierGroupApiDto): DropdownItem[] => [
+    {
+      label: 'Gán nhà cung cấp',
+      icon: Users,
+      onClick: () => setMembersTarget(row),
+    },
+    {
+      label: 'Sửa',
+      icon: Pencil,
+      onClick: () => openEdit(row),
+    },
+    {
+      label: 'Xóa',
+      icon: Trash2,
+      danger: true,
+      onClick: () => setDeleteTarget(row),
+    },
+  ];
 
   const handleSubmit = async (values: { name: string; description: string | null }) => {
     try {
@@ -165,33 +186,8 @@ export default function SupplierGroupsPage() {
                   <td className="table-cell whitespace-nowrap text-right tabular-nums">
                     {row.supplierCount}
                   </td>
-                  <td className="table-cell text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <button
-                        type="button"
-                        className="p-1.5 rounded-lg hover:bg-[var(--tint-primary-hover)] opacity-80 hover:opacity-100"
-                        aria-label={`Gán nhà cung cấp cho nhóm ${row.name}`}
-                        onClick={() => setMembersTarget(row)}
-                      >
-                        <Users size={14} />
-                      </button>
-                      <button
-                        type="button"
-                        className="p-1.5 rounded-lg hover:bg-[var(--tint-primary-hover)] opacity-80 hover:opacity-100"
-                        aria-label={`Sửa nhóm ${row.name}`}
-                        onClick={() => openEdit(row)}
-                      >
-                        <Pencil size={14} />
-                      </button>
-                      <button
-                        type="button"
-                        className="p-1.5 rounded-lg text-[var(--md-error)] hover:bg-[var(--md-error-container)] opacity-80 hover:opacity-100"
-                        aria-label={`Xóa nhóm ${row.name}`}
-                        onClick={() => setDeleteTarget(row)}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
+                  <td className="table-cell text-center" onClick={e => e.stopPropagation()}>
+                    <Dropdown trigger="Tác vụ" items={rowActions(row)} />
                   </td>
                 </tr>
               ))

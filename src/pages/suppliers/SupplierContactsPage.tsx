@@ -21,6 +21,10 @@ import type {
   SupplierContactApiDto,
   UpsertSupplierContactRequest,
 } from '../../types/api/supplierDirectoryApi';
+import {
+  supplierContactRoleLabel,
+  supplierContactRoleTone,
+} from '../../lib/suppliers/supplierContactRole';
 
 export default function SupplierContactsPage() {
   const [search, setSearch] = useState('');
@@ -142,7 +146,7 @@ export default function SupplierContactsPage() {
               <th className="table-header-cell">Chức vụ</th>
               <th className="table-header-cell">Điện thoại</th>
               <th className="table-header-cell">Email</th>
-              <th className="table-header-cell text-center">Liên hệ chính</th>
+              <th className="table-header-cell text-center">Vai trò</th>
               <th className="table-header-cell text-center">Thao tác</th>
             </tr>
           </thead>
@@ -180,11 +184,10 @@ export default function SupplierContactsPage() {
                   <td className="table-cell whitespace-nowrap tabular-nums">{row.phone || '—'}</td>
                   <td className="table-cell truncate max-w-[16rem]">{row.email || '—'}</td>
                   <td className="table-cell text-center">
-                    {row.isPrimary ? (
-                      <PurchasingStatusBadge label="Chính" tone="success" />
-                    ) : (
-                      <span className="text-[var(--md-on-surface-variant)]">—</span>
-                    )}
+                    <PurchasingStatusBadge
+                      label={row.roleLabel || supplierContactRoleLabel(row.role)}
+                      tone={supplierContactRoleTone(row.role)}
+                    />
                   </td>
                   <td className="table-cell text-center">
                     <div className="flex items-center justify-center gap-1">

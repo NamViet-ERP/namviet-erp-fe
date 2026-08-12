@@ -642,7 +642,6 @@ export default function PurchasePriceBookPage() {
           <div className="space-y-3">
             <p className="text-[length:var(--fs-sm)]">
               Giá trần: {detail.data.item.ceilingPrice != null ? formatCurrencyFull(detail.data.item.ceilingPrice) : 'Chưa khai báo'}
-              {detail.data.item.abcClass ? ` · ABC ${detail.data.item.abcClass}` : ''}
             </p>
             <PriceHistoryChart points={detail.data.history} />
             <div className="text-[length:var(--fs-sm)] font-medium">Toàn bộ lịch sử giá và báo giá</div>

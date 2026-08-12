@@ -276,7 +276,7 @@ describe('employeeApiMapper', () => {
     });
 
     it('should round-trip a number taxCode directly without converting to string (potential type unsafety)', () => {
-      const dtoNumber: EmployeeApiDto = {
+      const dtoNumber = {
         id: 'emp-999',
         fullName: 'Le Van C',
         gender: 'Nam',
@@ -284,7 +284,7 @@ describe('employeeApiMapper', () => {
         joinDate: '01/01/2020',
         status: 'Đang làm',
         taxCode: 123456789,
-      } as EmployeeApiDto;
+      } as unknown as EmployeeApiDto;
 
       const employee = fromApi(dtoNumber);
       expect(employee.taxCode).toBe(123456789); // remains a number!
