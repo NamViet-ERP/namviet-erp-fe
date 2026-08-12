@@ -8781,6 +8781,8 @@ export interface paths {
                 query?: {
                     search?: string;
                     categoryId?: number;
+                    fromDate?: string;
+                    toDate?: string;
                 };
                 header?: never;
                 path?: never;
@@ -8994,6 +8996,86 @@ export interface paths {
                         "text/plain": components["schemas"]["PurchaseSellPriceDto"];
                         "application/json": components["schemas"]["PurchaseSellPriceDto"];
                         "text/json": components["schemas"]["PurchaseSellPriceDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/price-book/estimates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PriceBookEstimateRowDto"][];
+                        "application/json": components["schemas"]["PriceBookEstimateRowDto"][];
+                        "text/json": components["schemas"]["PriceBookEstimateRowDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/price-book/estimate-prices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpsertPurchaseItemEstimatePriceRequest"];
+                    "text/json": components["schemas"]["UpsertPurchaseItemEstimatePriceRequest"];
+                    "application/*+json": components["schemas"]["UpsertPurchaseItemEstimatePriceRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseItemEstimatePriceDto"];
+                        "application/json": components["schemas"]["PurchaseItemEstimatePriceDto"];
+                        "text/json": components["schemas"]["PurchaseItemEstimatePriceDto"];
                     };
                 };
             };
@@ -11545,6 +11627,7 @@ export interface paths {
                     rating?: string;
                     groupId?: number;
                     isBlacklisted?: boolean;
+                    approvalStatus?: string;
                 };
                 header?: never;
                 path?: never;
@@ -11586,10 +11669,51 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "text/plain": components["schemas"]["SupplierDto"];
+                        "application/json": components["schemas"]["SupplierDto"];
+                        "text/json": components["schemas"]["SupplierDto"];
+                    };
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/suppliers/next-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierNextCodeDto"];
+                        "application/json": components["schemas"]["SupplierNextCodeDto"];
+                        "text/json": components["schemas"]["SupplierNextCodeDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -11711,6 +11835,84 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/suppliers/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierDto"];
+                        "application/json": components["schemas"]["SupplierDto"];
+                        "text/json": components["schemas"]["SupplierDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/suppliers/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierDto"];
+                        "application/json": components["schemas"]["SupplierDto"];
+                        "text/json": components["schemas"]["SupplierDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -13812,6 +14014,25 @@ export interface components {
             /** Format: double */
             sharePct: number;
         };
+        PriceBookEstimateRowDto: {
+            materialCode: string;
+            materialName: string;
+            projectCode?: string | null;
+            /** Format: double */
+            estimatePrice: number;
+            /** Format: date */
+            effectiveDate: string;
+            /** Format: double */
+            purchaseLatest?: number | null;
+            /** Format: double */
+            diff?: number | null;
+            /** Format: double */
+            diffPct?: number | null;
+            /** Format: double */
+            marginPct?: number | null;
+            /** Format: int32 */
+            estimateHistoryCount: number;
+        };
         PriceBookHistoryRowDto: {
             /** Format: date */
             date: string;
@@ -13854,6 +14075,14 @@ export interface components {
             /** Format: double */
             trendPct?: number | null;
             overCeiling: boolean;
+            /** Format: double */
+            estimatePrice?: number | null;
+            /** Format: double */
+            estimateDiff?: number | null;
+            /** Format: double */
+            estimateDiffPct?: number | null;
+            /** Format: int32 */
+            historyCount: number;
         };
         PriceBookMarginRowDto: {
             materialCode: string;
@@ -14270,6 +14499,19 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
             updatedByName: string;
+        };
+        PurchaseItemEstimatePriceDto: {
+            /** Format: uuid */
+            id: string;
+            materialCode: string;
+            materialName: string;
+            projectCode?: string | null;
+            /** Format: double */
+            estimatePrice: number;
+            /** Format: date */
+            effectiveDate: string;
+            createdByName: string;
+            note?: string | null;
         };
         PurchaseOrderAttachmentDto: {
             /** Format: uuid */
@@ -15331,6 +15573,7 @@ export interface components {
             maxDebtDays: number;
             paymentTerms?: string | null;
             rating: string;
+            approvalStatus: string;
             isBlacklisted: boolean;
             blacklistReason?: string | null;
             /** Format: date-time */
@@ -15463,6 +15706,9 @@ export interface components {
             gradeHMinScore: number;
             evaluationCycle: string;
             groupRequired: boolean;
+        };
+        SupplierNextCodeDto: {
+            nextCode: string;
         };
         SupplierTrendPointDto: {
             month: string;
@@ -15810,6 +16056,15 @@ export interface components {
             departmentId: number;
             level?: string | null;
         };
+        UpsertPurchaseItemEstimatePriceRequest: {
+            materialCode: string;
+            projectCode?: string | null;
+            /** Format: double */
+            estimatePrice: number;
+            /** Format: date */
+            effectiveDate: string;
+            note?: string | null;
+        };
         UpsertPurchaseRfqQuoteRequest: {
             materialCode: string;
             /** Format: int32 */
@@ -15862,7 +16117,7 @@ export interface components {
             description?: string | null;
         };
         UpsertSupplierRequest: {
-            supplierCode: string;
+            supplierCode?: string | null;
             supplierName: string;
             contactPhone?: string | null;
             /** Format: int32 */

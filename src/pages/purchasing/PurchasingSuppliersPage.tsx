@@ -8,7 +8,7 @@ export default function PurchasingSuppliersPage() {
       <PageHeader
         eyebrow="Nhà cung cấp"
         title="Nhà cung cấp"
-        subtitle="Danh mục NCC master — điều khoản thanh toán (hạn công nợ) dùng khi tạo PO và phiếu nhập."
+        subtitle="Danh mục NCC master. NCC mới là Hạng D, trạng thái Mới; sếp duyệt xong mới đặt PO được."
       />
       <SuppliersSettingsPanel />
     </div>

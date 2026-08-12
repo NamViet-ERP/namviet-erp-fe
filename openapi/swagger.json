@@ -10407,6 +10407,22 @@
               "type": "integer",
               "format": "int32"
             }
+          },
+          {
+            "name": "fromDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "toDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
           }
         ],
         "responses": {
@@ -10637,6 +10653,92 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PurchaseSellPriceDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/price-book/estimates": {
+      "get": {
+        "tags": [
+          "PurchasePriceBook"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PriceBookEstimateRowDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PriceBookEstimateRowDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PriceBookEstimateRowDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/price-book/estimate-prices": {
+      "post": {
+        "tags": [
+          "PurchasePriceBook"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertPurchaseItemEstimatePriceRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertPurchaseItemEstimatePriceRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertPurchaseItemEstimatePriceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseItemEstimatePriceDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseItemEstimatePriceDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseItemEstimatePriceDto"
                 }
               }
             }
@@ -14054,6 +14156,13 @@
             "schema": {
               "type": "boolean"
             }
+          },
+          {
+            "name": "approvalStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -14104,7 +14213,53 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/warehouse/suppliers/next-code": {
+      "get": {
+        "tags": [
+          "Suppliers"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierNextCodeDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierNextCodeDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierNextCodeDto"
+                }
+              }
+            }
           }
         }
       }
@@ -14244,6 +14399,86 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/warehouse/suppliers/{id}/approve": {
+      "post": {
+        "tags": [
+          "Suppliers"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/warehouse/suppliers/{id}/reject": {
+      "post": {
+        "tags": [
+          "Suppliers"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierDto"
+                }
+              }
+            }
           }
         }
       }
@@ -19265,6 +19500,61 @@
         },
         "additionalProperties": false
       },
+      "PriceBookEstimateRowDto": {
+        "required": [
+          "effectiveDate",
+          "estimateHistoryCount",
+          "estimatePrice",
+          "materialCode",
+          "materialName"
+        ],
+        "type": "object",
+        "properties": {
+          "materialCode": {
+            "type": "string"
+          },
+          "materialName": {
+            "type": "string"
+          },
+          "projectCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "estimatePrice": {
+            "type": "number",
+            "format": "double"
+          },
+          "effectiveDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "purchaseLatest": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "diff": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "diffPct": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "marginPct": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "estimateHistoryCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
       "PriceBookHistoryRowDto": {
         "required": [
           "date",
@@ -19330,6 +19620,7 @@
       "PriceBookItemDto": {
         "required": [
           "categoryId",
+          "historyCount",
           "materialCode",
           "materialName",
           "overCeiling",
@@ -19400,6 +19691,25 @@
           },
           "overCeiling": {
             "type": "boolean"
+          },
+          "estimatePrice": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "estimateDiff": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "estimateDiffPct": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "historyCount": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false
@@ -20818,6 +21128,49 @@
           },
           "updatedByName": {
             "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchaseItemEstimatePriceDto": {
+        "required": [
+          "createdByName",
+          "effectiveDate",
+          "estimatePrice",
+          "id",
+          "materialCode",
+          "materialName"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "materialCode": {
+            "type": "string"
+          },
+          "materialName": {
+            "type": "string"
+          },
+          "projectCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "estimatePrice": {
+            "type": "number",
+            "format": "double"
+          },
+          "effectiveDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "createdByName": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -24264,6 +24617,7 @@
       },
       "SupplierDto": {
         "required": [
+          "approvalStatus",
           "id",
           "industryGroups",
           "isBlacklisted",
@@ -24298,6 +24652,9 @@
             "nullable": true
           },
           "rating": {
+            "type": "string"
+          },
+          "approvalStatus": {
             "type": "string"
           },
           "isBlacklisted": {
@@ -24732,6 +25089,18 @@
           },
           "groupRequired": {
             "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupplierNextCodeDto": {
+        "required": [
+          "nextCode"
+        ],
+        "type": "object",
+        "properties": {
+          "nextCode": {
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -25917,6 +26286,36 @@
         },
         "additionalProperties": false
       },
+      "UpsertPurchaseItemEstimatePriceRequest": {
+        "required": [
+          "effectiveDate",
+          "estimatePrice",
+          "materialCode"
+        ],
+        "type": "object",
+        "properties": {
+          "materialCode": {
+            "type": "string"
+          },
+          "projectCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "estimatePrice": {
+            "type": "number",
+            "format": "double"
+          },
+          "effectiveDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "UpsertPurchaseRfqQuoteRequest": {
         "required": [
           "materialCode",
@@ -26090,13 +26489,13 @@
       "UpsertSupplierRequest": {
         "required": [
           "maxDebtDays",
-          "supplierCode",
           "supplierName"
         ],
         "type": "object",
         "properties": {
           "supplierCode": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "supplierName": {
             "type": "string"

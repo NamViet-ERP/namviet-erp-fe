@@ -20,6 +20,7 @@ export function useSuppliers(params: SupplierListParams & { all?: boolean } = {}
       params.rating ?? '',
       params.groupId ?? 0,
       params.isBlacklisted ?? '',
+      params.approvalStatus ?? '',
     ] as const,
     queryFn: () =>
       suppliersService.list({
@@ -29,6 +30,7 @@ export function useSuppliers(params: SupplierListParams & { all?: boolean } = {}
         rating: params.rating,
         groupId: params.groupId,
         isBlacklisted: params.isBlacklisted,
+        approvalStatus: params.approvalStatus,
       }),
   });
 }
@@ -54,6 +56,22 @@ export function useDeleteSupplier() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: number) => suppliersService.remove(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.suppliers.all }),
+  });
+}
+
+export function useApproveSupplier() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => suppliersService.approve(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.suppliers.all }),
+  });
+}
+
+export function useRejectSupplier() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => suppliersService.reject(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.suppliers.all }),
   });
 }

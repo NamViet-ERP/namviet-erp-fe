@@ -4,6 +4,7 @@ import { showToast } from '../../../components/ui/Toast';
 import { usePurchasePlan, usePurchasePlans } from '../../../hooks/usePurchasePlans';
 import { useCreatePurchaseOrder } from '../../../hooks/usePurchaseOrders';
 import { getApiErrorMessage } from '../../../lib/apiClient';
+import { isSupplierOrderable } from '../../../lib/suppliers/supplierStatus';
 import { findSupplierByName, suppliersService } from '../../../services/suppliersService';
 import { addDaysIso, supplierOf, unitPriceOf } from './poDetailHelpers';
 import type { PoInstallmentDraft } from './PoInstallmentCreatePanels';
@@ -217,6 +218,17 @@ export function useCreatePurchaseOrderForm(onCreated: (code: string) => void) {
       showToast(
         'error',
         `Không đối chiếu được NCC "${supplierName}" với danh mục. Vào Nhà cung cấp → Nhà cung cấp để tạo/sửa NCC (đúng tên + hạn công nợ).`,
+      );
+      return;
+    }
+    if (matchedSupplier.isBlacklisted) {
+      showToast('error', `NCC "${supplierName}" đang blacklist, không thể tạo PO.`);
+      return;
+    }
+    if (!isSupplierOrderable(matchedSupplier)) {
+      showToast(
+        'error',
+        `NCC "${supplierName}" chưa được sếp duyệt. Vào Nhà cung cấp để duyệt trước khi đặt hàng.`,
       );
       return;
     }

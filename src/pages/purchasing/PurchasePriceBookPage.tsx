@@ -11,12 +11,15 @@ import MaterialAutocomplete from '../../components/ui/MaterialAutocomplete';
 import { showToast } from '../../components/ui/Toast';
 import {
   usePriceBookCategories,
+  usePriceBookEstimates,
   usePriceBookItem,
   usePriceBookItems,
   usePriceBookMargins,
   usePriceBookMatrix,
+  useUpsertEstimatePrice,
   useUpsertSellPrice,
 } from '../../hooks/usePurchasePriceBook';
+import MaterialByGroupFields, { rootCategoryIdOf } from '../../components/purchasing/MaterialByGroupFields';
 import { useCategoryTree } from '../../hooks/useCategories';
 import { useMaterials } from '../../hooks/useMaterials';
 import { usePermission } from '../../hooks/usePermission';
@@ -41,15 +44,39 @@ const CHART_COLORS = [
   'var(--md-primary)',
 ];
 
-type Tab = 'items' | 'matrix' | 'rfq' | 'groups' | 'margins';
+type Tab = 'items' | 'matrix' | 'rfq' | 'groups' | 'estimates' | 'margins';
+type PeriodType = 'all' | 'month' | 'quarter' | 'year';
+
+const THIS_YEAR = new Date().getFullYear();
+const YEARS = Array.from({ length: 5 }, (_, i) => THIS_YEAR - i);
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'items', label: 'Sổ giá theo mặt hàng' },
   { id: 'matrix', label: 'So sánh giá NCC' },
   { id: 'rfq', label: 'Giá chào thầu (RFQ)' },
   { id: 'groups', label: 'Phân tích theo nhóm hàng' },
+  { id: 'estimates', label: 'Giá dự toán & Chênh lệch' },
   { id: 'margins', label: 'Phân tích Mua vào - Bán ra' },
 ];
+
+function periodRange(type: PeriodType, year: number, quarter: number, month: number) {
+  if (type === 'all') return { from: undefined as string | undefined, to: undefined as string | undefined };
+  if (type === 'year') return { from: `${year}-01-01`, to: `${year}-12-31` };
+  if (type === 'quarter') {
+    const start = (quarter - 1) * 3 + 1;
+    const endMonth = start + 2;
+    const lastDay = new Date(year, endMonth, 0).getDate();
+    return {
+      from: `${year}-${String(start).padStart(2, '0')}-01`,
+      to: `${year}-${String(endMonth).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`,
+    };
+  }
+  const lastDay = new Date(year, month, 0).getDate();
+  return {
+    from: `${year}-${String(month).padStart(2, '0')}-01`,
+    to: `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`,
+  };
+}
 
 function categoryOption(c: { code: string; name: string }) {
   return `${c.code} - ${c.name}`;
@@ -79,16 +106,34 @@ function downloadCsv(filename: string, header: string[], rows: string[][]) {
 
 function exportItemsCsv(rows: PriceBookItemApiDto[]) {
   downloadCsv('SoGia_MatHang.csv',
-    ['Mã hàng', 'Tên hàng', 'Giá mới nhất', 'NCC gần nhất', 'Giá min', 'Giá max', 'Số NCC', 'Xu hướng %'],
+    ['Mã hàng', 'Tên hàng', 'Giá mua mới nhất', 'Giá dự toán', 'Chênh lệch', 'Chênh lệch %', 'NCC gần nhất', 'Giá min', 'Giá max', 'Số NCC', 'Xu hướng %', 'Giá trần'],
     rows.map(r => [
       r.materialCode,
       r.materialName,
       r.latestPrice != null ? String(r.latestPrice) : '',
+      r.estimatePrice != null ? String(r.estimatePrice) : '',
+      r.estimateDiff != null ? String(r.estimateDiff) : '',
+      r.estimateDiffPct != null ? String(r.estimateDiffPct) : '',
       r.latestSupplierName ?? '',
       r.minPrice != null ? String(r.minPrice) : '',
       r.maxPrice != null ? String(r.maxPrice) : '',
       String(r.supplierCount),
       r.trendPct != null ? String(r.trendPct) : '',
+      r.ceilingPrice != null ? String(r.ceilingPrice) : '',
+    ]));
+}
+
+function exportEstimatesCsv(rows: NonNullable<ReturnType<typeof usePriceBookEstimates>['data']>) {
+  downloadCsv('GiaDuToan_ChenhLech.csv',
+    ['Mã hàng', 'Tên hàng', 'Dự án', 'Giá dự toán', 'Giá mua mới nhất', 'Chênh lệch', 'Biên lợi nhuận %'],
+    rows.map(r => [
+      r.materialCode,
+      r.materialName,
+      r.projectCode ?? '',
+      String(r.estimatePrice),
+      r.purchaseLatest != null ? String(r.purchaseLatest) : '',
+      r.diff != null ? String(r.diff) : '',
+      r.marginPct != null ? String(r.marginPct) : '',
     ]));
 }
 
@@ -116,6 +161,10 @@ export default function PurchasePriceBookPage() {
   const [tab, setTab] = useState<Tab>('items');
   const [search, setSearch] = useState('');
   const [categoryId, setCategoryId] = useState<number | ''>('');
+  const [periodType, setPeriodType] = useState<PeriodType>('all');
+  const [periodYear, setPeriodYear] = useState(THIS_YEAR);
+  const [periodQuarter, setPeriodQuarter] = useState(Math.ceil((new Date().getMonth() + 1) / 3));
+  const [periodMonth, setPeriodMonth] = useState(new Date().getMonth() + 1);
   const [matrixCategoryId, setMatrixCategoryId] = useState<number | ''>('');
   const [detailCode, setDetailCode] = useState<string | null>(null);
   const [rfqPresetCode, setRfqPresetCode] = useState('');
@@ -127,20 +176,38 @@ export default function PurchasePriceBookPage() {
     effectiveDate: new Date().toISOString().slice(0, 10),
     note: '',
   });
+  const [estimateOpen, setEstimateOpen] = useState(false);
+  const [estimateCategoryId, setEstimateCategoryId] = useState<number | ''>('');
+  const [estimateForm, setEstimateForm] = useState({
+    materialCode: '',
+    projectCode: '',
+    estimatePrice: '',
+    effectiveDate: new Date().toISOString().slice(0, 10),
+    note: '',
+  });
 
+  const range = periodRange(periodType, periodYear, periodQuarter, periodMonth);
   const items = usePriceBookItems(
     search.trim() || undefined,
     categoryId === '' ? undefined : categoryId,
     tab === 'items',
+    range.from,
+    range.to,
   );
-  const allItems = usePriceBookItems(undefined, undefined, tab === 'matrix' || tab === 'margins');
+  const allItems = usePriceBookItems(undefined, undefined, tab === 'matrix' || tab === 'margins' || tab === 'estimates');
   const matrix = usePriceBookMatrix(matrixCategoryId === '' ? undefined : matrixCategoryId);
   const groups = usePriceBookCategories(tab === 'groups');
   const margins = usePriceBookMargins(tab === 'margins');
+  const estimates = usePriceBookEstimates(tab === 'estimates');
   const detail = usePriceBookItem(detailCode ?? undefined);
   const upsertSell = useUpsertSellPrice();
+  const upsertEstimate = useUpsertEstimatePrice();
   const { data: categories = [] } = useCategoryTree();
-  const { data: materialsPage } = useMaterials({ page: 1, pageSize: 200 });
+  const { data: materialsPage } = useMaterials({
+    page: 1,
+    pageSize: 500,
+    categoryId: estimateCategoryId === '' ? undefined : estimateCategoryId,
+  });
   const { data: projectsPage } = useProjects({ page: 1, pageSize: 200 });
   const materials = materialsPage?.items ?? [];
   const projects = projectsPage?.items ?? [];
@@ -202,6 +269,28 @@ export default function PurchasePriceBookPage() {
     }
   };
 
+  const saveEstimate = async () => {
+    const price = Number(String(estimateForm.estimatePrice).replace(/[^\d.-]/g, ''));
+    if (estimateCategoryId === '' || !estimateForm.materialCode || !estimateForm.effectiveDate || !(price > 0)) {
+      showToast('error', 'Chọn nhóm vật tư, vật tư, ngày hiệu lực và giá dự toán.');
+      return;
+    }
+    try {
+      await upsertEstimate.mutateAsync({
+        materialCode: estimateForm.materialCode,
+        projectCode: estimateForm.projectCode || null,
+        estimatePrice: price,
+        effectiveDate: estimateForm.effectiveDate,
+        note: estimateForm.note || null,
+      });
+      showToast('success', 'Đã ghi giá dự toán.');
+      setEstimateForm(f => ({ ...f, estimatePrice: '', note: '' }));
+      setEstimateOpen(false);
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không ghi được giá dự toán.'));
+    }
+  };
+
   return (
     <PurchasingListLayout
       title="Sổ giá & Phân tích"
@@ -210,33 +299,73 @@ export default function PurchasePriceBookPage() {
       search={search}
       onSearchChange={setSearch}
       searchPlaceholder="Tìm theo mã/tên hàng…"
+      hasFilters={tab === 'items' && Boolean(categoryId || periodType !== 'all')}
       filters={tab === 'items' ? (
-        <HrmSelect
-          aria-label="Nhóm hàng"
-          placeholder="-- Tất cả nhóm hàng --"
-          value={itemsCategoryValue ? categoryOption(itemsCategoryValue) : ''}
-          options={categoryLabels}
-          onChange={label => {
-            const found = rootCategories.find(c => categoryOption(c) === label);
-            setCategoryId(found?.id ?? '');
-          }}
-        />
+        <>
+          <HrmSelect
+            aria-label="Nhóm hàng"
+            placeholder="Tất cả nhóm hàng"
+            value={itemsCategoryValue ? categoryOption(itemsCategoryValue) : ''}
+            options={categoryLabels}
+            onChange={label => {
+              const found = rootCategories.find(c => categoryOption(c) === label);
+              setCategoryId(found?.id ?? '');
+            }}
+          />
+          <HrmSelect
+            aria-label="Kỳ"
+            value={periodType === 'all' ? 'Tất cả (toàn bộ lịch sử)' : periodType === 'month' ? 'Theo tháng' : periodType === 'quarter' ? 'Theo quý' : 'Theo năm'}
+            options={['Tất cả (toàn bộ lịch sử)', 'Theo tháng', 'Theo quý', 'Theo năm']}
+            onChange={label => {
+              if (label.startsWith('Tất cả')) setPeriodType('all');
+              else if (label === 'Theo tháng') setPeriodType('month');
+              else if (label === 'Theo quý') setPeriodType('quarter');
+              else setPeriodType('year');
+            }}
+          />
+          {periodType !== 'all' ? (
+            <HrmSelect
+              aria-label="Năm"
+              value={String(periodYear)}
+              options={YEARS.map(String)}
+              onChange={v => setPeriodYear(Number(v))}
+            />
+          ) : null}
+          {periodType === 'quarter' ? (
+            <HrmSelect
+              aria-label="Quý"
+              value={`Quý ${periodQuarter}`}
+              options={['Quý 1', 'Quý 2', 'Quý 3', 'Quý 4']}
+              onChange={v => setPeriodQuarter(Number(v.replace('Quý ', '')))}
+            />
+          ) : null}
+          {periodType === 'month' ? (
+            <HrmSelect
+              aria-label="Tháng"
+              value={`Tháng ${periodMonth}`}
+              options={Array.from({ length: 12 }, (_, i) => `Tháng ${i + 1}`)}
+              onChange={v => setPeriodMonth(Number(v.replace('Tháng ', '')))}
+            />
+          ) : null}
+        </>
       ) : null}
-      hasFilters={tab === 'items' && Boolean(categoryId)}
       onResetFilters={() => {
         setCategoryId('');
         setSearch('');
+        setPeriodType('all');
       }}
     >
       <p className="text-[length:var(--fs-sm)] text-[var(--md-on-surface-variant)] mb-3">
         {tab === 'items'
-          ? 'Sổ giá tổng hợp lịch sử mua thực tế (từ PO đã duyệt) theo mặt hàng: biến động giá, số NCC, xu hướng so với lần mua trước và cảnh báo khi vượt giá trần tham chiếu.'
+          ? 'Sổ giá tổng hợp lịch sử mua thực tế từ PO đã chốt theo mặt hàng: giá mới nhất, giá dự toán (từ tab Giá dự toán & Chênh lệch), số NCC, xu hướng và cảnh báo khi vượt giá trần.'
           : tab === 'matrix'
             ? 'Bảng so sánh giá gần nhất của các NCC cho từng mặt hàng trong cùng nhóm hàng. Ô có dấu ★ là giá thấp nhất giữa các NCC đã từng báo / bán mặt hàng đó.'
             : tab === 'rfq'
               ? 'Ghi lại tất cả báo giá nhận được cho một mặt hàng, kể cả báo giá không được chọn, để có nền tảng thương lượng cho các lần mua sau.'
               : tab === 'groups'
                 ? 'Tổng hợp chi tiêu và biến động giá theo từng nhóm hàng, giúp nhìn nhóm nào chiếm tỷ trọng lớn để ưu tiên đàm phán.'
+                : tab === 'estimates'
+                  ? 'So sánh giá dự toán (giá công ty) với giá mua thực tế trên PO đã chốt để biết đang mua rẻ hơn hay đắt hơn dự toán.'
                 : 'So sánh giá bán / giá chào cho dự án với giá mua thực tế để nhìn margin theo từng mặt hàng.'}
       </p>
 
@@ -310,6 +439,112 @@ export default function PurchasePriceBookPage() {
             }}
           />
         )
+      ) : null}
+
+      {tab === 'estimates' ? (
+        <div className="space-y-3">
+          <EstimateKpis rows={estimates.data ?? []} />
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-[length:var(--fs-lg)] font-semibold m-0">Giá dự toán & Chênh lệch so với giá mua thực tế</h2>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                onClick={() => exportEstimatesCsv(estimates.data ?? [])}
+              >
+                Xuất CSV
+              </button>
+              {canUpdateBook ? (
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  onClick={() => {
+                    setEstimateCategoryId('');
+                    setEstimateForm({
+                      materialCode: '',
+                      projectCode: '',
+                      estimatePrice: '',
+                      effectiveDate: new Date().toISOString().slice(0, 10),
+                      note: '',
+                    });
+                    setEstimateOpen(true);
+                  }}
+                >
+                  + Thiết lập giá dự toán
+                </button>
+              ) : null}
+            </div>
+          </div>
+          <EstimatesTable
+            loading={estimates.isLoading}
+            rows={estimates.data ?? []}
+            missingEstimate={allItems.data?.filter(i => i.latestPrice != null && !(estimates.data ?? []).some(m => m.materialCode === i.materialCode)) ?? []}
+            canUpdate={canUpdateBook}
+            onEdit={row => {
+              const mat = materials.find(m => m.materialCode === row.materialCode);
+              setEstimateCategoryId(rootCategoryIdOf(mat?.categoryId, categories));
+              setEstimateForm({
+                materialCode: row.materialCode,
+                projectCode: row.projectCode ?? '',
+                estimatePrice: String(row.estimatePrice),
+                effectiveDate: row.effectiveDate?.slice(0, 10) || new Date().toISOString().slice(0, 10),
+                note: '',
+              });
+              setEstimateOpen(true);
+            }}
+            onAdd={code => {
+              const mat = materials.find(m => m.materialCode === code);
+              setEstimateCategoryId(rootCategoryIdOf(mat?.categoryId, categories));
+              setEstimateForm(f => ({ ...f, materialCode: code, projectCode: '', estimatePrice: '' }));
+              setEstimateOpen(true);
+            }}
+            onHistory={setDetailCode}
+          />
+          {canUpdateBook ? (
+            <Modal isOpen={estimateOpen} onClose={() => setEstimateOpen(false)} title="Thiết lập giá dự toán" size="md">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <MaterialByGroupFields
+                  categoryId={estimateCategoryId}
+                  onCategoryChange={id => {
+                    setEstimateCategoryId(id);
+                    setEstimateForm(f => ({ ...f, materialCode: '' }));
+                  }}
+                  materialCode={estimateForm.materialCode}
+                  onMaterialChange={materialCode => setEstimateForm(f => ({ ...f, materialCode }))}
+                  groups={rootCategories}
+                  materials={materials}
+                />
+                <FormField label="Dự án">
+                  <ProjectAutocomplete
+                    value={estimateForm.projectCode}
+                    onChange={projectCode => setEstimateForm(f => ({ ...f, projectCode }))}
+                    projects={projects}
+                  />
+                </FormField>
+                <FormField label="Giá dự toán" required>
+                  <CurrencyInput
+                    value={estimateForm.estimatePrice}
+                    onChange={estimatePrice => setEstimateForm(f => ({ ...f, estimatePrice }))}
+                  />
+                </FormField>
+                <FormField label="Ngày hiệu lực" required>
+                  <input
+                    className="form-input"
+                    type="date"
+                    value={estimateForm.effectiveDate}
+                    onChange={e => setEstimateForm(f => ({ ...f, effectiveDate: e.target.value }))}
+                  />
+                </FormField>
+              </div>
+              <div className="flex justify-end gap-2 mt-3">
+                <button type="button" className="btn btn-outline btn-sm" onClick={() => setEstimateOpen(false)}>Hủy</button>
+                <button type="button" className="btn btn-primary btn-sm" disabled={upsertEstimate.isPending} onClick={() => void saveEstimate()}>
+                  {upsertEstimate.isPending ? 'Đang lưu…' : 'Lưu'}
+                </button>
+              </div>
+            </Modal>
+          ) : null}
+        </div>
       ) : null}
 
       {tab === 'margins' ? (
@@ -478,7 +713,9 @@ function ItemsTable({
         <thead>
           <tr>
             <th className="table-header-cell">Hàng hoá</th>
-            <th className="table-header-cell">Giá mới nhất</th>
+            <th className="table-header-cell">Giá mua mới nhất</th>
+            <th className="table-header-cell">Giá dự toán</th>
+            <th className="table-header-cell">Chênh lệch (Mua - Dự toán)</th>
             <th className="table-header-cell">NCC gần nhất</th>
             <th className="table-header-cell">Khoảng giá</th>
             <th className="table-header-cell">Số NCC</th>
@@ -488,10 +725,10 @@ function ItemsTable({
         </thead>
         <tbody>
           {loading ? (
-            <TableSkeletonRows colSpan={7} />
+            <TableSkeletonRows colSpan={9} />
           ) : rows.length === 0 ? (
             <tr>
-              <td colSpan={7} className="table-cell"><EmptyState message="Chưa có mặt hàng phù hợp." /></td>
+              <td colSpan={9} className="table-cell"><EmptyState message="Chưa có mặt hàng phù hợp." /></td>
             </tr>
           ) : rows.map(row => (
             <tr key={row.materialCode} className="table-row">
@@ -500,13 +737,22 @@ function ItemsTable({
                 <div>{row.materialName}</div>
                 <div className="text-[var(--md-on-surface-variant)]">
                   Giá trần: {row.ceilingPrice != null ? formatCurrencyFull(row.ceilingPrice) : '—'}
+                  {row.estimatePrice != null ? ` · Giá dự toán: ${formatCurrencyFull(row.estimatePrice)}` : ''}
                   {row.overCeiling ? (
                     <span className="ml-2 text-[var(--md-error)]">Vượt trần</span>
                   ) : null}
                 </div>
               </td>
+              <td className={`table-cell text-right tabular-nums ${row.overCeiling ? 'text-[var(--md-error)]' : ''}`}>
+                {row.latestPrice != null ? formatCurrencyFull(row.latestPrice) : 'Chưa có lịch sử giá mua trong kỳ đã chọn'}
+              </td>
               <td className="table-cell text-right tabular-nums">
-                {row.latestPrice != null ? formatCurrencyFull(row.latestPrice) : 'Chưa có lịch sử giá'}
+                {row.estimatePrice != null ? formatCurrencyFull(row.estimatePrice) : '—'}
+              </td>
+              <td className={`table-cell text-right tabular-nums ${row.estimateDiff != null && row.estimateDiff > 0 ? 'text-[var(--md-error)]' : row.estimateDiff != null ? 'text-[var(--md-success)]' : ''}`}>
+                {row.estimateDiff != null
+                  ? `${row.estimateDiff > 0 ? '+' : ''}${formatCurrencyFull(row.estimateDiff)}${row.estimateDiffPct != null ? ` (${row.estimateDiffPct > 0 ? '+' : ''}${row.estimateDiffPct}%)` : ''}`
+                  : 'Chưa có dự toán'}
               </td>
               <td className="table-cell">{row.latestSupplierName || '—'}</td>
               <td className="table-cell text-right tabular-nums">
@@ -664,6 +910,148 @@ function GroupsTable({
   );
 }
 
+function EstimateKpis({ rows }: { rows: NonNullable<ReturnType<typeof usePriceBookEstimates>['data']> }) {
+  const withEst = new Set(rows.map(r => r.materialCode)).size;
+  const valid = rows.filter(r => r.marginPct != null);
+  const avg = valid.length === 0 ? null : valid.reduce((sum, r) => sum + (r.marginPct ?? 0), 0) / valid.length;
+  const over = rows.filter(r => r.marginPct != null && r.marginPct < 0).length;
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="border border-[var(--md-outline-variant)] rounded-[var(--radius-md)] px-3 py-2 border-l-4 border-l-[var(--md-secondary)]">
+        <div className="text-[length:var(--fs-xs)] font-semibold uppercase tracking-wide text-[var(--md-on-surface-variant)]">Số mặt hàng đã có giá dự toán</div>
+        <div className="text-[length:var(--fs-2xl)] font-semibold tabular-nums">{withEst}</div>
+      </div>
+      <div className="border border-[var(--md-outline-variant)] rounded-[var(--radius-md)] px-3 py-2 border-l-4 border-l-[var(--md-secondary)]">
+        <div className="text-[length:var(--fs-xs)] font-semibold uppercase tracking-wide text-[var(--md-on-surface-variant)]">Biên lợi nhuận TB so với dự toán</div>
+        <div className="text-[length:var(--fs-2xl)] font-semibold tabular-nums">{avg == null ? '—' : `${avg > 0 ? '+' : ''}${avg.toFixed(1)}%`}</div>
+      </div>
+      <div className={`border border-[var(--md-outline-variant)] rounded-[var(--radius-md)] px-3 py-2 border-l-4 ${over > 0 ? 'border-l-[var(--md-error)]' : 'border-l-[var(--md-secondary)]'}`}>
+        <div className="text-[length:var(--fs-xs)] font-semibold uppercase tracking-wide text-[var(--md-on-surface-variant)]">Mặt hàng đang mua vượt giá dự toán</div>
+        <div className="text-[length:var(--fs-2xl)] font-semibold tabular-nums">{over}</div>
+      </div>
+    </div>
+  );
+}
+
+function estimateMarginBadge(pct: number | null | undefined) {
+  if (pct == null) return 'badge-neutral';
+  if (pct >= 10) return 'badge-success';
+  if (pct >= 0) return 'badge-warning';
+  return 'badge-error';
+}
+
+function EstimatesTable({
+  loading,
+  rows,
+  missingEstimate,
+  canUpdate,
+  onEdit,
+  onAdd,
+  onHistory,
+}: {
+  loading: boolean;
+  rows: NonNullable<ReturnType<typeof usePriceBookEstimates>['data']>;
+  missingEstimate: PriceBookItemApiDto[];
+  canUpdate: boolean;
+  onEdit: (row: NonNullable<ReturnType<typeof usePriceBookEstimates>['data']>[number]) => void;
+  onAdd: (materialCode: string) => void;
+  onHistory: (materialCode: string) => void;
+}) {
+  return (
+    <div className="space-y-4">
+      <div className="wms-inventory-table-wrap">
+        <table className="wms-inventory-table">
+          <thead>
+            <tr>
+              <th className="table-header-cell">Hàng hoá</th>
+              <th className="table-header-cell">Dự án</th>
+              <th className="table-header-cell">Giá dự toán</th>
+              <th className="table-header-cell">Giá mua mới nhất</th>
+              <th className="table-header-cell">Chênh lệch (Mua - Dự toán)</th>
+              <th className="table-header-cell">Biên lợi nhuận</th>
+              <th className="table-header-cell"> </th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <TableSkeletonRows colSpan={7} />
+            ) : rows.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="table-cell"><EmptyState message="Chưa có giá dự toán nào được thiết lập." /></td>
+              </tr>
+            ) : rows.map(row => (
+              <tr key={`${row.materialCode}-${row.projectCode ?? ''}-${row.effectiveDate}`} className="table-row">
+                <td className="table-cell">
+                  <span className="mat-code-cell__badge">{row.materialCode}</span>
+                  {' '}
+                  {row.materialName}
+                </td>
+                <td className="table-cell">{row.projectCode || 'Chung'}</td>
+                <td className="table-cell text-right tabular-nums">{formatCurrencyFull(row.estimatePrice)}</td>
+                <td className="table-cell text-right tabular-nums">{row.purchaseLatest != null ? formatCurrencyFull(row.purchaseLatest) : '—'}</td>
+                <td className={`table-cell text-right tabular-nums font-semibold ${row.diff != null && row.diff > 0 ? 'text-[var(--md-error)]' : ''}`}>
+                  {row.diff != null ? `${row.diff > 0 ? '+' : ''}${formatCurrencyFull(row.diff)}` : '—'}
+                </td>
+                <td className="table-cell">
+                  <span className={`badge ${estimateMarginBadge(row.marginPct)}`}>
+                    {row.marginPct != null ? `${row.marginPct > 0 ? '+' : ''}${row.marginPct}%` : '—'}
+                  </span>
+                </td>
+                <td className="table-cell whitespace-nowrap">
+                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => onHistory(row.materialCode)}>
+                    Lịch sử ({row.estimateHistoryCount})
+                  </button>
+                  {canUpdate ? (
+                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => onEdit(row)}>Sửa</button>
+                  ) : null}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {missingEstimate.length > 0 ? (
+        <div className="space-y-2">
+          <h3 className="text-[length:var(--fs-lg)] font-semibold m-0">Mặt hàng đã có giá mua nhưng chưa thiết lập giá dự toán</h3>
+          <div className="wms-inventory-table-wrap">
+            <table className="wms-inventory-table">
+              <thead>
+                <tr>
+                  <th className="table-header-cell">Hàng hoá</th>
+                  <th className="table-header-cell">Giá mua mới nhất</th>
+                  <th className="table-header-cell"> </th>
+                </tr>
+              </thead>
+              <tbody>
+                {missingEstimate.map(row => (
+                  <tr key={row.materialCode} className="table-row">
+                    <td className="table-cell">
+                      <span className="mat-code-cell__badge">{row.materialCode}</span>
+                      {' '}
+                      {row.materialName}
+                    </td>
+                    <td className="table-cell text-right tabular-nums">
+                      {row.latestPrice != null ? formatCurrencyFull(row.latestPrice) : '—'}
+                    </td>
+                    <td className="table-cell">
+                      {canUpdate ? (
+                        <button type="button" className="btn btn-primary btn-sm" onClick={() => onAdd(row.materialCode)}>
+                          + Thiết lập giá dự toán
+                        </button>
+                      ) : null}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function MarginKpis({ rows }: { rows: NonNullable<ReturnType<typeof usePriceBookMargins>['data']> }) {
   const withSell = new Set(rows.map(r => r.materialCode)).size;
   const avg = rows.length === 0
@@ -721,7 +1109,6 @@ function MarginsTable({
               <th className="table-header-cell">Hàng hoá</th>
               <th className="table-header-cell">Dự án</th>
               <th className="table-header-cell">Giá bán/chào</th>
-              <th className="table-header-cell">Giá mua TB</th>
               <th className="table-header-cell">Giá mua mới nhất</th>
               <th className="table-header-cell">Margin</th>
               <th className="table-header-cell">Margin %</th>
@@ -730,10 +1117,10 @@ function MarginsTable({
           </thead>
           <tbody>
             {loading ? (
-              <TableSkeletonRows colSpan={8} />
+              <TableSkeletonRows colSpan={7} />
             ) : rows.length === 0 ? (
               <tr>
-                <td colSpan={8} className="table-cell"><EmptyState message="Chưa có giá bán để đối chiếu." /></td>
+                <td colSpan={7} className="table-cell"><EmptyState message="Chưa có giá bán để đối chiếu." /></td>
               </tr>
             ) : rows.map(row => (
               <tr key={`${row.materialCode}-${row.projectCode ?? ''}-${row.effectiveDate}`} className="table-row">
@@ -744,7 +1131,6 @@ function MarginsTable({
                 </td>
                 <td className="table-cell">{row.projectCode || 'Chung'}</td>
                 <td className="table-cell text-right tabular-nums">{formatCurrencyFull(row.sellPrice)}</td>
-                <td className="table-cell text-right tabular-nums">{row.purchaseAvg != null ? formatCurrencyFull(row.purchaseAvg) : 'Chưa có'}</td>
                 <td className="table-cell text-right tabular-nums">{row.purchaseLatest != null ? formatCurrencyFull(row.purchaseLatest) : '—'}</td>
                 <td className={`table-cell text-right tabular-nums font-semibold ${row.margin != null && row.margin < 0 ? 'text-[var(--md-error)]' : ''}`}>
                   {row.margin != null ? formatCurrencyFull(row.margin) : '—'}
@@ -755,11 +1141,9 @@ function MarginsTable({
                   </span>
                 </td>
                 <td className="table-cell whitespace-nowrap">
-                  {row.sellHistoryCount > 1 ? (
-                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => onHistory(row.materialCode)}>
-                      Lịch sử ({row.sellHistoryCount})
-                    </button>
-                  ) : null}
+                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => onHistory(row.materialCode)}>
+                    Lịch sử ({row.sellHistoryCount})
+                  </button>
                   {canUpdate ? (
                     <button type="button" className="btn btn-ghost btn-sm" onClick={() => onEdit(row)}>Sửa</button>
                   ) : null}
@@ -816,6 +1200,7 @@ function historyKindLabel(kind: string, status?: string | null) {
   if (kind === 'plan') return 'KHMH';
   if (kind === 'import') return 'Nhập kho';
   if (kind === 'sell') return 'Giá bán';
+  if (kind === 'estimate') return 'Giá dự toán';
   if (status === 'won') return 'Báo giá - Thắng';
   if (status === 'lost') return 'Báo giá - Thua';
   if (status === 'active') return 'Báo giá - Còn hiệu lực';
@@ -825,7 +1210,7 @@ function historyKindLabel(kind: string, status?: string | null) {
 
 function historyKindBadge(kind: string, status?: string | null) {
   if (kind === 'po' || kind === 'plan' || kind === 'import') return 'badge-success';
-  if (kind === 'sell') return 'badge-info';
+  if (kind === 'sell' || kind === 'estimate') return 'badge-info';
   if (status === 'won') return 'badge-success';
   if (status === 'active') return 'badge-warning';
   if (status === 'lost' || status === 'expired') return 'badge-error';

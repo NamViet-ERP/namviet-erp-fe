@@ -107,3 +107,5 @@ export type PriceBookMatrixApiDto = Schemas['PriceBookMatrixDto'];
 export type PriceBookCategoryRowApiDto = Schemas['PriceBookCategoryRowDto'];
 export type PriceBookMarginRowApiDto = Schemas['PriceBookMarginRowDto'];
 export type UpsertPurchaseSellPriceRequest = Schemas['UpsertPurchaseSellPriceRequest'];
+export type PriceBookEstimateRowApiDto = Schemas['PriceBookEstimateRowDto'];
+export type UpsertPurchaseItemEstimatePriceRequest = Schemas['UpsertPurchaseItemEstimatePriceRequest'];

@@ -1,20 +1,24 @@
 import { apiClient } from '../lib/apiClient';
 import type {
   PriceBookCategoryRowApiDto,
+  PriceBookEstimateRowApiDto,
   PriceBookItemApiDto,
   PriceBookItemDetailApiDto,
   PriceBookMarginRowApiDto,
   PriceBookMatrixApiDto,
+  UpsertPurchaseItemEstimatePriceRequest,
   UpsertPurchaseSellPriceRequest,
 } from '../types/api/purchasingApi';
 
 const ENDPOINT = '/api/purchasing/price-book';
 
 export const purchasePriceBookService = {
-  items(search?: string, categoryId?: number) {
+  items(search?: string, categoryId?: number, fromDate?: string, toDate?: string) {
     return apiClient.get<PriceBookItemApiDto[]>(`${ENDPOINT}/items`, {
       search: search || undefined,
       categoryId,
+      fromDate: fromDate || undefined,
+      toDate: toDate || undefined,
     });
   },
 
@@ -38,5 +42,13 @@ export const purchasePriceBookService = {
 
   upsertSellPrice(body: UpsertPurchaseSellPriceRequest) {
     return apiClient.post(`${ENDPOINT}/sell-prices`, body);
+  },
+
+  estimates() {
+    return apiClient.get<PriceBookEstimateRowApiDto[]>(`${ENDPOINT}/estimates`);
+  },
+
+  upsertEstimatePrice(body: UpsertPurchaseItemEstimatePriceRequest) {
+    return apiClient.post(`${ENDPOINT}/estimate-prices`, body);
   },
 };

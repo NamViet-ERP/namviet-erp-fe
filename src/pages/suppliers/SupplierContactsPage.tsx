@@ -8,7 +8,7 @@ import Pagination from '../../components/ui/Pagination';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import SupplierContactFormModal from '../../components/suppliers/SupplierContactFormModal';
 import { showToast } from '../../components/ui/Toast';
-import { getApiErrorMessage } from '../../lib/apiClient';
+import { getApiErrorMessage, getApiFieldErrors } from '../../lib/apiClient';
 import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
 import { useSuppliers } from '../../hooks/useSuppliers';
 import {
@@ -30,6 +30,7 @@ export default function SupplierContactsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<SupplierContactApiDto | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<SupplierContactApiDto | null>(null);
+  const [contactApiErrors, setContactApiErrors] = useState<{ phone?: string; email?: string; fullName?: string }>({});
 
   const { data: suppliers } = useSuppliers({ all: true });
   const { data, isLoading, isError } = useSupplierContacts({
@@ -49,6 +50,7 @@ export default function SupplierContactsPage() {
 
   const openCreate = () => {
     setEditing(null);
+    setContactApiErrors({});
     setShowForm(true);
   };
 
@@ -61,9 +63,19 @@ export default function SupplierContactsPage() {
         await createMutation.mutateAsync(body);
         showToast('success', 'Đã thêm người liên hệ');
       }
+      setContactApiErrors({});
       setShowForm(false);
       setEditing(null);
     } catch (err: unknown) {
+      const fieldErrors = getApiFieldErrors(err);
+      if (fieldErrors.phone || fieldErrors.email || fieldErrors.fullName) {
+        setContactApiErrors({
+          phone: fieldErrors.phone,
+          email: fieldErrors.email,
+          fullName: fieldErrors.fullName,
+        });
+        return;
+      }
       showToast('error', getApiErrorMessage(err, 'Không thể lưu người liên hệ'));
     }
   };
@@ -182,6 +194,7 @@ export default function SupplierContactsPage() {
                         aria-label={`Sửa liên hệ ${row.fullName}`}
                         onClick={() => {
                           setEditing(row);
+                          setContactApiErrors({});
                           setShowForm(true);
                         }}
                       >
@@ -224,9 +237,11 @@ export default function SupplierContactsPage() {
         isOpen={showForm}
         editing={editing}
         isSaving={createMutation.isPending || updateMutation.isPending}
+        apiErrors={contactApiErrors}
         onClose={() => {
           setShowForm(false);
           setEditing(null);
+          setContactApiErrors({});
         }}
         onSubmit={handleSubmit}
       />

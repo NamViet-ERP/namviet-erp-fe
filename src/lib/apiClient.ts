@@ -42,6 +42,24 @@ export function getApiErrorMessage(err: unknown, fallback: string = UI_ERROR.gen
   return msg;
 }
 
+function normalizeErrorField(key: string): string | null {
+  let field = key.trim();
+  if (field.startsWith('$.')) field = field.slice(2);
+  if (field.toLowerCase().startsWith('request.')) field = field.slice(8);
+  const last = field.split(/[./]/).pop()?.trim() ?? '';
+  if (!last || ['_form', 'request', '$'].includes(last)) return null;
+  return last.charAt(0).toLowerCase() + last.slice(1);
+}
+
+function firstErrorMessage(value: unknown): string | undefined {
+  if (typeof value === 'string' && value.trim()) return value.trim();
+  if (Array.isArray(value)) {
+    const first = value.find(item => typeof item === 'string' && item.trim());
+    return typeof first === 'string' ? first.trim() : undefined;
+  }
+  return undefined;
+}
+
 /** Field-level validation errors from API payload (`errors: { field: string[] }`). */
 export function getApiFieldErrors(err: unknown): Record<string, string> {
   if (!(err instanceof ApiError) || err.payload == null || typeof err.payload !== 'object') return {};
@@ -51,11 +69,10 @@ export function getApiFieldErrors(err: unknown): Record<string, string> {
 
   const result: Record<string, string> = {};
   for (const [key, msgs] of Object.entries(obj.errors)) {
-    if (['_form', 'request', '$'].includes(key)) continue;
-    const first = Array.isArray(msgs) ? msgs.find(Boolean) : undefined;
-    if (!first) continue;
-    const fieldKey = key.length ? key.charAt(0).toLowerCase() + key.slice(1) : key;
-    result[fieldKey] = translateErrorMessage(String(first));
+    const fieldKey = normalizeErrorField(key);
+    const first = firstErrorMessage(msgs);
+    if (!fieldKey || !first) continue;
+    result[fieldKey] = translateErrorMessage(first);
   }
   return result;
 }

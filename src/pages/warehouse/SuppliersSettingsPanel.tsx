@@ -1,7 +1,7 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
-import { Ban, Plus, Trash2, Pencil, RotateCcw, Eye, ShieldOff } from 'lucide-react';
+import { Ban, Check, Plus, Trash2, Pencil, RotateCcw, Eye, ShieldOff, X } from 'lucide-react';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import SearchBar from '../../components/ui/SearchBar';
 import Pagination from '../../components/ui/Pagination';
@@ -10,16 +10,29 @@ import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import Modal from '../../components/ui/Modal';
 import FormField from '../../components/ui/FormField';
 import Dropdown from '../../components/ui/Dropdown';
+import { usePermission } from '../../hooks/usePermission';
 import { showToast } from '../../components/ui/Toast';
-import { getApiErrorMessage } from '../../lib/apiClient';
+import { getApiErrorMessage, getApiFieldErrors } from '../../lib/apiClient';
 import { WMS_ERROR } from '../../lib/wms/messages';
 import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
 import { formatCurrencyFull } from '../../utils/formatCurrency';
+import {
+  normalizeSupplierApproval,
+  isSameSupplierName,
+  parseMaxDebtDays,
+  restrictVnPhoneInput,
+  supplierGradeLabel,
+  SUPPLIER_APPROVAL,
+  SUPPLIER_LIMITS,
+  validateOptionalVietnamPhone,
+} from '../../lib/suppliers/supplierStatus';
 import {
   useSuppliers,
   useCreateSupplier,
   useUpdateSupplier,
   useDeleteSupplier,
+  useApproveSupplier,
+  useRejectSupplier,
 } from '../../hooks/useSuppliers';
 import {
   useAddSupplierToBlacklist,
@@ -28,12 +41,14 @@ import {
 } from '../../hooks/useSupplierDirectory';
 import { supplierGroupsService } from '../../services/supplierDirectoryService';
 import { queryKeys } from '../../services/queryKeys';
-import type { SupplierApiDto } from '../../services/suppliersService';
+import { suppliersService, type SupplierApiDto } from '../../services/suppliersService';
 import type { DropdownItem } from '../../types';
 
 const RATING_OPTIONS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 const GROUPS_VISIBLE_IN_TABLE = 3;
-const COL_COUNT = 11;
+const COL_COUNT = 12;
+type FormErrors = Partial<Record<'supplierCode' | 'supplierName' | 'contactPhone' | 'maxDebtDays' | 'paymentTerms', string>>;
+type SupplierRow = SupplierApiDto & { approvalStatus?: string };
 
 const emptyForm = {
   supplierCode: '',
@@ -44,18 +59,42 @@ const emptyForm = {
   groupIds: [] as number[],
 };
 
-function RatingBadge({ rating }: { rating?: string | null }) {
-  const value = rating?.trim();
-  if (!value) {
-    return (
-      <span className="hrm-badge hrm-badge--neutral">Chưa đánh giá</span>
-    );
+function mapSupplierSaveErrors(err: unknown): FormErrors {
+  const fromApi = getApiFieldErrors(err);
+  const next: FormErrors = {};
+  for (const [key, message] of Object.entries(fromApi)) {
+    if (key in emptyForm || key === 'supplierCode') next[key as keyof FormErrors] = message;
   }
+
+  const message = getApiErrorMessage(err, '');
+  const lower = message.toLowerCase();
+  if (!next.contactPhone && (lower.includes('điện thoại') || lower.includes('sđt'))) {
+    next.contactPhone = message;
+  }
+  if (!next.supplierName && (lower.includes('tên nhà cung cấp') || lower.includes('đã tồn tại'))) {
+    next.supplierName = message;
+  }
+  if (!next.maxDebtDays && lower.includes('hạn công nợ')) {
+    next.maxDebtDays = message;
+  }
+  return next;
+}
+
+function RatingBadge({ rating }: { rating?: string | null }) {
   return (
-    <span className="inline-block min-w-[1.5rem] px-2 py-0.5 rounded bg-[var(--md-surface-container-high)] font-semibold">
-      {value}
-    </span>
+    <span className="hrm-badge hrm-badge--neutral">Hạng {supplierGradeLabel(rating)}</span>
   );
+}
+
+function ApprovalStatusBadge({ status }: { status?: string | null }) {
+  const value = normalizeSupplierApproval(status);
+  if (value === SUPPLIER_APPROVAL.New) {
+    return <span className="hrm-badge hrm-badge--warning">Mới - chờ duyệt</span>;
+  }
+  if (value === SUPPLIER_APPROVAL.Rejected) {
+    return <span className="hrm-badge hrm-badge--danger">Từ chối</span>;
+  }
+  return <span className="hrm-badge hrm-badge--success">Đã duyệt</span>;
 }
 
 function IndustryGroupsCell({ groups }: { groups: string[] }) {
@@ -100,20 +139,26 @@ function DetailField({
 
 export default function SuppliersSettingsPanel() {
   const qc = useQueryClient();
+  const { has } = usePermission();
+  const canApproveSupplier = has('wms.suppliers.approve');
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState('');
   const [ratingFilter, setRatingFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_LIST_PAGE_SIZE);
   const [showForm, setShowForm] = useState(false);
-  const [editing, setEditing] = useState<SupplierApiDto | null>(null);
-  const [viewing, setViewing] = useState<SupplierApiDto | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<SupplierApiDto | null>(null);
-  const [blacklistTarget, setBlacklistTarget] = useState<SupplierApiDto | null>(null);
-  const [removeBlacklistTarget, setRemoveBlacklistTarget] = useState<SupplierApiDto | null>(null);
+  const [editing, setEditing] = useState<SupplierRow | null>(null);
+  const [viewing, setViewing] = useState<SupplierRow | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<SupplierRow | null>(null);
+  const [blacklistTarget, setBlacklistTarget] = useState<SupplierRow | null>(null);
+  const [removeBlacklistTarget, setRemoveBlacklistTarget] = useState<SupplierRow | null>(null);
   const [blacklistReason, setBlacklistReason] = useState('');
   const [form, setForm] = useState(emptyForm);
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [openingEdit, setOpeningEdit] = useState(false);
+  const [approveTarget, setApproveTarget] = useState<SupplierRow | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<SupplierRow | null>(null);
 
   const groupIdFromUrl = useMemo(() => {
     const raw = searchParams.get('groupId');
@@ -127,6 +172,7 @@ export default function SuppliersSettingsPanel() {
     pageSize,
     search: search || undefined,
     rating: ratingFilter || undefined,
+    approvalStatus: statusFilter || undefined,
     groupId: groupIdFromUrl,
   });
   const { data: groupPage } = useSupplierGroups({ page: 1, pageSize: 500 });
@@ -135,8 +181,10 @@ export default function SuppliersSettingsPanel() {
   const deleteMutation = useDeleteSupplier();
   const addBlacklistMutation = useAddSupplierToBlacklist();
   const removeBlacklistMutation = useRemoveSupplierFromBlacklist();
+  const approveMutation = useApproveSupplier();
+  const rejectMutation = useRejectSupplier();
 
-  const items = data?.items ?? [];
+  const items = (data?.items ?? []) as SupplierRow[];
   const totalCount = data?.totalCount ?? 0;
   const totalPages = data?.totalPages ?? 1;
   const groupOptions = groupPage?.items ?? [];
@@ -155,17 +203,25 @@ export default function SuppliersSettingsPanel() {
   const resetFilters = () => {
     setSearch('');
     setRatingFilter('');
+    setStatusFilter('');
     setPage(1);
     if (groupIdFromUrl) clearGroupFilter();
   };
 
-  const openCreate = () => {
+  const openCreate = async () => {
     setEditing(null);
     setForm(emptyForm);
+    setFormErrors({});
     setShowForm(true);
+    try {
+      const { nextCode } = await suppliersService.nextCode();
+      setForm(f => ({ ...f, supplierCode: nextCode }));
+    } catch {
+      setForm(f => ({ ...f, supplierCode: '' }));
+    }
   };
 
-  const openEdit = async (s: SupplierApiDto) => {
+  const openEdit = async (s: SupplierRow) => {
     setOpeningEdit(true);
     try {
       const assigned = await supplierGroupsService.groupsOfSupplier(s.id);
@@ -179,6 +235,7 @@ export default function SuppliersSettingsPanel() {
         paymentTerms: s.paymentTerms ?? '',
         groupIds: assigned.map(g => g.id),
       });
+      setFormErrors({});
       setShowForm(true);
     } catch (err: unknown) {
       showToast('error', getApiErrorMessage(err, 'Không thể tải nhóm ngành hàng của NCC'));
@@ -191,22 +248,45 @@ export default function SuppliersSettingsPanel() {
     setShowForm(false);
     setEditing(null);
     setForm(emptyForm);
+    setFormErrors({});
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const supplierCode = form.supplierCode.trim();
     const supplierName = form.supplierName.trim();
-    if (!supplierCode || !supplierName) {
-      showToast('warning', 'Mã NCC và tên nhà cung cấp là bắt buộc');
-      return;
+    const paymentTerms = form.paymentTerms.trim();
+    const nextErrors: FormErrors = {};
+
+    if (!supplierName) nextErrors.supplierName = 'Tên nhà cung cấp là bắt buộc.';
+    else if (supplierName.length > SUPPLIER_LIMITS.nameMax) {
+      nextErrors.supplierName = `Tên nhà cung cấp tối đa ${SUPPLIER_LIMITS.nameMax} ký tự.`;
+    } else if (
+      items.some(s => s.id !== editing?.id && isSameSupplierName(s.supplierName, supplierName))
+    ) {
+      nextErrors.supplierName = 'Tên nhà cung cấp đã tồn tại.';
     }
+
+    const contactPhone = restrictVnPhoneInput(form.contactPhone);
+    const phoneError = validateOptionalVietnamPhone(contactPhone);
+    if (phoneError) nextErrors.contactPhone = phoneError;
+
+    const debt = parseMaxDebtDays(form.maxDebtDays);
+    if (!debt.ok) nextErrors.maxDebtDays = debt.error;
+
+    if (paymentTerms.length > SUPPLIER_LIMITS.paymentTermsMax) {
+      nextErrors.paymentTerms = `Điều khoản thanh toán tối đa ${SUPPLIER_LIMITS.paymentTermsMax} ký tự.`;
+    }
+
+    setFormErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0 || !debt.ok) return;
+
     const body = {
       supplierCode,
       supplierName,
-      contactPhone: form.contactPhone.trim() || null,
-      maxDebtDays: Number(form.maxDebtDays) || 30,
-      paymentTerms: form.paymentTerms.trim() || null,
+      contactPhone: contactPhone || null,
+      maxDebtDays: debt.value,
+      paymentTerms: paymentTerms || null,
     };
 
     try {
@@ -218,7 +298,7 @@ export default function SuppliersSettingsPanel() {
       } else {
         const created = await createMutation.mutateAsync(body);
         supplierId = created.id;
-        showToast('success', 'Đã thêm nhà cung cấp');
+        showToast('success', 'Đã thêm nhà cung cấp. Hạng D, chờ sếp duyệt mới đặt hàng được.');
       }
       if (supplierId) {
         await supplierGroupsService.setGroupsOfSupplier(supplierId, { groupIds: form.groupIds });
@@ -226,7 +306,36 @@ export default function SuppliersSettingsPanel() {
       }
       closeForm();
     } catch (err: unknown) {
+      const fieldErrors = mapSupplierSaveErrors(err);
+      if (Object.keys(fieldErrors).length > 0) {
+        setFormErrors(prev => ({ ...prev, ...fieldErrors }));
+        return;
+      }
       showToast('error', getApiErrorMessage(err, 'Không thể lưu nhà cung cấp'));
+    }
+  };
+
+  const handleApprove = async () => {
+    if (!approveTarget) return;
+    try {
+      const updated = await approveMutation.mutateAsync(approveTarget.id);
+      showToast('success', `Đã duyệt ${approveTarget.supplierName}. Có thể đặt hàng.`);
+      setApproveTarget(null);
+      if (viewing?.id === updated.id) setViewing(updated);
+    } catch (err: unknown) {
+      showToast('error', getApiErrorMessage(err, 'Không thể duyệt nhà cung cấp'));
+    }
+  };
+
+  const handleReject = async () => {
+    if (!rejectTarget) return;
+    try {
+      const updated = await rejectMutation.mutateAsync(rejectTarget.id);
+      showToast('success', `Đã từ chối ${rejectTarget.supplierName}.`);
+      setRejectTarget(null);
+      if (viewing?.id === updated.id) setViewing(updated);
+    } catch (err: unknown) {
+      showToast('error', getApiErrorMessage(err, 'Không thể từ chối nhà cung cấp'));
     }
   };
 
@@ -294,9 +403,24 @@ export default function SuppliersSettingsPanel() {
     }
   };
 
-  const rowActions = (s: SupplierApiDto): DropdownItem[] => [
+  const rowActions = (s: SupplierRow): DropdownItem[] => [
     { label: 'Xem chi tiết', icon: Eye, onClick: () => setViewing(s) },
     { label: 'Sửa', icon: Pencil, onClick: () => void openEdit(s) },
+    ...(canApproveSupplier && normalizeSupplierApproval(s.approvalStatus) !== SUPPLIER_APPROVAL.Approved
+      ? [
+          {
+            label: 'Duyệt NCC',
+            icon: Check,
+            onClick: () => setApproveTarget(s),
+          },
+          {
+            label: 'Từ chối',
+            icon: X,
+            danger: true,
+            onClick: () => setRejectTarget(s),
+          },
+        ]
+      : []),
     { divider: true },
     s.isBlacklisted
       ? {
@@ -319,14 +443,15 @@ export default function SuppliersSettingsPanel() {
     },
   ];
 
-  const hasActiveFilters = Boolean(search || ratingFilter || groupIdFromUrl);
+  const hasActiveFilters = Boolean(search || ratingFilter || statusFilter || groupIdFromUrl);
 
   return (
     <div className="space-y-4">
       <div className="surface-panel surface-panel--rounded-xl p-4 shadow-card space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <p className="text-xs text-[var(--md-on-surface-variant)] text-pretty max-w-2xl">
-            Chỉ các NCC đã khai báo mới xuất hiện khi lập phiếu nhập kho.
+            NCC mới mặc định Hạng D và trạng thái Mới. Sếp duyệt xong mới chọn được khi tạo PO.
+            Hạng tăng/giảm theo phiếu đánh giá đơn hàng.
           </p>
           <button type="button" className="btn btn-primary flex items-center gap-2 shrink-0" onClick={openCreate}>
             <Plus size={16} aria-hidden />
@@ -345,10 +470,26 @@ export default function SuppliersSettingsPanel() {
                 setPage(1);
               }}
             >
-              <option value="">— Tất cả —</option>
+              <option value="">Tất cả</option>
               {RATING_OPTIONS.map(r => (
-                <option key={r} value={r}>{r}</option>
+                <option key={r} value={r}>Hạng {r}</option>
               ))}
+            </select>
+          </label>
+          <label className="text-xs space-y-1">
+            <span className="font-semibold text-[var(--md-on-surface-variant)]">Trạng thái</span>
+            <select
+              className="form-select w-full text-sm"
+              value={statusFilter}
+              onChange={e => {
+                setStatusFilter(e.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="">Tất cả</option>
+              <option value={SUPPLIER_APPROVAL.New}>Mới - chờ duyệt</option>
+              <option value={SUPPLIER_APPROVAL.Approved}>Đã duyệt</option>
+              <option value={SUPPLIER_APPROVAL.Rejected}>Từ chối</option>
             </select>
           </label>
         </div>
@@ -402,7 +543,8 @@ export default function SuppliersSettingsPanel() {
                 <th className="table-header-cell text-right">Hạn công nợ</th>
                 <th className="table-header-cell text-left">Điều khoản thanh toán</th>
                 <th className="table-header-cell text-left">Nhóm ngành hàng</th>
-                <th className="table-header-cell text-center">Phân loại</th>
+                <th className="table-header-cell text-center">Hạng</th>
+                <th className="table-header-cell text-center">Trạng thái</th>
                 <th className="table-header-cell text-right">Doanh số đã mua</th>
                 <th className="table-header-cell text-left">Đánh giá định kỳ gần nhất</th>
                 <th className="table-header-cell text-right">Điểm KPI</th>
@@ -449,6 +591,9 @@ export default function SuppliersSettingsPanel() {
                     </td>
                     <td className="table-cell text-center">
                       <RatingBadge rating={s.rating} />
+                    </td>
+                    <td className="table-cell text-center">
+                      <ApprovalStatusBadge status={s.approvalStatus} />
                     </td>
                     <td className="table-cell text-right tabular-nums">{formatCurrencyFull(s.purchasedRevenue)}</td>
                     <td className="table-cell">
@@ -517,6 +662,25 @@ export default function SuppliersSettingsPanel() {
                 </button>
               )
             ) : null}
+            {viewing && canApproveSupplier
+            && normalizeSupplierApproval(viewing.approvalStatus) !== SUPPLIER_APPROVAL.Approved ? (
+              <>
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={() => setRejectTarget(viewing)}
+                >
+                  Từ chối
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-filled"
+                  onClick={() => setApproveTarget(viewing)}
+                >
+                  Duyệt NCC
+                </button>
+              </>
+            ) : null}
             {viewing ? (
               <button
                 type="button"
@@ -533,8 +697,11 @@ export default function SuppliersSettingsPanel() {
         {viewing ? (
           <div className="ncc-master-detail-grid">
             <DetailField label="Mã NCC">{viewing.supplierCode}</DetailField>
-            <DetailField label="Phân loại">
+            <DetailField label="Hạng">
               <RatingBadge rating={viewing.rating} />
+            </DetailField>
+            <DetailField label="Trạng thái">
+              <ApprovalStatusBadge status={viewing.approvalStatus} />
             </DetailField>
             <DetailField label="Tên nhà cung cấp" span>
               <div className="flex flex-wrap items-center gap-1.5">
@@ -601,51 +768,93 @@ export default function SuppliersSettingsPanel() {
         }
       >
         <form id="supplier-settings-form" className="space-y-3 modal-form-bordered" onSubmit={handleSubmit}>
-          <FormField label="Mã NCC" required>
+          <FormField label="Mã NCC" error={formErrors.supplierCode}>
             <input
-              className="form-input"
+              className="form-input font-mono"
               value={form.supplierCode}
-              disabled={Boolean(editing)}
-              onChange={e => setForm(f => ({ ...f, supplierCode: e.target.value }))}
-              placeholder="VD: NCC-HP-01"
+              disabled
+              readOnly
+              placeholder={editing ? undefined : 'Hệ thống tự cấp khi lưu'}
+              aria-readonly="true"
             />
           </FormField>
-          <FormField label="Tên nhà cung cấp" required>
+          <FormField label="Tên nhà cung cấp" required error={formErrors.supplierName}>
             <input
               className="form-input"
               value={form.supplierName}
-              onChange={e => setForm(f => ({ ...f, supplierName: e.target.value }))}
+              maxLength={SUPPLIER_LIMITS.nameMax}
+              onChange={e => {
+                setForm(f => ({ ...f, supplierName: e.target.value }));
+                setFormErrors(prev => ({ ...prev, supplierName: undefined }));
+              }}
             />
           </FormField>
-          <FormField label="Điện thoại liên hệ">
+          <FormField label="Điện thoại liên hệ" error={formErrors.contactPhone}>
             <input
               className="form-input"
               value={form.contactPhone}
-              onChange={e => setForm(f => ({ ...f, contactPhone: e.target.value }))}
+              maxLength={10}
+              inputMode="numeric"
+              autoComplete="tel"
+              onChange={e => {
+                const contactPhone = restrictVnPhoneInput(e.target.value);
+                setForm(f => ({ ...f, contactPhone }));
+                setFormErrors(prev => ({ ...prev, contactPhone: undefined }));
+              }}
+              onBlur={() => {
+                setFormErrors(prev => ({
+                  ...prev,
+                  contactPhone: validateOptionalVietnamPhone(form.contactPhone) ?? undefined,
+                }));
+              }}
+              placeholder="0912345678"
             />
           </FormField>
-          <FormField label="Hạn công nợ (ngày)">
+          <FormField label="Hạn công nợ (ngày)" required error={formErrors.maxDebtDays}>
             <input
-              type="number"
-              min={0}
+              type="text"
+              inputMode="numeric"
               className="form-input"
               value={form.maxDebtDays}
-              onChange={e => setForm(f => ({ ...f, maxDebtDays: e.target.value }))}
+              onChange={e => {
+                const maxDebtDays = e.target.value;
+                setForm(f => ({ ...f, maxDebtDays }));
+                const parsed = parseMaxDebtDays(maxDebtDays);
+                setFormErrors(prev => ({
+                  ...prev,
+                  maxDebtDays: parsed.ok ? undefined : parsed.error,
+                }));
+              }}
+              placeholder="0 - 3650"
             />
           </FormField>
-          <FormField label="Phân loại">
+          <FormField label="Trạng thái">
             <div className="flex flex-wrap items-center gap-2">
-              <RatingBadge rating={editing?.rating} />
-              <span className="text-xs text-[var(--md-on-surface-variant)] text-pretty">
-                Chỉ đọc — tự cập nhật từ đánh giá KPI / đơn hàng.
+              <ApprovalStatusBadge status={editing?.approvalStatus ?? SUPPLIER_APPROVAL.New} />
+              <span className="text-[length:var(--fs-xs)] text-[var(--md-on-surface-variant)] text-pretty">
+                {editing
+                  ? 'Chỉ sếp duyệt mới đổi trạng thái. Chưa duyệt thì chưa đặt PO được.'
+                  : 'NCC mới ở trạng thái Mới. Sếp duyệt xong mới đặt hàng được.'}
               </span>
             </div>
           </FormField>
-          <FormField label="Điều khoản thanh toán">
+          <FormField label="Hạng">
+            <div className="flex flex-wrap items-center gap-2">
+              <RatingBadge rating={editing?.rating ?? 'D'} />
+              <span className="text-[length:var(--fs-xs)] text-[var(--md-on-surface-variant)] text-pretty">
+                Mặc định Hạng D khi tạo. Sau duyệt, hạng tăng/giảm theo phiếu đánh giá PO.
+              </span>
+            </div>
+          </FormField>
+          <FormField label="Điều khoản thanh toán" error={formErrors.paymentTerms}>
             <input
               className="form-input"
               value={form.paymentTerms}
-              onChange={e => setForm(f => ({ ...f, paymentTerms: e.target.value }))}
+              maxLength={SUPPLIER_LIMITS.paymentTermsMax}
+              onChange={e => {
+                setForm(f => ({ ...f, paymentTerms: e.target.value }));
+                setFormErrors(prev => ({ ...prev, paymentTerms: undefined }));
+              }}
               placeholder="VD: Thanh toán 30 ngày kể từ ngày nhận đủ chứng từ"
             />
           </FormField>
@@ -750,6 +959,40 @@ export default function SuppliersSettingsPanel() {
         confirmLabel="Gỡ blacklist"
         variant="danger"
         isLoading={removeBlacklistMutation.isPending}
+      />
+
+      <ConfirmDialog
+        isOpen={approveTarget !== null}
+        onClose={() => setApproveTarget(null)}
+        onConfirm={() => void handleApprove()}
+        title="Duyệt nhà cung cấp?"
+        message={
+          approveTarget ? (
+            <p>
+              Duyệt <strong>{approveTarget.supplierName}</strong> ({approveTarget.supplierCode})?
+              Sau khi duyệt có thể chọn NCC này khi tạo PO.
+            </p>
+          ) : null
+        }
+        confirmLabel="Duyệt"
+        isLoading={approveMutation.isPending}
+      />
+
+      <ConfirmDialog
+        isOpen={rejectTarget !== null}
+        onClose={() => setRejectTarget(null)}
+        onConfirm={() => void handleReject()}
+        title="Từ chối nhà cung cấp?"
+        message={
+          rejectTarget ? (
+            <p>
+              Từ chối <strong>{rejectTarget.supplierName}</strong>? NCC này chưa đặt hàng được.
+            </p>
+          ) : null
+        }
+        confirmLabel="Từ chối"
+        variant="danger"
+        isLoading={rejectMutation.isPending}
       />
     </div>
   );

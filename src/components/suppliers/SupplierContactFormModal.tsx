@@ -3,9 +3,9 @@ import Modal from '../ui/Modal';
 import FormField from '../ui/FormField';
 import { useSuppliers } from '../../hooks/useSuppliers';
 import {
-  sanitizePhoneField,
-  validateVietnamPhoneMessage,
-} from '../../lib/hrm/sanitizeInput';
+  restrictVnPhoneInput,
+  validateOptionalVietnamPhone,
+} from '../../lib/suppliers/supplierStatus';
 import type {
   SupplierContactApiDto,
   UpsertSupplierContactRequest,
@@ -17,6 +17,7 @@ interface SupplierContactFormModalProps {
   isOpen: boolean;
   editing: SupplierContactApiDto | null;
   isSaving: boolean;
+  apiErrors?: { phone?: string; email?: string; fullName?: string };
   onClose: () => void;
   onSubmit: (body: UpsertSupplierContactRequest) => void;
 }
@@ -27,6 +28,7 @@ export default function SupplierContactFormModal({
   isOpen,
   editing,
   isSaving,
+  apiErrors,
   onClose,
   onSubmit,
 }: SupplierContactFormModalProps) {
@@ -45,7 +47,7 @@ export default function SupplierContactFormModal({
         </>
       }
     >
-      <ContactForm editing={editing} onSubmit={onSubmit} />
+      <ContactForm editing={editing} apiErrors={apiErrors} onSubmit={onSubmit} />
     </Modal>
   );
 }
@@ -53,13 +55,14 @@ export default function SupplierContactFormModal({
 /** Modal chỉ render khi mở nên state khởi tạo lại mỗi lần mở — không cần đồng bộ qua effect. */
 function ContactForm({
   editing,
+  apiErrors,
   onSubmit,
-}: Pick<SupplierContactFormModalProps, 'editing' | 'onSubmit'>) {
+}: Pick<SupplierContactFormModalProps, 'editing' | 'apiErrors' | 'onSubmit'>) {
   const [form, setForm] = useState({
     supplierId: editing ? String(editing.supplierId) : '',
     fullName: editing?.fullName ?? '',
     position: editing?.position ?? '',
-    phone: editing?.phone ?? '',
+    phone: restrictVnPhoneInput(editing?.phone ?? ''),
     email: editing?.email ?? '',
     note: editing?.note ?? '',
     isPrimary: editing?.isPrimary ?? false,
@@ -80,17 +83,14 @@ function ContactForm({
     const fullName = form.fullName.trim();
     const position = form.position.trim();
     const email = form.email.trim();
-    const phoneRaw = form.phone.trim();
-    const phone = phoneRaw ? sanitizePhoneField(phoneRaw) : '';
+    const phone = restrictVnPhoneInput(form.phone);
     if (!supplierId) next.supplierId = 'Chọn nhà cung cấp.';
     if (!fullName) next.fullName = 'Họ tên là bắt buộc.';
     if (position.length > POSITION_MAX_LENGTH) {
       next.position = `Chức vụ tối đa ${POSITION_MAX_LENGTH} ký tự.`;
     }
-    if (phone) {
-      const phoneMsg = validateVietnamPhoneMessage(phone);
-      if (phoneMsg) next.phone = phoneMsg;
-    }
+    const phoneMsg = validateOptionalVietnamPhone(phone);
+    if (phoneMsg) next.phone = phoneMsg;
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) next.email = 'Email không hợp lệ.';
     setErrors(next);
     if (Object.keys(next).length > 0) return;
@@ -125,7 +125,7 @@ function ContactForm({
       </FormField>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <FormField label="Họ và tên" required error={errors.fullName}>
+        <FormField label="Họ và tên" required error={errors.fullName ?? apiErrors?.fullName}>
           <input
             className="form-input"
             value={form.fullName}
@@ -141,18 +141,28 @@ function ContactForm({
             placeholder="VD: Trưởng phòng kinh doanh"
           />
         </FormField>
-        <FormField label="Điện thoại" error={errors.phone}>
+        <FormField label="Điện thoại" error={errors.phone ?? apiErrors?.phone}>
           <input
             className="form-input"
             value={form.phone}
-            onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+            maxLength={10}
+            inputMode="numeric"
+            autoComplete="tel"
+            placeholder="0912345678"
+            onChange={e => {
+              const phone = restrictVnPhoneInput(e.target.value);
+              setForm(f => ({ ...f, phone }));
+              setErrors(prev => ({ ...prev, phone: undefined }));
+            }}
             onBlur={() => {
-              if (!form.phone.trim()) return;
-              setForm(f => ({ ...f, phone: sanitizePhoneField(f.phone) }));
+              setErrors(prev => ({
+                ...prev,
+                phone: validateOptionalVietnamPhone(form.phone) ?? undefined,
+              }));
             }}
           />
         </FormField>
-        <FormField label="Email" error={errors.email}>
+        <FormField label="Email" error={errors.email ?? apiErrors?.email}>
           <input
             className="form-input"
             value={form.email}

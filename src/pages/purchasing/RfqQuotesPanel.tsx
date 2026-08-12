@@ -5,9 +5,10 @@ import EmptyState from '../../components/ui/EmptyState';
 import Pagination from '../../components/ui/Pagination';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import CurrencyInput from '../../components/ui/CurrencyInput';
-import MaterialAutocomplete from '../../components/ui/MaterialAutocomplete';
 import SupplierAutocomplete from '../../components/ui/SupplierAutocomplete';
 import ProjectAutocomplete from '../../components/purchasing/ProjectAutocomplete';
+import MaterialByGroupFields, { rootCategoryIdOf } from '../../components/purchasing/MaterialByGroupFields';
+import { useCategoryTree } from '../../hooks/useCategories';
 import { showToast } from '../../components/ui/Toast';
 import { DEFAULT_LIST_PAGE_SIZE, type ListPageSize } from '../../constants/pagination';
 import {
@@ -88,6 +89,8 @@ export default function RfqQuotesPanel({
   const [editing, setEditing] = useState<PurchaseRfqQuoteApiDto | null>(null);
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState<RfqForm>(emptyForm);
+  const [categoryId, setCategoryId] = useState<number | ''>('');
+  const [formErrors, setFormErrors] = useState<Partial<Record<'categoryId' | 'materialCode' | 'supplierName' | 'quoteDate' | 'unitPrice', string>>>({});
 
   const params = useMemo(
     () => ({
@@ -106,9 +109,23 @@ export default function RfqQuotesPanel({
   const winRates = usePurchaseRfqWinRates();
   const createMutation = useCreatePurchaseRfqQuote();
   const updateMutation = useUpdatePurchaseRfqQuote();
-  const { data: materialsPage } = useMaterials({ page: 1, pageSize: 200 });
+  const { data: categories = [] } = useCategoryTree();
+  const { data: materialsPage } = useMaterials({
+    page: 1,
+    pageSize: 500,
+    categoryId: categoryId === '' ? undefined : categoryId,
+  });
   const { data: suppliersPage } = useSuppliers({ all: true });
   const { data: projectsPage } = useProjects({ page: 1, pageSize: 200 });
+  const rootCategories = useMemo(
+    () => categories.filter(c => c.level === 1 && c.code !== 'UNCATEGORIZED' && c.isActive),
+    [categories],
+  );
+
+  const items = list.data?.items ?? [];
+  const materials = materialsPage?.items ?? [];
+  const suppliers = suppliersPage?.items ?? [];
+  const projects = projectsPage?.items ?? [];
 
   const consumedPreset = useRef('');
   useEffect(() => {
@@ -117,18 +134,22 @@ export default function RfqQuotesPanel({
     setCreating(true);
     setEditing(null);
     setForm(f => ({ ...emptyForm(), materialCode: presetMaterialCode, quoteDate: f.quoteDate || emptyForm().quoteDate }));
+    setFormErrors({});
   }, [canWrite, presetMaterialCode]);
 
-  const items = list.data?.items ?? [];
-  const materials = materialsPage?.items ?? [];
-  const suppliers = suppliersPage?.items ?? [];
-  const projects = projectsPage?.items ?? [];
+  useEffect(() => {
+    if (!form.materialCode || categoryId !== '') return;
+    const mat = materials.find(m => m.materialCode === form.materialCode);
+    if (mat) setCategoryId(rootCategoryIdOf(mat.categoryId, categories));
+  }, [form.materialCode, categoryId, materials, categories]);
   const busy = createMutation.isPending || updateMutation.isPending;
 
   const openCreate = () => {
     setCreating(true);
     setEditing(null);
     setForm(emptyForm());
+    setCategoryId('');
+    setFormErrors({});
   };
 
   const openEdit = (row: PurchaseRfqQuoteApiDto) => {
@@ -146,6 +167,9 @@ export default function RfqQuotesPanel({
       status: row.status === 'expired' ? 'active' : row.status,
       note: row.note ?? '',
     });
+    const mat = materials.find(m => m.materialCode === row.materialCode);
+    setCategoryId(rootCategoryIdOf(mat?.categoryId, categories));
+    setFormErrors({});
   };
 
   const closeModal = () => {
@@ -171,12 +195,17 @@ export default function RfqQuotesPanel({
   };
 
   const save = async () => {
-    if (!form.materialCode || !form.supplierName || !form.quoteDate) {
-      showToast('error', 'Chọn vật tư, NCC và ngày báo giá.');
-      return;
-    }
+    const nextErrors: typeof formErrors = {};
+    if (categoryId === '') nextErrors.categoryId = 'Chọn nhóm vật tư.';
+    if (!form.materialCode) nextErrors.materialCode = 'Chọn vật tư.';
+    if (!form.supplierName) nextErrors.supplierName = 'Chọn nhà cung cấp.';
+    if (!form.quoteDate) nextErrors.quoteDate = 'Chọn ngày báo giá.';
+    const price = Number(String(form.unitPrice).replace(/[^\d.-]/g, ''));
+    if (!(price > 0)) nextErrors.unitPrice = 'Nhập đơn giá chào.';
+    setFormErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
     if (!buildBody().supplierId) {
-      showToast('error', 'Chọn NCC trong danh mục.');
+      setFormErrors({ supplierName: 'Chọn NCC trong danh mục.' });
       return;
     }
     try {
@@ -410,17 +439,30 @@ export default function RfqQuotesPanel({
         size="md"
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <FormField label="Vật tư" required>
-            <MaterialAutocomplete
-              value={form.materialCode}
-              onChange={materialCode => setForm(f => ({ ...f, materialCode }))}
-              materials={materials}
-            />
-          </FormField>
-          <FormField label="Nhà cung cấp" required>
+          <MaterialByGroupFields
+            categoryId={categoryId}
+            onCategoryChange={id => {
+              setCategoryId(id);
+              setForm(f => ({ ...f, materialCode: '' }));
+              setFormErrors(prev => ({ ...prev, categoryId: undefined, materialCode: undefined }));
+            }}
+            materialCode={form.materialCode}
+            onMaterialChange={materialCode => {
+              setForm(f => ({ ...f, materialCode }));
+              setFormErrors(prev => ({ ...prev, materialCode: undefined }));
+            }}
+            groups={rootCategories}
+            materials={materials}
+            categoryError={formErrors.categoryId}
+            materialError={formErrors.materialCode}
+          />
+          <FormField label="Nhà cung cấp" required error={formErrors.supplierName}>
             <SupplierAutocomplete
               value={form.supplierName}
-              onChange={supplierName => setForm(f => ({ ...f, supplierName }))}
+              onChange={supplierName => {
+                setForm(f => ({ ...f, supplierName }));
+                setFormErrors(prev => ({ ...prev, supplierName: undefined }));
+              }}
               suppliers={suppliers}
             />
           </FormField>
@@ -431,11 +473,17 @@ export default function RfqQuotesPanel({
               projects={projects}
             />
           </FormField>
-          <FormField label="Ngày báo giá" required>
-            <input className="form-input" type="date" value={form.quoteDate} onChange={e => setForm(f => ({ ...f, quoteDate: e.target.value }))} />
+          <FormField label="Ngày báo giá" required error={formErrors.quoteDate}>
+            <input className="form-input" type="date" value={form.quoteDate} onChange={e => {
+              setForm(f => ({ ...f, quoteDate: e.target.value }));
+              setFormErrors(prev => ({ ...prev, quoteDate: undefined }));
+            }} />
           </FormField>
-          <FormField label="Đơn giá chào" required>
-            <CurrencyInput value={form.unitPrice} onChange={unitPrice => setForm(f => ({ ...f, unitPrice }))} />
+          <FormField label="Đơn giá chào" required error={formErrors.unitPrice}>
+            <CurrencyInput value={form.unitPrice} onChange={unitPrice => {
+              setForm(f => ({ ...f, unitPrice }));
+              setFormErrors(prev => ({ ...prev, unitPrice: undefined }));
+            }} />
           </FormField>
           <FormField label="Hạn giữ giá">
             <input className="form-input" type="date" value={form.validUntil} onChange={e => setForm(f => ({ ...f, validUntil: e.target.value }))} />

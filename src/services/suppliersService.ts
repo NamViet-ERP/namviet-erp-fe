@@ -1,5 +1,5 @@
 import { apiClient } from '../lib/apiClient';
-import type { PagedApiResult, SupplierApiDto, UpsertSupplierRequest } from '../types/wms';
+import type { PagedApiResult, SupplierApiDto, SupplierNextCodeApiDto, UpsertSupplierRequest } from '../types/wms';
 
 export type { SupplierApiDto } from '../types/wms';
 /** @deprecated Prefer UpsertSupplierRequest from types/wms */
@@ -22,11 +22,12 @@ export interface SupplierListParams {
   rating?: string;
   groupId?: number;
   isBlacklisted?: boolean;
+  approvalStatus?: string;
 }
 
 export const suppliersService = {
   async list(params: SupplierListParams = {}) {
-    const { page = 1, pageSize = 20, search, rating, groupId, isBlacklisted } = params;
+    const { page = 1, pageSize = 20, search, rating, groupId, isBlacklisted, approvalStatus } = params;
     return apiClient.get<PagedApiResult<SupplierApiDto>>(ENDPOINT, {
       page,
       pageSize,
@@ -34,21 +35,21 @@ export const suppliersService = {
       rating: rating || undefined,
       groupId: groupId ?? undefined,
       isBlacklisted: isBlacklisted ?? undefined,
+      approvalStatus: approvalStatus || undefined,
     });
   },
 
-  async create(body: UpsertSupplierRequest) {
-    await apiClient.post(ENDPOINT, {
-      supplierCode: body.supplierCode,
+  nextCode() {
+    return apiClient.get<SupplierNextCodeApiDto>(`${ENDPOINT}/next-code`);
+  },
+
+  create(body: UpsertSupplierRequest) {
+    return apiClient.post<SupplierApiDto>(ENDPOINT, {
       supplierName: body.supplierName,
       contactPhone: body.contactPhone ?? null,
       maxDebtDays: body.maxDebtDays ?? 30,
       paymentTerms: body.paymentTerms ?? null,
     });
-    const page = await suppliersService.list({ pageSize: 200 });
-    const found = page.items.find((s) => s.supplierCode === body.supplierCode);
-    if (!found) throw new Error('Không thể tải NCC vừa tạo');
-    return found;
   },
 
   async update(id: number, body: UpsertSupplierRequest) {
@@ -64,5 +65,13 @@ export const suppliersService = {
 
   async remove(id: number) {
     await apiClient.delete(`${ENDPOINT}/${id}`);
+  },
+
+  async approve(id: number) {
+    return apiClient.post<SupplierApiDto>(`${ENDPOINT}/${id}/approve`);
+  },
+
+  async reject(id: number) {
+    return apiClient.post<SupplierApiDto>(`${ENDPOINT}/${id}/reject`);
   },
 };

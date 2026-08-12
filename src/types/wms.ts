@@ -28,6 +28,7 @@ export type StockMatrixRowApiDto = Schemas['StockMatrixRowDto'];
 export type SupplierApiDto = Schemas['SupplierDto'];
 export type SupplierLatestEvaluationApiDto = Schemas['SupplierLatestEvaluationDto'];
 export type UpsertSupplierRequest = Schemas['UpsertSupplierRequest'];
+export type SupplierNextCodeApiDto = Schemas['SupplierNextCodeDto'];
 
 export type ProjectLedgerKind = 'import' | 'export' | 'transfer';
 

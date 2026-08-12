@@ -4,8 +4,8 @@ import FormField from '../../components/ui/FormField';
 import EmptyState from '../../components/ui/EmptyState';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import MaterialAutocomplete from '../../components/ui/MaterialAutocomplete';
+import { HrmDetailHeader } from '../../components/hr/HrmPageChrome';
 import Modal from '../../components/ui/Modal';
-import PageHeader from '../../components/ui/PageHeader';
 import { showToast } from '../../components/ui/Toast';
 import {
   useApproveEstimateL1,
@@ -234,17 +234,16 @@ export default function PurchaseEstimateDetailPage() {
     || rejectMutation.isPending
     || convertMutation.isPending;
 
+  const back = () => navigate('/purchasing/estimate-procurement?tab=estimates');
+
   return (
     <div className="page-shell space-y-3">
-      <PageHeader
-        eyebrow="Mua hàng dự toán"
+      <HrmDetailHeader
+        onBack={back}
         title={row ? `${row.code} · ${row.title}` : 'Dự toán'}
-        subtitle={row ? `${row.projectCode} · ${meta}` : undefined}
+        subtitle={row ? `${row.projectCode} · ${meta}` : 'Mua hàng dự toán'}
         actions={(
-          <div className="flex flex-wrap gap-2">
-            <button type="button" className="btn btn-outline btn-sm" onClick={() => navigate('/purchasing/estimate-procurement?tab=estimates')}>
-              Quay lại
-            </button>
+          <div className="flex flex-wrap gap-2 justify-end">
             {canEdit && viewingLatest && !editing && canShareEstimate(row?.status) ? (
               <button type="button" className="btn btn-outline btn-sm" disabled={busy} onClick={() => void openShare()}>
                 {activeShareExpiresAt ? 'Cấp lại link điền' : 'Lấy link điền'}
@@ -309,193 +308,233 @@ export default function PurchaseEstimateDetailPage() {
             ) : null}
           </div>
 
-          <div className="flex flex-wrap gap-2 items-center">
-            <span className="text-[length:var(--fs-sm)] text-[var(--md-on-surface-variant)]">Lịch sử version</span>
-            {versions.map(v => (
-              <button
-                key={v.id}
-                type="button"
-                className={`btn btn-sm ${(!viewVersion && v.versionNumber === latest) || viewVersion === v.versionNumber ? 'btn-primary' : 'btn-outline'}`}
-                disabled={editing}
-                onClick={() => setViewVersion(v.versionNumber)}
-                title={`${formatDateTimeVi(v.createdAt)} · ${v.updatedByName}`}
-              >
-                Ver {v.versionNumber}
-              </button>
-            ))}
-            <span className="text-[length:var(--fs-xs)] text-[var(--md-on-surface-variant)]">
-              Đang xem Ver {row.viewedVersion}. Vận hành luôn dùng Ver {row.currentVersion}.
-            </span>
-          </div>
-
-          {editing ? (
-            <div className="space-y-3">
-              <FormField label="Tiêu đề">
-                <input className="form-input" value={title} onChange={e => setTitle(e.target.value)} />
-              </FormField>
-              <div className="wms-inventory-table-wrap">
-                <table className="wms-inventory-table">
-                  <thead>
-                    <tr>
-                      <th className="table-header-cell">Vật tư</th>
-                      <th className="table-header-cell">SL mới</th>
-                      <th className="table-header-cell"> </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {draftLines.map(line => (
-                      <tr key={line.key} className="table-row">
-                        <td className="table-cell">
-                          <MaterialAutocomplete
-                            value={line.materialCode}
-                            onChange={materialCode => setDraftLines(prev => prev.map(l => l.key === line.key ? { ...l, materialCode } : l))}
-                            materials={materials}
-                          />
-                        </td>
-                        <td className="table-cell">
-                          <input
-                            className="form-input"
-                            inputMode="decimal"
-                            value={line.newQty}
-                            onChange={e => setDraftLines(prev => prev.map(l => l.key === line.key ? { ...l, newQty: e.target.value } : l))}
-                          />
-                        </td>
-                        <td className="table-cell">
-                          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setDraftLines(prev => prev.filter(l => l.key !== line.key))}>
-                            Xóa
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start">
+            <aside
+              className="w-full shrink-0 rounded-[var(--radius-md)] border border-[var(--md-outline-variant)] bg-[var(--md-surface)] lg:w-56"
+              aria-label="Lịch sử version"
+            >
+              <div className="border-b border-[var(--md-outline-variant)] px-3 py-2 text-[length:var(--fs-xs)] font-semibold uppercase tracking-wide text-[var(--md-on-surface-variant)]">
+                Lịch sử version
               </div>
-              <div className="flex gap-2">
-                <button type="button" className="btn btn-outline btn-sm" onClick={() => setDraftLines(prev => [...prev, { key: String(Date.now()), materialCode: '', newQty: '' }])}>
-                  Thêm vật tư
-                </button>
-                <button type="button" className="btn btn-outline btn-sm" disabled={updateMutation.isPending} onClick={() => setEditing(false)}>Hủy</button>
-                <button type="button" className="btn btn-primary btn-sm" disabled={updateMutation.isPending} onClick={() => void save()}>
-                  {updateMutation.isPending ? 'Đang lưu…' : `Lưu thành Ver ${latest + 1}`}
-                </button>
+              <div className="flex max-h-[28rem] flex-col gap-2 overflow-y-auto p-2">
+                {[...versions]
+                  .sort((a, b) => b.versionNumber - a.versionNumber)
+                  .map(v => {
+                    const selected = (!viewVersion && v.versionNumber === latest)
+                      || viewVersion === v.versionNumber;
+                    const isLatest = v.versionNumber === latest;
+                    return (
+                      <button
+                        key={v.id}
+                        type="button"
+                        disabled={editing}
+                        onClick={() => setViewVersion(isLatest ? undefined : v.versionNumber)}
+                        className={[
+                          'w-full rounded-[var(--radius-sm)] border px-2.5 py-2 text-left transition-[background-color,border-color,transform] duration-150',
+                          'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--md-primary)]',
+                          'disabled:cursor-not-allowed disabled:opacity-60',
+                          'active:scale-[0.97]',
+                          selected
+                            ? 'border-[var(--md-primary)] bg-[var(--tint-primary-weak)]'
+                            : 'border-[var(--md-outline-variant)] bg-[var(--md-surface)] hover:bg-[var(--tint-primary-weak)]',
+                        ].join(' ')}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[length:var(--fs-sm)] font-semibold text-[var(--md-on-surface)]">
+                            Ver {v.versionNumber}
+                          </span>
+                          {isLatest ? (
+                            <span className="text-[length:var(--fs-micro)] font-medium text-[var(--md-primary)]">
+                              Mới nhất
+                            </span>
+                          ) : null}
+                        </div>
+                        <div className="mt-0.5 text-[length:var(--fs-xs)] tabular-nums text-[var(--md-on-surface-variant)]">
+                          {formatDateTimeVi(v.createdAt)}
+                        </div>
+                        <div className="mt-0.5 truncate text-[length:var(--fs-xs)] text-[var(--md-on-surface-variant)]">
+                          {v.updatedByName}
+                        </div>
+                      </button>
+                    );
+                  })}
               </div>
-            </div>
-          ) : (
-            <>
-              <p className="text-[length:var(--fs-sm)] text-[var(--md-on-surface-variant)]">
-                Double check - {filledLines.length + proposals.length} dòng đã điền / đề xuất trên tổng {row.lines.length} mã hàng của mẫu.
+              <p className="border-t border-[var(--md-outline-variant)] px-3 py-2 text-[length:var(--fs-xs)] text-[var(--md-on-surface-variant)]">
+                Đang xem Ver {row.viewedVersion}. Vận hành luôn dùng Ver {row.currentVersion}.
               </p>
-              <div className="wms-inventory-table-wrap">
-                <table className="wms-inventory-table">
-                  <thead>
-                    <tr>
-                      <th className="table-header-cell">Hạng mục</th>
-                      <th className="table-header-cell">Hàng hoá</th>
-                      <th className="table-header-cell">ĐVT</th>
-                      <th className="table-header-cell">SL cũ</th>
-                      <th className="table-header-cell">SL mới</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filledLines.length === 0 && proposals.length === 0 ? (
-                      <tr>
-                        <td colSpan={5} className="table-cell">
-                          <EmptyState message={workflowLocked ? 'Chưa có dòng nào được điền.' : 'Mẫu chưa được điền. Lấy link rồi gửi cho người lập dự toán.'} />
-                        </td>
-                      </tr>
-                    ) : (
-                      <>
-                        {groupLines(filledLines).flatMap(([cat, lines]) =>
-                          lines.map(line => (
-                            <tr key={line.id} className="table-row">
-                              <td className="table-cell">{cat}</td>
-                              <td className="table-cell">
-                                <span className="font-mono">{line.materialCode}</span>
-                                {' '}
-                                {line.materialName}
-                              </td>
-                              <td className="table-cell">{line.unit || '—'}</td>
-                              <td className="table-cell text-right tabular-nums">{line.oldQty}</td>
-                              <td className={`table-cell text-right tabular-nums font-medium ${qtyClass(line.oldQty, line.newQty)}`}>
-                                {line.newQty}
-                              </td>
-                            </tr>
-                          )),
-                        )}
-                        {proposals.map(p => (
-                          <tr key={p.id} className="table-row">
-                            <td className="table-cell"><span className="badge badge-warning">Đề xuất mới</span></td>
-                            <td className="table-cell">
-                              <strong>{p.name}</strong>
-                              {p.spec ? ` - ${p.spec}` : ''}
-                              {p.note ? (
-                                <div className="text-[var(--md-on-surface-variant)]">{p.note}</div>
-                              ) : null}
-                            </td>
-                            <td className="table-cell">{p.unit || '—'}</td>
-                            <td className="table-cell text-right tabular-nums">0</td>
-                            <td className="table-cell text-right tabular-nums font-medium text-[var(--md-success)]">{p.qty}</td>
-                          </tr>
-                        ))}
-                      </>
-                    )}
-                  </tbody>
-                </table>
-              </div>
+            </aside>
 
-              {row.approvals.length > 0 ? (
-                <div className="space-y-2">
-                  <div className="text-[length:var(--fs-sm)] font-medium">Luồng duyệt</div>
+            <div className="min-w-0 flex-1 space-y-3">
+              {editing ? (
+                <div className="space-y-3">
+                  <FormField label="Tiêu đề">
+                    <input className="form-input" value={title} onChange={e => setTitle(e.target.value)} />
+                  </FormField>
                   <div className="wms-inventory-table-wrap">
                     <table className="wms-inventory-table">
                       <thead>
                         <tr>
-                          <th className="table-header-cell">Cấp</th>
-                          <th className="table-header-cell">Người duyệt</th>
-                          <th className="table-header-cell">Trạng thái</th>
-                          <th className="table-header-cell">Thời điểm</th>
-                          <th className="table-header-cell">Ý kiến</th>
+                          <th className="table-header-cell">Vật tư</th>
+                          <th className="table-header-cell">SL mới</th>
+                          <th className="table-header-cell"> </th>
                         </tr>
                       </thead>
                       <tbody>
-                        {row.approvals.map(a => (
-                          <tr key={a.id} className="table-row">
-                            <td className="table-cell">Cấp {a.level} · {a.name}</td>
-                            <td className="table-cell">{a.actionByName || '—'}</td>
+                        {draftLines.map(line => (
+                          <tr key={line.key} className="table-row">
                             <td className="table-cell">
-                              <span className={`badge ${a.status === 'approved' ? 'badge-success' : a.status === 'rejected' ? 'badge-error' : 'badge-pending'}`}>
-                                {a.status === 'approved' ? 'Đã duyệt' : a.status === 'rejected' ? 'Từ chối' : 'Chờ duyệt'}
-                              </span>
+                              <MaterialAutocomplete
+                                value={line.materialCode}
+                                onChange={materialCode => setDraftLines(prev => prev.map(l => l.key === line.key ? { ...l, materialCode } : l))}
+                                materials={materials}
+                              />
                             </td>
-                            <td className="table-cell">{a.actionAt ? formatDateTimeVi(a.actionAt) : '—'}</td>
-                            <td className="table-cell">{a.note || '—'}</td>
+                            <td className="table-cell">
+                              <input
+                                className="form-input"
+                                inputMode="decimal"
+                                value={line.newQty}
+                                onChange={e => setDraftLines(prev => prev.map(l => l.key === line.key ? { ...l, newQty: e.target.value } : l))}
+                              />
+                            </td>
+                            <td className="table-cell">
+                              <button type="button" className="btn btn-ghost btn-sm" onClick={() => setDraftLines(prev => prev.filter(l => l.key !== line.key))}>
+                                Xóa
+                              </button>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
-                  {canDecideCurrent && row.status === 'pending_approval' && nextApproval ? (
-                    <div className="flex flex-wrap gap-2 items-end">
-                      <FormField label={`Ý kiến cấp ${nextApproval.level} (${nextApproval.name})`}>
-                        <input
-                          className="form-input"
-                          value={decideNote}
-                          onChange={e => setDecideNote(e.target.value)}
-                          placeholder="Ghi chú (tuỳ chọn)"
-                        />
-                      </FormField>
-                      <button type="button" className="btn btn-primary btn-sm" disabled={busy} onClick={() => void runApprove()}>
-                        Duyệt cấp {nextApproval.level}
-                      </button>
-                      <button type="button" className="btn btn-outline btn-sm" disabled={busy} onClick={() => void runReject()}>
-                        Từ chối
-                      </button>
+                  <div className="flex gap-2">
+                    <button type="button" className="btn btn-outline btn-sm" onClick={() => setDraftLines(prev => [...prev, { key: String(Date.now()), materialCode: '', newQty: '' }])}>
+                      Thêm vật tư
+                    </button>
+                    <button type="button" className="btn btn-outline btn-sm" disabled={updateMutation.isPending} onClick={() => setEditing(false)}>Hủy</button>
+                    <button type="button" className="btn btn-primary btn-sm" disabled={updateMutation.isPending} onClick={() => void save()}>
+                      {updateMutation.isPending ? 'Đang lưu…' : `Lưu thành Ver ${latest + 1}`}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <p className="text-[length:var(--fs-sm)] text-[var(--md-on-surface-variant)]">
+                    Double check - {filledLines.length + proposals.length} dòng đã điền / đề xuất trên tổng {row.lines.length} mã hàng của mẫu.
+                  </p>
+                  <div className="wms-inventory-table-wrap">
+                    <table className="wms-inventory-table">
+                      <thead>
+                        <tr>
+                          <th className="table-header-cell">Hạng mục</th>
+                          <th className="table-header-cell">Hàng hoá</th>
+                          <th className="table-header-cell">ĐVT</th>
+                          <th className="table-header-cell">SL cũ</th>
+                          <th className="table-header-cell">SL mới</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filledLines.length === 0 && proposals.length === 0 ? (
+                          <tr>
+                            <td colSpan={5} className="table-cell">
+                              <EmptyState message={workflowLocked ? 'Chưa có dòng nào được điền.' : 'Mẫu chưa được điền. Lấy link rồi gửi cho người lập dự toán.'} />
+                            </td>
+                          </tr>
+                        ) : (
+                          <>
+                            {groupLines(filledLines).flatMap(([cat, lines]) =>
+                              lines.map(line => (
+                                <tr key={line.id} className="table-row">
+                                  <td className="table-cell">{cat}</td>
+                                  <td className="table-cell">
+                                    <span className="font-mono">{line.materialCode}</span>
+                                    {' '}
+                                    {line.materialName}
+                                  </td>
+                                  <td className="table-cell">{line.unit || '-'}</td>
+                                  <td className="table-cell text-right tabular-nums">{line.oldQty}</td>
+                                  <td className={`table-cell text-right tabular-nums font-medium ${qtyClass(line.oldQty, line.newQty)}`}>
+                                    {line.newQty}
+                                  </td>
+                                </tr>
+                              )),
+                            )}
+                            {proposals.map(p => (
+                              <tr key={p.id} className="table-row">
+                                <td className="table-cell"><span className="badge badge-warning">Đề xuất mới</span></td>
+                                <td className="table-cell">
+                                  <strong>{p.name}</strong>
+                                  {p.spec ? ` - ${p.spec}` : ''}
+                                  {p.note ? (
+                                    <div className="text-[var(--md-on-surface-variant)]">{p.note}</div>
+                                  ) : null}
+                                </td>
+                                <td className="table-cell">{p.unit || '-'}</td>
+                                <td className="table-cell text-right tabular-nums">0</td>
+                                <td className="table-cell text-right tabular-nums font-medium text-[var(--md-success)]">{p.qty}</td>
+                              </tr>
+                            ))}
+                          </>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {row.approvals.length > 0 ? (
+                    <div className="space-y-2">
+                      <div className="text-[length:var(--fs-sm)] font-medium">Luồng duyệt</div>
+                      <div className="wms-inventory-table-wrap">
+                        <table className="wms-inventory-table">
+                          <thead>
+                            <tr>
+                              <th className="table-header-cell">Cấp</th>
+                              <th className="table-header-cell">Người duyệt</th>
+                              <th className="table-header-cell">Trạng thái</th>
+                              <th className="table-header-cell">Thời điểm</th>
+                              <th className="table-header-cell">Ý kiến</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {row.approvals.map(a => (
+                              <tr key={a.id} className="table-row">
+                                <td className="table-cell">Cấp {a.level} · {a.name}</td>
+                                <td className="table-cell">{a.actionByName || '-'}</td>
+                                <td className="table-cell">
+                                  <span className={`badge ${a.status === 'approved' ? 'badge-success' : a.status === 'rejected' ? 'badge-error' : 'badge-pending'}`}>
+                                    {a.status === 'approved' ? 'Đã duyệt' : a.status === 'rejected' ? 'Từ chối' : 'Chờ duyệt'}
+                                  </span>
+                                </td>
+                                <td className="table-cell">{a.actionAt ? formatDateTimeVi(a.actionAt) : '-'}</td>
+                                <td className="table-cell">{a.note || '-'}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      {canDecideCurrent && row.status === 'pending_approval' && nextApproval ? (
+                        <div className="flex flex-wrap gap-2 items-end">
+                          <FormField label={`Ý kiến cấp ${nextApproval.level} (${nextApproval.name})`}>
+                            <input
+                              className="form-input"
+                              value={decideNote}
+                              onChange={e => setDecideNote(e.target.value)}
+                              placeholder="Ghi chú (tuỳ chọn)"
+                            />
+                          </FormField>
+                          <button type="button" className="btn btn-primary btn-sm" disabled={busy} onClick={() => void runApprove()}>
+                            Duyệt cấp {nextApproval.level}
+                          </button>
+                          <button type="button" className="btn btn-outline btn-sm" disabled={busy} onClick={() => void runReject()}>
+                            Từ chối
+                          </button>
+                        </div>
+                      ) : null}
                     </div>
                   ) : null}
-                </div>
-              ) : null}
-            </>
-          )}
+                </>
+              )}
+            </div>
+          </div>
         </>
       )}
 
