@@ -6,6 +6,7 @@ import type {
   PriceBookItemDetailApiDto,
   PriceBookMarginRowApiDto,
   PriceBookMatrixApiDto,
+  PurchaseItemEstimatePriceApiDto,
   UpsertPurchaseItemEstimatePriceRequest,
   UpsertPurchaseSellPriceRequest,
 } from '../types/api/purchasingApi';
@@ -49,6 +50,6 @@ export const purchasePriceBookService = {
   },
 
   upsertEstimatePrice(body: UpsertPurchaseItemEstimatePriceRequest) {
-    return apiClient.post(`${ENDPOINT}/estimate-prices`, body);
+    return apiClient.post<PurchaseItemEstimatePriceApiDto>(`${ENDPOINT}/estimate-prices`, body);
   },
 };

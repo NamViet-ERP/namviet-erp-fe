@@ -202,7 +202,7 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
         >
           <img
             src={NAMVIET_GROUP_LOGO_URL}
-            alt="Nam Viet Group"
+            alt="Mayzer"
             className="nv-header__logo"
           />
         </button>

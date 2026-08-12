@@ -48,7 +48,7 @@ const RATING_OPTIONS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 const GROUPS_VISIBLE_IN_TABLE = 3;
 const COL_COUNT = 12;
 type FormErrors = Partial<Record<'supplierCode' | 'supplierName' | 'contactPhone' | 'maxDebtDays' | 'paymentTerms', string>>;
-type SupplierRow = SupplierApiDto & { approvalStatus?: string };
+type SupplierRow = SupplierApiDto;
 
 const emptyForm = {
   supplierCode: '',
@@ -184,7 +184,7 @@ export default function SuppliersSettingsPanel() {
   const approveMutation = useApproveSupplier();
   const rejectMutation = useRejectSupplier();
 
-  const items = (data?.items ?? []) as SupplierRow[];
+  const items = data?.items ?? [];
   const totalCount = data?.totalCount ?? 0;
   const totalPages = data?.totalPages ?? 1;
   const groupOptions = groupPage?.items ?? [];

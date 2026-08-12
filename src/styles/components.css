@@ -1592,9 +1592,10 @@
   }
   .nv-header__logo {
     display: block;
-    height: 46px;
+    height: 52px;
     width: auto;
     object-fit: contain;
+    border-radius: var(--radius-md);
   }
   .nv-header__actions {
     flex: 0 0 auto;
@@ -5748,12 +5749,11 @@
       inset 0 1px 0 rgba(255, 255, 255, 0.14);
   }
   .login-brand__logo {
-    height: 4.75rem;
+    height: 5.5rem;
     width: auto;
-    max-width: 240px;
+    max-width: 280px;
     object-fit: contain;
-    /* White logo on black PNG — blend away black, keep white on navy */
-    mix-blend-mode: screen;
+    border-radius: var(--radius-md);
   }
   .dark .login-brand {
     box-shadow:

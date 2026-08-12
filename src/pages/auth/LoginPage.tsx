@@ -96,7 +96,7 @@ export default function LoginPage() {
         <div className="login-card">
           <div className="text-center mb-7">
             <div className="login-brand">
-              <img src={NAMVIET_GROUP_LOGO_URL} alt="NamViet Group" className="login-brand__logo" />
+              <img src={NAMVIET_GROUP_LOGO_URL} alt="Mayzer" className="login-brand__logo" />
             </div>
             <h2 className="text-2xl font-bold text-[var(--md-on-surface)]">
               Nam Việt <span className="text-[var(--md-primary)]">ERP</span>
