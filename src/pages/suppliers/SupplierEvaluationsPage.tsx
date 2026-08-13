@@ -31,7 +31,7 @@ export default function SupplierEvaluationsPage() {
       <PageHeader
         eyebrow="Nhà cung cấp"
         title="Đánh giá NCC"
-        subtitle="Đánh giá theo đơn hàng và KPI định kỳ. Xếp hạng theo ngưỡng trong Thiết lập. Blacklist xem mục riêng trên menu."
+        subtitle="Đánh giá theo đơn hàng và KPI định kỳ. Blacklist xem mục riêng trên menu."
       />
       <HrmPanel noPadding>
         <div className="px-4 pt-3 border-b border-[var(--md-outline-variant)]">

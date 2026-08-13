@@ -7,6 +7,7 @@ import EmptyState from '../../components/ui/EmptyState';
 import FormField from '../../components/ui/FormField';
 import Modal from '../../components/ui/Modal';
 import Pagination from '../../components/ui/Pagination';
+import TabFilter from '../../components/ui/TabFilter';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import { showToast } from '../../components/ui/Toast';
 import { DEFAULT_LIST_PAGE_SIZE, type ListPageSize } from '../../constants/pagination';
@@ -24,6 +25,7 @@ import {
   estimateStatusLabel,
 } from '../../lib/purchaseEstimateStatus';
 import RfqQuotesPanel from './RfqQuotesPanel';
+import type { TabItem } from '../../types';
 
 export default function PurchaseEstimateProcurementPage() {
   const { has } = usePermission();
@@ -139,26 +141,14 @@ export default function PurchaseEstimateProcurementPage() {
         </button>
       ) : null}
     >
-      <div className="flex gap-2 mb-3">
-        {canViewEstimates ? (
-          <button
-            type="button"
-            className={`btn btn-sm ${tab === 'estimates' ? 'btn-primary' : 'btn-outline'}`}
-            onClick={() => setTab('estimates')}
-          >
-            Dự toán
-          </button>
-        ) : null}
-        {canViewRfq ? (
-          <button
-            type="button"
-            className={`btn btn-sm ${tab === 'rfq' ? 'btn-primary' : 'btn-outline'}`}
-            onClick={() => setTab('rfq')}
-          >
-            Giá chào thầu
-          </button>
-        ) : null}
-      </div>
+      <TabFilter
+        tabs={[
+          ...(canViewEstimates ? [{ id: 'estimates', label: 'Dự toán' }] : []),
+          ...(canViewRfq ? [{ id: 'rfq', label: 'Giá chào thầu' }] : []),
+        ] satisfies TabItem[]}
+        activeTab={tab}
+        onChange={id => setTab(id as 'rfq' | 'estimates')}
+      />
 
       {tab === 'rfq' ? (
         <RfqQuotesPanel canWrite={canWriteRfq} canUpdate={canUpdateRfq} />

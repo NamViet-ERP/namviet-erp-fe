@@ -174,7 +174,7 @@ export const recruitmentMenu: SidebarMenuItem[] = [
   },
   {
     id: 'recruitment-settings',
-    label: 'Thiết lập',
+    label: 'Thiết lập tuyển dụng',
     icon: Settings,
     path: '/recruitment/settings',
     permission: 'hrm.recruitment.positions.view',
@@ -190,7 +190,7 @@ export const membersMenu: SidebarMenuItem[] = [
   },
   {
     id: 'members-settings',
-    label: 'Thiết lập',
+    label: 'Thiết lập nhân sự',
     icon: Settings,
     path: '/members/settings',
     permission: 'hrm.members.settings.view',
@@ -350,13 +350,6 @@ export const suppliersMenu: SidebarMenuItem[] = [
     label: 'Danh sách blacklist',
     icon: Ban,
     path: '/suppliers/blacklist',
-    permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
-  },
-  {
-    id: 'sup-settings',
-    label: 'Thiết lập',
-    icon: Settings,
-    path: '/suppliers/settings',
     permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
   },
 ];

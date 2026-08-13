@@ -14,7 +14,7 @@ export function formatCurrency(value: number | null | undefined): string {
  * @returns {string}
  */
 export function formatCurrencyFull(value: number | null | undefined): string {
-  return formatCurrency(value) + ' đ';
+  return `${formatCurrency(value)}\u00a0đ`;
 }
 
 /** Bỏ mọi ký tự không phải số → số tiền nguyên (VNĐ). */

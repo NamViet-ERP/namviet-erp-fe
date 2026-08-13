@@ -8,7 +8,6 @@ const SupplierSpendPage = lazy(() => import('../pages/suppliers/SupplierSpendPag
 const SupplierPriceHistoryPage = lazy(() => import('../pages/suppliers/SupplierPriceHistoryPage'));
 const SupplierEvaluationsPage = lazy(() => import('../pages/suppliers/SupplierEvaluationsPage'));
 const SupplierBlacklistPage = lazy(() => import('../pages/suppliers/SupplierBlacklistPage'));
-const SupplierSettingsPage = lazy(() => import('../pages/suppliers/SupplierSettingsPage'));
 const SupplierMasterPage = lazy(() => import('../pages/suppliers/SupplierMasterPage'));
 
 /** Module Nhà cung cấp — mọi tab dùng API thật. */
@@ -24,7 +23,7 @@ export default function SuppliersModuleRoutes() {
       <Route path="price-history" element={<SupplierPriceHistoryPage />} />
       <Route path="evaluations" element={<SupplierEvaluationsPage />} />
       <Route path="blacklist" element={<SupplierBlacklistPage />} />
-      <Route path="settings" element={<SupplierSettingsPage />} />
+      <Route path="settings" element={<Navigate to="/suppliers/dashboard" replace />} />
       <Route path="*" element={<Navigate to="dashboard" replace />} />
     </Routes>
   );

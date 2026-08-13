@@ -254,7 +254,7 @@ export default function OperationsProjectsPage() {
             <thead>
               <tr>
                 <th className="table-header-cell whitespace-nowrap project-col-code">Mã DA</th>
-                <th className="table-header-cell">Tên dự án</th>
+                <th className="table-header-cell project-col-name">Tên dự án</th>
                 <th className="table-header-cell">Khách hàng</th>
                 <th className="table-header-cell project-col-pm">PIC / Quản lý</th>
                 <th className="table-header-cell">Thành viên SC</th>
@@ -290,8 +290,8 @@ export default function OperationsProjectsPage() {
                     <td className="table-cell font-mono text-sm text-[var(--md-primary)] whitespace-nowrap project-col-code">
                       {row.projectCode}
                     </td>
-                    <td className="table-cell font-semibold max-w-[260px]">
-                      <span className="line-clamp-2" title={row.projectName}>{row.projectName}</span>
+                    <td className="table-cell font-semibold project-col-name">
+                      <span title={row.projectName}>{row.projectName}</span>
                     </td>
                     <td className="table-cell">
                       {row.clientName?.trim() || <span className="hrm-empty-cell">—</span>}

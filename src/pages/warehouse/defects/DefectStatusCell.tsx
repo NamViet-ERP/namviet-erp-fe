@@ -17,7 +17,7 @@ export default function DefectStatusCell({ row }: { row: PurchaseDefectApiDto })
     return (
       <div className="pur-erp--po defect-status-cell">
         <div className="pur-erp__approve">
-          <span className="pur-erp__pill pur-erp__pill--ok">Đã xử lý</span>
+          <Badge status="approved" label="Đã xử lý" />
           <div className="pur-erp__approve-user">
             <span className="pur-erp__approve-avatar" title={name}>{nameInitials(name)}</span>
             <span className="pur-erp__approve-name" title={name}>{name}</span>
@@ -31,7 +31,7 @@ export default function DefectStatusCell({ row }: { row: PurchaseDefectApiDto })
   return (
     <div className="pur-erp--po defect-status-cell">
       <div className="pur-erp__approve">
-        <span className="pur-erp__pill pur-erp__pill--ok">Đã duyệt</span>
+        <Badge status="approved" label="Đã duyệt" />
         <div className="pur-erp__approve-user">
           <span className="pur-erp__approve-avatar" title={approver}>{nameInitials(approver)}</span>
           <span className="pur-erp__approve-name" title={approver}>{approver}</span>

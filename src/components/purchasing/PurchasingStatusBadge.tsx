@@ -2,11 +2,11 @@
 export type PurchasingTone = 'success' | 'warning' | 'danger' | 'neutral' | 'primary';
 
 const TONE_CLASS: Record<PurchasingTone, string> = {
-  success: 'hrm-badge hrm-badge--success',
-  warning: 'hrm-badge hrm-badge--warning',
-  danger: 'hrm-badge hrm-badge--danger',
-  neutral: 'hrm-badge hrm-badge--neutral',
-  primary: 'hrm-badge hrm-badge--primary',
+  success: 'badge badge-success',
+  warning: 'badge badge-warning',
+  danger: 'badge badge-error',
+  neutral: 'badge badge-neutral',
+  primary: 'badge badge-md-primary',
 };
 
 interface PurchasingStatusBadgeProps {

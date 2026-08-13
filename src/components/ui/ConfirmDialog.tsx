@@ -2,6 +2,7 @@ import { AlertTriangle } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import { useEscapeToClose } from '../../hooks/useEscapeToClose';
 
 interface ConfirmDialogProps {
   isOpen: boolean;
@@ -27,6 +28,7 @@ export default function ConfirmDialog({
   isLoading = false,
 }: ConfirmDialogProps) {
   useBodyScrollLock(isOpen);
+  useEscapeToClose(isOpen, onClose);
   if (!isOpen) return null;
 
   return createPortal(

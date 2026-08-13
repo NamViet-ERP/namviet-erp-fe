@@ -251,7 +251,7 @@ export default function ProjectsPage() {
             <thead>
               <tr>
                 <th className="table-header-cell whitespace-nowrap project-col-code">Mã kho</th>
-                <th className="table-header-cell">Tên công trình</th>
+                <th className="table-header-cell project-col-name">Tên công trình</th>
                 <th className="table-header-cell project-col-pm">Thủ kho phụ trách</th>
                 <th className="table-header-cell project-col-date whitespace-nowrap">Ngày bắt đầu</th>
                 <th className="table-header-cell text-right project-col-count">Mặt hàng</th>
@@ -290,8 +290,8 @@ export default function ProjectsPage() {
                         to={`/warehouse/projects/${encodeURIComponent(p.projectCode)}`}
                       />
                     </td>
-                    <td className="table-cell font-semibold max-w-[260px]">
-                      <span className="line-clamp-2" title={p.projectName}>{p.projectName}</span>
+                    <td className="table-cell font-semibold project-col-name">
+                      <span title={p.projectName}>{p.projectName}</span>
                     </td>
                     <td className="table-cell project-col-pm">
                       {(() => {

@@ -5,9 +5,11 @@ import HrmSelect from '../../components/hr/HrmSelect';
 import EmptyState from '../../components/ui/EmptyState';
 import FormField from '../../components/ui/FormField';
 import Modal from '../../components/ui/Modal';
+import TabFilter from '../../components/ui/TabFilter';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import CurrencyInput from '../../components/ui/CurrencyInput';
 import MaterialAutocomplete from '../../components/ui/MaterialAutocomplete';
+import HrmDatePicker from '../../components/hr/HrmDatePicker';
 import { showToast } from '../../components/ui/Toast';
 import {
   usePriceBookCategories,
@@ -369,17 +371,17 @@ export default function PurchasePriceBookPage() {
                 : 'So sánh giá bán / giá chào cho dự án với giá mua thực tế để nhìn margin theo từng mặt hàng.'}
       </p>
 
-      <div className="flex flex-wrap gap-2 mb-3">
-        {TABS.map(t => (
-          <button
-            key={t.id}
-            type="button"
-            className={`btn btn-sm ${tab === t.id ? 'btn-primary' : 'btn-outline'}`}
-            onClick={() => setTab(t.id)}
-          >
-            {t.label}
+      <div className="tab-filter-row">
+        <TabFilter
+          tabs={TABS.map(t => ({ id: t.id, label: t.label }))}
+          activeTab={tab}
+          onChange={id => setTab(id as Tab)}
+        />
+        {tab === 'items' ? (
+          <button type="button" className="btn btn-outline btn-sm" onClick={() => exportItemsCsv(items.data ?? [])}>
+            Xuất CSV
           </button>
-        ))}
+        ) : null}
       </div>
 
       {tab === 'rfq' ? (
@@ -388,11 +390,6 @@ export default function PurchasePriceBookPage() {
 
       {tab === 'items' ? (
         <div className="space-y-3">
-          <div className="flex justify-end">
-            <button type="button" className="btn btn-outline btn-sm" onClick={() => exportItemsCsv(items.data ?? [])}>
-              Xuất CSV
-            </button>
-          </div>
           {items.isError ? (
             <EmptyState message={getApiErrorMessage(items.error, 'Không tải được sổ giá.')} />
           ) : (
@@ -528,11 +525,9 @@ export default function PurchasePriceBookPage() {
                   />
                 </FormField>
                 <FormField label="Ngày hiệu lực" required>
-                  <input
-                    className="form-input"
-                    type="date"
+                  <HrmDatePicker
                     value={estimateForm.effectiveDate}
-                    onChange={e => setEstimateForm(f => ({ ...f, effectiveDate: e.target.value }))}
+                    onChange={effectiveDate => setEstimateForm(f => ({ ...f, effectiveDate }))}
                   />
                 </FormField>
               </div>
@@ -605,11 +600,9 @@ export default function PurchasePriceBookPage() {
                   <CurrencyInput value={sellForm.sellPrice} onChange={sellPrice => setSellForm(f => ({ ...f, sellPrice }))} />
                 </FormField>
                 <FormField label="Ngày hiệu lực" required>
-                  <input
-                    className="form-input"
-                    type="date"
+                  <HrmDatePicker
                     value={sellForm.effectiveDate}
-                    onChange={e => setSellForm(f => ({ ...f, effectiveDate: e.target.value }))}
+                    onChange={effectiveDate => setSellForm(f => ({ ...f, effectiveDate }))}
                   />
                 </FormField>
               </div>

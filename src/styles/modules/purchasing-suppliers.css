@@ -1448,7 +1448,7 @@
     border: 0;
     background: transparent;
     color: var(--md-on-surface-variant);
-    font-size: var(--fs-xs);
+    font-size: var(--fs-sm);
     font-weight: 600;
     padding: 0.4rem 0.55rem;
     border-radius: 4px;
@@ -1526,17 +1526,17 @@
     position: sticky;
     top: 0;
     z-index: 1;
-    padding: 0.55rem 0.65rem;
-    font-size: var(--fs-micro);
-    font-weight: 650;
+    padding: var(--table-header-py) var(--table-header-px);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
     letter-spacing: 0.03em;
     text-transform: uppercase;
     text-align: center;
     vertical-align: middle;
     white-space: nowrap;
-    color: #fff !important;
-    background: linear-gradient(180deg, color-mix(in srgb, var(--nv-header-bg) 88%, var(--nv-navy-2)) 0%, var(--nv-header-bg) 100%) !important;
-    border: 1px solid color-mix(in srgb, #fff 14%, var(--nv-header-bg)) !important;
+    color: var(--nv-table-header-text);
+    background: var(--nv-table-header-bg);
+    border: 1px solid color-mix(in srgb, #fff 12%, var(--nv-table-header-bg));
   }
   .pur-erp--plan .pur-erp__table--plans-list thead th.pur-erp__th-num {
     text-align: right !important;
@@ -1552,20 +1552,20 @@
     width: 8.5rem;
   }
   .pur-erp--plan .pur-erp__table--plans-list tbody td {
-    padding: 0.5rem 0.65rem;
+    padding: var(--table-cell-py) var(--table-cell-px);
     vertical-align: middle;
     text-align: left;
-    border: 1px solid var(--md-outline-variant02) !important;
-    background: var(--md-surface);
+    border: 1px solid var(--md-outline-variant02);
+    background: var(--md-surface-container);
     font-size: var(--fs-sm);
-    font-weight: 400;
+    font-weight: var(--fw-regular);
     color: var(--md-on-surface);
   }
   .pur-erp--plan .pur-erp__table--plans-list tbody tr:nth-child(even) td {
     background: color-mix(in srgb, var(--md-primary) 4%, var(--md-surface-container));
   }
   .pur-erp--plan .pur-erp__table--plans-list tbody tr:hover td {
-    background: color-mix(in srgb, var(--plan-accent, var(--md-primary)) 8%, var(--md-surface));
+    background: color-mix(in srgb, var(--md-primary) 7%, var(--md-surface-container));
   }
   .pur-erp--plan .pur-erp__table--plans-list .pur-erp__td-num {
     text-align: right !important;
@@ -1620,10 +1620,10 @@
     justify-content: center;
     box-sizing: border-box;
     min-width: 5.5rem;
-    padding: 0 0.5rem;
-    height: 22px;
-    font-size: var(--fs-micro);
-    font-weight: 600;
+    padding: 4px 12px;
+    height: auto;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
     text-align: center;
   }
   .pur-erp--plan .pur-erp__table--plans-list .pur-erp__td-actions {
@@ -1670,9 +1670,9 @@
   }
   .pur-erp__table th,
   .pur-erp__table td {
-    border-bottom: 1px solid var(--pur-border);
-    border-right: 1px solid color-mix(in srgb, var(--pur-border) 70%, transparent);
-    padding: 0.45rem 0.55rem;
+    border-bottom: 1px solid var(--md-outline-variant02);
+    border-right: 1px solid var(--md-outline-variant02);
+    padding: var(--table-cell-py) var(--table-cell-px);
     text-align: left;
     vertical-align: middle;
   }
@@ -1684,17 +1684,20 @@
     position: sticky;
     top: 0;
     z-index: 1;
-    background: linear-gradient(180deg, var(--nv-navy-2) 0%, var(--nv-header-bg) 100%);
-    color: #fff;
-    font-weight: 600;
-    font-size: var(--fs-micro);
+    background: var(--nv-table-header-bg);
+    color: var(--nv-table-header-text);
+    font-weight: var(--fw-semibold);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
     white-space: nowrap;
-    border-bottom-color: color-mix(in srgb, var(--md-primary) 70%, #000);
-    border-right-color: color-mix(in srgb, #fff 18%, transparent);
+    padding: var(--table-header-py) var(--table-header-px);
+    border-bottom-color: color-mix(in srgb, #fff 12%, var(--nv-table-header-bg));
+    border-right-color: color-mix(in srgb, #fff 12%, var(--nv-table-header-bg));
   }
   .pur-erp__table thead .pur-erp__subhead th {
-    background: linear-gradient(180deg, var(--nv-steel) 0%, var(--nv-navy-2) 100%);
-    font-weight: 600;
+    background: var(--nv-navy-2);
+    font-weight: var(--fw-semibold);
     font-size: var(--fs-xs);
     top: auto;
     position: static;
@@ -1747,16 +1750,13 @@
     margin-left: auto;
     margin-right: auto;
   }
-  .pur-erp__table tbody tr {
-    transition: background-color 100ms ease-out;
+  .pur-erp__table tbody tr:nth-child(even) td {
+    background: color-mix(in srgb, var(--md-primary) 4%, var(--md-surface-container));
   }
-  .pur-erp__table tbody tr:nth-child(even) {
-    background: color-mix(in srgb, var(--md-surface-container) 28%, transparent);
+  .pur-erp__table tbody tr:hover td {
+    background: color-mix(in srgb, var(--md-primary) 7%, var(--md-surface-container));
   }
-  .pur-erp__table tbody tr:hover {
-    background: var(--pur-accent-soft);
-  }
-  .pur-erp__table tbody tr.is-selected {
+  .pur-erp__table tbody tr.is-selected td {
     background: color-mix(in srgb, var(--md-primary) 14%, transparent);
   }
   .pur-erp__link-cell {
@@ -1907,10 +1907,10 @@
     font-variant-numeric: tabular-nums;
   }
   .pur-erp--plan .pur-erp__workspace {
-    border: 1px solid #c5ced9;
-    border-left: 3px solid var(--plan-accent);
-    border-radius: 8px;
-    background: #fff;
+    border: 1px solid var(--md-outline-variant02);
+    border-left-color: var(--plan-accent);
+    border-radius: var(--radius-md);
+    background: var(--md-surface-container);
     overflow: hidden;
     box-shadow: 0 1px 4px rgb(15 23 42 / 0.08);
   }
@@ -2308,67 +2308,66 @@
   }
   .pur-erp--plan .pur-erp__table th,
   .pur-erp--plan .pur-erp__table td {
-    padding: 0.5rem 0.45rem;
+    padding: var(--table-cell-py) var(--table-cell-px);
     vertical-align: middle;
   }
   .pur-erp--plan .pur-erp__table thead th {
     position: sticky;
     top: 0;
     z-index: 1;
-    background: var(--md-primary);
-    color: #fff;
-    font-weight: 650;
-    font-size: var(--fs-micro);
+    background: var(--nv-table-header-bg);
+    color: var(--nv-table-header-text);
+    font-weight: var(--fw-semibold);
+    font-size: var(--fs-xs);
     text-transform: uppercase;
     letter-spacing: 0.03em;
     text-align: center;
     white-space: nowrap;
-    border: 1px solid #5b7aad;
-    padding: 0.5rem 0.4rem;
+    border: 1px solid color-mix(in srgb, #fff 12%, var(--nv-table-header-bg));
+    padding: var(--table-header-py) var(--table-header-px);
   }
   .pur-erp--plan .pur-erp__table thead .pur-erp__subhead th {
-    background: color-mix(in srgb, var(--md-primary) 88%, var(--nv-navy-2));
-    font-size: var(--fs-micro);
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    border: 1px solid #5b7aad;
+    background: var(--nv-navy-2);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
+    letter-spacing: 0.03em;
+    border: 1px solid color-mix(in srgb, #fff 12%, var(--nv-navy-2));
   }
   .pur-erp--plan .pur-erp__table thead .pur-erp__th-group {
     border-bottom: 1px solid color-mix(in srgb, #fff 28%, #5b7aad);
   }
   .pur-erp--plan .pur-erp__table tbody td {
-    border: 1px solid #cedae6;
+    border: 1px solid var(--md-outline-variant02);
     font-size: var(--fs-sm);
   }
-  .pur-erp--plan .pur-erp__table tbody tr:nth-child(even) {
+  .pur-erp--plan .pur-erp__table tbody tr:nth-child(even) td {
     background: color-mix(in srgb, var(--md-primary) 4%, var(--md-surface-container));
   }
-  .pur-erp--plan .pur-erp__table tbody tr:hover {
-    background: var(--plan-accent-soft);
+  .pur-erp--plan .pur-erp__table tbody tr:hover td {
+    background: color-mix(in srgb, var(--md-primary) 7%, var(--md-surface-container));
   }
-  .pur-erp--plan .pur-erp__table tbody tr.is-selected {
-    background: color-mix(in srgb, var(--plan-accent) 16%, var(--md-surface-container));
+  .pur-erp--plan .pur-erp__table tbody tr.is-selected td {
+    background: color-mix(in srgb, var(--md-primary) 14%, var(--md-surface-container));
   }
-  /* List KHMH: khớp typography bảng Đơn hàng (không bị rule .pur-erp__table chung ghi đè) */
   .pur-erp--plan .pur-erp__table.pur-erp__table--plans-list {
     font-size: var(--fs-sm);
     line-height: 1.4;
   }
   .pur-erp--plan .pur-erp__table.pur-erp__table--plans-list thead th {
-    background: var(--nv-navy) !important;
-    color: #fff !important;
-    font-size: var(--fs-micro) !important;
-    font-weight: 650 !important;
+    background: var(--nv-table-header-bg);
+    color: var(--nv-table-header-text);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
     letter-spacing: 0.03em;
     text-transform: uppercase;
-    padding: 0.55rem 0.65rem;
-    border: 1px solid #5b7aad !important;
+    padding: var(--table-header-py) var(--table-header-px);
+    border: 1px solid color-mix(in srgb, #fff 12%, var(--nv-table-header-bg));
   }
   .pur-erp--plan .pur-erp__table.pur-erp__table--plans-list tbody td {
-    font-size: var(--fs-sm) !important;
-    font-weight: 400 !important;
-    padding: 0.5rem 0.65rem;
-    border: 1px solid var(--md-outline-variant02) !important;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-regular);
+    padding: var(--table-cell-py) var(--table-cell-px);
+    border: 1px solid var(--md-outline-variant02);
   }
   .pur-erp--plan .pur-erp__link-cell {
     color: var(--md-primary);
@@ -2758,34 +2757,34 @@
     white-space: nowrap;
   }
   .pur-erp--po .pur-erp__table--po thead th {
-    background: linear-gradient(180deg, color-mix(in srgb, var(--nv-header-bg) 88%, var(--nv-navy-2)) 0%, var(--nv-header-bg) 100%);
-    color: #fff;
-    font-size: var(--fs-micro);
-    font-weight: 650;
+    background: var(--nv-table-header-bg);
+    color: var(--nv-table-header-text);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
     text-align: center;
     vertical-align: middle;
     text-transform: uppercase;
     letter-spacing: 0.03em;
-    padding: 0.55rem 0.65rem;
+    padding: var(--table-header-py) var(--table-header-px);
     white-space: nowrap;
-    border: 1px solid color-mix(in srgb, #fff 14%, var(--nv-header-bg));
+    border: 1px solid color-mix(in srgb, #fff 12%, var(--nv-table-header-bg));
   }
   .pur-erp--po .pur-erp__table--po tbody td {
     vertical-align: middle;
-    padding: 0.5rem 0.65rem;
+    padding: var(--table-cell-py) var(--table-cell-px);
     border: 1px solid var(--md-outline-variant02);
     font-size: var(--fs-sm);
-    font-weight: 400;
+    font-weight: var(--fw-regular);
     color: var(--md-on-surface);
   }
-  .pur-erp--po .pur-erp__table--po tbody tr:nth-child(even) {
+  .pur-erp--po .pur-erp__table--po tbody tr:nth-child(even) td {
     background: color-mix(in srgb, var(--md-primary) 4%, var(--md-surface-container));
   }
-  .pur-erp--po .pur-erp__table--po tbody tr:hover {
-    background: var(--plan-accent-soft);
+  .pur-erp--po .pur-erp__table--po tbody tr:hover td {
+    background: color-mix(in srgb, var(--md-primary) 7%, var(--md-surface-container));
   }
-  .pur-erp--po .pur-erp__table--po tbody tr.is-expanded {
-    background: color-mix(in srgb, var(--plan-accent) 10%, var(--md-surface-container));
+  .pur-erp--po .pur-erp__table--po tbody tr.is-expanded td {
+    background: color-mix(in srgb, var(--md-primary) 10%, var(--md-surface-container));
   }
   .pur-erp--po .pur-erp__approve-btn {
     appearance: none;
@@ -3164,18 +3163,18 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.35rem;
+    gap: 4px;
     max-width: 100%;
-    height: 24px;
-    min-height: 24px;
-    padding: 0 0.65rem;
-    border-radius: 999px;
-    border: 1px solid transparent;
+    height: auto;
+    min-height: 0;
+    padding: 4px 12px;
+    border-radius: 9999px;
+    border: none;
     background: var(--md-surface-container-high);
-    font-size: var(--fs-micro);
-    font-weight: 600;
-    line-height: 1;
-    letter-spacing: 0;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
+    line-height: 1.2;
+    letter-spacing: 0.04em;
     text-align: center;
     white-space: nowrap;
     color: var(--md-on-surface);
@@ -3183,29 +3182,25 @@
     vertical-align: middle;
   }
   .pur-erp__pill--warn {
-    color: #c47a00;
-    border-color: #f0ad4e;
-    background: #fffaf0;
+    color: var(--md-on-warning-container);
+    background: var(--md-warning-container);
   }
   .pur-erp__pill--danger {
-    color: #c62828;
-    border-color: #ef9a9a;
-    background: #fff5f5;
+    color: var(--md-on-error-container);
+    background: var(--md-error-container);
   }
   .pur-erp__pill--ok {
-    color: #2e7d32;
-    border-color: #81c784;
-    background: #f1faf1;
+    color: var(--md-on-success-container);
+    background: var(--md-success-container);
   }
   .pur-erp__pill--info {
-    color: #1565c0;
-    border-color: #90caf9;
-    background: #f3f8ff;
+    color: var(--md-on-info-container);
+    background: var(--md-info-container);
   }
   .pur-erp__pill--neutral {
-    color: #4a5560;
-    border-color: #b8c2cc;
-    background: #f4f6f8;
+    color: var(--nv-badge-draft-text);
+    background: var(--nv-badge-draft-bg);
+    border: 1px solid var(--nv-badge-draft-border);
   }
   .pur-erp--po .pur-erp__table--po .pur-erp__td-status {
     text-align: center;
@@ -3394,13 +3389,13 @@
   .dark .pur-erp--plan .pur-erp__scope-btn:hover {
     background: color-mix(in srgb, var(--md-on-surface) 6%, transparent) !important;
   }
-  .dark .pur-erp--plan .pur-erp__table tbody tr:nth-child(even),
-  .dark .pur-erp--po .pur-erp__table--po tbody tr:nth-child(even) {
+  .dark .pur-erp--plan .pur-erp__table tbody tr:nth-child(even) td,
+  .dark .pur-erp--po .pur-erp__table--po tbody tr:nth-child(even) td {
     background: var(--pur-row-stripe);
   }
-  .dark .pur-erp--plan .pur-erp__table tbody tr:hover,
-  .dark .pur-erp--po .pur-erp__table--po tbody tr:hover {
-    background: color-mix(in srgb, var(--plan-accent) 14%, var(--md-surface-container));
+  .dark .pur-erp--plan .pur-erp__table tbody tr:hover td,
+  .dark .pur-erp--po .pur-erp__table--po tbody tr:hover td {
+    background: color-mix(in srgb, var(--md-primary) 10%, var(--md-surface-container));
   }
   .dark .pur-erp--plan .pur-erp__table thead th,
   .dark .pur-erp--plan .pur-erp__table thead .pur-erp__subhead th {
@@ -3411,16 +3406,10 @@
     border-color: var(--md-outline-variant02);
   }
   .dark .pur-erp--po .pur-erp__head-actions .pur-erp__action--primary {
-    border-color: color-mix(in srgb, var(--md-secondary) 42%, var(--md-outline-variant02));
-    background: linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--md-secondary) 82%, var(--nv-navy-2)) 0%,
-      color-mix(in srgb, var(--md-secondary) 72%, #0a284f) 100%
-    );
-    color: #fff;
-    box-shadow:
-      0 1px 3px rgba(0, 0, 0, 0.38),
-      inset 0 1px 0 color-mix(in srgb, #fff 14%, transparent);
+    border-color: color-mix(in srgb, var(--nv-action) 42%, var(--md-outline-variant02));
+    background: var(--nv-action);
+    color: var(--md-on-primary);
+    box-shadow: var(--md-shadow-1);
   }
   .dark .pur-erp--po .pur-erp__head-actions .pur-erp__action--primary:hover:not(:disabled) {
     background: linear-gradient(
@@ -3440,8 +3429,8 @@
     border-color: color-mix(in srgb, var(--plan-accent) 38%, var(--md-outline-variant02));
     color: var(--md-secondary);
   }
-  .dark .pur-erp--po .pur-erp__table--po tbody tr.is-expanded {
-    background: color-mix(in srgb, var(--plan-accent) 12%, var(--md-surface-container));
+  .dark .pur-erp--po .pur-erp__table--po tbody tr.is-expanded td {
+    background: color-mix(in srgb, var(--md-primary) 12%, var(--md-surface-container));
   }
   .dark .pur-erp--po .pur-erp__table--po thead th {
     background: color-mix(in srgb, var(--nv-header-bg) 92%, #000);
@@ -3467,28 +3456,23 @@
   }
   .dark .pur-erp--po .pur-erp__pill {
     background: var(--md-surface-container-high);
-    border-color: var(--md-outline-variant02);
     color: var(--md-on-surface);
   }
   .dark .pur-erp--po .pur-erp__pill--warn {
-    color: var(--md-warning);
-    border-color: color-mix(in srgb, var(--md-warning) 45%, var(--md-outline-variant02));
-    background: color-mix(in srgb, var(--md-warning) 12%, var(--md-surface-container-high));
+    color: var(--md-on-warning-container);
+    background: var(--md-warning-container);
   }
   .dark .pur-erp--po .pur-erp__pill--danger {
-    color: var(--md-error);
-    border-color: color-mix(in srgb, var(--md-error) 40%, var(--md-outline-variant02));
-    background: color-mix(in srgb, var(--md-error) 10%, var(--md-surface-container-high));
+    color: var(--md-on-error-container);
+    background: var(--md-error-container);
   }
   .dark .pur-erp--po .pur-erp__pill--ok {
-    color: var(--md-success);
-    border-color: color-mix(in srgb, var(--md-success) 40%, var(--md-outline-variant02));
-    background: color-mix(in srgb, var(--md-success) 10%, var(--md-surface-container-high));
+    color: var(--md-on-success-container);
+    background: var(--md-success-container);
   }
   .dark .pur-erp--po .pur-erp__pill--info {
-    color: var(--md-info);
-    border-color: color-mix(in srgb, var(--md-info) 40%, var(--md-outline-variant02));
-    background: color-mix(in srgb, var(--md-info) 10%, var(--md-surface-container-high));
+    color: var(--md-on-info-container);
+    background: var(--md-info-container);
   }
   .dark .pur-erp--po .pur-erp__tacvu-menu {
     background: var(--md-surface-container-high);
@@ -3841,7 +3825,7 @@
     padding: 0.45rem 0.5rem 0.5rem;
     border-radius: 6px;
     border: 1px solid color-mix(in srgb, var(--stage-edge) 70%, var(--md-outline-variant02));
-    border-left: 3px solid var(--stage-accent);
+    border-left-color: var(--stage-accent);
     background: color-mix(in srgb, var(--stage-tint) 78%, var(--md-surface));
   }
 
@@ -3858,9 +3842,12 @@
   }
 
   .pur-pay-plan__stage--paid {
-    --stage-accent: var(--md-success, #2C8659);
-    --stage-tint: var(--md-success-container, #E5F4EC);
-    --stage-edge: color-mix(in srgb, var(--md-success, #2C8659) 35%, var(--md-outline-variant02));
+    --stage-accent: var(--status-success);
+    --stage-tint: var(--md-success-container);
+    --stage-edge: color-mix(in srgb, var(--status-success) 40%, var(--md-outline-variant02));
+    border-color: color-mix(in srgb, var(--status-success) 42%, var(--md-outline-variant02));
+    border-left-color: var(--status-success);
+    background: var(--md-success-container);
   }
 
   .pur-pay-plan__stage-money {
@@ -3926,9 +3913,9 @@
   }
 
   .pur-pay-plan__badge--paid {
-    color: var(--md-success, #2C8659);
-    border-color: color-mix(in srgb, var(--md-success, #2C8659) 35%, #b8d9c6);
-    background: var(--md-success-container, #E5F4EC);
+    color: var(--status-success);
+    border-color: color-mix(in srgb, var(--status-success) 40%, var(--md-outline-variant02));
+    background: color-mix(in srgb, var(--md-success-container) 70%, var(--md-surface));
   }
 
   .pur-pay-plan__total {
@@ -4437,20 +4424,20 @@
     text-align: left;
   }
   .pur-detail__total--budget {
-    background-color: #d7eaf3 !important;
-    border-color: #9cc9de !important;
+    background-color: var(--md-info-container);
+    border-color: color-mix(in srgb, var(--md-info) 35%, var(--md-outline-variant));
   }
   .pur-detail__total--proposal {
-    background-color: #d8eee5 !important;
-    border-color: #9dceb8 !important;
+    background-color: var(--md-success-container);
+    border-color: var(--tint-success-border);
   }
   .pur-detail__total--purchase {
-    background-color: #f3e6cc !important;
-    border-color: #dfc28a !important;
+    background-color: var(--md-warning-container);
+    border-color: var(--tint-warning-border);
   }
   .pur-detail__total--paid {
-    background-color: #f3d9d5 !important;
-    border-color: #e0a89f !important;
+    background-color: var(--md-error-container);
+    border-color: var(--tint-error-soft);
   }
   .pur-detail__section-title {
     margin: 0 0 12px;
@@ -4569,28 +4556,28 @@
     background-image: none;
   }
   .pur-detail .pur-detail__lines-table thead th.pur-detail__th--base {
-    background-color: #dce6f0 !important;
-    border-color: #b7c7d8 !important;
+    background-color: var(--md-secondary-container);
+    border-color: color-mix(in srgb, var(--md-secondary) 28%, var(--md-outline-variant));
   }
   .pur-detail .pur-detail__lines-table thead th.pur-detail__th--budget {
-    background-color: #d7eaf3 !important;
-    border-color: #9cc9de !important;
+    background-color: var(--md-info-container);
+    border-color: color-mix(in srgb, var(--md-info) 32%, var(--md-outline-variant));
   }
   .pur-detail .pur-detail__lines-table thead th.pur-detail__th--proposal {
-    background-color: #d8eee5 !important;
-    border-color: #9dceb8 !important;
+    background-color: var(--md-success-container);
+    border-color: var(--tint-success-border);
   }
   .pur-detail .pur-detail__lines-table thead th.pur-detail__th--purchase {
-    background-color: #f3e6cc !important;
-    border-color: #dfc28a !important;
+    background-color: var(--md-warning-container);
+    border-color: var(--tint-warning-border);
   }
   .pur-detail .pur-detail__lines-table thead th.pur-detail__th--select {
-    background-color: #dde5ec !important;
-    border-color: #b8c5d1 !important;
+    background-color: var(--nv-steel-light);
+    border-color: var(--md-outline-variant);
   }
   .pur-detail .pur-detail__lines-table thead th.pur-detail__th--track {
-    background-color: #f3d9d5 !important;
-    border-color: #e0a89f !important;
+    background-color: var(--md-error-container);
+    border-color: var(--tint-error-soft);
   }
   /* ── Modal tạo / sửa KHMH (kiểu bảng kho) ── */
   .pur-create-plan {
@@ -4766,20 +4753,19 @@
     padding: 0.65rem 0.75rem 0.7rem;
     border-radius: 10px;
     border: 1px solid color-mix(in srgb, var(--md-outline-variant02) 75%, transparent);
-    border-left-width: 3px;
     background: var(--md-surface);
   }
   .pur-create-plan__price-box--proposal {
-    border-left-color: #2f7a5b;
-    background: color-mix(in srgb, #2f7a5b 6%, var(--md-surface));
+    border-left-color: var(--md-success);
+    background: var(--tint-success-soft);
   }
   .pur-create-plan__price-box--purchase {
-    border-left-color: #a67c1f;
-    background: color-mix(in srgb, #a67c1f 6%, var(--md-surface));
+    border-left-color: var(--md-warning);
+    background: var(--tint-warning-soft);
   }
   .pur-create-plan__price-box--select {
-    border-left-color: #3d5a73;
-    background: color-mix(in srgb, #3d5a73 6%, var(--md-surface));
+    border-left-color: var(--md-secondary);
+    background: color-mix(in srgb, var(--md-secondary) 8%, var(--md-surface));
   }
   .pur-create-plan__price-head {
     display: flex;
@@ -5053,19 +5039,19 @@
     white-space: nowrap;
   }
   .pur-detail__status--draft {
-    background-color: #f3e6cc !important;
-    border-color: #dfc28a !important;
-    color: #8a5c10 !important;
+    background-color: var(--md-warning-container);
+    border-color: var(--tint-warning-border);
+    color: var(--md-on-warning-container);
   }
   .pur-detail__status--active {
-    background-color: #d8eee5 !important;
-    border-color: #9dceb8 !important;
-    color: #1f7a5c !important;
+    background-color: var(--md-success-container);
+    border-color: var(--tint-success-border);
+    color: var(--md-on-success-container);
   }
   .pur-detail__status--closed {
-    background-color: #e6eaee !important;
-    border-color: #b8c2cc !important;
-    color: #4a5560 !important;
+    background-color: var(--nv-badge-draft-bg);
+    border-color: var(--nv-badge-draft-border);
+    color: var(--nv-badge-draft-text);
   }
 }
 

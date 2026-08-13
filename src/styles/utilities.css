@@ -4,6 +4,14 @@
 @layer utilities {
   .text-balance { text-wrap: balance; }
 
+  /* Keycap buttons beat leftover Tailwind rounded-full */
+  .btn.rounded-full,
+  .btn.rounded-lg,
+  .btn.rounded-xl,
+  .btn.rounded-2xl {
+    border-radius: var(--radius-sm);
+  }
+
   /* ── Semantic color utilities ── */
   .text-md-primary   { color: var(--md-primary) !important; }
   .text-md-secondary { color: var(--md-secondary) !important; }
@@ -267,11 +275,8 @@
 
   /* ── Gradient text ── */
   .text-gradient-gold {
-    background: linear-gradient(135deg, var(--md-primary), var(--md-tertiary));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    font-weight: 700;
+    color: var(--nv-amber);
+    font-weight: var(--fw-bold);
   }
 
   /* ── Form table styling (compact layout for data entry inside modals) ── */

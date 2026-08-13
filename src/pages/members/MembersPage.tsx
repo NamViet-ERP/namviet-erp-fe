@@ -5,6 +5,7 @@ import PageHeader from '../../components/ui/PageHeader';
 import SearchBar from '../../components/ui/SearchBar';
 import Pagination from '../../components/ui/Pagination';
 import EmptyState from '../../components/ui/EmptyState';
+import TabFilter from '../../components/ui/TabFilter';
 import HrmPanel from '../../components/hr/HrmPanel';
 import HrmStatCard from '../../components/hr/HrmStatCard';
 import PermissionGate from '../../components/auth/PermissionGate';
@@ -19,6 +20,7 @@ import { formatDateCell } from '../../lib/hrm/formatters';
 
 import HrmProfileAvatar from '../../components/hr/HrmProfileAvatar';
 import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
+import type { TabItem } from '../../types';
 
 function EmptyCell({ value }: { value?: string }) {
   if (!value || value === '—') {
@@ -26,6 +28,11 @@ function EmptyCell({ value }: { value?: string }) {
   }
   return <>{value}</>;
 }
+
+const MEMBER_STATUS_TABS: TabItem[] = [
+  { id: 'all', label: 'Tất cả' },
+  ...EMPLOYEE_STATUSES.map(status => ({ id: status, label: status })),
+];
 
 export default function MembersPage() {
   const navigate = useNavigate();
@@ -95,6 +102,22 @@ export default function MembersPage() {
       </div>
 
       <HrmPanel noPadding>
+        <div className="px-4 pt-3 pb-1 border-b border-[var(--md-outline-variant02)]">
+          <TabFilter
+            tabs={MEMBER_STATUS_TABS.map(tab => {
+              if (tab.id === 'all') return { ...tab, count: employeeList.length };
+              if (tab.id === 'Đang làm') return { ...tab, count: stats.active };
+              if (tab.id === 'Nghỉ việc') return { ...tab, count: stats.resigned };
+              if (tab.id === 'Thai sản') return { ...tab, count: stats.maternity };
+              return tab;
+            })}
+            activeTab={statusFilter || 'all'}
+            onChange={id => {
+              setStatusFilter(id === 'all' ? '' : id as EmployeeStatus);
+              setPage(1);
+            }}
+          />
+        </div>
         <div className="hrm-list-toolbar">
           <div className="hrm-list-toolbar__filters">
             <SearchBar
@@ -102,25 +125,16 @@ export default function MembersPage() {
               onChange={v => { setSearch(v); setPage(1); }}
               placeholder="Tìm theo tên, mã NV, bộ phận..."
             />
-            <div className="hrm-filter-select-wrap">
-              <select
-                className="hrm-filter-select"
-                value={statusFilter}
-                onChange={e => { setStatusFilter(e.target.value as EmployeeStatus | ''); setPage(1); }}
-                aria-label="Lọc trạng thái"
-              >
-                <option value="">Tất cả trạng thái</option>
-                {EMPLOYEE_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </div>
           </div>
         </div>
 
         <div className="overflow-x-auto table-scroll hrm-table-wrap">
-          <table className="w-full min-w-max border-collapse hrm-table">
+          <table className="w-full min-w-max hrm-table">
             <thead>
               <tr>
-                {['Mã NV', 'Họ tên', 'Giới tính', 'Ngày sinh', 'Mảng', 'Chi nhánh', 'Bộ phận', 'Chức vụ', 'Vào làm', 'Chính thức', 'Trạng thái', 'Nghỉ việc'].map(h => (
+                <th className="table-header-cell whitespace-nowrap hrm-table-sticky-col">Mã NV</th>
+                <th className="table-header-cell whitespace-nowrap hrm-table-sticky-col hrm-table-sticky-col--name">Họ tên</th>
+                {['Giới tính', 'Ngày sinh', 'Mảng', 'Chi nhánh', 'Bộ phận', 'Chức vụ', 'Vào làm', 'Chính thức', 'Trạng thái', 'Nghỉ việc'].map(h => (
                   <th key={h} className="table-header-cell whitespace-nowrap">{h}</th>
                 ))}
               </tr>

@@ -87,7 +87,7 @@ export default function LoginPage() {
               <img src={NAMVIET_GROUP_LOGO_URL} alt="Mayzer" className="login-brand__logo" />
             </div>
             <h2 className="text-2xl font-bold text-[var(--md-on-surface)]">
-              Nam Việt <span className="text-[var(--md-primary)]">ERP</span>
+              Nam Việt <span className="text-[var(--nv-amber)]">ERP</span>
             </h2>
             <p className="text-xs font-medium tracking-wide text-[var(--md-on-surface-variant)]">
               HỆ THỐNG QUẢN LÝ CHO NHÂN SỰ & KHO MAYZER
@@ -162,7 +162,7 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="btn btn-primary login-submit-btn w-full py-3 text-sm font-bold rounded-full mt-2"
+              className="btn btn-primary login-submit-btn w-full py-3 text-sm font-bold mt-2"
               disabled={loading}
               aria-busy={loading}
             >
@@ -180,7 +180,7 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => navigate('/recruitment/apply')}
-              className="btn btn-outlined w-full py-2.5 text-sm font-semibold rounded-full flex items-center justify-center gap-2"
+              className="btn btn-outlined w-full py-2.5 text-sm font-semibold flex items-center justify-center gap-2"
             >
               <FileText size={16} />
               Nộp đơn ứng tuyển

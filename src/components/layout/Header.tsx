@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { NAMVIET_GROUP_LOGO_URL } from '../../constants/branding';
 import {
-  Search, Settings, BarChart3, Bell, ChevronDown,
+  Settings, BarChart3, Bell, ChevronDown,
   User, LogOut, X, PackagePlus, PackageMinus, ArrowLeftRight, ClipboardCheck,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -151,7 +151,6 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [readNotificationIds, setReadNotificationIds] = useState(readStoredNotifIds);
-  const [searchFocused, setSearchFocused] = useState(false);
   useDarkMode();
   const { data: pendingNotifications } = useWmsNotifications();
 
@@ -206,18 +205,6 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
             className="nv-header__logo"
           />
         </button>
-
-        <div className={`nv-header-search nv-header-search--bar${searchFocused ? ' nv-header-search--focused' : ''}`}>
-          <Search className="nv-header-search__icon" size={16} aria-hidden />
-          <input
-            type="search"
-            placeholder="Tìm kiếm chứng từ, sản phẩm..."
-            className="nv-header-search__input"
-            aria-label="Tìm kiếm chứng từ, sản phẩm"
-            onFocus={() => setSearchFocused(true)}
-            onBlur={() => setSearchFocused(false)}
-          />
-        </div>
 
         <div className="nv-header__actions">
           <button

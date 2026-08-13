@@ -279,11 +279,8 @@ export default function StocktakeListPage() {
 
   const freezeBadgeClass = (tone: 'frozen' | 'open') =>
     [
-      'inline-flex h-6 min-w-[6.75rem] shrink-0 items-center justify-center gap-1',
-      'whitespace-nowrap rounded-full px-2.5 text-xs font-medium leading-none',
-      tone === 'frozen'
-        ? 'bg-[var(--md-error-container)] text-[var(--md-on-error-container)]'
-        : 'bg-[var(--md-success-container)] text-[var(--md-on-success-container)]',
+      'badge inline-flex h-6 min-w-[6.75rem] shrink-0 items-center justify-center gap-1',
+      tone === 'frozen' ? 'badge-error' : 'badge-success',
     ].join(' ');
 
   const renderFreezeBadge = (item: Stocktake) => {

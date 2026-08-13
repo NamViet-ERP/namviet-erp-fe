@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import { useEscapeToClose } from '../../hooks/useEscapeToClose';
 
 interface ModalProps {
   isOpen: boolean;
@@ -13,6 +14,12 @@ interface ModalProps {
   variant?: ModalVariant;
   /** Rendered next to the title — status badge, code chip. */
   titleAdornment?: ReactNode;
+  /** Hint or meta under the title row (voucher status, helper). */
+  subtitle?: ReactNode;
+  /** Tighter header padding (voucher / detail sheets). */
+  headerCompact?: boolean;
+  /** Extra classes on the title (mono voucher codes). */
+  titleClassName?: string;
   /** Fixed block between header and scrollable body (meta grid, filters). */
   beforeBody?: ReactNode;
   footer?: ReactNode;
@@ -45,11 +52,15 @@ export default function Modal({
   size = 'md',
   variant = 'plain',
   titleAdornment,
+  subtitle,
+  headerCompact = false,
+  titleClassName,
   beforeBody,
   footer,
   className,
 }: ModalProps) {
   useBodyScrollLock(isOpen);
+  useEscapeToClose(isOpen, onClose);
   if (!isOpen) return null;
 
   const dialogClass = [
@@ -65,10 +76,15 @@ export default function Modal({
     <div className="md-dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="md-dialog-title">
       <div className="md-dialog-scrim" onClick={onClose} aria-hidden />
       <div className={dialogClass}>
-        <div className="md-dialog__header">
-          <div className="md-dialog__title-row">
-            <h3 id="md-dialog-title" className="md-dialog__title">{title}</h3>
-            {titleAdornment}
+        <div className={`md-dialog__header${headerCompact ? ' md-dialog__header--compact' : ''}`}>
+          <div className="min-w-0 flex-1">
+            <div className="md-dialog__title-row">
+              <h3 id="md-dialog-title" className={`md-dialog__title${titleClassName ? ` ${titleClassName}` : ''}`}>
+                {title}
+              </h3>
+              {titleAdornment}
+            </div>
+            {subtitle}
           </div>
           <button type="button" className="md-dialog__close" onClick={onClose} aria-label="Đóng">
             <X size={20} />

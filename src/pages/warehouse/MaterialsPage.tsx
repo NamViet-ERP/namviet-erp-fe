@@ -279,7 +279,10 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
             <thead>
               <tr>
                 {MATERIAL_TABLE_COLUMNS.map(col => (
-                  <th key={col.key} className="table-header-cell text-left whitespace-nowrap">
+                  <th
+                    key={col.key}
+                    className={`table-header-cell text-left whitespace-nowrap${col.key === 'ceilingPrice' ? ' mat-col-ceiling' : ''}`}
+                  >
                     {col.label}
                   </th>
                 ))}
@@ -343,7 +346,7 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
                     <td className="table-cell">{pathCell(m, 'kieu')}</td>
                     <td className="table-cell">{m.technicalSpec ?? '—'}</td>
                     <td className="table-cell">{m.qualityStandard ?? '—'}</td>
-                    <td className="table-cell text-right tabular-nums">
+                    <td className="table-cell table-cell--money mat-col-ceiling">
                       {m.ceilingPrice != null ? formatCurrencyFull(m.ceilingPrice) : '—'}
                     </td>
                   </tr>

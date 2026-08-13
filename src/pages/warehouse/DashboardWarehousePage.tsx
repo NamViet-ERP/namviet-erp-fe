@@ -34,7 +34,7 @@ const CHART_AXIS_STROKE = 'var(--md-outline-variant)';
 const CHART_AXIS_TICK = {
   fill: 'var(--md-on-surface-variant)',
   fontSize: 11,
-  fontFamily: 'Roboto, sans-serif',
+  fontFamily: 'var(--font-sans)',
 } as const;
 
 const WAREHOUSE_BAR_Y_AXIS = {
@@ -67,7 +67,7 @@ function buildStockBarYScale(values: number[]): { domainMax: number; ticks: numb
 }
 
 function warehouseBarChartHeight(): number {
-  return 280;
+  return 180;
 }
 
 function WarehouseBarXTick({ x = 0, y = 0, index = 0 }: XAxisTickContentProps) {
@@ -174,7 +174,7 @@ function renderPiePercentLabel(props: PieSliceLabelProps) {
       dominantBaseline="central"
       fontSize={11}
       fontWeight={700}
-      fontFamily="Roboto, sans-serif"
+      fontFamily="var(--font-sans)"
       pointerEvents="none"
       style={{ pointerEvents: 'none' }}
     >
@@ -426,13 +426,13 @@ function TrendChart({ data }: { data: TrendDataPoint[] }) {
               <XAxis
                 dataKey="month"
                 stroke="transparent"
-                tick={{ fill: 'var(--md-on-surface-variant)', fontSize: 11, fontFamily: 'Roboto, sans-serif' }}
+                tick={CHART_AXIS_TICK}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis
                 stroke="transparent"
-                tick={{ fill: 'var(--md-on-surface-variant)', fontSize: 10, fontFamily: 'Roboto, sans-serif' }}
+                tick={{ ...CHART_AXIS_TICK, fontSize: 10 }}
                 tickFormatter={(v) => formatCurrencyShort(Number(v))}
                 width={48}
                 domain={[0, yMax]}

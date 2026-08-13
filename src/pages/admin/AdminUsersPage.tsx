@@ -6,6 +6,7 @@ import PageHeader from '../../components/ui/PageHeader';
 import SearchBar from '../../components/ui/SearchBar';
 import Pagination from '../../components/ui/Pagination';
 import EmptyState from '../../components/ui/EmptyState';
+import TabFilter from '../../components/ui/TabFilter';
 import HrmPanel from '../../components/hr/HrmPanel';
 import HrmStatCard from '../../components/hr/HrmStatCard';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
@@ -27,6 +28,7 @@ import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
 import type { AdminUserListParams, AdminUserPagedResult, AdminUserRow } from '../../services/adminUsersService';
 import { getSessionUser } from '../../constants/systemUsers';
 import { isCurrentAdminUserRow, adminUserToggleKey } from '../../lib/admin/isCurrentAdminUser';
+import type { TabItem } from '../../types';
 
 const TABLE_HEADERS = [
   'Mã nhân viên',
@@ -46,9 +48,14 @@ type QuickFilter = 'all' | 'pending';
 type AccountStatusFilter = '' | 'pending' | 'active' | 'locked';
 type SourceFilter = '' | 'employee' | 'manual';
 
+const QUICK_TABS: TabItem[] = [
+  { id: 'all', label: 'Tất cả' },
+  { id: 'pending', label: 'Chờ cấp TK' },
+];
+
 function statusBadgeClass(user: AdminUserRow): string {
-  if (!user.hasAccount) return 'hrm-badge hrm-badge--neutral';
-  return user.isActive ? 'hrm-badge hrm-badge--success' : 'hrm-badge hrm-badge--warning';
+  if (!user.hasAccount) return 'badge badge-neutral';
+  return user.isActive ? 'badge badge-success' : 'badge badge-warning';
 }
 
 export default function AdminUsersPage() {
@@ -183,6 +190,17 @@ export default function AdminUsersPage() {
       </div>
 
       <HrmPanel noPadding>
+        <div className="px-4 pt-3 pb-1 border-b border-[var(--md-outline-variant02)]">
+          <TabFilter
+            tabs={QUICK_TABS.map(tab => (
+              tab.id === 'all'
+                ? { ...tab, count: summary?.total }
+                : { ...tab, count: summary?.pending }
+            ))}
+            activeTab={quickFilter}
+            onChange={id => { setQuickFilter(id as QuickFilter); resetPaging(); }}
+          />
+        </div>
         <div className="hrm-list-toolbar">
           <div className="hrm-list-toolbar__filters">
             <SearchBar
@@ -222,22 +240,6 @@ export default function AdminUsersPage() {
                   <option value="employee">Nhân viên HR</option>
                   <option value="manual">Tài khoản hệ thống</option>
                 </select>
-              </div>
-              <div className="hrm-filter-quick-chips" role="group" aria-label="Lọc nhanh">
-                <button
-                  type="button"
-                  className={`hrm-status-chip${quickFilter === 'all' ? ' hrm-status-chip--active' : ''}`}
-                  onClick={() => { setQuickFilter('all'); resetPaging(); }}
-                >
-                  Tất cả
-                </button>
-                <button
-                  type="button"
-                  className={`hrm-status-chip${quickFilter === 'pending' ? ' hrm-status-chip--active' : ''}`}
-                  onClick={() => { setQuickFilter('pending'); resetPaging(); }}
-                >
-                  Chờ cấp TK
-                </button>
               </div>
               {hasFilters && (
                 <button type="button" onClick={resetFilters} className="hrm-filter-reset">

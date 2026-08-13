@@ -10,6 +10,7 @@ import Modal from '../../components/ui/Modal';
 import Pagination from '../../components/ui/Pagination';
 import SupplierAutocomplete from '../../components/ui/SupplierAutocomplete';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
+import HrmDatePicker from '../../components/hr/HrmDatePicker';
 import { showToast } from '../../components/ui/Toast';
 import { DEFAULT_LIST_PAGE_SIZE, type ListPageSize } from '../../constants/pagination';
 import {
@@ -521,30 +522,24 @@ export default function PurchaseContractsPage() {
                 />
               </FormField>
               <FormField label="Ngày ký">
-                <input
-                  type="date"
-                  className="form-input"
+                <HrmDatePicker
                   value={form.signedDate}
                   disabled={busy || (!canCreate && !canUpdate)}
-                  onChange={e => setForm(prev => ({ ...prev, signedDate: e.target.value }))}
+                  onChange={signedDate => setForm(prev => ({ ...prev, signedDate }))}
                 />
               </FormField>
               <FormField label="Hiệu lực từ">
-                <input
-                  type="date"
-                  className="form-input"
+                <HrmDatePicker
                   value={form.effectiveFrom}
                   disabled={busy || (!canCreate && !canUpdate)}
-                  onChange={e => setForm(prev => ({ ...prev, effectiveFrom: e.target.value }))}
+                  onChange={effectiveFrom => setForm(prev => ({ ...prev, effectiveFrom }))}
                 />
               </FormField>
               <FormField label="Hiệu lực đến">
-                <input
-                  type="date"
-                  className="form-input"
+                <HrmDatePicker
                   value={form.effectiveTo}
                   disabled={busy || (!canCreate && !canUpdate)}
-                  onChange={e => setForm(prev => ({ ...prev, effectiveTo: e.target.value }))}
+                  onChange={effectiveTo => setForm(prev => ({ ...prev, effectiveTo }))}
                 />
               </FormField>
               <FormField label="Ghi chú" className="md:col-span-2">

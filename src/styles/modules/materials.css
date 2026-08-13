@@ -75,3 +75,8 @@
   color: var(--md-on-surface-variant);
   font-weight: 400;
 }
+
+.mat-col-ceiling {
+  width: 9.5rem;
+  min-width: 9.5rem;
+}

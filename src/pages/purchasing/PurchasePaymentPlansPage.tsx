@@ -15,17 +15,23 @@ import type { DropdownItem } from '../../types';
 import type { PurchasePaymentPlanStageApiDto } from '../../types/api/purchasingApi';
 
 function stageStatusLabel(status: string): string {
-  switch (status) {
-    case 'paid': return 'Đã thanh toán';
-    case 'in_progress': return 'Chưa hoàn thành';
-    default: return 'Chưa thanh toán';
+  switch (status.trim().toLowerCase()) {
+    case 'paid':
+    case 'completed':
+    case 'đã thanh toán':
+      return 'Đã thanh toán';
+    case 'in_progress':
+    case 'partial':
+      return 'Chưa hoàn thành';
+    default:
+      return 'Chưa thanh toán';
   }
 }
 
 function stageTone(status: string): 'paid' | 'busy' | 'open' {
   const s = status.trim().toLowerCase();
-  if (s === 'paid') return 'paid';
-  if (s === 'in_progress') return 'busy';
+  if (s === 'paid' || s === 'completed' || s === 'đã thanh toán') return 'paid';
+  if (s === 'in_progress' || s === 'partial') return 'busy';
   return 'open';
 }
 

@@ -13,7 +13,6 @@ const purchasingPages: Array<{ path: string; title: string | RegExp }> = [
   { path: '/suppliers/groups', title: 'Nhóm nhà cung cấp' },
   { path: '/suppliers/contacts', title: 'Liên hệ NCC' },
   { path: '/suppliers/evaluations', title: 'Đánh giá NCC' },
-  { path: '/suppliers/settings', title: 'Thiết lập' },
 ];
 
 test.describe('Purchasing & suppliers pages', () => {

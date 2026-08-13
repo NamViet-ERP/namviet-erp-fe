@@ -150,26 +150,23 @@ export default function DepartmentsSettingsPanel({ canUpdate }: { canUpdate: boo
           <div className="hrm-settings-card__icon hrm-settings-card__icon--primary">
             <Building2 size={20} aria-hidden />
           </div>
-          <div>
+          <div className="hrm-settings-card__head-text">
             <h2 className="hrm-settings-card__title">Phòng ban</h2>
             <p className="hrm-settings-card__desc">
               Tạo - sửa phòng ban, rồi gán một hoặc nhiều nhân viên vào phòng. Đổi tên không làm lệch kế hoạch tuyển dụng (lưu theo Id).
             </p>
           </div>
-        </div>
-
-        {canUpdate && (
-          <div className="hrm-settings-card__actions">
+          {canUpdate && (
             <button
               type="button"
-              className="btn btn-primary rounded-full px-4 flex items-center gap-2 text-sm"
+              className="btn btn-primary"
               onClick={openCreate}
             >
               <Plus size={16} aria-hidden />
               Thêm phòng ban
             </button>
-          </div>
-        )}
+          )}
+        </div>
 
         {isPending && <p className="hrm-settings-note" role="status">Đang tải phòng ban...</p>}
         {isError && (
@@ -210,10 +207,10 @@ export default function DepartmentsSettingsPanel({ canUpdate }: { canUpdate: boo
                     <td className="table-cell">{dept.isActive ? 'Đang hoạt động' : 'Ngừng'}</td>
                     {canUpdate && (
                       <td className="table-cell">
-                        <div className="flex items-center gap-1">
+                        <div className="hrm-table-row-actions">
                           <button
                             type="button"
-                            className="btn btn-outline btn-sm rounded-full"
+                            className="btn btn-outline btn-sm"
                             onClick={() => openAssign(dept)}
                             aria-label={`Gán nhân viên vào ${dept.name}`}
                           >
@@ -222,7 +219,7 @@ export default function DepartmentsSettingsPanel({ canUpdate }: { canUpdate: boo
                           </button>
                           <button
                             type="button"
-                            className="btn btn-outline btn-sm rounded-full"
+                            className="btn btn-outline btn-sm"
                             onClick={() => openEdit(dept)}
                             aria-label={`Sửa ${dept.name}`}
                           >
@@ -230,7 +227,7 @@ export default function DepartmentsSettingsPanel({ canUpdate }: { canUpdate: boo
                           </button>
                           <button
                             type="button"
-                            className="btn btn-outline btn-sm rounded-full text-[var(--md-error)]"
+                            className="btn btn-outline btn-sm text-[var(--md-error)]"
                             onClick={() => setDeleteTarget(dept)}
                             aria-label={`Xóa ${dept.name}`}
                           >
