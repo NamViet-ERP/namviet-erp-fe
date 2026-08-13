@@ -5,9 +5,12 @@ import './index.css';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
 import { queryClient } from './lib/queryClient';
-import { initAuthTokenProvider } from './services/authService';
+import { startApiKeepAlive } from './lib/apiKeepAlive';
+import { authService, initAuthTokenProvider } from './services/authService';
 
 initAuthTokenProvider();
+startApiKeepAlive();
+void authService.ensureSession();
 
 createRoot(document.getElementById('root') as HTMLElement).render(
   <StrictMode>

@@ -56,6 +56,8 @@ function lockReasonFromStatus(status?: string): string | null {
 
 export type SessionCheckResult = 'authenticated' | 'unauthenticated' | 'recoverable-error';
 
+let sessionInFlight: Promise<SessionCheckResult> | null = null;
+
 async function syncSessionUserFromApi(): Promise<SessionCheckResult> {
   try {
     const dto = await apiClient.get<AuthUserDto>('/api/auth/me');
@@ -91,6 +93,54 @@ export function initAuthTokenProvider(): void {
   setAuthTokenProvider(getStoredToken);
 }
 
+async function ensureSessionOnce(): Promise<SessionCheckResult> {
+  const token = getStoredToken();
+  const e2e = import.meta.env.VITE_E2E === 'true';
+
+  // Playwright persists access JWT in localStorage; refresh cookies rotate per test context.
+  // Prefer /me with the bearer token before cookie refresh so E2E storageState stays usable.
+  if (e2e && token && !isAccessTokenExpired(token)) {
+    const synced = await syncSessionUserFromApi();
+    if (synced === 'authenticated') return synced;
+    if (synced === 'recoverable-error') {
+      clearSessionUser();
+      return synced;
+    }
+  }
+
+  if (!token || isAccessTokenExpired(token)) {
+    const refreshResult = await refreshAccessToken();
+    if (refreshResult === 'unavailable') {
+      clearSessionUser();
+      return 'recoverable-error';
+    }
+    if (refreshResult === 'rejected') {
+      clearSession();
+      clearSessionUser();
+      return 'unauthenticated';
+    }
+  }
+
+  const synced = await syncSessionUserFromApi();
+  if (synced === 'authenticated' || synced === 'recoverable-error') {
+    if (synced === 'recoverable-error') clearSessionUser();
+    return synced;
+  }
+
+  // Access rejected — try one refresh then /me again.
+  const refreshResult = await refreshAccessToken();
+  if (refreshResult === 'unavailable') {
+    clearSessionUser();
+    return 'recoverable-error';
+  }
+  if (refreshResult === 'rejected') {
+    clearSession();
+    clearSessionUser();
+    return 'unauthenticated';
+  }
+  return syncSessionUserFromApi();
+}
+
 export const authService = {
   async login(username: string, password: string, rememberMe = false): Promise<SystemUser> {
     const res = await apiClient.post<LoginResponse>('/api/auth/login', {
@@ -111,51 +161,12 @@ export const authService = {
   },
 
   async ensureSession(): Promise<SessionCheckResult> {
-    const token = getStoredToken();
-    const e2e = import.meta.env.VITE_E2E === 'true';
-
-    // Playwright persists access JWT in localStorage; refresh cookies rotate per test context.
-    // Prefer /me with the bearer token before cookie refresh so E2E storageState stays usable.
-    if (e2e && token && !isAccessTokenExpired(token)) {
-      const synced = await syncSessionUserFromApi();
-      if (synced === 'authenticated') return synced;
-      if (synced === 'recoverable-error') {
-        clearSessionUser();
-        return synced;
-      }
+    if (!sessionInFlight) {
+      sessionInFlight = ensureSessionOnce().finally(() => {
+        sessionInFlight = null;
+      });
     }
-
-    if (!token || isAccessTokenExpired(token)) {
-      const refreshResult = await refreshAccessToken();
-      if (refreshResult === 'unavailable') {
-        clearSessionUser();
-        return 'recoverable-error';
-      }
-      if (refreshResult === 'rejected') {
-        clearSession();
-        clearSessionUser();
-        return 'unauthenticated';
-      }
-    }
-
-    const synced = await syncSessionUserFromApi();
-    if (synced === 'authenticated' || synced === 'recoverable-error') {
-      if (synced === 'recoverable-error') clearSessionUser();
-      return synced;
-    }
-
-    // Access rejected — try one refresh then /me again.
-    const refreshResult = await refreshAccessToken();
-    if (refreshResult === 'unavailable') {
-      clearSessionUser();
-      return 'recoverable-error';
-    }
-    if (refreshResult === 'rejected') {
-      clearSession();
-      clearSessionUser();
-      return 'unauthenticated';
-    }
-    return syncSessionUserFromApi();
+    return sessionInFlight;
   },
 
   async refreshSession(): Promise<SessionCheckResult> {

@@ -1,0 +1,21 @@
+name: Keep API warm
+
+# Render Free sleeps after ~15 min idle. Ping /health so the first user
+# does not wait 10–30s for a cold start.
+# Scheduled runs only on the repo default branch (currently `main`).
+# Push/workflow_dispatch also wake the API after a FE deploy.
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+  push:
+    branches: [feature/purchasing, dev, production, main]
+
+jobs:
+  ping:
+    name: Ping Render /health
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: GET https://namviet-erp-api.onrender.com/health
+        run: curl -fsS --retry 2 --retry-delay 5 --max-time 45 https://namviet-erp-api.onrender.com/health

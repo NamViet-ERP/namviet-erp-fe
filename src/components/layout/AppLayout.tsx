@@ -131,7 +131,7 @@ export default function AppLayout() {
       )}
       <main className={mainClass}>
         <div className="app-main__inner">
-          <div key={location.pathname} className="page-route-enter">
+          <div className="page-route-enter">
             <Outlet />
           </div>
         </div>
