@@ -3,16 +3,10 @@ import type {
   AssignDepartmentMembersRequest,
   DepartmentApiDto,
   DepartmentMemberApiDto,
+  UpsertDepartmentRequest,
 } from '../types/api/hrApi';
 
-export type { DepartmentApiDto, DepartmentMemberApiDto };
-
-export interface UpsertDepartmentRequest {
-  code: string;
-  name: string;
-  parentId?: number | null;
-  block?: string | null;
-}
+export type { DepartmentApiDto, DepartmentMemberApiDto, UpsertDepartmentRequest };
 
 const BASE = '/api/hr/departments';
 

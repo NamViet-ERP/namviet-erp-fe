@@ -1,5 +1,3 @@
-import { isAccountActiveForEmployee } from '../services/employeesService';
-import { isActiveEmployee, type Employee } from '../types/hr';
 import type { CreateSystemUserDto, SystemUser, SystemUserRole } from '../types/systemUser';
 
 export type { CreateSystemUserDto, SystemUser, SystemUserRole };
@@ -9,33 +7,7 @@ export type { CreateSystemUserDto, SystemUser, SystemUserRole };
  * Authorization is always enforced by the API (JWT + permissions) — never trust localStorage alone.
  */
 const SESSION_USER_KEY = 'nv-session-user';
-const ACCOUNT_ENABLED_PREFIX = 'nv-user-enabled-';
 export const AUTH_CHANGED_EVENT = 'nv-auth-changed';
-
-export function isAccountManuallyEnabled(id: string): boolean {
-  const raw = localStorage.getItem(`${ACCOUNT_ENABLED_PREFIX}${id}`);
-  if (raw === null) return true;
-  return raw !== 'false';
-}
-
-export function setAccountEnabled(id: string, enabled: boolean): void {
-  localStorage.setItem(`${ACCOUNT_ENABLED_PREFIX}${id}`, enabled ? 'true' : 'false');
-}
-
-export function isUserAccountActive(user: SystemUser): boolean {
-  const enableKey = user.employeeId ?? user.id;
-  if (!isAccountManuallyEnabled(enableKey)) return false;
-  return isAccountActiveForEmployee(user.employeeId);
-}
-
-export function isEmployeeLoginActive(employee: Pick<Employee, 'id' | 'status'>): boolean {
-  if (!isAccountManuallyEnabled(employee.id)) return false;
-  return isActiveEmployee(employee);
-}
-
-export function canUserLogin(user: SystemUser): boolean {
-  return isUserAccountActive(user);
-}
 
 function readStoredSessionUser(): SystemUser | undefined {
   const raw = localStorage.getItem(SESSION_USER_KEY);

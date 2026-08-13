@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Production build — forces VITE_USE_MOCK=false (Windows + Unix).
+ * Production build (Windows + Unix).
  * VITE_API_BASE_URL may be empty (same-origin reverse proxy + cookie auth).
  */
 
@@ -11,7 +11,7 @@ import path from 'node:path';
 
 const scriptsDir = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.join(scriptsDir, '..');
-const env = { ...process.env, VITE_USE_MOCK: 'false' };
+const env = { ...process.env };
 
 function run(scriptName) {
   const result = spawnSync(process.execPath, [path.join(scriptsDir, scriptName)], {

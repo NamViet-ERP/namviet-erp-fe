@@ -2475,7 +2475,11 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "text/plain": components["schemas"]["DepartmentDto"][];
+                        "application/json": components["schemas"]["DepartmentDto"][];
+                        "text/json": components["schemas"]["DepartmentDto"][];
+                    };
                 };
             };
         };
@@ -2533,7 +2537,11 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "text/plain": components["schemas"]["DepartmentDto"];
+                        "application/json": components["schemas"]["DepartmentDto"];
+                        "text/json": components["schemas"]["DepartmentDto"];
+                    };
                 };
             };
         };
@@ -2612,7 +2620,11 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "text/plain": components["schemas"]["DepartmentMemberDto"][];
+                        "application/json": components["schemas"]["DepartmentMemberDto"][];
+                        "text/json": components["schemas"]["DepartmentMemberDto"][];
+                    };
                 };
             };
         };
@@ -13679,6 +13691,38 @@ export interface components {
             importValue: number;
             /** Format: double */
             exportValue: number;
+        };
+        DepartmentChildDto: {
+            /** Format: int32 */
+            id: number;
+            code: string;
+            name: string;
+            isActive: boolean;
+            /** Format: int32 */
+            employeeCount: number;
+        };
+        DepartmentDto: {
+            /** Format: int32 */
+            id: number;
+            code: string;
+            name: string;
+            /** Format: int32 */
+            parentId?: number | null;
+            block?: string | null;
+            isActive: boolean;
+            /** Format: int32 */
+            employeeCount: number;
+            children: components["schemas"]["DepartmentChildDto"][];
+        };
+        DepartmentMemberDto: {
+            /** Format: int32 */
+            id: number;
+            code: string;
+            fullName: string;
+            email?: string | null;
+            phone?: string | null;
+            status: string;
+            positionName?: string | null;
         };
         EmployeeDto: {
             id: string;

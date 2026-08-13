@@ -1,5 +1,4 @@
 import { ApiError, apiClient, setAuthTokenProvider } from '../lib/apiClient';
-import { cacheEmployeeStatus } from './employeesService';
 import type { SystemUser } from '../constants/systemUsers';
 import { setSessionUser, clearSessionUser, getSessionUser } from '../constants/systemUsers';
 import { getEmployeeLockReason } from '../constants/employeeStatus';
@@ -68,10 +67,6 @@ async function syncSessionUserFromApi(): Promise<SessionCheckResult> {
       return 'unauthenticated';
     }
 
-    if (dto.employeeId && dto.employeeStatus) {
-      cacheEmployeeStatus(dto.employeeId, dto.employeeStatus);
-    }
-
     const permissions = resolvePermissions(dto);
     setSessionUser(mapAuthUser(dto, permissions));
     return 'authenticated';
@@ -109,10 +104,6 @@ export const authService = {
     const access = res.accessToken ?? res.token;
     if (!access) throw new Error('Phản hồi đăng nhập thiếu access token.');
     setAccessToken(access);
-
-    if (res.user.employeeId && res.user.employeeStatus) {
-      cacheEmployeeStatus(res.user.employeeId, res.user.employeeStatus);
-    }
 
     const user = mapAuthUser(res.user, resolvePermissions(res.user));
     setSessionUser(user);

@@ -11,9 +11,6 @@ import { getDefaultRoute } from '../../utils/getDefaultRoute';
 import { getActiveRole } from '../../lib/getActiveRole';
 import { NAMVIET_GROUP_LOGO_URL } from '../../constants/branding';
 
-// Same-origin cookie auth: empty VITE_API_BASE_URL still talks to /api via proxy.
-const HAS_API = import.meta.env.VITE_USE_MOCK !== 'true';
-
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -22,16 +19,12 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   /** Đóng tab mất access token trong RAM — thử lại bằng cookie refresh trước khi hiện form. */
-  const [restoring, setRestoring] = useState(HAS_API);
+  const [restoring, setRestoring] = useState(true);
   const [searchParams] = useSearchParams();
   const sessionExpired = searchParams.get('expired') === '1';
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!HAS_API) {
-      setRestoring(false);
-      return;
-    }
     let cancelled = false;
     void authService.ensureSession().then(result => {
       if (cancelled) return;
@@ -53,11 +46,6 @@ export default function LoginPage() {
     try {
       if (!username.trim() || !password.trim()) {
         setError('Vui lòng điền đầy đủ email và mật khẩu');
-        return;
-      }
-
-      if (!HAS_API) {
-        setError(UI_ERROR.serverUnavailable);
         return;
       }
 

@@ -4,7 +4,7 @@ import Header from './Header';
 import Sidebar from './Sidebar';
 import ToastContainer, { showToast } from '../ui/Toast';
 import { unifiedSidebarMenu } from '../../constants/sidebarMenus';
-import { getSessionUser, canUserLogin, getSessionPermissions } from '../../constants/systemUsers';
+import { getSessionUser, getSessionPermissions } from '../../constants/systemUsers';
 import { authService } from '../../services/authService';
 import {
   getFallbackRoute,
@@ -86,7 +86,7 @@ export default function AppLayout() {
     );
   }
 
-  if (sessionState === 'unauthenticated' || !authService.isLoggedIn() || !sessionUser || !canUserLogin(sessionUser)) {
+  if (sessionState === 'unauthenticated' || !authService.isLoggedIn() || !sessionUser) {
     return <Navigate to="/login" replace />;
   }
 

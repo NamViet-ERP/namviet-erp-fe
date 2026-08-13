@@ -9,7 +9,7 @@ Backend: file `docs/DEPLOY.md` trong repo **`WareHouse_Management_BE`** (cùng b
 
 | Được | Không được |
 |------|------------|
-| Gọi API thật (same-origin proxy hoặc absolute URL) | `VITE_USE_MOCK=true` (mock layer đã gỡ — build sẽ fail nếu set) |
+| Gọi API thật (same-origin proxy hoặc absolute URL) | `VITE_USE_MOCK=true` (cờ legacy; `verify-prod-env` fail nếu còn set) |
 | Build bằng `npm run build:prod` | `npm run build` thiếu `.env.production` / env shell |
 | Master data tùy chọn qua script SQL (BE) sau khi business chốt | Seed user / dữ liệu nghiệp vụ trong code hoặc migration tự chạy |
 | Tạo admin đầu tiên thủ công (BE `BootstrapFirstAdmin`) | Tài khoản admin cứng trong repo |
@@ -48,10 +48,9 @@ Artifact: thư mục `dist/` — deploy lên static host (Nginx, IIS, CDN, …).
 
 ### Guard đã bật (P0 + Phase 1)
 
-- `verify-prod-env` — fail nếu `VITE_USE_MOCK=true`; `VITE_API_BASE_URL` phải rỗng (same-origin), absolute http(s), hoặc path  
+- `verify-prod-env` — fail nếu `VITE_USE_MOCK=true` (cờ legacy) hoặc `VITE_API_BASE_URL` không phải rỗng / http(s) / path  
 - `verify-no-mock-src` — fail nếu còn mock/seed store trong `src/`  
 - `verify-prod-bundle` — fail nếu `dist/assets/` còn chunk `*.mock*.js`  
-- `vite.config.ts` / `assertProductionConfig()` — chặn mock trên production  
 - CI: build same-origin (`VITE_API_BASE_URL` rỗng) + upload artifact `fe-dist`
 
 ### Mẫu reverse proxy (same-origin)
@@ -140,7 +139,7 @@ psql -h <host> -U <user> -d <database> -f scripts/seed-material-category-tree.sq
 | Triệu chứng | Kiểm tra |
 |-------------|----------|
 | Build fail “VITE_API_BASE_URL” | Set trong `.env.production` hoặc `$env:VITE_API_BASE_URL` trước `build:prod` |
-| Build fail “VITE_USE_MOCK=true” | Dùng `npm run build:prod`, không set mock true |
+| Build fail “VITE_USE_MOCK=true” | Gỡ `VITE_USE_MOCK` khỏi `.env.production` / env shell |
 | Login OK nhưng API 401/CORS | `Cors:AllowedOrigins` trên BE, URL FE khớp |
 | App gọi sai host | Build lại FE với `VITE_API_BASE_URL` đúng (không sửa tay file trong `dist/`) |
 

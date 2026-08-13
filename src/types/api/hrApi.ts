@@ -14,37 +14,9 @@ export type UpdateEmployeeRequest = Schemas['UpdateEmployeeRequest'];
 
 /** OpenAPI aliases — Departments */
 export type AssignDepartmentMembersRequest = Schemas['AssignDepartmentMembersRequest'];
-
-/**
- * Department list/detail responses are anonymous on BE (not in components.schemas).
- * Keep a hand wire shape until BE publishes DepartmentDto (+ employeeCount).
- */
-export type DepartmentApiDto = {
-  id: number;
-  code: string;
-  name: string;
-  parentId?: number | null;
-  block?: string | null;
-  isActive: boolean;
-  employeeCount?: number;
-  children?: Array<{
-    id: number;
-    code: string;
-    name: string;
-    isActive: boolean;
-    employeeCount?: number;
-  }>;
-};
-
-export type DepartmentMemberApiDto = {
-  id: number;
-  code: string;
-  fullName: string;
-  email?: string | null;
-  phone?: string | null;
-  status: string;
-  positionName?: string | null;
-};
+export type DepartmentApiDto = Schemas['DepartmentDto'];
+export type DepartmentMemberApiDto = Schemas['DepartmentMemberDto'];
+export type UpsertDepartmentRequest = Schemas['UpsertDepartmentRequest'];
 
 /** OpenAPI aliases — Recruitment plans */
 export type RecruitmentPlanApiDto = Schemas['RecruitmentPlanDto'];

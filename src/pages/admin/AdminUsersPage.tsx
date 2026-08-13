@@ -8,22 +8,15 @@ import Pagination from '../../components/ui/Pagination';
 import EmptyState from '../../components/ui/EmptyState';
 import HrmPanel from '../../components/hr/HrmPanel';
 import HrmStatCard from '../../components/hr/HrmStatCard';
-import Modal from '../../components/ui/Modal';
-import FormField from '../../components/ui/FormField';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
-import AdminPasswordField from '../../components/admin/AdminPasswordField';
-import { validatePassword } from '../../lib/validatePassword';
+import AdminAccountSwitch from '../../components/admin/AdminAccountSwitch';
+import AdminCreateSystemUserModal from '../../components/admin/AdminCreateSystemUserModal';
+import AdminProvisionAccountModal from '../../components/admin/AdminProvisionAccountModal';
+import AdminResetPasswordModal from '../../components/admin/AdminResetPasswordModal';
 import { showToast } from '../../components/ui/Toast';
-import {
-  type CreateSystemUserDto,
-  type SystemUserRole,
-} from '../../constants/systemUsers';
 import {
   adminUsersListQueryKey,
   useAdminUsers,
-  useCreateAdminUser,
-  useProvisionAdminAccount,
-  useResetAdminPassword,
   useToggleAdminUserStatus,
 } from '../../hooks/useAdminUsers';
 import { useActiveRoleOptions } from '../../hooks/useRoles';
@@ -53,47 +46,9 @@ type QuickFilter = 'all' | 'pending';
 type AccountStatusFilter = '' | 'pending' | 'active' | 'locked';
 type SourceFilter = '' | 'employee' | 'manual';
 
-const EMPTY_FORM: CreateSystemUserDto = {
-  name: '',
-  email: '',
-  phone: '',
-  employeeCode: '',
-  department: '',
-  position: '',
-  role: 'storekeeper',
-};
-
 function statusBadgeClass(user: AdminUserRow): string {
   if (!user.hasAccount) return 'hrm-badge hrm-badge--neutral';
   return user.isActive ? 'hrm-badge hrm-badge--success' : 'hrm-badge hrm-badge--warning';
-}
-
-interface AccountSwitchProps {
-  checked: boolean;
-  disabled?: boolean;
-  onChange: (next: boolean) => void;
-  title?: string;
-}
-
-function AccountSwitch({ checked, disabled, onChange, title }: AccountSwitchProps) {
-  return (
-    <button
-      type="button"
-      onMouseDown={e => e.stopPropagation()}
-      onClick={e => {
-        e.stopPropagation();
-        if (!disabled) onChange(!checked);
-      }}
-      disabled={disabled}
-      className={`hrm-toggle-switch${checked ? ' hrm-toggle-switch--on' : ''}${disabled ? ' hrm-toggle-switch--disabled' : ''}`}
-      role="switch"
-      aria-checked={checked}
-      aria-disabled={disabled}
-      title={title ?? (checked ? 'Đang bật' : 'Đang tắt')}
-    >
-      <span className="hrm-toggle-switch__thumb" aria-hidden />
-    </button>
-  );
 }
 
 export default function AdminUsersPage() {
@@ -142,24 +97,10 @@ export default function AdminUsersPage() {
 
   const { data: roleOptions = [] } = useActiveRoleOptions();
   const toggleMutation = useToggleAdminUserStatus(listParams);
-  const createMutation = useCreateAdminUser();
-  const provisionMutation = useProvisionAdminAccount();
-  const resetMutation = useResetAdminPassword();
 
   const [showCreate, setShowCreate] = useState(false);
-  const [form, setForm] = useState(EMPTY_FORM);
-  const [createPassword, setCreatePassword] = useState('');
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
   const [provisionTarget, setProvisionTarget] = useState<AdminUserRow | null>(null);
-  const [provisionRole, setProvisionRole] = useState<SystemUserRole>('storekeeper');
-  const [provisionPassword, setProvisionPassword] = useState('');
-  const [provisionErrors, setProvisionErrors] = useState<Record<string, string>>({});
-
   const [resetTarget, setResetTarget] = useState<AdminUserRow | null>(null);
-  const [resetPassword, setResetPassword] = useState('');
-  const [resetError, setResetError] = useState('');
-
   const [lockConfirmTarget, setLockConfirmTarget] = useState<AdminUserRow | null>(null);
 
   const sessionUser = getSessionUser();
@@ -167,42 +108,6 @@ export default function AdminUsersPage() {
   const togglingKey = toggleMutation.isPending && toggleMutation.variables
     ? `${toggleMutation.variables.source}:${toggleMutation.variables.toggleId}`
     : null;
-
-  const validateManualForm = () => {
-    const next: Record<string, string> = {};
-    if (!form.name.trim()) next.name = 'Vui lòng nhập họ tên';
-    if (!form.email.trim()) next.email = 'Vui lòng nhập email';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) next.email = 'Email không hợp lệ';
-    const passErr = validatePassword(createPassword);
-    if (passErr) next.password = passErr;
-    setErrors(next);
-    return Object.keys(next).length === 0;
-  };
-
-  const resetManualForm = () => {
-    setForm(EMPTY_FORM);
-    setCreatePassword('');
-    setErrors({});
-  };
-
-  const openProvision = (user: AdminUserRow) => {
-    setProvisionTarget(user);
-    setProvisionRole('storekeeper');
-    setProvisionPassword('');
-    setProvisionErrors({});
-  };
-
-  const closeProvision = () => {
-    setProvisionTarget(null);
-    setProvisionPassword('');
-    setProvisionErrors({});
-  };
-
-  const openReset = (user: AdminUserRow) => {
-    setResetTarget(user);
-    setResetPassword('');
-    setResetError('');
-  };
 
   const handleRowClick = (user: AdminUserRow) => {
     navigate(`/admin/users/${user.id}?source=${user.source}`);
@@ -212,80 +117,6 @@ export default function AdminUsersPage() {
     const target = e.target as HTMLElement;
     if (target.closest('button, a, input, select, textarea, [role="switch"]')) return;
     handleRowClick(user);
-  };
-
-  const handleCreate = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!validateManualForm()) {
-      showToast('warning', 'Vui lòng kiểm tra lại thông tin');
-      return;
-    }
-
-    try {
-      await createMutation.mutateAsync({
-        ...form,
-        phone: form.phone?.trim() || undefined,
-        employeeCode: form.employeeCode?.trim() || undefined,
-        department: form.department?.trim() || undefined,
-        position: form.position?.trim() || undefined,
-        password: createPassword,
-      });
-      showToast('success', 'Đã thêm tài khoản hệ thống — gửi mật khẩu cho người dùng qua kênh nội bộ');
-      setShowCreate(false);
-      resetManualForm();
-    } catch (err: unknown) {
-      showToast('error', getApiErrorMessage(err, 'Không thể thêm tài khoản'));
-    }
-  };
-
-  const handleProvision = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!provisionTarget) return;
-
-    const next: Record<string, string> = {};
-    const passErr = validatePassword(provisionPassword);
-    if (passErr) next.password = passErr;
-    setProvisionErrors(next);
-    if (Object.keys(next).length > 0) {
-      showToast('warning', passErr ?? 'Vui lòng kiểm tra lại mật khẩu');
-      return;
-    }
-
-    try {
-      await provisionMutation.mutateAsync({
-        employeeId: provisionTarget.id,
-        role: provisionRole,
-        password: provisionPassword,
-      });
-      showToast('success', `Đã cấp tài khoản cho ${provisionTarget.fullName} — gửi mật khẩu qua kênh nội bộ`);
-      closeProvision();
-    } catch (err: unknown) {
-      showToast('error', getApiErrorMessage(err, 'Không thể cấp tài khoản'));
-    }
-  };
-
-  const handleResetPassword = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!resetTarget?.accountUserId) return;
-
-    const passErr = validatePassword(resetPassword);
-    if (passErr) {
-      setResetError(passErr);
-      showToast('warning', passErr);
-      return;
-    }
-
-    try {
-      await resetMutation.mutateAsync({
-        accountUserId: resetTarget.accountUserId,
-        password: resetPassword,
-      });
-      showToast('success', `Đã đặt lại mật khẩu cho ${resetTarget.fullName}`);
-      setResetTarget(null);
-      setResetPassword('');
-    } catch (err: unknown) {
-      showToast('error', getApiErrorMessage(err, 'Không thể đặt lại mật khẩu'));
-    }
   };
 
   const executeToggle = async (user: AdminUserRow, next: boolean) => {
@@ -473,7 +304,7 @@ export default function AdminUsersPage() {
                       onMouseDown={e => e.stopPropagation()}
                     >
                       {user.hasAccount ? (
-                        <AccountSwitch
+                        <AdminAccountSwitch
                           checked={user.isActive}
                           disabled={
                             !user.canToggle
@@ -497,7 +328,7 @@ export default function AdminUsersPage() {
                     <td className="table-cell whitespace-nowrap" onClick={e => e.stopPropagation()}>
                       <div className="flex flex-wrap gap-2 justify-center">
                         {user.canProvision && (
-                          <button type="button" className="btn btn-sm btn-primary" onClick={() => openProvision(user)}>
+                          <button type="button" className="btn btn-sm btn-primary" onClick={() => setProvisionTarget(user)}>
                             Cấp tài khoản
                           </button>
                         )}
@@ -505,7 +336,7 @@ export default function AdminUsersPage() {
                           <button
                             type="button"
                             className="btn btn-sm btn-outline flex items-center gap-1"
-                            onClick={() => openReset(user)}
+                            onClick={() => setResetTarget(user)}
                           >
                             <KeyRound size={14} />
                             Đặt lại MK
@@ -534,199 +365,20 @@ export default function AdminUsersPage() {
         )}
       </HrmPanel>
 
-      <Modal
-        isOpen={!!provisionTarget}
-        onClose={closeProvision}
-        title="Cấp tài khoản"
-        size="xl"
-        footer={
-          <>
-            <button type="button" className="btn btn-outline" onClick={closeProvision}>Hủy</button>
-            <button
-              type="button"
-              className="btn btn-primary"
-              disabled={provisionMutation.isPending}
-              onClick={() => void handleProvision()}
-            >
-              {provisionMutation.isPending ? 'Đang lưu...' : 'Cấp tài khoản'}
-            </button>
-          </>
-        }
-      >
-        {provisionTarget && (
-          <form id="admin-provision-form" onSubmit={handleProvision} className="space-y-4 modal-form-bordered">
-            <p className="text-sm text-[var(--md-on-surface-variant)]">
-              Thông tin lấy từ hồ sơ HR — admin chỉ chọn vai trò và đặt mật khẩu ban đầu.
-            </p>
-            <FormField label="Họ tên">
-              <input className="form-input" value={provisionTarget.fullName} readOnly />
-            </FormField>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField label="Mã nhân viên">
-                <input className="form-input" value={provisionTarget.employeeCode} readOnly />
-              </FormField>
-              <FormField label="Email">
-                <input className="form-input" value={provisionTarget.email} readOnly />
-              </FormField>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField label="Bộ phận">
-                <input className="form-input" value={provisionTarget.department} readOnly />
-              </FormField>
-              <FormField label="Chức vụ">
-                <input className="form-input" value={provisionTarget.position} readOnly />
-              </FormField>
-            </div>
-            <FormField label="Vai trò hệ thống" required>
-              <select
-                className="form-select"
-                value={provisionRole}
-                onChange={e => setProvisionRole(e.target.value as SystemUserRole)}
-              >
-                {roleOptions.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
-            </FormField>
-            <AdminPasswordField
-              value={provisionPassword}
-              onChange={v => { setProvisionPassword(v); setProvisionErrors(e => ({ ...e, password: '' })); }}
-              error={provisionErrors.password}
-            />
-          </form>
-        )}
-      </Modal>
-
-      <Modal
-        isOpen={!!resetTarget}
+      <AdminProvisionAccountModal
+        user={provisionTarget}
+        onClose={() => setProvisionTarget(null)}
+        roleOptions={roleOptions}
+      />
+      <AdminResetPasswordModal
+        user={resetTarget}
         onClose={() => setResetTarget(null)}
-        title="Đặt lại mật khẩu"
-        size="sm"
-        footer={
-          <>
-            <button type="button" className="btn btn-outline" onClick={() => setResetTarget(null)}>Hủy</button>
-            <button
-              type="button"
-              className="btn btn-primary"
-              disabled={resetMutation.isPending}
-              onClick={() => void handleResetPassword()}
-            >
-              {resetMutation.isPending ? 'Đang lưu...' : 'Lưu mật khẩu mới'}
-            </button>
-          </>
-        }
-      >
-        {resetTarget && (
-          <form id="admin-reset-password-form" onSubmit={handleResetPassword} className="space-y-4 modal-form-bordered">
-            <p className="text-sm text-[var(--md-on-surface-variant)]">
-              Tài khoản: <strong>{resetTarget.fullName}</strong> ({resetTarget.email})
-            </p>
-            <AdminPasswordField
-              value={resetPassword}
-              onChange={v => { setResetPassword(v); setResetError(''); }}
-              error={resetError}
-              label="Mật khẩu mới"
-            />
-          </form>
-        )}
-      </Modal>
-
-      <Modal
-        isOpen={showCreate}
-        onClose={() => { setShowCreate(false); resetManualForm(); }}
-        title="Thêm tài khoản hệ thống"
-        size="xl"
-        footer={
-          <>
-            <button type="button" className="btn btn-outline" onClick={() => { setShowCreate(false); resetManualForm(); }}>
-              Hủy
-            </button>
-            <button
-              type="button"
-              className="btn btn-primary"
-              disabled={createMutation.isPending}
-              onClick={() => void handleCreate()}
-            >
-              {createMutation.isPending ? 'Đang lưu...' : 'Thêm'}
-            </button>
-          </>
-        }
-      >
-        <form id="admin-user-create-form" onSubmit={handleCreate} className="space-y-4 modal-form-bordered">
-          <p className="text-sm text-[var(--md-on-surface-variant)]">
-            Dùng cho tài khoản admin, dịch vụ… không gắn hồ sơ nhân viên HR.
-          </p>
-          <FormField label="Họ tên" required error={errors.name}>
-            <input
-              className="form-input"
-              value={form.name}
-              onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-              placeholder="Nguyễn Văn A"
-            />
-          </FormField>
-          <FormField label="Email" required error={errors.email}>
-            <input
-              type="email"
-              className="form-input"
-              value={form.email}
-              onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-              placeholder="email@namviet.vn"
-            />
-          </FormField>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FormField label="Số điện thoại">
-              <input
-                className="form-input"
-                value={form.phone ?? ''}
-                onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                placeholder="0901234567"
-              />
-            </FormField>
-            <FormField label="Mã nhân viên (tùy chọn)">
-              <input
-                className="form-input"
-                value={form.employeeCode ?? ''}
-                onChange={e => setForm(f => ({ ...f, employeeCode: e.target.value }))}
-                placeholder="NV-0008"
-              />
-            </FormField>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FormField label="Bộ phận">
-              <input
-                className="form-input"
-                value={form.department ?? ''}
-                onChange={e => setForm(f => ({ ...f, department: e.target.value }))}
-                placeholder="Kế toán"
-              />
-            </FormField>
-            <FormField label="Chức vụ">
-              <input
-                className="form-input"
-                value={form.position ?? ''}
-                onChange={e => setForm(f => ({ ...f, position: e.target.value }))}
-                placeholder="Chuyên viên"
-              />
-            </FormField>
-          </div>
-          <FormField label="Vai trò" required>
-            <select
-              className="form-select"
-              value={form.role}
-              onChange={e => setForm(f => ({ ...f, role: e.target.value as SystemUserRole }))}
-            >
-              {roleOptions.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </FormField>
-          <AdminPasswordField
-            value={createPassword}
-            onChange={v => { setCreatePassword(v); setErrors(e => ({ ...e, password: '' })); }}
-            error={errors.password}
-          />
-        </form>
-      </Modal>
+      />
+      <AdminCreateSystemUserModal
+        open={showCreate}
+        onClose={() => setShowCreate(false)}
+        roleOptions={roleOptions}
+      />
 
       <ConfirmDialog
         isOpen={lockConfirmTarget !== null}

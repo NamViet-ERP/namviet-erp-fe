@@ -28,24 +28,8 @@ function createApiProxy(proxyTarget: string) {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
 
-  const isVitest =
-    mode === 'test' ||
-    process.env.VITEST != null ||
-    process.env.VITEST_WORKER_ID != null ||
-    process.argv.some((arg) => /vitest/i.test(arg))
-  const useMock =
-    env.VITE_USE_MOCK === 'true' || process.env.VITE_USE_MOCK === 'true'
   const proxyTarget = (env.VITE_DEV_PROXY_TARGET ?? process.env.VITE_DEV_PROXY_TARGET ?? 'http://localhost:8080').trim()
   const apiProxy = createApiProxy(proxyTarget)
-
-  if (mode === 'production' && !isVitest) {
-    if (useMock) {
-      throw new Error(
-        'Production build blocked: VITE_USE_MOCK=true. Use `npm run build:prod` (mock is forced off).',
-      )
-    }
-    // Empty VITE_API_BASE_URL = same-origin (reverse proxy). Non-empty = absolute API URL.
-  }
 
   return {
     // Base public path. Override with VITE_BASE_PATH when hosting under a

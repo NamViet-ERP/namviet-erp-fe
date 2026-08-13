@@ -2,13 +2,8 @@ import { apiClient } from '../lib/apiClient';
 import { fromApi, toApi, type EmployeeApiDto } from '../lib/hrm/employeeApiMapper';
 import type { CreateEmployeeDto, Employee, UpdateEmployeeDto } from '../types/hr';
 import { isActiveEmployee } from '../types/hr';
-import { getEmployeeLockReason, isActiveEmployeeStatus } from '../constants/employeeStatus';
 
 const ENDPOINT = '/api/employees';
-
-export function cacheEmployeeStatus(employeeId: string, status: string): void {
-  localStorage.setItem(`nv-emp-status-${employeeId}`, status);
-}
 
 export async function validateUniqueCode(code: string, excludeId?: string): Promise<boolean> {
   const normalized = code.trim().toUpperCase();
@@ -27,19 +22,6 @@ export async function getSuggestedEmployeeCode(excludeId?: string): Promise<stri
   return res.suggestedCode;
 }
 
-export function isAccountActiveForEmployee(employeeId?: string): boolean {
-  if (!employeeId) return true;
-  const cached = localStorage.getItem(`nv-emp-status-${employeeId}`);
-  if (cached) return isActiveEmployeeStatus(cached);
-  return true;
-}
-
-export function getAccountLockReason(employeeId?: string): string | null {
-  if (!employeeId) return null;
-  const cached = localStorage.getItem(`nv-emp-status-${employeeId}`);
-  return getEmployeeLockReason(cached);
-}
-
 export const employeesService = {
   async list(): Promise<Employee[]> {
     const items = await apiClient.get<EmployeeApiDto[]>(ENDPOINT);
@@ -49,7 +31,6 @@ export const employeesService = {
 
   async getById(id: string): Promise<Employee> {
     const dto = await apiClient.get<EmployeeApiDto>(`${ENDPOINT}/${id}`);
-    cacheEmployeeStatus(id, dto.status);
     return fromApi(dto);
   },
 
@@ -82,18 +63,15 @@ export const employeesService = {
     if (merged.status === 'Đang làm') merged.resignDate = undefined;
     const payload = toApi(merged, id);
     const res = await apiClient.put<EmployeeApiDto>(`${ENDPOINT}/${id}`, payload);
-    cacheEmployeeStatus(id, res.status);
     return fromApi(res);
   },
 
   async listActive(): Promise<Employee[]> {
-    try {
-      const items = await apiClient.get<EmployeeApiDto[]>(ENDPOINT, { activeOnly: true });
-      return items.map(fromApi);
-    } catch (e) {
-      console.error('Failed to fetch active employees:', e);
-      return [];
+    const items = await apiClient.get<EmployeeApiDto[]>(ENDPOINT, { activeOnly: true });
+    if (!Array.isArray(items)) {
+      throw new Error('Phản hồi danh sách nhân viên không hợp lệ.');
     }
+    return items.map(fromApi);
   },
 
   async getByIdIfActive(id: string): Promise<Employee | undefined> {
