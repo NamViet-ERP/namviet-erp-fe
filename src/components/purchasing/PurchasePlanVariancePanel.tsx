@@ -67,7 +67,7 @@ export default function PurchasePlanVariancePanel({ planCode, projectCode }: Pur
         </div>
       ) : lines.length === 0 ? (
         <EmptyState
-          message={showAll ? 'Chưa có dữ liệu KHMH.' : 'Không có dòng lệch tiến độ — mọi KHMH đều đúng kế hoạch.'}
+          message={showAll ? 'Chưa có dữ liệu KHMH.' : 'Không có dòng lệch tiến độ - mọi KHMH đều đúng kế hoạch.'}
         />
       ) : (
         <div className="overflow-x-auto table-scroll">

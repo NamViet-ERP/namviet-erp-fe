@@ -1509,14 +1509,14 @@
     gap: 0.15rem 0.35rem;
   }
   .pur-erp--plan .pur-erp__panel .overflow-x-auto.table-scroll {
-    border: 1px solid color-mix(in srgb, var(--md-outline-variant02) 90%, transparent);
-    border-radius: 8px 8px 0 0;
-    background: var(--md-surface);
+    border: none;
+    border-radius: 0;
+    background: var(--md-surface-container-high);
   }
   .pur-erp--plan .pur-erp__table--plans-list {
     min-width: 1180px;
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
     border-spacing: 0;
     font-size: var(--fs-sm);
     line-height: 1.4;
@@ -1555,17 +1555,17 @@
     padding: var(--table-cell-py) var(--table-cell-px);
     vertical-align: middle;
     text-align: left;
-    border: 1px solid var(--md-outline-variant02);
-    background: var(--md-surface-container);
+    border: 1px solid var(--nv-epc-border);
+    background: var(--md-surface-container-high);
     font-size: var(--fs-sm);
     font-weight: var(--fw-regular);
     color: var(--md-on-surface);
   }
   .pur-erp--plan .pur-erp__table--plans-list tbody tr:nth-child(even) td {
-    background: color-mix(in srgb, var(--md-primary) 4%, var(--md-surface-container));
+    background: color-mix(in srgb, var(--nv-navy) 3.5%, var(--md-surface-container-high));
   }
   .pur-erp--plan .pur-erp__table--plans-list tbody tr:hover td {
-    background: color-mix(in srgb, var(--md-primary) 7%, var(--md-surface-container));
+    background: color-mix(in srgb, var(--nv-action) 10%, var(--md-surface-container-high));
   }
   .pur-erp--plan .pur-erp__table--plans-list .pur-erp__td-num {
     text-align: right !important;
@@ -1655,9 +1655,9 @@
   }
   .pur-erp--plan .pur-erp__panel .pagination-bar--embedded {
     margin-top: 0;
-    border: 1px solid color-mix(in srgb, var(--md-outline-variant02) 90%, transparent);
-    border-top: 0;
-    border-radius: 0 0 8px 8px;
+    border: none;
+    border-top: 1px solid var(--nv-epc-border);
+    border-radius: 0;
     background: var(--md-surface-container);
     padding: 12px 16px;
   }
@@ -1808,13 +1808,10 @@
     gap: 0.85rem;
     padding-top: 0.85rem;
   }
-  .pur-erp--plan .pur-erp__workspace {
-    margin-top: 0.15rem;
-  }
   .pur-erp--plan {
-    --plan-accent: #0b6e99;
-    --plan-accent-soft: color-mix(in srgb, var(--plan-accent) 12%, var(--md-surface-container));
-    --plan-accent-border: color-mix(in srgb, var(--plan-accent) 35%, var(--md-outline-variant02));
+    --plan-accent: var(--nv-action);
+    --plan-accent-soft: color-mix(in srgb, var(--nv-action) 12%, var(--md-surface-container));
+    --plan-accent-border: color-mix(in srgb, var(--nv-action) 32%, var(--md-outline-variant02));
     --pur-field-bg: var(--md-surface-container);
     gap: 0.85rem;
   }
@@ -1828,9 +1825,9 @@
     gap: 1rem;
     min-height: 0;
     margin: 0;
-    padding: 0.15rem 0 0.85rem;
+    padding: 0.15rem 0 0;
     background: transparent;
-    border-bottom: 1px solid color-mix(in srgb, var(--md-outline-variant) 75%, transparent);
+    border-bottom: none;
   }
   .pur-erp--plan .pur-erp__head-text {
     display: flex;
@@ -1842,7 +1839,7 @@
   .pur-erp--plan .pur-erp__title {
     margin: 0;
     font-size: var(--fs-xl);
-    font-weight: 700;
+    font-weight: var(--fw-bold);
     letter-spacing: normal;
     text-transform: none;
     color: var(--md-on-surface);
@@ -1861,14 +1858,14 @@
     gap: 0.35rem;
     height: 36px;
     padding: 0 0.95rem;
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     font-size: var(--fs-sm);
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
     text-transform: none;
     letter-spacing: 0;
     cursor: pointer;
     white-space: nowrap;
-    transition: background-color 140ms ease-out, border-color 140ms ease-out, transform 120ms ease-out;
+    transition: background-color var(--md-duration) var(--md-easing), border-color var(--md-duration) var(--md-easing), transform var(--md-duration) var(--md-easing);
   }
   .pur-erp--plan .pur-erp__action:active:not(:disabled) {
     transform: scale(0.98);
@@ -1878,13 +1875,19 @@
     cursor: not-allowed;
   }
   .pur-erp--plan .pur-erp__action--history {
-    border: 1px solid color-mix(in srgb, var(--md-outline-variant02) 90%, transparent);
-    background: var(--md-surface-container);
-    color: var(--md-on-surface);
+    border: 1px solid color-mix(in srgb, var(--nv-amber) 40%, var(--nv-epc-border));
+    background: var(--md-warning-container);
+    color: var(--nv-amber-dark);
   }
   .pur-erp--plan .pur-erp__action--history:hover {
-    border-color: color-mix(in srgb, var(--md-primary) 28%, var(--md-outline-variant02));
-    background: color-mix(in srgb, var(--md-primary) 6%, var(--md-surface-container));
+    border-color: color-mix(in srgb, var(--nv-action) 40%, var(--nv-epc-border));
+    background: color-mix(in srgb, var(--nv-action) 16%, var(--md-warning-container));
+    color: var(--nv-action);
+  }
+  .pur-erp--plan .pur-erp__action--history.is-active {
+    border-color: color-mix(in srgb, var(--nv-action) 45%, var(--nv-epc-border));
+    background: color-mix(in srgb, var(--nv-action) 22%, var(--md-surface-container-high));
+    color: var(--nv-action);
   }
   .pur-erp--plan .pur-erp__action--primary {
     border: 0;
@@ -1906,32 +1909,81 @@
     font-weight: 700;
     font-variant-numeric: tabular-nums;
   }
-  .pur-erp--plan .pur-erp__workspace {
-    border: 1px solid var(--md-outline-variant02);
-    border-left-color: var(--plan-accent);
+  .pur-erp--plan .hrm-stat-grid {
+    gap: 1px;
+    margin: 0;
+    border: 1px solid var(--nv-epc-border);
     border-radius: var(--radius-md);
-    background: var(--md-surface-container);
     overflow: hidden;
-    box-shadow: 0 1px 4px rgb(15 23 42 / 0.08);
+    background: var(--nv-epc-border);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .pur-erp--plan .hrm-stat-grid .hrm-stat-card {
+    border: none;
+    border-radius: 0;
+    padding: 14px 16px;
+    animation: none;
+    box-shadow: none;
+  }
+  .pur-erp--plan .hrm-stat-grid > * {
+    animation: none;
+  }
+  @media (max-width: 899px) {
+    .pur-erp--plan .hrm-stat-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 639px) {
+    .pur-erp--plan .hrm-stat-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  .pur-erp--plan .pur-erp__workspace {
+    border: 1px solid var(--nv-epc-border);
+    border-radius: var(--radius-md);
+    background: var(--md-surface-container-high);
+    overflow: hidden;
+    box-shadow: none;
   }
   .pur-erp--plan .pur-erp__workspace > .pur-erp__filter-card {
     padding: 0.85rem 1rem;
-    border-bottom: 1px solid #d8dde6;
-    background: #f7f9fc;
+    border-bottom: 1px solid var(--nv-epc-border);
+    background:
+      linear-gradient(180deg, var(--plan-accent-soft) 0%, transparent 72%),
+      var(--md-surface-container);
+  }
+  .pur-erp--plan .pur-erp__workspace > .pur-erp__filter-card:not(.pur-erp__filter-card--plan) {
+    padding: 0.75rem 1rem;
+    background: var(--md-warning-container);
+    border-bottom: 1px solid color-mix(in srgb, var(--nv-amber) 40%, var(--nv-epc-border));
+    box-shadow: inset 4px 0 0 var(--nv-amber);
   }
   .pur-erp--plan .pur-erp__filter-card--plan {
     gap: 0;
     padding: 0;
   }
   .pur-erp--plan .pur-erp__filter-card--plan .pur-erp__tabs-row {
-    padding: 0.65rem 1rem 0.45rem;
-    border-bottom: 1px solid #e6e9ef;
-    background: #f7f9fc;
+    padding: 0.35rem 1rem 0;
+    border-bottom: none;
+    background: transparent;
+  }
+  .pur-erp--plan .pur-erp__filter-card--plan .tab-filter {
+    margin-bottom: 0;
   }
   .pur-erp--plan .pur-erp__filter-card--plan .hrm-list-toolbar {
     border-bottom: 0;
-    padding: 0.75rem 1rem 0.85rem;
-    background: #f7f9fc;
+    padding: 0.45rem 1rem 0.7rem;
+    background: transparent;
+  }
+  .pur-erp--plan .hrm-list-toolbar__filters {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+  .pur-erp--plan .hrm-list-toolbar .search-bar {
+    flex: 1 1 18rem;
+    min-width: 12rem;
   }
   .pur-erp--plan .pur-erp__filter-card--plan .search-bar__wrap,
   .pur-erp--plan .pur-erp__filter-card--plan .search-bar__input {
@@ -3321,14 +3373,14 @@
   }
   .dark .pur-erp--plan .pur-erp__head,
   .dark .pur-erp--po .pur-erp__head {
-    background: var(--md-surface-container);
-    border-bottom-color: var(--md-outline-variant02);
+    background: transparent;
+    border-bottom: none;
   }
   .dark .pur-erp--plan .pur-erp__workspace,
   .dark .pur-erp--po .pur-erp__workspace {
     background: var(--md-surface-container);
     border-color: var(--md-outline-variant02);
-    box-shadow: var(--md-shadow-1);
+    box-shadow: none;
   }
   .dark .pur-erp--plan .pur-erp__workspace > .pur-erp__filter-card,
   .dark .pur-erp--po .pur-erp__workspace > .pur-erp__filter-card {

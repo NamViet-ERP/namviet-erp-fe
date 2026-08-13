@@ -225,22 +225,17 @@ function DashboardWarehouseContent({
   const hasMoreActivity = data.recentActivity.length > ACTIVITY_PREVIEW_COUNT;
 
   return (
-    <div className="page-stack relative">
-      <div className="dashboard-ambient dashboard-ambient--tl" aria-hidden />
-      <div className="dashboard-ambient dashboard-ambient--br" aria-hidden />
-
-      <div className="relative z-10">
-        <PageHeader
+    <div className="page-stack">
+      <PageHeader
           eyebrow="Tổng quan"
           title="Tổng quan kho hàng"
           actions={
-            <p className="flex items-center gap-1.5 text-xs text-[var(--md-on-surface-variant)] shrink-0">
-              <Activity size={13} className="text-[var(--md-secondary)]" aria-hidden />
-              Cập nhật lúc: {new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+            <p className="page-header__updated">
+              <Activity size={13} aria-hidden />
+              Cập nhật lúc {new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
             </p>
           }
         />
-      </div>
 
       {hasLoadError && (
         <div className="alert-banner alert-banner--error dashboard-load-alert" role="alert">
@@ -263,10 +258,10 @@ function DashboardWarehouseContent({
         </div>
       )}
 
-      <div className="dashboard-kpi-grid">
+      <div className="dashboard-kpi-grid" role="list" aria-label="Chỉ số kho">
         <Card
           title="Tổng tồn kho"
-          value={hasLoadError ? '—' : fmtStockQty(data.totalStock)}
+          value={hasLoadError ? '-' : fmtStockQty(data.totalStock)}
           subtitle="vật tư trong tất cả kho dự án"
           accent="amber"
           icon={Package}
@@ -274,7 +269,7 @@ function DashboardWarehouseContent({
         {canViewPrices && (
           <Card
             title="Tổng giá trị"
-            value={hasLoadError ? '—' : formatCurrencyShort(data.totalValue)}
+            value={hasLoadError ? '-' : formatCurrencyShort(data.totalValue)}
             subtitle="ước tính từ giá bình quân"
             accent="blue"
             icon={DollarSign}
@@ -282,7 +277,7 @@ function DashboardWarehouseContent({
         )}
         <Card
           title="Kho dự án hoạt động"
-          value={hasLoadError ? '—' : data.activeProjects}
+          value={hasLoadError ? '-' : data.activeProjects}
           subtitle="dự án chưa đóng"
           accent="teal"
           icon={Warehouse}
@@ -293,10 +288,10 @@ function DashboardWarehouseContent({
         <div className="alert-banner alert-banner--warning" role="alert">
           <AlertTriangle size={18} className="alert-banner__icon" aria-hidden />
           <div className="min-w-0 flex-1">
-            <p className="font-semibold text-sm text-[var(--md-on-surface)]">
+            <p className="alert-banner__title">
               {lowStockAlerts.length} cảnh báo tồn dưới ngưỡng tối thiểu
             </p>
-            <ul className="mt-1 text-xs text-[var(--md-on-surface-variant)] space-y-0.5">
+            <ul className="alert-banner__list">
               {lowStockAlerts.slice(0, 5).map(a => (
                 <li key={`${a.projectCode}-${a.materialCode}`}>
                   <Link
@@ -305,7 +300,7 @@ function DashboardWarehouseContent({
                   >
                     {a.projectCode}
                   </Link>
-                  {' — '}
+                  {' - '}
                   {a.materialCode} ({a.actualQty}/{a.minStockQty} {a.unit})
                 </li>
               ))}

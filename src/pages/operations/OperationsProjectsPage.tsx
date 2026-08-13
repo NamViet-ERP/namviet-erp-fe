@@ -167,7 +167,7 @@ export default function OperationsProjectsPage() {
         });
         showToast(
           'success',
-          `Đã tạo dự án ${created.projectCode} — kho dự án đã sẵn sàng trong Kho hàng.`,
+          `Đã tạo dự án ${created.projectCode} - kho dự án đã sẵn sàng trong Kho hàng.`,
         );
       }
       setShowForm(false);
@@ -184,12 +184,12 @@ export default function OperationsProjectsPage() {
     <div className="hrm-page">
       <PageHeader
         title="Dự án"
-        subtitle="Danh sách & phân công dự án EPC — tạo dự án sẽ tự sinh kho dự án bên Kho hàng."
+        subtitle="Danh sách và phân công dự án EPC - tạo dự án sẽ tự sinh kho dự án bên Kho hàng."
         actions={(
           <PermissionGate permission="wms.projects.create">
             <button
               type="button"
-              className="btn btn-primary flex items-center gap-2 rounded-full px-5"
+              className="btn btn-primary flex items-center gap-2"
               onClick={openCreate}
             >
               <Plus size={16} aria-hidden />
@@ -202,19 +202,19 @@ export default function OperationsProjectsPage() {
       <div className="hrm-stat-grid">
         <HrmStatCard
           label="Tổng dự án"
-          value={statsAll?.totalCount ?? '—'}
+          value={statsAll?.totalCount ?? '-'}
           icon={FolderKanban}
           tone="primary"
         />
         <HrmStatCard
           label="Đang triển khai"
-          value={statsActive?.totalCount ?? '—'}
+          value={statsActive?.totalCount ?? '-'}
           icon={CheckCircle2}
           tone="success"
         />
         <HrmStatCard
           label="Đã đóng"
-          value={statsClosed?.totalCount ?? '—'}
+          value={statsClosed?.totalCount ?? '-'}
           icon={Archive}
           tone="neutral"
         />
@@ -250,18 +250,18 @@ export default function OperationsProjectsPage() {
         </div>
 
         <div className="overflow-x-auto table-scroll wms-inventory-table-wrap">
-          <table className="wms-inventory-table project-warehouse-table">
+          <table className="wms-inventory-table project-warehouse-table project-warehouse-table--wide">
             <thead>
               <tr>
                 <th className="table-header-cell whitespace-nowrap project-col-code">Mã DA</th>
                 <th className="table-header-cell project-col-name">Tên dự án</th>
-                <th className="table-header-cell">Khách hàng</th>
+                <th className="table-header-cell project-col-client">Khách hàng</th>
                 <th className="table-header-cell project-col-pm">PIC / Quản lý</th>
-                <th className="table-header-cell">Thành viên SC</th>
+                <th className="table-header-cell project-col-sc">Thành viên SC</th>
                 <th className="table-header-cell project-col-date whitespace-nowrap">Ngày bắt đầu</th>
                 <th className="table-header-cell project-col-date whitespace-nowrap">Ngày kết thúc</th>
                 <th className="table-header-cell text-center project-col-status">Trạng thái</th>
-                <th className="table-header-cell text-center whitespace-nowrap">Tác vụ</th>
+                <th className="table-header-cell text-center whitespace-nowrap project-col-actions">Tác vụ</th>
               </tr>
             </thead>
             <tbody>
@@ -293,15 +293,15 @@ export default function OperationsProjectsPage() {
                     <td className="table-cell font-semibold project-col-name">
                       <span title={row.projectName}>{row.projectName}</span>
                     </td>
-                    <td className="table-cell">
-                      {row.clientName?.trim() || <span className="hrm-empty-cell">—</span>}
+                    <td className="table-cell project-col-client">
+                      {row.clientName?.trim() || <span className="hrm-empty-cell">-</span>}
                     </td>
                     <td className="table-cell project-col-pm">
-                      {row.pmName || <span className="hrm-empty-cell">—</span>}
+                      {row.pmName || <span className="hrm-empty-cell">-</span>}
                     </td>
-                    <td className="table-cell max-w-[220px]">
-                      <span className="line-clamp-2" title={row.scMembers ?? undefined}>
-                        {row.scMembers?.trim() || <span className="hrm-empty-cell">—</span>}
+                    <td className="table-cell project-col-sc">
+                      <span title={row.scMembers ?? undefined}>
+                        {row.scMembers?.trim() || <span className="hrm-empty-cell">-</span>}
                       </span>
                     </td>
                     <td className="table-cell project-col-date whitespace-nowrap tabular-nums">
@@ -313,7 +313,7 @@ export default function OperationsProjectsPage() {
                     <td className="table-cell text-center project-col-status">
                       <Badge status={projectStatusBadge(row.status)} label={statusLabel(row.status)} />
                     </td>
-                    <td className="table-cell text-center">
+                    <td className="table-cell text-center project-col-actions">
                       <PermissionGate permission="wms.projects.update">
                         <button
                           type="button"

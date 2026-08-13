@@ -416,72 +416,27 @@
     border-color: color-mix(in srgb, var(--md-outline-variant02) 90%, var(--md-primary));
   }
 
-  /* ── Operations dashboard: restrained brand-tinted summary surfaces ── */
-  .operations-dashboard .page-header {
-    border-color: color-mix(in srgb, var(--nv-steel) 20%, var(--md-outline-variant02));
-    background:
-      linear-gradient(
-        105deg,
-        color-mix(in srgb, var(--nv-navy) 7%, #fff) 0%,
-        color-mix(in srgb, var(--nv-steel) 3%, #fff) 68%,
-        #fff 100%
-      );
-    box-shadow: 0 2px 8px rgba(19, 42, 69, 0.07);
-  }
-
-  .operations-dashboard .dashboard-kpi-grid .kpi-card {
-    border-color: color-mix(in srgb, var(--nv-steel) 20%, var(--md-outline-variant02));
-    background:
-      linear-gradient(
-        145deg,
-        color-mix(in srgb, var(--nv-steel) 7%, #fff) 0%,
-        color-mix(in srgb, var(--nv-navy) 3%, #fff) 100%
-      );
-    box-shadow: 0 3px 10px rgba(19, 42, 69, 0.08);
-  }
-
-  .operations-dashboard .dashboard-kpi-grid .kpi-card--accent-amber {
-    background:
-      linear-gradient(
-        145deg,
-        color-mix(in srgb, var(--md-warning) 7%, #fff) 0%,
-        color-mix(in srgb, var(--nv-navy) 2%, #fff) 100%
-      );
-  }
-
-  .operations-dashboard .dashboard-kpi-grid .kpi-card--accent-teal {
-    background:
-      linear-gradient(
-        145deg,
-        color-mix(in srgb, var(--md-secondary) 8%, #fff) 0%,
-        color-mix(in srgb, var(--nv-navy) 2%, #fff) 100%
-      );
-  }
-
+  /* Operations dashboard shares WMS page chrome — no per-tab white header. */
   .operations-dashboard .dashboard-ops-card {
     border-color: color-mix(
       in srgb,
       var(--ops-color, var(--nv-steel)) 18%,
       var(--md-outline-variant02)
     );
-    background:
-      linear-gradient(
-        135deg,
-        color-mix(in srgb, var(--ops-color, var(--nv-steel)) 6%, #fff) 0%,
-        color-mix(in srgb, var(--nv-navy) 2%, #fff) 100%
-      );
-    box-shadow: 0 2px 8px rgba(19, 42, 69, 0.07);
+    background: color-mix(
+      in srgb,
+      var(--ops-color, var(--nv-steel)) 8%,
+      var(--md-surface-container)
+    );
+    box-shadow: none;
   }
 
-  .dark .operations-dashboard .page-header,
-  .dark .operations-dashboard .dashboard-kpi-grid .kpi-card,
   .dark .operations-dashboard .dashboard-ops-card {
-    background:
-      linear-gradient(
-        145deg,
-        color-mix(in srgb, var(--nv-steel) 10%, var(--md-surface-container)) 0%,
-        var(--md-surface-container-high) 100%
-      );
+    background: color-mix(
+      in srgb,
+      var(--ops-color, var(--nv-steel)) 12%,
+      var(--md-surface-container)
+    );
     border-color: color-mix(in srgb, var(--nv-steel) 25%, var(--md-outline-variant02));
   }
 

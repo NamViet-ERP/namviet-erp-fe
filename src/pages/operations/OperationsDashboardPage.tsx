@@ -147,29 +147,23 @@ export default function OperationsDashboardPage() {
   }
 
   return (
-    <div className="page-stack relative operations-dashboard">
-      <div className="dashboard-ambient dashboard-ambient--tl" aria-hidden />
-      <div className="dashboard-ambient dashboard-ambient--br" aria-hidden />
-
-      <div className="relative z-10">
-        <PageHeader
+    <div className="page-stack operations-dashboard">
+      <PageHeader
           eyebrow="Tổng quan"
           title="Tổng quan vận hành"
           actions={(
-            <p className="flex items-center gap-1.5 text-xs text-[var(--md-on-surface-variant)] shrink-0">
-              <Activity size={13} className="text-[var(--md-secondary)]" aria-hidden />
-              Cập nhật lúc:{' '}
-              {new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+            <p className="page-header__updated">
+              <Activity size={13} aria-hidden />
+              Cập nhật lúc {new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
             </p>
           )}
         />
-      </div>
 
-      <div className="dashboard-kpi-grid">
+      <div className="dashboard-kpi-grid" role="list" aria-label="Chỉ số vận hành">
         <Card
           title="Dự án đang triển khai"
           value={activeCount}
-          subtitle={`/${totalProjects} tổng · ${closedCount} đã đóng`}
+          subtitle={`${totalProjects} tổng, ${closedCount} đã đóng`}
           accent="teal"
           icon={CheckCircle2}
         />
@@ -183,7 +177,7 @@ export default function OperationsDashboardPage() {
         <Card
           title="Đơn hàng đang xử lý"
           value={openOrderCount}
-          subtitle={`/${ordersAll?.totalCount ?? '—'} PO · ${planCount} KHMH`}
+          subtitle={`${ordersAll?.totalCount ?? '-'} PO, ${planCount} KHMH`}
           accent="blue"
           icon={ShoppingCart}
         />
@@ -200,14 +194,14 @@ export default function OperationsDashboardPage() {
         <div className="alert-banner alert-banner--warning" role="alert">
           <AlertTriangle size={18} className="alert-banner__icon" aria-hidden />
           <div className="min-w-0 flex-1">
-            <p className="font-semibold text-sm text-[var(--md-on-surface)]">
+            <p className="alert-banner__title">
               {lowStock.length} cảnh báo tồn dưới ngưỡng tối thiểu
             </p>
-            <ul className="mt-1 text-xs text-[var(--md-on-surface-variant)] space-y-0.5">
+            <ul className="alert-banner__list">
               {lowStock.slice(0, 5).map(a => (
                 <li key={`${a.projectCode}-${a.materialCode}`}>
                   <span className="font-mono">{a.projectCode}</span>
-                  {' — '}
+                  {' - '}
                   {a.materialCode} ({fmtStockQty(a.actualQty)}/{fmtStockQty(a.minStockQty)} {a.unit})
                 </li>
               ))}
@@ -389,16 +383,16 @@ export default function OperationsDashboardPage() {
       <HrmPanel>
         <SectionHeading
           title="Dự án đang triển khai"
-          sub="Danh sách nhanh — tạo mới sẽ tự sinh kho dự án."
+          sub="Danh sách nhanh - tạo mới sẽ tự sinh kho dự án."
           action={{ to: '/operations/projects', label: 'Danh sách dự án →' }}
         />
-        <div className="overflow-x-auto table-scroll wms-inventory-table-wrap -mx-1">
+        <div className="overflow-x-auto table-scroll wms-inventory-table-wrap">
           <table className="wms-inventory-table project-warehouse-table">
             <thead>
               <tr>
                 <th className="table-header-cell project-col-code">Mã</th>
-                <th className="table-header-cell">Tên công trình</th>
-                <th className="table-header-cell">Khách hàng</th>
+                <th className="table-header-cell project-col-name">Tên công trình</th>
+                <th className="table-header-cell project-col-client">Khách hàng</th>
                 <th className="table-header-cell project-col-pm">PM</th>
                 <th className="table-header-cell text-center project-col-status">Trạng thái</th>
               </tr>
@@ -413,11 +407,11 @@ export default function OperationsDashboardPage() {
               ) : (
                 (activeProjectsPage?.items ?? []).map(row => (
                   <tr key={row.projectCode} className="table-row">
-                    <td className="table-cell font-mono text-sm text-[var(--md-primary)] project-col-code">
+                    <td className="table-cell font-mono text-sm text-[var(--md-primary)] whitespace-nowrap project-col-code">
                       {row.projectCode}
                     </td>
-                    <td className="table-cell font-semibold">{row.projectName}</td>
-                    <td className="table-cell">{row.clientName?.trim() || '—'}</td>
+                    <td className="table-cell font-semibold project-col-name">{row.projectName}</td>
+                    <td className="table-cell project-col-client">{row.clientName?.trim() || '—'}</td>
                     <td className="table-cell project-col-pm">{row.pmName || '—'}</td>
                     <td className="table-cell text-center project-col-status">
                       <Badge status={projectStatusBadge(row.status)} label={projectStatusLabel(row.status)} />

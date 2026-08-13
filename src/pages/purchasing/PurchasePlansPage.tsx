@@ -4,8 +4,11 @@ import EntityCodeLink from '../../components/ui/EntityCodeLink';
 import {
   AlertTriangle,
   CheckCircle2,
+  ClipboardList,
+  Clock,
   CopyPlus,
   Eye,
+  FileText,
   FolderLock,
   FolderOpen,
   Pencil,
@@ -20,6 +23,7 @@ import PurchasePlanVariancePanel from '../../components/purchasing/PurchasePlanV
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Dropdown from '../../components/ui/Dropdown';
 import EmptyState from '../../components/ui/EmptyState';
+import HrmStatCard from '../../components/hr/HrmStatCard';
 import Pagination from '../../components/ui/Pagination';
 import SearchBar from '../../components/ui/SearchBar';
 import TabFilter from '../../components/ui/TabFilter';
@@ -53,7 +57,7 @@ function planStatusLabel(status: string | null | undefined): string {
     case 'active': return 'Đã duyệt';
     case 'rejected': return 'Từ chối';
     case 'closed': return 'Đã đóng';
-    default: return status || '—';
+    default: return status || '-';
   }
 }
 
@@ -150,10 +154,17 @@ export default function PurchasePlansPage({ kind = 'plan' }: Props) {
   }), [page, pageSize, status, dateFrom, dateTo, search, kind]);
 
   const { data, isLoading, isError, error, refetch } = usePurchasePlans(listParams);
+  const statsBase = useMemo(() => ({ page: 1, pageSize: 1, kind }), [kind]);
+  const { data: statsAll } = usePurchasePlans(statsBase);
+  const { data: statsDraft } = usePurchasePlans({ ...statsBase, status: 'draft' });
+  const { data: statsPendingL1 } = usePurchasePlans({ ...statsBase, status: 'pending_l1' });
+  const { data: statsPendingL2 } = usePurchasePlans({ ...statsBase, status: 'pending_l2' });
+  const { data: statsApproved } = usePurchasePlans({ ...statsBase, status: 'approved' });
 
   const items = data?.items ?? [];
   const totalCount = data?.totalCount ?? 0;
   const totalPages = Math.max(1, data?.totalPages ?? 1);
+  const pendingCount = (statsPendingL1?.totalCount ?? 0) + (statsPendingL2?.totalCount ?? 0);
 
   const hasFilters = Boolean(status || dateFrom || dateTo || search.trim());
 
@@ -215,15 +226,15 @@ export default function PurchasePlansPage({ kind = 'plan' }: Props) {
           <h1 className="pur-erp__title">{title}</h1>
           <p className="pur-erp__subtitle">
             {isAdhoc
-              ? 'Yêu cầu mua phát sinh theo dự án — duyệt 2 cấp rồi mới tạo PO'
-              : 'Kế hoạch mua theo dự án — gửi duyệt Trưởng cung ứng → Sếp, rồi mới tạo PO'}
+              ? 'Yêu cầu mua phát sinh theo dự án - duyệt 2 cấp rồi mới tạo PO'
+              : 'Kế hoạch mua theo dự án - gửi duyệt Trưởng cung ứng → Sếp, rồi mới tạo PO'}
           </p>
         </div>
         <div className="pur-erp__head-actions">
           {!isAdhoc ? (
             <button
               type="button"
-              className="pur-erp__action pur-erp__action--history"
+              className={`pur-erp__action pur-erp__action--history${showVariance ? ' is-active' : ''}`}
               onClick={() => setShowVariance(v => !v)}
             >
               <AlertTriangle size={14} aria-hidden />
@@ -240,6 +251,33 @@ export default function PurchasePlansPage({ kind = 'plan' }: Props) {
           </button>
         </div>
       </header>
+
+      <div className="hrm-stat-grid">
+        <HrmStatCard
+          label={isAdhoc ? 'Tổng phiếu' : 'Tổng KHMH'}
+          value={statsAll?.totalCount ?? '-'}
+          icon={ClipboardList}
+          tone="primary"
+        />
+        <HrmStatCard
+          label="Nháp"
+          value={statsDraft?.totalCount ?? '-'}
+          icon={FileText}
+          tone="warning"
+        />
+        <HrmStatCard
+          label="Chờ duyệt"
+          value={pendingCount}
+          icon={Clock}
+          tone="neutral"
+        />
+        <HrmStatCard
+          label="Đã duyệt"
+          value={statsApproved?.totalCount ?? '-'}
+          icon={CheckCircle2}
+          tone="success"
+        />
+      </div>
 
       <div className="pur-erp__workspace">
         {!isAdhoc && showVariance ? <PurchasePlanVariancePanel /> : null}
@@ -440,7 +478,7 @@ export default function PurchasePlansPage({ kind = 'plan' }: Props) {
                       ];
                       return (
                         <tr key={row.code} className={isRejected ? 'pur-erp__row--rejected' : undefined}>
-                          <td className="tabular-nums">{formatDateTimeVi(row.createdAt) ?? '—'}</td>
+                          <td className="tabular-nums">{formatDateTimeVi(row.createdAt) ?? '-'}</td>
                           <td className="pur-erp__td-code">
                             <EntityCodeLink
                               code={row.code}
@@ -450,7 +488,7 @@ export default function PurchasePlansPage({ kind = 'plan' }: Props) {
                           <td className="pur-erp__td-project">
                             {row.projectName
                               ? `${row.projectName} (${row.projectCode})`
-                              : (row.projectCode || '—')}
+                              : (row.projectCode || '-')}
                           </td>
                           <td className="pur-erp__td-num">{formatCurrency(row.budgetTotal)} (VNĐ)</td>
                           <td className="pur-erp__td-num">{formatCurrency(row.proposalTotal)} (VNĐ)</td>
@@ -478,7 +516,7 @@ export default function PurchasePlansPage({ kind = 'plan' }: Props) {
                               ) : null}
                             </div>
                           </td>
-                          <td className="pur-erp__td-note">{row.note || '—'}</td>
+                          <td className="pur-erp__td-note">{row.note || '-'}</td>
                           <td className="pur-erp__td-actions">
                             <Dropdown items={actionItems} />
                           </td>
