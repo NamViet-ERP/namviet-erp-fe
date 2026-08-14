@@ -6403,9 +6403,17 @@
   height: 18rem;
 }
 
+.pur-pricebook-col-goods {
+  min-width: 16rem;
+}
+
 .pur-pricebook-goods__meta,
 .pur-pricebook-goods__spec {
   color: var(--md-on-surface-variant);
+}
+
+.pur-pricebook-goods__meta {
+  white-space: nowrap;
 }
 
 .pur-pricebook-goods__spec {
@@ -6414,6 +6422,10 @@
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
+}
+
+.pur-pricebook-goods__warn {
+  color: var(--md-error);
 }
 
 

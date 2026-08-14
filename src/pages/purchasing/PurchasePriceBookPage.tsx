@@ -727,19 +727,22 @@ function ItemsTable({
             <th className="table-header-cell">Khoảng giá</th>
             <th className="table-header-cell">Số NCC</th>
             <th className="table-header-cell text-center">Xu hướng</th>
-            <th className="table-header-cell"> </th>
           </tr>
         </thead>
         <tbody>
           {loading ? (
-            <TableSkeletonRows colSpan={9} />
+            <TableSkeletonRows colSpan={8} />
           ) : rows.length === 0 ? (
             <tr>
-              <td colSpan={9} className="table-cell"><EmptyState message="Chưa có mặt hàng phù hợp." /></td>
+              <td colSpan={8} className="table-cell"><EmptyState message="Chưa có mặt hàng phù hợp." /></td>
             </tr>
           ) : rows.map(row => (
-            <tr key={row.materialCode} className="table-row">
-              <td className="table-cell">
+            <tr
+              key={row.materialCode}
+              className="table-row wms-inventory-row--interactive"
+              onClick={() => onOpen(row.materialCode)}
+            >
+              <td className="table-cell pur-pricebook-col-goods">
                 <div><span className="mat-code-cell__badge">{row.materialCode}</span></div>
                 <div>{row.materialName}</div>
                 <div className="pur-pricebook-goods__meta">
@@ -753,10 +756,12 @@ function ItemsTable({
                 </div>
                 <div className="pur-pricebook-goods__meta">
                   Giá trần: {row.ceilingPrice != null ? formatCurrencyFull(row.ceilingPrice) : '-'}
-                  {row.estimatePrice != null ? ` · Giá dự toán: ${formatCurrencyFull(row.estimatePrice)}` : ''}
                   {row.overCeiling ? (
-                    <span className="ml-2 text-[var(--md-error)]">Vượt trần</span>
+                    <span className="pur-pricebook-goods__warn"> Vượt trần</span>
                   ) : null}
+                </div>
+                <div className="pur-pricebook-goods__meta">
+                  Giá dự toán: {row.estimatePrice != null ? formatCurrencyFull(row.estimatePrice) : '-'}
                 </div>
               </td>
               <td className={`table-cell text-right tabular-nums ${row.overCeiling ? 'text-[var(--md-error)]' : ''}`}>
@@ -779,11 +784,6 @@ function ItemsTable({
               <td className="table-cell text-right tabular-nums">{row.supplierCount}</td>
               <td className={`table-cell text-center tabular-nums ${trendClass(row.trendPct)}`}>
                 {trendLabel(row.trendPct)}
-              </td>
-              <td className="table-cell">
-                <button type="button" className="btn btn-ghost btn-sm" onClick={() => onOpen(row.materialCode)}>
-                  Xem chi tiết
-                </button>
               </td>
             </tr>
           ))}
