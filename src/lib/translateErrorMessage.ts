@@ -1,4 +1,5 @@
 import { WMS_ERROR } from './wms/messages';
+import { UI_ERROR } from './uiMessages';
 
 function normalizeMessageKey(message: string): string {
   return message
@@ -43,16 +44,22 @@ export function translateErrorMessage(message: string): string {
   const trimmed = message.trim();
   if (!trimmed) return trimmed;
 
+  const lower = trimmed.toLowerCase();
+  if (isTransientFailureMessage(lower)) {
+    return UI_ERROR.transient;
+  }
+
   if (trimmed.includes(';')) {
     return formatUserMessages(trimmed.split(';'));
   }
 
-  const lower = trimmed.toLowerCase();
-
   if (/failed to fetch|networkerror|network request failed|load failed/i.test(trimmed)) {
     return WMS_ERROR.network;
   }
-  if (/aborterror|the operation was aborted|signal timed out|timeout/i.test(lower)) {
+  if (/aborterror|the operation was aborted|signal timed out/i.test(lower)) {
+    return WMS_ERROR.timeout;
+  }
+  if (/\btimeout\b/i.test(lower)) {
     return WMS_ERROR.timeout;
   }
   if (/^typeerror:/i.test(trimmed) && lower.includes('fetch')) {
@@ -108,16 +115,35 @@ export function translateErrorMessage(message: string): string {
 export function isTechnicalUserMessage(message: string): boolean {
   const lower = message.trim().toLowerCase();
   if (!lower) return true;
+  if (isTransientFailureMessage(lower)) return true;
   if (lower.includes('path:') && lower.includes('linenumber:')) return true;
   if (lower.includes('linq expression') || lower.includes('could not be translated')) return true;
   if (lower.includes('entityframeworkcore') || lower.includes('transparentidentifier')) return true;
   if (lower.includes('could not be converted') || lower.includes('json value could not')) return true;
+  if (/^an exception has been raised/i.test(lower)) return true;
+  if (/\bsystem\.[a-z.]*(exception|error)\b/i.test(lower)) return true;
   return (
     /failed to fetch|networkerror|fetch failed|load failed/i.test(lower) ||
     /\bbackend\b/.test(lower) ||
     /\bvite_/.test(lower) ||
     /\/api\//.test(lower) ||
     (/\bapi\b/.test(lower) && /(error|check|restart|khởi động)/i.test(lower))
+  );
+}
+
+function isTransientFailureMessage(lower: string): boolean {
+  return (
+    lower.includes('transient failure')
+    || lower.includes('the database is not currently available')
+    || lower.includes('timeout expired')
+    || lower.includes('could not connect')
+    || lower.includes('connection refused')
+    || lower.includes('server closed the connection')
+    || lower.includes('connection pool has been exhausted')
+    || lower.includes('npgsql')
+    || lower.includes('postgresexception')
+    || lower.includes('nv-503')
+    || /\bsqlstate\b/.test(lower)
   );
 }
 

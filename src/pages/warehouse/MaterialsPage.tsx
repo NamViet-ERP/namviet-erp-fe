@@ -73,6 +73,7 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
     materialName: '',
     unit: '',
     technicalSpec: '',
+    generalTechnicalSpec: '',
     qualityStandard: '',
     ceilingPrice: '',
   });
@@ -123,6 +124,7 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
       materialName: '',
       unit: '',
       technicalSpec: '',
+      generalTechnicalSpec: '',
       qualityStandard: '',
       ceilingPrice: '',
     });
@@ -171,6 +173,7 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
         categoryId,
         unit: createForm.unit.trim(),
         technicalSpec: createForm.technicalSpec.trim() || null,
+        generalTechnicalSpec: createForm.generalTechnicalSpec.trim() || null,
         qualityStandard: createForm.qualityStandard.trim() || null,
         ceilingPrice: createForm.ceilingPrice
           ? Number(String(createForm.ceilingPrice).replace(/[^\d.-]/g, '')) || null
@@ -275,13 +278,13 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
 
       <div className="surface-panel surface-panel--rounded-xl surface-panel--table shadow-card">
         <div className="overflow-x-auto table-scroll">
-          <table className="w-full text-xs table-min-w--1400">
+          <table className="w-full text-xs mat-catalog-table">
             <thead>
               <tr>
                 {MATERIAL_TABLE_COLUMNS.map(col => (
                   <th
                     key={col.key}
-                    className={`table-header-cell text-left whitespace-nowrap${col.key === 'ceilingPrice' ? ' mat-col-ceiling' : ''}`}
+                    className={`table-header-cell text-left whitespace-nowrap${col.key === 'ceilingPrice' ? ' mat-col-ceiling' : ''}${col.key === 'generalTechnicalSpec' ? ' mat-col-general-spec' : ''}`}
                   >
                     {col.label}
                   </th>
@@ -345,6 +348,11 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
                     <td className="table-cell">{pathCell(m, 'phanLoai')}</td>
                     <td className="table-cell">{pathCell(m, 'kieu')}</td>
                     <td className="table-cell">{m.technicalSpec ?? '—'}</td>
+                    <td className="table-cell mat-col-general-spec">
+                      <div className="mat-spec-cell" title={m.generalTechnicalSpec ?? undefined}>
+                        {m.generalTechnicalSpec?.trim() || '-'}
+                      </div>
+                    </td>
                     <td className="table-cell">{m.qualityStandard ?? '—'}</td>
                     <td className="table-cell table-cell--money mat-col-ceiling">
                       {m.ceilingPrice != null ? formatCurrencyFull(m.ceilingPrice) : '—'}
@@ -458,6 +466,15 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
                 value={createForm.technicalSpec}
                 onChange={e => setCreateForm(f => ({ ...f, technicalSpec: e.target.value }))}
                 placeholder={MATERIAL_FIELD_PLACEHOLDERS.technicalSpec}
+              />
+            </FormField>
+            <FormField label="Thông số kỹ thuật chung" className="sm:col-span-2">
+              <textarea
+                className="form-input w-full"
+                rows={4}
+                value={createForm.generalTechnicalSpec}
+                onChange={e => setCreateForm(f => ({ ...f, generalTechnicalSpec: e.target.value }))}
+                placeholder={MATERIAL_FIELD_PLACEHOLDERS.generalTechnicalSpec}
               />
             </FormField>
             <FormField label="Tiêu chuẩn chất lượng" className="sm:col-span-2">

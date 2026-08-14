@@ -38,7 +38,12 @@ export function getApiErrorMessage(err: unknown, fallback: string = UI_ERROR.gen
   let msg = fallback;
   if (err instanceof ApiError) msg = translateErrorMessage(err.message);
   else if (err instanceof Error && err.message.trim()) msg = translateErrorMessage(err.message.trim());
-  if (!msg.trim() || isTechnicalUserMessage(msg)) return fallback;
+  if (!msg.trim() || isTechnicalUserMessage(msg)) {
+    if (err instanceof ApiError && (err.status === 502 || err.status === 503)) {
+      return UI_ERROR.transient;
+    }
+    return fallback;
+  }
   return msg;
 }
 
@@ -194,6 +199,7 @@ async function tryRefreshSession(): Promise<AuthRefreshResult> {
 function fallbackForStatus(status: number): string {
   if (status === 401) return 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
   if (status === 403) return 'Bạn không có quyền truy cập chức năng này.';
+  if (status === 502 || status === 503) return UI_ERROR.transient;
   return 'Yêu cầu không thành công. Vui lòng thử lại.';
 }
 

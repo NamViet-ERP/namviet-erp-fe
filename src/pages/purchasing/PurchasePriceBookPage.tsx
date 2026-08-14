@@ -1,4 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
+import {
+  CartesianGrid,
+  ComposedChart,
+  Line,
+  ReferenceLine,
+  ResponsiveContainer,
+  Scatter,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
+import type { TooltipContentProps } from 'recharts';
 import PurchasingListLayout from '../../components/purchasing/PurchasingListLayout';
 import ProjectAutocomplete from '../../components/purchasing/ProjectAutocomplete';
 import HrmSelect from '../../components/hr/HrmSelect';
@@ -29,22 +41,14 @@ import { useProjects } from '../../hooks/useProjects';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { formatDateCell } from '../../lib/hrm/formatters';
 import {
-  buildPriceHistoryChart,
-  isPurchaseKind,
+  buildPriceHistoryPlot,
+  priceHistoryKindLabel,
+  type PriceHistoryPlotPoint,
   type PriceHistoryPoint,
 } from '../../lib/purchasePriceHistoryChart';
-import { formatCurrencyFull } from '../../utils/formatCurrency';
+import { formatCurrencyFull, formatCurrencyShort } from '../../utils/formatCurrency';
 import type { PriceBookItemApiDto } from '../../types/api/purchasingApi';
 import RfqQuotesPanel from './RfqQuotesPanel';
-
-const CHART_COLORS = [
-  'var(--md-secondary)',
-  'var(--md-tertiary)',
-  'var(--md-success)',
-  'var(--md-error)',
-  'var(--md-info)',
-  'var(--md-primary)',
-];
 
 type Tab = 'items' | 'matrix' | 'rfq' | 'groups' | 'estimates' | 'margins';
 type PeriodType = 'all' | 'month' | 'quarter' | 'year';
@@ -108,10 +112,12 @@ function downloadCsv(filename: string, header: string[], rows: string[][]) {
 
 function exportItemsCsv(rows: PriceBookItemApiDto[]) {
   downloadCsv('SoGia_MatHang.csv',
-    ['Mã hàng', 'Tên hàng', 'Giá mua mới nhất', 'Giá dự toán', 'Chênh lệch', 'Chênh lệch %', 'NCC gần nhất', 'Giá min', 'Giá max', 'Số NCC', 'Xu hướng %', 'Giá trần'],
+    ['Mã hàng', 'Tên hàng', 'Quy cách', 'Thông số kỹ thuật chung', 'Giá mua mới nhất', 'Giá dự toán', 'Chênh lệch', 'Chênh lệch %', 'NCC gần nhất', 'Giá min', 'Giá max', 'Số NCC', 'Xu hướng %', 'Giá trần'],
     rows.map(r => [
       r.materialCode,
       r.materialName,
+      r.technicalSpec ?? '',
+      r.generalTechnicalSpec ?? '',
       r.latestPrice != null ? String(r.latestPrice) : '',
       r.estimatePrice != null ? String(r.estimatePrice) : '',
       r.estimateDiff != null ? String(r.estimateDiff) : '',
@@ -621,7 +627,31 @@ export default function PurchasePriceBookPage() {
         isOpen={Boolean(detailCode)}
         onClose={() => setDetailCode(null)}
         title={detail.data ? `${detail.data.item.materialCode} · ${detail.data.item.materialName}` : 'Chi tiết sổ giá'}
-        size="lg"
+        size="full"
+        subtitle={
+          detail.data ? (
+            <p className="m-0 text-[length:var(--fs-sm)] text-[var(--md-on-surface-variant)]">
+              Giá trần: {detail.data.item.ceilingPrice != null ? formatCurrencyFull(detail.data.item.ceilingPrice) : 'Chưa khai báo'}
+            </p>
+          ) : undefined
+        }
+        footer={
+          canWriteRfq && detail.data ? (
+            <div className="flex justify-end">
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={() => {
+                  setRfqPresetCode(detail.data.item.materialCode);
+                  setDetailCode(null);
+                  setTab('rfq');
+                }}
+              >
+                + Ghi nhận báo giá mới
+              </button>
+            </div>
+          ) : undefined
+        }
       >
         {detail.isError ? (
           <EmptyState message={getApiErrorMessage(detail.error, 'Không tải được chi tiết sổ giá.')} />
@@ -633,10 +663,10 @@ export default function PurchasePriceBookPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            <p className="text-[length:var(--fs-sm)]">
-              Giá trần: {detail.data.item.ceilingPrice != null ? formatCurrencyFull(detail.data.item.ceilingPrice) : 'Chưa khai báo'}
-            </p>
-            <PriceHistoryChart points={detail.data.history} />
+            <PriceHistoryChart
+              points={detail.data.history}
+              ceilingPrice={detail.data.item.ceilingPrice}
+            />
             <div className="text-[length:var(--fs-sm)] font-medium">Toàn bộ lịch sử giá và báo giá</div>
             <div className="wms-inventory-table-wrap">
               <table className="wms-inventory-table wms-voucher-detail-table">
@@ -658,7 +688,7 @@ export default function PurchasePriceBookPage() {
                   ) : detail.data.history.map((h, i) => (
                     <tr key={`${h.date}-${h.kind}-${i}`} className="table-row">
                       <td className="table-cell">{formatDateCell(h.date)}</td>
-                      <td className="table-cell"><span className={`badge ${historyKindBadge(h.kind, h.status)}`}>{historyKindLabel(h.kind, h.status)}</span></td>
+                      <td className="table-cell"><span className={`badge ${historyKindBadge(h.kind, h.status)}`}>{priceHistoryKindLabel(h.kind, h.status)}</span></td>
                       <td className="table-cell">{h.supplierName || '—'}</td>
                       <td className="table-cell text-right tabular-nums">{formatCurrencyFull(h.unitPrice)}</td>
                       <td className="table-cell font-mono">{h.poRef || '—'}</td>
@@ -668,21 +698,6 @@ export default function PurchasePriceBookPage() {
                 </tbody>
               </table>
             </div>
-            {canWriteRfq ? (
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  className="btn btn-primary btn-sm"
-                  onClick={() => {
-                    setRfqPresetCode(detail.data.item.materialCode);
-                    setDetailCode(null);
-                    setTab('rfq');
-                  }}
-                >
-                  + Ghi nhận báo giá mới
-                </button>
-              </div>
-            ) : null}
           </div>
         )}
       </Modal>
@@ -727,6 +742,17 @@ function ItemsTable({
               <td className="table-cell">
                 <div><span className="mat-code-cell__badge">{row.materialCode}</span></div>
                 <div>{row.materialName}</div>
+                {row.technicalSpec?.trim() ? (
+                  <div className="text-[var(--md-on-surface-variant)]">Quy cách: {row.technicalSpec.trim()}</div>
+                ) : null}
+                {row.generalTechnicalSpec?.trim() ? (
+                  <div
+                    className="pur-pricebook-goods__spec text-[var(--md-on-surface-variant)]"
+                    title={row.generalTechnicalSpec}
+                  >
+                    Thông số kỹ thuật: {row.generalTechnicalSpec.trim()}
+                  </div>
+                ) : null}
                 <div className="text-[var(--md-on-surface-variant)]">
                   Giá trần: {row.ceilingPrice != null ? formatCurrencyFull(row.ceilingPrice) : '—'}
                   {row.estimatePrice != null ? ` · Giá dự toán: ${formatCurrencyFull(row.estimatePrice)}` : ''}
@@ -1187,19 +1213,6 @@ function MarginsTable({
   );
 }
 
-function historyKindLabel(kind: string, status?: string | null) {
-  if (kind === 'po') return 'Đã mua (PO)';
-  if (kind === 'plan') return 'KHMH';
-  if (kind === 'import') return 'Nhập kho';
-  if (kind === 'sell') return 'Giá bán';
-  if (kind === 'estimate') return 'Giá dự toán';
-  if (status === 'won') return 'Báo giá - Thắng';
-  if (status === 'lost') return 'Báo giá - Thua';
-  if (status === 'active') return 'Báo giá - Còn hiệu lực';
-  if (status === 'expired') return 'Báo giá - Hết hạn';
-  return 'Báo giá';
-}
-
 function historyKindBadge(kind: string, status?: string | null) {
   if (kind === 'po' || kind === 'plan' || kind === 'import') return 'badge-success';
   if (kind === 'sell' || kind === 'estimate') return 'badge-info';
@@ -1209,79 +1222,190 @@ function historyKindBadge(kind: string, status?: string | null) {
   return 'badge-neutral';
 }
 
-function PriceHistoryChart({ points }: { points: PriceHistoryPoint[] }) {
-  const chart = buildPriceHistoryChart(points);
-  if (!chart) {
+const CHART_TICK = {
+  fill: 'var(--md-on-surface-variant)',
+  fontSize: 11,
+  fontFamily: 'var(--font-sans)',
+} as const;
+
+function PriceHistoryTooltip({ active, payload }: TooltipContentProps) {
+  if (!active || !payload?.length) return null;
+  const point = payload[0]?.payload as PriceHistoryPlotPoint | undefined;
+  if (!point) return null;
+  return (
+    <div className="chart-tooltip" role="tooltip">
+      <p className="chart-tooltip__label">{point.kindLabel}</p>
+      <div className="chart-tooltip__row">
+        <span className="chart-tooltip__name">Ngày:</span>
+        <span className="chart-tooltip__value">{formatDateCell(point.date)}</span>
+      </div>
+      <div className="chart-tooltip__row">
+        <span className="chart-tooltip__name">Đơn giá:</span>
+        <span className="chart-tooltip__value">{formatCurrencyFull(point.unitPrice)}</span>
+      </div>
+      {point.supplierName ? (
+        <div className="chart-tooltip__row">
+          <span className="chart-tooltip__name">NCC:</span>
+          <span className="chart-tooltip__value">{point.supplierName}</span>
+        </div>
+      ) : null}
+      {point.poRef ? (
+        <div className="chart-tooltip__row">
+          <span className="chart-tooltip__name">Tham chiếu:</span>
+          <span className="chart-tooltip__value">{point.poRef}</span>
+        </div>
+      ) : null}
+      {point.projectCode ? (
+        <div className="chart-tooltip__row">
+          <span className="chart-tooltip__name">Dự án:</span>
+          <span className="chart-tooltip__value">{point.projectCode}</span>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function PriceHistoryDot({
+  cx,
+  cy,
+  payload,
+}: {
+  cx?: number;
+  cy?: number;
+  payload?: PriceHistoryPlotPoint;
+}) {
+  if (cx == null || cy == null || !payload) return null;
+  return (
+    <g>
+      <text
+        x={cx}
+        y={cy - 22}
+        textAnchor="middle"
+        fill="var(--md-on-surface)"
+        style={{ fontSize: 'var(--fs-micro)', fontFamily: 'var(--font-sans)' }}
+      >
+        {formatCurrencyFull(payload.unitPrice)}
+      </text>
+      <text
+        x={cx}
+        y={cy - 10}
+        textAnchor="middle"
+        fill="var(--md-on-surface-variant)"
+        style={{ fontSize: 'var(--fs-micro)', fontFamily: 'var(--font-sans)' }}
+      >
+        {payload.kindLabel}
+      </text>
+      <circle
+        cx={cx}
+        cy={cy}
+        r={6}
+        fill={payload.purchased ? payload.color : 'var(--md-surface-container-high)'}
+        stroke={payload.color}
+        strokeWidth={2}
+      />
+    </g>
+  );
+}
+
+function PriceHistoryChart({
+  points,
+  ceilingPrice,
+}: {
+  points: PriceHistoryPoint[];
+  ceilingPrice?: number | null;
+}) {
+  const plot = buildPriceHistoryPlot(points);
+  if (!plot) {
     return <EmptyState message="Chưa có dữ liệu giá để vẽ biểu đồ." />;
   }
 
-  const { layout, axis, supplierKeys, xOf, yOf, minP, midP, maxP } = chart;
-  const colorOf = (name: string) => CHART_COLORS[Math.max(0, supplierKeys.indexOf(name)) % CHART_COLORS.length];
+  const { rows, legend, xDomain, yDomain, xTicks } = plot;
+  const hasPurchaseLine = rows.filter(r => r.purchased).length >= 2;
 
   return (
     <div className="space-y-2">
-      <div className="overflow-x-auto">
-        <svg
-          width={layout.width}
-          height={layout.height}
-          viewBox={`0 0 ${layout.width} ${layout.height}`}
-          role="img"
-          aria-label="Biểu đồ lịch sử giá"
-        >
-          <line x1={axis.x1} y1={axis.y1} x2={axis.x1} y2={axis.y2} stroke="var(--md-outline-variant)" />
-          <line x1={axis.x1} y1={axis.y2} x2={axis.x2} y2={axis.y2} stroke="var(--md-outline-variant)" />
-          {[maxP, midP, minP].map(v => (
-            <text
-              key={v}
-              x={4}
-              y={yOf(v) + 4}
-              fill="var(--md-on-surface-variant)"
-              style={{ fontSize: 'var(--fs-micro)' }}
-            >
-              {formatCurrencyFull(v)}
-            </text>
-          ))}
-          {supplierKeys.map(name => {
-            const linePts = points
-              .filter(p => (p.supplierName || `#${p.supplierId ?? 0}`) === name && isPurchaseKind(p.kind))
-              .slice()
-              .sort((a, b) => a.date.localeCompare(b.date));
-            if (linePts.length < 2) return null;
-            const d = linePts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${xOf(p.date).toFixed(1)} ${yOf(p.unitPrice).toFixed(1)}`).join(' ');
-            return <path key={name} d={d} fill="none" stroke={colorOf(name)} strokeWidth="2" opacity="0.75" />;
-          })}
-          {points.map((p, i) => {
-            const key = p.supplierName || `#${p.supplierId ?? 0}`;
-            const color = colorOf(key);
-            const purchased = isPurchaseKind(p.kind);
-            return (
-              <circle
-                key={`${p.date}-${p.kind}-${i}`}
-                cx={xOf(p.date)}
-                cy={yOf(p.unitPrice)}
-                r={purchased ? 5 : 4}
-                fill={purchased ? color : 'var(--md-surface-container)'}
-                stroke={p.kind === 'quote' && p.status === 'active' ? 'var(--md-tertiary)' : color}
-                strokeWidth={purchased ? 1.5 : 2}
-              >
-                <title>
-                  {`${p.supplierName || 'NCC'}: ${formatCurrencyFull(p.unitPrice)} (${p.date}) - ${historyKindLabel(p.kind, p.status)}`}
-                </title>
-              </circle>
-            );
-          })}
-        </svg>
+      <div className="text-[length:var(--fs-sm)] font-medium">Diễn biến đơn giá theo thời gian</div>
+      <div className="pur-pricebook-chart">
+        <ResponsiveContainer width="100%" height="100%">
+          <ComposedChart data={rows} margin={{ top: 36, right: 28, left: 8, bottom: 8 }}>
+            <CartesianGrid stroke="var(--md-outline-variant)" vertical={false} />
+            <XAxis
+              dataKey="ts"
+              type="number"
+              domain={xDomain}
+              ticks={xTicks}
+              tickFormatter={ts => {
+                const row = rows.find(r => r.ts === ts);
+                return formatDateCell(row?.date);
+              }}
+              tick={CHART_TICK}
+              axisLine={{ stroke: 'var(--md-outline-variant)' }}
+              tickLine={false}
+            />
+            <YAxis
+              domain={yDomain}
+              tickFormatter={value => formatCurrencyShort(Number(value))}
+              tick={CHART_TICK}
+              axisLine={false}
+              tickLine={false}
+              width={72}
+            />
+            <Tooltip content={PriceHistoryTooltip} />
+            {ceilingPrice != null ? (
+              <ReferenceLine
+                y={ceilingPrice}
+                stroke="var(--md-error)"
+                strokeDasharray="4 4"
+                label={{
+                  value: `Giá trần ${formatCurrencyFull(ceilingPrice)}`,
+                  fill: 'var(--md-error)',
+                  fontSize: 11,
+                  fontFamily: 'var(--font-sans)',
+                  position: 'insideTopRight',
+                }}
+              />
+            ) : null}
+            {hasPurchaseLine ? (
+              <Line
+                type="linear"
+                dataKey="purchasePrice"
+                name="Giá đã mua"
+                stroke="var(--md-tertiary)"
+                strokeWidth={2}
+                dot={false}
+                activeDot={false}
+                connectNulls
+                legendType="none"
+                isAnimationActive={false}
+              />
+            ) : null}
+            <Scatter
+              dataKey="unitPrice"
+              name="Mốc giá"
+              shape={PriceHistoryDot}
+              isAnimationActive={false}
+              legendType="none"
+            />
+          </ComposedChart>
+        </ResponsiveContainer>
       </div>
       <div className="flex flex-wrap gap-3 text-[length:var(--fs-xs)] text-[var(--md-on-surface-variant)]">
-        {supplierKeys.map(name => (
-          <span key={name} className="inline-flex items-center gap-1">
-            <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ background: colorOf(name) }} />
-            {name}
+        {legend.map(item => (
+          <span key={item.kindLabel} className="inline-flex items-center gap-1">
+            <span
+              className="inline-block w-2.5 h-2.5 rounded-full"
+              style={{
+                background: item.purchased ? item.color : 'transparent',
+                boxShadow: `inset 0 0 0 2px ${item.color}`,
+              }}
+            />
+            {item.kindLabel}
           </span>
         ))}
       </div>
       <p className="text-[length:var(--fs-xs)] text-[var(--md-on-surface-variant)] m-0">
-        Chấm đặc = đã mua (PO / KHMH / nhập kho). Chấm rỗng = báo giá hoặc giá bán.
+        Trục ngang là ngày ghi giá. Mỗi chấm là một dòng trong bảng bên dưới.
+        Chấm đặc = đã mua (PO, KHMH, nhập kho). Chấm rỗng = giá tham khảo (báo giá, giá bán, dự toán).
       </p>
     </div>
   );

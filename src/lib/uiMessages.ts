@@ -16,6 +16,7 @@ export const UI_ERROR = {
   saveFailed: 'Không lưu được thông tin. Vui lòng thử lại.',
   loginFailed: 'Đăng nhập thất bại. Vui lòng thử lại.',
   serverUnavailable: 'Hệ thống chưa sẵn sàng. Vui lòng liên hệ quản trị.',
+  transient: 'Hệ thống đang tạm gián đoạn. Thử lại sau 1-2 phút. Nếu vẫn lỗi, báo quản trị viên.',
 } as const;
 
 /** Menu item / feature chưa có route — không dùng wording "giả lập". */

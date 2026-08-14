@@ -7,11 +7,11 @@ import { readImageFile } from '../../lib/hrm/attachments';
 import type { FileAttachment } from '../../types/hr';
 import { useSecureFileUrl } from '../../hooks/useSecureFileUrl';
 
-export function FieldView({ label, value }: { label: string; value?: string }) {
+export function FieldView({ label, value, multiline, className = '' }: { label: string; value?: string; multiline?: boolean; className?: string }) {
   return (
-    <div className="hrm-field">
+    <div className={`hrm-field ${className}`.trim()}>
       <span className="hrm-field__label">{label}</span>
-      <span className="hrm-field__value">{value || '—'}</span>
+      <span className={`hrm-field__value${multiline ? ' hrm-field__value--multiline' : ''}`}>{value || '—'}</span>
     </div>
   );
 }
@@ -75,6 +75,38 @@ export function FieldInput({ label, value, onChange, type = 'text', error, phone
           placeholder={placeholder}
         />
       )}
+      {error && <p className="hrm-field__error">{error}</p>}
+    </div>
+  );
+}
+
+export function FieldTextarea({
+  label,
+  value,
+  onChange,
+  error,
+  placeholder,
+  rows = 4,
+  className = '',
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  error?: string;
+  placeholder?: string;
+  rows?: number;
+  className?: string;
+}) {
+  return (
+    <div className={`hrm-field ${className}`.trim()}>
+      <label className="hrm-field__label">{label}</label>
+      <textarea
+        className={`form-input w-full${error ? ' hrm-field-input--error' : ''}`}
+        rows={rows}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder={placeholder}
+      />
       {error && <p className="hrm-field__error">{error}</p>}
     </div>
   );

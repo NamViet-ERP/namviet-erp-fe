@@ -19580,6 +19580,10 @@
             "type": "string",
             "nullable": true
           },
+          "generalTechnicalSpec": {
+            "type": "string",
+            "nullable": true
+          },
           "qualityStandard": {
             "type": "string",
             "nullable": true
@@ -20093,6 +20097,14 @@
             "nullable": true
           },
           "abcClass": {
+            "type": "string",
+            "nullable": true
+          },
+          "technicalSpec": {
+            "type": "string",
+            "nullable": true
+          },
+          "generalTechnicalSpec": {
             "type": "string",
             "nullable": true
           },
@@ -27185,6 +27197,10 @@
             "type": "string"
           },
           "technicalSpec": {
+            "type": "string",
+            "nullable": true
+          },
+          "generalTechnicalSpec": {
             "type": "string",
             "nullable": true
           },

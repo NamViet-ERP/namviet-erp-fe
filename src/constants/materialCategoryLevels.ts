@@ -19,6 +19,7 @@ export const MATERIAL_TABLE_COLUMNS = [
   { key: 'phanLoai', label: 'Phân loại' },
   { key: 'kieu', label: 'Kiểu' },
   { key: 'technicalSpec', label: 'Quy cách' },
+  { key: 'generalTechnicalSpec', label: 'Thông số kỹ thuật chung' },
   { key: 'qualityStandard', label: 'Tiêu chuẩn chất lượng' },
   { key: 'ceilingPrice', label: 'Giá trần' },
 ] as const;
@@ -34,6 +35,7 @@ export const MATERIAL_FIELD_PLACEHOLDERS = {
   materialCode: 'VD: TE-PLT-012-SA516',
   materialName: 'VD: Tấm thép SA516 Gr.70 dày 12mm',
   technicalSpec: 'VD: 2000×6000×12mm',
+  generalTechnicalSpec: 'VD: Q=80m3/h, H=15m, điện áp 380V',
   qualityStandard: 'VD: ASTM A516 Gr.70',
 } as const;
 

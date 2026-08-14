@@ -14140,6 +14140,7 @@ export interface components {
             categoryPath: components["schemas"]["MaterialCategoryPathDto"];
             unit: string;
             technicalSpec?: string | null;
+            generalTechnicalSpec?: string | null;
             qualityStandard?: string | null;
             /** Format: double */
             ceilingPrice?: number | null;
@@ -14295,6 +14296,8 @@ export interface components {
             /** Format: double */
             ceilingPrice?: number | null;
             abcClass?: string | null;
+            technicalSpec?: string | null;
+            generalTechnicalSpec?: string | null;
             /** Format: double */
             latestPrice?: number | null;
             /** Format: date */
@@ -16438,6 +16441,7 @@ export interface components {
             categoryId: number;
             unit: string;
             technicalSpec?: string | null;
+            generalTechnicalSpec?: string | null;
             qualityStandard?: string | null;
             /** Format: double */
             ceilingPrice?: number | null;

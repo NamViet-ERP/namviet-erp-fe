@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Ban, RotateCcw } from 'lucide-react';
 import DetailSection from '../../components/hr/DetailSection';
 import DetailFieldGrid from '../../components/hr/DetailFieldGrid';
-import { FieldInput, FieldView } from '../../components/hr/DetailFields';
+import { FieldInput, FieldTextarea, FieldView } from '../../components/hr/DetailFields';
 import { HrmDetailHeader } from '../../components/hr/HrmPageChrome';
 import HrmEditActions from '../../components/hr/HrmEditActions';
 import HrmNotFound, { HrmLoadingState } from '../../components/hr/HrmNotFound';
@@ -58,6 +58,7 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
     materialName: '',
     unit: '',
     technicalSpec: '',
+    generalTechnicalSpec: '',
     qualityStandard: '',
     ceilingPrice: '',
   });
@@ -92,6 +93,7 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
       materialName: material.materialName,
       unit: material.unit,
       technicalSpec: material.technicalSpec ?? '',
+      generalTechnicalSpec: material.generalTechnicalSpec ?? '',
       qualityStandard: material.qualityStandard ?? '',
       ceilingPrice: material.ceilingPrice != null ? String(material.ceilingPrice) : '',
     });
@@ -105,6 +107,7 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
       materialName: material.materialName,
       unit: material.unit,
       technicalSpec: material.technicalSpec ?? '',
+      generalTechnicalSpec: material.generalTechnicalSpec ?? '',
       qualityStandard: material.qualityStandard ?? '',
       ceilingPrice: material.ceilingPrice != null ? String(material.ceilingPrice) : '',
     });
@@ -145,6 +148,7 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
           categoryId,
           unit: editForm.unit.trim(),
           technicalSpec: editForm.technicalSpec.trim() || null,
+          generalTechnicalSpec: editForm.generalTechnicalSpec.trim() || null,
           qualityStandard: editForm.qualityStandard.trim() || null,
           ceilingPrice: editForm.ceilingPrice
             ? Number(String(editForm.ceilingPrice).replace(/[^\d.-]/g, '')) || null
@@ -265,6 +269,13 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
               onChange={v => setEditForm(f => ({ ...f, technicalSpec: v }))}
               placeholder={MATERIAL_FIELD_PLACEHOLDERS.technicalSpec}
             />
+            <FieldTextarea
+              className="col-span-full"
+              label="Thông số kỹ thuật chung"
+              value={editForm.generalTechnicalSpec}
+              onChange={v => setEditForm(f => ({ ...f, generalTechnicalSpec: v }))}
+              placeholder={MATERIAL_FIELD_PLACEHOLDERS.generalTechnicalSpec}
+            />
             <FieldInput
               label="Tiêu chuẩn chất lượng"
               value={editForm.qualityStandard}
@@ -286,6 +297,12 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
             <FieldView label="Tên" value={material.materialName} />
             <FieldView label="Đơn vị tính" value={material.unit} />
             <FieldView label="Quy cách" value={material.technicalSpec ?? undefined} />
+            <FieldView
+              className="col-span-full"
+              label="Thông số kỹ thuật chung"
+              value={material.generalTechnicalSpec ?? undefined}
+              multiline
+            />
             <FieldView label="Tiêu chuẩn chất lượng" value={material.qualityStandard ?? undefined} />
             <FieldView
               label="Giá trần tham chiếu"

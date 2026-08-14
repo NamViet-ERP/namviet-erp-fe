@@ -80,3 +80,20 @@
   width: 9.5rem;
   min-width: 9.5rem;
 }
+
+.mat-catalog-table {
+  min-width: 1600px;
+}
+
+.mat-col-general-spec {
+  width: 16rem;
+  min-width: 12rem;
+}
+
+.mat-spec-cell {
+  white-space: pre-wrap;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+}

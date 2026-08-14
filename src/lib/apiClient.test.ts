@@ -76,6 +76,17 @@ describe('parseApiError', () => {
       expect(parseApiError(payload, fallback)).toBe(fallback);
     });
 
+    it('maps infrastructure transient failures to a safe Vietnamese report code', () => {
+      expect(parseApiError(
+        { detail: 'An exception has been raised that is likely due to a transient failure.' },
+        fallback,
+      )).toBe('Hệ thống đang tạm gián đoạn. Thử lại sau 1-2 phút. Nếu vẫn lỗi, báo quản trị viên.');
+      expect(parseApiError(
+        { detail: 'Npgsql.NpgsqlException: Failed to connect to 127.0.0.1:5432' },
+        fallback,
+      )).toBe('Hệ thống đang tạm gián đoạn. Thử lại sau 1-2 phút. Nếu vẫn lỗi, báo quản trị viên.');
+    });
+
     describe('weird error payloads (adversarial review)', () => {
       it('should handle empty errors list or object', () => {
         expect(parseApiError({ errors: [] }, fallback)).toBe(fallback);
