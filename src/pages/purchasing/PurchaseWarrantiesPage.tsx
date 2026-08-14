@@ -1,84 +1,38 @@
-import { useMemo, useState } from 'react';
-import { Eye, Plus, RefreshCw } from 'lucide-react';
-import PurchasingListLayout from '../../components/purchasing/PurchasingListLayout';
-import ProjectAutocomplete from '../../components/purchasing/ProjectAutocomplete';
-import EmptyState from '../../components/ui/EmptyState';
-import Modal from '../../components/ui/Modal';
-import FormField from '../../components/ui/FormField';
-import Pagination from '../../components/ui/Pagination';
-import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { Package, RefreshCw, ShieldCheck, TriangleAlert } from 'lucide-react';
+import PageHeader from '../../components/ui/PageHeader';
+import TabFilter from '../../components/ui/TabFilter';
+import HrmPanel from '../../components/hr/HrmPanel';
+import HrmStatCard from '../../components/hr/HrmStatCard';
 import { showToast } from '../../components/ui/Toast';
 import { DEFAULT_LIST_PAGE_SIZE, type ListPageSize } from '../../constants/pagination';
 import {
-  useCloseWarrantyClaim,
-  useCreateWarrantyClaim,
-  usePurchaseWarranty,
   usePurchaseWarranties,
+  usePurchaseWarrantyClaims,
   useSyncPurchaseWarranties,
-  useUpdatePurchaseWarranty,
 } from '../../hooks/usePurchaseWarranties';
 import { usePermission } from '../../hooks/usePermission';
 import { useProjects } from '../../hooks/useProjects';
 import { getApiErrorMessage } from '../../lib/apiClient';
-import { formatDateCell, formatDateTimeVi } from '../../lib/hrm/formatters';
+import type { TabItem } from '../../types';
 import type { PurchaseWarrantyApiDto } from '../../services/purchaseWarrantiesService';
+import CreateComplaintTicketPanel from './warranties/CreateComplaintTicketPanel';
+import WarrantyComplaintsPanel from './warranties/WarrantyComplaintsPanel';
+import WarrantyDetailModal from './warranties/WarrantyDetailModal';
+import WarrantyRegistryPanel from './warranties/WarrantyRegistryPanel';
+import {
+  WARRANTY_PAGE_TABS,
+  type WarrantyPageTab,
+} from './warranties/warrantyLabels';
 
-const STATUS_OPTIONS = [
-  { value: '', label: 'Tất cả trạng thái' },
-  { value: 'pending_anchor', label: 'Chờ mốc' },
-  { value: 'active', label: 'Còn hạn' },
-  { value: 'expired', label: 'Hết hạn' },
-  { value: 'void', label: 'Đã hủy' },
-];
-
-const COL_COUNT = 10;
-
-function statusTone(status: string): 'ok' | 'warn' | 'danger' | 'neutral' {
-  switch (status) {
-    case 'active':
-      return 'ok';
-    case 'pending_anchor':
-      return 'warn';
-    case 'expired':
-    case 'void':
-      return 'danger';
-    default:
-      return 'neutral';
-  }
+function tabFromParam(value: string | null): WarrantyPageTab {
+  if (value === 'complaints' || value === 'create-complaint') return 'complaints';
+  return 'registry';
 }
 
-function statusLabel(status: string): string {
-  switch (status) {
-    case 'pending_anchor':
-      return 'Chờ mốc';
-    case 'active':
-      return 'Còn hạn';
-    case 'expired':
-      return 'Hết hạn';
-    case 'void':
-      return 'Đã hủy';
-    default:
-      return status;
-  }
-}
-
-function claimStatusLabel(status: string): string {
-  switch (status) {
-    case 'draft':
-      return 'Nháp';
-    case 'submitted':
-      return 'Đã gửi';
-    case 'closed':
-      return 'Đã đóng';
-    case 'cancelled':
-      return 'Đã hủy';
-    default:
-      return status;
-  }
-}
-
-function anchorLabel(anchor: string): string {
-  return anchor === 'acceptance' ? 'Nghiệm thu' : 'Giao hàng';
+function shouldOpenCreate(value: string | null): boolean {
+  return value === 'create-complaint' || value === 'create-warranty';
 }
 
 export default function PurchaseWarrantiesPage() {
@@ -87,6 +41,9 @@ export default function PurchaseWarrantiesPage() {
   const canUpdate = has('purchasing.warranties.update');
   const { data: projectsPage } = useProjects({ page: 1, pageSize: 200 });
   const projects = projectsPage?.items ?? [];
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const tab = tabFromParam(tabParam);
 
   const [search, setSearch] = useState('');
   const [projectCode, setProjectCode] = useState('');
@@ -94,15 +51,13 @@ export default function PurchaseWarrantiesPage() {
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<ListPageSize>(DEFAULT_LIST_PAGE_SIZE);
+  const [claimSearch, setClaimSearch] = useState('');
+  const [claimStatus, setClaimStatus] = useState('');
+  const [claimPage, setClaimPage] = useState(1);
+  const [claimPageSize, setClaimPageSize] = useState<ListPageSize>(DEFAULT_LIST_PAGE_SIZE);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [claimReason, setClaimReason] = useState('');
-  const [claimNote, setClaimNote] = useState('');
-  const [acceptanceDate, setAcceptanceDate] = useState('');
-  const [anchorType, setAnchorType] = useState('delivery');
-  const [warrantyMonths, setWarrantyMonths] = useState('12');
-  const [closeClaimId, setCloseClaimId] = useState<string | null>(null);
-  const [serviceRating, setServiceRating] = useState('5');
-  const [serviceNote, setServiceNote] = useState('');
+  const [preselectedLotId, setPreselectedLotId] = useState('');
+  const [createOpen, setCreateOpen] = useState(() => shouldOpenCreate(tabParam));
 
   const listParams = useMemo(
     () => ({
@@ -113,126 +68,81 @@ export default function PurchaseWarrantiesPage() {
     }),
     [search, projectCode, materialCode, status],
   );
+  const claimParams = useMemo(() => ({ kind: 'complaint' as const }), []);
 
   const { data = [], isLoading, isError, error } = usePurchaseWarranties(listParams);
-  const detailQuery = usePurchaseWarranty(selectedId ?? undefined);
+  const lotsQuery = usePurchaseWarranties({});
+  const lots = lotsQuery.data ?? [];
+  const claimsQuery = usePurchaseWarrantyClaims(claimParams);
+  const claims = useMemo(() => {
+    let rows = claimsQuery.data ?? [];
+    if (claimStatus) rows = rows.filter(c => c.status === claimStatus);
+    const q = claimSearch.trim().toLowerCase();
+    if (q) {
+      rows = rows.filter(c =>
+        [c.ticketCode, c.reason, c.poCode, c.materialName, c.materialCode ?? '', c.supplierName ?? '', c.projectCode ?? '']
+          .join(' ')
+          .toLowerCase()
+          .includes(q),
+      );
+    }
+    return rows;
+  }, [claimsQuery.data, claimSearch, claimStatus]);
   const syncMutation = useSyncPurchaseWarranties();
-  const updateMutation = useUpdatePurchaseWarranty();
-  const createClaimMutation = useCreateWarrantyClaim();
-  const closeClaimMutation = useCloseWarrantyClaim();
 
-  const pageRows = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return data.slice(start, start + pageSize);
-  }, [data, page, pageSize]);
+  const totalLots = lots.length;
+  const activeLots = lots.filter(r => r.status === 'active').length;
+  const expiredLots = lots.filter(r => r.status === 'expired').length;
+  const openComplaints = (claimsQuery.data ?? []).filter(
+    c => c.status !== 'closed' && c.status !== 'cancelled',
+  ).length;
+  const highOpen = (claimsQuery.data ?? []).filter(
+    c => c.severity === 'high' && c.status !== 'closed' && c.status !== 'cancelled',
+  ).length;
 
-  const hasFilters = Boolean(search.trim() || projectCode.trim() || materialCode.trim() || status);
+  useEffect(() => {
+    if (!shouldOpenCreate(tabParam)) return;
+    setCreateOpen(true);
+    setSearchParams(tabParam === 'create-complaint' ? { tab: 'complaints' } : {}, { replace: true });
+  }, [tabParam, setSearchParams]);
 
-  const openDetail = (row: PurchaseWarrantyApiDto) => {
-    setSelectedId(row.id);
-    setClaimReason('');
-    setClaimNote('');
-    setAcceptanceDate(row.acceptanceDate?.slice(0, 10) ?? '');
-    setAnchorType(row.anchorType || 'delivery');
-    setWarrantyMonths(String(row.warrantyMonths || 12));
+  const setTab = (next: WarrantyPageTab) => {
+    setSearchParams(next === 'registry' ? {} : { tab: next }, { replace: true });
+  };
+
+  const openCreate = (lotId = '') => {
+    setPreselectedLotId(lotId);
+    setCreateOpen(true);
+  };
+
+  const closeCreate = () => {
+    setCreateOpen(false);
+    setPreselectedLotId('');
   };
 
   const onSync = async () => {
     try {
       const result = await syncMutation.mutateAsync();
-      showToast(
-        'success',
-        `Đã đồng bộ: tạo ${result.created}, cập nhật ${result.updated} hồ sơ BH.`,
-      );
+      showToast('success', `Đã đồng bộ: tạo ${result.created}, cập nhật ${result.updated} hồ sơ BH.`);
     } catch (err) {
       showToast('error', getApiErrorMessage(err, 'Không đồng bộ được bảo hành'));
     }
   };
 
-  const onSaveMeta = async () => {
-    if (!selectedId) return;
-    const months = Number(warrantyMonths);
-    if (!Number.isFinite(months) || months < 0 || months > 120) {
-      showToast('error', 'Số tháng BH phải từ 0 đến 120.');
-      return;
-    }
-    try {
-      await updateMutation.mutateAsync({
-        id: selectedId,
-        body: {
-          warrantyMonths: months,
-          anchorType,
-          acceptanceDate: acceptanceDate || null,
-        },
-      });
-      showToast('success', 'Đã cập nhật hồ sơ bảo hành.');
-    } catch (err) {
-      showToast('error', getApiErrorMessage(err, 'Không cập nhật được hồ sơ BH'));
-    }
-  };
+  const tabs: TabItem[] = WARRANTY_PAGE_TABS.map(t => {
+    if (t.id === 'registry') return { ...t, count: totalLots };
+    if (t.id === 'complaints') return { ...t, count: claimsQuery.data?.length ?? 0 };
+    return t;
+  });
 
-  const onCreateClaim = async () => {
-    if (!selectedId) return;
-    if (claimReason.trim().length < 3) {
-      showToast('error', 'Nhập nguyên nhân (tối thiểu 3 ký tự).');
-      return;
-    }
-    try {
-      await createClaimMutation.mutateAsync({
-        id: selectedId,
-        body: { reason: claimReason.trim(), note: claimNote.trim() || undefined, submit: true },
-      });
-      setClaimReason('');
-      setClaimNote('');
-      showToast('success', 'Đã tạo phiếu bảo hành.');
-    } catch (err) {
-      showToast('error', getApiErrorMessage(err, 'Không tạo được phiếu BH'));
-    }
-  };
-
-  const onConfirmCloseClaim = async () => {
-    if (!closeClaimId) return;
-    const rating = Number(serviceRating);
-    if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
-      showToast('error', 'Đánh giá dịch vụ BH phải từ 1 đến 5.');
-      return;
-    }
-    try {
-      await closeClaimMutation.mutateAsync({
-        claimId: closeClaimId,
-        body: {
-          serviceRating: rating,
-          serviceNote: serviceNote.trim() || null,
-        },
-      });
-      setCloseClaimId(null);
-      setServiceRating('5');
-      setServiceNote('');
-      showToast('success', 'Đã đóng phiếu BH và lưu đánh giá dịch vụ.');
-    } catch (err) {
-      showToast('error', getApiErrorMessage(err, 'Không đóng được phiếu'));
-    }
-  };
+  const goCreateComplaint = (row: PurchaseWarrantyApiDto) => openCreate(row.id);
 
   return (
-    <>
-      <PurchasingListLayout
+    <div className="page-shell space-y-4 pur-warranty-page">
+      <PageHeader
+        eyebrow="Mua hàng"
         title="Quản lý bảo hành"
-        subtitle="Theo dõi hạn BH theo giao hàng / nghiệm thu · lọc dự án · mặt hàng · NCC · tạo phiếu BH."
-        search={search}
-        onSearchChange={v => {
-          setSearch(v);
-          setPage(1);
-        }}
-        searchPlaceholder="Tìm mã BH, PO, vật tư, NCC…"
-        hasFilters={hasFilters}
-        onResetFilters={() => {
-          setSearch('');
-          setProjectCode('');
-          setMaterialCode('');
-          setStatus('');
-          setPage(1);
-        }}
+        subtitle="Danh mục lô hàng còn/hết hạn BH và khiếu nại bảo hành / chất lượng với NCC."
         actions={
           canUpdate ? (
             <button
@@ -248,361 +158,93 @@ export default function PurchaseWarrantiesPage() {
             </button>
           ) : null
         }
-        filters={
-          <>
-            <ProjectAutocomplete
-              value={projectCode}
-              onChange={code => {
-                setProjectCode(code);
-                setPage(1);
-              }}
-              projects={projects}
-              placeholder="Lọc dự án"
-              compact
-            />
-            <input
-              className="form-input"
-              value={materialCode}
-              onChange={e => {
-                setMaterialCode(e.target.value);
-                setPage(1);
-              }}
-              placeholder="Mã vật tư"
-              aria-label="Lọc mã vật tư"
-            />
-            <select
-              className="form-input"
-              value={status}
-              onChange={e => {
-                setStatus(e.target.value);
-                setPage(1);
-              }}
-              aria-label="Lọc trạng thái"
-            >
-              {STATUS_OPTIONS.map(o => (
-                <option key={o.value || 'all'} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </>
-        }
-      >
-        <div className="overflow-x-auto table-scroll wms-inventory-table-wrap">
-          <table className="wms-inventory-table">
-            <thead>
-              <tr>
-                <th className="table-header-cell">Mã BH</th>
-                <th className="table-header-cell">PO</th>
-                <th className="table-header-cell">Vật tư</th>
-                <th className="table-header-cell">Dự án</th>
-                <th className="table-header-cell">NCC</th>
-                <th className="table-header-cell text-right">SL</th>
-                <th className="table-header-cell">Mốc</th>
-                <th className="table-header-cell">Hạn BH</th>
-                <th className="table-header-cell">Trạng thái</th>
-                <th className="table-header-cell text-center w-16">Tác vụ</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                <TableSkeletonRows colSpan={COL_COUNT} />
-              ) : isError ? (
-                <tr>
-                  <td colSpan={COL_COUNT}>
-                    <EmptyState message={getApiErrorMessage(error, 'Không tải được danh sách BH.')} />
-                  </td>
-                </tr>
-              ) : pageRows.length === 0 ? (
-                <tr>
-                  <td colSpan={COL_COUNT}>
-                    <EmptyState message="Chưa có hồ sơ bảo hành. Set tháng BH trên dòng PO rồi nhập kho / Đồng bộ." />
-                  </td>
-                </tr>
-              ) : (
-                pageRows.map(row => (
-                  <tr
-                    key={row.id}
-                    className="table-row wms-inventory-row--interactive"
-                    onClick={() => openDetail(row)}
-                  >
-                    <td className="table-cell font-mono text-sm">{row.code}</td>
-                    <td className="table-cell font-mono text-sm">{row.poCode}</td>
-                    <td className="table-cell">
-                      <div className="font-semibold">{row.materialName}</div>
-                      <div className="text-xs text-[var(--md-on-surface-variant)] font-mono">
-                        {row.materialCode || '—'}
-                      </div>
-                    </td>
-                    <td className="table-cell font-mono text-sm">{row.projectCode || '—'}</td>
-                    <td className="table-cell">{row.supplierName || '—'}</td>
-                    <td className="table-cell text-right tabular-nums">
-                      {row.quantity} {row.unit}
-                    </td>
-                    <td className="table-cell">{anchorLabel(row.anchorType)}</td>
-                    <td className="table-cell tabular-nums">
-                      {formatDateCell(row.warrantyEndDate ?? undefined)}
-                    </td>
-                    <td className="table-cell">
-                      <span className={`pur-erp__pill pur-erp__pill--${statusTone(row.status)}`}>
-                        {statusLabel(row.status)}
-                      </span>
-                      {row.claimCount > 0 ? (
-                        <span className="pur-erp__pill pur-erp__pill--info ml-2">
-                          {row.claimCount} phiếu
-                        </span>
-                      ) : null}
-                    </td>
-                    <td className="table-cell text-center" onClick={e => e.stopPropagation()}>
-                      <button
-                        type="button"
-                        className="btn btn-ghost btn-sm"
-                        aria-label={`Xem ${row.code}`}
-                        onClick={() => openDetail(row)}
-                      >
-                        <Eye size={14} />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      />
+
+      <div className="tab-filter-row">
+        <TabFilter tabs={tabs} activeTab={tab} onChange={id => setTab(id as WarrantyPageTab)} />
+      </div>
+
+      {tab === 'registry' ? (
+        <div className="hrm-stat-grid">
+          <HrmStatCard label="Tổng số lô hàng có bảo hành" value={totalLots} icon={Package} tone="primary" />
+          <HrmStatCard label="Còn bảo hành" value={activeLots} icon={ShieldCheck} tone="success" />
+          <HrmStatCard label="Đã hết bảo hành" value={expiredLots} icon={TriangleAlert} tone="warning" />
         </div>
-        {data.length > 0 && !isLoading ? (
-          <Pagination
-            embedded
-            currentPage={page}
-            totalPages={Math.max(1, Math.ceil(data.length / pageSize))}
+      ) : null}
+      {tab === 'complaints' ? (
+        <div className="hrm-stat-grid">
+          <HrmStatCard label="Khiếu nại đang xử lý" value={openComplaints} icon={TriangleAlert} tone="warning" />
+          <HrmStatCard label="Tổng số khiếu nại" value={claimsQuery.data?.length ?? 0} icon={Package} tone="primary" />
+          <HrmStatCard label="Mức nghiêm trọng chưa đóng" value={highOpen} icon={TriangleAlert} tone="warning" />
+        </div>
+      ) : null}
+
+      {tab === 'registry' ? (
+        <HrmPanel noPadding>
+          <WarrantyRegistryPanel
+            rows={data}
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            search={search}
+            onSearchChange={v => { setSearch(v); setPage(1); }}
+            projectCode={projectCode}
+            onProjectCodeChange={v => { setProjectCode(v); setPage(1); }}
+            materialCode={materialCode}
+            onMaterialCodeChange={v => { setMaterialCode(v); setPage(1); }}
+            status={status}
+            onStatusChange={v => { setStatus(v); setPage(1); }}
+            projects={projects}
+            page={page}
             pageSize={pageSize}
-            totalItems={data.length}
             onPageChange={setPage}
-            onPageSizeChange={size => {
-              setPageSize(size);
-              setPage(1);
-            }}
+            onPageSizeChange={setPageSize}
+            canCreate={canCreate}
+            onOpenDetail={row => setSelectedId(row.id)}
+            onCreateComplaint={goCreateComplaint}
           />
-        ) : null}
-      </PurchasingListLayout>
+        </HrmPanel>
+      ) : null}
 
-      <Modal
-        isOpen={Boolean(selectedId)}
-        onClose={() => setSelectedId(null)}
-        title={detailQuery.data ? `Bảo hành ${detailQuery.data.code}` : 'Chi tiết bảo hành'}
-        size="lg"
-      >
-        {detailQuery.isLoading || !detailQuery.data ? (
-          <EmptyState message={detailQuery.isLoading ? 'Đang tải…' : 'Không tìm thấy hồ sơ.'} />
-        ) : (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-              <div>
-                <div className="text-[var(--md-on-surface-variant)]">PO / VT</div>
-                <div className="font-semibold">
-                  {detailQuery.data.poCode} · {detailQuery.data.materialName}
-                </div>
-              </div>
-              <div>
-                <div className="text-[var(--md-on-surface-variant)]">NCC / Dự án</div>
-                <div className="font-semibold">
-                  {detailQuery.data.supplierName || '—'} · {detailQuery.data.projectCode || '—'}
-                </div>
-              </div>
-              <div>
-                <div className="text-[var(--md-on-surface-variant)]">Ngày giao / Hạn BH</div>
-                <div className="font-semibold tabular-nums">
-                  {formatDateCell(detailQuery.data.deliveryDate ?? undefined)} →{' '}
-                  {formatDateCell(detailQuery.data.warrantyEndDate ?? undefined)}
-                </div>
-              </div>
-              <div>
-                <div className="text-[var(--md-on-surface-variant)]">Trạng thái</div>
-                <div className="font-semibold">{statusLabel(detailQuery.data.status)}</div>
-              </div>
-            </div>
+      {tab === 'complaints' ? (
+        <HrmPanel noPadding>
+          <WarrantyComplaintsPanel
+            rows={claims}
+            isLoading={claimsQuery.isLoading}
+            isError={claimsQuery.isError}
+            error={claimsQuery.error}
+            search={claimSearch}
+            onSearchChange={v => { setClaimSearch(v); setClaimPage(1); }}
+            status={claimStatus}
+            onStatusChange={v => { setClaimStatus(v); setClaimPage(1); }}
+            page={claimPage}
+            pageSize={claimPageSize}
+            onPageChange={setClaimPage}
+            onPageSizeChange={setClaimPageSize}
+            onOpenWarranty={id => setSelectedId(id)}
+            canCreate={canCreate}
+            onCreate={() => openCreate()}
+          />
+        </HrmPanel>
+      ) : null}
 
-            {canUpdate ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 border-t border-[var(--md-outline-variant)] pt-3">
-                <FormField label="Số tháng BH">
-                  <input
-                    className="form-input"
-                    type="number"
-                    min={0}
-                    max={120}
-                    value={warrantyMonths}
-                    onChange={e => setWarrantyMonths(e.target.value)}
-                  />
-                </FormField>
-                <FormField label="Mốc tính hạn">
-                  <select
-                    className="form-input"
-                    value={anchorType}
-                    onChange={e => setAnchorType(e.target.value)}
-                  >
-                    <option value="delivery">Giao hàng</option>
-                    <option value="acceptance">Nghiệm thu</option>
-                  </select>
-                </FormField>
-                <FormField label="Ngày nghiệm thu">
-                  <input
-                    className="form-input"
-                    type="date"
-                    value={acceptanceDate}
-                    onChange={e => setAcceptanceDate(e.target.value)}
-                  />
-                </FormField>
-                <div className="md:col-span-3">
-                  <button
-                    type="button"
-                    className="btn btn-secondary btn-sm"
-                    disabled={updateMutation.isPending}
-                    onClick={() => {
-                      void onSaveMeta();
-                    }}
-                  >
-                    Lưu mốc / tháng BH
-                  </button>
-                </div>
-              </div>
-            ) : null}
-
-            <div className="border-t border-[var(--md-outline-variant)] pt-3">
-              <h3 className="purchasing-section-title">Lịch sử phiếu bảo hành</h3>
-              {detailQuery.data.claims.length === 0 ? (
-                <p className="text-sm text-[var(--md-on-surface-variant)]">Chưa có phiếu BH.</p>
-              ) : (
-                <ul className="space-y-2">
-                  {detailQuery.data.claims.map(c => (
-                    <li
-                      key={c.id}
-                      className="flex flex-wrap items-start justify-between gap-2 rounded-lg border border-[var(--md-outline-variant)] px-3 py-2"
-                    >
-                      <div>
-                        <div className="font-mono text-sm font-semibold">{c.ticketCode}</div>
-                        <div className="text-sm">{c.reason}</div>
-                        <div className="text-xs text-[var(--md-on-surface-variant)]">
-                          {claimStatusLabel(c.status)} · {c.createdByName} ·{' '}
-                          {formatDateTimeVi(c.createdAt)}
-                          {c.serviceRating != null
-                            ? ` · Đánh giá DV: ${c.serviceRating}/5`
-                            : ''}
-                        </div>
-                        {c.serviceNote ? (
-                          <div className="text-xs text-[var(--md-on-surface-variant)]">
-                            Ghi chú đánh giá: {c.serviceNote}
-                          </div>
-                        ) : null}
-                      </div>
-                      {canUpdate && c.status === 'submitted' ? (
-                        <button
-                          type="button"
-                          className="btn btn-secondary btn-sm"
-                          disabled={closeClaimMutation.isPending}
-                          onClick={() => {
-                            setCloseClaimId(c.id);
-                            setServiceRating('5');
-                            setServiceNote('');
-                          }}
-                        >
-                          Đóng phiếu
-                        </button>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            {canCreate ? (
-              <div className="border-t border-[var(--md-outline-variant)] pt-3 space-y-3">
-                <h3 className="purchasing-section-title">Tạo phiếu bảo hành</h3>
-                <FormField label="Nguyên nhân (nhập tay)" required>
-                  <textarea
-                    className="form-input min-h-[4rem]"
-                    value={claimReason}
-                    onChange={e => setClaimReason(e.target.value)}
-                    placeholder="Mô tả lỗi / lý do bảo hành…"
-                  />
-                </FormField>
-                <FormField label="Ghi chú">
-                  <input
-                    className="form-input"
-                    value={claimNote}
-                    onChange={e => setClaimNote(e.target.value)}
-                  />
-                </FormField>
-                <button
-                  type="button"
-                  className="btn btn-primary btn-sm"
-                  disabled={createClaimMutation.isPending}
-                  onClick={() => {
-                    void onCreateClaim();
-                  }}
-                >
-                  <Plus size={14} aria-hidden />
-                  Tạo phiếu BH
-                </button>
-              </div>
-            ) : null}
-          </div>
-        )}
-      </Modal>
-
-      <Modal
-        isOpen={Boolean(closeClaimId)}
-        onClose={() => {
-          if (!closeClaimMutation.isPending) setCloseClaimId(null);
+      <CreateComplaintTicketPanel
+        isOpen={createOpen}
+        onClose={closeCreate}
+        lots={lots}
+        preselectedId={preselectedLotId}
+        canCreate={canCreate}
+        onCreated={() => {
+          closeCreate();
+          setTab('complaints');
         }}
-        title="Đóng phiếu & đánh giá dịch vụ BH"
-        size="sm"
-      >
-        <div className="space-y-3">
-          <p className="text-sm text-[var(--md-on-surface-variant)]">
-            Đánh giá dịch vụ bảo hành nhà cung cấp trước khi đóng phiếu.
-          </p>
-          <FormField label="Điểm dịch vụ BH (1-5)" required>
-            <select
-              className="form-input"
-              value={serviceRating}
-              onChange={e => setServiceRating(e.target.value)}
-            >
-              {[5, 4, 3, 2, 1].map(n => (
-                <option key={n} value={String(n)}>
-                  {n}
-                </option>
-              ))}
-            </select>
-          </FormField>
-          <FormField label="Ghi chú đánh giá">
-            <textarea
-              className="form-input min-h-[3.5rem]"
-              value={serviceNote}
-              onChange={e => setServiceNote(e.target.value)}
-              placeholder="Thời gian phản hồi, chất lượng sửa chữa…"
-            />
-          </FormField>
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              className="btn btn-outline btn-sm"
-              disabled={closeClaimMutation.isPending}
-              onClick={() => setCloseClaimId(null)}
-            >
-              Hủy
-            </button>
-            <button
-              type="button"
-              className="btn btn-primary btn-sm"
-              disabled={closeClaimMutation.isPending}
-              onClick={() => {
-                void onConfirmCloseClaim();
-              }}
-            >
-              {closeClaimMutation.isPending ? 'Đang lưu…' : 'Đóng phiếu'}
-            </button>
-          </div>
-        </div>
-      </Modal>
-    </>
+      />
+
+      <WarrantyDetailModal
+        selectedId={selectedId}
+        canUpdate={canUpdate}
+        onClose={() => setSelectedId(null)}
+      />
+    </div>
   );
 }

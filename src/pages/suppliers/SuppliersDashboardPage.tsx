@@ -36,7 +36,7 @@ export default function SuppliersDashboardPage() {
       <PageHeader
         eyebrow="Nhà cung cấp"
         title="Dashboard"
-        subtitle="Tổng quan nhà cung cấp — công nợ & thanh toán."
+        subtitle="Tổng quan nhà cung cấp. Công nợ trên dashboard lấy từ DNTT, không lấy tổng giá trị PO."
       />
 
       <div className="suppliers-dash-filters">
@@ -98,25 +98,25 @@ export default function SuppliersDashboardPage() {
 
           <div className="suppliers-finance-grid">
             <div className="suppliers-finance-card suppliers-finance-card--debt">
-              <p className="suppliers-finance-card__label">Công nợ</p>
+              <p className="suppliers-finance-card__label">Đã đề nghị TT</p>
               <p className="suppliers-finance-card__value tabular-nums">{formatCurrencyFull(data.debtTotal)}</p>
             </div>
             <div className="suppliers-finance-card suppliers-finance-card--pay">
-              <p className="suppliers-finance-card__label">Thanh toán</p>
+              <p className="suppliers-finance-card__label">Đã thanh toán</p>
               <p className="suppliers-finance-card__value tabular-nums">{formatCurrencyFull(data.paymentTotal)}</p>
             </div>
             <div className="suppliers-finance-card suppliers-finance-card--remain">
-              <p className="suppliers-finance-card__label">Còn lại</p>
+              <p className="suppliers-finance-card__label">Còn phải trả</p>
               <p className="suppliers-finance-card__value tabular-nums">{formatCurrencyFull(data.remaining)}</p>
             </div>
           </div>
 
           <div className="suppliers-chart-grid">
             <HrmPanel>
-              <h2 className="purchasing-section-title">Biểu đồ công nợ theo nhà cung cấp</h2>
+              <h2 className="purchasing-section-title">Biểu đồ DNTT theo nhà cung cấp</h2>
               <div className="suppliers-chart-box">
                 {data.debtBySupplier.length === 0 ? (
-                  <EmptyState message="Chưa có công nợ nào trong kỳ đã chọn." />
+                  <EmptyState message="Chưa có đề nghị thanh toán nào trong kỳ đã chọn." />
                 ) : (
                   <ResponsiveContainer width="100%" height={280}>
                     <BarChart data={data.debtBySupplier} margin={{ top: 8, right: 8, left: 0, bottom: 48 }}>
@@ -132,8 +132,8 @@ export default function SuppliersDashboardPage() {
                       <YAxis tick={{ fontSize: 11 }} tickFormatter={v => formatCurrencyShort(Number(v))} />
                       <Tooltip formatter={v => formatCurrencyFull(Number(v ?? 0))} />
                       <Legend />
-                      <Bar dataKey="debt" name="Công nợ" fill="var(--md-primary)" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="remaining" name="Còn lại" fill="var(--md-secondary)" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="debt" name="Đã đề nghị TT" fill="var(--md-primary)" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="remaining" name="Còn phải trả" fill="var(--md-secondary)" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 )}
@@ -141,7 +141,7 @@ export default function SuppliersDashboardPage() {
             </HrmPanel>
 
             <HrmPanel>
-              <h2 className="purchasing-section-title">Công nợ & thanh toán theo tháng</h2>
+              <h2 className="purchasing-section-title">DNTT và thanh toán theo tháng</h2>
               <div className="suppliers-chart-box">
                 {data.trend.length === 0 ? (
                   <EmptyState message="Chưa có dữ liệu theo tháng trong kỳ đã chọn." />
@@ -153,7 +153,7 @@ export default function SuppliersDashboardPage() {
                       <YAxis tick={{ fontSize: 11 }} tickFormatter={v => formatCurrencyShort(Number(v))} />
                       <Tooltip formatter={v => formatCurrencyFull(Number(v ?? 0))} />
                       <Legend />
-                      <Line type="monotone" dataKey="debt" name="Công nợ" stroke="var(--md-primary)" strokeWidth={2} dot={false} />
+                      <Line type="monotone" dataKey="debt" name="Đã đề nghị TT" stroke="var(--md-primary)" strokeWidth={2} dot={false} />
                       <Line type="monotone" dataKey="payment" name="Thanh toán" stroke="var(--md-secondary)" strokeWidth={2} dot={false} />
                     </LineChart>
                   </ResponsiveContainer>

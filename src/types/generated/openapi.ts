@@ -9418,6 +9418,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/purchasing/warranties/claims": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    kind?: string;
+                    status?: string;
+                    search?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseWarrantyClaimListDto"][];
+                        "application/json": components["schemas"]["PurchaseWarrantyClaimListDto"][];
+                        "text/json": components["schemas"]["PurchaseWarrantyClaimListDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/purchasing/warranties/{id}": {
         parameters: {
             query?: never;
@@ -11616,6 +11657,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/purchasing/supplier-payables": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    supplierId?: number;
+                    status?: string;
+                    search?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierPayableReportDto"];
+                        "application/json": components["schemas"]["SupplierPayableReportDto"];
+                        "text/json": components["schemas"]["SupplierPayableReportDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/supplier-payables/snapshot/{supplierId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    supplierId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierPayableSnapshotDto"];
+                        "application/json": components["schemas"]["SupplierPayableSnapshotDto"];
+                        "text/json": components["schemas"]["SupplierPayableSnapshotDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/warehouse/suppliers/{id}/groups": {
         parameters: {
             query?: never;
@@ -13579,6 +13700,9 @@ export interface components {
             reason: string;
             note?: string | null;
             submit: boolean;
+            kind: string;
+            defectType?: string | null;
+            severity?: string | null;
         };
         CreateRecruitmentCostRequest: {
             source: string;
@@ -14791,6 +14915,9 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
             createdByName?: string | null;
+            /** Format: date-time */
+            paidAt?: string | null;
+            paidByName?: string | null;
         };
         PurchasePaymentNextStageDto: {
             poCode: string;
@@ -15214,6 +15341,43 @@ export interface components {
             /** Format: int32 */
             serviceRating?: number | null;
             serviceNote?: string | null;
+            kind: string;
+            defectType?: string | null;
+            severity?: string | null;
+        };
+        PurchaseWarrantyClaimListDto: {
+            /** Format: uuid */
+            id: string;
+            ticketCode: string;
+            /** Format: uuid */
+            warrantyId: string;
+            kind: string;
+            status: string;
+            reason: string;
+            note?: string | null;
+            defectType?: string | null;
+            severity?: string | null;
+            /** Format: uuid */
+            createdById: string;
+            createdByName: string;
+            /** Format: date-time */
+            submittedAt?: string | null;
+            /** Format: date-time */
+            closedAt?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: int32 */
+            serviceRating?: number | null;
+            serviceNote?: string | null;
+            warrantyCode: string;
+            poCode: string;
+            projectCode?: string | null;
+            supplierName?: string | null;
+            materialCode?: string | null;
+            materialName: string;
+            /** Format: date */
+            warrantyEndDate?: string | null;
+            warrantyStatus: string;
         };
         PurchaseWarrantyDetailDto: {
             /** Format: uuid */
@@ -15686,6 +15850,8 @@ export interface components {
             contactPhone?: string | null;
             /** Format: int32 */
             maxDebtDays: number;
+            /** Format: double */
+            creditLimit?: number | null;
             paymentTerms?: string | null;
             rating: string;
             approvalStatus: string;
@@ -15824,6 +15990,123 @@ export interface components {
         };
         SupplierNextCodeDto: {
             nextCode: string;
+        };
+        SupplierPayableAgingBucketDto: {
+            key: string;
+            label: string;
+            /** Format: double */
+            amount: number;
+            /** Format: int32 */
+            count: number;
+        };
+        SupplierPayableKpiDto: {
+            /** Format: double */
+            outstandingTotal: number;
+            /** Format: double */
+            overdueTotal: number;
+            /** Format: int32 */
+            overdueSupplierCount: number;
+            /** Format: int32 */
+            overLimitSupplierCount: number;
+        };
+        SupplierPayableLineDto: {
+            paymentCode: string;
+            poCode: string;
+            /** Format: date */
+            poDate?: string | null;
+            projectCode?: string | null;
+            projectName?: string | null;
+            /** Format: int32 */
+            supplierId?: number | null;
+            supplierCode?: string | null;
+            supplierName?: string | null;
+            /** Format: int32 */
+            stageNumber: number;
+            /** Format: double */
+            requested: number;
+            /** Format: double */
+            paid: number;
+            /** Format: double */
+            outstanding: number;
+            /** Format: date */
+            dueDate: string;
+            /** Format: int32 */
+            daysOverdue: number;
+            lineStatus: string;
+            paymentStatus: string;
+            paymentTerm?: string | null;
+            /** Format: date-time */
+            paidAt?: string | null;
+            paidByName?: string | null;
+        };
+        SupplierPayableReportDto: {
+            kpis: components["schemas"]["SupplierPayableKpiDto"];
+            aging: components["schemas"]["SupplierPayableAgingBucketDto"][];
+            suppliers: components["schemas"]["SupplierPayableSupplierRowDto"][];
+            /** Format: double */
+            upcoming7Total: number;
+            /** Format: double */
+            upcoming30Total: number;
+            upcoming: components["schemas"]["SupplierPayableUpcomingDto"][];
+            lines: components["schemas"]["SupplierPayableLineDto"][];
+        };
+        SupplierPayableSnapshotDto: {
+            /** Format: int32 */
+            supplierId: number;
+            supplierCode: string;
+            supplierName: string;
+            /** Format: double */
+            outstanding: number;
+            /** Format: double */
+            overdueAmount: number;
+            /** Format: int32 */
+            unpaidCount: number;
+            /** Format: int32 */
+            overdueCount: number;
+            /** Format: double */
+            creditLimit?: number | null;
+            overLimit: boolean;
+            /** Format: int32 */
+            maxDebtDays: number;
+        };
+        SupplierPayableSupplierRowDto: {
+            /** Format: int32 */
+            supplierId: number;
+            supplierCode: string;
+            supplierName: string;
+            /** Format: int32 */
+            poCount: number;
+            /** Format: int32 */
+            projectCount: number;
+            /** Format: double */
+            requested: number;
+            /** Format: double */
+            paid: number;
+            /** Format: double */
+            outstanding: number;
+            /** Format: double */
+            creditLimit?: number | null;
+            overLimit: boolean;
+            /** Format: double */
+            overdueAmount: number;
+            /** Format: int32 */
+            overdueCount: number;
+            /** Format: int32 */
+            unpaidCount: number;
+        };
+        SupplierPayableUpcomingDto: {
+            paymentCode: string;
+            poCode: string;
+            projectCode?: string | null;
+            /** Format: int32 */
+            supplierId?: number | null;
+            supplierName?: string | null;
+            /** Format: date */
+            dueDate: string;
+            /** Format: double */
+            outstanding: number;
+            /** Format: int32 */
+            daysUntilDue: number;
         };
         SupplierTrendPointDto: {
             month: string;
@@ -16240,6 +16523,8 @@ export interface components {
             /** Format: int32 */
             maxDebtDays: number;
             paymentTerms?: string | null;
+            /** Format: double */
+            creditLimit?: number | null;
         };
         WarehouseDto: {
             id: string;

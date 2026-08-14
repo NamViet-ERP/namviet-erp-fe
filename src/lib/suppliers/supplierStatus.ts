@@ -11,6 +11,8 @@ export const SUPPLIER_LIMITS = {
   paymentTermsMax: 500,
   maxDebtDaysMin: 0,
   maxDebtDaysMax: 3650,
+  creditLimitMin: 0,
+  creditLimitMax: 999_999_999_999,
 } as const;
 
 export type SupplierApprovalStatus =
@@ -49,6 +51,23 @@ export function parseMaxDebtDays(
     return { ok: false, error: 'Hạn công nợ từ 0 đến 3650 ngày.' };
   }
   return { ok: true, value };
+}
+
+export function parseCreditLimit(
+  raw: string,
+): { ok: true; value: number | null } | { ok: false; error: string } {
+  const trimmed = raw.trim();
+  if (!trimmed) return { ok: true, value: null };
+  const digits = trimmed.replace(/\D/g, '');
+  if (!digits) return { ok: true, value: null };
+  const value = Number(digits);
+  if (!Number.isFinite(value) || value < SUPPLIER_LIMITS.creditLimitMin) {
+    return { ok: false, error: 'Hạn mức công nợ phải từ 0 trở lên.' };
+  }
+  if (value > SUPPLIER_LIMITS.creditLimitMax) {
+    return { ok: false, error: 'Hạn mức công nợ vượt quá giới hạn cho phép.' };
+  }
+  return { ok: true, value: value > 0 ? value : null };
 }
 
 export function foldSupplierName(value: string): string {

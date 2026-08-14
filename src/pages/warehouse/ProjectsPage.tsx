@@ -10,7 +10,7 @@ import FormField from '../../components/ui/FormField';
 import CurrencyInput from '../../components/ui/CurrencyInput';
 import Badge from '../../components/ui/Badge';
 import HrmPanel from '../../components/hr/HrmPanel';
-import HrmStatCard from '../../components/hr/HrmStatCard';
+import Card from '../../components/ui/Card';
 import PermissionGate from '../../components/auth/PermissionGate';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage, getApiFieldErrors } from '../../lib/apiClient';
@@ -196,24 +196,24 @@ export default function ProjectsPage() {
         }
       />
 
-      <div className="hrm-stat-grid">
-        <HrmStatCard
-          label="Tổng kho dự án"
-          value={statsAll?.totalCount ?? '—'}
+      <div className="dashboard-kpi-grid dashboard-kpi-grid--3" role="list" aria-label="Thống kê kho dự án">
+        <Card
+          title="Tổng kho dự án"
+          value={statsAll?.totalCount ?? '-'}
+          accent="amber"
           icon={FolderKanban}
-          tone="primary"
         />
-        <HrmStatCard
-          label="Đang hoạt động"
-          value={statsActive?.totalCount ?? '—'}
+        <Card
+          title="Đang hoạt động"
+          value={statsActive?.totalCount ?? '-'}
+          accent="blue"
           icon={CheckCircle2}
-          tone="success"
         />
-        <HrmStatCard
-          label="Đã đóng kho"
-          value={statsClosed?.totalCount ?? '—'}
+        <Card
+          title="Đã đóng kho"
+          value={statsClosed?.totalCount ?? '-'}
+          accent="teal"
           icon={Archive}
-          tone="neutral"
         />
       </div>
 

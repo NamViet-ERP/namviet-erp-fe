@@ -45,6 +45,8 @@ export function CreatePurchaseOrderForm({ onCreated }: { onCreated: (code: strin
         onSelectSupplier={f.selectSupplier}
         matchedSupplier={f.matchedSupplier}
         dueDatePreview={f.dueDatePreview}
+        payableSnapshot={f.payableSnapshot}
+        payableSnapshotLoading={f.payableSnapshotLoading}
       />
 
       <CreatePoLinePicker

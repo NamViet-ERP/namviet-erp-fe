@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Plus, Pencil, FolderKanban, CheckCircle2, Archive, X } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import HrmPanel from '../../components/hr/HrmPanel';
-import HrmStatCard from '../../components/hr/HrmStatCard';
+import Card from '../../components/ui/Card';
 import EmptyState from '../../components/ui/EmptyState';
 import Modal from '../../components/ui/Modal';
 import FormField from '../../components/ui/FormField';
@@ -199,24 +199,24 @@ export default function OperationsProjectsPage() {
         )}
       />
 
-      <div className="hrm-stat-grid">
-        <HrmStatCard
-          label="Tổng dự án"
+      <div className="dashboard-kpi-grid dashboard-kpi-grid--3" role="list" aria-label="Thống kê dự án">
+        <Card
+          title="Tổng dự án"
           value={statsAll?.totalCount ?? '-'}
+          accent="amber"
           icon={FolderKanban}
-          tone="primary"
         />
-        <HrmStatCard
-          label="Đang triển khai"
+        <Card
+          title="Đang triển khai"
           value={statsActive?.totalCount ?? '-'}
+          accent="blue"
           icon={CheckCircle2}
-          tone="success"
         />
-        <HrmStatCard
-          label="Đã đóng"
+        <Card
+          title="Đã đóng"
           value={statsClosed?.totalCount ?? '-'}
+          accent="teal"
           icon={Archive}
-          tone="neutral"
         />
       </div>
 

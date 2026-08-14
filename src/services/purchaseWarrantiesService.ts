@@ -4,6 +4,7 @@ import type {
   ClosePurchaseWarrantyClaimRequest,
   PurchaseWarrantyApiDto,
   PurchaseWarrantyClaimApiDto,
+  PurchaseWarrantyClaimListApiDto,
   PurchaseWarrantyDetailApiDto,
   UpdatePurchaseWarrantyRequest,
 } from '../types/api/purchasingApi';
@@ -13,6 +14,7 @@ const ENDPOINT = '/api/purchasing/warranties';
 export type {
   PurchaseWarrantyApiDto,
   PurchaseWarrantyClaimApiDto,
+  PurchaseWarrantyClaimListApiDto,
   PurchaseWarrantyDetailApiDto,
   UpdatePurchaseWarrantyRequest,
   CreatePurchaseWarrantyClaimRequest,
@@ -27,12 +29,26 @@ export type PurchaseWarrantyListParams = {
   search?: string;
 };
 
+export type PurchaseWarrantyClaimListParams = {
+  kind?: 'warranty' | 'complaint';
+  status?: string;
+  search?: string;
+};
+
 export const purchaseWarrantiesService = {
   list(params: PurchaseWarrantyListParams = {}) {
     return apiClient.get<PurchaseWarrantyApiDto[]>(ENDPOINT, {
       projectCode: params.projectCode || undefined,
       materialCode: params.materialCode || undefined,
       supplierId: params.supplierId,
+      status: params.status || undefined,
+      search: params.search || undefined,
+    });
+  },
+
+  listClaims(params: PurchaseWarrantyClaimListParams = {}) {
+    return apiClient.get<PurchaseWarrantyClaimListApiDto[]>(`${ENDPOINT}/claims`, {
+      kind: params.kind || undefined,
       status: params.status || undefined,
       search: params.search || undefined,
     });

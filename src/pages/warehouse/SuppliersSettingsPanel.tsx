@@ -15,10 +15,12 @@ import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage, getApiFieldErrors } from '../../lib/apiClient';
 import { WMS_ERROR } from '../../lib/wms/messages';
 import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
-import { formatCurrencyFull } from '../../utils/formatCurrency';
+import { formatCurrencyFull, formatCurrencyInput } from '../../utils/formatCurrency';
+import CurrencyInput from '../../components/ui/CurrencyInput';
 import {
   normalizeSupplierApproval,
   isSameSupplierName,
+  parseCreditLimit,
   parseMaxDebtDays,
   restrictVnPhoneInput,
   supplierGradeLabel,
@@ -46,8 +48,8 @@ import type { DropdownItem } from '../../types';
 
 const RATING_OPTIONS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 const GROUPS_VISIBLE_IN_TABLE = 3;
-const COL_COUNT = 12;
-type FormErrors = Partial<Record<'supplierCode' | 'supplierName' | 'contactPhone' | 'maxDebtDays' | 'paymentTerms', string>>;
+const COL_COUNT = 13;
+type FormErrors = Partial<Record<'supplierCode' | 'supplierName' | 'contactPhone' | 'maxDebtDays' | 'creditLimit' | 'paymentTerms', string>>;
 type SupplierRow = SupplierApiDto;
 
 const emptyForm = {
@@ -55,6 +57,7 @@ const emptyForm = {
   supplierName: '',
   contactPhone: '',
   maxDebtDays: '30',
+  creditLimit: '',
   paymentTerms: '',
   groupIds: [] as number[],
 };
@@ -76,6 +79,9 @@ function mapSupplierSaveErrors(err: unknown): FormErrors {
   }
   if (!next.maxDebtDays && lower.includes('hạn công nợ')) {
     next.maxDebtDays = message;
+  }
+  if (!next.creditLimit && lower.includes('hạn mức')) {
+    next.creditLimit = message;
   }
   return next;
 }
@@ -232,6 +238,7 @@ export default function SuppliersSettingsPanel() {
         supplierName: s.supplierName,
         contactPhone: s.contactPhone ?? '',
         maxDebtDays: String(s.maxDebtDays),
+        creditLimit: s.creditLimit ? formatCurrencyInput(s.creditLimit) : '',
         paymentTerms: s.paymentTerms ?? '',
         groupIds: assigned.map(g => g.id),
       });
@@ -274,18 +281,22 @@ export default function SuppliersSettingsPanel() {
     const debt = parseMaxDebtDays(form.maxDebtDays);
     if (!debt.ok) nextErrors.maxDebtDays = debt.error;
 
+    const limit = parseCreditLimit(form.creditLimit);
+    if (!limit.ok) nextErrors.creditLimit = limit.error;
+
     if (paymentTerms.length > SUPPLIER_LIMITS.paymentTermsMax) {
       nextErrors.paymentTerms = `Điều khoản thanh toán tối đa ${SUPPLIER_LIMITS.paymentTermsMax} ký tự.`;
     }
 
     setFormErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0 || !debt.ok) return;
+    if (Object.keys(nextErrors).length > 0 || !debt.ok || !limit.ok) return;
 
     const body = {
       supplierCode,
       supplierName,
       contactPhone: contactPhone || null,
       maxDebtDays: debt.value,
+      creditLimit: limit.value,
       paymentTerms: paymentTerms || null,
     };
 
@@ -541,6 +552,7 @@ export default function SuppliersSettingsPanel() {
                 <th className="table-header-cell text-left">Tên nhà cung cấp</th>
                 <th className="table-header-cell text-left">Điện thoại</th>
                 <th className="table-header-cell text-right">Hạn công nợ</th>
+                <th className="table-header-cell text-right">Hạn mức</th>
                 <th className="table-header-cell text-left">Điều khoản thanh toán</th>
                 <th className="table-header-cell text-left">Nhóm ngành hàng</th>
                 <th className="table-header-cell text-center">Hạng</th>
@@ -585,6 +597,9 @@ export default function SuppliersSettingsPanel() {
                     </td>
                     <td className="table-cell">{s.contactPhone || '—'}</td>
                     <td className="table-cell text-right tabular-nums">{s.maxDebtDays} ngày</td>
+                    <td className="table-cell text-right tabular-nums">
+                      {s.creditLimit ? formatCurrencyFull(s.creditLimit) : 'Không giới hạn'}
+                    </td>
                     <td className="table-cell">{s.paymentTerms || '—'}</td>
                     <td className="table-cell">
                       <IndustryGroupsCell groups={s.industryGroups ?? []} />
@@ -713,6 +728,9 @@ export default function SuppliersSettingsPanel() {
             </DetailField>
             <DetailField label="Điện thoại">{viewing.contactPhone || '—'}</DetailField>
             <DetailField label="Hạn công nợ">{viewing.maxDebtDays} ngày</DetailField>
+            <DetailField label="Hạn mức công nợ">
+              {viewing.creditLimit ? formatCurrencyFull(viewing.creditLimit) : 'Không giới hạn'}
+            </DetailField>
             <DetailField label="Điều khoản thanh toán" span>
               {viewing.paymentTerms || '—'}
             </DetailField>
@@ -826,6 +844,23 @@ export default function SuppliersSettingsPanel() {
                 }));
               }}
               placeholder="0 - 3650"
+            />
+          </FormField>
+          <FormField
+            label="Hạn mức công nợ (tiền, trống = không giới hạn)"
+            error={formErrors.creditLimit}
+          >
+            <CurrencyInput
+              value={form.creditLimit}
+              onChange={creditLimit => {
+                setForm(f => ({ ...f, creditLimit }));
+                const parsed = parseCreditLimit(creditLimit);
+                setFormErrors(prev => ({
+                  ...prev,
+                  creditLimit: parsed.ok ? undefined : parsed.error,
+                }));
+              }}
+              placeholder="Không giới hạn"
             />
           </FormField>
           <FormField label="Trạng thái">

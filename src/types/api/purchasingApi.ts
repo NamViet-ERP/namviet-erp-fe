@@ -70,6 +70,16 @@ export type PurchaseWarrantyClaimApiDto = Schemas['PurchaseWarrantyClaimDto'];
 export type UpdatePurchaseWarrantyRequest = Schemas['UpdatePurchaseWarrantyRequest'];
 export type CreatePurchaseWarrantyClaimRequest = Schemas['CreatePurchaseWarrantyClaimRequest'];
 export type ClosePurchaseWarrantyClaimRequest = Schemas['ClosePurchaseWarrantyClaimRequest'];
+export type PurchaseWarrantyClaimListApiDto = Schemas['PurchaseWarrantyClaimListDto'];
+
+/** OpenAPI aliases — Công nợ NCC (AP) */
+export type SupplierPayableReportApiDto = Schemas['SupplierPayableReportDto'];
+export type SupplierPayableKpiApiDto = Schemas['SupplierPayableKpiDto'];
+export type SupplierPayableAgingBucketApiDto = Schemas['SupplierPayableAgingBucketDto'];
+export type SupplierPayableSupplierRowApiDto = Schemas['SupplierPayableSupplierRowDto'];
+export type SupplierPayableLineApiDto = Schemas['SupplierPayableLineDto'];
+export type SupplierPayableUpcomingApiDto = Schemas['SupplierPayableUpcomingDto'];
+export type SupplierPayableSnapshotApiDto = Schemas['SupplierPayableSnapshotDto'];
 
 /** OpenAPI aliases — KHMH soft risk (NCC + vật tư) */
 export type SupplierMaterialRiskPairRequest = Schemas['SupplierMaterialRiskPairRequest'];

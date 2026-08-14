@@ -9,7 +9,7 @@ import { UI_ERROR } from '../../lib/uiMessages';
 import { authService } from '../../services/authService';
 import { getDefaultRoute } from '../../utils/getDefaultRoute';
 import { getActiveRole } from '../../lib/getActiveRole';
-import { NAMVIET_GROUP_LOGO_URL } from '../../constants/branding';
+import { NAMVIET_LOGIN_LOGO_URL } from '../../constants/branding';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -84,7 +84,7 @@ export default function LoginPage() {
         <div className="login-card">
           <div className="text-center mb-7">
             <div className="login-brand">
-              <img src={NAMVIET_GROUP_LOGO_URL} alt="Mayzer" className="login-brand__logo" />
+              <img src={NAMVIET_LOGIN_LOGO_URL} alt="Mayzer" className="login-brand__logo" />
             </div>
             <h2 className="text-2xl font-bold text-[var(--md-on-surface)]">
               Nam Việt <span className="text-[var(--nv-amber)]">ERP</span>

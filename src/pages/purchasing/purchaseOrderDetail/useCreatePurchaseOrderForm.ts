@@ -6,6 +6,7 @@ import { useCreatePurchaseOrder } from '../../../hooks/usePurchaseOrders';
 import { getApiErrorMessage } from '../../../lib/apiClient';
 import { isSupplierOrderable } from '../../../lib/suppliers/supplierStatus';
 import { findSupplierByName, suppliersService } from '../../../services/suppliersService';
+import { useSupplierPayableSnapshot } from '../../../hooks/useSupplierPayables';
 import { addDaysIso, supplierOf, unitPriceOf } from './poDetailHelpers';
 import type { PoInstallmentDraft } from './PoInstallmentCreatePanels';
 
@@ -83,6 +84,9 @@ export function useCreatePurchaseOrderForm(onCreated: (code: string) => void) {
   const dueDatePreview = useMemo(
     () => (matchedSupplier ? addDaysIso(matchedSupplier.maxDebtDays) : null),
     [matchedSupplier],
+  );
+  const { data: payableSnapshot, isLoading: payableSnapshotLoading } = useSupplierPayableSnapshot(
+    matchedSupplier?.id,
   );
 
   const allVisibleSelected = visibleSupplierLines.length > 0
@@ -324,6 +328,8 @@ export function useCreatePurchaseOrderForm(onCreated: (code: string) => void) {
     visibleSupplierLines,
     matchedSupplier,
     dueDatePreview,
+    payableSnapshot,
+    payableSnapshotLoading,
     allVisibleSelected,
     someVisibleSelected,
     selectPlan,

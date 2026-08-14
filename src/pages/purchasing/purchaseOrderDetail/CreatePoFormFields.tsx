@@ -1,7 +1,9 @@
 import FormField from '../../../components/ui/FormField';
+import { Link } from 'react-router-dom';
 import { formatDateCell } from '../../../lib/hrm/formatters';
 import { getApiErrorMessage } from '../../../lib/apiClient';
-import type { PurchasePlanDetailApiDto, PurchasePlanApiDto } from '../../../types/api/purchasingApi';
+import { formatCurrencyFull } from '../../../utils/formatCurrency';
+import type { PurchasePlanDetailApiDto, PurchasePlanApiDto, SupplierPayableSnapshotApiDto } from '../../../types/api/purchasingApi';
 import type { SupplierApiDto } from '../../../types/wms';
 
 type Props = {
@@ -22,6 +24,8 @@ type Props = {
   onSelectSupplier: (name: string) => void;
   matchedSupplier: SupplierApiDto | null | undefined;
   dueDatePreview: string | null;
+  payableSnapshot?: SupplierPayableSnapshotApiDto | null;
+  payableSnapshotLoading?: boolean;
 };
 
 export function CreatePoFormFields({
@@ -42,6 +46,8 @@ export function CreatePoFormFields({
   onSelectSupplier,
   matchedSupplier,
   dueDatePreview,
+  payableSnapshot,
+  payableSnapshotLoading,
 }: Props) {
   const sourceLabel = sourceKind === 'adhoc' ? 'Mua hàng phát sinh' : 'KHMH';
   return (
@@ -127,14 +133,36 @@ export function CreatePoFormFields({
           </div>
           <div className="pur-dntt__po-tile">
             <div>
-              <span>Hạn công nợ (MaxDebtDays)</span>
+              <span>Hạn thanh toán (ngày)</span>
               <strong>{matchedSupplier.maxDebtDays} ngày</strong>
             </div>
           </div>
           <div className="pur-dntt__po-tile pur-dntt__po-tile--money">
             <div>
               <span>Hạn thanh toán dự kiến</span>
-              <strong>{dueDatePreview ? formatDateCell(dueDatePreview) : '—'}</strong>
+              <strong>{dueDatePreview ? formatDateCell(dueDatePreview) : '-'}</strong>
+            </div>
+          </div>
+          <div className="pur-dntt__po-tile pur-dntt__po-tile--money">
+            <div>
+              <span>Công nợ hiện tại</span>
+              <strong>
+                {payableSnapshotLoading
+                  ? 'Đang tải…'
+                  : payableSnapshot
+                    ? formatCurrencyFull(payableSnapshot.outstanding)
+                    : '-'}
+              </strong>
+            </div>
+          </div>
+          <div className="pur-dntt__po-tile">
+            <div>
+              <span>Hạn mức công nợ</span>
+              <strong>
+                {payableSnapshot?.creditLimit
+                  ? formatCurrencyFull(payableSnapshot.creditLimit)
+                  : 'Không giới hạn'}
+              </strong>
             </div>
           </div>
         </div>
@@ -143,6 +171,26 @@ export function CreatePoFormFields({
           Công nợ và điều khoản thanh toán hiển thị trên phiếu PO sau khi đối chiếu NCC master.
         </p>
       )}
+      {payableSnapshot?.overdueCount ? (
+        <p className="pur-detail__alert" role="status">
+          {payableSnapshot.overdueCount} DNTT quá hạn ({formatCurrencyFull(payableSnapshot.overdueAmount)}).
+        </p>
+      ) : payableSnapshot && payableSnapshot.unpaidCount > 0 ? (
+        <p className="pur-detail__muted">
+          {payableSnapshot.unpaidCount} DNTT chưa thanh toán.
+        </p>
+      ) : null}
+      {payableSnapshot?.overLimit ? (
+        <p className="pur-detail__alert" role="alert">
+          Công nợ hiện tại ({formatCurrencyFull(payableSnapshot.outstanding)}) đã vượt hạn mức
+          ({formatCurrencyFull(payableSnapshot.creditLimit)}). Cân nhắc trước khi đặt thêm hàng từ NCC này.
+        </p>
+      ) : null}
+      {matchedSupplier ? (
+        <p className="pur-detail__muted">
+          <Link to={`/suppliers/debt?supplierId=${matchedSupplier.id}`}>Xem chi tiết công nợ</Link>
+        </p>
+      ) : null}
     </section>
   );
 }

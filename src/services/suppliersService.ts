@@ -49,6 +49,7 @@ export const suppliersService = {
       contactPhone: body.contactPhone ?? null,
       maxDebtDays: body.maxDebtDays ?? 30,
       paymentTerms: body.paymentTerms ?? null,
+      creditLimit: body.creditLimit ?? null,
     });
   },
 
@@ -59,6 +60,7 @@ export const suppliersService = {
       contactPhone: body.contactPhone ?? null,
       maxDebtDays: body.maxDebtDays ?? 30,
       paymentTerms: body.paymentTerms ?? null,
+      creditLimit: body.creditLimit ?? null,
     });
     return apiClient.get<SupplierApiDto>(`${ENDPOINT}/${id}`);
   },

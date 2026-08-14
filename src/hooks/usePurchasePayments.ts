@@ -30,6 +30,8 @@ export function useCreatePurchasePayment() {
       qc.invalidateQueries({ queryKey: queryKeys.purchasePaymentPlans.all });
       qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all });
       qc.invalidateQueries({ queryKey: queryKeys.purchasingDashboard.all });
+      qc.invalidateQueries({ queryKey: queryKeys.supplierPayables.all });
+      qc.invalidateQueries({ queryKey: queryKeys.suppliersDashboard.all });
     },
   });
 }
@@ -41,6 +43,8 @@ function useInvalidatePurchasePaymentQueries() {
     qc.invalidateQueries({ queryKey: queryKeys.purchasePaymentPlans.all });
     qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all });
     qc.invalidateQueries({ queryKey: queryKeys.purchasingDashboard.all });
+    qc.invalidateQueries({ queryKey: queryKeys.supplierPayables.all });
+    qc.invalidateQueries({ queryKey: queryKeys.suppliersDashboard.all });
   };
 }
 

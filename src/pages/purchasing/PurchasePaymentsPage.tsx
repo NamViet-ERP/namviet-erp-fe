@@ -48,6 +48,19 @@ function paymentStatusBadgeClass(status: string | null | undefined): string {
   }
 }
 
+/** Meta xác nhận TT — cùng layout cột trạng thái KHMH. */
+function paymentPaidMeta(row: {
+  status?: string | null;
+  paidAt?: string | null;
+  paidByName?: string | null;
+}) {
+  if (row.status !== 'paid') return null;
+  const name = row.paidByName?.trim() || '';
+  const time = formatDateTimeVi(row.paidAt ?? undefined);
+  if (!name && !time) return null;
+  return { name, time };
+}
+
 const COL_COUNT = 10;
 
 /** Danh sách đề nghị thanh toán (DNTT). */
@@ -230,7 +243,9 @@ export default function PurchasePaymentsPage() {
                         </td>
                       </tr>
                     ) : (
-                      items.map(row => (
+                      items.map(row => {
+                        const paidMeta = paymentPaidMeta(row);
+                        return (
                         <tr
                           key={row.code}
                           style={{ cursor: 'pointer' }}
@@ -244,9 +259,23 @@ export default function PurchasePaymentsPage() {
                           <td className="pur-erp__td-num">{formatCurrency(row.amount)}</td>
                           <td>{formatDateCell(row.dueDate)}</td>
                           <td className="pur-erp__td-status">
-                            <span className={paymentStatusBadgeClass(row.status)}>
-                              {paymentStatusLabel(row.status)}
-                            </span>
+                            <div className="pur-plan-status-cell">
+                              <span className={paymentStatusBadgeClass(row.status)}>
+                                {paymentStatusLabel(row.status)}
+                              </span>
+                              {paidMeta ? (
+                                <div className="pur-plan-status-meta">
+                                  {paidMeta.time ? (
+                                    <div className="tabular-nums">{paidMeta.time}</div>
+                                  ) : null}
+                                  {paidMeta.name ? (
+                                    <div className="pur-plan-status-meta__name" title={paidMeta.name}>
+                                      {paidMeta.name}
+                                    </div>
+                                  ) : null}
+                                </div>
+                              ) : null}
+                            </div>
                           </td>
                           <td className="pur-erp__td-datetime">{formatDateTimeVi(row.createdAt)}</td>
                           <td
@@ -256,7 +285,8 @@ export default function PurchasePaymentsPage() {
                             <Dropdown trigger="Tác vụ" items={rowActions(row)} />
                           </td>
                         </tr>
-                      ))
+                        );
+                      })
                     )}
                   </tbody>
                 </table>

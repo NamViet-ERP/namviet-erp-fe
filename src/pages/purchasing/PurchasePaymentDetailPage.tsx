@@ -56,6 +56,23 @@ function paymentStatusLabel(status: string | null | undefined): string {
   }
 }
 
+function paymentDetailSubtitle(payment: {
+  status?: string | null;
+  createdAt?: string | null;
+  paidAt?: string | null;
+  paidByName?: string | null;
+} | undefined) {
+  if (!payment) return '';
+  if (payment.status === 'paid') {
+    return [
+      paymentStatusLabel(payment.status),
+      formatDateTimeVi(payment.paidAt ?? undefined),
+      payment.paidByName?.trim() || undefined,
+    ].filter(Boolean).join(' · ');
+  }
+  return `${paymentStatusLabel(payment.status)}${payment.createdAt ? ` · ${formatDateTimeVi(payment.createdAt)}` : ''}`;
+}
+
 /** Tạo / xem DNTT — form + xem trước phiếu (chrome khớp PO/KHMH). */
 export default function PurchasePaymentDetailPage() {
   const { code } = useParams<{ code: string }>();
@@ -268,7 +285,7 @@ export default function PurchasePaymentDetailPage() {
           subtitle={
             isCreate
               ? 'Chọn PO, kiểm tra phiếu bên phải, rồi lưu và in trình ký'
-              : `${paymentStatusLabel(payment?.status)}${payment?.createdAt ? ` · ${formatDateTimeVi(payment.createdAt)}` : ''}`
+              : paymentDetailSubtitle(payment)
           }
           actions={(
             <div className="pur-detail__actions">

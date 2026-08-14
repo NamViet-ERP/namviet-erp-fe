@@ -11278,6 +11278,67 @@
         }
       }
     },
+    "/api/purchasing/warranties/claims": {
+      "get": {
+        "tags": [
+          "PurchaseWarranties"
+        ],
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PurchaseWarrantyClaimListDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PurchaseWarrantyClaimListDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PurchaseWarrantyClaimListDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/purchasing/warranties/{id}": {
       "get": {
         "tags": [
@@ -14122,6 +14183,99 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SupplierModuleSettingsDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/supplier-payables": {
+      "get": {
+        "tags": [
+          "SupplierPayables"
+        ],
+        "parameters": [
+          {
+            "name": "supplierId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierPayableReportDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierPayableReportDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierPayableReportDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/supplier-payables/snapshot/{supplierId}": {
+      "get": {
+        "tags": [
+          "SupplierPayables"
+        ],
+        "parameters": [
+          {
+            "name": "supplierId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierPayableSnapshotDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierPayableSnapshotDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierPayableSnapshotDto"
                 }
               }
             }
@@ -17804,6 +17958,7 @@
       },
       "CreatePurchaseWarrantyClaimRequest": {
         "required": [
+          "kind",
           "reason",
           "submit"
         ],
@@ -17818,6 +17973,17 @@
           },
           "submit": {
             "type": "boolean"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "defectType": {
+            "type": "string",
+            "nullable": true
+          },
+          "severity": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -22001,6 +22167,15 @@
           "createdByName": {
             "type": "string",
             "nullable": true
+          },
+          "paidAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "paidByName": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -23291,6 +23466,7 @@
           "createdById",
           "createdByName",
           "id",
+          "kind",
           "reason",
           "status",
           "ticketCode",
@@ -23348,6 +23524,129 @@
           "serviceNote": {
             "type": "string",
             "nullable": true
+          },
+          "kind": {
+            "type": "string"
+          },
+          "defectType": {
+            "type": "string",
+            "nullable": true
+          },
+          "severity": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchaseWarrantyClaimListDto": {
+        "required": [
+          "createdAt",
+          "createdById",
+          "createdByName",
+          "id",
+          "kind",
+          "materialName",
+          "poCode",
+          "reason",
+          "status",
+          "ticketCode",
+          "warrantyCode",
+          "warrantyId",
+          "warrantyStatus"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ticketCode": {
+            "type": "string"
+          },
+          "warrantyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "defectType": {
+            "type": "string",
+            "nullable": true
+          },
+          "severity": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdById": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdByName": {
+            "type": "string"
+          },
+          "submittedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "closedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "serviceRating": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "serviceNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "warrantyCode": {
+            "type": "string"
+          },
+          "poCode": {
+            "type": "string"
+          },
+          "projectCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "supplierName": {
+            "type": "string",
+            "nullable": true
+          },
+          "materialCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "materialName": {
+            "type": "string"
+          },
+          "warrantyEndDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "warrantyStatus": {
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -24935,6 +25234,11 @@
             "type": "integer",
             "format": "int32"
           },
+          "creditLimit": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
           "paymentTerms": {
             "type": "string",
             "nullable": true
@@ -25389,6 +25693,372 @@
         "properties": {
           "nextCode": {
             "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupplierPayableAgingBucketDto": {
+        "required": [
+          "amount",
+          "count",
+          "key",
+          "label"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupplierPayableKpiDto": {
+        "required": [
+          "outstandingTotal",
+          "overdueSupplierCount",
+          "overdueTotal",
+          "overLimitSupplierCount"
+        ],
+        "type": "object",
+        "properties": {
+          "outstandingTotal": {
+            "type": "number",
+            "format": "double"
+          },
+          "overdueTotal": {
+            "type": "number",
+            "format": "double"
+          },
+          "overdueSupplierCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "overLimitSupplierCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupplierPayableLineDto": {
+        "required": [
+          "daysOverdue",
+          "dueDate",
+          "lineStatus",
+          "outstanding",
+          "paid",
+          "paymentCode",
+          "paymentStatus",
+          "poCode",
+          "requested",
+          "stageNumber"
+        ],
+        "type": "object",
+        "properties": {
+          "paymentCode": {
+            "type": "string"
+          },
+          "poCode": {
+            "type": "string"
+          },
+          "poDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "projectCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "projectName": {
+            "type": "string",
+            "nullable": true
+          },
+          "supplierId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "supplierCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "supplierName": {
+            "type": "string",
+            "nullable": true
+          },
+          "stageNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "requested": {
+            "type": "number",
+            "format": "double"
+          },
+          "paid": {
+            "type": "number",
+            "format": "double"
+          },
+          "outstanding": {
+            "type": "number",
+            "format": "double"
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "daysOverdue": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lineStatus": {
+            "type": "string"
+          },
+          "paymentStatus": {
+            "type": "string"
+          },
+          "paymentTerm": {
+            "type": "string",
+            "nullable": true
+          },
+          "paidAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "paidByName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupplierPayableReportDto": {
+        "required": [
+          "aging",
+          "kpis",
+          "lines",
+          "suppliers",
+          "upcoming",
+          "upcoming30Total",
+          "upcoming7Total"
+        ],
+        "type": "object",
+        "properties": {
+          "kpis": {
+            "$ref": "#/components/schemas/SupplierPayableKpiDto"
+          },
+          "aging": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupplierPayableAgingBucketDto"
+            }
+          },
+          "suppliers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupplierPayableSupplierRowDto"
+            }
+          },
+          "upcoming7Total": {
+            "type": "number",
+            "format": "double"
+          },
+          "upcoming30Total": {
+            "type": "number",
+            "format": "double"
+          },
+          "upcoming": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupplierPayableUpcomingDto"
+            }
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupplierPayableLineDto"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupplierPayableSnapshotDto": {
+        "required": [
+          "maxDebtDays",
+          "outstanding",
+          "overdueAmount",
+          "overdueCount",
+          "overLimit",
+          "supplierCode",
+          "supplierId",
+          "supplierName",
+          "unpaidCount"
+        ],
+        "type": "object",
+        "properties": {
+          "supplierId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "supplierCode": {
+            "type": "string"
+          },
+          "supplierName": {
+            "type": "string"
+          },
+          "outstanding": {
+            "type": "number",
+            "format": "double"
+          },
+          "overdueAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "unpaidCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "overdueCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "creditLimit": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "overLimit": {
+            "type": "boolean"
+          },
+          "maxDebtDays": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupplierPayableSupplierRowDto": {
+        "required": [
+          "outstanding",
+          "overdueAmount",
+          "overdueCount",
+          "overLimit",
+          "paid",
+          "poCount",
+          "projectCount",
+          "requested",
+          "supplierCode",
+          "supplierId",
+          "supplierName",
+          "unpaidCount"
+        ],
+        "type": "object",
+        "properties": {
+          "supplierId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "supplierCode": {
+            "type": "string"
+          },
+          "supplierName": {
+            "type": "string"
+          },
+          "poCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "projectCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "requested": {
+            "type": "number",
+            "format": "double"
+          },
+          "paid": {
+            "type": "number",
+            "format": "double"
+          },
+          "outstanding": {
+            "type": "number",
+            "format": "double"
+          },
+          "creditLimit": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "overLimit": {
+            "type": "boolean"
+          },
+          "overdueAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "overdueCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "unpaidCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupplierPayableUpcomingDto": {
+        "required": [
+          "daysUntilDue",
+          "dueDate",
+          "outstanding",
+          "paymentCode",
+          "poCode"
+        ],
+        "type": "object",
+        "properties": {
+          "paymentCode": {
+            "type": "string"
+          },
+          "poCode": {
+            "type": "string"
+          },
+          "projectCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "supplierId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "supplierName": {
+            "type": "string",
+            "nullable": true
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "outstanding": {
+            "type": "number",
+            "format": "double"
+          },
+          "daysUntilDue": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false
@@ -26803,6 +27473,11 @@
           },
           "paymentTerms": {
             "type": "string",
+            "nullable": true
+          },
+          "creditLimit": {
+            "type": "number",
+            "format": "double",
             "nullable": true
           }
         },

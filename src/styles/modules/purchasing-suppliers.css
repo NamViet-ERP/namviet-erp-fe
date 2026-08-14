@@ -1590,26 +1590,33 @@
     font-weight: 400;
     color: var(--md-on-surface-variant);
   }
-  .pur-erp--plan .pur-erp__table--plans-list .pur-erp__td-status {
+  .pur-erp--plan .pur-erp__table--plans-list .pur-erp__td-status,
+  .pur-erp--plan .pur-erp__table--payments-list .pur-erp__td-status {
     text-align: center;
     width: 8.5rem;
     vertical-align: middle;
   }
-  .pur-erp--plan .pur-erp__table--plans-list .pur-plan-status-cell {
+  .pur-erp--plan .pur-erp__table--plans-list .pur-plan-status-cell,
+  .pur-erp--plan .pur-erp__table--payments-list .pur-plan-status-cell,
+  .sup-ap-col-status .pur-plan-status-cell {
     display: inline-flex;
     flex-direction: column;
     align-items: center;
     gap: 0.25rem;
     max-width: 9rem;
   }
-  .pur-erp--plan .pur-erp__table--plans-list .pur-plan-status-meta {
+  .pur-erp--plan .pur-erp__table--plans-list .pur-plan-status-meta,
+  .pur-erp--plan .pur-erp__table--payments-list .pur-plan-status-meta,
+  .sup-ap-col-status .pur-plan-status-meta {
     max-width: 9rem;
     text-align: center;
     font-size: var(--fs-micro);
     line-height: 1.3;
     color: var(--md-on-surface-variant);
   }
-  .pur-erp--plan .pur-erp__table--plans-list .pur-plan-status-meta__name {
+  .pur-erp--plan .pur-erp__table--plans-list .pur-plan-status-meta__name,
+  .pur-erp--plan .pur-erp__table--payments-list .pur-plan-status-meta__name,
+  .sup-ap-col-status .pur-plan-status-meta__name {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -6365,6 +6372,29 @@
   display: flex;
   align-items: flex-end;
   padding-bottom: 0.1rem;
+}
+
+/* Công nợ NCC — column widths only */
+.sup-ap-col-ncc {
+  min-width: 14rem;
+}
+.sup-ap-col-status {
+  min-width: 11rem;
+}
+.app-shell--wms .hrm-stat-grid.sup-ap-aging:not(.project-detail-stat-grid) {
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+}
+
+/* Warranty list — column widths only */
+.pur-warranty-page .warranty-col-actions {
+  width: 10.5rem;
+  min-width: 10.5rem;
+  white-space: nowrap;
+}
+.pur-warranty-page .warranty-col-po,
+.pur-warranty-page .warranty-col-project {
+  width: 7.5rem;
+  min-width: 7rem;
 }
 
 

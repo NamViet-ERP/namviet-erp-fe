@@ -138,6 +138,11 @@ export const queryKeys = {
   supplierSpend: {
     all: ['supplierSpend'] as const,
   },
+  supplierPayables: {
+    all: ['supplierPayables'] as const,
+    report: (params: object) => ['supplierPayables', 'report', params] as const,
+    snapshot: (supplierId: number) => ['supplierPayables', 'snapshot', supplierId] as const,
+  },
   supplierPriceHistory: {
     all: ['supplierPriceHistory'] as const,
   },

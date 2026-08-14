@@ -274,7 +274,7 @@ export const purchasingMenu: SidebarMenuItem[] = [
   },
   {
     id: 'pur-warranties',
-    label: 'Bảo hành',
+    label: 'Bảo hành / Khiếu nại',
     icon: ShieldCheck,
     path: '/purchasing/warranties',
     permission: 'purchasing.warranties.view',
@@ -329,6 +329,13 @@ export const suppliersMenu: SidebarMenuItem[] = [
     label: 'Chi tiêu theo NCC',
     icon: PieChart,
     path: '/suppliers/spend',
+    permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
+  },
+  {
+    id: 'sup-debt',
+    label: 'Công nợ NCC',
+    icon: WalletCards,
+    path: '/suppliers/debt',
     permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
   },
   {

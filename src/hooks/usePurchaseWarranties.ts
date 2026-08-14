@@ -5,6 +5,7 @@ import type {
 } from '../types/api/purchasingApi';
 import {
   purchaseWarrantiesService,
+  type PurchaseWarrantyClaimListParams,
   type PurchaseWarrantyListParams,
   type UpdatePurchaseWarrantyRequest,
 } from '../services/purchaseWarrantiesService';
@@ -15,6 +16,13 @@ export function usePurchaseWarranties(params: PurchaseWarrantyListParams = {}) {
   return useQuery({
     queryKey: [...LIST_KEY, params],
     queryFn: () => purchaseWarrantiesService.list(params),
+  });
+}
+
+export function usePurchaseWarrantyClaims(params: PurchaseWarrantyClaimListParams = {}) {
+  return useQuery({
+    queryKey: [...LIST_KEY, 'claims', params],
+    queryFn: () => purchaseWarrantiesService.listClaims(params),
   });
 }
 
