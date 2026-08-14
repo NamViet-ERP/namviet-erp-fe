@@ -6403,6 +6403,11 @@
   height: 18rem;
 }
 
+.pur-pricebook-goods__meta,
+.pur-pricebook-goods__spec {
+  color: var(--md-on-surface-variant);
+}
+
 .pur-pricebook-goods__spec {
   white-space: pre-wrap;
   overflow: hidden;

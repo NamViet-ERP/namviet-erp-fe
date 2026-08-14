@@ -742,19 +742,17 @@ function ItemsTable({
               <td className="table-cell">
                 <div><span className="mat-code-cell__badge">{row.materialCode}</span></div>
                 <div>{row.materialName}</div>
-                {row.technicalSpec?.trim() ? (
-                  <div className="text-[var(--md-on-surface-variant)]">Quy cách: {row.technicalSpec.trim()}</div>
-                ) : null}
-                {row.generalTechnicalSpec?.trim() ? (
-                  <div
-                    className="pur-pricebook-goods__spec text-[var(--md-on-surface-variant)]"
-                    title={row.generalTechnicalSpec}
-                  >
-                    Thông số kỹ thuật: {row.generalTechnicalSpec.trim()}
-                  </div>
-                ) : null}
-                <div className="text-[var(--md-on-surface-variant)]">
-                  Giá trần: {row.ceilingPrice != null ? formatCurrencyFull(row.ceilingPrice) : '—'}
+                <div className="pur-pricebook-goods__meta">
+                  Quy cách: {row.technicalSpec?.trim() || '-'}
+                </div>
+                <div
+                  className="pur-pricebook-goods__spec"
+                  title={row.generalTechnicalSpec?.trim() || undefined}
+                >
+                  Thông số kỹ thuật: {row.generalTechnicalSpec?.trim() || '-'}
+                </div>
+                <div className="pur-pricebook-goods__meta">
+                  Giá trần: {row.ceilingPrice != null ? formatCurrencyFull(row.ceilingPrice) : '-'}
                   {row.estimatePrice != null ? ` · Giá dự toán: ${formatCurrencyFull(row.estimatePrice)}` : ''}
                   {row.overCeiling ? (
                     <span className="ml-2 text-[var(--md-error)]">Vượt trần</span>
