@@ -204,7 +204,7 @@ export default function PurchasePriceBookPage() {
   );
   const allItems = usePriceBookItems(undefined, undefined, tab === 'matrix' || tab === 'margins' || tab === 'estimates');
   const matrix = usePriceBookMatrix(matrixCategoryId === '' ? undefined : matrixCategoryId);
-  const groups = usePriceBookCategories(tab === 'groups');
+  const groups = usePriceBookCategories(tab === 'groups' || tab === 'matrix');
   const margins = usePriceBookMargins(tab === 'margins');
   const estimates = usePriceBookEstimates(tab === 'estimates');
   const detail = usePriceBookItem(detailCode ?? undefined);
@@ -225,25 +225,14 @@ export default function PurchasePriceBookPage() {
     [categories],
   );
 
-  const pricedCategoryIds = useMemo(() => {
-    const byId = new Map(categories.map(c => [c.id, c]));
-    const roots = new Set<number>();
-    for (const row of allItems.data ?? []) {
-      if (row.latestPrice == null || row.categoryId == null) continue;
-      let cur = byId.get(row.categoryId);
-      while (cur?.parentId) {
-        const parent = byId.get(cur.parentId);
-        if (!parent) break;
-        cur = parent;
-      }
-      if (cur) roots.add(cur.id);
-    }
-    return roots;
-  }, [allItems.data, categories]);
   const matrixCategories = useMemo(() => {
-    const priced = rootCategories.filter(c => pricedCategoryIds.has(c.id));
-    return priced.length > 0 ? priced : rootCategories;
-  }, [rootCategories, pricedCategoryIds]);
+    const fromGroups = (groups.data ?? []).map(row => ({
+      id: row.categoryId,
+      code: row.categoryCode,
+      name: row.categoryName,
+    }));
+    return fromGroups.length > 0 ? fromGroups : rootCategories;
+  }, [groups.data, rootCategories]);
   const categoryLabels = useMemo(() => rootCategories.map(categoryOption), [rootCategories]);
   const matrixCategoryLabels = useMemo(() => matrixCategories.map(categoryOption), [matrixCategories]);
   const itemsCategoryValue = rootCategories.find(c => c.id === categoryId);
@@ -363,31 +352,33 @@ export default function PurchasePriceBookPage() {
         setPeriodType('all');
       }}
     >
-      <p className="text-[length:var(--fs-sm)] text-[var(--md-on-surface-variant)] mb-3">
-        {tab === 'items'
-          ? 'Sổ giá tổng hợp lịch sử mua thực tế từ PO đã chốt theo mặt hàng: giá mới nhất, giá dự toán (từ tab Giá dự toán & Chênh lệch), số NCC, xu hướng và cảnh báo khi vượt giá trần.'
-          : tab === 'matrix'
-            ? 'Bảng so sánh giá gần nhất của các NCC cho từng mặt hàng trong cùng nhóm hàng. Ô có dấu ★ là giá thấp nhất giữa các NCC đã từng báo / bán mặt hàng đó.'
-            : tab === 'rfq'
-              ? 'Ghi lại tất cả báo giá nhận được cho một mặt hàng, kể cả báo giá không được chọn, để có nền tảng thương lượng cho các lần mua sau.'
-              : tab === 'groups'
-                ? 'Tổng hợp chi tiêu và biến động giá theo từng nhóm hàng, giúp nhìn nhóm nào chiếm tỷ trọng lớn để ưu tiên đàm phán.'
-                : tab === 'estimates'
-                  ? 'So sánh giá dự toán (giá công ty) với giá mua thực tế trên PO đã chốt để biết đang mua rẻ hơn hay đắt hơn dự toán.'
-                : 'So sánh giá bán / giá chào cho dự án với giá mua thực tế để nhìn margin theo từng mặt hàng.'}
-      </p>
+      <div className="pur-pricebook-chrome">
+        <p className="pur-pricebook-intro text-[length:var(--fs-sm)] text-[var(--md-on-surface-variant)]">
+          {tab === 'items'
+            ? 'Sổ giá tổng hợp lịch sử mua thực tế từ PO đã chốt theo mặt hàng: giá mới nhất, giá dự toán (từ tab Giá dự toán & Chênh lệch), số NCC, xu hướng và cảnh báo khi vượt giá trần.'
+            : tab === 'matrix'
+              ? 'Bảng so sánh giá gần nhất của các NCC cho từng mặt hàng trong cùng nhóm hàng. Ô có dấu ★ là giá thấp nhất giữa các NCC đã từng báo / bán mặt hàng đó.'
+              : tab === 'rfq'
+                ? 'Ghi lại tất cả báo giá nhận được cho một mặt hàng, kể cả báo giá không được chọn, để có nền tảng thương lượng cho các lần mua sau.'
+                : tab === 'groups'
+                  ? 'Tổng hợp chi tiêu và biến động giá theo từng nhóm hàng, giúp nhìn nhóm nào chiếm tỷ trọng lớn để ưu tiên đàm phán.'
+                  : tab === 'estimates'
+                    ? 'So sánh giá dự toán (giá công ty) với giá mua thực tế trên PO đã chốt để biết đang mua rẻ hơn hay đắt hơn dự toán.'
+                  : 'So sánh giá bán / giá chào cho dự án với giá mua thực tế để nhìn margin theo từng mặt hàng.'}
+        </p>
 
-      <div className="tab-filter-row">
-        <TabFilter
-          tabs={TABS.map(t => ({ id: t.id, label: t.label }))}
-          activeTab={tab}
-          onChange={id => setTab(id as Tab)}
-        />
-        {tab === 'items' ? (
-          <button type="button" className="btn btn-outline btn-sm" onClick={() => exportItemsCsv(items.data ?? [])}>
-            Xuất CSV
-          </button>
-        ) : null}
+        <div className="tab-filter-row">
+          <TabFilter
+            tabs={TABS.map(t => ({ id: t.id, label: t.label }))}
+            activeTab={tab}
+            onChange={id => setTab(id as Tab)}
+          />
+          {tab === 'items' ? (
+            <button type="button" className="btn btn-outline btn-sm" onClick={() => exportItemsCsv(items.data ?? [])}>
+              Xuất CSV
+            </button>
+          ) : null}
+        </div>
       </div>
 
       {tab === 'rfq' ? (
@@ -410,7 +401,7 @@ export default function PurchasePriceBookPage() {
 
       {tab === 'matrix' ? (
         <div className="space-y-3">
-          <div className="flex flex-wrap items-end justify-between gap-2">
+          <div className="pur-pricebook-section flex flex-wrap items-end justify-between gap-2">
             <h2 className="text-[length:var(--fs-lg)] font-semibold m-0">So sánh giá theo nhà cung cấp</h2>
             <FormField label="Nhóm hàng">
               <HrmSelect
@@ -447,7 +438,7 @@ export default function PurchasePriceBookPage() {
       {tab === 'estimates' ? (
         <div className="space-y-3">
           <EstimateKpis rows={estimates.data ?? []} />
-          <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="pur-pricebook-section flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-[length:var(--fs-lg)] font-semibold m-0">Giá dự toán & Chênh lệch so với giá mua thực tế</h2>
             <div className="flex flex-wrap gap-2">
               <button
@@ -551,7 +542,7 @@ export default function PurchasePriceBookPage() {
       {tab === 'margins' ? (
         <div className="space-y-3">
           <MarginKpis rows={margins.data ?? []} />
-          <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="pur-pricebook-section flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-[length:var(--fs-lg)] font-semibold m-0">Phân tích Mua vào - Bán ra</h2>
             <div className="flex flex-wrap gap-2">
               <button type="button" className="btn btn-outline btn-sm" onClick={() => exportMarginsCsv(margins.data ?? [])}>

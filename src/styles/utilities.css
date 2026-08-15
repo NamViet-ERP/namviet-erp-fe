@@ -311,6 +311,10 @@
     vertical-align: top !important;
   }
 
+  .form-table.import-items-table.import-items-table--po-import {
+    min-width: 64rem;
+  }
+
   .form-table.import-items-table.import-items-table--po-select thead .table-header-cell {
     text-align: center;
   }
@@ -330,6 +334,30 @@
 
   .form-table.import-items-table.import-items-table--po-select thead :is(th):nth-child(2) {
     text-align: center;
+  }
+
+  .form-table.import-items-table.import-items-table--po-select .import-po-col-unit {
+    width: 4.5rem;
+    min-width: 4.5rem;
+  }
+
+  .form-table.import-items-table.import-items-table--po-select .import-po-col-qty {
+    width: 9rem;
+    min-width: 9rem;
+  }
+
+  .form-table.import-items-table.import-items-table--po-select td.import-po-col-qty {
+    overflow: visible !important;
+  }
+
+  .form-table.import-items-table.import-items-table--po-select .import-po-col-amount {
+    width: 9rem;
+    min-width: 9rem;
+  }
+
+  .form-table.import-items-table.import-items-table--po-select td.import-po-col-amount {
+    overflow: visible !important;
+    white-space: nowrap;
   }
 
   .form-table.import-items-table.import-items-table--defect-select :is(th, td):nth-child(8) {
@@ -810,12 +838,12 @@
     display: inline-flex;
     align-items: stretch;
     width: 100%;
-    max-width: 112px;
+    max-width: 9rem;
     margin-left: auto;
     margin-right: 0;
     vertical-align: top;
     border: 1px solid var(--md-outline-variant);
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     overflow: hidden;
     background: var(--md-surface);
   }
@@ -847,7 +875,7 @@
   .form-table .qty-stepper__input {
     width: 0;
     flex: 1;
-    min-width: 40px;
+    min-width: 3.5rem;
     height: 32px !important;
     border: none !important;
     border-left: 1px solid var(--md-outline-variant) !important;

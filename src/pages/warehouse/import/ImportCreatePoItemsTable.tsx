@@ -1,7 +1,7 @@
 import QtyStepper from '../../../components/ui/QtyStepper';
 import EmptyState from '../../../components/ui/EmptyState';
 import TableSkeletonRows from '../../../components/ui/TableSkeletonRows';
-import { formatCurrency } from '../../../utils/formatCurrency';
+import { formatCurrencyFull } from '../../../utils/formatCurrency';
 import type { PoImportLinePreviewApiDto } from '../../../types/api/poImportApi';
 import type { PoLineDraft } from './importCreatePoDrafts';
 
@@ -27,28 +27,30 @@ export default function ImportCreatePoItemsTable({
   onSetPoLine,
   qtyColumnLabel = 'SL dự kiến',
 }: ImportCreatePoItemsTableProps) {
+  const colCount = canViewPrices ? 10 : 8;
   return (
     <div className="overflow-x-auto table-scroll">
-      <table className="form-table import-items-table import-items-table--po-select text-xs">
+      <table className="form-table import-items-table import-items-table--po-select import-items-table--po-import text-xs">
         <thead>
           <tr>
             <th className="table-header-cell w-10 text-center" />
             <th className="table-header-cell text-center">Mặt hàng</th>
             <th className="table-header-cell text-center">Đặt</th>
+            <th className="table-header-cell text-center import-po-col-unit">ĐVT</th>
             <th className="table-header-cell text-center">Đã nhận</th>
             <th className="table-header-cell text-center">Chờ NK</th>
             <th className="table-header-cell text-center">Còn lại</th>
             {canViewPrices && <th className="table-header-cell text-center">Đơn giá</th>}
-            <th className="table-header-cell text-center">{qtyColumnLabel}</th>
-            {canViewPrices && <th className="table-header-cell text-center">Thành tiền</th>}
+            <th className="table-header-cell text-center import-po-col-qty">{qtyColumnLabel}</th>
+            {canViewPrices && <th className="table-header-cell text-center import-po-col-amount">Thành tiền</th>}
           </tr>
         </thead>
         <tbody>
           {poLoading ? (
-            <TableSkeletonRows rows={4} colSpan={canViewPrices ? 9 : 7} />
+            <TableSkeletonRows rows={4} colSpan={colCount} />
           ) : poPreviewLines.length === 0 ? (
             <tr>
-              <td colSpan={canViewPrices ? 9 : 7}>
+              <td colSpan={colCount}>
                 <EmptyState message="PO không còn dòng hàng để nhập." />
               </td>
             </tr>
@@ -71,18 +73,21 @@ export default function ImportCreatePoItemsTable({
                   </td>
                   <td className="table-cell">
                     <div className="font-medium text-[var(--md-on-surface)] leading-snug">{line.name}</div>
-                    <div className="mt-0.5 text-[10px] text-[var(--md-on-surface-variant)] leading-snug">
-                      {[line.materialCode, line.unit].filter(Boolean).join(' · ') || '—'}
+                    <div className="mt-0.5 text-[var(--md-on-surface-variant)] leading-snug">
+                      {line.materialCode?.trim() || '—'}
                     </div>
                   </td>
                   <td className="table-cell text-center tabular-nums">{line.ordered}</td>
+                  <td className="table-cell text-center import-po-col-unit">
+                    {line.unit?.trim() || '—'}
+                  </td>
                   <td className="table-cell text-center tabular-nums">{line.received}</td>
                   <td className="table-cell text-center tabular-nums">{line.reservedPending}</td>
                   <td className="table-cell text-center tabular-nums font-semibold">{line.available}</td>
                   {canViewPrices && (
-                    <td className="table-cell text-center tabular-nums">{formatCurrency(line.unitPrice)}</td>
+                    <td className="table-cell text-center tabular-nums">{formatCurrencyFull(line.unitPrice)}</td>
                   )}
-                  <td className="table-cell text-center">
+                  <td className="table-cell text-center import-po-col-qty">
                     {disabled || !draft.selected ? (
                       <div className="import-cell-placeholder import-cell-placeholder--center text-[var(--md-on-surface-variant)]">
                         —
@@ -99,8 +104,8 @@ export default function ImportCreatePoItemsTable({
                     )}
                   </td>
                   {canViewPrices && (
-                    <td className="table-cell text-center tabular-nums font-semibold text-[var(--md-on-surface)]">
-                      {lineTotal > 0 ? formatCurrency(lineTotal) : '—'}
+                    <td className="table-cell text-center tabular-nums font-semibold text-[var(--md-on-surface)] import-po-col-amount">
+                      {lineTotal > 0 ? formatCurrencyFull(lineTotal) : '—'}
                     </td>
                   )}
                 </tr>
@@ -111,11 +116,11 @@ export default function ImportCreatePoItemsTable({
         {canViewPrices && (
           <tfoot>
             <tr className="border-t border-[var(--md-outline-variant)]">
-              <td colSpan={8} className="table-cell text-right font-bold text-[var(--md-on-surface-variant)] py-2">
+              <td colSpan={9} className="table-cell text-right font-bold text-[var(--md-on-surface-variant)] py-2">
                 Tổng cộng (đã chọn)
               </td>
               <td className="table-cell text-center font-bold tabular-nums text-[var(--md-primary)] py-2">
-                {formatCurrency(formGrandTotal)} đ
+                {formatCurrencyFull(formGrandTotal)}
               </td>
             </tr>
           </tfoot>

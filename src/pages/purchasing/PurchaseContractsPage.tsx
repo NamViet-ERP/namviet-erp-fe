@@ -32,7 +32,7 @@ import { purchaseContractsService } from '../../services/purchaseContractsServic
 import { formatCurrency } from '../../utils/formatCurrency';
 import type { PurchaseContractApiDto } from '../../types/api/purchasingApi';
 
-const COL_COUNT = 9;
+const COL_COUNT = 10;
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Tất cả trạng thái' },
@@ -343,16 +343,17 @@ export default function PurchaseContractsPage() {
           <EmptyState message={getApiErrorMessage(error, 'Không tải được danh sách hợp đồng.')} />
         ) : (
           <>
-            <div className="overflow-x-auto table-scroll wms-inventory-table-wrap">
+            <div className="overflow-x-auto table-scroll wms-inventory-table-wrap pur-contracts-table">
               <table className="wms-inventory-table">
                 <thead>
                   <tr>
-                    <th className="table-header-cell">Mã</th>
-                    <th className="table-header-cell">Số HĐ</th>
+                    <th className="table-header-cell pur-contracts-col-code">Mã</th>
+                    <th className="table-header-cell pur-contracts-col-no">Số HĐ</th>
                     <th className="table-header-cell">Tiêu đề</th>
                     <th className="table-header-cell">NCC</th>
-                    <th className="table-header-cell">PO / Dự án</th>
-                    <th className="table-header-cell">Hiệu lực</th>
+                    <th className="table-header-cell pur-contracts-col-po">PO / Dự án</th>
+                    <th className="table-header-cell pur-contracts-col-date">Hiệu lực từ</th>
+                    <th className="table-header-cell pur-contracts-col-date">Hiệu lực đến</th>
                     <th className="table-header-cell text-right">Giá trị</th>
                     <th className="table-header-cell">Trạng thái</th>
                     <th className="table-header-cell text-center">Thao tác</th>
@@ -375,33 +376,36 @@ export default function PurchaseContractsPage() {
                         style={{ cursor: 'pointer' }}
                         onClick={() => openEdit(row)}
                       >
-                        <td className="table-cell font-mono text-sm">{row.code}</td>
-                        <td className="table-cell font-semibold">{row.contractNo}</td>
+                        <td className="table-cell font-mono text-sm pur-contracts-col-code">{row.code}</td>
+                        <td className="table-cell font-semibold pur-contracts-col-no">{row.contractNo}</td>
                         <td className="table-cell">{row.title}</td>
                         <td className="table-cell">{row.supplierName || '—'}</td>
-                        <td className="table-cell">
+                        <td className="table-cell pur-contracts-col-po">
                           <div className="font-mono text-sm">{row.poCode || '—'}</div>
                           <div className="text-xs text-[var(--md-on-surface-variant)] font-mono">
                             {row.projectCode || '—'}
                           </div>
                         </td>
-                        <td className="table-cell tabular-nums">
+                        <td className="table-cell tabular-nums pur-contracts-col-date">
                           {formatDateCell(row.effectiveFrom ?? undefined)}
-                          {' → '}
+                        </td>
+                        <td className="table-cell tabular-nums pur-contracts-col-date">
                           {formatDateCell(row.effectiveTo ?? undefined)}
                         </td>
                         <td className="table-cell text-right tabular-nums">
                           {row.amount != null ? formatCurrency(row.amount) : '—'}
                         </td>
                         <td className="table-cell">
-                          <span className={`pur-erp__pill pur-erp__pill--${statusTone(row.status)}`}>
-                            {statusLabel(row.status)}
-                          </span>
-                          {row.hasFile ? (
-                            <span className="pur-erp__pill pur-erp__pill--info ml-2">
-                              Có file
+                          <div className="pur-contract-status">
+                            <span className={`pur-erp__pill pur-erp__pill--${statusTone(row.status)}`}>
+                              {statusLabel(row.status)}
                             </span>
-                          ) : null}
+                            {row.hasFile ? (
+                              <span className="pur-erp__pill pur-erp__pill--info">
+                                Có file
+                              </span>
+                            ) : null}
+                          </div>
                         </td>
                         <td className="table-cell text-center" onClick={e => e.stopPropagation()}>
                           <div className="inline-flex items-center gap-1">

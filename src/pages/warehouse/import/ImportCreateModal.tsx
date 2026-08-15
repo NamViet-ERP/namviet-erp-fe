@@ -212,7 +212,7 @@ export default function ImportCreateModal({
       isOpen={isOpen}
       onClose={onClose}
       title={editVoucher ? `Sửa phiếu nhập - ${editVoucher.code}` : 'Tạo phiếu nhập kho dự án'}
-      size="full"
+      size="wide"
       className="md-dialog--import-create"
       footer={
         <div className="flex w-full items-center justify-between gap-4 flex-wrap">
