@@ -25,6 +25,7 @@ export function useActivityRealtime(module: string, enabled = true): { connected
 
     const onCreated = (_payload: ActivityEventCreatedPayload) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.purchasingDashboard.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.wmsNotifications.all });
     };
 
     const wire = async () => {

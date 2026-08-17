@@ -340,7 +340,7 @@ export default function PurchaseEstimateFillPage() {
     <>
       <PublicFormLayout
         wide
-        eyebrow="NAM VIỆT GROUP"
+        eyebrow="MAYZER"
         title="Phiếu lập dự toán vật tư"
         subtitle={row ? `${row.projectCode}${row.projectName ? ` - ${row.projectName}` : ''} · ${row.title}` : 'Điền số lượng theo mẫu Phòng Cung ứng gửi'}
       >

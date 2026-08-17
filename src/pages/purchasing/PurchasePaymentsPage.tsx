@@ -30,18 +30,20 @@ const STATUS_TABS: TabItem[] = [
 ];
 
 function paymentStatusLabel(status: string | null | undefined): string {
-  switch (status) {
+  switch (status?.trim().toLowerCase()) {
     case 'draft': return 'Nháp';
     case 'submitted': return 'Đã gửi';
-    case 'paid': return 'Đã thanh toán';
+    case 'paid':
+    case 'completed': return 'Đã thanh toán';
     case 'cancelled': return 'Đã hủy';
     default: return status || '—';
   }
 }
 
 function paymentStatusBadgeClass(status: string | null | undefined): string {
-  switch (status) {
-    case 'paid': return 'pur-erp__pill pur-erp__pill--ok';
+  switch (status?.trim().toLowerCase()) {
+    case 'paid':
+    case 'completed': return 'pur-erp__pill pur-erp__pill--ok';
     case 'cancelled': return 'pur-erp__pill pur-erp__pill--danger';
     case 'submitted': return 'pur-erp__pill pur-erp__pill--info';
     default: return 'pur-erp__pill pur-erp__pill--warn';

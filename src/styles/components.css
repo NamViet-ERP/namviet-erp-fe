@@ -4,7 +4,7 @@
 @layer components {
 
   /* ────────────────────────────────────────────────────────
-     BUTTONS — keycap shape, orange commit
+     BUTTONS — keycap shape, primary = --nv-action (tokens.css)
   ──────────────────────────────────────────────────────── */
   .btn {
     display: inline-flex;
@@ -45,7 +45,7 @@
   .btn:hover::after { opacity: 0.08; }
   .btn:active::after { opacity: 0.12; }
 
-  /* Filled — Primary (the orange commit key) */
+  /* Filled — Primary (--nv-action) */
   .btn-filled, .btn-primary {
     background: var(--nv-action);
     color: var(--md-on-primary);
@@ -391,7 +391,7 @@
   }
   .tab-filter__tab--active {
     color: var(--nv-action);
-    border-bottom-color: var(--nv-amber);
+    border-bottom-color: var(--nv-steel);
   }
   .tab-filter__tab--active:hover {
     background: transparent;
@@ -1639,10 +1639,10 @@
     display: flex;
     align-items: center;
     background: var(--nv-header-bg);
-    border-bottom: 3px solid var(--nv-amber);
+    border-bottom: 1px solid color-mix(in srgb, #000 22%, var(--nv-navy));
     box-shadow:
-      0 1px 0 rgba(0, 0, 0, 0.20),
-      0 8px 20px rgba(12, 18, 24, 0.22);
+      0 1px 0 rgba(14, 48, 99, 0.18),
+      0 6px 16px rgba(14, 48, 99, 0.16);
     transition: background var(--md-duration) var(--md-easing);
   }
   .nv-header__inner {
@@ -1791,6 +1791,51 @@
   .dark .nv-notif-panel {
     background: var(--md-surface-container-high);
     border-color: var(--md-outline-variant);
+  }
+  .nv-notif-toast {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    width: min(280px, calc(100vw - 24px));
+    padding: 10px 12px;
+    border: 1px solid var(--md-outline-variant02);
+    border-radius: var(--radius-md);
+    background: var(--md-surface-container);
+    box-shadow: var(--md-shadow-2);
+    z-index: var(--z-dropdown);
+    color: var(--md-on-surface);
+    cursor: pointer;
+    text-align: left;
+    animation: nv-notif-toast-in 180ms var(--md-easing);
+  }
+  .nv-notif-toast:hover {
+    background: var(--md-surface-container-high);
+  }
+  .nv-notif-toast:focus-visible {
+    outline: 2px solid var(--md-primary);
+    outline-offset: 2px;
+  }
+  .nv-notif-toast__title {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-semibold);
+    color: var(--md-on-surface);
+  }
+  .nv-notif-toast__msg {
+    margin-top: 2px;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-regular);
+    color: var(--md-on-surface-variant);
+  }
+  .dark .nv-notif-toast {
+    background: var(--md-surface-container-high);
+    border-color: var(--md-outline-variant);
+  }
+  @keyframes nv-notif-toast-in {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .nv-notif-toast { animation: none; }
   }
   .notif-icon {
     width: 36px;
@@ -3199,7 +3244,7 @@
     background: var(--nv-table-header-bg);
     white-space: nowrap;
     border: 1px solid color-mix(in srgb, var(--nv-navy) 70%, #000);
-    border-bottom: 2px solid var(--nv-amber);
+    border-bottom: 2px solid color-mix(in srgb, #000 16%, var(--nv-navy));
   }
   .table-row {
     border: 1px solid var(--md-outline-variant02);
@@ -5866,7 +5911,7 @@
     position: relative;
     overflow: hidden;
     background:
-      radial-gradient(ellipse at 18% 12%, color-mix(in srgb, var(--nv-amber) 28%, transparent) 0%, transparent 42%),
+      radial-gradient(ellipse at 18% 12%, color-mix(in srgb, var(--nv-steel) 28%, transparent) 0%, transparent 42%),
       radial-gradient(ellipse at 88% 88%, color-mix(in srgb, var(--nv-action) 22%, transparent) 0%, transparent 46%),
       var(--nv-navy);
   }
@@ -5924,7 +5969,7 @@
     right: -5%;
     width: 360px;
     height: 360px;
-    background: radial-gradient(circle, color-mix(in srgb, var(--nv-amber) 45%, transparent) 0%, transparent 70%);
+    background: radial-gradient(circle, color-mix(in srgb, var(--nv-steel) 45%, transparent) 0%, transparent 70%);
   }
   .login-page__glow--bl {
     bottom: -10%;
@@ -5934,14 +5979,14 @@
     background: radial-gradient(circle, color-mix(in srgb, var(--nv-action) 38%, transparent) 0%, transparent 70%);
   }
   .dark .login-page__glow--tr {
-    background: radial-gradient(circle, color-mix(in srgb, var(--nv-amber) 35%, transparent) 0%, transparent 70%);
+    background: radial-gradient(circle, color-mix(in srgb, var(--nv-steel) 35%, transparent) 0%, transparent 70%);
   }
   .dark .login-page__glow--bl {
     background: radial-gradient(circle, color-mix(in srgb, var(--nv-action) 30%, transparent) 0%, transparent 70%);
   }
   .login-card {
     border-radius: var(--radius-lg);
-    border: 1px solid color-mix(in srgb, var(--nv-amber) 35%, var(--md-outline-variant));
+    border: 1px solid color-mix(in srgb, var(--nv-steel) 28%, var(--md-outline-variant));
     padding: 36px;
     background: var(--md-surface-container-high);
     box-shadow: var(--md-shadow-4);
@@ -5965,7 +6010,7 @@
     width: 2.25rem;
     height: 2px;
     transform: translateX(-50%);
-    background: var(--nv-amber);
+    background: var(--nv-steel);
     border-radius: 1px;
   }
   .login-brand__logo {

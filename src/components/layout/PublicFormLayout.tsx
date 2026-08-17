@@ -30,7 +30,7 @@ export default function PublicFormLayout({ eyebrow, eyebrowAsTitle = false, titl
 
         <div className="hrm-public-intro">
           {eyebrowAsTitle ? (
-            <h1 className="hrm-public-intro__title">{eyebrow ?? 'NAM VIỆT GROUP TUYỂN DỤNG'}</h1>
+            <h1 className="hrm-public-intro__title">{eyebrow ?? 'MAYZER TUYỂN DỤNG'}</h1>
           ) : (
             eyebrow ? (
               <p className="hrm-public-intro__eyebrow">{eyebrow}</p>
@@ -53,7 +53,7 @@ export default function PublicFormLayout({ eyebrow, eyebrowAsTitle = false, titl
         </div>
 
         <p className="hrm-public-footer">
-          © {new Date().getFullYear()} NamViet Group. Bảo mật thông tin hồ sơ.
+          © {new Date().getFullYear()} Mayzer. Bảo mật thông tin hồ sơ.
         </p>
       </div>
     </div>

@@ -87,7 +87,7 @@ export default function LoginPage() {
               <img src={NAMVIET_LOGIN_LOGO_URL} alt="Mayzer" className="login-brand__logo" />
             </div>
             <h2 className="text-2xl font-bold text-[var(--md-on-surface)]">
-              Nam Việt <span className="text-[var(--nv-amber)]">ERP</span>
+              Mayzer <span className="text-[var(--nv-steel)]">ERP</span>
             </h2>
             <p className="text-xs font-medium tracking-wide text-[var(--md-on-surface-variant)]">
               HỆ THỐNG QUẢN LÝ CHO NHÂN SỰ & KHO MAYZER

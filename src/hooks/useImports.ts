@@ -7,6 +7,7 @@ import type { VoucherListParams } from '../lib/wms/voucherDateUtils';
 
 function invalidateImportSideEffects(qc: ReturnType<typeof useQueryClient>, imp?: Import | null) {
   qc.invalidateQueries({ queryKey: queryKeys.imports.all });
+  qc.invalidateQueries({ queryKey: queryKeys.wmsNotifications.all });
   qc.invalidateQueries({ queryKey: queryKeys.stock.matrix });
   qc.invalidateQueries({ queryKey: queryKeys.projects.all });
   const projectCode = imp?.project?.trim();
@@ -120,6 +121,7 @@ export function useSubmitImport() {
     onSuccess: (_data, id) => {
       qc.invalidateQueries({ queryKey: queryKeys.imports.all });
       qc.invalidateQueries({ queryKey: queryKeys.imports.detail(id) });
+      qc.invalidateQueries({ queryKey: queryKeys.wmsNotifications.all });
     },
   });
 }

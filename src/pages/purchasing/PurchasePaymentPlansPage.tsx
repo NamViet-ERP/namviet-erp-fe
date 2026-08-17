@@ -22,17 +22,20 @@ function stageStatusLabel(status: string): string {
       return 'Đã thanh toán';
     case 'in_progress':
     case 'partial':
-      return 'Chưa hoàn thành';
+      return 'Chờ thanh toán';
     default:
-      return 'Chưa thanh toán';
+      return 'Chưa lập DNTT';
   }
 }
 
-function stageTone(status: string): 'paid' | 'busy' | 'open' {
+function stageTone(status: string): 'paid' | 'open' {
   const s = status.trim().toLowerCase();
   if (s === 'paid' || s === 'completed' || s === 'đã thanh toán') return 'paid';
-  if (s === 'in_progress' || s === 'partial') return 'busy';
   return 'open';
+}
+
+function stagePillClass(tone: 'paid' | 'open'): string {
+  return tone === 'paid' ? 'pur-erp__pill pur-erp__pill--ok' : 'pur-erp__pill pur-erp__pill--warn';
 }
 
 function StageCell({ stage }: { stage: PurchasePaymentPlanStageApiDto }) {
@@ -50,7 +53,7 @@ function StageCell({ stage }: { stage: PurchasePaymentPlanStageApiDto }) {
           {stage.percent}%
         </span>
       </div>
-      <span className={`pur-pay-plan__badge pur-pay-plan__badge--${tone}`}>
+      <span className={stagePillClass(tone)}>
         {stageStatusLabel(stage.paymentStatus)}
       </span>
     </div>

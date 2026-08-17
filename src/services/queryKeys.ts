@@ -178,6 +178,10 @@ export const queryKeys = {
     all: ['purchasePaymentPlans'] as const,
     nextStage: (poCode: string) => ['purchasePaymentPlans', 'nextStage', poCode] as const,
   },
+  wmsNotifications: {
+    all: ['wms-notifications'] as const,
+    pending: ['wms-notifications', 'pending'] as const,
+  },
   purchasingDashboard: {
     all: ['purchasingDashboard'] as const,
     summary: (params: object) => ['purchasingDashboard', 'summary', params] as const,

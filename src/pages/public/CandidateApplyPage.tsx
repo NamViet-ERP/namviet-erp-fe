@@ -7,7 +7,7 @@ export default function CandidateApplyPage() {
     <>
       <PublicFormLayout
         wide
-        eyebrow="NAM VIỆT GROUP TUYỂN DỤNG"
+        eyebrow="MAYZER TUYỂN DỤNG"
         eyebrowAsTitle
         title=""
         subtitle="Vui lòng điền đầy đủ thông tin để chúng tôi có thể liên hệ và phản hồi sớm nhất"

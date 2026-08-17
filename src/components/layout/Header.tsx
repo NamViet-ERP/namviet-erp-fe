@@ -12,6 +12,7 @@ import { getSessionUser, clearSessionUser } from '../../constants/systemUsers';
 import { authService } from '../../services/authService';
 import { UI_COMING_SOON } from '../../lib/uiMessages';
 import { useWmsNotifications } from '../../hooks/useWmsNotifications';
+import { useActivityRealtime } from '../../hooks/useActivityRealtime';
 import { useDarkMode } from '../../hooks/useDarkMode';
 import type { WmsNotificationItemApiDto } from '../../services/notificationsService';
 
@@ -151,11 +152,16 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [readNotificationIds, setReadNotificationIds] = useState(readStoredNotifIds);
+  const [bellToast, setBellToast] = useState<{ title: string; message: string } | null>(null);
   useDarkMode();
+  useActivityRealtime('wms');
   const { data: pendingNotifications } = useWmsNotifications();
 
   const userMenuRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
+  const seenImportIdsRef = useRef<Set<string> | null>(null);
+  const showNotificationsRef = useRef(showNotifications);
+  showNotificationsRef.current = showNotifications;
 
   const notifications = useMemo(
     () => pendingNotifications?.items?.map(item => mapApiNotification(item, readNotificationIds)) ?? [],
@@ -164,9 +170,38 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
   const unreadCount = notifications.filter(n => !n.read).length;
 
   useEffect(() => {
+    if (!pendingNotifications) return;
+    const importItems = pendingNotifications.items.filter(item => item.kind === 'import');
+    const ids = importItems.map(item => item.id);
+    if (seenImportIdsRef.current === null) {
+      seenImportIdsRef.current = new Set(ids);
+      return;
+    }
+    const fresh = importItems.filter(item => !seenImportIdsRef.current!.has(item.id));
+    ids.forEach(id => seenImportIdsRef.current!.add(id));
+    if (fresh.length === 0 || showNotificationsRef.current) return;
+    const first = fresh[0];
+    setBellToast({
+      title: fresh.length === 1
+        ? '1 phiếu nhập kho được tạo'
+        : `${fresh.length} phiếu nhập kho được tạo`,
+      message: first.voucherCode || first.message,
+    });
+  }, [pendingNotifications]);
+
+  useEffect(() => {
+    if (!bellToast) return;
+    const timer = window.setTimeout(() => setBellToast(null), 4000);
+    return () => window.clearTimeout(timer);
+  }, [bellToast]);
+
+  useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) setShowUserMenu(false);
-      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setShowNotifications(false);
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setShowNotifications(false);
+        setBellToast(null);
+      }
     };
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
@@ -222,11 +257,33 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
               <IconBtn
                 title="Thông báo"
                 active={showNotifications}
-                onClick={() => { setShowNotifications(p => !p); setShowUserMenu(false); }}
-                badge={pendingNotifications?.totalCount ?? unreadCount}
+                onClick={() => {
+                  setShowNotifications(p => !p);
+                  setShowUserMenu(false);
+                  setBellToast(null);
+                }}
+                badge={unreadCount}
               >
                 <Bell size={18} />
               </IconBtn>
+
+              {bellToast && !showNotifications && (
+                <button
+                  type="button"
+                  className="nv-notif-toast"
+                  aria-live="polite"
+                  onClick={() => {
+                    setShowNotifications(true);
+                    setBellToast(null);
+                    setShowUserMenu(false);
+                  }}
+                >
+                  <p className="nv-notif-toast__title">{bellToast.title}</p>
+                  {bellToast.message && (
+                    <p className="nv-notif-toast__msg">{bellToast.message}</p>
+                  )}
+                </button>
+              )}
 
               {showNotifications && (
                 <div className="nv-notif-panel animate-scale-in">

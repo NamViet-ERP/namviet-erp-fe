@@ -36,8 +36,10 @@ export function poDeliveryStatus(v: string | null | undefined): { label: string;
 }
 
 export function poPaymentStatus(v: string | null | undefined): { label: string; tone: PoPillTone } {
-  switch (v) {
+  switch (v?.trim().toLowerCase()) {
     case 'paid':
+    case 'completed':
+    case 'đã thanh toán':
       return { label: 'Đã thanh toán', tone: 'ok' };
     case 'partial':
       return { label: 'Thanh toán 1 phần', tone: 'info' };

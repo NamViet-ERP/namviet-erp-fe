@@ -1,14 +1,15 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   NamViet ERP — Dispatch cabin × hardware bench
-   Seed 4afbeea0 · assigned cabin desk · fused creator-hardware-bench
-   Chrome gunmetal · paper bone · commit = safety orange · live = amber
-   Anti-reference: Roboto + washed navy + MD3 pills
+   THEME ROOT — src/styles/tokens.css  (:root)
+   Đổi font / màu brand: CHỈ sửa block 「KNOBS」 bên dưới.
+   Component, page, login không hardcode hex — dùng var(--token).
+   File chữ Google: @import ngay dưới. Family: --font-sans.
    ═══════════════════════════════════════════════════════════════════════ */
 
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,500;0,700;1,400&display=swap');
+
 :root {
-  /* ── Typography — Be Vietnam Pro (Vietnamese workhorse, not Roboto) ──
-     Hierarchy comes from weight + color first, size second. */
-  --font-sans: 'Be Vietnam Pro', 'Segoe UI', 'Helvetica Neue', sans-serif;
+  /* ── KNOBS — sửa hex / family ở đây là xong toàn app ── */
+  --font-sans: 'Roboto', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
   --font-mono: ui-monospace, 'Cascadia Code', 'Segoe UI Mono', 'Roboto Mono', monospace;
 
   --fs-micro: 11px;   /* badge, eyebrow, chip, helper */
@@ -23,7 +24,7 @@
 
   --fw-regular:  400;
   --fw-medium:   500;
-  --fw-semibold: 600;
+  --fw-semibold: 700;
   --fw-bold:     700;
 
   --lh-tight:  1.2;
@@ -41,47 +42,48 @@
   --radius-md: 8px;   /* card, panel, table wrapper */
   --radius-lg: 12px;  /* modal */
 
-  /* ── Brand primitives ──
-     Ink = gunmetal chassis. Action = the one orange key. Live = amber screen. */
-  --nv-navy:                     #121A24;
-  --nv-navy-2:                   #1C2836;
-  --nv-steel:                    #3A6F8C;
-  --nv-steel-light:              #E4EEF4;
+  /* ── Brand knobs ──
+     Đổi accent: --nv-action (+ hover). Navy / giấy / chữ / cảnh báo tách riêng.
+     --nv-steel bám action — đừng ghi hex lần nữa. */
+  --nv-navy:                     #0E3063;
+  --nv-navy-2:                   #164785;
+  --nv-action:                   #0077B3;
+  --nv-action-hover:             #005F8F;
+  --nv-steel:                    var(--nv-action);
+  --nv-steel-light:              #D9EDF7;
   --nv-amber:                    #E39B12;
   --nv-amber-dark:               #B56F08;
-  --nv-action:                   #D35400;
-  --nv-action-hover:             #B84700;
-  --nv-epc-bg:                   #EDE8E0;
-  --nv-epc-border:               #D4CDC2;
-  --nv-epc-muted:                #4A453E;
-  --nv-epc-text:                 #1A1612;
+  --nv-epc-bg:                   #F4F4F4;
+  --nv-epc-border:               #E8E8E8;
+  --nv-epc-muted:                #5A6178;
+  --nv-epc-text:                 #323A45;
 
   /* ── Header ── */
   --nv-header-bg:                var(--nv-navy);
-  --nv-header-on-bg:             #F7F1E8;
-  --nv-header-icon:              rgba(247, 241, 232, 0.78);
+  --nv-header-on-bg:             #FFFFFF;
+  --nv-header-icon:              rgba(255, 255, 255, 0.78);
   --nv-header-icon-hover:        #FFFFFF;
   --nv-header-icon-active:       #FFFFFF;
-  --nv-header-icon-active-bg:    rgba(211, 84, 0, 0.22);
-  --nv-header-search-bg:         #F7F3EC;
+  --nv-header-icon-active-bg:    color-mix(in srgb, var(--nv-action) 28%, transparent);
+  --nv-header-search-bg:         #FFFFFF;
   --nv-header-search-text:       var(--nv-epc-text);
-  --nv-header-search-placeholder:#7A736A;
-  --nv-header-border:            rgba(227, 155, 18, 0.55);
+  --nv-header-search-placeholder:#6B7280;
+  --nv-header-border:            rgba(255, 255, 255, 0.16);
 
   /* ── Table Header ── */
   --nv-table-header-bg:          var(--nv-navy);
-  --nv-table-header-text:        #F7F1E8;
+  --nv-table-header-text:        #FFFFFF;
 
   /* ── Badge Draft / muted ── */
-  --nv-badge-draft-bg:           #E6E0D6;
+  --nv-badge-draft-bg:           #EEF0F4;
   --nv-badge-draft-text:         var(--nv-epc-muted);
   --nv-badge-draft-border:       var(--nv-epc-border);
 
-  /* ── Primary (safety orange — commit / interactive) ── */
+  /* ── Derived from knobs — đừng ghi hex brand ở đây ── */
   --md-primary:                  var(--nv-action);
   --md-on-primary:               #FFFFFF;
-  --md-primary-container:        #F8D4B8;
-  --md-on-primary-container:     #7A2E00;
+  --md-primary-container:        var(--nv-steel-light);
+  --md-on-primary-container:     #0A4A6E;
 
   /* ── Secondary (steel) ── */
   --md-secondary:                var(--nv-steel);
@@ -95,22 +97,22 @@
   --md-tertiary-container:       #F8E4B5;
   --md-on-tertiary-container:    var(--nv-amber-dark);
 
-  /* ── Surface System — bone paper + putty cards ── */
+  /* ── Surface System — cool gray page + white cards ── */
   --md-surface:                  var(--nv-epc-bg);
   --md-on-surface:               var(--nv-epc-text);
-  --md-surface-variant:          #F7F3EC;
+  --md-surface-variant:          #FFFFFF;
   --md-surface-variant_purple:   #B5BAFF;
   --md-on-surface-variant:       var(--nv-epc-muted);
-  --md-surface-container:        #F7F3EC;
-  --md-surface-container-low:    #F3EDE4;
-  --md-surface-container-lowest: #FFFCF7;
-  --md-surface-container-high:   #FFFCF7;
+  --md-surface-container:        #FFFFFF;
+  --md-surface-container-low:    #F4F4F4;
+  --md-surface-container-lowest: #FFFFFF;
+  --md-surface-container-high:   #FFFFFF;
   --md-inverse-surface:          var(--nv-navy);
-  --md-inverse-on-surface:       #F7F1E8;
+  --md-inverse-on-surface:       #FFFFFF;
 
   /* ── Outline ── */
-  --md-outline:                  #B9B0A4;
-  --md-outline-variant:          #D4CDC2;
+  --md-outline:                  #C5CAD3;
+  --md-outline-variant:          #E8E8E8;
   --md-outline-variant02:        var(--nv-epc-border);
 
   /* ── Error / danger ── */
@@ -128,7 +130,7 @@
   --md-on-warning-container: #6A4200;
   --md-info:                 var(--nv-steel);
   --md-info-container:       var(--nv-steel-light);
-  --md-on-info-container:    #163044;
+  --md-on-info-container:    #0A4A6E;
 
   /* ── Status accents ── */
   --status-success: #1F7A4D;
@@ -141,11 +143,11 @@
   --status-info-on-inverse:    #8EC4E0;
   --status-error-on-inverse:   #F0A8A0;
 
-  /* ── State-layer tints ── */
-  --tint-primary-weak:   rgba(211, 84, 0, 0.06);
-  --tint-primary-soft:   rgba(211, 84, 0, 0.10);
-  --tint-primary-hover:  rgba(211, 84, 0, 0.12);
-  --tint-primary-active: rgba(211, 84, 0, 0.18);
+  /* ── State-layer tints (bám --nv-action) ── */
+  --tint-primary-weak:   color-mix(in srgb, var(--nv-action) 6%, transparent);
+  --tint-primary-soft:   color-mix(in srgb, var(--nv-action) 10%, transparent);
+  --tint-primary-hover:  color-mix(in srgb, var(--nv-action) 12%, transparent);
+  --tint-primary-active: color-mix(in srgb, var(--nv-action) 18%, transparent);
   --tint-success-soft:   rgba(31, 122, 77, 0.12);
   --tint-success-border: rgba(31, 122, 77, 0.22);
   --tint-warning-soft:   rgba(196, 122, 0, 0.14);
@@ -154,24 +156,24 @@
   --tint-error-strong:   rgba(196, 43, 34, 0.16);
 
   /* ── Chart series ── */
-  --chart-1: #121A24;
-  --chart-2: #3A6F8C;
-  --chart-3: #1F7A4D;
-  --chart-4: #D35400;
-  --chart-5: #E39B12;
-  --chart-6: #C42B22;
+  --chart-1: var(--nv-navy);
+  --chart-2: var(--nv-action);
+  --chart-3: var(--md-success);
+  --chart-4: var(--nv-action);
+  --chart-5: var(--nv-amber);
+  --chart-6: var(--md-error);
 
   /* ── Icons ── */
   --icon-stroke: 2;
 
   /* ── Modal scrim ── */
-  --md-scrim: rgba(18, 26, 36, 0.62);
+  --md-scrim: rgba(14, 48, 99, 0.52);
 
-  /* ── Elevation — warm ink, real offset ── */
-  --md-shadow-1: 0 1px 2px 0 rgba(18, 26, 36, 0.10);
-  --md-shadow-2: 0 3px 8px 0 rgba(18, 26, 36, 0.12);
-  --md-shadow-3: 0 8px 22px 0 rgba(18, 26, 36, 0.16);
-  --md-shadow-4: 0 16px 36px 0 rgba(18, 26, 36, 0.20);
+  /* ── Elevation — cool navy ink, real offset ── */
+  --md-shadow-1: 0 1px 2px 0 rgba(14, 48, 99, 0.08);
+  --md-shadow-2: 0 3px 8px 0 rgba(14, 48, 99, 0.10);
+  --md-shadow-3: 0 8px 22px 0 rgba(14, 48, 99, 0.14);
+  --md-shadow-4: 0 16px 36px 0 rgba(14, 48, 99, 0.18);
 
   /* ── Transition ── */
   --md-easing: cubic-bezier(0.2, 0, 0, 1);
@@ -202,7 +204,7 @@
   --nv-surface-card:     var(--md-surface-container);
   --nv-surface-raised:   var(--md-surface-container-high);
   --nv-surface-subtle:   var(--md-surface-container-low);
-  --nv-surface-hover:    rgba(211, 84, 0, 0.10);
+  --nv-surface-hover:    color-mix(in srgb, var(--nv-action) 10%, transparent);
   --nv-border-default:   var(--md-outline-variant);
   --nv-border-subtle:    var(--md-outline-variant);
   --nv-text-primary:     var(--md-on-surface);
@@ -227,69 +229,70 @@
   --nv-app-chrome-top:           72px;
   --nv-sidebar-bg:       var(--nv-navy);
   --nv-sidebar-bg-alt:   var(--nv-navy);
-  --nv-sidebar-border:   rgba(247, 241, 232, 0.10);
-  --nv-sidebar-accent:   var(--nv-amber);
-  --nv-sidebar-on:       rgba(247, 241, 232, 0.78);
-  --nv-sidebar-on-strong:#F7F1E8;
-  --nv-sidebar-on-muted: rgba(247, 241, 232, 0.45);
-  --nv-sidebar-item-hover:       rgba(247, 241, 232, 0.08);
-  --nv-sidebar-item-active-bg:   rgba(211, 84, 0, 0.22);
+  --nv-sidebar-border:   rgba(255, 255, 255, 0.10);
+  --nv-sidebar-accent:   #4FC3F7;
+  --nv-sidebar-on:       rgba(255, 255, 255, 0.78);
+  --nv-sidebar-on-strong:#FFFFFF;
+  --nv-sidebar-on-muted: rgba(255, 255, 255, 0.45);
+  --nv-sidebar-item-hover:       rgba(255, 255, 255, 0.08);
+  --nv-sidebar-item-active-bg:   color-mix(in srgb, var(--nv-action) 32%, transparent);
   --nv-chrome-bg:        var(--md-surface-container);
   --nv-chrome-border:    var(--md-outline-variant);
   --nv-chrome-text:      var(--md-on-surface);
-  --nv-chrome-bg-hover:  rgba(211, 84, 0, 0.10);
+  --nv-chrome-bg-hover:  color-mix(in srgb, var(--nv-action) 10%, transparent);
   --sidebar-bg:          var(--md-surface-container);
-  --nv-scrollbar-thumb:  #A89880;
-  --nv-scrollbar-thumb-hover: #8A7A64;
+  --nv-scrollbar-thumb:  #B0B6C4;
+  --nv-scrollbar-thumb-hover: #8A90A0;
 }
 
-/* ── Dark Mode — night warehouse, sodium amber ── */
+/* ── Dark knobs — chỉ đổi action / navy / surface ở đây ── */
 .dark {
-  --nv-header-bg:                #0C1218;
-  --nv-header-on-bg:             #F7F1E8;
-  --nv-action:                   #F08A3C;
-  --nv-action-hover:             #FF9A4A;
+  --nv-header-bg:                #0A1F42;
+  --nv-header-on-bg:             #FFFFFF;
+  --nv-action:                   #7EC8E8;
+  --nv-action-hover:             #A0D8F0;
+  --nv-steel:                    var(--nv-action);
 
-  --nv-table-header-bg:          #0C1218;
-  --nv-table-header-text:        #F7F1E8;
+  --nv-table-header-bg:          #0A1F42;
+  --nv-table-header-text:        #FFFFFF;
 
-  --nv-badge-draft-bg:           #243040;
-  --nv-badge-draft-text:         #C4B8A8;
-  --nv-badge-draft-border:       #3A4A5C;
-  --nv-header-icon:              rgba(247, 241, 232, 0.75);
+  --nv-badge-draft-bg:           #1C2A40;
+  --nv-badge-draft-text:         #A8B0C4;
+  --nv-badge-draft-border:       #2A3C58;
+  --nv-header-icon:              rgba(255, 255, 255, 0.75);
   --nv-header-icon-hover:        #FFFFFF;
   --nv-header-icon-active:       #FFFFFF;
-  --nv-header-icon-active-bg:    rgba(232, 140, 48, 0.28);
+  --nv-header-icon-active-bg:    rgba(126, 200, 232, 0.28);
   --nv-header-search-bg:         var(--md-surface-container-high);
   --nv-header-search-text:       var(--md-on-surface);
   --nv-header-search-placeholder:var(--md-on-surface-variant);
-  --nv-header-border:            rgba(227, 155, 18, 0.40);
+  --nv-header-border:            rgba(255, 255, 255, 0.12);
 
-  --md-primary:                  #F08A3C;
-  --md-on-primary:               #1A0C00;
-  --md-primary-container:        #7A3208;
-  --md-on-primary-container:     #FFD4B0;
-  --md-secondary:                #8EC4E0;
+  --md-primary:                  var(--nv-action);
+  --md-on-primary:               #0A1F42;
+  --md-primary-container:        #163A52;
+  --md-on-primary-container:     #D4EAF4;
+  --md-secondary:                var(--nv-action);
   --md-on-secondary:             #0C1E28;
-  --md-secondary-container:      #1E3A4C;
+  --md-secondary-container:      #163A52;
   --md-on-secondary-container:   #D4EAF4;
   --md-tertiary:                 #F0C36D;
   --md-on-tertiary:              #2A1C00;
   --md-tertiary-container:       #5C3A08;
   --md-on-tertiary-container:    #F8E4B5;
-  --md-surface:                  #0E141A;
-  --md-on-surface:               #F0E8DC;
-  --md-surface-variant:          #243040;
-  --md-on-surface-variant:       #C4B8A8;
-  --md-surface-container:        #161E28;
-  --md-surface-container-low:    #121820;
-  --md-surface-container-lowest: #0C1218;
-  --md-surface-container-high:   #1E2834;
-  --md-inverse-surface:          #F0E8DC;
-  --md-inverse-on-surface:       #121820;
-  --md-outline:                  #5A6A78;
-  --md-outline-variant:          #2A3848;
-  --md-outline-variant02:        #3A4A5C;
+  --md-surface:                  #0B1220;
+  --md-on-surface:               #E8ECF4;
+  --md-surface-variant:          #1C2A40;
+  --md-on-surface-variant:       #A8B0C4;
+  --md-surface-container:        #141C2C;
+  --md-surface-container-low:    #101828;
+  --md-surface-container-lowest: #0A1220;
+  --md-surface-container-high:   #1C2A40;
+  --md-inverse-surface:          #E8ECF4;
+  --md-inverse-on-surface:       #101828;
+  --md-outline:                  #5A6A80;
+  --md-outline-variant:          #2A3C58;
+  --md-outline-variant02:        #3A4C64;
   --md-error:                    #F0A8A0;
   --md-on-error:                 #5C1812;
   --md-error-container:          #8C241C;
@@ -314,10 +317,10 @@
   --status-info-on-inverse:    #3A6F8C;
   --status-error-on-inverse:   #C42B22;
 
-  --tint-primary-weak:   rgba(240, 138, 60, 0.08);
-  --tint-primary-soft:   rgba(240, 138, 60, 0.12);
-  --tint-primary-hover:  rgba(240, 138, 60, 0.16);
-  --tint-primary-active: rgba(240, 138, 60, 0.22);
+  --tint-primary-weak:   rgba(126, 200, 232, 0.08);
+  --tint-primary-soft:   rgba(126, 200, 232, 0.12);
+  --tint-primary-hover:  rgba(126, 200, 232, 0.16);
+  --tint-primary-active: rgba(126, 200, 232, 0.22);
   --tint-success-soft:   rgba(110, 214, 160, 0.12);
   --tint-success-border: rgba(110, 214, 160, 0.22);
   --tint-warning-soft:   rgba(240, 195, 109, 0.15);
@@ -326,7 +329,7 @@
   --tint-error-strong:   rgba(240, 168, 160, 0.18);
 
   --chart-1: #8EC4E0;
-  --chart-2: #F08A3C;
+  --chart-2: #7EC8E8;
   --chart-3: #6ED6A0;
   --chart-4: #F0C36D;
   --chart-5: #C4B8A8;
@@ -340,17 +343,17 @@
   --nv-scrollbar-thumb:          #3A4A5C;
   --nv-scrollbar-thumb-hover:    #5A6A78;
 
-  --nv-surface-hover:            rgba(240, 138, 60, 0.12);
-  --nv-sidebar-bg:               #0C1218;
-  --nv-sidebar-bg-alt:           #0C1218;
-  --nv-sidebar-border:           rgba(247, 241, 232, 0.08);
-  --nv-sidebar-accent:           var(--nv-amber);
-  --nv-sidebar-on:               rgba(240, 232, 220, 0.74);
-  --nv-sidebar-on-strong:        #F0E8DC;
-  --nv-sidebar-on-muted:         rgba(240, 232, 220, 0.42);
-  --nv-sidebar-item-hover:       rgba(247, 241, 232, 0.08);
-  --nv-sidebar-item-active-bg:   rgba(240, 138, 60, 0.22);
-  --nv-chrome-bg-hover:          rgba(240, 138, 60, 0.12);
+  --nv-surface-hover:            rgba(126, 200, 232, 0.12);
+  --nv-sidebar-bg:               #0A1F42;
+  --nv-sidebar-bg-alt:           #0A1F42;
+  --nv-sidebar-border:           rgba(255, 255, 255, 0.08);
+  --nv-sidebar-accent:           #4FC3F7;
+  --nv-sidebar-on:               rgba(232, 236, 244, 0.78);
+  --nv-sidebar-on-strong:        #E8ECF4;
+  --nv-sidebar-on-muted:         rgba(232, 236, 244, 0.42);
+  --nv-sidebar-item-hover:       rgba(255, 255, 255, 0.08);
+  --nv-sidebar-item-active-bg:   rgba(126, 200, 232, 0.22);
+  --nv-chrome-bg-hover:          rgba(126, 200, 232, 0.12);
 
   --md-scrim: rgba(6, 10, 14, 0.72);
 }

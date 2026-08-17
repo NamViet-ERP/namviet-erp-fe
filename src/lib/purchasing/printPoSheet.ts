@@ -1,6 +1,6 @@
 /**
  * In phiếu PO qua iframe ẩn — tránh header/footer trình duyệt
- * (title "Nam Việt Group" + URL trang chi tiết).
+ * (title "Mayzer" + URL trang chi tiết).
  * Ngày giờ vẫn có thể hiện nếu user bật "Headers and footers" trong hộp thoại In.
  */
 export function printPoSheet(root: HTMLElement, documentTitle = 'Purchase Order'): boolean {

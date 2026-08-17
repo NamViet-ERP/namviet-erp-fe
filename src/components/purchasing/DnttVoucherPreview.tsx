@@ -12,7 +12,7 @@ import { formatCurrency } from '../../utils/formatCurrency';
 import { amountToVietnameseWords } from '../../utils/amountToVietnameseWords';
 import { formatDateCell } from '../../lib/hrm/formatters';
 
-const COMPANY_NAME = 'CÔNG TY CP GIẢI PHÁP KỸ THUẬT NAM VIỆT';
+const COMPANY_NAME = 'CÔNG TY TNHH MAYZER';
 const DEPT_NAME = 'Phòng Cung ứng';
 
 export interface DnttPreviewLine {
