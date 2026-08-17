@@ -118,7 +118,7 @@ export default function AppLayout() {
   ].filter(Boolean).join(' ');
 
   return (
-    <div className={`app-shell ${shellModuleClass}`}>
+    <div className={`app-shell ${shellModuleClass}${hideSidebar ? ' app-shell--no-sidebar' : sidebarCollapsed ? ' app-shell--sidebar-collapsed' : ''}`}>
       <Header currentModule={currentModule} onModuleSwitch={() => {}} />
       {!hideSidebar && (
         <Sidebar

@@ -227,9 +227,9 @@
   --nv-sidebar-width:            236px;
   --nv-sidebar-collapsed:        52px;
   --nv-app-chrome-top:           72px;
-  --nv-sidebar-bg:       var(--nv-navy);
-  --nv-sidebar-bg-alt:   var(--nv-navy);
-  --nv-sidebar-border:   rgba(255, 255, 255, 0.10);
+  --nv-sidebar-bg:       color-mix(in srgb, #fff 9%, var(--nv-navy));
+  --nv-sidebar-bg-alt:   var(--nv-sidebar-bg);
+  --nv-sidebar-border:   rgba(255, 255, 255, 0.14);
   --nv-sidebar-accent:   #4FC3F7;
   --nv-sidebar-on:       rgba(255, 255, 255, 0.78);
   --nv-sidebar-on-strong:#FFFFFF;
@@ -344,9 +344,9 @@
   --nv-scrollbar-thumb-hover:    #5A6A78;
 
   --nv-surface-hover:            rgba(126, 200, 232, 0.12);
-  --nv-sidebar-bg:               #0A1F42;
-  --nv-sidebar-bg-alt:           #0A1F42;
-  --nv-sidebar-border:           rgba(255, 255, 255, 0.08);
+  --nv-sidebar-bg:               color-mix(in srgb, #fff 8%, var(--nv-header-bg));
+  --nv-sidebar-bg-alt:           var(--nv-sidebar-bg);
+  --nv-sidebar-border:           rgba(255, 255, 255, 0.12);
   --nv-sidebar-accent:           #4FC3F7;
   --nv-sidebar-on:               rgba(232, 236, 244, 0.78);
   --nv-sidebar-on-strong:        #E8ECF4;
