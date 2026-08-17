@@ -14,12 +14,20 @@ import { UI_COMING_SOON } from '../../lib/uiMessages';
 import { useWmsNotifications } from '../../hooks/useWmsNotifications';
 import { useActivityRealtime } from '../../hooks/useActivityRealtime';
 import { useDarkMode } from '../../hooks/useDarkMode';
+import { isOwnWmsBellToastSuppressed } from '../../lib/wms/ownWmsBellToast';
 import type { WmsNotificationItemApiDto } from '../../services/notificationsService';
 
 type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin' | 'technical' | 'purchasing' | 'suppliers' | 'operations';
 type NotifType = 'warning' | 'import' | 'export' | 'info' | 'transfer' | 'stocktake';
 
 const NOTIF_READ_KEY = 'nv-wms-notif-read';
+const BELL_TOAST_MS = 4000;
+
+type BellToast = {
+  title: string;
+  voucherCode: string;
+  extraCount: number;
+};
 
 function readStoredNotifIds(): Set<string> {
   try {
@@ -152,7 +160,9 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [readNotificationIds, setReadNotificationIds] = useState(readStoredNotifIds);
-  const [bellToast, setBellToast] = useState<{ title: string; message: string } | null>(null);
+  const [bellToast, setBellToast] = useState<BellToast | null>(null);
+  const [toastPaused, setToastPaused] = useState(false);
+  const toastRemainingMsRef = useRef(BELL_TOAST_MS);
   useDarkMode();
   useActivityRealtime('wms');
   const { data: pendingNotifications } = useWmsNotifications();
@@ -179,21 +189,37 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
     }
     const fresh = importItems.filter(item => !seenImportIdsRef.current!.has(item.id));
     ids.forEach(id => seenImportIdsRef.current!.add(id));
-    if (fresh.length === 0 || showNotificationsRef.current) return;
-    const first = fresh[0];
+    const toAnnounce = fresh.filter(item => !isOwnWmsBellToastSuppressed(item.voucherCode));
+    if (toAnnounce.length === 0 || showNotificationsRef.current) return;
+    const first = toAnnounce[0];
     setBellToast({
-      title: fresh.length === 1
+      title: toAnnounce.length === 1
         ? '1 phiếu nhập kho được tạo'
-        : `${fresh.length} phiếu nhập kho được tạo`,
-      message: first.voucherCode || first.message,
+        : `${toAnnounce.length} phiếu nhập kho được tạo`,
+      voucherCode: first.voucherCode || '',
+      extraCount: Math.max(0, toAnnounce.length - 1),
     });
   }, [pendingNotifications]);
 
   useEffect(() => {
-    if (!bellToast) return;
-    const timer = window.setTimeout(() => setBellToast(null), 4000);
-    return () => window.clearTimeout(timer);
+    if (!bellToast) {
+      setToastPaused(false);
+      toastRemainingMsRef.current = BELL_TOAST_MS;
+      return;
+    }
+    toastRemainingMsRef.current = BELL_TOAST_MS;
+    setToastPaused(false);
   }, [bellToast]);
+
+  useEffect(() => {
+    if (!bellToast || toastPaused) return;
+    const startedAt = Date.now();
+    const timer = window.setTimeout(() => setBellToast(null), toastRemainingMsRef.current);
+    return () => {
+      window.clearTimeout(timer);
+      toastRemainingMsRef.current = Math.max(0, toastRemainingMsRef.current - (Date.now() - startedAt));
+    };
+  }, [bellToast, toastPaused]);
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -203,8 +229,16 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
         setBellToast(null);
       }
     };
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      setBellToast(null);
+    };
     document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('keydown', handleKey);
+    };
   }, []);
 
   const markAllRead = () => {
@@ -268,21 +302,59 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
               </IconBtn>
 
               {bellToast && !showNotifications && (
-                <button
-                  type="button"
-                  className="nv-notif-toast"
+                <div
+                  key={`${bellToast.title}:${bellToast.voucherCode}:${bellToast.extraCount}`}
+                  className={`nv-notif-toast${toastPaused ? ' nv-notif-toast--paused' : ''}`}
+                  role="status"
                   aria-live="polite"
-                  onClick={() => {
-                    setShowNotifications(true);
-                    setBellToast(null);
-                    setShowUserMenu(false);
+                  aria-atomic="true"
+                  onMouseEnter={() => setToastPaused(true)}
+                  onMouseLeave={() => setToastPaused(false)}
+                  onFocusCapture={() => setToastPaused(true)}
+                  onBlurCapture={(event) => {
+                    if (!event.currentTarget.contains(event.relatedTarget as Node)) {
+                      setToastPaused(false);
+                    }
                   }}
                 >
-                  <p className="nv-notif-toast__title">{bellToast.title}</p>
-                  {bellToast.message && (
-                    <p className="nv-notif-toast__msg">{bellToast.message}</p>
-                  )}
-                </button>
+                  <span className="nv-notif-toast__caret" aria-hidden />
+                  <button
+                    type="button"
+                    className="nv-notif-toast__hit"
+                    onClick={() => {
+                      setShowNotifications(true);
+                      setBellToast(null);
+                      setShowUserMenu(false);
+                    }}
+                  >
+                    <span className="notif-icon notif-icon--import" aria-hidden>
+                      <PackagePlus size={16} />
+                    </span>
+                    <span className="nv-notif-toast__copy">
+                      <span className="nv-notif-toast__kicker">Nhập kho</span>
+                      <span className="nv-notif-toast__title">{bellToast.title}</span>
+                      {(bellToast.voucherCode || bellToast.extraCount > 0) && (
+                        <span className="nv-notif-toast__meta">
+                          {bellToast.voucherCode && (
+                            <span className="nv-notif-toast__code">{bellToast.voucherCode}</span>
+                          )}
+                          {bellToast.extraCount > 0 && (
+                            <span className="nv-notif-toast__more">+{bellToast.extraCount}</span>
+                          )}
+                        </span>
+                      )}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    className="nv-notif-toast__close"
+                    aria-label="Đóng thông báo"
+                    onClick={() => setBellToast(null)}
+                  >
+                    <X size={16} aria-hidden />
+                  </button>
+                  <span className="nv-notif-toast__timer" aria-hidden />
+                </div>
               )}
 
               {showNotifications && (
@@ -391,7 +463,7 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
           <div className="nv-header-anchor nv-header-user-wrap" ref={userMenuRef}>
               <button
                 type="button"
-                onClick={() => { setShowUserMenu(p => !p); setShowNotifications(false); }}
+                onClick={() => { setShowUserMenu(p => !p); setShowNotifications(false); setBellToast(null); }}
                 className={`nv-header-user-trigger${showUserMenu ? ' nv-header-user-trigger--open' : ''}`}
                 aria-expanded={showUserMenu}
                 aria-haspopup="menu"

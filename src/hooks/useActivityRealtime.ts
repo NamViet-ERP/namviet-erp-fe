@@ -6,7 +6,19 @@ import {
   ensureHubStarted,
   type ActivityEventCreatedPayload,
 } from '../lib/activityHub';
+import { getSessionUser } from '../constants/systemUsers';
+import { suppressOwnWmsBellToast } from '../lib/wms/ownWmsBellToast';
 import { queryKeys } from '../services/queryKeys';
+
+const OWN_IMPORT_BELL_ACTIONS = new Set(['import.submitted', 'import.created']);
+
+function suppressBellToastIfOwnImport(payload: ActivityEventCreatedPayload) {
+  const me = getSessionUser();
+  const actorId = payload.actorUserId?.trim();
+  if (!me?.id || !actorId || actorId.toLowerCase() !== me.id.toLowerCase()) return;
+  if (!OWN_IMPORT_BELL_ACTIONS.has(payload.action)) return;
+  suppressOwnWmsBellToast(payload.entityCode);
+}
 
 /**
  * Subscribes to SignalR activity push for a module group.
@@ -23,7 +35,8 @@ export function useActivityRealtime(module: string, enabled = true): { connected
     const connection = createActivityHubConnection();
     let cancelled = false;
 
-    const onCreated = (_payload: ActivityEventCreatedPayload) => {
+    const onCreated = (payload: ActivityEventCreatedPayload) => {
+      suppressBellToastIfOwnImport(payload);
       void queryClient.invalidateQueries({ queryKey: queryKeys.purchasingDashboard.all });
       void queryClient.invalidateQueries({ queryKey: queryKeys.wmsNotifications.all });
     };

@@ -4,8 +4,10 @@ import type { CreateImportFromPoRequest } from '../types/api/poImportApi';
 import { queryKeys } from '../services/queryKeys';
 import type { Import } from '../types';
 import type { VoucherListParams } from '../lib/wms/voucherDateUtils';
+import { suppressOwnWmsBellToast } from '../lib/wms/ownWmsBellToast';
 
 function invalidateImportSideEffects(qc: ReturnType<typeof useQueryClient>, imp?: Import | null) {
+  if (imp?.status === 'pending') suppressOwnWmsBellToast(imp.voucherCode);
   qc.invalidateQueries({ queryKey: queryKeys.imports.all });
   qc.invalidateQueries({ queryKey: queryKeys.wmsNotifications.all });
   qc.invalidateQueries({ queryKey: queryKeys.stock.matrix });
@@ -118,7 +120,8 @@ export function useSubmitImport() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => importsService.submit(id),
-    onSuccess: (_data, id) => {
+    onSuccess: (data, id) => {
+      suppressOwnWmsBellToast(data?.voucherCode);
       qc.invalidateQueries({ queryKey: queryKeys.imports.all });
       qc.invalidateQueries({ queryKey: queryKeys.imports.detail(id) });
       qc.invalidateQueries({ queryKey: queryKeys.wmsNotifications.all });
