@@ -21,6 +21,9 @@ export interface ImportCreateEvidenceSectionProps {
   evidenceErrors?: ImportEvidenceFieldErrors;
   evaluationDraft: string;
   onEvaluationChange: (value: string) => void;
+  onEvaluationBlur?: () => void;
+  /** Ghi đè dòng hướng dẫn dưới ô đánh giá. */
+  hint?: string;
   evidencePhotos: File[];
   evidenceDocs: File[];
   onEvidencePhotosChange: (updater: (prev: File[]) => File[]) => void;
@@ -41,6 +44,8 @@ export default function ImportCreateEvidenceSection({
   evidenceErrors,
   evaluationDraft,
   onEvaluationChange,
+  onEvaluationBlur,
+  hint,
   evidencePhotos,
   evidenceDocs,
   onEvidencePhotosChange,
@@ -67,12 +72,13 @@ export default function ImportCreateEvidenceSection({
             rows={3}
             value={evaluationDraft}
             onChange={e => onEvaluationChange(e.target.value)}
+            onBlur={onEvaluationBlur}
             placeholder="Mô tả tình trạng hàng khi nhận…"
             aria-invalid={Boolean(evaluationError)}
           />
         </FormField>
-        <p className="text-[11px] text-[var(--md-on-surface-variant)] -mt-1 text-pretty">
-          Có thể đính kèm ngay khi tạo. Duyệt thực tế bắt buộc có đánh giá + ảnh + file chứng từ.
+        <p className="text-xs text-[var(--md-on-surface-variant)] -mt-1 text-pretty">
+          {hint ?? 'Có thể đính kèm ngay khi tạo. Duyệt thực tế bắt buộc có đánh giá + ảnh + file chứng từ.'}
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <FormField label="Ảnh nhận hàng" required={markRequired} error={photoError}>
@@ -144,13 +150,14 @@ export default function ImportCreateEvidenceSection({
           rows={3}
           value={evaluationDraft}
           onChange={e => onEvaluationChange(e.target.value)}
+          onBlur={onEvaluationBlur}
           placeholder="Mô tả tình trạng hàng khi nhận…"
           disabled={isEvidencePending}
           aria-invalid={Boolean(evaluationError)}
         />
       </FormField>
-      <p className="text-[11px] text-[var(--md-on-surface-variant)] text-pretty">
-        Thêm / xóa ảnh và file chứng từ tại đây. Màn chi tiết chỉ xem.
+      <p className="text-xs text-[var(--md-on-surface-variant)] text-pretty">
+        {hint ?? 'Thêm / xóa ảnh và file chứng từ. Cần đủ đánh giá, ảnh và file trước khi duyệt thực tế.'}
       </p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <FormField label="Ảnh nhận hàng" required={markRequired} error={photoError}>

@@ -60,11 +60,20 @@ function mapNotifIcon(kind: string): LucideIcon {
 
 function mapApiNotification(item: WmsNotificationItemApiDto, readIds: Set<string>): Notification {
   const type = mapNotifType(item.kind);
+  const contextLabel = item.contextLabel?.trim() ?? '';
+  const createdByName = item.createdByName?.trim() ?? '';
+  const fallbackActor = (item.message ?? '')
+    .replace(item.voucherCode, '')
+    .replace(/[—–]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
   return {
     id: item.id,
     type,
     title: item.title,
-    message: item.message,
+    voucherCode: item.voucherCode,
+    contextLabel,
+    createdByName: createdByName || (!contextLabel ? fallbackActor : ''),
     time: item.timeLabel,
     read: readIds.has(item.id),
     icon: mapNotifIcon(item.kind),
@@ -84,7 +93,9 @@ interface Notification {
   id: string;
   type: NotifType;
   title: string;
-  message: string;
+  voucherCode: string;
+  contextLabel: string;
+  createdByName: string;
   time: string;
   read: boolean;
   icon: LucideIcon;
@@ -162,7 +173,6 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
   const [readNotificationIds, setReadNotificationIds] = useState(readStoredNotifIds);
   const [bellToast, setBellToast] = useState<BellToast | null>(null);
   const [toastPaused, setToastPaused] = useState(false);
-  const toastRemainingMsRef = useRef(BELL_TOAST_MS);
   useDarkMode();
   useActivityRealtime('wms');
   const { data: pendingNotifications } = useWmsNotifications();
@@ -204,22 +214,13 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
   useEffect(() => {
     if (!bellToast) {
       setToastPaused(false);
-      toastRemainingMsRef.current = BELL_TOAST_MS;
       return;
     }
-    toastRemainingMsRef.current = BELL_TOAST_MS;
     setToastPaused(false);
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const timer = window.setTimeout(() => setBellToast(null), BELL_TOAST_MS);
+    return () => window.clearTimeout(timer);
   }, [bellToast]);
-
-  useEffect(() => {
-    if (!bellToast || toastPaused) return;
-    const startedAt = Date.now();
-    const timer = window.setTimeout(() => setBellToast(null), toastRemainingMsRef.current);
-    return () => {
-      window.clearTimeout(timer);
-      toastRemainingMsRef.current = Math.max(0, toastRemainingMsRef.current - (Date.now() - startedAt));
-    };
-  }, [bellToast, toastPaused]);
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -336,7 +337,7 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
                       {(bellToast.voucherCode || bellToast.extraCount > 0) && (
                         <span className="nv-notif-toast__meta">
                           {bellToast.voucherCode && (
-                            <span className="nv-notif-toast__code">{bellToast.voucherCode}</span>
+                            <span className="nv-notif-code">{bellToast.voucherCode}</span>
                           )}
                           {bellToast.extraCount > 0 && (
                             <span className="nv-notif-toast__more">+{bellToast.extraCount}</span>
@@ -353,111 +354,116 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
                   >
                     <X size={16} aria-hidden />
                   </button>
-                  <span className="nv-notif-toast__timer" aria-hidden />
+                  <span
+                    className="nv-notif-toast__timer"
+                    aria-hidden
+                    onAnimationEnd={event => {
+                      if (!event.animationName.includes('nv-notif-toast-timer')) return;
+                      setBellToast(null);
+                    }}
+                  />
                 </div>
               )}
 
               {showNotifications && (
-                <div className="nv-notif-panel animate-scale-in">
-              {/* Header */}
-              <div className="flex items-center justify-between px-4 pt-4 pb-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-base font-bold text-[var(--md-on-surface)] text-balance">
-                    Thông báo
-                  </span>
-                  {unreadCount > 0 && (
-                    <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[var(--md-error-container)] text-[var(--md-error)] tabular-nums">
-                      {unreadCount} mới
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-1">
-                  {unreadCount > 0 && (
-                    <button
-                      type="button"
-                      onClick={markAllRead}
-                      className="text-[13px] text-[var(--md-primary)] font-medium px-2 py-1 rounded-lg hover:bg-[var(--nv-surface-hover)] transition-colors duration-150"
-                    >
-                      Đọc tất cả
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setShowNotifications(false)}
-                    className="size-8 flex items-center justify-center rounded-full hover:bg-[var(--nv-surface-hover)] text-[var(--md-on-surface-variant)] transition-colors duration-150"
-                    aria-label="Đóng thông báo"
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
-              </div>
-
-              <div className="h-px bg-[var(--md-outline-variant)]" />
-
-              {/* List */}
-              <div className="max-h-[340px] overflow-y-auto">
-                {notifications.length === 0 ? (
-                  <div className="px-4 py-10 text-center">
-                    <Bell
-                      size={28}
-                      className="mx-auto mb-2 text-[var(--md-on-surface-variant)] opacity-45"
-                      aria-hidden
-                    />
-                    <p className="text-sm text-[var(--md-on-surface-variant)]">Chưa có thông báo</p>
-                  </div>
-                ) : (
-                  notifications.map(n => {
-                    const NIcon = n.icon;
-                    return (
+                <div
+                  className="nv-notif-panel animate-scale-in"
+                  role="region"
+                  aria-labelledby="nv-notif-panel-title"
+                >
+                  <span className="nv-notif-panel__caret" aria-hidden />
+                  <div className="nv-notif-panel__head">
+                    <div className="nv-notif-panel__heading">
+                      <span id="nv-notif-panel-title" className="nv-notif-panel__title">
+                        Thông báo
+                      </span>
+                      {unreadCount > 0 && (
+                        <span className="nv-notif-panel__badge">{unreadCount} mới</span>
+                      )}
+                    </div>
+                    <div className="nv-notif-panel__actions">
+                      {unreadCount > 0 && (
+                        <button
+                          type="button"
+                          onClick={markAllRead}
+                          className="nv-notif-panel__text-btn"
+                        >
+                          Đọc tất cả
+                        </button>
+                      )}
                       <button
-                        key={n.id}
                         type="button"
-                        onClick={() => markAsRead(n.id, n.route)}
-                        className={`w-full text-left px-4 py-3 flex items-start gap-3 border-b border-[var(--md-outline-variant)] last:border-b-0 transition-colors duration-150 hover:bg-[var(--nv-surface-hover)] ${
-                          !n.read ? 'bg-[color-mix(in_srgb,var(--md-primary)_4%,transparent)]' : ''
-                        }`}
+                        onClick={() => setShowNotifications(false)}
+                        className="nv-notif-panel__icon-btn"
+                        aria-label="Đóng thông báo"
                       >
-                        <div className={`notif-icon ${notifIconClass[n.type] || notifIconClass.info}`}>
-                          <NIcon size={16} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className={`text-sm text-[var(--md-on-surface)] truncate ${!n.read ? 'font-semibold' : 'font-normal'}`}>
-                              {n.title}
-                            </p>
-                            {!n.read && (
-                              <span className="size-2 rounded-full bg-[var(--md-secondary)] shrink-0" aria-hidden />
-                            )}
-                          </div>
-                          <p className="text-[13px] text-[var(--md-on-surface-variant)] mt-0.5 line-clamp-2 text-pretty">
-                            {n.message}
-                          </p>
-                          <p className="text-xs text-[var(--md-on-surface-variant)] mt-1 opacity-80">
-                            {n.time}
-                          </p>
-                        </div>
+                        <X size={16} aria-hidden />
                       </button>
-                    );
-                  })
-                )}
-              </div>
+                    </div>
+                  </div>
 
-              {notifications.length > 0 && (
-                <div className="p-3 border-t border-[var(--md-outline-variant)]">
-                  <button
-                    type="button"
-                    className="w-full text-center text-sm font-medium text-[var(--md-primary)] py-2 rounded-xl hover:bg-[var(--nv-surface-hover)] transition-colors duration-150"
-                    onClick={() => {
-                      setShowNotifications(false);
-                      navigate('/warehouse/reports?section=pending');
-                    }}
-                  >
-                    Xem báo cáo chờ duyệt
-                  </button>
+                  <div className="nv-notif-panel__list">
+                    {notifications.length === 0 ? (
+                      <div className="nv-notif-panel__empty">
+                        <Bell size={22} aria-hidden />
+                        <p>Chưa có thông báo</p>
+                      </div>
+                    ) : (
+                      notifications.map(n => {
+                        const NIcon = n.icon;
+                        const label = [n.title, n.voucherCode, n.contextLabel, n.createdByName, n.time]
+                          .filter(Boolean)
+                          .join('. ');
+                        return (
+                          <button
+                            key={n.id}
+                            type="button"
+                            aria-label={label}
+                            onClick={() => markAsRead(n.id, n.route)}
+                            className={`nv-notif-panel__item${n.read ? '' : ' nv-notif-panel__item--unread'}`}
+                          >
+                            <span className={`notif-icon ${notifIconClass[n.type] || notifIconClass.info}`} aria-hidden>
+                              <NIcon size={16} />
+                            </span>
+                            <span className="nv-notif-panel__item-body">
+                              <span className="nv-notif-panel__item-title">{n.title}</span>
+                              {(n.voucherCode || n.contextLabel || n.createdByName) && (
+                                <span className="nv-notif-panel__item-meta">
+                                  {n.voucherCode && (
+                                    <span className="nv-notif-code">{n.voucherCode}</span>
+                                  )}
+                                  {n.contextLabel && (
+                                    <span className="nv-notif-panel__place">{n.contextLabel}</span>
+                                  )}
+                                  {n.createdByName && (
+                                    <span className="nv-notif-panel__actor">{n.createdByName}</span>
+                                  )}
+                                </span>
+                              )}
+                              <span className="nv-notif-panel__item-time">{n.time}</span>
+                            </span>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {notifications.length > 0 && (
+                    <div className="nv-notif-panel__footer">
+                      <button
+                        type="button"
+                        className="nv-notif-panel__footer-btn"
+                        onClick={() => {
+                          setShowNotifications(false);
+                          navigate('/warehouse/reports?section=pending');
+                        }}
+                      >
+                        Xem báo cáo chờ duyệt
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
-          )}
           </div>
 
           <div className="nv-header-anchor nv-header-user-wrap" ref={userMenuRef}>

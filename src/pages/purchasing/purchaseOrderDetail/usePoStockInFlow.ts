@@ -168,6 +168,10 @@ export function usePoStockInFlow({ poCode, order }: Props) {
 
   const openEdit = (imp: Import) => {
     if (!canUpdate && !canCreate) return;
+    if (imp.status !== 'draft') {
+      openDetail(imp);
+      return;
+    }
     setShowDetail(false);
     setEditing(imp);
     setDefaultSupplier(imp.supplier);

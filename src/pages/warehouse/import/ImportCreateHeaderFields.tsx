@@ -154,7 +154,7 @@ export default function ImportCreateHeaderFields({
               Chọn PO trước — kho dự án và NCC lấy từ PO.
               Tick mặt hàng còn SL và nhập <strong className="text-[var(--md-on-surface)]">SL dự kiến nhập kho</strong>.
               Phiếu nháp không khóa PO; chốt dự kiến mới giữ SL trên PO.
-              Khi duyệt thực tế, thủ kho chỉnh SL thành số thực nhận (tối đa phần còn lại trên PO).
+              Thủ kho nhận hàng trên màn Nhập kho: xem chi tiết, cập nhật đánh giá / ảnh / file, rồi duyệt thực tế.
             </>
           )
         ) : (

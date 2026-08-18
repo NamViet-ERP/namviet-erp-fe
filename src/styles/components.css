@@ -1794,18 +1794,240 @@
   .nv-notif-panel {
     position: absolute;
     right: 0;
-    top: calc(100% + 8px);
+    top: calc(100% + 10px);
     width: min(380px, calc(100vw - 24px));
     background: var(--md-surface-container);
     border: 1px solid var(--md-outline-variant02);
     box-shadow: var(--md-shadow-3);
     z-index: var(--z-dropdown);
-    border-radius: 16px;
-    overflow: hidden;
+    border-radius: var(--radius-lg);
+    overflow: visible;
   }
   .dark .nv-notif-panel {
     background: var(--md-surface-container-high);
     border-color: var(--md-outline-variant);
+  }
+  .nv-notif-panel__caret {
+    position: absolute;
+    top: -5px;
+    right: 15px;
+    width: 10px;
+    height: 10px;
+    background: var(--md-surface-container);
+    border-left: 1px solid var(--md-outline-variant02);
+    border-top: 1px solid var(--md-outline-variant02);
+    transform: rotate(45deg);
+    pointer-events: none;
+  }
+  .dark .nv-notif-panel__caret {
+    background: var(--md-surface-container-high);
+    border-left-color: var(--md-outline-variant);
+    border-top-color: var(--md-outline-variant);
+  }
+  .nv-notif-panel__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 10px 10px 14px;
+    border-bottom: 1px solid var(--md-outline-variant);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+  .nv-notif-panel__heading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  .nv-notif-panel__title {
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+    color: var(--md-on-surface);
+    text-wrap: balance;
+  }
+  .nv-notif-panel__badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 6px;
+    border-radius: var(--radius-xs);
+    background: var(--md-error-container);
+    color: var(--md-error);
+    font-size: var(--fs-micro);
+    font-weight: var(--fw-semibold);
+    font-variant-numeric: tabular-nums;
+  }
+  .nv-notif-panel__actions {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .nv-notif-panel__text-btn {
+    min-height: 40px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--md-primary);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-medium);
+    cursor: pointer;
+    transition: background 150ms var(--md-easing);
+  }
+  .nv-notif-panel__text-btn:hover {
+    background: var(--nv-surface-hover);
+  }
+  .nv-notif-panel__text-btn:focus-visible,
+  .nv-notif-panel__icon-btn:focus-visible,
+  .nv-notif-panel__item:focus-visible,
+  .nv-notif-panel__footer-btn:focus-visible {
+    outline: 2px solid var(--md-primary);
+    outline-offset: -2px;
+  }
+  .nv-notif-panel__icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--md-on-surface-variant);
+    cursor: pointer;
+    transition: background 150ms var(--md-easing), color 150ms var(--md-easing);
+  }
+  .nv-notif-panel__icon-btn:hover {
+    background: var(--nv-surface-hover);
+    color: var(--md-on-surface);
+  }
+  .nv-notif-panel__list {
+    max-height: 340px;
+    overflow-y: auto;
+  }
+  .nv-notif-panel__list:last-child {
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  }
+  .nv-notif-panel__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 28px 16px;
+    color: var(--md-on-surface-variant);
+    font-size: var(--fs-sm);
+  }
+  .nv-notif-panel__item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+    margin: 0;
+    padding: 10px 14px 10px 11px;
+    border: 0;
+    border-bottom: 1px solid var(--md-outline-variant);
+    border-left: 3px solid transparent;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background 150ms var(--md-easing);
+  }
+  .nv-notif-panel__item:last-child {
+    border-bottom: 0;
+  }
+  .nv-notif-panel__item:hover {
+    background: var(--nv-surface-hover);
+  }
+  .nv-notif-panel__item--unread {
+    border-left-color: var(--nv-amber);
+    background: color-mix(in srgb, var(--nv-amber) 7%, transparent);
+  }
+  .nv-notif-panel__item--unread:hover {
+    background: color-mix(in srgb, var(--nv-amber) 12%, transparent);
+  }
+  .nv-notif-panel__item-body {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 0;
+    flex: 1;
+  }
+  .nv-notif-panel__item-title {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-semibold);
+    color: var(--md-on-surface);
+    line-height: var(--lh-tight);
+  }
+  .nv-notif-panel__item--unread .nv-notif-panel__item-title {
+    font-weight: var(--fw-bold);
+  }
+  .nv-notif-panel__item-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    min-width: 0;
+  }
+  .nv-notif-panel__place,
+  .nv-notif-panel__actor {
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
+    color: var(--md-on-surface-variant);
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+  }
+  .nv-notif-panel__item-time {
+    margin-top: 4px;
+    font-size: var(--fs-micro);
+    font-weight: var(--fw-regular);
+    color: var(--md-on-surface-variant);
+    font-variant-numeric: tabular-nums;
+  }
+  .nv-notif-panel__footer {
+    padding: 8px;
+    border-top: 1px solid var(--md-outline-variant);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  }
+  .nv-notif-panel__footer-btn {
+    width: 100%;
+    min-height: 40px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--md-primary);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-medium);
+    cursor: pointer;
+    transition: background 150ms var(--md-easing);
+  }
+  .nv-notif-panel__footer-btn:hover {
+    background: var(--nv-surface-hover);
+  }
+  .nv-notif-code {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    padding: 1px 6px;
+    border-radius: var(--radius-xs);
+    background: color-mix(in srgb, var(--nv-navy) 8%, transparent);
+    color: var(--nv-navy);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .dark .nv-notif-code {
+    background: color-mix(in srgb, var(--nv-amber) 18%, transparent);
+    color: var(--md-on-surface);
   }
   .nv-notif-toast {
     --nv-notif-toast-ms: 4000ms;
@@ -1892,22 +2114,6 @@
     margin-top: 6px;
     min-width: 0;
   }
-  .nv-notif-toast__code {
-    display: inline-flex;
-    align-items: center;
-    max-width: 100%;
-    padding: 1px 6px;
-    border-radius: var(--radius-xs);
-    background: color-mix(in srgb, var(--nv-navy) 8%, transparent);
-    color: var(--nv-navy);
-    font-family: var(--font-mono);
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-medium);
-    line-height: 1.4;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
   .nv-notif-toast__more {
     font-size: var(--fs-micro);
     font-weight: var(--fw-medium);
@@ -1959,10 +2165,6 @@
     background: var(--md-surface-container-high);
     border-left-color: var(--md-outline-variant);
     border-top-color: var(--md-outline-variant);
-  }
-  .dark .nv-notif-toast__code {
-    background: color-mix(in srgb, var(--nv-amber) 18%, transparent);
-    color: var(--md-on-surface);
   }
   @keyframes nv-notif-toast-in {
     from { opacity: 0; transform: translateY(-6px); }
@@ -7806,10 +8008,10 @@
     flex-wrap: wrap;
     justify-content: flex-end;
   }
-  /* Embedded-table variant: quiet header inside a dialog. Same type scale and
-     density as the list table — only the header fill differs. */
+  /* Embedded-table variant: quiet header inside a dialog. Same type scale,
+     density, grid and zebra as the list table — only the header fill differs. */
   .wms-voucher-detail-table-wrap {
-    overflow-x: auto;
+    overflow: auto;
     border: 1px solid var(--md-outline-variant);
     border-radius: var(--radius-md);
     background: var(--md-surface);
@@ -7818,26 +8020,39 @@
     width: 100%;
     border-collapse: collapse;
   }
+  .wms-voucher-detail-table--fixed {
+    table-layout: fixed;
+  }
   .wms-voucher-detail-table thead tr {
     background: var(--md-surface-container-high);
   }
   .wms-voucher-detail-table thead .table-header-cell {
-    color: var(--md-on-surface-variant);
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid var(--md-outline-variant);
-  }
-  .wms-voucher-detail-table tbody .table-cell {
-    border: none;
-    border-bottom: 1px solid var(--md-outline-variant02);
-  }
-  .wms-voucher-detail-table tbody tr:last-child .table-cell {
-    border-bottom: none;
+    color: var(--md-on-surface);
+    background: var(--md-surface-container-high);
+    border-color: var(--md-outline-variant);
+    border-bottom: 2px solid var(--nv-amber);
   }
   .wms-voucher-detail-table tfoot .table-cell {
     background: var(--md-surface-container-low);
-    border: none;
     border-top: 1px solid var(--md-outline-variant);
+  }
+  .wms-voucher-detail-col-stt {
+    width: 3.25rem;
+  }
+  .wms-voucher-detail-col-code {
+    width: 8rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .wms-voucher-detail-col-qty {
+    width: 5.5rem;
+  }
+  .wms-voucher-detail-col-unit {
+    width: 4.75rem;
+  }
+  .wms-voucher-detail-col-money {
+    width: 8rem;
   }
 
   /* ── Stock matrix — column widths + drawer ── */

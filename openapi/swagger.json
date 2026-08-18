@@ -27657,6 +27657,14 @@
           },
           "timeLabel": {
             "type": "string"
+          },
+          "contextLabel": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdByName": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false

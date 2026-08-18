@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { History } from 'lucide-react';
+import HrmSelect from '../../components/hr/HrmSelect';
 import {
   Bar,
   BarChart,
@@ -117,6 +118,7 @@ function ActivityFeedItem({
 export default function PurchasingDashboardPage() {
   const [dateRange, setDateRange] = useState<DateRangeValue | null>(null);
   const [staffId, setStaffId] = useState('');
+  const staffSelectId = useId();
 
   const queryParams = useMemo(() => {
     if (dateRange?.from && dateRange?.to) {
@@ -148,6 +150,10 @@ export default function PurchasingDashboardPage() {
       to: queryParams.to,
     },
     liveOpts,
+  );
+  const staffOptions = useMemo(
+    () => (actorsQ.data ?? []).map(a => ({ value: a.userId, label: a.name })),
+    [actorsQ.data],
   );
 
   const activityItems = useMemo(
@@ -282,20 +288,20 @@ export default function PurchasingDashboardPage() {
                 placeholder="Chọn khoảng ngày"
               />
             </div>
-            <label className="pur-dash__filter pur-dash__filter--full">
+            <label className="pur-dash__filter pur-dash__filter--full" htmlFor={staffSelectId}>
               <span>Theo nhân viên</span>
-              <select value={staffId} onChange={e => setStaffId(e.target.value)}>
-                <option value="">Tất cả</option>
-                {(actorsQ.data ?? []).map(a => (
-                  <option key={a.userId} value={a.userId}>
-                    {a.name}
-                  </option>
-                ))}
-              </select>
+              <HrmSelect
+                id={staffSelectId}
+                value={staffId}
+                onChange={setStaffId}
+                options={staffOptions}
+                placeholder="Tất cả"
+                aria-label="Theo nhân viên"
+              />
             </label>
             {actorsQ.isSuccess && (actorsQ.data?.length ?? 0) === 0 && (
               <p className="pur-dash-feed__hint" role="note">
-                Chưa có nhân viên gắn tài khoản đăng nhập — vào mục Nhân viên để liên kết.
+                Chưa có tài khoản đăng nhập hoạt động.
               </p>
             )}
           </div>

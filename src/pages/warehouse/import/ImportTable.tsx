@@ -107,7 +107,7 @@ export default function ImportTable({
                   <Dropdown
                     items={[
                       { label: 'Xem chi tiết', icon: Eye, onClick: () => onOpenDetail(imp) },
-                      ...(canEdit && (imp.status === 'draft' || imp.status === 'pending')
+                      ...(canEdit && imp.status === 'draft'
                         ? [{ label: 'Sửa phiếu', icon: Pencil, onClick: () => onEdit?.(imp) }]
                         : []),
                       ...(canSubmit && imp.status === 'draft'

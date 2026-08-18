@@ -577,6 +577,10 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
 
   const openEdit = (imp: Import) => {
+    if (imp.status !== 'draft') {
+      openDetail(imp);
+      return;
+    }
 
     setShowDetail(false);
 
@@ -658,15 +662,17 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
     const hasPhoto = (imp.attachments ?? []).some(a => a.kind === 'photo');
     const hasDocument = (imp.attachments ?? []).some(a => a.kind === 'document');
 
-    // Duyệt từ bảng (không mở modal): vẫn chặn sớm; lỗi trên modal dùng inline đỏ.
-    if (evaluationText === undefined && (!text || !hasPhoto || !hasDocument)) {
+    if (!text || !hasPhoto || !hasDocument) {
+      if (evaluationText === undefined) {
+        openDetail(imp);
+      }
       showToast(
         'error',
         !text
-          ? 'Thiếu đánh giá nhận hàng. Mở chi tiết phiếu để nhập đánh giá.'
+          ? 'Thiếu đánh giá nhận hàng. Nhập trên chi tiết phiếu trước khi duyệt.'
           : !hasPhoto
-            ? 'Thiếu ảnh nhận hàng. Mở Sửa phiếu để tải ảnh.'
-            : 'Thiếu file chứng từ. Mở Sửa phiếu để tải file.',
+            ? 'Thiếu ảnh nhận hàng. Tải ảnh trên chi tiết phiếu trước khi duyệt.'
+            : 'Thiếu file chứng từ. Tải file trên chi tiết phiếu trước khi duyệt.',
       );
       return;
     }
@@ -684,46 +690,6 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
       setIsEvidencePending(false);
     }
   };
-
-  /** Lưu thay đổi (nếu có) rồi duyệt thực tế từ form sửa. */
-  const handleApproveFromEdit = async (payload?: { evaluation: string }) => {
-    if (!editing || editing.status !== 'pending') return;
-
-    const dto = buildDto('pending');
-    if (!dto) return;
-
-    const evaluation = (payload?.evaluation ?? '').trim();
-    const hasPhoto = (editing.attachments ?? []).some(a => a.kind === 'photo');
-    const hasDocument = (editing.attachments ?? []).some(a => a.kind === 'document');
-    if (!evaluation || !hasPhoto || !hasDocument) {
-      showToast(
-        'error',
-        !evaluation
-          ? 'Thiếu đánh giá nhận hàng trước khi duyệt.'
-          : !hasPhoto
-            ? 'Thiếu ảnh nhận hàng. Tải ảnh trong phần chứng từ.'
-            : 'Thiếu file chứng từ. Tải file trong phần chứng từ.',
-      );
-      return;
-    }
-
-    try {
-      await updateMutation.mutateAsync({ id: editing.id, dto: { ...dto, status: editing.status } });
-      let toApprove = editing;
-      if (evaluation !== (editing.receiptEvaluation ?? '').trim()) {
-        toApprove = await importsService.updateReceiptEvaluation(editing.id, evaluation);
-      } else {
-        toApprove = await importsService.getById(editing.id);
-      }
-      await runApprove(toApprove, false);
-      setShowCreate(false);
-      resetForm();
-    } catch (err) {
-      showToast('error', getApiErrorMessage(err, 'Không thể duyệt phiếu'));
-    }
-  };
-
-
 
   const handleExportExcel = async () => {
 
@@ -817,6 +783,15 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
     }
   };
 
+  const handleSaveEvaluation = async (imp: Import, evaluation: string) => {
+    try {
+      await importsService.updateReceiptEvaluation(imp.id, evaluation);
+      await reloadImport(imp.id);
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không lưu được đánh giá nhận hàng.'));
+    }
+  };
+
 
 
   return (
@@ -893,7 +868,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
           onSubmit={handleSubmit}
 
-          canEdit={canEditImport}
+          canEdit={false}
 
           canSubmit={false}
 
@@ -1030,9 +1005,6 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
         materialUnit={materialUnit}
         editAttachments={editing?.attachments ?? []}
         isEvidencePending={isEvidencePending}
-        canApprove={canApproveImport}
-        onApprove={payload => { void handleApproveFromEdit(payload); }}
-        isApproving={approveMutation.isPending}
         onUploadEditAttachment={
           editing && canEditImport
             ? (file, kind) => handleUploadAttachment(editing, file, kind)
@@ -1086,13 +1058,21 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
         projectName={projectName}
 
-        onEdit={canEditImport ? openEdit : undefined}
-
-        onApprove={canApproveImport ? (imp) => { void handleApprove(imp); } : undefined}
+        onApprove={canApproveImport ? (imp, evaluation) => { void handleApprove(imp, evaluation); } : undefined}
 
         isApproving={approveMutation.isPending}
 
         onDownloadAttachment={handleDownloadAttachment}
+
+        canUpdateEvidence={canApproveImport}
+
+        isEvidencePending={isEvidencePending}
+
+        onUploadAttachment={handleUploadAttachment}
+
+        onDeleteAttachment={handleDeleteAttachment}
+
+        onSaveEvaluation={handleSaveEvaluation}
 
         showPrices={canViewPrices}
 

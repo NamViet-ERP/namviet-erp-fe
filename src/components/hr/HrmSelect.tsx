@@ -3,6 +3,7 @@ import {
   useEffect,
   useId,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -13,11 +14,13 @@ import { hrmFieldClass } from './hrmFieldClass';
 
 const ITEM_HEIGHT = 40;
 
+export type HrmSelectOption = string | { value: string; label: string };
+
 export interface HrmSelectProps {
   value: string;
   onChange: (value: string) => void;
   onBlur?: () => void;
-  options: readonly string[] | string[];
+  options: readonly HrmSelectOption[] | HrmSelectOption[];
   placeholder?: string;
   disabled?: boolean;
   error?: boolean;
@@ -25,6 +28,10 @@ export interface HrmSelectProps {
   id?: string;
   name?: string;
   'aria-label'?: string;
+}
+
+function toItem(option: HrmSelectOption): { value: string; label: string } {
+  return typeof option === 'string' ? { value: option, label: option } : option;
 }
 
 export default function HrmSelect({
@@ -48,7 +55,9 @@ export default function HrmSelect({
   const [layout, setLayout] = useState<FloatingMenuLayout | null>(null);
   const [activeIndex, setActiveIndex] = useState(-1);
 
-  const selectedLabel = value || placeholder;
+  const items = useMemo(() => options.map(toItem), [options]);
+  const selected = items.find(item => item.value === value);
+  const selectedLabel = selected?.label || placeholder;
   const isPlaceholder = !value;
 
   const close = useCallback(() => {
@@ -60,10 +69,10 @@ export default function HrmSelect({
 
   const openMenu = useCallback(() => {
     if (disabled) return;
-    const currentIndex = options.findIndex(o => o === value);
+    const currentIndex = items.findIndex(item => item.value === value);
     setActiveIndex(currentIndex);
     setOpen(true);
-  }, [disabled, options, value]);
+  }, [disabled, items, value]);
 
   useEffect(() => {
     if (!open) return;
@@ -82,21 +91,23 @@ export default function HrmSelect({
     const updateLayout = () => {
       if (!triggerRef.current || !menuRef.current) return;
       const triggerRect = triggerRef.current.getBoundingClientRect();
-      const menuHeight = Math.min(options.length * ITEM_HEIGHT + 8, 320);
+      const menuHeight = Math.min((items.length + 1) * ITEM_HEIGHT + 8, 320);
       setLayout(computeFloatingMenuLayout(triggerRect, menuHeight, triggerRect.width));
     };
 
     updateLayout();
+    const selectedEl = menuRef.current.querySelector<HTMLElement>('[aria-selected="true"]');
+    selectedEl?.scrollIntoView({ block: 'nearest' });
     window.addEventListener('resize', updateLayout);
     window.addEventListener('scroll', updateLayout, true);
     return () => {
       window.removeEventListener('resize', updateLayout);
       window.removeEventListener('scroll', updateLayout, true);
     };
-  }, [open, options.length]);
+  }, [open, items.length]);
 
-  const pick = (option: string) => {
-    onChange(option);
+  const pick = (next: string) => {
+    onChange(next);
     close();
   };
 
@@ -105,13 +116,13 @@ export default function HrmSelect({
     if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       if (!open) openMenu();
-      else setActiveIndex(i => (i < options.length - 1 ? i + 1 : 0));
+      else setActiveIndex(i => (i < items.length - 1 ? i + 1 : 0));
       return;
     }
     if (event.key === 'ArrowUp') {
       event.preventDefault();
       if (!open) openMenu();
-      else setActiveIndex(i => (i > 0 ? i - 1 : options.length - 1));
+      else setActiveIndex(i => (i > 0 ? i - 1 : items.length - 1));
       return;
     }
     if (event.key === 'Escape' && open) {
@@ -147,22 +158,22 @@ export default function HrmSelect({
       >
         {placeholder}
       </button>
-      {options.map((option, index) => (
+      {items.map((item, index) => (
         <button
-          key={option}
+          key={item.value}
           type="button"
           role="option"
-          aria-selected={value === option}
+          aria-selected={value === item.value}
           className={[
             'hrm-select__option',
-            value === option && 'hrm-select__option--selected',
+            value === item.value && 'hrm-select__option--selected',
             activeIndex === index && 'hrm-select__option--active',
           ].filter(Boolean).join(' ')}
           onMouseDown={e => e.preventDefault()}
-          onClick={() => pick(option)}
+          onClick={() => pick(item.value)}
           onMouseEnter={() => setActiveIndex(index)}
         >
-          {option}
+          {item.label}
         </button>
       ))}
     </div>

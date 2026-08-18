@@ -31,7 +31,7 @@ export function PoRelatedImportsSection({ poCode, order }: Props) {
 
   const actionItems = (imp: Import) => [
     { label: 'Xem chi tiết', icon: Eye, onClick: () => flow.openDetail(imp) },
-    ...(flow.canUpdate && (imp.status === 'draft' || imp.status === 'pending')
+    ...(flow.canUpdate && imp.status === 'draft'
       ? [{ label: 'Sửa phiếu', icon: Pencil, onClick: () => flow.openEdit(imp) }]
       : []),
     ...(flow.canSubmit && imp.status === 'draft'

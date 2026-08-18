@@ -16577,6 +16577,8 @@ export interface components {
             message: string;
             route: string;
             timeLabel: string;
+            contextLabel?: string | null;
+            createdByName?: string | null;
         };
         WmsPendingNotificationsDto: {
             /** Format: int32 */
