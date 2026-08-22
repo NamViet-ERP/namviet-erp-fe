@@ -13,7 +13,7 @@ export function statusLabel(status: string) {
   if (status === 'draft') return 'Nháp';
   if (status === 'pending') return 'Chờ duyệt';
   if (status === 'approved') return 'Đã duyệt';
-  if (status === 'rejected') return 'Từ chối';
+  if (status === 'rejected') return 'Đã hủy';
   return status;
 }
 
@@ -41,6 +41,8 @@ export function matchesTab(row: PurchaseDefectApiDto, tab: DefectTab): boolean {
       return row.status === 'approved' && row.processingPhase === 'processing';
     case 'processed':
       return row.status === 'approved' && row.processingPhase === 'processed';
+    case 'rejected':
+      return row.status === 'rejected';
     default:
       return true;
   }
@@ -49,11 +51,11 @@ export function matchesTab(row: PurchaseDefectApiDto, tab: DefectTab): boolean {
 export function causeSourceLabel(causeSource: string | null | undefined): string {
   if (causeSource === 'customer') return 'Khách hàng';
   if (causeSource === 'supplier') return 'NCC';
-  return '—';
+  return '-';
 }
 
 export function handlingMethodLabel(handlingMethod: string | null | undefined): string {
   if (handlingMethod === 'warranty_repair') return 'Bảo hành sửa chữa';
   if (handlingMethod === 'replace') return 'Đổi mới';
-  return '—';
+  return '-';
 }

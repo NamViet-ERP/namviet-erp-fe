@@ -47,7 +47,7 @@ export default function ApiStockMatrixView() {
     if (projectFilter === 'all') return true;
     if (projectFilter === 'general') return row.generalActualQty > 0 || row.generalReservedQty > 0;
     const col = row.projects.find(p => p.projectCode === projectFilter);
-    return (col?.actualQty ?? 0) !== 0 || (col?.plannedImportQty ?? 0) !== 0 || (col?.plannedExportQty ?? 0) !== 0;
+    return (col?.actualQty ?? 0) !== 0 || (col?.plannedImportQty ?? 0) !== 0 || (col?.plannedExportQty ?? 0) !== 0 || (col?.pendingDefectQty ?? 0) !== 0;
   });
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
@@ -88,7 +88,7 @@ export default function ApiStockMatrixView() {
                 <th className="table-header-cell text-left stock-col-name">Tên vật tư</th>
                 <th className="table-header-cell text-center w-14">ĐVT</th>
                 <th className="table-header-cell text-right w-20">{GENERAL_WAREHOUSE_LABEL}</th>
-                <th className="table-header-cell text-right w-20" title="Tồn thực tế − xuất/chuyển dự kiến (kèm kho trung tâm − giữ)">Khả dụng</th>
+                <th className="table-header-cell text-right w-20" title="Tồn thực tế − xuất/chuyển dự kiến − HL tồn kho chờ duyệt (kèm kho trung tâm − giữ)">Khả dụng</th>
                 <th className="table-header-cell text-right w-20">Nhập dự kiến</th>
                 <th className="table-header-cell text-right w-20">Xuất dự kiến</th>
                 <th className="table-header-cell text-right stock-col-project whitespace-nowrap">Tồn thực tế</th>
@@ -132,7 +132,7 @@ export default function ApiStockMatrixView() {
                     <tr
                       key={row.materialCode}
                       onClick={() => setSelectedRow(row)}
-                      className="wms-inventory-row--interactive stock-matrix-row table-row border-b border-[var(--md-outline-variant)] cursor-pointer"
+                      className="wms-inventory-row--interactive stock-matrix-row table-row cursor-pointer"
                     >
                       <td className="table-cell font-mono font-bold stock-col-code" onClick={e => e.stopPropagation()}>
                         <Link

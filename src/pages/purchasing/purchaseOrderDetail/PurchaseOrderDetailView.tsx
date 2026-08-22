@@ -4,6 +4,7 @@ import TableSkeletonRows from '../../../components/ui/TableSkeletonRows';
 import ConfirmDialog from '../../../components/ui/ConfirmDialog';
 import PoVoucherPreview from '../../../components/purchasing/PoVoucherPreview';
 import PoAttachmentsPanel from '../../../components/purchasing/PoAttachmentsPanel';
+import PoCommentsPanel from '../../../components/purchasing/PoCommentsPanel';
 import { getApiErrorMessage } from '../../../lib/apiClient';
 import { PoDetailHeaderActions } from './PoDetailHeaderActions';
 import { PoDetailLinesTable } from './PoDetailLinesTable';
@@ -21,7 +22,7 @@ export function PurchaseOrderDetailView({ code }: { code: string }) {
       <div className="no-print">
         <HrmDetailHeader
           onBack={d.requestBack}
-          title={`PO ${code}`}
+          title={/^po([\s_-]|$)/i.test(code.trim()) ? code.trim() : `PO ${code.trim()}`}
           subtitle={d.order?.supplierName || d.order?.planCode || undefined}
           actions={(
             <PoDetailHeaderActions
@@ -99,6 +100,11 @@ export function PurchaseOrderDetailView({ code }: { code: string }) {
               poCode={code}
               canUpload={d.canUpdate}
               onDirtyChange={d.setAttachDirty}
+            />
+
+            <PoCommentsPanel
+              poCode={code}
+              canComment
             />
           </>
         )}

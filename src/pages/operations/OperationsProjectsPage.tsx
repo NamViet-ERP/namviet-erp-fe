@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Plus, Pencil, FolderKanban, CheckCircle2, Archive, X } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import HrmPanel from '../../components/hr/HrmPanel';
@@ -10,18 +11,31 @@ import PermissionGate from '../../components/auth/PermissionGate';
 import Badge from '../../components/ui/Badge';
 import Pagination from '../../components/ui/Pagination';
 import SearchBar from '../../components/ui/SearchBar';
+import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
+import ProjectPurchasingGantt from '../../components/operations/ProjectPurchasingGantt';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage, getApiFieldErrors } from '../../lib/apiClient';
-import { formatDateCell } from '../../lib/hrm/formatters';
+import { formatDateCell, formatDateVi } from '../../lib/hrm/formatters';
 import { projectStatusBadge } from '../../lib/wms/projectStatusBadge';
+import { dueAwareStatus, purchasingProgressMeta } from '../../lib/wms/purchasingProgressStatus';
 import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
-import { useProjects, useCreateProject, useUpdateProject } from '../../hooks/useProjects';
+import {
+  useProjects,
+  useCreateProject,
+  useUpdateProject,
+  useProjectPurchasingProgress,
+} from '../../hooks/useProjects';
 import type { WarehouseProjectApiDto } from '../../types/wms';
 
-const EMPTY_PM_ID = '00000000-0000-0000-0000-000000000000';
-
 function todayIso() {
-  return new Date().toISOString().slice(0, 10);
+  const d = new Date();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${mm}-${dd}`;
+}
+
+function formatTaskDate(iso?: string | null) {
+  return formatDateVi(iso ?? undefined) ?? '-';
 }
 
 function suggestProjectCode() {
@@ -59,7 +73,9 @@ const emptyForm = (): FormState => ({
   materialBudget: '1',
 });
 
-/** CRUD dự án vận hành — cùng chrome/table pattern với Kho dự án. */
+const EMPTY_PM_ID = '00000000-0000-0000-0000-000000000000';
+
+/** CRUD dự án vận hành - Gantt tiến độ mua hàng theo dự án. */
 export default function OperationsProjectsPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -69,6 +85,7 @@ export default function OperationsProjectsPage() {
   const [editing, setEditing] = useState<WarehouseProjectApiDto | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [progressProjectFilter, setProgressProjectFilter] = useState('');
 
   const { data, isLoading } = useProjects({
     page,
@@ -79,6 +96,8 @@ export default function OperationsProjectsPage() {
   const { data: statsAll } = useProjects({ page: 1, pageSize: 1 });
   const { data: statsActive } = useProjects({ page: 1, pageSize: 1, status: 'Active' });
   const { data: statsClosed } = useProjects({ page: 1, pageSize: 1, status: 'Closed' });
+  const { data: projectOptions } = useProjects({ page: 1, pageSize: 200 });
+  const progressQ = useProjectPurchasingProgress(progressProjectFilter || undefined);
 
   const createMutation = useCreateProject();
   const updateMutation = useUpdateProject();
@@ -179,23 +198,34 @@ export default function OperationsProjectsPage() {
   };
 
   const pending = createMutation.isPending || updateMutation.isPending;
+  const projectSelectItems = projectOptions?.items ?? items;
+  const progressGroups = progressQ.data ?? [];
+  const progressOrders = progressGroups.flatMap(g =>
+    g.orders.map(order => ({ ...order, projectCode: g.projectCode, projectName: g.projectName })),
+  );
+  const hasGanttRows = progressGroups.some(g =>
+    g.orders.length > 0 || (g.plans?.length ?? 0) > 0,
+  );
 
   return (
     <div className="hrm-page">
       <PageHeader
         title="Dự án"
-        subtitle="Danh sách và phân công dự án EPC - tạo dự án sẽ tự sinh kho dự án bên Kho hàng."
+        subtitle="Luồng: KHMH/MHPS - PO - NK. Thanh là hạn giao. Chấm xanh là nhập thực tế."
         actions={(
-          <PermissionGate permission="wms.projects.create">
-            <button
-              type="button"
-              className="btn btn-primary flex items-center gap-2"
-              onClick={openCreate}
-            >
-              <Plus size={16} aria-hidden />
-              Dự án mới
-            </button>
-          </PermissionGate>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="page-header__updated">Hôm nay: {formatTaskDate(todayIso())}</p>
+            <PermissionGate permission="wms.projects.create">
+              <button
+                type="button"
+                className="btn btn-primary flex items-center gap-2"
+                onClick={openCreate}
+              >
+                <Plus size={16} aria-hidden />
+                Dự án mới
+              </button>
+            </PermissionGate>
+          </div>
         )}
       />
 
@@ -219,6 +249,121 @@ export default function OperationsProjectsPage() {
           icon={Archive}
         />
       </div>
+
+      <HrmPanel title="Gantt tiến độ mua hàng">
+        <div className="hrm-list-toolbar">
+          <div className="hrm-list-toolbar__filters">
+            <div className="hrm-filter-select-wrap">
+              <select
+                className="hrm-filter-select"
+                value={progressProjectFilter}
+                onChange={e => setProgressProjectFilter(e.target.value)}
+                aria-label="Lọc dự án trên Gantt"
+              >
+                <option value="">Tất cả dự án</option>
+                {projectSelectItems.map(p => (
+                  <option key={p.projectCode} value={p.projectCode}>
+                    {p.projectCode} - {p.projectName}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+        {progressQ.isLoading ? (
+          <div className="ops-gantt-skeleton" aria-busy="true">
+            <div className="hrm-table-skeleton" />
+          </div>
+        ) : progressQ.isError ? (
+          <p className="ops-gantt-note">Không tải được tiến độ. Tải lại trang để thử lại.</p>
+        ) : !hasGanttRows ? (
+          <EmptyState
+            message={
+              projectSelectItems.length === 0
+                ? 'Chưa có dự án. Tạo dự án, rồi lập KHMH hoặc PO bên Mua hàng.'
+                : 'Dự án chưa có KHMH/MHPS hoặc đơn đặt hàng. Lập phiếu bên Mua hàng để theo dõi Gantt.'
+            }
+            icon={FolderKanban}
+          />
+        ) : (
+          <>
+            <ProjectPurchasingGantt groups={progressGroups} />
+          </>
+        )}
+      </HrmPanel>
+
+      <HrmPanel title="Bảng tiến độ theo đơn đặt hàng">
+        <div className="overflow-x-auto table-scroll wms-inventory-table-wrap">
+          <table className="wms-inventory-table ops-progress-table">
+            <thead>
+              <tr>
+                <th className="table-header-cell">Mã PO</th>
+                <th className="table-header-cell">Dự án</th>
+                <th className="table-header-cell">NCC</th>
+                <th className="table-header-cell whitespace-nowrap">Ngày đặt</th>
+                <th className="table-header-cell whitespace-nowrap">DK giao</th>
+                <th className="table-header-cell whitespace-nowrap">Nhập kho</th>
+                <th className="table-header-cell text-right">Đã nhận / Tổng</th>
+                <th className="table-header-cell text-right ops-progress-col-pct">%</th>
+                <th className="table-header-cell text-center">Trạng thái</th>
+                <th className="table-header-cell text-center">Tác vụ</th>
+              </tr>
+            </thead>
+            <tbody>
+              {progressQ.isLoading ? (
+                <TableSkeletonRows colSpan={10} />
+              ) : progressOrders.length === 0 ? (
+                <tr>
+                  <td colSpan={10}>
+                    <EmptyState message="Chưa có đơn đặt hàng để theo dõi." icon={FolderKanban} />
+                  </td>
+                </tr>
+              ) : (
+                progressOrders.map(row => {
+                  const st = purchasingProgressMeta(dueAwareStatus(row.status, row.plannedEnd));
+                  return (
+                    <tr key={row.poCode} className="table-row">
+                      <td className="table-cell font-mono">{row.poCode}</td>
+                      <td className="table-cell font-mono">{row.projectCode}</td>
+                      <td className="table-cell">{row.supplierName?.trim() || '-'}</td>
+                      <td className="table-cell whitespace-nowrap tabular-nums">{formatTaskDate(row.plannedStart)}</td>
+                      <td className="table-cell whitespace-nowrap tabular-nums">{formatTaskDate(row.plannedEnd)}</td>
+                      <td className="table-cell whitespace-nowrap tabular-nums">{formatTaskDate(row.actualEnd)}</td>
+                      <td className="table-cell text-right font-mono tabular-nums">
+                        {row.received}/{row.ordered}
+                      </td>
+                      <td className="table-cell ops-progress-col-pct">
+                        <span className="ops-meter-cell">
+                          <span className="ops-meter" aria-hidden>
+                            <span
+                              className={`ops-meter__fill ops-tone--${st.tone}`}
+                              style={{ width: `${Math.min(100, Math.max(0, row.percentComplete))}%` }}
+                            />
+                          </span>
+                          <span className="font-mono tabular-nums">{row.percentComplete}%</span>
+                        </span>
+                      </td>
+                      <td className="table-cell text-center">
+                        <span className={`badge ${st.badgeClass}`}>{st.label}</span>
+                      </td>
+                      <td className="table-cell text-center">
+                        <PermissionGate permission="purchasing.orders.view">
+                          <Link
+                            className="btn btn-ghost btn-sm"
+                            to={`/purchasing/orders/${encodeURIComponent(row.poCode)}`}
+                          >
+                            Xem đơn
+                          </Link>
+                        </PermissionGate>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </HrmPanel>
 
       <HrmPanel noPadding>
         <div className="hrm-list-toolbar">

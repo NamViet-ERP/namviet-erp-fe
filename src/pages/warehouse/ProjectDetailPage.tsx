@@ -184,6 +184,7 @@ export default function ProjectDetailPage() {
       r => r.actualInventoryQty !== 0
         || r.plannedImportQty !== 0
         || r.plannedExportQty !== 0
+        || r.pendingDefectQty !== 0
         || r.minStockQty > 0,
     ),
     [inventory],

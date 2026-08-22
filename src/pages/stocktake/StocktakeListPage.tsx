@@ -350,8 +350,8 @@ export default function StocktakeListPage() {
           <SearchBar value={search} onChange={setSearch} placeholder="Tìm mã phiếu, kho dự án..." />
         </div>
 
-        <div className="overflow-x-auto table-scroll">
-          <table className="w-full">
+        <div className="overflow-x-auto table-scroll wms-inventory-table-wrap">
+          <table className="wms-inventory-table">
             <thead>
               <tr>
                 <th className="table-header-cell">Ngày chứng từ</th>
@@ -609,7 +609,7 @@ export default function StocktakeListPage() {
               )}
             </div>
             {selectedItem.items?.length > 0 ? (
-              <table className="w-full">
+              <table className="wms-inventory-table wms-voucher-detail-table">
                 <thead>
                   <tr>
                     <th className="table-header-cell">Tên hàng</th>

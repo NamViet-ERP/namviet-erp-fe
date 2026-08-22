@@ -30,6 +30,7 @@ import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
 import type { CreateExportDto } from '../../services/exportsService';
 import { emptyQtyLine, type MaterialQtyLine } from './voucher/voucherFormTypes';
 import { availableExportQty, inventoryRow } from './export/exportUtils';
+import { projectInventoryAvailable } from '../../lib/wms/stockQtyFormat';
 import ExportTable from './export/ExportTable';
 import ExportCreateModal from './export/ExportCreateModal';
 import ExportDetailModal from './export/ExportDetailModal';
@@ -90,7 +91,7 @@ function ExportListPageApi({ initialProjectCode, openVoucherCode }: ExportListPa
     if (!projectCode) return materials;
     const codes = new Set(
       projectInventory
-        .filter(r => r.actualInventoryQty - r.plannedExportQty > 0)
+        .filter(r => projectInventoryAvailable(r) > 0)
         .map(r => r.materialCode),
     );
     return materials.filter(m => codes.has(m.materialCode));

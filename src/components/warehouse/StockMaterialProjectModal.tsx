@@ -17,7 +17,7 @@ function StockMaterialProjectContent({ row, onClose }: { row: StockMatrixRowApiD
 
   const activeProjects = useMemo(() => {
     return row.projects
-      .filter(p => p.actualQty !== 0 || p.plannedImportQty !== 0 || p.plannedExportQty !== 0)
+      .filter(p => p.actualQty !== 0 || p.plannedImportQty !== 0 || p.plannedExportQty !== 0 || p.pendingDefectQty !== 0)
       .filter(p => {
         if (!q.trim()) return true;
         const needle = q.toLowerCase();
@@ -87,21 +87,21 @@ function StockMaterialProjectContent({ row, onClose }: { row: StockMatrixRowApiD
           Không có dự án nào đang giữ hoặc sử dụng vật tư này.
         </p>
       ) : (
-        <div className="stock-modal-table-wrap">
-          <table className="w-full text-xs stock-modal-table">
+        <div className="stock-modal-table-wrap wms-inventory-table-wrap">
+          <table className="wms-inventory-table stock-modal-table">
             <thead>
-              <tr className="border-b border-[var(--md-outline-variant)]">
-                <th className="table-header-cell text-left py-2.5 pl-3">Dự án / công trình</th>
-                <th className="table-header-cell text-right py-2.5 w-20">Tồn TT</th>
-                <th className="table-header-cell text-right py-2.5 w-20">Nhập DK</th>
-                <th className="table-header-cell text-right py-2.5 w-20">Xuất DK</th>
-                <th className="table-header-cell text-right py-2.5 w-20 pr-3" title="Tồn thực tế + nhập dự kiến">Tồn DK</th>
+              <tr>
+                <th className="table-header-cell text-left">Dự án / công trình</th>
+                <th className="table-header-cell text-right">Tồn TT</th>
+                <th className="table-header-cell text-right">Nhập DK</th>
+                <th className="table-header-cell text-right">Xuất DK</th>
+                <th className="table-header-cell text-right" title="Tồn thực tế + nhập dự kiến">Tồn DK</th>
               </tr>
             </thead>
             <tbody>
               {activeProjects.map(p => (
-                <tr key={p.projectCode} className="border-b border-[var(--md-outline-variant)] hover:bg-[var(--tint-primary-weak)]">
-                  <td className="table-cell py-2.5 pl-3">
+                <tr key={p.projectCode} className="table-row">
+                  <td className="table-cell">
                     <Link
                       to={`/warehouse/projects/${p.projectCode}`}
                       className="font-semibold text-[var(--md-primary)] hover:underline text-pretty line-clamp-2"
@@ -109,7 +109,7 @@ function StockMaterialProjectContent({ row, onClose }: { row: StockMatrixRowApiD
                     >
                       {p.projectName}
                     </Link>
-                    <div className="text-[10px] text-[var(--md-on-surface-variant)] font-mono">{p.projectCode}</div>
+                    <div className="font-mono text-[length:var(--fs-micro)] text-[var(--md-on-surface-variant)]">{p.projectCode}</div>
                   </td>
                   <td className="table-cell text-right font-bold tabular-nums">{p.actualQty}</td>
                   <td className="table-cell text-right tabular-nums stock-qty--pending">

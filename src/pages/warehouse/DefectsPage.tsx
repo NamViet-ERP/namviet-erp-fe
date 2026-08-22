@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Check, Eye, Plus, Trash2 } from 'lucide-react';
+import { Check, Eye, Plus, Trash2, XCircle } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import PermissionGate from '../../components/auth/PermissionGate';
 import SearchBar from '../../components/ui/SearchBar';
@@ -12,6 +12,7 @@ import { getApiErrorMessage } from '../../lib/apiClient';
 import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
 import {
   useApproveDefect,
+  useCancelDefect,
   useDefects,
   useDeleteDefect,
 } from '../../hooks/useDefects';
@@ -35,6 +36,7 @@ export default function DefectsPage() {
   const [showDetail, setShowDetail] = useState(false);
   const [selected, setSelected] = useState<PurchaseDefectApiDto | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<PurchaseDefectApiDto | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<PurchaseDefectApiDto | null>(null);
 
   const { has } = usePermission();
   const canCreate = has('wms.defects.create');
@@ -43,6 +45,7 @@ export default function DefectsPage() {
   const listQuery = useDefects();
   const approveMutation = useApproveDefect();
   const deleteMutation = useDeleteDefect();
+  const cancelMutation = useCancelDefect();
 
   const filtered = useMemo(() => {
     let rows = listQuery.data ?? [];
@@ -73,6 +76,7 @@ export default function DefectsPage() {
       approved: all.filter(r => matchesTab(r, 'approved')).length,
       processing: all.filter(r => matchesTab(r, 'processing')).length,
       processed: all.filter(r => matchesTab(r, 'processed')).length,
+      rejected: all.filter(r => matchesTab(r, 'rejected')).length,
     };
   }, [listQuery.data]);
 
@@ -89,7 +93,7 @@ export default function DefectsPage() {
   const handleApproveRow = async (row: PurchaseDefectApiDto) => {
     try {
       await approveMutation.mutateAsync(row.ticketCode);
-      showToast('success', `Đã duyệt ${row.ticketCode} — cập nhật PO/KHMH, không cộng tồn.`);
+      showToast('success', `Đã duyệt ${row.ticketCode} - cập nhật PO/KHMH, không cộng tồn.`);
       if (selected?.ticketCode === row.ticketCode) {
         const fresh = await defectsService.getById(row.ticketCode);
         setSelected(fresh);
@@ -114,6 +118,20 @@ export default function DefectsPage() {
     }
   };
 
+  const handleConfirmCancel = async () => {
+    if (!cancelTarget) return;
+    try {
+      const updated = await cancelMutation.mutateAsync(cancelTarget.ticketCode);
+      showToast('success', `Đã hủy ${cancelTarget.ticketCode}.`);
+      if (selected?.ticketCode === cancelTarget.ticketCode) {
+        setSelected(updated);
+      }
+      setCancelTarget(null);
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không hủy được phiếu'));
+    }
+  };
+
   const buildRowActions = (row: PurchaseDefectApiDto): DropdownItem[] => {
     const items: DropdownItem[] = [
       { label: 'Xem chi tiết', icon: Eye, onClick: () => void openDetail(row) },
@@ -123,6 +141,14 @@ export default function DefectsPage() {
         label: 'Duyệt',
         icon: Check,
         onClick: () => void handleApproveRow(row),
+      });
+    }
+    if (canCreate && row.status === 'pending') {
+      items.push({
+        label: 'Hủy phiếu',
+        icon: XCircle,
+        onClick: () => setCancelTarget(row),
+        danger: true,
       });
     }
     if (canCreate && row.status === 'draft') {
@@ -168,6 +194,7 @@ export default function DefectsPage() {
               { id: 'approved', label: `Đã duyệt (${tabCounts.approved})` },
               { id: 'processing', label: `Đang xử lý (${tabCounts.processing})` },
               { id: 'processed', label: `Đã xử lý (${tabCounts.processed})` },
+              { id: 'rejected', label: `Đã hủy (${tabCounts.rejected})` },
             ]}
             activeTab={activeTab}
             onChange={id => {
@@ -221,6 +248,7 @@ export default function DefectsPage() {
         }}
         onHide={() => setShowDetail(false)}
         onSelectedChange={setSelected}
+        onRequestCancel={row => setCancelTarget(row)}
       />
 
       <ConfirmDialog
@@ -236,6 +264,21 @@ export default function DefectsPage() {
         confirmLabel="Xóa phiếu"
         variant="danger"
         isLoading={deleteMutation.isPending}
+      />
+
+      <ConfirmDialog
+        isOpen={Boolean(cancelTarget)}
+        onClose={() => setCancelTarget(null)}
+        onConfirm={() => void handleConfirmCancel()}
+        title="Hủy phiếu hàng lỗi"
+        message={
+          cancelTarget
+            ? `Hủy phiếu chờ duyệt ${cancelTarget.ticketCode}? Phiếu chuyển sang Đã hủy, không trừ tồn.`
+            : ''
+        }
+        confirmLabel="Hủy phiếu"
+        variant="danger"
+        isLoading={cancelMutation.isPending}
       />
     </div>
   );

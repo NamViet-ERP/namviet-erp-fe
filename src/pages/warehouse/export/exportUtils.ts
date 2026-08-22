@@ -1,5 +1,6 @@
 import type { Export } from '../../../types';
 import type { WarehouseProjectInventoryApiDto } from '../../../types/wms';
+import { projectInventoryAvailable } from '../../../lib/wms/stockQtyFormat';
 import type { MaterialQtyLine } from '../voucher/voucherFormTypes';
 
 export function exportStatusHint(status: Export['status']) {
@@ -28,7 +29,7 @@ export function availableExportQty(
 ) {
   const row = inventoryRow(inventory, materialCode);
   if (!row) return 0;
-  const base = row.actualInventoryQty - row.plannedExportQty;
+  const base = projectInventoryAvailable(row);
   const usedInForm = items.reduce((sum, it, i) => {
     if (i === lineIdx || it.materialCode !== materialCode) return sum;
     return sum + (Number(it.qty) || 0);

@@ -84,7 +84,7 @@ export default function CreateComplaintTicketPanel({
       return;
     }
     try {
-      await createMutation.mutateAsync({
+      const created = await createMutation.mutateAsync({
         id: warrantyId,
         body: {
           reason: buildReason(reason, defectType, specs),
@@ -95,7 +95,7 @@ export default function CreateComplaintTicketPanel({
           severity,
         },
       });
-      showToast('success', 'Đã tạo khiếu nại bảo hành.');
+      showToast('success', `Đã tạo khiếu nại ${created.ticketCode}.`);
       onCreated();
     } catch (err) {
       showToast('error', getApiErrorMessage(err, 'Không tạo được khiếu nại bảo hành'));

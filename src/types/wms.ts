@@ -22,6 +22,18 @@ export type UpdateWarehouseProjectRequest = Schemas['UpdateProjectRequest'];
 export type WarehouseProjectInventoryApiDto = Schemas['ProjectInventoryDto'];
 export type WarehouseProjectLedgerEntryApiDto = Schemas['ProjectLedgerEntryDto'];
 
+export type ProjectConstructionTaskStatus = 'planned' | 'in_progress' | 'completed' | 'late';
+export type ProjectConstructionTaskApiDto = Schemas['ProjectConstructionTaskDto'];
+export type CreateProjectConstructionTaskRequest = Schemas['CreateProjectConstructionTaskRequest'];
+export type UpdateProjectConstructionTaskRequest = Schemas['UpdateProjectConstructionTaskRequest'];
+
+export type ProjectPurchasingProgressLineApiDto = Schemas['ProjectPurchasingProgressLineDto'];
+export type ProjectPurchasingProgressReceiptLineApiDto = Schemas['ProjectPurchasingProgressReceiptLineDto'];
+export type ProjectPurchasingProgressReceiptApiDto = Schemas['ProjectPurchasingProgressReceiptDto'];
+export type ProjectPurchasingProgressOrderApiDto = Schemas['ProjectPurchasingProgressOrderDto'];
+export type ProjectPurchasingProgressPlanApiDto = Schemas['ProjectPurchasingProgressPlanDto'];
+export type ProjectPurchasingProgressApiDto = Schemas['ProjectPurchasingProgressDto'];
+
 export type StockMatrixProjectColumnApiDto = Schemas['StockMatrixProjectColumnDto'];
 export type StockMatrixRowApiDto = Schemas['StockMatrixRowDto'];
 

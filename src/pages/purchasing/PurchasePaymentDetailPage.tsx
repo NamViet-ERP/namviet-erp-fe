@@ -52,7 +52,7 @@ function paymentStatusLabel(status: string | null | undefined): string {
     case 'submitted': return 'Đã gửi';
     case 'paid': return 'Đã thanh toán';
     case 'cancelled': return 'Đã hủy';
-    default: return status || '—';
+    default: return status || '-';
   }
 }
 
@@ -113,6 +113,12 @@ export default function PurchasePaymentDetailPage() {
   }, [isCreate, nextStage]);
 
   const docsGateBlocked = isCreate && Boolean(nextStage) && missingDocTypes.length > 0;
+  const poHasNoApprovedImport = Boolean(
+    isCreate
+    && order
+    && (order.lines ?? []).length > 0
+    && (order.lines ?? []).every(line => (line.received ?? 0) <= 0),
+  );
 
   useEffect(() => {
     if (!isCreate && payment) {
@@ -152,7 +158,7 @@ export default function PurchasePaymentDetailPage() {
       unitPrice: l.poPrice,
       amount: l.lineAmount,
     }));
-    const projectLabel = [order?.projectCode, order?.projectName].filter(Boolean).join(' — ');
+      const projectLabel = [order?.projectCode, order?.projectName].filter(Boolean).join(' - ');
     return {
       code: payment?.code,
       dateLabel: payment?.createdAt
@@ -207,7 +213,7 @@ export default function PurchasePaymentDetailPage() {
         dueDate,
         note: note.trim() || null,
       });
-      showToast('success', `Đã tạo ${created.code}`);
+      showToast('success', `Đã tạo ${created.code}.`);
       navigate(`/purchasing/payments/${encodeURIComponent(created.code)}`, { replace: true });
     } catch (err) {
       showToast('error', getApiErrorMessage(err));
@@ -218,7 +224,7 @@ export default function PurchasePaymentDetailPage() {
     if (!payment) return;
     try {
       await submitMutation.mutateAsync(payment.code);
-      showToast('success', `Đã gửi DNTT ${payment.code}.`);
+      showToast('success', `Đã gửi ${payment.code}.`);
     } catch (err) {
       showToast('error', getApiErrorMessage(err, 'Không gửi được DNTT.'));
     }
@@ -459,6 +465,17 @@ export default function PurchasePaymentDetailPage() {
                     <strong>Chưa đủ chứng từ đợt {nextStage?.stageNumber}</strong>
                     <p>
                       Thiếu: {missingDocTypes.join(', ')}. Tải đủ file trên chi tiết PO trước khi tạo DNTT.
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+              {poHasNoApprovedImport ? (
+                <div className="pur-dntt__stage-banner pur-dntt__stage-banner--warn" role="status">
+                  <AlertTriangle size={16} strokeWidth={1.75} aria-hidden />
+                  <div>
+                    <strong>PO chưa có phiếu nhập đã duyệt</strong>
+                    <p>
+                      DNTT vẫn tạo được nếu là tạm ứng theo đợt. Số tiền chưa gắn với hàng đã nhận kho.
                     </p>
                   </div>
                 </div>

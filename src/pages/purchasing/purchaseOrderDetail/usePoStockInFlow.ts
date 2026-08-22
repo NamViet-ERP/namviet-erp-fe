@@ -29,6 +29,7 @@ import type { ImportFormFieldErrors } from '../../../lib/wms/importFormSchema';
 import { parseCurrencyInput } from '../../../utils/currencyInput';
 import { emptyQtyPriceLine, type MaterialQtyPriceLine } from '../../warehouse/voucher/voucherFormTypes';
 import { importLineTotal } from '../../warehouse/import/importUtils';
+import { resolvePoImportItems } from '../../warehouse/import/importCreatePoDrafts';
 
 type Props = {
   poCode: string;
@@ -46,9 +47,22 @@ export function usePoStockInFlow({ poCode, order }: Props) {
 
   const importsQuery = useImports();
   const relatedImports = useMemo(
-    () => (importsQuery.data ?? []).filter(
-      imp => (imp.referenceCode ?? '').trim().toLowerCase() === poCode.trim().toLowerCase(),
-    ),
+    () => {
+      const rank = (status: string) => {
+        if (status === 'approved') return 0;
+        if (status === 'pending') return 1;
+        if (status === 'draft') return 2;
+        return 3;
+      };
+      return (importsQuery.data ?? [])
+        .filter(imp => (imp.referenceCode ?? '').trim().toLowerCase() === poCode.trim().toLowerCase())
+        .slice()
+        .sort((a, b) => {
+          const byStatus = rank(a.status) - rank(b.status);
+          if (byStatus !== 0) return byStatus;
+          return (b.approvedAt || b.date || '').localeCompare(a.approvedAt || a.date || '');
+        });
+    },
     [importsQuery.data, poCode],
   );
 
@@ -81,24 +95,20 @@ export function usePoStockInFlow({ poCode, order }: Props) {
   const submitMutation = useSubmitImport();
   const deleteMutation = useDeleteImport();
 
-  const previewEnabled = Boolean(
-    order
-    && order.orderPlacementStatus === 'placed'
-    && order.deliveryStatus !== 'complete',
-  );
+  const previewEnabled = Boolean(order && order.orderPlacementStatus === 'placed');
   const poPreviewQuery = usePoImportPreview(
     selectedPoCode || poCode || undefined,
     previewEnabled,
     editing?.voucherCode,
   );
 
-  const hasAvailableQty = !poPreviewQuery.isSuccess
-    || (poPreviewQuery.data?.lines?.some(line => (line.available ?? 0) > 0) ?? false);
+  const hasAvailableQty = Boolean(
+    poPreviewQuery.data?.lines?.some(line => (line.available ?? 0) > 0),
+  );
 
   const canPlaceImport = Boolean(
     order
     && order.orderPlacementStatus === 'placed'
-    && order.deliveryStatus !== 'complete'
     && hasAvailableQty,
   );
 
@@ -106,10 +116,10 @@ export function usePoStockInFlow({ poCode, order }: Props) {
     ? 'Chưa tải được PO'
     : order.orderPlacementStatus !== 'placed'
       ? 'Chỉ tạo khi PO đã đặt NCC'
-      : order.deliveryStatus === 'complete'
-        ? 'PO đã nhập đủ — không còn SL khả dụng'
+      : poPreviewQuery.isFetching && !poPreviewQuery.data
+        ? 'Đang kiểm tra SL còn lại trên PO'
         : !hasAvailableQty
-          ? 'Không còn SL khả dụng (đã nhập / đang chờ duyệt)'
+          ? 'Không còn SL khả dụng (đã nhập thực tế / đang chờ duyệt)'
           : '';
 
   const poOptions = useMemo(
@@ -248,23 +258,18 @@ export function usePoStockInFlow({ poCode, order }: Props) {
 
   const handleCreate = async (
     status: 'draft' | 'pending',
-    evidence?: { files: File[]; evaluation: string },
+    evidence?: { files: File[]; evaluation: string; poItems?: { poItemId: number; qty: number }[] },
   ) => {
     if (editing) return;
     if (!selectedPoCode) {
       setCreateErrors(e => ({ ...e, referenceCode: 'Thiếu mã PO.' }));
       return;
     }
-    const selectedItems = items
-      .map(line => {
-        const match = /poItem:(\d+)/i.exec((line.notes ?? '').trim());
-        const poItemId = match ? Number(match[1]) : NaN;
-        const qty = Number(line.qty);
-        return Number.isFinite(poItemId) && poItemId > 0 && Number.isFinite(qty) && qty > 0
-          ? { poItemId, qty }
-          : null;
-      })
-      .filter((x): x is { poItemId: number; qty: number } => Boolean(x));
+    const selectedItems = resolvePoImportItems({
+      evidencePoItems: evidence?.poItems,
+      formItems: items,
+      previewLines: poPreviewQuery.data?.lines ?? [],
+    });
 
     if (selectedItems.length === 0) {
       setCreateErrors(e => ({ ...e, items: 'PO chưa có dòng hợp lệ để nhập kho.' }));

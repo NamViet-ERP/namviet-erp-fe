@@ -165,8 +165,8 @@ export default function WarehouseReportsPage() {
             </PermissionGate>
           </div>
 
-          <div className="overflow-x-auto table-scroll">
-            <table className="w-full">
+          <div className="overflow-x-auto table-scroll wms-inventory-table-wrap">
+            <table className="wms-inventory-table">
               <thead>
                 <tr>
                   <th className="table-header-cell">Dự án</th>
@@ -247,8 +247,8 @@ export default function WarehouseReportsPage() {
             </PermissionGate>
           </div>
 
-          <div className="overflow-x-auto table-scroll">
-            <table className="w-full">
+          <div className="overflow-x-auto table-scroll wms-inventory-table-wrap">
+            <table className="wms-inventory-table">
               <thead>
                 <tr>
                   <th className="table-header-cell">Loại</th>

@@ -1,7 +1,5 @@
 import { Link } from 'react-router-dom';
-import type { CSSProperties } from 'react';
 import {
-  Activity,
   AlertTriangle,
   CheckCircle2,
   FolderKanban,
@@ -16,11 +14,7 @@ import EmptyState from '../../components/ui/EmptyState';
 import Card from '../../components/ui/Card';
 import HrmPanel from '../../components/hr/HrmPanel';
 import Badge from '../../components/ui/Badge';
-import { useProjects } from '../../hooks/useProjects';
-import { useLowStockAlerts } from '../../hooks/useLowStockAlerts';
-import { usePurchaseOrders } from '../../hooks/usePurchaseOrders';
-import { usePurchasePayments } from '../../hooks/usePurchasePayments';
-import { usePurchasePlans } from '../../hooks/usePurchasePlans';
+import { useOperationsDashboard } from '../../hooks/useOperationsDashboard';
 import { fmtStockQty } from '../../lib/wms/stockQtyFormat';
 import { projectStatusBadge } from '../../lib/wms/projectStatusBadge';
 import {
@@ -49,7 +43,7 @@ function paymentStatusLabel(status: string) {
     case 'cancelled':
       return 'Đã hủy';
     default:
-      return status || '—';
+      return status || '-';
   }
 }
 
@@ -99,7 +93,7 @@ function OpenPoRows({ rows }: { rows: PurchaseOrderApiDto[] }) {
         </Link>
       </td>
       <td className="table-cell tabular-nums">{row.projectCode}</td>
-      <td className="table-cell">{row.supplierName || '—'}</td>
+      <td className="table-cell">{row.supplierName || '-'}</td>
       <td className="table-cell"><PoStatusPill {...poPlacementStatus(row.orderPlacementStatus)} /></td>
       <td className="table-cell"><PoStatusPill {...poDeliveryStatus(row.deliveryStatus)} /></td>
       <td className="table-cell"><PoStatusPill {...poApprovalStatus(row.approvalStatus)} /></td>
@@ -109,40 +103,10 @@ function OpenPoRows({ rows }: { rows: PurchaseOrderApiDto[] }) {
 
 /** Tổng quan Vận hành — reuse chrome/KPI/table pattern của Kho + Mua hàng. */
 export default function OperationsDashboardPage() {
-  const { data: allProjects, isLoading: loadingAll } = useProjects({ page: 1, pageSize: 1 });
-  const { data: activeProjectsPage, isLoading: loadingActive } = useProjects({
-    page: 1,
-    pageSize: 8,
-    status: 'Active',
-  });
-  const { data: closedProjects } = useProjects({ page: 1, pageSize: 1, status: 'Closed' });
+  const dash = useOperationsDashboard();
+  const { counts } = dash;
 
-  const { data: lowStock = [], isLoading: loadingStock } = useLowStockAlerts(undefined, 10);
-
-  const { data: ordersNone } = usePurchaseOrders({ page: 1, pageSize: 8, deliveryStatus: 'none' });
-  const { data: ordersPartial } = usePurchaseOrders({ page: 1, pageSize: 8, deliveryStatus: 'partial' });
-  const { data: ordersAll } = usePurchaseOrders({ page: 1, pageSize: 1 });
-  const { data: ordersWarning } = usePurchaseOrders({ page: 1, pageSize: 5, paymentWarning: true });
-
-  const { data: paymentsDraft } = usePurchasePayments({ page: 1, pageSize: 1, status: 'draft' });
-  const { data: paymentsSubmitted } = usePurchasePayments({ page: 1, pageSize: 5, status: 'submitted' });
-  const { data: plansOpen } = usePurchasePlans({ page: 1, pageSize: 1 });
-
-  const activeCount = activeProjectsPage?.totalCount ?? 0;
-  const totalProjects = allProjects?.totalCount ?? 0;
-  const closedCount = closedProjects?.totalCount ?? 0;
-  const openOrderCount = (ordersNone?.totalCount ?? 0) + (ordersPartial?.totalCount ?? 0);
-  const openOrderRows = [...(ordersNone?.items ?? []), ...(ordersPartial?.items ?? [])].slice(0, 8);
-  const pendingPaymentCount =
-    (paymentsDraft?.totalCount ?? 0) + (paymentsSubmitted?.totalCount ?? 0);
-  const pendingPaymentRows = [
-    ...(paymentsSubmitted?.items ?? []),
-    ...(paymentsDraft?.items ?? []),
-  ].slice(0, 5);
-  const paymentWarningCount = ordersWarning?.totalCount ?? 0;
-  const planCount = plansOpen?.totalCount ?? 0;
-
-  if ((loadingAll || loadingActive || loadingStock) && !activeProjectsPage && !allProjects) {
+  if (dash.isBootLoading) {
     return <PageLoader />;
   }
 
@@ -153,7 +117,6 @@ export default function OperationsDashboardPage() {
           title="Tổng quan vận hành"
           actions={(
             <p className="page-header__updated">
-              <Activity size={13} aria-hidden />
               Cập nhật lúc {new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
             </p>
           )}
@@ -161,107 +124,93 @@ export default function OperationsDashboardPage() {
 
       <div className="dashboard-kpi-grid" role="list" aria-label="Chỉ số vận hành">
         <Card
-          title="Dự án đang triển khai"
-          value={activeCount}
-          subtitle={`${totalProjects} tổng, ${closedCount} đã đóng`}
-          accent="teal"
+          title="Dự án"
+          to="/operations/projects"
+          accent="info"
           icon={CheckCircle2}
+          stats={[
+            { label: 'Đang triển khai', value: counts.projectActive, tone: 'ok' },
+            { label: 'Đã đóng', value: counts.projectClosed, tone: 'info' },
+            { label: 'Tổng', value: counts.projectTotal, tone: 'neutral' },
+          ]}
         />
         <Card
-          title="Cảnh báo tồn thấp"
-          value={lowStock.length}
-          subtitle="Dưới ngưỡng tối thiểu"
-          accent="amber"
+          title="Phân công"
+          to="/operations/projects"
+          accent="neutral"
+          icon={FolderKanban}
+          stats={[
+            { label: 'Chưa gán PM', value: counts.projectWithoutPm, tone: 'warn' },
+            { label: 'Có PM', value: counts.projectWithPm, tone: 'ok' },
+            { label: 'Có thủ kho', value: counts.projectWithKeeper, tone: 'info' },
+          ]}
+        />
+        <Card
+          title="Tồn thấp"
+          to="/warehouse/stock"
+          accent="warning"
           icon={AlertTriangle}
+          stats={[
+            { label: 'Dưới ngưỡng', value: counts.stockBelowMin, tone: 'warn' },
+            { label: 'Hết tồn', value: counts.stockZero, tone: 'danger' },
+            { label: 'Số dự án', value: counts.stockProjects, tone: 'info' },
+          ]}
         />
         <Card
-          title="Đơn hàng đang xử lý"
-          value={openOrderCount}
-          subtitle={`${ordersAll?.totalCount ?? '-'} PO, ${planCount} KHMH`}
-          accent="blue"
+          title="Vật tư"
+          to="/operations/materials"
+          accent="stone"
+          icon={Package}
+          stats={[
+            { label: 'Đang dùng', value: counts.materialActive, tone: 'ok' },
+            { label: 'Ngừng dùng', value: counts.materialInactive, tone: 'warn' },
+            { label: 'Tổng', value: counts.materialTotal, tone: 'neutral' },
+          ]}
+        />
+        <Card
+          title="Đơn hàng"
+          to="/purchasing/orders"
+          accent="success"
           icon={ShoppingCart}
+          stats={[
+            { label: 'Chưa giao', value: counts.orderNone, tone: 'warn' },
+            { label: 'Giao 1 phần', value: counts.orderPartial, tone: 'info' },
+            { label: 'Kế hoạch mua', value: counts.planCount, tone: 'neutral' },
+          ]}
         />
         <Card
-          title="DNTT chờ xử lý"
-          value={pendingPaymentCount}
-          subtitle="Nháp + đã gửi"
+          title="Hàng về"
+          to="/warehouse/arrival-plans"
+          accent="primary"
+          icon={Truck}
+          stats={[
+            { label: 'Quá hạn', value: counts.arrivalOverdue, tone: 'danger' },
+            { label: 'Đến hạn', value: counts.arrivalDueToday, tone: 'warn' },
+            { label: 'Sắp về', value: counts.arrivalUpcoming, tone: 'info' },
+          ]}
+        />
+        <Card
+          title="Đề nghị TT"
+          to="/purchasing/payments"
           accent="purple"
           icon={Wallet}
+          stats={[
+            { label: 'Nháp', value: counts.paymentDraft, tone: 'info' },
+            { label: 'Đã gửi', value: counts.paymentSubmitted, tone: 'warn' },
+            { label: 'Đã thanh toán', value: counts.paymentPaid, tone: 'ok' },
+          ]}
         />
-      </div>
-
-      {lowStock.length > 0 && (
-        <div className="alert-banner alert-banner--warning" role="alert">
-          <AlertTriangle size={18} className="alert-banner__icon" aria-hidden />
-          <div className="min-w-0 flex-1">
-            <p className="alert-banner__title">
-              {lowStock.length} cảnh báo tồn dưới ngưỡng tối thiểu
-            </p>
-            <ul className="alert-banner__list">
-              {lowStock.slice(0, 5).map(a => (
-                <li key={`${a.projectCode}-${a.materialCode}`}>
-                  <span className="font-mono">{a.projectCode}</span>
-                  {' - '}
-                  {a.materialCode} ({fmtStockQty(a.actualQty)}/{fmtStockQty(a.minStockQty)} {a.unit})
-                </li>
-              ))}
-            </ul>
-          </div>
-          <Link to="/warehouse/stock" className="btn btn-outlined btn-sm shrink-0">
-            Đi tới Kho
-          </Link>
-        </div>
-      )}
-
-      <div className="dashboard-ops-grid" aria-label="Cảnh báo nhanh">
-        <div className="dashboard-ops-card" style={{ '--ops-color': 'var(--md-error)' } as CSSProperties}>
-          <div className="dashboard-ops-card__icon">
-            <AlertTriangle size={18} />
-          </div>
-          <div className="min-w-0">
-            <p className="dashboard-ops-card__label">Cảnh báo thanh toán PO</p>
-            <p className="dashboard-ops-card__value">{paymentWarningCount}</p>
-          </div>
-          <Link to="/purchasing/orders" className="text-xs font-medium text-[var(--md-primary)] hover:underline ml-auto shrink-0">
-            Xem ngay
-          </Link>
-        </div>
-        <div className="dashboard-ops-card" style={{ '--ops-color': 'var(--md-primary)' } as CSSProperties}>
-          <div className="dashboard-ops-card__icon">
-            <Truck size={18} />
-          </div>
-          <div className="min-w-0">
-            <p className="dashboard-ops-card__label">Tiến độ hàng về</p>
-            <p className="text-xs text-[var(--md-on-surface-variant)] mt-0.5 mb-0">Kế hoạch hàng về theo dự án / PO</p>
-          </div>
-          <Link to="/warehouse/arrival-plans" className="text-xs font-medium text-[var(--md-primary)] hover:underline ml-auto shrink-0">
-            Xem tiến độ →
-          </Link>
-        </div>
-        <div className="dashboard-ops-card" style={{ '--ops-color': 'var(--md-secondary)' } as CSSProperties}>
-          <div className="dashboard-ops-card__icon">
-            <FolderKanban size={18} />
-          </div>
-          <div className="min-w-0">
-            <p className="dashboard-ops-card__label">Danh sách dự án</p>
-            <p className="text-xs text-[var(--md-on-surface-variant)] mt-0.5 mb-0">Phân công PIC / SC</p>
-          </div>
-          <Link to="/operations/projects" className="text-xs font-medium text-[var(--md-primary)] hover:underline ml-auto shrink-0">
-            Mở →
-          </Link>
-        </div>
-        <div className="dashboard-ops-card" style={{ '--ops-color': 'var(--md-tertiary, var(--md-primary))' } as CSSProperties}>
-          <div className="dashboard-ops-card__icon">
-            <Package size={18} />
-          </div>
-          <div className="min-w-0">
-            <p className="dashboard-ops-card__label">Danh mục vật tư</p>
-            <p className="text-xs text-[var(--md-on-surface-variant)] mt-0.5 mb-0">Master VT vận hành</p>
-          </div>
-          <Link to="/operations/materials" className="text-xs font-medium text-[var(--md-primary)] hover:underline ml-auto shrink-0">
-            Mở →
-          </Link>
-        </div>
+        <Card
+          title="Thanh toán PO"
+          to="/purchasing/orders"
+          accent="danger"
+          icon={AlertTriangle}
+          stats={[
+            { label: 'Trễ hạn', value: counts.poOverdue, tone: 'danger' },
+            { label: 'Chưa thanh toán', value: counts.poUnpaid, tone: 'warn' },
+            { label: 'Thanh toán 1 phần', value: counts.poPartialPay, tone: 'info' },
+          ]}
+        />
       </div>
 
       <HrmPanel>
@@ -282,14 +231,14 @@ export default function OperationsDashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {lowStock.length === 0 ? (
+              {dash.stockPreview.length === 0 ? (
                 <tr>
                   <td colSpan={5}>
                     <EmptyState message="Không có cảnh báo tồn thấp." />
                   </td>
                 </tr>
               ) : (
-                lowStock.map(row => (
+                dash.stockPreview.map(row => (
                   <tr key={`${row.projectCode}-${row.materialCode}`} className="table-row">
                     <td className="table-cell font-mono text-sm">{row.materialCode}</td>
                     <td className="table-cell font-semibold">{row.materialName}</td>
@@ -311,7 +260,7 @@ export default function OperationsDashboardPage() {
       <HrmPanel>
         <SectionHeading
           title="Đơn hàng cần theo dõi"
-          sub="PO chưa giao đủ — đặt hàng, nhận hàng, duyệt."
+          sub="PO chưa giao đủ - đặt hàng, nhận hàng, duyệt."
           action={{ to: '/purchasing/orders', label: 'Đi tới Mua hàng →' }}
         />
         <div className="overflow-x-auto table-scroll wms-inventory-table-wrap -mx-1">
@@ -327,7 +276,7 @@ export default function OperationsDashboardPage() {
               </tr>
             </thead>
             <tbody>
-              <OpenPoRows rows={openOrderRows} />
+              <OpenPoRows rows={dash.openOrderRows} />
             </tbody>
           </table>
         </div>
@@ -351,14 +300,14 @@ export default function OperationsDashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {pendingPaymentRows.length === 0 ? (
+              {dash.pendingPaymentRows.length === 0 ? (
                 <tr>
                   <td colSpan={5}>
                     <EmptyState message="Không có đề nghị thanh toán chờ xử lý." icon={Wallet} />
                   </td>
                 </tr>
               ) : (
-                pendingPaymentRows.map(row => (
+                dash.pendingPaymentRows.map(row => (
                   <tr key={row.code} className="table-row">
                     <td className="table-cell">
                       <Link
@@ -369,7 +318,7 @@ export default function OperationsDashboardPage() {
                       </Link>
                     </td>
                     <td className="table-cell tabular-nums">{row.poCode}</td>
-                    <td className="table-cell">{row.supplierName || '—'}</td>
+                    <td className="table-cell">{row.supplierName || '-'}</td>
                     <td className="table-cell text-right tabular-nums">{formatCurrency(row.amount)}</td>
                     <td className="table-cell">{paymentStatusLabel(row.status)}</td>
                   </tr>
@@ -398,21 +347,21 @@ export default function OperationsDashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {(activeProjectsPage?.items ?? []).length === 0 ? (
+              {dash.activeProjects.length === 0 ? (
                 <tr>
                   <td colSpan={5}>
                     <EmptyState message="Chưa có dự án đang triển khai." icon={FolderKanban} />
                   </td>
                 </tr>
               ) : (
-                (activeProjectsPage?.items ?? []).map(row => (
+                dash.activeProjects.map(row => (
                   <tr key={row.projectCode} className="table-row">
                     <td className="table-cell font-mono text-sm text-[var(--md-primary)] whitespace-nowrap project-col-code">
                       {row.projectCode}
                     </td>
                     <td className="table-cell font-semibold project-col-name">{row.projectName}</td>
-                    <td className="table-cell project-col-client">{row.clientName?.trim() || '—'}</td>
-                    <td className="table-cell project-col-pm">{row.pmName || '—'}</td>
+                    <td className="table-cell project-col-client">{row.clientName?.trim() || '-'}</td>
+                    <td className="table-cell project-col-pm">{row.pmName || '-'}</td>
                     <td className="table-cell text-center project-col-status">
                       <Badge status={projectStatusBadge(row.status)} label={projectStatusLabel(row.status)} />
                     </td>

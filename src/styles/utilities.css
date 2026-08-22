@@ -281,24 +281,26 @@
 
   /* ── Form table styling (compact layout for data entry inside modals) ── */
   .form-table {
-    border-collapse: collapse !important;
+    border-collapse: separate !important;
+    border-spacing: 0;
     width: 100% !important;
   }
 
   .form-table th {
     background: var(--nv-table-header-bg) !important;
     color: var(--nv-table-header-text) !important;
-    font-weight: 700 !important;
-    font-size: var(--fs-xs) !important; /* text-xs */
-    padding: 8px 10px !important;
-    border: 1px solid var(--md-outline-variant) !important;
+    font-weight: var(--fw-bold) !important;
+    font-size: var(--fs-xs) !important;
+    padding: var(--table-header-py) var(--table-header-px) !important;
+    border: 1px solid var(--table-header-border) !important;
+    border-bottom: 2px solid var(--table-header-lip) !important;
     text-align: left;
     white-space: nowrap;
   }
 
   .form-table td {
-    padding: 6px 8px !important;
-    border: 1px solid var(--md-outline-variant) !important;
+    padding: var(--table-cell-py) var(--table-cell-px) !important;
+    border: 1px solid var(--table-border) !important;
     vertical-align: middle !important;
   }
 

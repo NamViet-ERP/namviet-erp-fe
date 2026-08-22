@@ -2303,6 +2303,90 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/defects/{id}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateDefectItemsRequest"];
+                    "text/json": components["schemas"]["UpdateDefectItemsRequest"];
+                    "application/*+json": components["schemas"]["UpdateDefectItemsRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseDefectDto"];
+                        "application/json": components["schemas"]["PurchaseDefectDto"];
+                        "text/json": components["schemas"]["PurchaseDefectDto"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/defects/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseDefectDto"];
+                        "application/json": components["schemas"]["PurchaseDefectDto"];
+                        "text/json": components["schemas"]["PurchaseDefectDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/defects/{id}/processing": {
         parameters: {
             query?: never;
@@ -6220,6 +6304,195 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/warehouse/projects/construction-tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    projectCode?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectConstructionTaskDto"][];
+                        "application/json": components["schemas"]["ProjectConstructionTaskDto"][];
+                        "text/json": components["schemas"]["ProjectConstructionTaskDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/projects/{code}/construction-tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateProjectConstructionTaskRequest"];
+                    "text/json": components["schemas"]["CreateProjectConstructionTaskRequest"];
+                    "application/*+json": components["schemas"]["CreateProjectConstructionTaskRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectConstructionTaskDto"];
+                        "application/json": components["schemas"]["ProjectConstructionTaskDto"];
+                        "text/json": components["schemas"]["ProjectConstructionTaskDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/projects/{code}/construction-tasks/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateProjectConstructionTaskRequest"];
+                    "text/json": components["schemas"]["UpdateProjectConstructionTaskRequest"];
+                    "application/*+json": components["schemas"]["UpdateProjectConstructionTaskRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectConstructionTaskDto"];
+                        "application/json": components["schemas"]["ProjectConstructionTaskDto"];
+                        "text/json": components["schemas"]["ProjectConstructionTaskDto"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/projects/purchasing-progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    projectCode?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectPurchasingProgressDto"][];
+                        "application/json": components["schemas"]["ProjectPurchasingProgressDto"][];
+                        "text/json": components["schemas"]["ProjectPurchasingProgressDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/warehouse/projects": {
         parameters: {
             query?: never;
@@ -7755,6 +8028,140 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/orders/{code}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseOrderCommentDto"][];
+                        "application/json": components["schemas"]["PurchaseOrderCommentDto"][];
+                        "text/json": components["schemas"]["PurchaseOrderCommentDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreatePurchaseOrderCommentRequest"];
+                    "text/json": components["schemas"]["CreatePurchaseOrderCommentRequest"];
+                    "application/*+json": components["schemas"]["CreatePurchaseOrderCommentRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseOrderCommentDto"];
+                        "application/json": components["schemas"]["PurchaseOrderCommentDto"];
+                        "text/json": components["schemas"]["PurchaseOrderCommentDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/orders/{code}/comments/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdatePurchaseOrderCommentRequest"];
+                    "text/json": components["schemas"]["UpdatePurchaseOrderCommentRequest"];
+                    "application/*+json": components["schemas"]["UpdatePurchaseOrderCommentRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PurchaseOrderCommentDto"];
+                        "application/json": components["schemas"]["PurchaseOrderCommentDto"];
+                        "text/json": components["schemas"]["PurchaseOrderCommentDto"];
+                    };
+                };
+            };
+        };
         post?: never;
         delete: {
             parameters: {
@@ -13550,6 +13957,17 @@ export interface components {
             dueDate?: string | null;
             loanReason?: string | null;
         };
+        CreateProjectConstructionTaskRequest: {
+            name: string;
+            /** Format: date */
+            plannedStart: string;
+            /** Format: date */
+            plannedEnd: string;
+            /** Format: date */
+            actualEnd?: string | null;
+            /** Format: int32 */
+            percentComplete: number;
+        };
         CreateProjectRequest: {
             projectCode: string;
             projectName: string;
@@ -13589,6 +14007,9 @@ export interface components {
             projectCode: string;
             title: string;
             lines?: components["schemas"]["PurchaseEstimateLineInput"][] | null;
+        };
+        CreatePurchaseOrderCommentRequest: {
+            body: string;
         };
         CreatePurchaseOrderLineRequest: {
             /** Format: int32 */
@@ -14361,6 +14782,24 @@ export interface components {
             materialName: string;
             cells: components["schemas"]["PriceBookMatrixCellDto"][];
         };
+        ProjectConstructionTaskDto: {
+            /** Format: uuid */
+            id: string;
+            projectCode: string;
+            projectName: string;
+            name: string;
+            /** Format: date */
+            plannedStart: string;
+            /** Format: date */
+            plannedEnd: string;
+            /** Format: date */
+            actualEnd?: string | null;
+            /** Format: int32 */
+            percentComplete: number;
+            /** Format: int32 */
+            sortOrder: number;
+            status: string;
+        };
         ProjectDto: {
             projectCode: string;
             projectName: string;
@@ -14425,6 +14864,8 @@ export interface components {
             reservedQty: number;
             /** Format: double */
             minStockQty: number;
+            /** Format: double */
+            pendingDefectQty: number;
         };
         ProjectLedgerEntryDto: {
             id: string;
@@ -14436,6 +14877,95 @@ export interface components {
             itemQty: number;
             /** Format: double */
             totalValue?: number | null;
+        };
+        ProjectPurchasingProgressDto: {
+            projectCode: string;
+            projectName: string;
+            /** Format: date */
+            plannedStart?: string | null;
+            /** Format: date */
+            plannedEnd?: string | null;
+            /** Format: date */
+            actualEnd?: string | null;
+            /** Format: int32 */
+            percentComplete: number;
+            status: string;
+            plans: components["schemas"]["ProjectPurchasingProgressPlanDto"][];
+            orders: components["schemas"]["ProjectPurchasingProgressOrderDto"][];
+        };
+        ProjectPurchasingProgressLineDto: {
+            /** Format: int32 */
+            id: number;
+            name: string;
+            sku: string;
+            /** Format: date */
+            plannedStart: string;
+            /** Format: date */
+            plannedEnd: string;
+            /** Format: date */
+            actualEnd?: string | null;
+            /** Format: double */
+            ordered: number;
+            /** Format: double */
+            received: number;
+            /** Format: int32 */
+            percentComplete: number;
+            status: string;
+        };
+        ProjectPurchasingProgressOrderDto: {
+            poCode: string;
+            supplierName?: string | null;
+            planCode: string;
+            /** Format: date */
+            plannedStart: string;
+            /** Format: date */
+            plannedEnd: string;
+            /** Format: date */
+            actualEnd?: string | null;
+            /** Format: double */
+            ordered: number;
+            /** Format: double */
+            received: number;
+            /** Format: int32 */
+            percentComplete: number;
+            deliveryStatus: string;
+            status: string;
+            lines: components["schemas"]["ProjectPurchasingProgressLineDto"][];
+            receipts: components["schemas"]["ProjectPurchasingProgressReceiptDto"][];
+        };
+        ProjectPurchasingProgressPlanDto: {
+            planCode: string;
+            kind: string;
+            planStatus: string;
+            /** Format: date */
+            plannedStart: string;
+            /** Format: date */
+            plannedEnd: string;
+            /** Format: date */
+            actualEnd?: string | null;
+            /** Format: double */
+            ordered: number;
+            /** Format: double */
+            received: number;
+            /** Format: int32 */
+            percentComplete: number;
+            status: string;
+            orders: components["schemas"]["ProjectPurchasingProgressOrderDto"][];
+        };
+        ProjectPurchasingProgressReceiptDto: {
+            ticketCode: string;
+            status: string;
+            /** Format: date */
+            date: string;
+            /** Format: double */
+            quantity: number;
+            lines: components["schemas"]["ProjectPurchasingProgressReceiptLineDto"][];
+        };
+        ProjectPurchasingProgressReceiptLineDto: {
+            name: string;
+            sku: string;
+            /** Format: double */
+            quantity: number;
         };
         /** @enum {string} */
         ProjectStatus: "Active" | "Transferring" | "Transferred" | "Closed";
@@ -14762,6 +15292,19 @@ export interface components {
             /** Format: date-time */
             uploadedAt: string;
             uploadedByName?: string | null;
+        };
+        PurchaseOrderCommentDto: {
+            /** Format: uuid */
+            id: string;
+            poCode: string;
+            /** Format: uuid */
+            authorUserId: string;
+            authorName: string;
+            body: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt?: string | null;
         };
         PurchaseOrderDetailDto: {
             code: string;
@@ -15476,6 +16019,8 @@ export interface components {
         PurchasingDashboardChartBarDto: {
             key: string;
             label: string;
+            /** Format: int32 */
+            count: number;
             /** Format: double */
             amount: number;
         };
@@ -15501,11 +16046,16 @@ export interface components {
             /** Format: date-time */
             generatedAt: string;
         };
+        PurchasingKpiLineDto: {
+            key: string;
+            label: string;
+            /** Format: int32 */
+            count: number;
+        };
         PurchasingKpiMetricDto: {
             /** Format: int32 */
             count: number;
-            /** Format: double */
-            amount: number;
+            lines: components["schemas"]["PurchasingKpiLineDto"][];
         };
         RecruitmentBudgetDto: {
             /** Format: int32 */
@@ -15705,6 +16255,8 @@ export interface components {
             plannedImportQty: number;
             /** Format: double */
             plannedExportQty: number;
+            /** Format: double */
+            pendingDefectQty: number;
         };
         StockMatrixRowDto: {
             materialCode: string;
@@ -16215,6 +16767,16 @@ export interface components {
             rejectReason?: string | null;
             recruitmentPlanId?: string | null;
         };
+        UpdateDefectItemRequest: {
+            /** Format: int32 */
+            id: number;
+            /** Format: double */
+            quantity: number;
+            lineReason?: string | null;
+        };
+        UpdateDefectItemsRequest: {
+            items: components["schemas"]["UpdateDefectItemRequest"][];
+        };
         UpdateDefectProcessingRequest: {
             causeSource?: string | null;
             supplierFeedback?: string | null;
@@ -16245,6 +16807,19 @@ export interface components {
         };
         UpdateImportReceiptEvaluationRequest: {
             evaluation?: string | null;
+        };
+        UpdateProjectConstructionTaskRequest: {
+            name: string;
+            /** Format: date */
+            plannedStart: string;
+            /** Format: date */
+            plannedEnd: string;
+            /** Format: date */
+            actualEnd?: string | null;
+            /** Format: int32 */
+            percentComplete: number;
+            /** Format: int32 */
+            sortOrder: number;
         };
         UpdateProjectInventoryMinStockRequest: {
             /** Format: double */
@@ -16285,6 +16860,9 @@ export interface components {
         UpdatePurchaseEstimateRequest: {
             title?: string | null;
             lines: components["schemas"]["PurchaseEstimateLineInput"][];
+        };
+        UpdatePurchaseOrderCommentRequest: {
+            body: string;
         };
         UpdatePurchaseOrderRequest: {
             note?: string | null;

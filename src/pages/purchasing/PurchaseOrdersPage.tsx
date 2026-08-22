@@ -180,27 +180,27 @@ export default function PurchaseOrdersPage() {
   const handleApprove = async (code: string) => {
     try {
       await approveMutation.mutateAsync(code);
-      showToast('success', `Đã duyệt PO ${code}.`);
+      showToast('success', `Đã duyệt ${code}.`);
     } catch (err) {
-      showToast('error', getApiErrorMessage(err, `Không duyệt được PO ${code}`));
+      showToast('error', getApiErrorMessage(err, `Không duyệt được ${code}`));
     }
   };
 
   const handleUnapprove = async (code: string) => {
     try {
       await unapproveMutation.mutateAsync(code);
-      showToast('success', `Đã hủy duyệt PO ${code}.`);
+      showToast('success', `Đã hủy duyệt ${code}.`);
     } catch (err) {
-      showToast('error', getApiErrorMessage(err, `Không hủy duyệt được PO ${code}`));
+      showToast('error', getApiErrorMessage(err, `Không hủy duyệt được ${code}`));
     }
   };
 
   const handlePlace = async (code: string) => {
     try {
       await placeMutation.mutateAsync(code);
-      showToast('success', `Đã đặt NCC cho PO ${code}.`);
+      showToast('success', `Đã đặt NCC cho ${code}.`);
     } catch (err) {
-      showToast('error', getApiErrorMessage(err, `Không thể đặt NCC cho PO ${code}`));
+      showToast('error', getApiErrorMessage(err, `Không thể đặt NCC cho ${code}`));
     }
   };
 

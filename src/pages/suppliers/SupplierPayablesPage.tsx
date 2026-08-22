@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { AlertTriangle, CalendarClock, CircleDollarSign, Download, Wallet } from 'lucide-react';
+import { Download } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import EmptyState from '../../components/ui/EmptyState';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
+import Skeleton from '../../components/ui/Skeleton';
 import HrmPanel from '../../components/hr/HrmPanel';
-import HrmStatCard from '../../components/hr/HrmStatCard';
 import FormField from '../../components/ui/FormField';
+import SupplierPayablesOverview from '../../components/suppliers/SupplierPayablesOverview';
 import { usePermission } from '../../hooks/usePermission';
 import { useSupplierPayables } from '../../hooks/useSupplierPayables';
 import { getApiErrorMessage } from '../../lib/apiClient';
@@ -127,7 +128,7 @@ export default function SupplierPayablesPage() {
       <PageHeader
         eyebrow="Nhà cung cấp"
         title="Công nợ NCC"
-        subtitle="Chỉ tính phần DNTT còn phải trả. PO chưa lập đề nghị thanh toán không phát sinh công nợ. Hạn mức tiền chỉ cảnh báo, không chặn đặt hàng."
+        subtitle="Công nợ lấy từ DNTT còn phải trả. PO chưa lập đề nghị không phát sinh nợ."
         actions={(
           <button
             type="button"
@@ -147,67 +148,20 @@ export default function SupplierPayablesPage() {
         </HrmPanel>
       ) : (
         <>
-          <div className="hrm-stat-grid">
-            {isLoading || !kpis ? (
-              <>
-                <HrmStatCard label="Tổng còn phải trả" value="…" icon={Wallet} tone="primary" />
-                <HrmStatCard label="Trong đó quá hạn" value="…" icon={AlertTriangle} tone="warning" />
-                <HrmStatCard label="NCC có nợ quá hạn" value="…" icon={AlertTriangle} tone="warning" />
-                <HrmStatCard label="NCC vượt hạn mức" value="…" icon={CircleDollarSign} tone="neutral" />
-              </>
-            ) : (
-              <>
-                <HrmStatCard
-                  label="Tổng công nợ còn phải trả"
-                  value={formatCurrencyFull(kpis.outstandingTotal)}
-                  icon={Wallet}
-                  tone="primary"
-                />
-                <HrmStatCard
-                  label="Trong đó quá hạn"
-                  value={formatCurrencyFull(kpis.overdueTotal)}
-                  icon={AlertTriangle}
-                  tone={kpis.overdueTotal > 0 ? 'warning' : 'neutral'}
-                />
-                <HrmStatCard
-                  label="Số NCC đang có nợ quá hạn"
-                  value={kpis.overdueSupplierCount}
-                  icon={AlertTriangle}
-                  tone={kpis.overdueSupplierCount > 0 ? 'warning' : 'neutral'}
-                />
-                <HrmStatCard
-                  label="Số NCC vượt hạn mức công nợ"
-                  value={kpis.overLimitSupplierCount}
-                  icon={CircleDollarSign}
-                  tone={kpis.overLimitSupplierCount > 0 ? 'warning' : 'neutral'}
-                />
-              </>
-            )}
-          </div>
-
-          <HrmPanel
-            title="Phân tích tuổi nợ"
-            subtitle="Khoản còn nợ nhóm theo số ngày quá hạn so với hạn thanh toán trên DNTT."
-          >
-            <div className="hrm-stat-grid sup-ap-aging">
-              {(isLoading ? [
-                { key: 'current', label: 'Chưa đến hạn', amount: 0, count: 0 },
-                { key: 'd1_30', label: 'Quá hạn 1-30 ngày', amount: 0, count: 0 },
-                { key: 'd31_60', label: 'Quá hạn 31-60 ngày', amount: 0, count: 0 },
-                { key: 'd61_90', label: 'Quá hạn 61-90 ngày', amount: 0, count: 0 },
-                { key: 'over90', label: 'Quá hạn trên 90 ngày', amount: 0, count: 0 },
-              ] : aging).map(bucket => (
-                <HrmStatCard
-                  key={bucket.key}
-                  label={bucket.label}
-                  value={isLoading ? '…' : formatCurrencyFull(bucket.amount)}
-                  hint={`${bucket.count} DNTT`}
-                  icon={CalendarClock}
-                  tone={bucket.key !== 'current' && bucket.amount > 0 ? 'warning' : 'neutral'}
-                />
-              ))}
-            </div>
-          </HrmPanel>
+          {isLoading || !kpis ? (
+            <HrmPanel noPadding>
+              <Skeleton variant="rect" height={196} />
+            </HrmPanel>
+          ) : (
+            <HrmPanel noPadding>
+              <SupplierPayablesOverview
+                kpis={kpis}
+                aging={aging}
+                upcoming7Total={data?.upcoming7Total ?? 0}
+                upcoming30Total={data?.upcoming30Total ?? 0}
+              />
+            </HrmPanel>
+          )}
 
           <HrmPanel title="Công nợ theo nhà cung cấp">
             <div className="overflow-x-auto table-scroll">
@@ -305,20 +259,6 @@ export default function SupplierPayablesPage() {
               title="Lịch thanh toán sắp tới (30 ngày)"
               subtitle="Khoản còn nợ chưa quá hạn, phục vụ kế hoạch dòng tiền."
             >
-              <div className="hrm-stat-grid">
-                <HrmStatCard
-                  label="Cần thanh toán trong 7 ngày tới"
-                  value={formatCurrencyFull(data?.upcoming7Total)}
-                  icon={CalendarClock}
-                  tone="warning"
-                />
-                <HrmStatCard
-                  label="Cần thanh toán trong 30 ngày tới"
-                  value={formatCurrencyFull(data?.upcoming30Total)}
-                  icon={CalendarClock}
-                  tone="primary"
-                />
-              </div>
               <div className="overflow-x-auto table-scroll">
                 <table className="wms-inventory-table">
                   <thead>

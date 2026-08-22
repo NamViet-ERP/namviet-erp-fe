@@ -5,9 +5,9 @@
  * Usage: node scripts/fetch-swagger.mjs
  * Env:   VITE_DEV_PROXY_TARGET or SWAGGER_URL
  */
-import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { writeFileRetry } from './write-file-retry.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..');
@@ -28,6 +28,5 @@ if (!res.ok) {
 
 const text = await res.text();
 JSON.parse(text); // validate JSON
-await mkdir(dirname(outFile), { recursive: true });
-await writeFile(outFile, text, 'utf8');
+writeFileRetry(outFile, text, 'utf8');
 console.log(`Wrote ${outFile} (${text.length} bytes) from ${url}`);

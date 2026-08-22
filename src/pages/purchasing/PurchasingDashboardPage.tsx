@@ -1,37 +1,30 @@
 import { useId, useMemo, useState } from 'react';
-import { History } from 'lucide-react';
-import HrmSelect from '../../components/hr/HrmSelect';
 import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
-import PageLoader from '../../components/ui/PageLoader';
+  Calculator,
+  ClipboardList,
+  History,
+  ScrollText,
+  ShieldCheck,
+  ShoppingBag,
+  ShoppingCart,
+  Wallet,
+  WalletCards,
+  type LucideIcon,
+} from 'lucide-react';
+import HrmSelect from '../../components/hr/HrmSelect';
 import EmptyState from '../../components/ui/EmptyState';
+import Card, { type KpiStat } from '../../components/ui/Card';
+import type { CardAccent } from '../../types';
+import PageLoader from '../../components/ui/PageLoader';
 import PurDateRangePicker, { type DateRangeValue } from '../../components/purchasing/PurDateRangePicker';
 import { useActivityRealtime } from '../../hooks/useActivityRealtime';
 import {
   usePurchasingActivityActors,
   usePurchasingActivityFeed,
-  usePurchasingDashboardChart,
   usePurchasingDashboardSummary,
+  usePurchasingDashboardVouchers,
 } from '../../hooks/usePurchasingDashboard';
-import { formatCurrency } from '../../utils/formatCurrency';
-import type {
-  PurchasingActivityItemApiDto,
-  PurchasingKpiMetricApiDto,
-} from '../../types/api/purchasingDashboardApi';
-
-const CHART_BLUE = '#428bca';
-
-/** Legacy chart axis: 100,000,000 style (en-US commas). */
-function formatChartAxis(value: number): string {
-  return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(value);
-}
+import type { PurchasingActivityItemApiDto } from '../../types/api/purchasingDashboardApi';
 
 function formatUpdatedAt(iso: string): string {
   const d = new Date(iso);
@@ -41,15 +34,7 @@ function formatUpdatedAt(iso: string): string {
   const yyyy = d.getFullYear();
   const hh = String(d.getHours()).padStart(2, '0');
   const mi = String(d.getMinutes()).padStart(2, '0');
-  const ss = String(d.getSeconds()).padStart(2, '0');
-  return `${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}`;
-}
-
-function formatKpiLine(metric: PurchasingKpiMetricApiDto): string {
-  if (metric.amount > 0) {
-    return `${metric.count} Đơn (${formatCurrency(metric.amount)})`;
-  }
-  return `${metric.count} Đơn`;
+  return `${dd}/${mm}/${yyyy} ${hh}:${mi}`;
 }
 
 function formatRelativeVi(iso: string): string {
@@ -71,23 +56,6 @@ function initials(name: string): string {
   if (parts.length === 0) return '?';
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
-
-function PurchasingKpiCard({
-  title,
-  metric,
-  tone,
-}: {
-  title: string;
-  metric: PurchasingKpiMetricApiDto;
-  tone: 'plan' | 'order' | 'import';
-}) {
-  return (
-    <div className={`pur-dash-kpi pur-dash-kpi--${tone}`}>
-      <h3 className="pur-dash-kpi__title">{title}</h3>
-      <p className="pur-dash-kpi__value">{formatKpiLine(metric)}</p>
-    </div>
-  );
 }
 
 function ActivityFeedItem({
@@ -113,6 +81,26 @@ function ActivityFeedItem({
       </div>
     </article>
   );
+}
+
+type DashTile = {
+  show: boolean;
+  title: string;
+  to: string;
+  accent: CardAccent;
+  icon: LucideIcon;
+  stats: KpiStat[];
+};
+
+const EMPTY_VOUCHER = { show: false, stats: [] as KpiStat[] };
+
+function tileTotal(stats: KpiStat[]): number | undefined {
+  let sum = 0;
+  for (const row of stats) {
+    if (typeof row.value !== 'number') return undefined;
+    sum += row.value;
+  }
+  return stats.length > 0 ? sum : undefined;
 }
 
 export default function PurchasingDashboardPage() {
@@ -141,7 +129,7 @@ export default function PurchasingDashboardPage() {
   const liveOpts = { live };
 
   const summaryQ = usePurchasingDashboardSummary(queryParams, liveOpts);
-  const chartQ = usePurchasingDashboardChart(queryParams, liveOpts);
+  const vouchers = usePurchasingDashboardVouchers(dateRange?.from, dateRange?.to);
   const activityQ = usePurchasingActivityFeed(queryParams, liveOpts);
   const actorsQ = usePurchasingActivityActors(
     {
@@ -161,17 +149,75 @@ export default function PurchasingDashboardPage() {
     [activityQ.data],
   );
 
-  const chartData = useMemo(
-    () =>
-      (chartQ.data?.bars ?? []).map(b => ({
-        name: b.label.toLocaleUpperCase('vi-VN'),
-        amount: b.amount,
-      })),
-    [chartQ.data],
-  );
+  const tiles: DashTile[] = [
+    {
+      show: (vouchers.plans ?? EMPTY_VOUCHER).show,
+      title: 'Kế hoạch mua hàng',
+      to: '/purchasing/plans',
+      accent: 'warning',
+      icon: ClipboardList,
+      stats: (vouchers.plans ?? EMPTY_VOUCHER).stats,
+    },
+    {
+      show: (vouchers.adhoc ?? EMPTY_VOUCHER).show,
+      title: 'Mua hàng phát sinh',
+      to: '/purchasing/adhoc',
+      accent: 'purple',
+      icon: ShoppingBag,
+      stats: (vouchers.adhoc ?? EMPTY_VOUCHER).stats,
+    },
+    {
+      show: (vouchers.orders ?? EMPTY_VOUCHER).show,
+      title: 'Đơn hàng',
+      to: '/purchasing/orders',
+      accent: 'success',
+      icon: ShoppingCart,
+      stats: (vouchers.orders ?? EMPTY_VOUCHER).stats,
+    },
+    {
+      show: (vouchers.estimates ?? EMPTY_VOUCHER).show,
+      title: 'Mua hàng dự toán',
+      to: '/purchasing/estimate-procurement',
+      accent: 'info',
+      icon: Calculator,
+      stats: (vouchers.estimates ?? EMPTY_VOUCHER).stats,
+    },
+    {
+      show: (vouchers.contracts ?? EMPTY_VOUCHER).show,
+      title: 'Hợp đồng',
+      to: '/purchasing/contracts',
+      accent: 'stone',
+      icon: ScrollText,
+      stats: (vouchers.contracts ?? EMPTY_VOUCHER).stats,
+    },
+    {
+      show: (vouchers.paymentPlans ?? EMPTY_VOUCHER).show,
+      title: 'Kế hoạch thanh toán',
+      to: '/purchasing/payment-plans',
+      accent: 'neutral',
+      icon: WalletCards,
+      stats: (vouchers.paymentPlans ?? EMPTY_VOUCHER).stats,
+    },
+    {
+      show: (vouchers.payments ?? EMPTY_VOUCHER).show,
+      title: 'Đề nghị thanh toán',
+      to: '/purchasing/payments',
+      accent: 'danger',
+      icon: Wallet,
+      stats: (vouchers.payments ?? EMPTY_VOUCHER).stats,
+    },
+    {
+      show: (vouchers.warranties ?? EMPTY_VOUCHER).show,
+      title: 'Bảo hành / Khiếu nại',
+      to: '/purchasing/warranties',
+      accent: 'primary',
+      icon: ShieldCheck,
+      stats: (vouchers.warranties ?? EMPTY_VOUCHER).stats,
+    },
+  ].filter(t => t.show);
 
-  const updatedAt = summaryQ.data?.generatedAt ?? chartQ.data?.generatedAt;
-  const loading = summaryQ.isLoading || chartQ.isLoading;
+  const updatedAt = summaryQ.data?.generatedAt;
+  const loading = summaryQ.isLoading;
 
   if (loading && !summaryQ.data) return <PageLoader />;
 
@@ -181,99 +227,33 @@ export default function PurchasingDashboardPage() {
         <div className="pur-erp__head-text">
           <h1 className="pur-erp__title">Dashboard mua hàng</h1>
           <p className="pur-erp__subtitle">
-            Tổng quan KHMH · Đơn hàng · Nhập hàng và lịch sử hoạt động
+            Số phiếu theo từng nghiệp vụ - ẩn mục chưa có dữ liệu
           </p>
         </div>
+        {updatedAt ? (
+          <p className="page-header__updated">Cập nhật lúc {formatUpdatedAt(updatedAt)}</p>
+        ) : null}
       </header>
 
       <div className="pur-dash__layout">
         <div className="pur-dash__main">
-          <div className="pur-dash-kpi-row">
-            <PurchasingKpiCard
-              title="KHMH"
-              metric={summaryQ.data?.plans ?? { count: 0, amount: 0 }}
-              tone="plan"
-            />
-            <PurchasingKpiCard
-              title="Đơn hàng"
-              metric={summaryQ.data?.orders ?? { count: 0, amount: 0 }}
-              tone="order"
-            />
-            <PurchasingKpiCard
-              title="Nhập hàng"
-              metric={summaryQ.data?.imports ?? { count: 0, amount: 0 }}
-              tone="import"
-            />
-          </div>
-
-          <section className="pur-dash-chart">
-            <h2 className="pur-dash-chart__title">
-              Biểu đồ mua theo hoạch định sản xuất và dự trữ kho
-            </h2>
-            {chartData.every(d => d.amount === 0) ? (
-              <EmptyState message="Chưa có đơn hàng trong kỳ đã chọn." />
-            ) : (
-              <>
-                <div className="pur-dash-chart__legend" aria-hidden>
-                  <span className="pur-dash-chart__legend-swatch" />
-                  <span>Tổng tiền</span>
-                </div>
-                <div className="pur-dash-chart__canvas">
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart
-                      data={chartData}
-                      margin={{ top: 12, right: 16, left: 8, bottom: 8 }}
-                      barCategoryGap="28%"
-                    >
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e8ebf0" />
-                      <XAxis
-                        dataKey="name"
-                        tick={{ fontSize: 11, fill: '#555', fontWeight: 600 }}
-                        axisLine={{ stroke: '#d8dde6' }}
-                        tickLine={false}
-                        interval={0}
-                      />
-                      <YAxis
-                        tick={{ fontSize: 11, fill: '#888' }}
-                        tickFormatter={v => formatChartAxis(Number(v))}
-                        width={96}
-                        axisLine={false}
-                        tickLine={false}
-                      />
-                      <Tooltip
-                        cursor={{ fill: 'rgb(66 139 202 / 0.08)' }}
-                        content={({ active, payload, label }) => {
-                          if (!active || !payload?.length) return null;
-                          const raw = Number(payload[0]?.value ?? 0);
-                          return (
-                            <div className="pur-dash-chart__tip">
-                              <p className="pur-dash-chart__tip-label">{label}</p>
-                              <p className="pur-dash-chart__tip-row">
-                                <span className="pur-dash-chart__tip-swatch" />
-                                <span>{formatChartAxis(raw)}</span>
-                              </p>
-                            </div>
-                          );
-                        }}
-                      />
-                      <Bar
-                        dataKey="amount"
-                        name="Tổng tiền"
-                        fill={CHART_BLUE}
-                        maxBarSize={220}
-                        radius={[0, 0, 0, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </>
-            )}
-            {updatedAt && (
-              <div className="pur-dash-chart__footer">
-                Updated {formatUpdatedAt(updatedAt)}
-              </div>
-            )}
-          </section>
+          {tiles.length === 0 ? (
+            <EmptyState message="Chưa có phiếu mua hàng trong kỳ đã chọn." />
+          ) : (
+            <div className="dashboard-kpi-grid" role="list" aria-label="Số phiếu mua hàng">
+              {tiles.map(tile => (
+                <Card
+                  key={tile.to}
+                  title={tile.title}
+                  value={tileTotal(tile.stats)}
+                  to={tile.to}
+                  accent={tile.accent}
+                  icon={tile.icon}
+                  stats={tile.stats}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         <aside className="pur-dash-feed">

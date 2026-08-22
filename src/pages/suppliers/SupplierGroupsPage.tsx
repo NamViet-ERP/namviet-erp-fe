@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Pencil, Plus, Trash2, Users } from 'lucide-react';
 import PurchasingListLayout from '../../components/purchasing/PurchasingListLayout';
+import PurchasingStatusBadge from '../../components/purchasing/PurchasingStatusBadge';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
-import Dropdown from '../../components/ui/Dropdown';
 import EmptyState from '../../components/ui/EmptyState';
 import Pagination from '../../components/ui/Pagination';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
@@ -19,7 +19,6 @@ import {
   useSupplierGroups,
   useUpdateSupplierGroup,
 } from '../../hooks/useSupplierDirectory';
-import type { DropdownItem } from '../../types';
 import type { SupplierGroupApiDto } from '../../types/api/supplierDirectoryApi';
 
 export default function SupplierGroupsPage() {
@@ -50,25 +49,6 @@ export default function SupplierGroupsPage() {
     setEditing(group);
     setShowForm(true);
   };
-
-  const rowActions = (row: SupplierGroupApiDto): DropdownItem[] => [
-    {
-      label: 'Gán nhà cung cấp',
-      icon: Users,
-      onClick: () => setMembersTarget(row),
-    },
-    {
-      label: 'Sửa',
-      icon: Pencil,
-      onClick: () => openEdit(row),
-    },
-    {
-      label: 'Xóa',
-      icon: Trash2,
-      danger: true,
-      onClick: () => setDeleteTarget(row),
-    },
-  ];
 
   const handleSubmit = async (values: { name: string; description: string | null }) => {
     try {
@@ -112,13 +92,13 @@ export default function SupplierGroupsPage() {
     <PurchasingListLayout
       eyebrow="Nhà cung cấp"
       title="Nhóm nhà cung cấp"
-      subtitle="Phân nhóm NCC theo ngành / loại. Một NCC có thể thuộc nhiều nhóm."
+      subtitle="Phân nhóm theo ngành / loại. Một NCC có thể thuộc nhiều nhóm."
       search={search}
       onSearchChange={value => {
         setSearch(value);
         setPage(1);
       }}
-      searchPlaceholder="Tìm nhóm…"
+      searchPlaceholder="Tìm theo tên nhóm…"
       hasFilters={Boolean(search)}
       onResetFilters={() => {
         setSearch('');
@@ -127,19 +107,19 @@ export default function SupplierGroupsPage() {
       actions={(
         <button type="button" className="btn btn-primary" onClick={openCreate}>
           <Plus size={16} aria-hidden />
-          Tạo mới
+          Tạo nhóm
         </button>
       )}
     >
-      <div className="overflow-x-auto table-scroll hrm-table-wrap">
+      <div className="overflow-x-auto table-scroll hrm-table-wrap supplier-groups-table">
         <table className="w-full border-collapse hrm-table table-min-w--720">
           <thead>
             <tr>
-              <th className="table-header-cell">#</th>
-              <th className="table-header-cell">Nhóm nhà cung cấp</th>
-              <th className="table-header-cell">Mô tả</th>
-              <th className="table-header-cell text-right">Số NCC</th>
-              <th className="table-header-cell text-center">Thao tác</th>
+              <th className="table-header-cell supplier-groups-col-idx">#</th>
+              <th className="table-header-cell supplier-groups-col-name">Nhóm</th>
+              <th className="table-header-cell supplier-groups-col-desc">Mô tả</th>
+              <th className="table-header-cell text-center supplier-groups-col-count">Số NCC</th>
+              <th className="table-header-cell hrm-table-col-actions" aria-label="Thao tác" />
             </tr>
           </thead>
           <tbody>
@@ -170,24 +150,61 @@ export default function SupplierGroupsPage() {
             ) : (
               items.map((row, i) => (
                 <tr key={row.id} className="table-row">
-                  <td className="table-cell whitespace-nowrap tabular-nums">
+                  <td className="table-cell supplier-groups-col-idx whitespace-nowrap tabular-nums">
                     {(page - 1) * pageSize + i + 1}
                   </td>
-                  <td className="table-cell">
+                  <td className="table-cell supplier-groups-col-name">
                     <Link
                       to={`/suppliers/list?groupId=${row.id}`}
-                      className="font-semibold text-[var(--md-primary)] hover:underline"
+                      className="supplier-groups-name-link"
                       title={`Xem NCC trong nhóm ${row.name}`}
                     >
                       {row.name}
                     </Link>
                   </td>
-                  <td className="table-cell">{row.description || '—'}</td>
-                  <td className="table-cell whitespace-nowrap text-right tabular-nums">
-                    {row.supplierCount}
+                  <td className="table-cell supplier-groups-col-desc">
+                    {row.description ? (
+                      <span className="supplier-groups-desc">{row.description}</span>
+                    ) : (
+                      <span className="supplier-groups-desc supplier-groups-desc--empty">Chưa có mô tả</span>
+                    )}
                   </td>
-                  <td className="table-cell text-center" onClick={e => e.stopPropagation()}>
-                    <Dropdown trigger="Tác vụ" items={rowActions(row)} />
+                  <td className="table-cell text-center supplier-groups-col-count">
+                    <PurchasingStatusBadge
+                      label={String(row.supplierCount)}
+                      tone={row.supplierCount > 0 ? 'warning' : 'neutral'}
+                    />
+                  </td>
+                  <td className="table-cell hrm-table-col-actions">
+                    <div className="hrm-table-row-actions">
+                      <button
+                        type="button"
+                        className="icon-btn"
+                        title="Gán nhà cung cấp"
+                        aria-label={`Gán nhà cung cấp cho nhóm ${row.name}`}
+                        onClick={() => setMembersTarget(row)}
+                      >
+                        <Users size={15} aria-hidden />
+                      </button>
+                      <button
+                        type="button"
+                        className="icon-btn"
+                        title="Sửa"
+                        aria-label={`Sửa nhóm ${row.name}`}
+                        onClick={() => openEdit(row)}
+                      >
+                        <Pencil size={15} aria-hidden />
+                      </button>
+                      <button
+                        type="button"
+                        className="icon-btn icon-btn--danger"
+                        title="Xóa"
+                        aria-label={`Xóa nhóm ${row.name}`}
+                        onClick={() => setDeleteTarget(row)}
+                      >
+                        <Trash2 size={15} aria-hidden />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))

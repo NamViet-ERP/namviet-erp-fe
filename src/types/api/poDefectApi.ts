@@ -27,6 +27,8 @@ export type PurchaseDefectApiDto = Schemas['PurchaseDefectDto'];
 /** OpenAPI aliases — updates */
 export type UpdateDefectProcessingRequest = Schemas['UpdateDefectProcessingRequest'];
 export type UpdateDefectReasonRequest = Schemas['UpdateDefectReasonRequest'];
+export type UpdateDefectItemRequest = Schemas['UpdateDefectItemRequest'];
+export type UpdateDefectItemsRequest = Schemas['UpdateDefectItemsRequest'];
 
 /** Domain string unions (BE stores plain strings; not enum schemas in OpenAPI). */
 export type PurchaseDefectSourceType = 'po' | 'stock';

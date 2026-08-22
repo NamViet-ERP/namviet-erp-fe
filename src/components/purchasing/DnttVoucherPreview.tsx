@@ -52,7 +52,7 @@ export default function DnttVoucherPreview({ model }: { model: DnttPreviewModel 
   const hasLines = model.lines.length > 0;
   const contentText = [
     model.supplierName ? `Thanh toán NCC ${model.supplierName}` : 'Thanh toán nhà cung cấp',
-    model.poCode ? `theo PO ${model.poCode}` : null,
+    model.poCode ? `theo ${model.poCode}` : null,
     model.invoiceNo ? `HĐ ${model.invoiceNo}` : null,
     model.projectLabel ? `DA ${model.projectLabel}` : null,
   ].filter(Boolean).join(' — ');

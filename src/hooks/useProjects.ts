@@ -1,5 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { CreateWarehouseProjectRequest, UpdateWarehouseProjectRequest } from '../types/wms';
+import type {
+  CreateProjectConstructionTaskRequest,
+  CreateWarehouseProjectRequest,
+  UpdateProjectConstructionTaskRequest,
+  UpdateWarehouseProjectRequest,
+} from '../types/wms';
 import { projectsService, type ProjectListParams } from '../services/projectsService';
 import { queryKeys } from '../services/queryKeys';
 
@@ -85,6 +90,65 @@ export function useUpdateProjectInventoryMinStock() {
     onSuccess: (_data, { projectCode }) => {
       qc.invalidateQueries({ queryKey: queryKeys.projects.inventory(projectCode) });
       qc.invalidateQueries({ queryKey: ['wms-alerts', 'low-stock'] });
+    },
+  });
+}
+
+export function useProjectPurchasingProgress(projectCode?: string) {
+  return useQuery({
+    queryKey: queryKeys.projects.purchasingProgress(projectCode),
+    queryFn: () => projectsService.listPurchasingProgress(projectCode),
+  });
+}
+
+export function useProjectConstructionTasks(projectCode?: string) {
+  return useQuery({
+    queryKey: queryKeys.projects.constructionTasks(projectCode),
+    queryFn: () => projectsService.listConstructionTasks(projectCode),
+  });
+}
+
+export function useCreateProjectConstructionTask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      projectCode,
+      body,
+    }: {
+      projectCode: string;
+      body: CreateProjectConstructionTaskRequest;
+    }) => projectsService.createConstructionTask(projectCode, body),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.projects.all });
+    },
+  });
+}
+
+export function useUpdateProjectConstructionTask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      projectCode,
+      id,
+      body,
+    }: {
+      projectCode: string;
+      id: string;
+      body: UpdateProjectConstructionTaskRequest;
+    }) => projectsService.updateConstructionTask(projectCode, id, body),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.projects.all });
+    },
+  });
+}
+
+export function useDeleteProjectConstructionTask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ projectCode, id }: { projectCode: string; id: string }) =>
+      projectsService.deleteConstructionTask(projectCode, id),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.projects.all });
     },
   });
 }

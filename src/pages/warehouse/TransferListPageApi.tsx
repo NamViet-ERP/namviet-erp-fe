@@ -24,6 +24,7 @@ import {
 } from '../../hooks/useTransfers';
 import { getVoucherTabLabels } from '../../lib/wms/voucherStatusLabels';
 import { GENERAL_WAREHOUSE_LABEL_LOWER } from '../../lib/wms/stockTerminology';
+import { projectInventoryAvailable } from '../../lib/wms/stockQtyFormat';
 import { transferToFormLines } from '../../lib/wms/voucherFormPopulate';
 import { useMaterials } from '../../hooks/useMaterials';
 import { useProjects, useProjectInventory } from '../../hooks/useProjects';
@@ -111,7 +112,7 @@ function TransferListPageApi({ initialProjectCode }: TransferListPageApiProps) {
     if (!projectCode) return materials;
     const codes = new Set(
       projectInventory
-        .filter(r => r.actualInventoryQty - r.plannedExportQty > 0)
+        .filter(r => projectInventoryAvailable(r) > 0)
         .map(r => r.materialCode),
     );
     return materials.filter(m => codes.has(m.materialCode));

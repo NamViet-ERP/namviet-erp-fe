@@ -76,6 +76,7 @@ import { importsService } from '../../services/importsService';
 import { emptyQtyPriceLine, type MaterialQtyPriceLine } from './voucher/voucherFormTypes';
 
 import { importLineTotal } from './import/importUtils';
+import { resolvePoImportItems } from './import/importCreatePoDrafts';
 
 import ImportTable from './import/ImportTable';
 
@@ -463,23 +464,18 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
   const handleCreate = async (
     status: 'draft' | 'pending',
-    evidence?: { files: File[]; evaluation: string },
+    evidence?: { files: File[]; evaluation: string; poItems?: { poItemId: number; qty: number }[] },
   ) => {
     if (!editing) {
       if (!selectedPoCode) {
         setCreateErrors(e => ({ ...e, referenceCode: 'Vui lòng chọn PO đã đặt NCC.' }));
         return;
       }
-      const selectedItems = items
-        .map(line => {
-          const match = /poItem:(\d+)/i.exec((line.notes ?? '').trim());
-          const poItemId = match ? Number(match[1]) : NaN;
-          const qty = Number(line.qty);
-          return Number.isFinite(poItemId) && poItemId > 0 && Number.isFinite(qty) && qty > 0
-            ? { poItemId, qty }
-            : null;
-        })
-        .filter((x): x is { poItemId: number; qty: number } => Boolean(x));
+      const selectedItems = resolvePoImportItems({
+        evidencePoItems: evidence?.poItems,
+        formItems: items,
+        previewLines: poPreviewQuery.data?.lines ?? [],
+      });
 
       if (selectedItems.length === 0) {
         setCreateErrors(e => ({ ...e, items: 'PO chưa có dòng hợp lệ để nhập kho.' }));

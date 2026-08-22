@@ -316,7 +316,8 @@ export default function DefectCreateModal({ isOpen, onClose }: DefectCreateModal
           <AlertTriangle size={14} className="shrink-0 mt-0.5" />
           <span>
             Phiếu HL không cộng tồn. Với hàng lỗi PO, duyệt sẽ tăng SL lỗi trên PO/KHMH và giảm SL còn lại.
-            Với hàng lỗi tồn kho, duyệt sẽ giữ chỗ trên tồn kho dự án. Gửi duyệt cần ít nhất 1 ảnh.
+            Với hàng lỗi tồn kho, gửi duyệt sẽ giữ chỗ trên tồn kho dự án - xuất/chuyển kho không lấy phần đó.
+            Duyệt HL mới trừ tồn thực tế. Gửi duyệt cần ít nhất 1 ảnh.
           </span>
         </div>
 

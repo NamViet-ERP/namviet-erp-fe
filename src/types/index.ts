@@ -32,7 +32,18 @@ export type StatusKey =
   | 'inactive';
 
 /** Card accent color options */
-export type CardAccent = 'amber' | 'blue' | 'teal' | 'purple';
+export type CardAccent =
+  | 'amber'
+  | 'blue'
+  | 'teal'
+  | 'purple'
+  | 'warning'
+  | 'danger'
+  | 'success'
+  | 'info'
+  | 'primary'
+  | 'neutral'
+  | 'stone';
 
 /** Toast notification type */
 export type ToastType = 'success' | 'error' | 'warning' | 'info';

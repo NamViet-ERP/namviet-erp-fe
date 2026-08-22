@@ -16,12 +16,12 @@ export function sumProjectPlannedExport(row: StockMatrixRowApiDto) {
 
 export function sumProjectAvailable(row: StockMatrixRowApiDto) {
   return row.projects.reduce(
-    (sum, p) => sum + computeAvailableQty(p.actualQty, p.plannedExportQty),
+    (sum, p) => sum + computeAvailableQty(p.actualQty, p.plannedExportQty, p.pendingDefectQty),
     0,
   );
 }
 
-/** Khả dụng tổng = (Kho trung tâm − giữ) + Σ(Tồn TT − xuất/CK DK) từng dự án */
+/** Khả dụng tổng = (Kho trung tâm − giữ) + Σ(Tồn TT − xuất/CK DK − HL chờ duyệt) từng dự án */
 export function totalUsableQty(row: StockMatrixRowApiDto) {
   const generalFree = row.generalActualQty - row.generalReservedQty;
   return generalFree + sumProjectAvailable(row);
@@ -34,7 +34,11 @@ export function projectPlannedStock(row: StockMatrixRowApiDto) {
 
 export function countActiveProjects(row: StockMatrixRowApiDto) {
   return row.projects.filter(
-    p => p.actualQty !== 0 || p.plannedImportQty !== 0 || p.plannedExportQty !== 0,
+    p =>
+      p.actualQty !== 0
+      || p.plannedImportQty !== 0
+      || p.plannedExportQty !== 0
+      || p.pendingDefectQty !== 0,
   ).length;
 }
 

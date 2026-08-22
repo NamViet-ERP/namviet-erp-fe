@@ -2666,6 +2666,103 @@
         }
       }
     },
+    "/api/defects/{id}/items": {
+      "put": {
+        "tags": [
+          "Defects"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDefectItemsRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDefectItemsRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDefectItemsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseDefectDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseDefectDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseDefectDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/defects/{id}/cancel": {
+      "post": {
+        "tags": [
+          "Defects"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseDefectDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseDefectDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseDefectDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/defects/{id}/processing": {
       "put": {
         "tags": [
@@ -7179,6 +7276,254 @@
         }
       }
     },
+    "/api/warehouse/projects/construction-tasks": {
+      "get": {
+        "tags": [
+          "ProjectConstructionTasks"
+        ],
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProjectConstructionTaskDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProjectConstructionTaskDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProjectConstructionTaskDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/warehouse/projects/{code}/construction-tasks": {
+      "post": {
+        "tags": [
+          "ProjectConstructionTasks"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProjectConstructionTaskRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProjectConstructionTaskRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProjectConstructionTaskRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectConstructionTaskDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectConstructionTaskDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectConstructionTaskDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/warehouse/projects/{code}/construction-tasks/{id}": {
+      "put": {
+        "tags": [
+          "ProjectConstructionTasks"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProjectConstructionTaskRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProjectConstructionTaskRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProjectConstructionTaskRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectConstructionTaskDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectConstructionTaskDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectConstructionTaskDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "ProjectConstructionTasks"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/warehouse/projects/purchasing-progress": {
+      "get": {
+        "tags": [
+          "ProjectPurchasingProgress"
+        ],
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProjectPurchasingProgressDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProjectPurchasingProgressDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProjectPurchasingProgressDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/warehouse/projects": {
       "get": {
         "tags": [
@@ -9158,6 +9503,206 @@
       }
     },
     "/api/purchasing/orders/{code}/attachments/{id}": {
+      "delete": {
+        "tags": [
+          "PurchaseOrders"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchasing/orders/{code}/comments": {
+      "get": {
+        "tags": [
+          "PurchaseOrders"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PurchaseOrderCommentDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PurchaseOrderCommentDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PurchaseOrderCommentDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "PurchaseOrders"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePurchaseOrderCommentRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePurchaseOrderCommentRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePurchaseOrderCommentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseOrderCommentDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseOrderCommentDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseOrderCommentDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/orders/{code}/comments/{id}": {
+      "put": {
+        "tags": [
+          "PurchaseOrders"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePurchaseOrderCommentRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePurchaseOrderCommentRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePurchaseOrderCommentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseOrderCommentDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseOrderCommentDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseOrderCommentDto"
+                }
+              }
+            }
+          }
+        }
+      },
       "delete": {
         "tags": [
           "PurchaseOrders"
@@ -17471,6 +18016,38 @@
         },
         "additionalProperties": false
       },
+      "CreateProjectConstructionTaskRequest": {
+        "required": [
+          "name",
+          "percentComplete",
+          "plannedEnd",
+          "plannedStart"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "plannedStart": {
+            "type": "string",
+            "format": "date"
+          },
+          "plannedEnd": {
+            "type": "string",
+            "format": "date"
+          },
+          "actualEnd": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "percentComplete": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
       "CreateProjectRequest": {
         "required": [
           "materialBudget",
@@ -17606,6 +18183,18 @@
               "$ref": "#/components/schemas/PurchaseEstimateLineInput"
             },
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreatePurchaseOrderCommentRequest": {
+        "required": [
+          "body"
+        ],
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -20299,6 +20888,60 @@
         },
         "additionalProperties": false
       },
+      "ProjectConstructionTaskDto": {
+        "required": [
+          "id",
+          "name",
+          "percentComplete",
+          "plannedEnd",
+          "plannedStart",
+          "projectCode",
+          "projectName",
+          "sortOrder",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "projectCode": {
+            "type": "string"
+          },
+          "projectName": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "plannedStart": {
+            "type": "string",
+            "format": "date"
+          },
+          "plannedEnd": {
+            "type": "string",
+            "format": "date"
+          },
+          "actualEnd": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "percentComplete": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "ProjectDto": {
         "required": [
           "approvedImportValue",
@@ -20446,6 +21089,7 @@
           "materialCode",
           "materialName",
           "minStockQty",
+          "pendingDefectQty",
           "plannedExportQty",
           "plannedImportQty",
           "plannedInventoryQty",
@@ -20498,6 +21142,10 @@
           "minStockQty": {
             "type": "number",
             "format": "double"
+          },
+          "pendingDefectQty": {
+            "type": "number",
+            "format": "double"
           }
         },
         "additionalProperties": false
@@ -20536,6 +21184,302 @@
             "type": "number",
             "format": "double",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProjectPurchasingProgressDto": {
+        "required": [
+          "orders",
+          "percentComplete",
+          "plans",
+          "projectCode",
+          "projectName",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "projectCode": {
+            "type": "string"
+          },
+          "projectName": {
+            "type": "string"
+          },
+          "plannedStart": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "plannedEnd": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "actualEnd": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "percentComplete": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "status": {
+            "type": "string"
+          },
+          "plans": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProjectPurchasingProgressPlanDto"
+            }
+          },
+          "orders": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProjectPurchasingProgressOrderDto"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProjectPurchasingProgressLineDto": {
+        "required": [
+          "id",
+          "name",
+          "ordered",
+          "percentComplete",
+          "plannedEnd",
+          "plannedStart",
+          "received",
+          "sku",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "plannedStart": {
+            "type": "string",
+            "format": "date"
+          },
+          "plannedEnd": {
+            "type": "string",
+            "format": "date"
+          },
+          "actualEnd": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "ordered": {
+            "type": "number",
+            "format": "double"
+          },
+          "received": {
+            "type": "number",
+            "format": "double"
+          },
+          "percentComplete": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProjectPurchasingProgressOrderDto": {
+        "required": [
+          "deliveryStatus",
+          "lines",
+          "ordered",
+          "percentComplete",
+          "planCode",
+          "plannedEnd",
+          "plannedStart",
+          "poCode",
+          "receipts",
+          "received",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "poCode": {
+            "type": "string"
+          },
+          "supplierName": {
+            "type": "string",
+            "nullable": true
+          },
+          "planCode": {
+            "type": "string"
+          },
+          "plannedStart": {
+            "type": "string",
+            "format": "date"
+          },
+          "plannedEnd": {
+            "type": "string",
+            "format": "date"
+          },
+          "actualEnd": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "ordered": {
+            "type": "number",
+            "format": "double"
+          },
+          "received": {
+            "type": "number",
+            "format": "double"
+          },
+          "percentComplete": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "deliveryStatus": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProjectPurchasingProgressLineDto"
+            }
+          },
+          "receipts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProjectPurchasingProgressReceiptDto"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProjectPurchasingProgressPlanDto": {
+        "required": [
+          "kind",
+          "ordered",
+          "orders",
+          "percentComplete",
+          "planCode",
+          "plannedEnd",
+          "plannedStart",
+          "planStatus",
+          "received",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "planCode": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "planStatus": {
+            "type": "string"
+          },
+          "plannedStart": {
+            "type": "string",
+            "format": "date"
+          },
+          "plannedEnd": {
+            "type": "string",
+            "format": "date"
+          },
+          "actualEnd": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "ordered": {
+            "type": "number",
+            "format": "double"
+          },
+          "received": {
+            "type": "number",
+            "format": "double"
+          },
+          "percentComplete": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "status": {
+            "type": "string"
+          },
+          "orders": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProjectPurchasingProgressOrderDto"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProjectPurchasingProgressReceiptDto": {
+        "required": [
+          "date",
+          "lines",
+          "quantity",
+          "status",
+          "ticketCode"
+        ],
+        "type": "object",
+        "properties": {
+          "ticketCode": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProjectPurchasingProgressReceiptLineDto"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProjectPurchasingProgressReceiptLineDto": {
+        "required": [
+          "name",
+          "quantity",
+          "sku"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
           }
         },
         "additionalProperties": false
@@ -21665,6 +22609,46 @@
           },
           "uploadedByName": {
             "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchaseOrderCommentDto": {
+        "required": [
+          "authorName",
+          "authorUserId",
+          "body",
+          "createdAt",
+          "id",
+          "poCode"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "poCode": {
+            "type": "string"
+          },
+          "authorUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "authorName": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
             "nullable": true
           }
         },
@@ -23964,6 +24948,7 @@
       "PurchasingDashboardChartBarDto": {
         "required": [
           "amount",
+          "count",
           "key",
           "label"
         ],
@@ -23974,6 +24959,10 @@
           },
           "label": {
             "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
           },
           "amount": {
             "type": "number",
@@ -24055,10 +25044,31 @@
         },
         "additionalProperties": false
       },
+      "PurchasingKpiLineDto": {
+        "required": [
+          "count",
+          "key",
+          "label"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
       "PurchasingKpiMetricDto": {
         "required": [
-          "amount",
-          "count"
+          "count",
+          "lines"
         ],
         "type": "object",
         "properties": {
@@ -24066,9 +25076,11 @@
             "type": "integer",
             "format": "int32"
           },
-          "amount": {
-            "type": "number",
-            "format": "double"
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PurchasingKpiLineDto"
+            }
           }
         },
         "additionalProperties": false
@@ -24713,6 +25725,7 @@
       "StockMatrixProjectColumnDto": {
         "required": [
           "actualQty",
+          "pendingDefectQty",
           "plannedExportQty",
           "plannedImportQty",
           "projectCode",
@@ -24739,6 +25752,10 @@
             "format": "double"
           },
           "plannedExportQty": {
+            "type": "number",
+            "format": "double"
+          },
+          "pendingDefectQty": {
             "type": "number",
             "format": "double"
           }
@@ -26449,6 +27466,43 @@
         },
         "additionalProperties": false
       },
+      "UpdateDefectItemRequest": {
+        "required": [
+          "id",
+          "quantity"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "lineReason": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateDefectItemsRequest": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UpdateDefectItemRequest"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
       "UpdateDefectProcessingRequest": {
         "type": "object",
         "properties": {
@@ -26554,6 +27608,43 @@
           "evaluation": {
             "type": "string",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateProjectConstructionTaskRequest": {
+        "required": [
+          "name",
+          "percentComplete",
+          "plannedEnd",
+          "plannedStart",
+          "sortOrder"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "plannedStart": {
+            "type": "string",
+            "format": "date"
+          },
+          "plannedEnd": {
+            "type": "string",
+            "format": "date"
+          },
+          "actualEnd": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "percentComplete": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false
@@ -26691,6 +27782,18 @@
             "items": {
               "$ref": "#/components/schemas/PurchaseEstimateLineInput"
             }
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdatePurchaseOrderCommentRequest": {
+        "required": [
+          "body"
+        ],
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "string"
           }
         },
         "additionalProperties": false

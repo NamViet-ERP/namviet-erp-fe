@@ -263,7 +263,7 @@ export default function MaterialCategoriesSettingsPanel() {
       </div>
 
       <div className="overflow-x-auto table-scroll rounded-lg border border-[var(--md-outline-variant)]">
-        <table className="w-full text-xs">
+        <table className="wms-inventory-table">
           <thead>
             <tr>
               <th className="table-header-cell text-left">Tên {levelLabel.toLowerCase()}</th>
@@ -291,7 +291,7 @@ export default function MaterialCategoriesSettingsPanel() {
               </tr>
             ) : (
               paginatedItems.map(item => (
-                  <tr key={item.id} className="table-row border-b border-[var(--md-outline-variant)]">
+                  <tr key={item.id} className="table-row">
                     <td className="table-cell">
                       {editingId === item.id ? (
                         <input

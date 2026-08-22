@@ -101,6 +101,10 @@ export const queryKeys = {
     detail: (code: string) => ['projects', code] as const,
     inventory: (code: string) => ['projects', code, 'inventory'] as const,
     ledger: (code: string) => ['projects', code, 'ledger'] as const,
+    constructionTasks: (projectCode?: string) =>
+      ['projects', 'construction-tasks', projectCode ?? 'all'] as const,
+    purchasingProgress: (projectCode?: string) =>
+      ['projects', 'purchasing-progress', projectCode ?? 'all'] as const,
   },
   materials: {
     all: ['materials'] as const,
@@ -169,6 +173,7 @@ export const queryKeys = {
     all: ['purchaseOrders'] as const,
     detail: (code: string) => ['purchaseOrders', code] as const,
     attachments: (code: string) => ['purchaseOrders', code, 'attachments'] as const,
+    comments: (code: string) => ['purchaseOrders', code, 'comments'] as const,
   },
   purchasePayments: {
     all: ['purchasePayments'] as const,

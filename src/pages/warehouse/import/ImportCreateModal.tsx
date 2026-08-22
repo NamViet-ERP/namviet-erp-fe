@@ -9,6 +9,7 @@ import {
   defaultPoLineDrafts,
   draftsFromExistingItems,
   poDraftsToItems,
+  selectedPoItemsFromDrafts,
   type PoLineDraft,
 } from './importCreatePoDrafts';
 import ImportCreateHeaderFields from './ImportCreateHeaderFields';
@@ -207,6 +208,16 @@ export default function ImportCreateModal({
     });
   };
 
+  const submitCreate = (status: 'draft' | 'pending') => {
+    const synced = poDraftsToItems(poPreviewLines, poLineDrafts);
+    onItemsChange(synced);
+    onCreate(status, {
+      files: [...evidencePhotos, ...evidenceDocs],
+      evaluation: evaluationDraft,
+      poItems: selectedPoItemsFromDrafts(poPreviewLines, poLineDrafts),
+    });
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -254,7 +265,7 @@ export default function ImportCreateModal({
                   type="button"
                   className="btn btn-outline"
                   disabled={isPending || submitBlocked}
-                  onClick={() => onCreate('draft', { files: [...evidencePhotos, ...evidenceDocs], evaluation: evaluationDraft })}
+                  onClick={() => submitCreate('draft')}
                 >
                   Lưu nháp
                 </button>
@@ -262,7 +273,7 @@ export default function ImportCreateModal({
                   type="button"
                   className="btn btn-filled"
                   disabled={isPending || submitBlocked}
-                  onClick={() => onCreate('pending', { files: [...evidencePhotos, ...evidenceDocs], evaluation: evaluationDraft })}
+                  onClick={() => submitCreate('pending')}
                 >
                   Chốt dự kiến
                 </button>

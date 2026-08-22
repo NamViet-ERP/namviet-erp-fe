@@ -2,9 +2,13 @@ export function fmtStockQty(n: number) {
   return new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 2 }).format(n);
 }
 
-/** Khả dụng (kho dự án) = tồn thực tế − xuất/chuyển dự kiến */
-export function computeAvailableQty(actual: number, plannedExport: number) {
-  return actual - plannedExport;
+/** Khả dụng (kho dự án) = tồn thực tế − xuất/chuyển dự kiến − HL tồn kho chờ duyệt */
+export function computeAvailableQty(
+  actual: number,
+  plannedExport: number,
+  pendingDefectQty = 0,
+) {
+  return actual - plannedExport - pendingDefectQty;
 }
 
 /** Tồn dự kiến = tồn thực tế + nhập/hoàn trả/chuyển kho dự kiến (không trừ xuất DK) */
@@ -12,10 +16,22 @@ export function computePlannedStock(actual: number, plannedImport: number) {
   return actual + plannedImport;
 }
 
-export function fmtAvailableQty(actual: number, plannedExport: number) {
-  const qty = computeAvailableQty(actual, plannedExport);
-  if (qty === 0 && actual === 0 && plannedExport === 0) return '—';
+export function fmtAvailableQty(actual: number, plannedExport: number, pendingDefectQty = 0) {
+  const qty = computeAvailableQty(actual, plannedExport, pendingDefectQty);
+  if (qty === 0 && actual === 0 && plannedExport === 0 && pendingDefectQty === 0) return '—';
   return fmtStockQty(qty);
+}
+
+export function projectInventoryAvailable(row: {
+  actualInventoryQty: number;
+  plannedExportQty: number;
+  pendingDefectQty?: number;
+}) {
+  return computeAvailableQty(
+    row.actualInventoryQty,
+    row.plannedExportQty,
+    row.pendingDefectQty ?? 0,
+  );
 }
 
 export function fmtPlannedStock(actual: number, plannedImport: number) {

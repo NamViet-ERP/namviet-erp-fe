@@ -130,7 +130,7 @@ export default function PurchasePaymentsPage() {
           label: 'Gửi đề nghị',
           icon: Send,
           onClick: () => {
-            void runAction(`Đã gửi DNTT ${row.code}.`, () => submitMutation.mutateAsync(row.code));
+            void runAction(`Đã gửi ${row.code}.`, () => submitMutation.mutateAsync(row.code));
           },
         }]
       : []),

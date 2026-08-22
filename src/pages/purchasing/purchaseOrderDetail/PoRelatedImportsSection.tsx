@@ -171,7 +171,7 @@ export function PoRelatedImportsSection({ poCode, order }: Props) {
         poOptions={flow.poOptions}
         selectedPoCode={flow.selectedPoCode}
         poLocked
-        poLoading={false}
+        poLoading={flow.poPreviewQuery.isFetching && !flow.poPreviewQuery.data}
         poPreviewLines={flow.poPreviewQuery.data?.lines ?? []}
         editAttachments={flow.editing?.attachments ?? []}
         isEvidencePending={flow.isEvidencePending}

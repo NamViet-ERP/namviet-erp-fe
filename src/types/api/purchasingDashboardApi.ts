@@ -6,6 +6,7 @@ import type { components } from '../generated/openapi';
 
 type Schemas = components['schemas'];
 
+export type PurchasingKpiLineApiDto = Schemas['PurchasingKpiLineDto'];
 export type PurchasingKpiMetricApiDto = Schemas['PurchasingKpiMetricDto'];
 export type PurchasingDashboardSummaryApiDto = Schemas['PurchasingDashboardSummaryDto'];
 export type PurchasingDashboardChartBarApiDto = Schemas['PurchasingDashboardChartBarDto'];

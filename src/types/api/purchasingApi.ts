@@ -49,6 +49,9 @@ export type PurchasePaymentNextStageApiDto = Schemas['PurchasePaymentNextStageDt
 
 /** OpenAPI aliases — PO attachments + plan variance */
 export type PurchaseOrderAttachmentApiDto = Schemas['PurchaseOrderAttachmentDto'];
+export type PurchaseOrderCommentApiDto = Schemas['PurchaseOrderCommentDto'];
+export type CreatePurchaseOrderCommentRequest = Schemas['CreatePurchaseOrderCommentRequest'];
+export type UpdatePurchaseOrderCommentRequest = Schemas['UpdatePurchaseOrderCommentRequest'];
 export type PurchasePlanVarianceApiDto = Schemas['PurchasePlanVarianceDto'];
 export type PurchasePlanVarianceLineApiDto = Schemas['PurchasePlanVarianceLineDto'];
 

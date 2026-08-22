@@ -4,6 +4,7 @@ import type {
   PurchaseOrderDetailApiDto,
   PurchaseOrderInstallmentApiDto,
   PurchaseOrderInstallmentDocumentApiDto,
+  PurchaseOrderCommentApiDto,
   PurchaseOrderPagedApiDto,
   UpdatePurchaseOrderRequest,
 } from '../types/api/purchasingApi';
@@ -96,6 +97,30 @@ export const purchaseOrdersService = {
     return apiClient.getBlob(
       `${ENDPOINT}/${encodeURIComponent(code)}/attachments/${attachmentId}/download`,
     );
+  },
+
+  async listComments(code: string): Promise<PurchaseOrderCommentApiDto[]> {
+    return apiClient.get<PurchaseOrderCommentApiDto[]>(
+      `${ENDPOINT}/${encodeURIComponent(code)}/comments`,
+    );
+  },
+
+  async createComment(code: string, body: string): Promise<PurchaseOrderCommentApiDto> {
+    return apiClient.post<PurchaseOrderCommentApiDto>(
+      `${ENDPOINT}/${encodeURIComponent(code)}/comments`,
+      { body },
+    );
+  },
+
+  async updateComment(code: string, commentId: string, body: string): Promise<PurchaseOrderCommentApiDto> {
+    return apiClient.put<PurchaseOrderCommentApiDto>(
+      `${ENDPOINT}/${encodeURIComponent(code)}/comments/${commentId}`,
+      { body },
+    );
+  },
+
+  async deleteComment(code: string, commentId: string): Promise<void> {
+    return apiClient.delete(`${ENDPOINT}/${encodeURIComponent(code)}/comments/${commentId}`);
   },
 
   async listInstallmentDocuments(

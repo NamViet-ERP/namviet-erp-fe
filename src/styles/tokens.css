@@ -74,6 +74,11 @@
   --nv-table-header-bg:          var(--nv-navy);
   --nv-table-header-text:        #FFFFFF;
 
+  /* ── Table grid — một viền cho mọi bảng ERP (đổi ở đây là đổi cả app) ── */
+  --table-border:        color-mix(in srgb, var(--nv-navy) 28%, var(--nv-epc-border));
+  --table-header-border: color-mix(in srgb, #fff 18%, var(--nv-table-header-bg));
+  --table-header-lip:    var(--nv-amber);
+
   /* ── Badge Draft / muted ── */
   --nv-badge-draft-bg:           #EEF0F4;
   --nv-badge-draft-text:         var(--nv-epc-muted);
@@ -255,6 +260,10 @@
 
   --nv-table-header-bg:          #0A1F42;
   --nv-table-header-text:        #FFFFFF;
+
+  --table-border:        color-mix(in srgb, var(--md-outline) 50%, var(--md-outline-variant02));
+  --table-header-border: color-mix(in srgb, #fff 14%, var(--nv-table-header-bg));
+  --table-header-lip:    var(--md-tertiary);
 
   --nv-badge-draft-bg:           #1C2A40;
   --nv-badge-draft-text:         #A8B0C4;

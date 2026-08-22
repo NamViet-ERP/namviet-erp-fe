@@ -8,17 +8,13 @@ interface Props {
 
 interface State {
   hasError: boolean;
-  errorMessage: string | null;
 }
 
 export default class ErrorBoundary extends Component<Props, State> {
-  state: State = { hasError: false, errorMessage: null };
+  state: State = { hasError: false };
 
-  static getDerivedStateFromError(error: Error): State {
-    return {
-      hasError: true,
-      errorMessage: error instanceof Error ? error.message : String(error),
-    };
+  static getDerivedStateFromError(): State {
+    return { hasError: true };
   }
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
@@ -37,9 +33,6 @@ export default class ErrorBoundary extends Component<Props, State> {
           <p className="error-fallback-page__message">
             Ứng dụng gặp sự cố không mong muốn. Vui lòng tải lại trang hoặc thử lại sau.
           </p>
-          {import.meta.env.DEV && this.state.errorMessage ? (
-            <pre className="error-fallback-page__dev-detail">{this.state.errorMessage}</pre>
-          ) : null}
           <button
             type="button"
             className="btn btn-filled"

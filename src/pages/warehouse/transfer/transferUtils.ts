@@ -1,6 +1,7 @@
 import type { Transfer } from '../../../types';
 import type { WarehouseProjectInventoryApiDto } from '../../../types/wms';
 import { GENERAL_WAREHOUSE_LABEL, GENERAL_WAREHOUSE_LABEL_LOWER } from '../../../lib/wms/stockTerminology';
+import { projectInventoryAvailable } from '../../../lib/wms/stockQtyFormat';
 import type { MaterialQtyLine, MaterialQtyPhaseLine } from '../voucher/voucherFormTypes';
 
 export type TransferMode = 'return' | 'cross-project';
@@ -45,7 +46,7 @@ export function availableReturnQty(
 ) {
   const row = inventoryRow(inventory, materialCode);
   if (!row) return 0;
-  const base = row.actualInventoryQty - row.plannedExportQty;
+  const base = projectInventoryAvailable(row);
   const usedInForm = items.reduce((sum, it, i) => {
     if (i === lineIdx || it.materialCode !== materialCode) return sum;
     return sum + (Number(it.qty) || 0);

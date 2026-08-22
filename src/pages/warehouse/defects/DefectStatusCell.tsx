@@ -13,7 +13,7 @@ export default function DefectStatusCell({ row }: { row: PurchaseDefectApiDto })
   }
 
   if (row.processingPhase === 'processed') {
-    const name = row.processedByName?.trim() || '—';
+    const name = row.processedByName?.trim() || '-';
     return (
       <div className="pur-erp--po defect-status-cell">
         <div className="pur-erp__approve">
@@ -27,7 +27,7 @@ export default function DefectStatusCell({ row }: { row: PurchaseDefectApiDto })
     );
   }
 
-  const approver = row.approvedByName?.trim() || '—';
+  const approver = row.approvedByName?.trim() || '-';
   return (
     <div className="pur-erp--po defect-status-cell">
       <div className="pur-erp__approve">

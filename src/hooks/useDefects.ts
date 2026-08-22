@@ -4,6 +4,7 @@ import { queryKeys } from '../services/queryKeys';
 import type {
   CreateDefectFromPoRequest,
   CreateDefectFromStockRequest,
+  UpdateDefectItemsRequest,
   UpdateDefectProcessingRequest,
 } from '../types/api/poDefectApi';
 
@@ -120,6 +121,33 @@ export function useDeleteDefect() {
       void qc.invalidateQueries({ queryKey: queryKeys.defects.all });
       void qc.invalidateQueries({ queryKey: queryKeys.defects.eligiblePos });
       void qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.stock.matrix });
+    },
+  });
+}
+
+export function useUpdateDefectItems() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, request }: { id: string; request: UpdateDefectItemsRequest }) =>
+      defectsService.updateItems(id, request),
+    onSuccess: dto => {
+      void qc.invalidateQueries({ queryKey: queryKeys.defects.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.defects.detail(dto.ticketCode) });
+      void qc.invalidateQueries({ queryKey: queryKeys.defects.eligiblePos });
+      void qc.invalidateQueries({ queryKey: queryKeys.stock.matrix });
+    },
+  });
+}
+
+export function useCancelDefect() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => defectsService.cancel(id),
+    onSuccess: dto => {
+      void qc.invalidateQueries({ queryKey: queryKeys.defects.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.defects.detail(dto.ticketCode) });
+      void qc.invalidateQueries({ queryKey: queryKeys.defects.eligiblePos });
       void qc.invalidateQueries({ queryKey: queryKeys.stock.matrix });
     },
   });

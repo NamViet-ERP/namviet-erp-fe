@@ -30,7 +30,14 @@ export interface ImportCreateModalProps {
   errors?: ImportFormFieldErrors;
   frozenByProjectCode: FrozenProjectMap;
   importErrors?: ImportParseErrorApiDto[];
-  onCreate: (status: 'draft' | 'pending', evidence?: { files: File[]; evaluation: string }) => void;
+  onCreate: (
+    status: 'draft' | 'pending',
+    evidence?: {
+      files: File[];
+      evaluation: string;
+      poItems?: { poItemId: number; qty: number }[];
+    },
+  ) => void;
   onSave?: (payload?: { evaluation: string }) => void;
   onDownloadTemplate?: () => Promise<void>;
   onImportFile?: (file: File) => Promise<void>;

@@ -1,9 +1,9 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
-import { Ban, Check, Plus, Trash2, Pencil, RotateCcw, Eye, ShieldOff, X } from 'lucide-react';
+import { Ban, Check, Plus, Trash2, Pencil, Eye, X } from 'lucide-react';
+import PurchasingListLayout from '../../components/purchasing/PurchasingListLayout';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
-import SearchBar from '../../components/ui/SearchBar';
 import Pagination from '../../components/ui/Pagination';
 import EmptyState from '../../components/ui/EmptyState';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
@@ -38,7 +38,6 @@ import {
 } from '../../hooks/useSuppliers';
 import {
   useAddSupplierToBlacklist,
-  useRemoveSupplierFromBlacklist,
   useSupplierGroups,
 } from '../../hooks/useSupplierDirectory';
 import { supplierGroupsService } from '../../services/supplierDirectoryService';
@@ -143,7 +142,13 @@ function DetailField({
   );
 }
 
-export default function SuppliersSettingsPanel() {
+type PanelProps = {
+  subtitle?: string;
+};
+
+export default function SuppliersSettingsPanel({
+  subtitle = 'NCC mới là Hạng D, trạng thái Mới. Sếp duyệt xong mới đặt PO được.',
+}: PanelProps) {
   const qc = useQueryClient();
   const { has } = usePermission();
   const canApproveSupplier = has('wms.suppliers.approve');
@@ -158,7 +163,6 @@ export default function SuppliersSettingsPanel() {
   const [viewing, setViewing] = useState<SupplierRow | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<SupplierRow | null>(null);
   const [blacklistTarget, setBlacklistTarget] = useState<SupplierRow | null>(null);
-  const [removeBlacklistTarget, setRemoveBlacklistTarget] = useState<SupplierRow | null>(null);
   const [blacklistReason, setBlacklistReason] = useState('');
   const [form, setForm] = useState(emptyForm);
   const [formErrors, setFormErrors] = useState<FormErrors>({});
@@ -180,13 +184,13 @@ export default function SuppliersSettingsPanel() {
     rating: ratingFilter || undefined,
     approvalStatus: statusFilter || undefined,
     groupId: groupIdFromUrl,
+    isBlacklisted: false,
   });
   const { data: groupPage } = useSupplierGroups({ page: 1, pageSize: 500 });
   const createMutation = useCreateSupplier();
   const updateMutation = useUpdateSupplier();
   const deleteMutation = useDeleteSupplier();
   const addBlacklistMutation = useAddSupplierToBlacklist();
-  const removeBlacklistMutation = useRemoveSupplierFromBlacklist();
   const approveMutation = useApproveSupplier();
   const rejectMutation = useRejectSupplier();
 
@@ -379,38 +383,12 @@ export default function SuppliersSettingsPanel() {
         id: blacklistTarget.id,
         body: { reason },
       });
-      showToast('success', `Đã thêm ${blacklistTarget.supplierName} vào blacklist`);
+      showToast('success', `Đã chuyển ${blacklistTarget.supplierName} sang mục Danh sách blacklist`);
       setBlacklistTarget(null);
       setBlacklistReason('');
-      if (viewing?.id === blacklistTarget.id) {
-        setViewing({
-          ...viewing,
-          isBlacklisted: true,
-          blacklistReason: reason,
-        });
-      }
+      if (viewing?.id === blacklistTarget.id) setViewing(null);
     } catch (err: unknown) {
       showToast('error', getApiErrorMessage(err, 'Không thể thêm vào blacklist'));
-    }
-  };
-
-  const handleRemoveBlacklist = async () => {
-    if (!removeBlacklistTarget) return;
-    try {
-      await removeBlacklistMutation.mutateAsync(removeBlacklistTarget.id);
-      showToast('success', `Đã gỡ blacklist: ${removeBlacklistTarget.supplierName}`);
-      setRemoveBlacklistTarget(null);
-      if (viewing?.id === removeBlacklistTarget.id) {
-        setViewing({
-          ...viewing,
-          isBlacklisted: false,
-          blacklistReason: null,
-          blacklistedAt: null,
-          blacklistedByName: null,
-        });
-      }
-    } catch (err: unknown) {
-      showToast('error', getApiErrorMessage(err, 'Không thể gỡ blacklist'));
     }
   };
 
@@ -433,18 +411,12 @@ export default function SuppliersSettingsPanel() {
         ]
       : []),
     { divider: true },
-    s.isBlacklisted
-      ? {
-          label: 'Gỡ blacklist',
-          icon: ShieldOff,
-          onClick: () => setRemoveBlacklistTarget(s),
-        }
-      : {
-          label: 'Thêm vào blacklist',
-          icon: Ban,
-          danger: true,
-          onClick: () => openBlacklist(s),
-        },
+    {
+      label: 'Thêm vào blacklist',
+      icon: Ban,
+      danger: true,
+      onClick: () => openBlacklist(s),
+    },
     { divider: true },
     {
       label: 'Xóa',
@@ -457,109 +429,89 @@ export default function SuppliersSettingsPanel() {
   const hasActiveFilters = Boolean(search || ratingFilter || statusFilter || groupIdFromUrl);
 
   return (
-    <div className="space-y-4">
-      <div className="surface-panel surface-panel--rounded-xl p-4 shadow-card space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <p className="text-xs text-[var(--md-on-surface-variant)] text-pretty max-w-2xl">
-            NCC mới mặc định Hạng D và trạng thái Mới. Sếp duyệt xong mới chọn được khi tạo PO.
-            Hạng tăng/giảm theo phiếu đánh giá đơn hàng.
-          </p>
-          <button type="button" className="btn btn-primary flex items-center gap-2 shrink-0" onClick={openCreate}>
+    <>
+      <PurchasingListLayout
+        eyebrow="Nhà cung cấp"
+        title="Nhà cung cấp"
+        subtitle={subtitle}
+        search={search}
+        onSearchChange={value => {
+          setSearch(value);
+          setPage(1);
+        }}
+        searchPlaceholder="Tìm mã NCC, tên nhà cung cấp…"
+        filters={(
+          <>
+            <div className="ncc-master-filters">
+              <div className="hrm-filter-select-wrap">
+                <select
+                  className="hrm-filter-select"
+                  value={ratingFilter}
+                  aria-label="Hạng"
+                  onChange={e => {
+                    setRatingFilter(e.target.value);
+                    setPage(1);
+                  }}
+                >
+                  <option value="">Tất cả hạng</option>
+                  {RATING_OPTIONS.map(r => (
+                    <option key={r} value={r}>Hạng {r}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="hrm-filter-select-wrap">
+                <select
+                  className="hrm-filter-select"
+                  value={statusFilter}
+                  aria-label="Trạng thái"
+                  onChange={e => {
+                    setStatusFilter(e.target.value);
+                    setPage(1);
+                  }}
+                >
+                  <option value="">Tất cả trạng thái</option>
+                  <option value={SUPPLIER_APPROVAL.New}>Mới - chờ duyệt</option>
+                  <option value={SUPPLIER_APPROVAL.Approved}>Đã duyệt</option>
+                  <option value={SUPPLIER_APPROVAL.Rejected}>Từ chối</option>
+                </select>
+              </div>
+              {groupIdFromUrl ? (
+                <button
+                  type="button"
+                  className="hrm-filter-reset"
+                  onClick={clearGroupFilter}
+                >
+                  Nhóm: {filteredGroupName ?? `#${groupIdFromUrl}`}
+                </button>
+              ) : null}
+            </div>
+          </>
+        )}
+        hasFilters={hasActiveFilters}
+        onResetFilters={resetFilters}
+        actions={(
+          <button type="button" className="btn btn-primary" onClick={() => void openCreate()}>
             <Plus size={16} aria-hidden />
             Thêm NCC
           </button>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <label className="text-xs space-y-1 sm:col-span-2">
-            <span className="font-semibold text-[var(--md-on-surface-variant)]">Phân loại</span>
-            <select
-              className="form-select w-full text-sm"
-              value={ratingFilter}
-              onChange={e => {
-                setRatingFilter(e.target.value);
-                setPage(1);
-              }}
-            >
-              <option value="">Tất cả</option>
-              {RATING_OPTIONS.map(r => (
-                <option key={r} value={r}>Hạng {r}</option>
-              ))}
-            </select>
-          </label>
-          <label className="text-xs space-y-1">
-            <span className="font-semibold text-[var(--md-on-surface-variant)]">Trạng thái</span>
-            <select
-              className="form-select w-full text-sm"
-              value={statusFilter}
-              onChange={e => {
-                setStatusFilter(e.target.value);
-                setPage(1);
-              }}
-            >
-              <option value="">Tất cả</option>
-              <option value={SUPPLIER_APPROVAL.New}>Mới - chờ duyệt</option>
-              <option value={SUPPLIER_APPROVAL.Approved}>Đã duyệt</option>
-              <option value={SUPPLIER_APPROVAL.Rejected}>Từ chối</option>
-            </select>
-          </label>
-        </div>
-
-        {groupIdFromUrl ? (
-          <div className="flex flex-wrap items-center gap-2 text-xs">
-            <span className="ncc-master-groups__chip">
-              Nhóm: {filteredGroupName ?? `#${groupIdFromUrl}`}
-            </span>
-            <button
-              type="button"
-              className="btn-clear-filters text-xs"
-              onClick={clearGroupFilter}
-            >
-              Xóa lọc nhóm
-            </button>
-          </div>
-        ) : null}
-
-        <div className="hrm-filter-bar">
-          <div className="hrm-filter-bar__search flex-1 min-w-[220px]">
-            <SearchBar
-              value={search}
-              onChange={v => {
-                setSearch(v);
-                setPage(1);
-              }}
-              placeholder="Tìm mã NCC, tên nhà cung cấp…"
-            />
-          </div>
-          <button
-            type="button"
-            onClick={resetFilters}
-            className="btn-clear-filters"
-            title="Đặt lại bộ lọc"
-          >
-            <RotateCcw size={15} aria-hidden />
-            <span className="hidden sm:inline">XÓA BỘ LỌC</span>
-          </button>
-        </div>
-      </div>
-
-      <div className="surface-panel surface-panel--rounded-xl surface-panel--table shadow-card">
-        <div className="overflow-x-auto table-scroll">
-          <table className="w-full text-xs ncc-master-table">
+        )}
+      >
+        <div className="overflow-x-auto table-scroll hrm-table-wrap">
+          <table className="w-full border-collapse hrm-table ncc-master-table">
             <thead>
               <tr>
-                <th className="table-header-cell text-left">Mã NCC</th>
-                <th className="table-header-cell text-left">Tên nhà cung cấp</th>
-                <th className="table-header-cell text-left">Điện thoại</th>
-                <th className="table-header-cell text-right">Hạn công nợ</th>
-                <th className="table-header-cell text-right">Hạn mức</th>
-                <th className="table-header-cell text-left">Điều khoản thanh toán</th>
-                <th className="table-header-cell text-left">Nhóm ngành hàng</th>
-                <th className="table-header-cell text-center">Hạng</th>
-                <th className="table-header-cell text-center">Trạng thái</th>
-                <th className="table-header-cell text-right">Doanh số đã mua</th>
-                <th className="table-header-cell text-left">Đánh giá định kỳ gần nhất</th>
-                <th className="table-header-cell text-right">Điểm KPI</th>
+                <th className="table-header-cell ncc-master-col-code">Mã NCC</th>
+                <th className="table-header-cell ncc-master-col-name">Tên nhà cung cấp</th>
+                <th className="table-header-cell ncc-master-col-phone">Điện thoại</th>
+                <th className="table-header-cell text-right ncc-master-col-debt">Hạn công nợ</th>
+                <th className="table-header-cell text-right ncc-master-col-limit">Hạn mức</th>
+                <th className="table-header-cell ncc-master-col-terms">Điều khoản thanh toán</th>
+                <th className="table-header-cell ncc-master-col-groups">Nhóm ngành hàng</th>
+                <th className="table-header-cell text-center ncc-master-col-grade">Hạng</th>
+                <th className="table-header-cell text-center ncc-master-col-status">Trạng thái</th>
+                <th className="table-header-cell text-right ncc-master-col-revenue">Doanh số đã mua</th>
+                <th className="table-header-cell ncc-master-col-eval">Đánh giá gần nhất</th>
+                <th className="table-header-cell text-right ncc-master-col-kpi">Điểm KPI</th>
                 <th className="table-header-cell text-center hrm-table-col-actions">Tác vụ</th>
               </tr>
             </thead>
@@ -575,48 +527,73 @@ export default function SuppliersSettingsPanel() {
               ) : items.length === 0 ? (
                 <tr>
                   <td colSpan={COL_COUNT}>
-                    <EmptyState message={hasActiveFilters ? 'Không tìm thấy NCC phù hợp.' : 'Chưa có nhà cung cấp nào.'} />
+                    <EmptyState
+                      message={hasActiveFilters ? 'Không tìm thấy NCC phù hợp.' : 'Chưa có nhà cung cấp nào.'}
+                      action={
+                        hasActiveFilters ? null : (
+                          <button type="button" className="btn btn-primary" onClick={() => void openCreate()}>
+                            <Plus size={16} aria-hidden />
+                            Thêm NCC đầu tiên
+                          </button>
+                        )
+                      }
+                    />
                   </td>
                 </tr>
               ) : (
                 items.map(s => (
-                  <tr
-                    key={s.id}
-                    className="table-row border-b border-[var(--md-outline-variant)] hover:bg-[var(--md-surface-container-high)]"
-                  >
-                    <td className="table-cell font-mono font-semibold">{s.supplierCode}</td>
-                    <td className="table-cell font-medium">
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <span>{s.supplierName}</span>
-                        {s.isBlacklisted ? (
-                          <span className="hrm-badge hrm-badge--danger" title={s.blacklistReason || 'Blacklist'}>
-                            Blacklist
-                          </span>
-                        ) : null}
-                      </div>
+                  <tr key={s.id} className="table-row">
+                    <td className="table-cell font-mono whitespace-nowrap ncc-master-col-code">
+                      {s.supplierCode}
                     </td>
-                    <td className="table-cell">{s.contactPhone || '—'}</td>
-                    <td className="table-cell text-right tabular-nums">{s.maxDebtDays} ngày</td>
-                    <td className="table-cell text-right tabular-nums">
+                    <td className="table-cell ncc-master-col-name">
+                      <button
+                        type="button"
+                        className="ncc-master-name"
+                        onClick={() => setViewing(s)}
+                      >
+                        {s.supplierName}
+                      </button>
+                    </td>
+                    <td className="table-cell whitespace-nowrap tabular-nums ncc-master-col-phone">
+                      {s.contactPhone || '—'}
+                    </td>
+                    <td className="table-cell text-right tabular-nums whitespace-nowrap ncc-master-col-debt">
+                      {s.maxDebtDays} ngày
+                    </td>
+                    <td className="table-cell text-right tabular-nums whitespace-nowrap ncc-master-col-limit">
                       {s.creditLimit ? formatCurrencyFull(s.creditLimit) : 'Không giới hạn'}
                     </td>
-                    <td className="table-cell">{s.paymentTerms || '—'}</td>
-                    <td className="table-cell">
+                    <td className="table-cell ncc-master-col-terms">
+                      <span className="line-clamp-2" title={s.paymentTerms || undefined}>
+                        {s.paymentTerms || '—'}
+                      </span>
+                    </td>
+                    <td className="table-cell ncc-master-col-groups">
                       <IndustryGroupsCell groups={s.industryGroups ?? []} />
                     </td>
-                    <td className="table-cell text-center">
+                    <td className="table-cell text-center ncc-master-col-grade">
                       <RatingBadge rating={s.rating} />
                     </td>
-                    <td className="table-cell text-center">
+                    <td className="table-cell text-center ncc-master-col-status">
                       <ApprovalStatusBadge status={s.approvalStatus} />
                     </td>
-                    <td className="table-cell text-right tabular-nums">{formatCurrencyFull(s.purchasedRevenue)}</td>
-                    <td className="table-cell">
-                      {s.latestEvaluation
-                        ? `${s.latestEvaluation.period} · ${s.latestEvaluation.gradeLabel || s.latestEvaluation.grade} · ${s.latestEvaluation.evaluatedAt}`
-                        : '—'}
+                    <td className="table-cell text-right tabular-nums whitespace-nowrap ncc-master-col-revenue">
+                      {formatCurrencyFull(s.purchasedRevenue)}
                     </td>
-                    <td className="table-cell text-right tabular-nums">
+                    <td className="table-cell ncc-master-col-eval">
+                      {s.latestEvaluation ? (
+                        <span
+                          className="line-clamp-2"
+                          title={`${s.latestEvaluation.period} - ${s.latestEvaluation.gradeLabel || s.latestEvaluation.grade} - ${s.latestEvaluation.evaluatedAt}`}
+                        >
+                          {s.latestEvaluation.period} - {s.latestEvaluation.gradeLabel || s.latestEvaluation.grade}
+                        </span>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
+                    <td className="table-cell text-right tabular-nums ncc-master-col-kpi">
                       {s.latestEvaluation ? s.latestEvaluation.score : '—'}
                     </td>
                     <td className="table-cell text-center hrm-table-col-actions">
@@ -630,23 +607,21 @@ export default function SuppliersSettingsPanel() {
         </div>
 
         {totalCount > 0 && !isLoading && (
-          <div className="surface-panel__footer px-4 pb-4">
-            <Pagination
-              embedded
-              itemLabel="NCC"
-              currentPage={page}
-              totalPages={totalPages}
-              onPageChange={setPage}
-              pageSize={pageSize}
-              onPageSizeChange={s => {
-                setPageSize(s);
-                setPage(1);
-              }}
-              totalItems={totalCount}
-            />
-          </div>
+          <Pagination
+            embedded
+            itemLabel="NCC"
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            pageSize={pageSize}
+            onPageSizeChange={s => {
+              setPageSize(s);
+              setPage(1);
+            }}
+            totalItems={totalCount}
+          />
         )}
-      </div>
+      </PurchasingListLayout>
 
       <Modal
         isOpen={viewing !== null}
@@ -659,23 +634,13 @@ export default function SuppliersSettingsPanel() {
               Đóng
             </button>
             {viewing ? (
-              viewing.isBlacklisted ? (
-                <button
-                  type="button"
-                  className="btn btn-outline"
-                  onClick={() => setRemoveBlacklistTarget(viewing)}
-                >
-                  Gỡ blacklist
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="btn btn-danger"
-                  onClick={() => openBlacklist(viewing)}
-                >
-                  Thêm vào blacklist
-                </button>
-              )
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={() => openBlacklist(viewing)}
+              >
+                Thêm vào blacklist
+              </button>
             ) : null}
             {viewing && canApproveSupplier
             && normalizeSupplierApproval(viewing.approvalStatus) !== SUPPLIER_APPROVAL.Approved ? (
@@ -718,14 +683,7 @@ export default function SuppliersSettingsPanel() {
             <DetailField label="Trạng thái">
               <ApprovalStatusBadge status={viewing.approvalStatus} />
             </DetailField>
-            <DetailField label="Tên nhà cung cấp" span>
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span>{viewing.supplierName}</span>
-                {viewing.isBlacklisted ? (
-                  <span className="hrm-badge hrm-badge--danger">Blacklist</span>
-                ) : null}
-              </div>
-            </DetailField>
+            <DetailField label="Tên nhà cung cấp" span>{viewing.supplierName}</DetailField>
             <DetailField label="Điện thoại">{viewing.contactPhone || '—'}</DetailField>
             <DetailField label="Hạn công nợ">{viewing.maxDebtDays} ngày</DetailField>
             <DetailField label="Hạn mức công nợ">
@@ -756,12 +714,6 @@ export default function SuppliersSettingsPanel() {
             <DetailField label="Điểm KPI gần nhất">
               {viewing.latestEvaluation ? viewing.latestEvaluation.score : '—'}
             </DetailField>
-            {viewing.isBlacklisted ? (
-              <DetailField label="Blacklist" span>
-                {viewing.blacklistReason || 'Đang blacklist'}
-                {viewing.blacklistedAt ? ` · ${viewing.blacklistedAt}` : ''}
-              </DetailField>
-            ) : null}
           </div>
         ) : null}
       </Modal>
@@ -956,8 +908,8 @@ export default function SuppliersSettingsPanel() {
           blacklistTarget ? (
             <div className="space-y-3 text-left">
               <p>
-                Thêm <strong>{blacklistTarget.supplierName}</strong> ({blacklistTarget.supplierCode}) vào
-                danh sách blacklist?
+                Chuyển <strong>{blacklistTarget.supplierName}</strong> ({blacklistTarget.supplierCode}) sang
+                mục Danh sách blacklist? NCC này sẽ không còn hiện ở danh mục nhà cung cấp.
               </p>
               <label className="block space-y-1 text-sm">
                 <span className="font-semibold">
@@ -977,23 +929,6 @@ export default function SuppliersSettingsPanel() {
         confirmLabel="Thêm vào blacklist"
         variant="danger"
         isLoading={addBlacklistMutation.isPending}
-      />
-
-      <ConfirmDialog
-        isOpen={removeBlacklistTarget !== null}
-        onClose={() => setRemoveBlacklistTarget(null)}
-        onConfirm={() => void handleRemoveBlacklist()}
-        title="Gỡ blacklist?"
-        message={
-          removeBlacklistTarget ? (
-            <p>
-              Gỡ <strong>{removeBlacklistTarget.supplierName}</strong> khỏi danh sách blacklist?
-            </p>
-          ) : null
-        }
-        confirmLabel="Gỡ blacklist"
-        variant="danger"
-        isLoading={removeBlacklistMutation.isPending}
       />
 
       <ConfirmDialog
@@ -1029,6 +964,6 @@ export default function SuppliersSettingsPanel() {
         variant="danger"
         isLoading={rejectMutation.isPending}
       />
-    </div>
+    </>
   );
 }

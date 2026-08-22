@@ -7,6 +7,7 @@ import type {
   PurchaseDefectApiDto,
   PurchaseDefectAttachmentApiDto,
   StockDefectPreviewApiDto,
+  UpdateDefectItemsRequest,
   UpdateDefectProcessingRequest,
 } from '../types/api/poDefectApi';
 
@@ -67,6 +68,17 @@ export const defectsService = {
       `${ENDPOINT}/${encodeURIComponent(id)}/processing`,
       request,
     );
+  },
+
+  updateItems(id: string, request: UpdateDefectItemsRequest): Promise<PurchaseDefectApiDto> {
+    return apiClient.put<PurchaseDefectApiDto>(
+      `${ENDPOINT}/${encodeURIComponent(id)}/items`,
+      request,
+    );
+  },
+
+  cancel(id: string): Promise<PurchaseDefectApiDto> {
+    return apiClient.post<PurchaseDefectApiDto>(`${ENDPOINT}/${encodeURIComponent(id)}/cancel`);
   },
 
   async uploadAttachment(

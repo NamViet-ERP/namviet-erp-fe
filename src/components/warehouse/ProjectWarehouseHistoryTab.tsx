@@ -58,8 +58,8 @@ export default function ProjectWarehouseHistoryTab({ projectCode }: Props) {
   }
 
   return (
-    <div className="overflow-x-auto table-scroll">
-      <table className="w-full text-xs">
+    <div className="overflow-x-auto table-scroll wms-inventory-table-wrap">
+      <table className="wms-inventory-table">
         <thead>
           <tr>
             <th className="table-header-cell text-left">Loại</th>
@@ -80,7 +80,7 @@ export default function ProjectWarehouseHistoryTab({ projectCode }: Props) {
             </tr>
           ) : (
             rows.map(row => (
-              <tr key={`${row.kind}-${row.id}`} className="table-row border-b border-[var(--md-outline-variant)]">
+              <tr key={`${row.kind}-${row.id}`} className="table-row">
                 <td className="table-cell">
                   <span className={`wms-history-kind ${
                     row.kind === 'import'

@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import {
-  Bar, BarChart, CartesianGrid, Legend, Line, LineChart,
+  Bar, BarChart, CartesianGrid, Line, LineChart,
   ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts';
-import { Building2, ClipboardList, Users } from 'lucide-react';
+import { Banknote, Building2, ClipboardList, Users, Wallet, WalletCards } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import HrmPanel from '../../components/hr/HrmPanel';
-import HrmStatCard from '../../components/hr/HrmStatCard';
+import Card from '../../components/ui/Card';
 import EmptyState from '../../components/ui/EmptyState';
 import Skeleton from '../../components/ui/Skeleton';
 import { useSuppliers } from '../../hooks/useSuppliers';
@@ -20,6 +20,29 @@ const PERIOD_OPTIONS = [
   { value: 'this_month', label: 'Tháng này' },
   { value: 'this_year', label: 'Năm nay' },
 ];
+
+const CHART_DNTT = 'var(--nv-amber)';
+const CHART_REMAIN = 'var(--md-error)';
+const CHART_PAY = 'var(--nv-action)';
+
+function shortAxisLabel(value: unknown) {
+  const text = String(value ?? '').trim();
+  if (text.length <= 20) return text;
+  return `${text.slice(0, 19)}…`;
+}
+
+function ChartKey({ items }: { items: { color: string; label: string }[] }) {
+  return (
+    <div className="chart-legend-inline" role="list">
+      {items.map(item => (
+        <span key={item.label} className="chart-legend-inline__item" role="listitem">
+          <span className="chart-legend-inline__dot" style={{ background: item.color }} aria-hidden />
+          {item.label}
+        </span>
+      ))}
+    </div>
+  );
+}
 
 export default function SuppliersDashboardPage() {
   const [period, setPeriod] = useState('this_year');
@@ -73,7 +96,12 @@ export default function SuppliersDashboardPage() {
         </HrmPanel>
       ) : isLoading || !data ? (
         <>
-          <div className="hrm-stat-grid">
+          <div className="dashboard-kpi-grid dashboard-kpi-grid--3">
+            <Skeleton variant="rect" height={96} />
+            <Skeleton variant="rect" height={96} />
+            <Skeleton variant="rect" height={96} />
+          </div>
+          <div className="dashboard-kpi-grid dashboard-kpi-grid--3">
             <Skeleton variant="rect" height={96} />
             <Skeleton variant="rect" height={96} />
             <Skeleton variant="rect" height={96} />
@@ -85,30 +113,52 @@ export default function SuppliersDashboardPage() {
         </>
       ) : (
         <>
-          <div className="hrm-stat-grid">
-            <HrmStatCard label="Nhà cung cấp" value={data.supplierCount} icon={Building2} tone="primary" />
-            <HrmStatCard label="Liên hệ" value={data.contactCount} icon={Users} tone="neutral" />
-            <HrmStatCard
-              label="Đơn hàng trong kỳ"
+          <div className="dashboard-kpi-grid dashboard-kpi-grid--3" role="list" aria-label="Chỉ số nhà cung cấp">
+            <Card
+              title="Nhà cung cấp"
+              value={data.supplierCount}
+              accent="neutral"
+              icon={Building2}
+              to="/suppliers/list"
+            />
+            <Card
+              title="Liên hệ"
+              value={data.contactCount}
+              accent="success"
+              icon={Users}
+              to="/suppliers/contacts"
+            />
+            <Card
+              title="Đơn hàng trong kỳ"
               value={data.orderCount.toLocaleString('vi-VN')}
+              accent="warning"
               icon={ClipboardList}
-              tone="success"
+              to="/purchasing/orders"
             />
           </div>
 
-          <div className="suppliers-finance-grid">
-            <div className="suppliers-finance-card suppliers-finance-card--debt">
-              <p className="suppliers-finance-card__label">Đã đề nghị TT</p>
-              <p className="suppliers-finance-card__value tabular-nums">{formatCurrencyFull(data.debtTotal)}</p>
-            </div>
-            <div className="suppliers-finance-card suppliers-finance-card--pay">
-              <p className="suppliers-finance-card__label">Đã thanh toán</p>
-              <p className="suppliers-finance-card__value tabular-nums">{formatCurrencyFull(data.paymentTotal)}</p>
-            </div>
-            <div className="suppliers-finance-card suppliers-finance-card--remain">
-              <p className="suppliers-finance-card__label">Còn phải trả</p>
-              <p className="suppliers-finance-card__value tabular-nums">{formatCurrencyFull(data.remaining)}</p>
-            </div>
+          <div className="dashboard-kpi-grid dashboard-kpi-grid--3" role="list" aria-label="Công nợ DNTT">
+            <Card
+              title="Đã đề nghị TT"
+              value={formatCurrencyFull(data.debtTotal)}
+              accent="purple"
+              icon={WalletCards}
+              to="/suppliers/debt"
+            />
+            <Card
+              title="Đã thanh toán"
+              value={formatCurrencyFull(data.paymentTotal)}
+              accent="info"
+              icon={Wallet}
+              to="/suppliers/debt"
+            />
+            <Card
+              title="Còn phải trả"
+              value={formatCurrencyFull(data.remaining)}
+              accent={data.remaining > 0 ? 'danger' : 'success'}
+              icon={Banknote}
+              to="/suppliers/debt"
+            />
           </div>
 
           <div className="suppliers-chart-grid">
@@ -118,24 +168,42 @@ export default function SuppliersDashboardPage() {
                 {data.debtBySupplier.length === 0 ? (
                   <EmptyState message="Chưa có đề nghị thanh toán nào trong kỳ đã chọn." />
                 ) : (
-                  <ResponsiveContainer width="100%" height={280}>
-                    <BarChart data={data.debtBySupplier} margin={{ top: 8, right: 8, left: 0, bottom: 48 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis
-                        dataKey="supplierName"
-                        tick={{ fontSize: 11 }}
-                        interval={0}
-                        angle={-35}
-                        textAnchor="end"
-                        height={60}
-                      />
-                      <YAxis tick={{ fontSize: 11 }} tickFormatter={v => formatCurrencyShort(Number(v))} />
-                      <Tooltip formatter={v => formatCurrencyFull(Number(v ?? 0))} />
-                      <Legend />
-                      <Bar dataKey="debt" name="Đã đề nghị TT" fill="var(--md-primary)" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="remaining" name="Còn phải trả" fill="var(--md-secondary)" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
+                  <>
+                    <ChartKey items={[
+                      { color: CHART_DNTT, label: 'Đã đề nghị TT' },
+                      { color: CHART_REMAIN, label: 'Còn phải trả' },
+                    ]} />
+                    <ResponsiveContainer width="100%" height={260}>
+                      <BarChart
+                        data={data.debtBySupplier}
+                        margin={{ top: 8, right: 8, left: 4, bottom: 8 }}
+                        barGap={4}
+                        barCategoryGap="22%"
+                      >
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                        <XAxis
+                          dataKey="supplierName"
+                          tick={{ fontSize: 12, fill: 'var(--md-on-surface-variant)' }}
+                          interval={0}
+                          angle={-32}
+                          textAnchor="end"
+                          height={72}
+                          tickFormatter={shortAxisLabel}
+                        />
+                        <YAxis
+                          tick={{ fontSize: 12, fill: 'var(--md-on-surface-variant)' }}
+                          tickFormatter={v => formatCurrencyShort(Number(v))}
+                          width={52}
+                        />
+                        <Tooltip
+                          formatter={(v, name) => [formatCurrencyFull(Number(v ?? 0)), String(name)]}
+                          labelFormatter={label => String(label)}
+                        />
+                        <Bar dataKey="debt" name="Đã đề nghị TT" fill={CHART_DNTT} radius={[4, 4, 0, 0]} maxBarSize={36} />
+                        <Bar dataKey="remaining" name="Còn phải trả" fill={CHART_REMAIN} radius={[4, 4, 0, 0]} maxBarSize={36} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </>
                 )}
               </div>
             </HrmPanel>
@@ -146,17 +214,26 @@ export default function SuppliersDashboardPage() {
                 {data.trend.length === 0 ? (
                   <EmptyState message="Chưa có dữ liệu theo tháng trong kỳ đã chọn." />
                 ) : (
-                  <ResponsiveContainer width="100%" height={280}>
-                    <LineChart data={data.trend} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                      <YAxis tick={{ fontSize: 11 }} tickFormatter={v => formatCurrencyShort(Number(v))} />
-                      <Tooltip formatter={v => formatCurrencyFull(Number(v ?? 0))} />
-                      <Legend />
-                      <Line type="monotone" dataKey="debt" name="Đã đề nghị TT" stroke="var(--md-primary)" strokeWidth={2} dot={false} />
-                      <Line type="monotone" dataKey="payment" name="Thanh toán" stroke="var(--md-secondary)" strokeWidth={2} dot={false} />
-                    </LineChart>
-                  </ResponsiveContainer>
+                  <>
+                    <ChartKey items={[
+                      { color: CHART_DNTT, label: 'Đã đề nghị TT' },
+                      { color: CHART_PAY, label: 'Thanh toán' },
+                    ]} />
+                    <ResponsiveContainer width="100%" height={260}>
+                      <LineChart data={data.trend} margin={{ top: 8, right: 8, left: 4, bottom: 8 }}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" tick={{ fontSize: 12, fill: 'var(--md-on-surface-variant)' }} />
+                        <YAxis
+                          tick={{ fontSize: 12, fill: 'var(--md-on-surface-variant)' }}
+                          tickFormatter={v => formatCurrencyShort(Number(v))}
+                          width={52}
+                        />
+                        <Tooltip formatter={(v, name) => [formatCurrencyFull(Number(v ?? 0)), String(name)]} />
+                        <Line type="monotone" dataKey="debt" name="Đã đề nghị TT" stroke={CHART_DNTT} strokeWidth={2} dot={false} />
+                        <Line type="monotone" dataKey="payment" name="Thanh toán" stroke={CHART_PAY} strokeWidth={2} dot={false} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </>
                 )}
               </div>
             </HrmPanel>

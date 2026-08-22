@@ -158,7 +158,7 @@ export function usePurchaseOrderDetail(code: string) {
           lines: bodyLines,
         },
       });
-      showToast('success', `Đã cập nhật PO ${code}.`);
+      showToast('success', `Đã cập nhật ${code}.`);
       setEditing(false);
     } catch (err) {
       showToast('error', getApiErrorMessage(err, 'Không cập nhật được PO.'));
@@ -171,13 +171,13 @@ export function usePurchaseOrderDetail(code: string) {
     try {
       if (kind === 'approve') {
         await approveMutation.mutateAsync(code);
-        showToast('success', `Đã duyệt PO ${code}.`);
+        showToast('success', `Đã duyệt ${code}.`);
       } else if (kind === 'unapprove') {
         await unapproveMutation.mutateAsync(code);
-        showToast('success', `Đã hủy duyệt PO ${code}.`);
+        showToast('success', `Đã hủy duyệt ${code}.`);
       } else {
         await placeMutation.mutateAsync(code);
-        showToast('success', `Đã đánh dấu đặt hàng PO ${code}.`);
+        showToast('success', `Đã đánh dấu đặt hàng ${code}.`);
       }
     } catch (err) {
       showToast('error', getApiErrorMessage(err, 'Thao tác thất bại.'));

@@ -277,8 +277,8 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
       </div>
 
       <div className="surface-panel surface-panel--rounded-xl surface-panel--table shadow-card">
-        <div className="overflow-x-auto table-scroll">
-          <table className="w-full text-xs mat-catalog-table">
+        <div className="overflow-x-auto table-scroll wms-inventory-table-wrap">
+          <table className="wms-inventory-table mat-catalog-table">
             <thead>
               <tr>
                 {MATERIAL_TABLE_COLUMNS.map(col => (
@@ -313,7 +313,7 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
                   return (
                   <tr
                     key={m.materialCode}
-                    className="table-row border-b border-[var(--md-outline-variant)] cursor-pointer hover:bg-[var(--md-surface-container-high)]"
+                    className="table-row cursor-pointer"
                     onClick={() => setDetailCode(m.materialCode)}
                   >
                     <td className="table-cell">

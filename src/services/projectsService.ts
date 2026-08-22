@@ -1,7 +1,11 @@
 import { apiClient } from '../lib/apiClient';
 import type {
+  CreateProjectConstructionTaskRequest,
   CreateWarehouseProjectRequest,
   PagedApiResult,
+  ProjectConstructionTaskApiDto,
+  ProjectPurchasingProgressApiDto,
+  UpdateProjectConstructionTaskRequest,
   UpdateWarehouseProjectRequest,
   WarehouseProjectApiDto,
   WarehouseProjectInventoryApiDto,
@@ -65,6 +69,45 @@ export const projectsService = {
     await apiClient.patch<void>(
       `${ENDPOINT}/${encodeURIComponent(projectCode)}/inventory/${encodeURIComponent(materialCode)}/min-stock`,
       { minStockQty },
+    );
+  },
+
+  listPurchasingProgress(projectCode?: string): Promise<ProjectPurchasingProgressApiDto[]> {
+    return apiClient.get<ProjectPurchasingProgressApiDto[]>(`${ENDPOINT}/purchasing-progress`, {
+      projectCode: projectCode || undefined,
+    });
+  },
+
+  listConstructionTasks(projectCode?: string): Promise<ProjectConstructionTaskApiDto[]> {
+    return apiClient.get<ProjectConstructionTaskApiDto[]>(`${ENDPOINT}/construction-tasks`, {
+      projectCode: projectCode || undefined,
+    });
+  },
+
+  createConstructionTask(
+    projectCode: string,
+    body: CreateProjectConstructionTaskRequest,
+  ): Promise<ProjectConstructionTaskApiDto> {
+    return apiClient.post<ProjectConstructionTaskApiDto>(
+      `${ENDPOINT}/${encodeURIComponent(projectCode)}/construction-tasks`,
+      body,
+    );
+  },
+
+  updateConstructionTask(
+    projectCode: string,
+    id: string,
+    body: UpdateProjectConstructionTaskRequest,
+  ): Promise<ProjectConstructionTaskApiDto> {
+    return apiClient.put<ProjectConstructionTaskApiDto>(
+      `${ENDPOINT}/${encodeURIComponent(projectCode)}/construction-tasks/${encodeURIComponent(id)}`,
+      body,
+    );
+  },
+
+  deleteConstructionTask(projectCode: string, id: string): Promise<void> {
+    return apiClient.delete(
+      `${ENDPOINT}/${encodeURIComponent(projectCode)}/construction-tasks/${encodeURIComponent(id)}`,
     );
   },
 };

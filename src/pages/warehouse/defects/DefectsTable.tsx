@@ -13,8 +13,8 @@ interface DefectsTableProps {
 
 export default function DefectsTable({ isLoading, rows, buildRowActions }: DefectsTableProps) {
   return (
-    <div className="overflow-x-auto table-scroll">
-      <table className="form-table text-xs w-full">
+    <div className="overflow-x-auto table-scroll wms-inventory-table-wrap">
+      <table className="wms-inventory-table">
         <thead>
           <tr>
             <th className="table-header-cell text-center">Mã phiếu</th>
