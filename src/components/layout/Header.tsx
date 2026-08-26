@@ -17,7 +17,7 @@ import { useDarkMode } from '../../hooks/useDarkMode';
 import { isOwnWmsBellToastSuppressed } from '../../lib/wms/ownWmsBellToast';
 import type { WmsNotificationItemApiDto } from '../../services/notificationsService';
 
-type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin' | 'technical' | 'purchasing' | 'suppliers' | 'operations';
+type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin' | 'technical' | 'cskh' | 'purchasing' | 'suppliers' | 'operations';
 type NotifType = 'warning' | 'import' | 'export' | 'info' | 'transfer' | 'stocktake';
 
 const NOTIF_READ_KEY = 'nv-wms-notif-read';

@@ -4,11 +4,13 @@ import AppLayout from './components/layout/AppLayout';
 import PageLoader from './components/ui/PageLoader';
 import ErrorBoundary from './components/ErrorBoundary';
 import { Agentation } from 'agentation';
+import { CSKH_MODULE_ENABLED } from './constants/cskh';
 import { getDefaultRoute } from './utils/getDefaultRoute';
 import { getActiveRole } from './lib/getActiveRole';
 import * as Pages from './routes/lazyPages';
 
 const SuppliersModuleRoutes = lazy(() => import('./routes/SuppliersModuleRoutes'));
+const CskhModuleRoutes = lazy(() => import('./routes/CskhModuleRoutes'));
 
 export default function App() {
   const role = getActiveRole();
@@ -81,8 +83,16 @@ export default function App() {
             <Route path="/admin/settings" element={<Pages.AdminSettingsPage />} />
             <Route path="/admin/settings/roles/:code/permissions" element={<Pages.AdminRolePermissionsPage />} />
 
-            {/* CSKH / purchasing·stocktake settings — chưa ship API; redirect khỏi placeholder */}
-            <Route path="/technical/*" element={<Navigate to="/operations/dashboard" replace />} />
+            {CSKH_MODULE_ENABLED ? (
+              <Route path="/cskh/*" element={<CskhModuleRoutes />} />
+            ) : (
+              <>
+                <Route path="/cskh" element={<Navigate to={getDefaultRoute(role)} replace />} />
+                <Route path="/cskh/*" element={<Navigate to={getDefaultRoute(role)} replace />} />
+              </>
+            )}
+            <Route path="/technical" element={<Navigate to={CSKH_MODULE_ENABLED ? '/cskh' : getDefaultRoute(role)} replace />} />
+            <Route path="/technical/*" element={<Navigate to={CSKH_MODULE_ENABLED ? '/cskh' : getDefaultRoute(role)} replace />} />
 
             <Route path="/purchasing" element={<Navigate to="/purchasing/dashboard" replace />} />
             <Route path="/purchasing/dashboard" element={<Pages.PurchasingDashboardPage />} />

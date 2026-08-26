@@ -111,15 +111,9 @@ export default function DashboardPage() {
               <Gift size={15} className="portal-birthday-card__title-icon" aria-hidden />
               Sinh nhật {monthLabel}
             </h2>
-            <div className="portal-birthday-stat-grid">
-              <div className="portal-birthday-stat">
-                <p className="portal-birthday-stat__label">Nhân viên</p>
-                <p className="portal-birthday-stat__value portal-birthday-stat__value--employees">{birthdayStats.employees}</p>
-              </div>
-              <div className="portal-birthday-stat">
-                <p className="portal-birthday-stat__label">Khách hàng</p>
-                <p className="portal-birthday-stat__value portal-birthday-stat__value--customers">{birthdayStats.customers}</p>
-              </div>
+            <div className="portal-birthday-stat">
+              <p className="portal-birthday-stat__label">Nhân viên</p>
+              <p className="portal-birthday-stat__value portal-birthday-stat__value--employees">{birthdayStats.employees}</p>
             </div>
             <p className="portal-birthday-card__footer">
               Chúc mừng sinh nhật các thành viên trong tháng!

@@ -368,14 +368,9 @@
     color: var(--md-secondary);
     flex-shrink: 0;
   }
-  .portal-birthday-stat-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-  }
   .portal-birthday-stat {
     padding: 8px 12px;
-    border-radius: 12px;
+    border-radius: var(--radius-md);
     background: color-mix(in srgb, #fff 82%, var(--nv-steel-light));
     border: 1px solid color-mix(in srgb, var(--nv-steel) 18%, var(--md-outline-variant));
   }
@@ -385,11 +380,10 @@
   }
   .portal-birthday-stat__value {
     font-size: var(--fs-xl);
-    font-weight: 700;
+    font-weight: var(--fw-bold);
     font-variant-numeric: tabular-nums;
   }
   .portal-birthday-stat__value--employees { color: var(--md-secondary); }
-  .portal-birthday-stat__value--customers { color: var(--md-primary); }
   .portal-birthday-card__footer {
     font-size: var(--fs-xs);
     text-align: center;

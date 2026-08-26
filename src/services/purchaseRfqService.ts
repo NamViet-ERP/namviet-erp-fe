@@ -19,6 +19,13 @@ export type PurchaseRfqListParams = {
   search?: string;
 };
 
+export type PurchaseRfqChipParams = {
+  supplierId?: number;
+  status?: string;
+  year?: number;
+  quarter?: number;
+};
+
 export const purchaseRfqService = {
   list(params: PurchaseRfqListParams = {}) {
     return apiClient.get<PurchaseRfqQuotePagedApiDto>(ENDPOINT, {
@@ -32,12 +39,23 @@ export const purchaseRfqService = {
     });
   },
 
-  averages(groupBy: 'quarter' | 'year', year?: number) {
-    return apiClient.get<PurchaseRfqAverageApiDto[]>(`${ENDPOINT}/averages`, { groupBy, year });
+  averages(groupBy: 'quarter' | 'year', params: PurchaseRfqChipParams = {}) {
+    return apiClient.get<PurchaseRfqAverageApiDto[]>(`${ENDPOINT}/averages`, {
+      groupBy,
+      year: params.year,
+      quarter: params.quarter,
+      supplierId: params.supplierId,
+      status: params.status || undefined,
+    });
   },
 
-  winRates() {
-    return apiClient.get<PurchaseRfqWinRateApiDto[]>(`${ENDPOINT}/win-rates`);
+  winRates(params: PurchaseRfqChipParams = {}) {
+    return apiClient.get<PurchaseRfqWinRateApiDto[]>(`${ENDPOINT}/win-rates`, {
+      supplierId: params.supplierId,
+      status: params.status || undefined,
+      year: params.year,
+      quarter: params.quarter,
+    });
   },
 
   create(body: UpsertPurchaseRfqQuoteRequest) {

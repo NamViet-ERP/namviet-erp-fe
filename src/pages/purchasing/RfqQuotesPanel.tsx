@@ -1,10 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { Check, Pencil, X } from 'lucide-react';
 import FormField from '../../components/ui/FormField';
 import Modal from '../../components/ui/Modal';
 import EmptyState from '../../components/ui/EmptyState';
 import Pagination from '../../components/ui/Pagination';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import CurrencyInput from '../../components/ui/CurrencyInput';
+import Dropdown from '../../components/ui/Dropdown';
+import HrmSelect from '../../components/hr/HrmSelect';
 import SupplierAutocomplete from '../../components/ui/SupplierAutocomplete';
 import ProjectAutocomplete from '../../components/purchasing/ProjectAutocomplete';
 import MaterialByGroupFields, { rootCategoryIdOf } from '../../components/purchasing/MaterialByGroupFields';
@@ -24,7 +27,13 @@ import { useSuppliers } from '../../hooks/useSuppliers';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { formatDateCell } from '../../lib/hrm/formatters';
 import { formatCurrency } from '../../utils/formatCurrency';
+import type { DropdownItem } from '../../types';
 import type { PurchaseRfqQuoteApiDto, UpsertPurchaseRfqQuoteRequest } from '../../types/api/purchasingApi';
+
+export type RfqQuotesPanelHandle = {
+  openCreate: () => void;
+  exportCsv: () => void;
+};
 
 const COLS = 9;
 const THIS_YEAR = new Date().getFullYear();
@@ -53,7 +62,6 @@ type RfqForm = {
   validUntil: string;
   leadTimeDays: string;
   paymentTerm: string;
-  status: string;
   note: string;
 };
 
@@ -66,20 +74,22 @@ const emptyForm = (): RfqForm => ({
   validUntil: '',
   leadTimeDays: '',
   paymentTerm: '',
-  status: 'active',
   note: '',
 });
 
-export default function RfqQuotesPanel({
-  canWrite,
-  canUpdate = canWrite,
-  presetMaterialCode = '',
-}: {
+export default forwardRef<RfqQuotesPanelHandle, {
   canWrite: boolean;
   canUpdate?: boolean;
   presetMaterialCode?: string;
-}) {
-  const [search, setSearch] = useState('');
+  /** Khi true: ẩn nút trên panel (parent đặt trên PageHeader). */
+  hideToolbarActions?: boolean;
+}>(function RfqQuotesPanel({
+  canWrite,
+  canUpdate = canWrite,
+  presetMaterialCode = '',
+  hideToolbarActions = false,
+}, ref) {
+  const [supplierId, setSupplierId] = useState<number | ''>('');
   const [year, setYear] = useState<number | ''>(THIS_YEAR);
   const [quarter, setQuarter] = useState<number | ''>('');
   const [status, setStatus] = useState('');
@@ -90,13 +100,13 @@ export default function RfqQuotesPanel({
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState<RfqForm>(emptyForm);
   const [categoryId, setCategoryId] = useState<number | ''>('');
-  const [formErrors, setFormErrors] = useState<Partial<Record<'categoryId' | 'materialCode' | 'supplierName' | 'quoteDate' | 'unitPrice', string>>>({});
+  const [formErrors, setFormErrors] = useState<Partial<Record<'categoryId' | 'materialCode' | 'supplierName' | 'quoteDate' | 'unitPrice' | 'validUntil', string>>>({});
 
   const params = useMemo(
     () => ({
       page,
       pageSize,
-      search: search.trim() || undefined,
+      supplierId: supplierId === '' ? undefined : supplierId,
       year:
         groupBy === 'year'
           ? year === '' ? undefined : year
@@ -104,13 +114,21 @@ export default function RfqQuotesPanel({
       quarter: groupBy === 'quarter' && quarter !== '' ? quarter : undefined,
       status: status || undefined,
     }),
-    [page, pageSize, search, year, quarter, status, groupBy],
+    [page, pageSize, supplierId, year, quarter, status, groupBy],
+  );
+
+  const chipParams = useMemo(
+    () => ({
+      supplierId: params.supplierId,
+      year: params.year,
+      quarter: params.quarter,
+    }),
+    [params.supplierId, params.year, params.quarter],
   );
 
   const list = usePurchaseRfqQuotes(params);
-  const averagesYear = groupBy === 'year' ? (year === '' ? undefined : year) : (year === '' ? THIS_YEAR : year);
-  const averages = usePurchaseRfqAverages(groupBy, averagesYear);
-  const winRates = usePurchaseRfqWinRates();
+  const averages = usePurchaseRfqAverages(groupBy, chipParams);
+  const winRates = usePurchaseRfqWinRates(chipParams);
   const createMutation = useCreatePurchaseRfqQuote();
   const updateMutation = useUpdatePurchaseRfqQuote();
   const { data: categories = [] } = useCategoryTree();
@@ -130,6 +148,14 @@ export default function RfqQuotesPanel({
   const materials = materialsPage?.items ?? [];
   const suppliers = suppliersPage?.items ?? [];
   const projects = projectsPage?.items ?? [];
+  const supplierOptions = useMemo(
+    () => [...suppliers].sort((a, b) => a.supplierName.localeCompare(b.supplierName, 'vi')),
+    [suppliers],
+  );
+  const winRateChips = useMemo(
+    () => (winRates.data ?? []).filter(w => w.won > 0),
+    [winRates.data],
+  );
 
   const consumedPreset = useRef('');
   useEffect(() => {
@@ -157,6 +183,10 @@ export default function RfqQuotesPanel({
   };
 
   const openEdit = (row: PurchaseRfqQuoteApiDto) => {
+    if (row.status === 'won' || row.status === 'lost') {
+      showToast('error', 'Báo giá đã kết thúc, không thể sửa.');
+      return;
+    }
     setCreating(false);
     setEditing(row);
     setForm({
@@ -168,7 +198,6 @@ export default function RfqQuotesPanel({
       validUntil: row.validUntil ?? '',
       leadTimeDays: row.leadTimeDays != null ? String(row.leadTimeDays) : '',
       paymentTerm: row.paymentTerm ?? '',
-      status: row.status === 'expired' ? 'active' : row.status,
       note: row.note ?? '',
     });
     const mat = materials.find(m => m.materialCode === row.materialCode);
@@ -185,17 +214,17 @@ export default function RfqQuotesPanel({
   const buildBody = (): UpsertPurchaseRfqQuoteRequest => {
     const matched = suppliers.find(s => s.supplierName === form.supplierName);
     return {
-    materialCode: form.materialCode,
-    supplierId: matched?.id ?? 0,
-    projectCode: form.projectCode || null,
-    quoteDate: form.quoteDate,
-    unitPrice: Number(String(form.unitPrice).replace(/[^\d.-]/g, '')),
-    validUntil: form.validUntil || null,
-    leadTimeDays: form.leadTimeDays ? Number(form.leadTimeDays) : null,
-    paymentTerm: form.paymentTerm || null,
-    status: form.status,
-    note: form.note || null,
-  };
+      materialCode: form.materialCode,
+      supplierId: matched?.id ?? 0,
+      projectCode: form.projectCode || null,
+      quoteDate: form.quoteDate,
+      unitPrice: Number(String(form.unitPrice).replace(/[^\d.-]/g, '')),
+      validUntil: form.validUntil,
+      leadTimeDays: form.leadTimeDays ? Number(form.leadTimeDays) : null,
+      paymentTerm: form.paymentTerm || null,
+      status: null,
+      note: form.note || null,
+    };
   };
 
   const save = async () => {
@@ -204,8 +233,9 @@ export default function RfqQuotesPanel({
     if (!form.materialCode) nextErrors.materialCode = 'Chọn vật tư.';
     if (!form.supplierName) nextErrors.supplierName = 'Chọn nhà cung cấp.';
     if (!form.quoteDate) nextErrors.quoteDate = 'Chọn ngày báo giá.';
+    if (!form.validUntil) nextErrors.validUntil = 'Chọn hạn giữ giá.';
     const price = Number(String(form.unitPrice).replace(/[^\d.-]/g, ''));
-    if (!(price > 0)) nextErrors.unitPrice = 'Nhập đơn giá chào.';
+    if (!(price > 0)) nextErrors.unitPrice = 'Nhập đơn báo giá.';
     setFormErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
     if (!buildBody().supplierId) {
@@ -227,6 +257,10 @@ export default function RfqQuotesPanel({
   };
 
   const mark = async (row: PurchaseRfqQuoteApiDto, next: 'won' | 'lost') => {
+    if (!row.validUntil) {
+      showToast('error', 'Báo giá thiếu hạn giữ giá, hãy sửa trước.');
+      return;
+    }
     try {
       await updateMutation.mutateAsync({
         id: row.id,
@@ -249,8 +283,24 @@ export default function RfqQuotesPanel({
     }
   };
 
+  const rowActions = (row: PurchaseRfqQuoteApiDto): DropdownItem[] => {
+    const items: DropdownItem[] = [];
+    const closed = row.status === 'won' || row.status === 'lost';
+    if (row.status === 'active') {
+      items.push(
+        { label: 'Thắng thầu', icon: Check, onClick: () => void mark(row, 'won') },
+        { label: 'Thua thầu', icon: X, danger: true, onClick: () => void mark(row, 'lost') },
+        { divider: true },
+      );
+    }
+    if (!closed) {
+      items.push({ label: 'Sửa báo giá', icon: Pencil, onClick: () => openEdit(row) });
+    }
+    return items;
+  };
+
   const exportCsv = () => {
-    const header = ['Ngày báo giá', 'Mã hàng', 'Tên hàng', 'Nhà cung cấp', 'Đơn giá', 'Hạn giữ giá', 'Lead-time', 'Điều khoản TT', 'Trạng thái'];
+    const header = ['Ngày báo giá', 'Mã hàng', 'Tên hàng', 'Nhà cung cấp', 'Đơn giá', 'Hạn giữ giá', 'Thời gian giao hàng', 'Điều khoản thanh toán', 'Trạng thái'];
     const lines = items.map(row => [
       row.quoteDate,
       row.materialCode,
@@ -271,106 +321,129 @@ export default function RfqQuotesPanel({
     URL.revokeObjectURL(url);
   };
 
+  useImperativeHandle(ref, () => ({ openCreate, exportCsv }), [canWrite, items]);
+
   return (
     <div className="space-y-3">
-      {winRates.data && winRates.data.length > 0 ? (
-        <div className="flex flex-wrap gap-2">
-          {winRates.data.map(w => (
-            <span key={w.supplierId} className={`badge ${w.rate >= 50 ? 'badge-success' : 'badge-warning'}`}>
+      {hideToolbarActions ? null : (
+        <div className="flex flex-wrap items-center justify-between gap-2 px-4">
+          <h2 className="text-[length:var(--fs-lg)] font-semibold m-0">Sổ giá chào thầu (RFQ)</h2>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" className="btn btn-outline btn-sm" onClick={exportCsv}>Xuất CSV</button>
+            {canWrite ? (
+              <button type="button" className="btn btn-primary btn-sm" onClick={openCreate}>
+                + Ghi nhận báo giá mới
+              </button>
+            ) : null}
+          </div>
+        </div>
+      )}
+
+      <div className="hrm-list-toolbar">
+        <div className="hrm-list-toolbar__filters">
+          <div className="hrm-list-toolbar__filter-row hrm-list-toolbar__filter-row--selects rfq-filter-row">
+            <FormField label="Lọc theo NCC">
+              <HrmSelect
+                aria-label="Lọc theo NCC"
+                placeholder="-- Tất cả NCC --"
+                value={supplierId === '' ? '' : String(supplierId)}
+                options={supplierOptions.map(s => ({ value: String(s.id), label: s.supplierName }))}
+                onChange={v => {
+                  setSupplierId(v ? Number(v) : '');
+                  setPage(1);
+                }}
+              />
+            </FormField>
+            <FormField label="Lọc theo trạng thái">
+              <HrmSelect
+                aria-label="Lọc theo trạng thái"
+                placeholder="-- Tất cả trạng thái --"
+                value={status}
+                className={
+                  status === 'won' ? 'rfq-status-select--won'
+                    : status === 'lost' ? 'rfq-status-select--lost'
+                      : status === 'expired' ? 'rfq-status-select--expired'
+                        : status === 'active' ? 'rfq-status-select--active'
+                          : ''
+                }
+                options={[
+                  { value: 'active', label: 'Còn hiệu lực' },
+                  { value: 'won', label: 'Thắng thầu' },
+                  { value: 'lost', label: 'Thua thầu' },
+                  { value: 'expired', label: 'Hết hạn' },
+                ]}
+                onChange={v => {
+                  setStatus(v);
+                  setPage(1);
+                }}
+              />
+            </FormField>
+            <FormField label="Gom giá TB">
+              <HrmSelect
+                aria-label="Gom giá TB"
+                value={groupBy}
+                options={[
+                  { value: 'quarter', label: 'Theo quý' },
+                  { value: 'year', label: 'Theo năm' },
+                ]}
+                onChange={v => {
+                  const next = v as 'quarter' | 'year';
+                  setGroupBy(next);
+                  if (next === 'year') {
+                    setQuarter('');
+                    if (year === '') setYear(THIS_YEAR);
+                  } else if (year === '') {
+                    setYear(THIS_YEAR);
+                  }
+                  setPage(1);
+                }}
+              />
+            </FormField>
+            {groupBy === 'quarter' ? (
+              <FormField label="Quý">
+                <HrmSelect
+                  aria-label="Quý"
+                  placeholder="Tất cả quý"
+                  value={quarter === '' ? '' : String(quarter)}
+                  options={[1, 2, 3, 4].map(q => ({ value: String(q), label: `Quý ${q}` }))}
+                  onChange={v => {
+                    setQuarter(v ? Number(v) : '');
+                    setPage(1);
+                  }}
+                />
+              </FormField>
+            ) : (
+              <FormField label="Năm">
+                <HrmSelect
+                  aria-label="Năm"
+                  placeholder="Tất cả (5 năm)"
+                  value={year === '' ? '' : String(year)}
+                  options={YEARS.map(y => ({ value: String(y), label: String(y) }))}
+                  onChange={v => {
+                    setYear(v ? Number(v) : '');
+                    setPage(1);
+                  }}
+                />
+              </FormField>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {winRateChips.length > 0 ? (
+        <div className="rfq-chip-row">
+          {winRateChips.map(w => (
+            <span key={w.supplierId} className={`badge ${w.rate >= 50 ? 'badge-success' : 'badge-error'}`}>
               {w.supplierName}: {w.won}/{w.total} ({w.rate}%)
             </span>
           ))}
         </div>
       ) : null}
 
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-[length:var(--fs-lg)] font-semibold m-0">Sổ giá chào thầu (RFQ)</h2>
-        <div className="flex flex-wrap gap-2">
-          <button type="button" className="btn btn-outline btn-sm" onClick={exportCsv}>Xuất CSV</button>
-          {canWrite ? (
-            <button type="button" className="btn btn-primary btn-sm" onClick={openCreate}>
-              + Ghi nhận báo giá mới
-            </button>
-          ) : null}
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-2 items-end">
-        <FormField label="Lọc theo NCC">
-          <input
-            className="form-input"
-            value={search}
-            onChange={e => { setSearch(e.target.value); setPage(1); }}
-            placeholder="Mã / tên VT / NCC"
-          />
-        </FormField>
-        <FormField label="Lọc theo trạng thái">
-          <select className="form-input" value={status} onChange={e => { setStatus(e.target.value); setPage(1); }}>
-            <option value="">-- Tất cả trạng thái --</option>
-            <option value="active">Còn hiệu lực</option>
-            <option value="won">Thắng thầu</option>
-            <option value="lost">Thua thầu</option>
-          </select>
-        </FormField>
-        <FormField label="Gom giá TB">
-          <select
-            className="form-input"
-            value={groupBy}
-            onChange={e => {
-              const next = e.target.value as 'quarter' | 'year';
-              setGroupBy(next);
-              if (next === 'year') {
-                setQuarter('');
-                if (year === '') setYear(THIS_YEAR);
-              } else if (year === '') {
-                setYear(THIS_YEAR);
-              }
-              setPage(1);
-            }}
-          >
-            <option value="quarter">Theo quý</option>
-            <option value="year">Theo năm</option>
-          </select>
-        </FormField>
-        {groupBy === 'quarter' ? (
-          <FormField label="Quý">
-            <select
-              className="form-input"
-              value={quarter}
-              onChange={e => {
-                setQuarter(e.target.value ? Number(e.target.value) : '');
-                setPage(1);
-              }}
-            >
-              <option value="">Tất cả quý</option>
-              {[1, 2, 3, 4].map(q => (
-                <option key={q} value={q}>Quý {q}</option>
-              ))}
-            </select>
-          </FormField>
-        ) : (
-          <FormField label="Năm">
-            <select
-              className="form-input"
-              value={year}
-              onChange={e => {
-                setYear(e.target.value ? Number(e.target.value) : '');
-                setPage(1);
-              }}
-            >
-              <option value="">Tất cả (5 năm)</option>
-              {YEARS.map(y => (
-                <option key={y} value={y}>{y}</option>
-              ))}
-            </select>
-          </FormField>
-        )}
-      </div>
-
       {averages.data && averages.data.length > 0 ? (
-        <div className="flex flex-wrap gap-2">
+        <div className="rfq-chip-row">
           {averages.data.map(a => (
-            <span key={a.period} className="badge">
+            <span key={a.period} className="badge badge-info">
               {a.period}: {formatCurrency(a.averagePrice)} ({a.quoteCount} BG)
             </span>
           ))}
@@ -386,10 +459,10 @@ export default function RfqQuotesPanel({
               <th className="table-header-cell">NCC</th>
               <th className="table-header-cell">Đơn giá</th>
               <th className="table-header-cell">Hạn giữ giá</th>
-              <th className="table-header-cell">Lead-time</th>
-              <th className="table-header-cell">Điều khoản TT</th>
+              <th className="table-header-cell">TG giao hàng</th>
+              <th className="table-header-cell">Điều khoản thanh toán</th>
               <th className="table-header-cell">Trạng thái</th>
-              <th className="table-header-cell"> </th>
+              <th className="table-header-cell hrm-table-col-actions">Tác vụ</th>
             </tr>
           </thead>
           <tbody>
@@ -418,24 +491,20 @@ export default function RfqQuotesPanel({
                   </td>
                   <td className="table-cell">{row.supplierName}</td>
                   <td className="table-cell text-right tabular-nums">{formatCurrency(row.unitPrice)}</td>
-                  <td className="table-cell">{row.validUntil ? formatDateCell(row.validUntil) : '—'}</td>
-                  <td className="table-cell">{row.leadTimeDays != null ? `${row.leadTimeDays} ngày` : '—'}</td>
-                  <td className="table-cell">{row.paymentTerm || '—'}</td>
+                  <td className="table-cell">{row.validUntil ? formatDateCell(row.validUntil) : '-'}</td>
+                  <td className="table-cell">{row.leadTimeDays != null ? `${row.leadTimeDays} ngày` : '-'}</td>
+                  <td className="table-cell">{row.paymentTerm || '-'}</td>
                   <td className="table-cell">
                     <span className={`badge ${rfqStatusBadge(row.status)}`}>
                       {STATUS_LABEL[row.status] ?? row.status}
                     </span>
                   </td>
-                  <td className="table-cell">
-                    {canUpdate && row.status === 'active' ? (
-                      <>
-                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => void mark(row, 'won')}>Thắng</button>
-                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => void mark(row, 'lost')}>Thua</button>
-                      </>
-                    ) : null}
-                    {canUpdate ? (
-                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => openEdit(row)}>Sửa</button>
-                    ) : null}
+                  <td className="table-cell hrm-table-col-actions">
+                    {(() => {
+                      if (!canUpdate) return null;
+                      const actions = rowActions(row);
+                      return actions.length > 0 ? <Dropdown trigger="Tác vụ" items={actions} /> : null;
+                    })()}
                   </td>
                 </tr>
               ))
@@ -456,9 +525,9 @@ export default function RfqQuotesPanel({
         isOpen={creating || Boolean(editing)}
         onClose={closeModal}
         title={editing ? 'Sửa báo giá' : 'Ghi nhận báo giá mới'}
-        size="md"
+        size="xl"
       >
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 modal-form-bordered">
           <MaterialByGroupFields
             categoryId={categoryId}
             onCategoryChange={id => {
@@ -499,27 +568,27 @@ export default function RfqQuotesPanel({
               setFormErrors(prev => ({ ...prev, quoteDate: undefined }));
             }} />
           </FormField>
-          <FormField label="Đơn giá chào" required error={formErrors.unitPrice}>
-            <CurrencyInput value={form.unitPrice} onChange={unitPrice => {
-              setForm(f => ({ ...f, unitPrice }));
-              setFormErrors(prev => ({ ...prev, unitPrice: undefined }));
+          <FormField label="Đơn báo giá" required error={formErrors.unitPrice}>
+            <CurrencyInput
+              value={form.unitPrice}
+              suffix="VND"
+              onChange={unitPrice => {
+                setForm(f => ({ ...f, unitPrice }));
+                setFormErrors(prev => ({ ...prev, unitPrice: undefined }));
+              }}
+            />
+          </FormField>
+          <FormField label="Hạn giữ giá" required error={formErrors.validUntil}>
+            <input className="form-input" type="date" value={form.validUntil} onChange={e => {
+              setForm(f => ({ ...f, validUntil: e.target.value }));
+              setFormErrors(prev => ({ ...prev, validUntil: undefined }));
             }} />
           </FormField>
-          <FormField label="Hạn giữ giá">
-            <input className="form-input" type="date" value={form.validUntil} onChange={e => setForm(f => ({ ...f, validUntil: e.target.value }))} />
-          </FormField>
-          <FormField label="Lead-time (ngày)">
+          <FormField label="Thời gian giao hàng (ngày)">
             <input className="form-input" type="number" min={0} value={form.leadTimeDays} onChange={e => setForm(f => ({ ...f, leadTimeDays: e.target.value }))} />
           </FormField>
-          <FormField label="Điều khoản TT">
+          <FormField label="Điều khoản thanh toán">
             <input className="form-input" value={form.paymentTerm} onChange={e => setForm(f => ({ ...f, paymentTerm: e.target.value }))} />
-          </FormField>
-          <FormField label="Trạng thái">
-            <select className="form-input" value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))}>
-              <option value="active">Còn hiệu lực</option>
-              <option value="won">Thắng thầu</option>
-              <option value="lost">Thua thầu</option>
-            </select>
           </FormField>
           <FormField label="Ghi chú" className="sm:col-span-2">
             <textarea className="form-input" value={form.note} onChange={e => setForm(f => ({ ...f, note: e.target.value }))} />
@@ -534,4 +603,4 @@ export default function RfqQuotesPanel({
       </Modal>
     </div>
   );
-}
+});

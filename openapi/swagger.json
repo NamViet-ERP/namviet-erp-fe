@@ -11577,6 +11577,29 @@
               "type": "integer",
               "format": "int32"
             }
+          },
+          {
+            "name": "quarter",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "supplierId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -11616,6 +11639,39 @@
       "get": {
         "tags": [
           "PurchaseRfqQuotes"
+        ],
+        "parameters": [
+          {
+            "name": "supplierId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "year",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "quarter",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
         ],
         "responses": {
           "200": {
@@ -18166,8 +18222,7 @@
       },
       "CreatePurchaseEstimateRequest": {
         "required": [
-          "projectCode",
-          "title"
+          "projectCode"
         ],
         "type": "object",
         "properties": {
@@ -18175,7 +18230,8 @@
             "type": "string"
           },
           "title": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "lines": {
             "type": "array",
@@ -22262,6 +22318,7 @@
       },
       "PurchaseEstimateLineDto": {
         "required": [
+          "estimateUnitPrice",
           "id",
           "materialCode",
           "materialName",
@@ -22295,12 +22352,17 @@
           "newQty": {
             "type": "number",
             "format": "double"
+          },
+          "estimateUnitPrice": {
+            "type": "number",
+            "format": "double"
           }
         },
         "additionalProperties": false
       },
       "PurchaseEstimateLineInput": {
         "required": [
+          "estimateUnitPrice",
           "materialCode",
           "newQty"
         ],
@@ -22310,6 +22372,10 @@
             "type": "string"
           },
           "newQty": {
+            "type": "number",
+            "format": "double"
+          },
+          "estimateUnitPrice": {
             "type": "number",
             "format": "double"
           }
@@ -28403,7 +28469,8 @@
           "materialCode",
           "quoteDate",
           "supplierId",
-          "unitPrice"
+          "unitPrice",
+          "validUntil"
         ],
         "type": "object",
         "properties": {
@@ -28428,8 +28495,7 @@
           },
           "validUntil": {
             "type": "string",
-            "format": "date",
-            "nullable": true
+            "format": "date"
           },
           "leadTimeDays": {
             "type": "integer",

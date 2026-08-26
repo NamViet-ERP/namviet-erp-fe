@@ -200,7 +200,7 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
   return (
     <div className="page-shell">
       <PageHeader
-        eyebrow="Vận hành"
+        eyebrow="SLC"
         title="Danh mục vật tư"
         actions={
           <PermissionGate permission="wms.materials.create">
@@ -406,7 +406,7 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
         <div className="space-y-4 modal-form-bordered">
           {!createCategoriesLoading && (createOptions[0]?.length ?? 0) === 0 && (
             <p className="alert-banner alert-banner--error text-xs">
-              Chưa có dữ liệu cây vật tư. Vào <strong>Vận hành → Thiết lập → Cây vật tư</strong> để khai báo trước khi tạo vật tư mới.
+              Chưa có dữ liệu cây vật tư. Vào <strong>SLC → Thiết lập → Cây vật tư</strong> để khai báo trước khi tạo vật tư mới.
             </p>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">

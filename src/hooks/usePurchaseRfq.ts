@@ -1,5 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { purchaseRfqService, type PurchaseRfqListParams } from '../services/purchaseRfqService';
+import {
+  purchaseRfqService,
+  type PurchaseRfqChipParams,
+  type PurchaseRfqListParams,
+} from '../services/purchaseRfqService';
 import type { UpsertPurchaseRfqQuoteRequest } from '../types/api/purchasingApi';
 
 const LIST_KEY = ['purchasing', 'rfq'] as const;
@@ -11,17 +15,17 @@ export function usePurchaseRfqQuotes(params: PurchaseRfqListParams = {}) {
   });
 }
 
-export function usePurchaseRfqAverages(groupBy: 'quarter' | 'year', year?: number) {
+export function usePurchaseRfqAverages(groupBy: 'quarter' | 'year', params: PurchaseRfqChipParams = {}) {
   return useQuery({
-    queryKey: [...LIST_KEY, 'averages', groupBy, year],
-    queryFn: () => purchaseRfqService.averages(groupBy, year),
+    queryKey: [...LIST_KEY, 'averages', groupBy, params],
+    queryFn: () => purchaseRfqService.averages(groupBy, params),
   });
 }
 
-export function usePurchaseRfqWinRates() {
+export function usePurchaseRfqWinRates(params: PurchaseRfqChipParams = {}) {
   return useQuery({
-    queryKey: [...LIST_KEY, 'win-rates'],
-    queryFn: () => purchaseRfqService.winRates(),
+    queryKey: [...LIST_KEY, 'win-rates', params],
+    queryFn: () => purchaseRfqService.winRates(params),
   });
 }
 

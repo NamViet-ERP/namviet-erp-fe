@@ -1,4 +1,5 @@
 import type { SidebarChildItem, SidebarMenuItem } from '../types';
+import { CSKH_MODULE_ENABLED, CSKH_VIEW_PERMISSION } from './cskh';
 import {
   LayoutDashboard, Package,
   PackagePlus, PackageMinus, Settings,
@@ -6,7 +7,7 @@ import {
   Layers, FolderKanban, ArrowLeftRight, Building2, Ruler, BarChart3, RotateCcw, AlertTriangle,
   Target, CalendarDays, DollarSign, ShoppingCart, ShoppingBag, Star, Truck, WalletCards, Ban,
   History, PieChart, Activity, Warehouse, ShieldCheck, FolderOpen, ScrollText,
-  Calculator, BookOpen,
+  Calculator, BookOpen, Headphones, FileEdit, MessageSquare, ClipboardList,
 } from 'lucide-react';
 
 function toSidebarChildren(items: SidebarMenuItem[]): SidebarChildItem[] {
@@ -92,7 +93,7 @@ export const warehouseMenu: SidebarMenuItem[] = [
   },
 ];
 
-/** Sidebar khi đang trong Thiết lập Vận hành (cây VT / ĐVT) */
+/** Sidebar khi đang trong Thiết lập SLC (cây VT / ĐVT) */
 export const operationsSettingsMenu: SidebarMenuItem[] = [
   {
     id: 'ops-settings-categories',
@@ -138,13 +139,6 @@ export const recruitmentMenu: SidebarMenuItem[] = [
     permission: 'hrm.recruitment.plans.view',
   },
   {
-    id: 'recruitment-costs',
-    label: 'Chi phí',
-    icon: DollarSign,
-    path: '/recruitment/costs',
-    permission: 'hrm.recruitment.costs.view',
-  },
-  {
     id: 'candidates-list',
     label: 'Quản lý ứng viên',
     icon: UserCheck,
@@ -157,6 +151,13 @@ export const recruitmentMenu: SidebarMenuItem[] = [
     icon: CalendarDays,
     path: '/recruitment/calendar',
     permission: 'hrm.candidates.view:all',
+  },
+  {
+    id: 'recruitment-costs',
+    label: 'Chi phí',
+    icon: DollarSign,
+    path: '/recruitment/costs',
+    permission: 'hrm.recruitment.costs.view',
   },
   {
     id: 'recruitment-reports',
@@ -212,9 +213,97 @@ export const adminMenu: SidebarMenuItem[] = [
     permission: 'admin.roles.view:all',
   },
 ];
-/** Kỹ thuật / CSKH — chưa ship API; giữ export rỗng để AppLayout không gãy. */
+
+/** CSKH — theo luồng: KH → yêu cầu → hồ sơ → theo dõi/báo cáo → BH → thiết lập. */
+export const cskhMenu: SidebarMenuItem[] = [
+  {
+    id: 'cskh-dashboard',
+    label: 'Tổng quan',
+    icon: LayoutDashboard,
+    path: '/cskh',
+    permission: CSKH_VIEW_PERMISSION,
+  },
+  {
+    id: 'cskh-customers',
+    label: 'Khách hàng CĐT',
+    icon: Building2,
+    path: '/cskh/customers',
+    permission: CSKH_VIEW_PERMISSION,
+  },
+  {
+    id: 'cskh-requests',
+    label: 'Yêu cầu',
+    icon: ClipboardList,
+    path: '/cskh/requests',
+    permission: CSKH_VIEW_PERMISSION,
+  },
+  {
+    id: 'cskh-approval',
+    label: 'Soạn và duyệt',
+    icon: FileEdit,
+    path: '/cskh/documents/approval',
+    permission: CSKH_VIEW_PERMISSION,
+  },
+  {
+    id: 'cskh-transit',
+    label: 'Giao nhận hồ sơ',
+    icon: ArrowLeftRight,
+    path: '/cskh/documents/transit',
+    permission: CSKH_VIEW_PERMISSION,
+  },
+  {
+    id: 'cskh-feedback',
+    label: 'Theo dõi phản hồi',
+    icon: MessageSquare,
+    path: '/cskh/documents/feedback',
+    permission: CSKH_VIEW_PERMISSION,
+  },
+  {
+    id: 'cskh-archive',
+    label: 'Lưu trữ',
+    icon: FolderOpen,
+    path: '/cskh/documents/archive',
+    permission: CSKH_VIEW_PERMISSION,
+  },
+  {
+    id: 'cskh-gantt',
+    label: 'Gantt và báo cáo',
+    icon: CalendarDays,
+    path: '/cskh/gantt',
+    permission: CSKH_VIEW_PERMISSION,
+  },
+  {
+    id: 'cskh-meetings',
+    label: 'Cuộc họp',
+    icon: Users,
+    path: '/cskh/meetings',
+    permission: CSKH_VIEW_PERMISSION,
+  },
+  {
+    id: 'cskh-bottlenecks',
+    label: 'Điểm nghẽn',
+    icon: AlertTriangle,
+    path: '/cskh/bottlenecks',
+    permission: CSKH_VIEW_PERMISSION,
+  },
+  {
+    id: 'cskh-warranties',
+    label: 'Bảo hành CĐT',
+    icon: ShieldCheck,
+    path: '/cskh/warranties',
+    permission: CSKH_VIEW_PERMISSION,
+  },
+  {
+    id: 'cskh-settings',
+    label: 'Thiết lập',
+    icon: Settings,
+    path: '/cskh/settings',
+    permission: CSKH_VIEW_PERMISSION,
+  },
+];
+/** @deprecated Alias — menu kỹ thuật cũ; CSKH nằm ở cskhMenu. */
 export const technicalMenu: SidebarMenuItem[] = [];
-/** Mua hàng — Dashboard + KHMH + Đơn hàng (NCC nằm module Nhà cung cấp). */
+/** Mua hàng — theo luồng: tham chiếu giá → cầu mua → PO → hợp đồng/hồ sơ → thanh toán → BH. */
 export const purchasingMenu: SidebarMenuItem[] = [
   {
     id: 'pur-dashboard',
@@ -222,6 +311,20 @@ export const purchasingMenu: SidebarMenuItem[] = [
     icon: LayoutDashboard,
     path: '/purchasing/dashboard',
     permission: 'purchasing.dashboard.view',
+  },
+  {
+    id: 'pur-price-book',
+    label: 'Sổ giá',
+    icon: BookOpen,
+    path: '/purchasing/price-book',
+    permission: 'purchasing.pricebook.view',
+  },
+  {
+    id: 'pur-estimate-procurement',
+    label: 'Mua hàng dự toán',
+    icon: Calculator,
+    path: '/purchasing/estimate-procurement',
+    permission: ['purchasing.estimates.view', 'purchasing.rfq.view'],
   },
   {
     id: 'pur-plan',
@@ -245,20 +348,6 @@ export const purchasingMenu: SidebarMenuItem[] = [
     permission: 'purchasing.orders.view',
   },
   {
-    id: 'pur-estimate-procurement',
-    label: 'Mua hàng dự toán',
-    icon: Calculator,
-    path: '/purchasing/estimate-procurement',
-    permission: ['purchasing.estimates.view', 'purchasing.rfq.view'],
-  },
-  {
-    id: 'pur-price-book',
-    label: 'Sổ giá',
-    icon: BookOpen,
-    path: '/purchasing/price-book',
-    permission: 'purchasing.pricebook.view',
-  },
-  {
     id: 'pur-contracts',
     label: 'Hợp đồng',
     icon: ScrollText,
@@ -271,13 +360,6 @@ export const purchasingMenu: SidebarMenuItem[] = [
     icon: FolderOpen,
     path: '/purchasing/documents',
     permission: 'purchasing.documents.view',
-  },
-  {
-    id: 'pur-warranties',
-    label: 'Bảo hành / Khiếu nại',
-    icon: ShieldCheck,
-    path: '/purchasing/warranties',
-    permission: 'purchasing.warranties.view',
   },
   {
     id: 'pur-payment-plans',
@@ -293,8 +375,15 @@ export const purchasingMenu: SidebarMenuItem[] = [
     path: '/purchasing/payments',
     permission: 'purchasing.payments.view',
   },
+  {
+    id: 'pur-warranties',
+    label: 'Bảo hành / Khiếu nại',
+    icon: ShieldCheck,
+    path: '/purchasing/warranties',
+    permission: 'purchasing.warranties.view',
+  },
 ];
-/** Nhà cung cấp — menu giống ERP /admin/suppliers. */
+/** Nhà cung cấp — master → giá → phân tích/nợ → đánh giá → blacklist. */
 export const suppliersMenu: SidebarMenuItem[] = [
   {
     id: 'sup-dashboard',
@@ -325,6 +414,13 @@ export const suppliersMenu: SidebarMenuItem[] = [
     permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
   },
   {
+    id: 'sup-price-history',
+    label: 'Lịch sử giá',
+    icon: History,
+    path: '/suppliers/price-history',
+    permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
+  },
+  {
     id: 'sup-spend',
     label: 'Chi tiêu theo NCC',
     icon: PieChart,
@@ -336,13 +432,6 @@ export const suppliersMenu: SidebarMenuItem[] = [
     label: 'Công nợ NCC',
     icon: WalletCards,
     path: '/suppliers/debt',
-    permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
-  },
-  {
-    id: 'sup-price-history',
-    label: 'Lịch sử giá',
-    icon: History,
-    path: '/suppliers/price-history',
     permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
   },
   {
@@ -360,7 +449,7 @@ export const suppliersMenu: SidebarMenuItem[] = [
     permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
   },
 ];
-/** Vận hành — Tổng quan, Dự án EPC, Danh mục vật tư, Thiết lập cây VT. */
+/** SLC — Tổng quan, Dự án EPC, Danh mục vật tư, Thiết lập cây VT. */
 export const operationsMenu: SidebarMenuItem[] = [
   {
     id: 'ops-dashboard',
@@ -400,19 +489,21 @@ export const operationsMenu: SidebarMenuItem[] = [
  * Portal card `/dashboard` đã tắt; điều hướng chỉ qua menu này.
  */
 export const unifiedSidebarMenu: SidebarMenuItem[] = [
+  ...(CSKH_MODULE_ENABLED
+    ? [{
+        id: 'mod-cskh',
+        label: 'CSKH',
+        icon: Headphones,
+        path: '/cskh',
+        children: toSidebarChildren(cskhMenu),
+      } satisfies SidebarMenuItem]
+    : []),
   {
     id: 'mod-operations',
-    label: 'Vận hành',
+    label: 'SLC',
     icon: Activity,
     path: '/operations/dashboard',
     children: toSidebarChildren(operationsMenu),
-  },
-  {
-    id: 'mod-purchasing',
-    label: 'Mua hàng',
-    icon: ShoppingCart,
-    path: '/purchasing/dashboard',
-    children: toSidebarChildren(purchasingMenu),
   },
   {
     id: 'mod-suppliers',
@@ -420,6 +511,13 @@ export const unifiedSidebarMenu: SidebarMenuItem[] = [
     icon: Building2,
     path: '/suppliers/dashboard',
     children: toSidebarChildren(suppliersMenu),
+  },
+  {
+    id: 'mod-purchasing',
+    label: 'Mua hàng',
+    icon: ShoppingCart,
+    path: '/purchasing/dashboard',
+    children: toSidebarChildren(purchasingMenu),
   },
   {
     id: 'mod-warehouse',

@@ -15,7 +15,7 @@ import { UI_PERMISSION_DENIED } from '../../lib/uiMessages';
 import PageLoader from '../ui/PageLoader';
 import type { SessionCheckResult } from '../../services/authService';
 
-type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin' | 'technical' | 'purchasing' | 'suppliers' | 'operations';
+type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin' | 'technical' | 'cskh' | 'purchasing' | 'suppliers' | 'operations';
 
 export default function AppLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -101,6 +101,7 @@ export default function AppLayout() {
     location.pathname.startsWith('/recruitment') ? 'recruitment' :
     location.pathname.startsWith('/members') ? 'members' :
     location.pathname.startsWith('/admin') ? 'admin' :
+    location.pathname.startsWith('/cskh') ? 'cskh' :
     location.pathname.startsWith('/technical') ? 'technical' :
     location.pathname.startsWith('/suppliers') ? 'suppliers' :
     location.pathname.startsWith('/purchasing') ? 'purchasing' : 'warehouse';

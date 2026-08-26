@@ -9649,6 +9649,9 @@ export interface paths {
                 query?: {
                     groupBy?: string;
                     year?: number;
+                    quarter?: number;
+                    supplierId?: number;
+                    status?: string;
                 };
                 header?: never;
                 path?: never;
@@ -9686,7 +9689,12 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    supplierId?: number;
+                    status?: string;
+                    year?: number;
+                    quarter?: number;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -14005,7 +14013,7 @@ export interface components {
         };
         CreatePurchaseEstimateRequest: {
             projectCode: string;
-            title: string;
+            title?: string | null;
             lines?: components["schemas"]["PurchaseEstimateLineInput"][] | null;
         };
         CreatePurchaseOrderCommentRequest: {
@@ -15196,11 +15204,15 @@ export interface components {
             oldQty: number;
             /** Format: double */
             newQty: number;
+            /** Format: double */
+            estimateUnitPrice: number;
         };
         PurchaseEstimateLineInput: {
             materialCode: string;
             /** Format: double */
             newQty: number;
+            /** Format: double */
+            estimateUnitPrice: number;
         };
         PurchaseEstimateListItemDto: {
             /** Format: uuid */
@@ -17057,7 +17069,7 @@ export interface components {
             /** Format: double */
             unitPrice: number;
             /** Format: date */
-            validUntil?: string | null;
+            validUntil: string;
             /** Format: int32 */
             leadTimeDays?: number | null;
             paymentTerm?: string | null;

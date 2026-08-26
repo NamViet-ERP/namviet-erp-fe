@@ -1,21 +1,18 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { Plus, Trash2 } from 'lucide-react';
 import FormField from '../../components/ui/FormField';
 import EmptyState from '../../components/ui/EmptyState';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import MaterialAutocomplete from '../../components/ui/MaterialAutocomplete';
+import CurrencyInput from '../../components/ui/CurrencyInput';
 import { HrmDetailHeader } from '../../components/hr/HrmPageChrome';
-import Modal from '../../components/ui/Modal';
 import { showToast } from '../../components/ui/Toast';
 import {
   useApproveEstimateL1,
-  useApproveEstimateL2,
   useConvertEstimateToPlan,
   usePurchaseEstimate,
   useRejectEstimateApproval,
-  useReviewPurchaseEstimate,
-  useRevokeEstimateShare,
-  useShareEstimateLink,
   useSubmitEstimateApproval,
   useUpdatePurchaseEstimate,
 } from '../../hooks/usePurchaseEstimates';
@@ -25,19 +22,14 @@ import { getApiErrorMessage } from '../../lib/apiClient';
 import { formatDateTimeVi } from '../../lib/hrm/formatters';
 import {
   canEditEstimate,
-  canShareEstimate,
+  canSubmitEstimate,
   estimateStatusBadge,
   estimateStatusLabel,
 } from '../../lib/purchaseEstimateStatus';
+import { formatCurrencyVnd } from '../../utils/formatCurrency';
 import type { PurchaseEstimateLineApiDto } from '../../types/api/purchasingApi';
 
-type DraftLine = { key: string; materialCode: string; newQty: string };
-
-function qtyClass(oldQty: number, newQty: number) {
-  if (newQty > oldQty) return 'text-[var(--md-success)]';
-  if (newQty < oldQty) return 'text-[var(--md-error)]';
-  return '';
-}
+type DraftLine = { key: string; materialCode: string; newQty: string; estimateUnitPrice: string };
 
 function groupLines(lines: PurchaseEstimateLineApiDto[]) {
   const groups = new Map<string, PurchaseEstimateLineApiDto[]>();
@@ -56,34 +48,26 @@ export default function PurchaseEstimateDetailPage() {
   const { has } = usePermission();
   const canEdit = has('purchasing.estimates.update');
   const canApproveL1 = has('purchasing.estimates.approve_l1');
-  const canApproveL2 = has('purchasing.estimates.approve_l2');
   const canConvert = has('purchasing.plans.create');
   const [viewVersion, setViewVersion] = useState<number | undefined>(undefined);
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState('');
   const [draftLines, setDraftLines] = useState<DraftLine[]>([]);
-  const [shareUrl, setShareUrl] = useState('');
-  const [shareExpiresAt, setShareExpiresAt] = useState<string | null>(null);
   const [decideNote, setDecideNote] = useState('');
 
   const detail = usePurchaseEstimate(id, viewVersion);
   const updateMutation = useUpdatePurchaseEstimate();
-  const shareMutation = useShareEstimateLink();
-  const revokeShareMutation = useRevokeEstimateShare();
-  const reviewMutation = useReviewPurchaseEstimate();
   const submitMutation = useSubmitEstimateApproval();
   const approveL1Mutation = useApproveEstimateL1();
-  const approveL2Mutation = useApproveEstimateL2();
   const rejectMutation = useRejectEstimateApproval();
   const convertMutation = useConvertEstimateToPlan();
-  const { data: materialsPage } = useMaterials({ page: 1, pageSize: 200 });
+  const { data: materialsPage } = useMaterials({ page: 1, pageSize: 500 });
   const materials = materialsPage?.items ?? [];
   const row = detail.data;
 
   const versions = row?.versions ?? [];
   const latest = row?.currentVersion ?? 1;
   const viewingLatest = !viewVersion || viewVersion === latest;
-  const filledLines = (row?.lines ?? []).filter(l => Number(l.newQty) > 0);
   const proposals = row?.proposals ?? [];
   const nextApproval = (row?.approvals ?? []).find(a => a.status === 'pending');
   const workflowLocked = !canEditEstimate(row?.status);
@@ -96,6 +80,7 @@ export default function PurchaseEstimateDetailPage() {
         key: l.id,
         materialCode: l.materialCode,
         newQty: String(l.newQty),
+        estimateUnitPrice: String(l.estimateUnitPrice || ''),
       })),
     );
     setEditing(true);
@@ -105,9 +90,17 @@ export default function PurchaseEstimateDetailPage() {
     if (!id) return;
     const lines = draftLines
       .filter(l => l.materialCode)
-      .map(l => ({ materialCode: l.materialCode, newQty: Number(l.newQty) || 0 }));
+      .map(l => ({
+        materialCode: l.materialCode,
+        newQty: Number(String(l.newQty).replace(/[^\d.-]/g, '')) || 0,
+        estimateUnitPrice: Number(String(l.estimateUnitPrice).replace(/[^\d.-]/g, '')) || 0,
+      }));
     if (lines.length === 0) {
       showToast('error', 'Giữ ít nhất một dòng vật tư.');
+      return;
+    }
+    if (lines.some(l => l.newQty <= 0)) {
+      showToast('error', 'Số lượng mỗi dòng phải lớn hơn 0.');
       return;
     }
     try {
@@ -123,41 +116,11 @@ export default function PurchaseEstimateDetailPage() {
     }
   };
 
-  const openShare = async () => {
-    if (!id) return;
-    try {
-      const link = await shareMutation.mutateAsync(id);
-      setShareUrl(`${window.location.origin}${link.path}`);
-      setShareExpiresAt(link.expiresAt ?? null);
-    } catch (err) {
-      showToast('error', getApiErrorMessage(err, 'Không lấy được link điền.'));
-    }
-  };
-
-  const copyShare = async () => {
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      showToast('success', 'Đã sao chép link.');
-    } catch {
-      showToast('error', 'Không sao chép được. Hãy chọn và copy thủ công.');
-    }
-  };
-
-  const runReview = async () => {
-    if (!id) return;
-    try {
-      await reviewMutation.mutateAsync(id);
-      showToast('success', 'Đã xác nhận kiểm tra - sẵn sàng gửi duyệt.');
-    } catch (err) {
-      showToast('error', getApiErrorMessage(err, 'Không xác nhận được.'));
-    }
-  };
-
   const runSubmit = async () => {
     if (!id) return;
     try {
       await submitMutation.mutateAsync(id);
-      showToast('success', 'Đã gửi duyệt các cấp.');
+      showToast('success', 'Đã gửi duyệt (Trưởng bộ phận CSKH).');
     } catch (err) {
       showToast('error', getApiErrorMessage(err, 'Không gửi duyệt được.'));
     }
@@ -165,14 +128,9 @@ export default function PurchaseEstimateDetailPage() {
 
   const runApprove = async () => {
     if (!id || !nextApproval) return;
-    const note = decideNote.trim() || null;
     try {
-      if (nextApproval.level <= 1) {
-        await approveL1Mutation.mutateAsync({ id, note });
-      } else {
-        await approveL2Mutation.mutateAsync({ id, note });
-      }
-      showToast('success', `Đã duyệt cấp ${nextApproval.level}.`);
+      await approveL1Mutation.mutateAsync({ id, note: decideNote.trim() || null });
+      showToast('success', 'Đã duyệt dự toán.');
       setDecideNote('');
     } catch (err) {
       showToast('error', getApiErrorMessage(err, 'Không duyệt được.'));
@@ -183,22 +141,10 @@ export default function PurchaseEstimateDetailPage() {
     if (!id || !nextApproval) return;
     try {
       await rejectMutation.mutateAsync({ id, note: decideNote.trim() || null });
-      showToast('success', `Đã từ chối cấp ${nextApproval.level}.`);
+      showToast('success', 'Đã từ chối dự toán.');
       setDecideNote('');
     } catch (err) {
       showToast('error', getApiErrorMessage(err, 'Không từ chối được.'));
-    }
-  };
-
-  const runRevokeShare = async () => {
-    if (!id) return;
-    try {
-      await revokeShareMutation.mutateAsync(id);
-      setShareUrl('');
-      setShareExpiresAt(null);
-      showToast('success', 'Đã thu hồi link điền.');
-    } catch (err) {
-      showToast('error', getApiErrorMessage(err, 'Không thu hồi được link.'));
     }
   };
 
@@ -218,19 +164,11 @@ export default function PurchaseEstimateDetailPage() {
     return `Tạo ${formatDateTimeVi(row.createdAt)} · ${row.createdByName} · Sửa ${formatDateTimeVi(row.updatedAt)} · ${row.updatedByName}`;
   }, [row]);
 
-  const activeShareExpiresAt = shareExpiresAt ?? row?.shareExpiresAt ?? null;
-  const canDecideCurrent = Boolean(
-    nextApproval
-    && ((nextApproval.level <= 1 && canApproveL1) || (nextApproval.level > 1 && canApproveL2)),
-  );
+  const canDecideCurrent = Boolean(nextApproval && canApproveL1);
 
   const busy = updateMutation.isPending
-    || shareMutation.isPending
-    || revokeShareMutation.isPending
-    || reviewMutation.isPending
     || submitMutation.isPending
     || approveL1Mutation.isPending
-    || approveL2Mutation.isPending
     || rejectMutation.isPending
     || convertMutation.isPending;
 
@@ -244,29 +182,14 @@ export default function PurchaseEstimateDetailPage() {
         subtitle={row ? `${row.projectCode} · ${meta}` : 'Mua hàng dự toán'}
         actions={(
           <div className="flex flex-wrap gap-2 justify-end">
-            {canEdit && viewingLatest && !editing && canShareEstimate(row?.status) ? (
-              <button type="button" className="btn btn-outline btn-sm" disabled={busy} onClick={() => void openShare()}>
-                {activeShareExpiresAt ? 'Cấp lại link điền' : 'Lấy link điền'}
-              </button>
-            ) : null}
-            {canEdit && viewingLatest && !editing && activeShareExpiresAt ? (
-              <button type="button" className="btn btn-outline btn-sm" disabled={busy} onClick={() => void runRevokeShare()}>
-                Thu hồi link
-              </button>
-            ) : null}
             {canEdit && viewingLatest && !editing && canEditEstimate(row?.status) ? (
               <button type="button" className="btn btn-outline btn-sm" onClick={startEdit}>
-                Chỉnh sửa mẫu
+                Sửa dòng vật tư
               </button>
             ) : null}
-            {canEdit && viewingLatest && row?.status === 'submitted' && !editing ? (
-              <button type="button" className="btn btn-primary btn-sm" disabled={busy} onClick={() => void runReview()}>
-                Xác nhận đã kiểm tra
-              </button>
-            ) : null}
-            {canEdit && viewingLatest && row?.status === 'reviewed' && !editing ? (
+            {canEdit && viewingLatest && !editing && canSubmitEstimate(row?.status) ? (
               <button type="button" className="btn btn-primary btn-sm" disabled={busy} onClick={() => void runSubmit()}>
-                Gửi duyệt các cấp
+                Gửi duyệt
               </button>
             ) : null}
             {canConvert && row?.status === 'approved' && !row.convertedPlanCode ? (
@@ -283,20 +206,13 @@ export default function PurchaseEstimateDetailPage() {
       ) : detail.isLoading || !row ? (
         <div className="wms-inventory-table-wrap">
           <table className="wms-inventory-table">
-            <tbody><TableSkeletonRows colSpan={4} /></tbody>
+            <tbody><TableSkeletonRows colSpan={6} /></tbody>
           </table>
         </div>
       ) : (
         <>
           <div className="flex flex-wrap gap-3 items-center">
             <span className={`badge ${estimateStatusBadge(row.status)}`}>{estimateStatusLabel(row.status)}</span>
-            <span className="text-[length:var(--fs-sm)]">Người lập: <strong>{row.preparerName || 'Chưa có'}</strong></span>
-            <span className="text-[length:var(--fs-sm)]">SC kiểm tra: <strong>{row.reviewedByName || 'Chưa kiểm tra'}</strong></span>
-            {activeShareExpiresAt ? (
-              <span className="text-[length:var(--fs-sm)] text-[var(--md-on-surface-variant)]">
-                Link điền hết hạn: <strong className="tabular-nums">{formatDateTimeVi(activeShareExpiresAt)}</strong>
-              </span>
-            ) : null}
             {row.convertedPlanCode ? (
               <button
                 type="button"
@@ -359,28 +275,62 @@ export default function PurchaseEstimateDetailPage() {
                     );
                   })}
               </div>
-              <p className="border-t border-[var(--md-outline-variant)] px-3 py-2 text-[length:var(--fs-xs)] text-[var(--md-on-surface-variant)]">
-                Đang xem Ver {row.viewedVersion}. Vận hành luôn dùng Ver {row.currentVersion}.
-              </p>
             </aside>
 
             <div className="min-w-0 flex-1 space-y-3">
               {editing ? (
-                <div className="space-y-3">
-                  <FormField label="Tiêu đề">
+                <div className="space-y-3 pur-estimate-edit">
+                  <FormField label="Tiêu đề (tên dự án)">
                     <input className="form-input" value={title} onChange={e => setTitle(e.target.value)} />
                   </FormField>
-                  <div className="wms-inventory-table-wrap">
-                    <table className="wms-inventory-table">
+
+                  <div className="pur-create-plan__section-head">
+                    <div>
+                      <h3 className="pur-create-plan__section-title">Dòng vật tư</h3>
+                      <p className="pur-create-plan__section-hint">
+                        {draftLines.filter(l => l.materialCode).length} dòng đã chọn
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2 justify-end">
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => setDraftLines(prev => [...prev, { key: String(Date.now()), materialCode: '', newQty: '', estimateUnitPrice: '' }])}
+                      >
+                        <Plus size={14} aria-hidden />
+                        Thêm vật tư
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-outline btn-sm"
+                        disabled={updateMutation.isPending}
+                        onClick={() => setEditing(false)}
+                      >
+                        Hủy
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-sm"
+                        disabled={updateMutation.isPending}
+                        onClick={() => void save()}
+                      >
+                        {updateMutation.isPending ? 'Đang lưu…' : `Lưu Ver ${latest + 1}`}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="pur-create-plan__table-shell">
+                    <table className="form-table import-items-table wms-inventory-table pur-estimate-edit__table">
                       <thead>
                         <tr>
-                          <th className="table-header-cell">Vật tư</th>
-                          <th className="table-header-cell">SL mới</th>
-                          <th className="table-header-cell"> </th>
+                          <th className="table-header-cell">Vật tư *</th>
+                          <th className="table-header-cell text-center">SL *</th>
+                          <th className="table-header-cell text-right">Giá dự toán</th>
+                          <th className="table-header-cell text-center" aria-label="Xóa" />
                         </tr>
                       </thead>
                       <tbody>
-                        {draftLines.map(line => (
+                        {draftLines.map((line, index) => (
                           <tr key={line.key} className="table-row">
                             <td className="table-cell">
                               <MaterialAutocomplete
@@ -391,15 +341,30 @@ export default function PurchaseEstimateDetailPage() {
                             </td>
                             <td className="table-cell">
                               <input
-                                className="form-input"
+                                className="form-input text-center tabular-nums"
                                 inputMode="decimal"
                                 value={line.newQty}
                                 onChange={e => setDraftLines(prev => prev.map(l => l.key === line.key ? { ...l, newQty: e.target.value } : l))}
+                                aria-label={`Số lượng dòng ${index + 1}`}
                               />
                             </td>
                             <td className="table-cell">
-                              <button type="button" className="btn btn-ghost btn-sm" onClick={() => setDraftLines(prev => prev.filter(l => l.key !== line.key))}>
-                                Xóa
+                              <CurrencyInput
+                                value={line.estimateUnitPrice}
+                                onChange={estimateUnitPrice => setDraftLines(prev => prev.map(l => l.key === line.key ? { ...l, estimateUnitPrice } : l))}
+                                suffix="VND"
+                              />
+                            </td>
+                            <td className="table-cell text-center">
+                              <button
+                                type="button"
+                                className="icon-btn icon-btn--danger"
+                                aria-label={`Xóa dòng ${index + 1}`}
+                                onClick={() => setDraftLines(prev => (prev.length <= 1
+                                  ? [{ key: String(Date.now()), materialCode: '', newQty: '', estimateUnitPrice: '' }]
+                                  : prev.filter(l => l.key !== line.key)))}
+                              >
+                                <Trash2 size={16} aria-hidden />
                               </button>
                             </td>
                           </tr>
@@ -407,21 +372,9 @@ export default function PurchaseEstimateDetailPage() {
                       </tbody>
                     </table>
                   </div>
-                  <div className="flex gap-2">
-                    <button type="button" className="btn btn-outline btn-sm" onClick={() => setDraftLines(prev => [...prev, { key: String(Date.now()), materialCode: '', newQty: '' }])}>
-                      Thêm vật tư
-                    </button>
-                    <button type="button" className="btn btn-outline btn-sm" disabled={updateMutation.isPending} onClick={() => setEditing(false)}>Hủy</button>
-                    <button type="button" className="btn btn-primary btn-sm" disabled={updateMutation.isPending} onClick={() => void save()}>
-                      {updateMutation.isPending ? 'Đang lưu…' : `Lưu thành Ver ${latest + 1}`}
-                    </button>
-                  </div>
                 </div>
               ) : (
                 <>
-                  <p className="text-[length:var(--fs-sm)] text-[var(--md-on-surface-variant)]">
-                    Double check - {filledLines.length + proposals.length} dòng đã điền / đề xuất trên tổng {row.lines.length} mã hàng của mẫu.
-                  </p>
                   <div className="wms-inventory-table-wrap">
                     <table className="wms-inventory-table">
                       <thead>
@@ -429,35 +382,38 @@ export default function PurchaseEstimateDetailPage() {
                           <th className="table-header-cell">Hạng mục</th>
                           <th className="table-header-cell">Hàng hoá</th>
                           <th className="table-header-cell">ĐVT</th>
-                          <th className="table-header-cell">SL cũ</th>
-                          <th className="table-header-cell">SL mới</th>
+                          <th className="table-header-cell">SL</th>
+                          <th className="table-header-cell">Giá dự toán</th>
+                          <th className="table-header-cell">Thành tiền</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {filledLines.length === 0 && proposals.length === 0 ? (
+                        {row.lines.length === 0 && proposals.length === 0 ? (
                           <tr>
-                            <td colSpan={5} className="table-cell">
-                              <EmptyState message={workflowLocked ? 'Chưa có dòng nào được điền.' : 'Mẫu chưa được điền. Lấy link rồi gửi cho người lập dự toán.'} />
+                            <td colSpan={6} className="table-cell">
+                              <EmptyState message={workflowLocked ? 'Chưa có dòng vật tư.' : 'Chưa có dòng. Bấm Sửa dòng vật tư để thêm.'} />
                             </td>
                           </tr>
                         ) : (
                           <>
-                            {groupLines(filledLines).flatMap(([cat, lines]) =>
-                              lines.map(line => (
-                                <tr key={line.id} className="table-row">
-                                  <td className="table-cell">{cat}</td>
-                                  <td className="table-cell">
-                                    <span className="font-mono">{line.materialCode}</span>
-                                    {' '}
-                                    {line.materialName}
-                                  </td>
-                                  <td className="table-cell">{line.unit || '-'}</td>
-                                  <td className="table-cell text-right tabular-nums">{line.oldQty}</td>
-                                  <td className={`table-cell text-right tabular-nums font-medium ${qtyClass(line.oldQty, line.newQty)}`}>
-                                    {line.newQty}
-                                  </td>
-                                </tr>
-                              )),
+                            {groupLines(row.lines).flatMap(([cat, lines]) =>
+                              lines.map(line => {
+                                const price = line.estimateUnitPrice;
+                                return (
+                                  <tr key={line.id} className="table-row">
+                                    <td className="table-cell">{cat}</td>
+                                    <td className="table-cell">
+                                      <span className="font-mono">{line.materialCode}</span>
+                                      {' '}
+                                      {line.materialName}
+                                    </td>
+                                    <td className="table-cell">{line.unit || '-'}</td>
+                                    <td className="table-cell text-right tabular-nums">{line.newQty}</td>
+                                    <td className="table-cell text-right tabular-nums">{formatCurrencyVnd(price)}</td>
+                                    <td className="table-cell text-right tabular-nums font-medium">{formatCurrencyVnd(price * Number(line.newQty))}</td>
+                                  </tr>
+                                );
+                              }),
                             )}
                             {proposals.map(p => (
                               <tr key={p.id} className="table-row">
@@ -465,13 +421,11 @@ export default function PurchaseEstimateDetailPage() {
                                 <td className="table-cell">
                                   <strong>{p.name}</strong>
                                   {p.spec ? ` - ${p.spec}` : ''}
-                                  {p.note ? (
-                                    <div className="text-[var(--md-on-surface-variant)]">{p.note}</div>
-                                  ) : null}
                                 </td>
                                 <td className="table-cell">{p.unit || '-'}</td>
-                                <td className="table-cell text-right tabular-nums">0</td>
-                                <td className="table-cell text-right tabular-nums font-medium text-[var(--md-success)]">{p.qty}</td>
+                                <td className="table-cell text-right tabular-nums">{p.qty}</td>
+                                <td className="table-cell text-right tabular-nums">-</td>
+                                <td className="table-cell text-right tabular-nums">-</td>
                               </tr>
                             ))}
                           </>
@@ -487,7 +441,6 @@ export default function PurchaseEstimateDetailPage() {
                         <table className="wms-inventory-table">
                           <thead>
                             <tr>
-                              <th className="table-header-cell">Cấp</th>
                               <th className="table-header-cell">Người duyệt</th>
                               <th className="table-header-cell">Trạng thái</th>
                               <th className="table-header-cell">Thời điểm</th>
@@ -497,8 +450,7 @@ export default function PurchaseEstimateDetailPage() {
                           <tbody>
                             {row.approvals.map(a => (
                               <tr key={a.id} className="table-row">
-                                <td className="table-cell">Cấp {a.level} · {a.name}</td>
-                                <td className="table-cell">{a.actionByName || '-'}</td>
+                                <td className="table-cell">{a.name}{a.actionByName ? ` · ${a.actionByName}` : ''}</td>
                                 <td className="table-cell">
                                   <span className={`badge ${a.status === 'approved' ? 'badge-success' : a.status === 'rejected' ? 'badge-error' : 'badge-pending'}`}>
                                     {a.status === 'approved' ? 'Đã duyệt' : a.status === 'rejected' ? 'Từ chối' : 'Chờ duyệt'}
@@ -513,7 +465,7 @@ export default function PurchaseEstimateDetailPage() {
                       </div>
                       {canDecideCurrent && row.status === 'pending_approval' && nextApproval ? (
                         <div className="flex flex-wrap gap-2 items-end">
-                          <FormField label={`Ý kiến cấp ${nextApproval.level} (${nextApproval.name})`}>
+                          <FormField label={`Ý kiến (${nextApproval.name})`}>
                             <input
                               className="form-input"
                               value={decideNote}
@@ -522,7 +474,7 @@ export default function PurchaseEstimateDetailPage() {
                             />
                           </FormField>
                           <button type="button" className="btn btn-primary btn-sm" disabled={busy} onClick={() => void runApprove()}>
-                            Duyệt cấp {nextApproval.level}
+                            Duyệt
                           </button>
                           <button type="button" className="btn btn-outline btn-sm" disabled={busy} onClick={() => void runReject()}>
                             Từ chối
@@ -537,30 +489,6 @@ export default function PurchaseEstimateDetailPage() {
           </div>
         </>
       )}
-
-      <Modal isOpen={Boolean(shareUrl)} onClose={() => setShareUrl('')} title={`Link điền dự toán - ${row?.code ?? ''}`} size="md">
-        <div className="space-y-3">
-          <p className="text-[length:var(--fs-sm)] text-[var(--md-on-surface-variant)]">
-            Link mới thay thế link cũ. Hết hạn sau 7 ngày. Sao chép rồi gửi Zalo / email cho người lập dự toán. Họ không cần tài khoản.
-          </p>
-          <FormField label="Đường dẫn chia sẻ">
-            <input className="form-input font-mono" value={shareUrl} readOnly onFocus={e => e.target.select()} />
-          </FormField>
-          {shareExpiresAt ? (
-            <p className="text-[length:var(--fs-sm)]">
-              Hết hạn: <strong className="tabular-nums">{formatDateTimeVi(shareExpiresAt)}</strong>
-            </p>
-          ) : null}
-          <div className="flex justify-end gap-2">
-            <button type="button" className="btn btn-outline btn-sm" onClick={() => setShareUrl('')}>Đóng</button>
-            <button type="button" className="btn btn-outline btn-sm" disabled={busy} onClick={() => void runRevokeShare()}>
-              Thu hồi
-            </button>
-            <a className="btn btn-outline btn-sm" href={shareUrl} target="_blank" rel="noreferrer">Mở thử</a>
-            <button type="button" className="btn btn-primary btn-sm" onClick={() => void copyShare()}>Sao chép link</button>
-          </div>
-        </div>
-      </Modal>
     </div>
   );
 }

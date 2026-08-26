@@ -10,7 +10,9 @@ import {
   ShoppingCart,
   Building2,
   Activity,
+  Headphones,
 } from 'lucide-react';
+import { CSKH_MODULE_ENABLED } from './cskh';
 
 export interface DepartmentSubItem {
   label: string;
@@ -29,17 +31,32 @@ export interface Department {
 }
 
 /**
- * Portal + Header mega-menu — chỉ phân hệ đã ship (có API).
- * Thứ tự: Vận hành → Mua hàng → Kho → HRM → Admin
+ * Portal + Header mega-menu.
+ * Thứ tự: (CSKH khi bật) → SLC → Nhà cung cấp → Mua hàng → Kho → HRM → Admin
  */
 export const departments: Department[] = [
+  ...(CSKH_MODULE_ENABLED
+    ? [{
+        title: 'CSKH',
+        icon: Headphones,
+        tone: 'operations' as const,
+        items: [
+          {
+            label: 'CSKH',
+            icon: Headphones,
+            path: '/cskh',
+            permission: ['cskh.dashboard.view', 'wms.projects.view:all'],
+          },
+        ],
+      }]
+    : []),
   {
-    title: 'VẬN HÀNH',
+    title: 'SLC',
     icon: Activity,
     tone: 'operations',
     items: [
       {
-        label: 'Vận hành',
+        label: 'SLC',
         icon: Activity,
         path: '/operations/dashboard',
         permission: 'wms.projects.view:all',
@@ -47,8 +64,8 @@ export const departments: Department[] = [
     ],
   },
   {
-    title: 'MUA HÀNG',
-    icon: ShoppingCart,
+    title: 'NHÀ CUNG CẤP',
+    icon: Building2,
     tone: 'purchasing',
     items: [
       {
@@ -57,6 +74,13 @@ export const departments: Department[] = [
         path: '/suppliers/dashboard',
         permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
       },
+    ],
+  },
+  {
+    title: 'MUA HÀNG',
+    icon: ShoppingCart,
+    tone: 'purchasing',
+    items: [
       {
         label: 'Mua hàng',
         icon: ShoppingCart,

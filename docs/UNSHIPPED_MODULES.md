@@ -4,7 +4,7 @@ Các màn dưới đây **không** có trong menu / route production cho đến 
 
 | Module | Path cũ | Ghi chú |
 |--------|---------|---------|
-| Kỹ thuật / CSKH | `/technical/cskh/*` | Redirect → `/operations/dashboard`. Placeholder page đã gỡ. |
+| CSKH | `/cskh/*` | **Ẩn** (`CSKH_MODULE_ENABLED = false`). Menu + URL redirect về route mặc định. Bật lại flag khi ship API. |
 | Thiết lập mua hàng | `/purchasing/settings` | Redirect → `/purchasing/dashboard`. |
 | Thiết lập kiểm kê | `/stocktake/settings` | Redirect → `/stocktake/list`. |
 

@@ -31,7 +31,7 @@ function countMonthBirthdays(data: Record<number, BirthdayEvent[]>) {
   Object.values(data).forEach((events) => {
     employees += events.length;
   });
-  return { employees, customers: 0 };
+  return { employees };
 }
 
 function buildCalendarCells(year: number, month: number): CalendarCell[] {

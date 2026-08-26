@@ -114,7 +114,7 @@ export default function OperationsDashboardPage() {
     <div className="page-stack operations-dashboard">
       <PageHeader
           eyebrow="Tổng quan"
-          title="Tổng quan vận hành"
+          title="Tổng quan SLC"
           actions={(
             <p className="page-header__updated">
               Cập nhật lúc {new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}

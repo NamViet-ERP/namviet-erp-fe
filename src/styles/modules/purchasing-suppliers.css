@@ -6965,4 +6965,327 @@
   gap: 4px;
 }
 
+/* RFQ panel — layout + status tint on filter value only */
+.rfq-filter-row.hrm-list-toolbar__filter-row--selects {
+  gap: 16px;
+  align-items: end;
+}
+.rfq-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  padding-inline: 1rem;
+}
+.rfq-status-select--won.hrm-select__trigger .hrm-select__value {
+  color: var(--md-success);
+}
+.rfq-status-select--lost.hrm-select__trigger .hrm-select__value {
+  color: var(--md-error);
+}
+.rfq-status-select--active.hrm-select__trigger .hrm-select__value {
+  color: var(--md-warning);
+}
+.rfq-status-select--expired.hrm-select__trigger .hrm-select__value {
+  color: var(--md-error);
+}
+
+/* Estimate create modal — column widths + corner fill (no white halo) */
+.pur-estimate-create__table :is(th, td):nth-child(1) { width: 2.5rem; }
+.pur-estimate-create__table :is(th, td):nth-child(2) { width: 34%; }
+.pur-estimate-create__table :is(th, td):nth-child(3) { width: 5.5rem; }
+.pur-estimate-create__table :is(th, td):nth-child(4) { width: 11.5rem; min-width: 10rem; }
+.pur-estimate-create__table :is(th, td):nth-child(5) { width: 9.5rem; min-width: 8.5rem; }
+/* Đủ chỗ cho icon-btn 32px + padding ô — tránh nút xóa bị cắt */
+.pur-estimate-create__table :is(th, td):nth-child(6) { width: 3.5rem; }
+
+.modal-form-bordered .pur-create-plan__table-shell {
+  border: 1px solid var(--md-outline);
+  border-radius: var(--radius-md);
+  /* Clip góc bo; vẫn cho cuộn ngang nếu bảng rộng */
+  overflow-x: auto;
+  overflow-y: hidden;
+  background: var(--md-surface-container-high);
+}
+
+.modal-form-bordered .pur-estimate-create__table {
+  min-width: 0;
+  width: 100%;
+  border-collapse: separate !important;
+  border-spacing: 0;
+}
+
+/* Sticky + border-radius shell = góc header vuông lộ nền trắng */
+.modal-form-bordered .pur-estimate-create__table thead .table-header-cell {
+  position: static;
+  /* !important: .form-table th dùng border !important */
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-bottom: 2px solid var(--table-header-lip) !important;
+  background: var(--nv-table-header-bg) !important;
+}
+
+.modal-form-bordered .pur-estimate-create__table thead .table-header-cell:first-child {
+  border-top-left-radius: calc(var(--radius-md) - 1px);
+}
+
+.modal-form-bordered .pur-estimate-create__table thead .table-header-cell:last-child {
+  border-top-right-radius: calc(var(--radius-md) - 1px);
+}
+
+.modal-form-bordered .pur-estimate-create__table thead .table-header-cell + .table-header-cell {
+  border-left: 1px solid color-mix(in srgb, var(--nv-table-header-text) 18%, transparent) !important;
+}
+
+.modal-form-bordered .pur-estimate-create__table tbody .table-cell,
+.modal-form-bordered .pur-estimate-create__table tfoot .table-cell {
+  border-color: var(--md-outline-variant) !important;
+  vertical-align: middle !important;
+}
+
+.modal-form-bordered .pur-estimate-create__table tbody tr:last-child .table-cell,
+.modal-form-bordered .pur-estimate-create__table tfoot .table-cell {
+  border-bottom: none !important;
+}
+
+.modal-form-bordered .pur-estimate-create__table :is(th, td):first-child {
+  border-left: none !important;
+}
+
+.modal-form-bordered .pur-estimate-create__table :is(th, td):last-child {
+  border-right: none !important;
+  /* form-table.import-items-table td { overflow: hidden } cắt nút xóa */
+  overflow: visible !important;
+  padding-left: 6px !important;
+  padding-right: 6px !important;
+  text-align: center;
+}
+
+.modal-form-bordered .pur-estimate-create__table tfoot .table-cell:first-child {
+  border-bottom-left-radius: calc(var(--radius-md) - 1px);
+}
+
+.modal-form-bordered .pur-estimate-create__table tfoot .table-cell:last-child {
+  border-bottom-right-radius: calc(var(--radius-md) - 1px);
+}
+
+/*
+ * form-table ép input 32px + border nhạt (!important) → lệch với CurrencyInput 40px.
+ * Estimate create: cùng 40px + border rõ.
+ */
+.modal-form-bordered .pur-estimate-create__table .form-input,
+.modal-form-bordered .pur-estimate-create__table .search-autocomplete__input,
+.modal-form-bordered .pur-estimate-create__table .currency-input-group {
+  height: 40px !important;
+  min-height: 40px !important;
+  padding: 0 12px !important;
+  font-size: var(--fs-sm) !important;
+  line-height: 1.4 !important;
+  border: 1px solid var(--md-outline) !important;
+  border-radius: var(--radius-xs) !important;
+  background: var(--md-surface) !important;
+  box-sizing: border-box !important;
+  box-shadow: none !important;
+}
+
+.modal-form-bordered .pur-estimate-create__table .search-autocomplete__input {
+  padding-right: 32px !important;
+}
+
+.modal-form-bordered .pur-estimate-create__table .form-input:hover,
+.modal-form-bordered .pur-estimate-create__table .search-autocomplete__input:hover,
+.modal-form-bordered .pur-estimate-create__table .currency-input-group:hover {
+  border-color: color-mix(in srgb, var(--nv-steel) 45%, var(--md-outline)) !important;
+  background: color-mix(in srgb, var(--nv-steel-light) 55%, var(--md-surface)) !important;
+}
+
+.modal-form-bordered .pur-estimate-create__table .form-input:focus,
+.modal-form-bordered .pur-estimate-create__table .search-autocomplete__input:focus,
+.modal-form-bordered .pur-estimate-create__table .currency-input-group:focus-within {
+  border: 1px solid var(--md-primary) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--md-primary) 16%, transparent) !important;
+  background: var(--md-surface) !important;
+  padding-bottom: 0 !important;
+}
+
+.modal-form-bordered .pur-estimate-create__table .search-autocomplete__control {
+  border: none;
+  background: transparent;
+  height: 40px;
+}
+
+.modal-form-bordered .pur-estimate-create__table .currency-input-group__input {
+  height: 100% !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-size: inherit !important;
+}
+
+.modal-form-bordered .pur-estimate-create__table .currency-input-group {
+  overflow: visible;
+  gap: 6px;
+}
+
+.modal-form-bordered .pur-estimate-create__table .currency-input-group__suffix {
+  flex-shrink: 0;
+  padding-left: 8px;
+  border-left: 1px solid var(--md-outline);
+  color: var(--md-on-surface-variant);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+}
+
+/* Ô giá: không cắt suffix VND */
+.modal-form-bordered .pur-estimate-create__table tbody .table-cell:nth-child(4) {
+  overflow: visible !important;
+}
+
+.modal-form-bordered .pur-estimate-create__table .icon-btn {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+/* Estimate detail — edit lines (actions above table; narrow SL) */
+.pur-estimate-edit .pur-create-plan__table-shell {
+  border: 1px solid var(--md-outline);
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+  overflow-y: hidden;
+  background: var(--md-surface-container-high);
+}
+
+.pur-estimate-edit__table {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+  border-collapse: separate !important;
+  border-spacing: 0;
+}
+
+.pur-estimate-edit__table :is(th, td):nth-child(1) { width: auto; }
+.pur-estimate-edit__table :is(th, td):nth-child(2) { width: 5.5rem; }
+.pur-estimate-edit__table :is(th, td):nth-child(3) { width: 12rem; min-width: 10.5rem; }
+.pur-estimate-edit__table :is(th, td):nth-child(4) { width: 3.5rem; }
+
+.pur-estimate-edit__table thead .table-header-cell {
+  position: static;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-bottom: 2px solid var(--table-header-lip) !important;
+  background: var(--nv-table-header-bg) !important;
+}
+
+.pur-estimate-edit__table thead .table-header-cell:first-child {
+  border-top-left-radius: calc(var(--radius-md) - 1px);
+}
+
+.pur-estimate-edit__table thead .table-header-cell:last-child {
+  border-top-right-radius: calc(var(--radius-md) - 1px);
+}
+
+.pur-estimate-edit__table thead .table-header-cell + .table-header-cell {
+  border-left: 1px solid color-mix(in srgb, var(--nv-table-header-text) 18%, transparent) !important;
+}
+
+.pur-estimate-edit__table tbody .table-cell {
+  border-color: var(--md-outline-variant) !important;
+  vertical-align: middle !important;
+}
+
+.pur-estimate-edit__table tbody tr:last-child .table-cell {
+  border-bottom: none !important;
+}
+
+.pur-estimate-edit__table :is(th, td):first-child {
+  border-left: none !important;
+}
+
+.pur-estimate-edit__table :is(th, td):last-child {
+  border-right: none !important;
+  overflow: visible !important;
+  padding-left: 6px !important;
+  padding-right: 6px !important;
+}
+
+.pur-estimate-edit__table tbody tr:last-child .table-cell:first-child {
+  border-bottom-left-radius: calc(var(--radius-md) - 1px);
+}
+
+.pur-estimate-edit__table tbody tr:last-child .table-cell:last-child {
+  border-bottom-right-radius: calc(var(--radius-md) - 1px);
+}
+
+.pur-estimate-edit__table .form-input,
+.pur-estimate-edit__table .search-autocomplete__input,
+.pur-estimate-edit__table .currency-input-group {
+  height: 40px !important;
+  min-height: 40px !important;
+  padding: 0 12px !important;
+  font-size: var(--fs-sm) !important;
+  line-height: 1.4 !important;
+  border: 1px solid var(--md-outline) !important;
+  border-radius: var(--radius-xs) !important;
+  background: var(--md-surface) !important;
+  box-sizing: border-box !important;
+  box-shadow: none !important;
+}
+
+.pur-estimate-edit__table .search-autocomplete__input {
+  padding-right: 32px !important;
+}
+
+.pur-estimate-edit__table .form-input:focus,
+.pur-estimate-edit__table .search-autocomplete__input:focus,
+.pur-estimate-edit__table .currency-input-group:focus-within {
+  border: 1px solid var(--md-primary) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--md-primary) 16%, transparent) !important;
+  background: var(--md-surface) !important;
+  padding-bottom: 0 !important;
+}
+
+.pur-estimate-edit__table .search-autocomplete__control {
+  border: none;
+  background: transparent;
+  height: 40px;
+}
+
+.pur-estimate-edit__table .currency-input-group {
+  overflow: visible;
+  gap: 6px;
+}
+
+.pur-estimate-edit__table .currency-input-group__input {
+  height: 100% !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-size: inherit !important;
+}
+
+.pur-estimate-edit__table .currency-input-group__suffix {
+  flex-shrink: 0;
+  padding-left: 8px;
+  border-left: 1px solid var(--md-outline);
+  color: var(--md-on-surface-variant);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+}
+
+.pur-estimate-edit__table tbody .table-cell:nth-child(3) {
+  overflow: visible !important;
+}
+
+.pur-estimate-edit__table .icon-btn {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
 

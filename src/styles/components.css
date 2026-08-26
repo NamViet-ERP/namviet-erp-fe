@@ -3967,15 +3967,19 @@
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--md-primary) 16%, transparent);
   }
 
-  /* Bordered fields inside modals — same outline language as global inputs */
+  /* Bordered fields inside modals — stronger outline than page chrome */
   .modal-form-bordered .form-input,
   .modal-form-bordered .form-select,
-  .modal-form-bordered .currency-input-group {
+  .modal-form-bordered .currency-input-group,
+  .modal-form-bordered .hrm-field-input,
+  .modal-form-bordered .hrm-field-select,
+  .modal-form-bordered .search-autocomplete__input,
+  .modal-form-bordered .supplier-autocomplete__input {
     height: 40px;
     padding: 0 12px;
     background: var(--md-surface);
-    border: 1px solid var(--md-outline-variant02);
-    border-radius: 8px;
+    border: 1px solid var(--md-outline);
+    border-radius: var(--radius-xs);
     box-sizing: border-box;
   }
 
@@ -3988,14 +3992,23 @@
 
   .modal-form-bordered .form-input:hover,
   .modal-form-bordered .form-select:hover,
-  .modal-form-bordered .currency-input-group:hover {
-    border-color: color-mix(in srgb, var(--nv-steel) 45%, var(--md-outline-variant02));
+  .modal-form-bordered .currency-input-group:hover,
+  .modal-form-bordered .hrm-field-input:hover,
+  .modal-form-bordered .hrm-field-select:hover,
+  .modal-form-bordered .search-autocomplete__input:hover,
+  .modal-form-bordered .supplier-autocomplete__input:hover {
+    border-color: color-mix(in srgb, var(--nv-steel) 45%, var(--md-outline));
     background: color-mix(in srgb, var(--nv-steel-light) 55%, var(--md-surface));
   }
 
   .modal-form-bordered .form-input:focus,
   .modal-form-bordered .form-select:focus,
-  .modal-form-bordered .currency-input-group:focus-within {
+  .modal-form-bordered .currency-input-group:focus-within,
+  .modal-form-bordered .hrm-field-input:focus,
+  .modal-form-bordered .hrm-field-select:focus,
+  .modal-form-bordered .hrm-select__trigger--open,
+  .modal-form-bordered .search-autocomplete__input:focus,
+  .modal-form-bordered .supplier-autocomplete__input:focus {
     border: 1px solid var(--md-primary);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--md-primary) 16%, transparent);
     padding-bottom: 0;
@@ -4450,6 +4463,10 @@
     background: var(--tint-primary-soft);
     border-color: color-mix(in srgb, var(--md-primary) 28%, var(--md-outline-variant));
     color: var(--md-primary);
+  }
+  .icon-btn--danger {
+    color: var(--md-error);
+    border-color: color-mix(in srgb, var(--md-error) 28%, var(--md-outline-variant));
   }
   .icon-btn--danger:hover {
     background: color-mix(in srgb, var(--md-error) 10%, var(--md-surface-container-high));
@@ -6318,7 +6335,8 @@
   }
   .hrm-select__menu {
     position: fixed;
-    z-index: 200;
+    /* Above --z-modal (1000): menu portals to body and must clear dialog overlay */
+    z-index: var(--z-popover);
     margin: 0;
     padding: 4px;
     border-radius: 12px;

@@ -11,7 +11,7 @@ Chạy trước khi merge/release. Agent/CI phải **execute** các lệnh, khô
 | 3 | TypeScript | `npx tsc --noEmit -p tsconfig.json` |
 | 4 | BE không seed lúc start | Review `Program.cs`: không gọi Bootstrap/Seed; health only |
 | 5 | Seed opt-in + guard | `scripts/README.md` + `ALLOW_DEMO_BOOTSTRAP` / CLI password |
-| 6 | Menu = màn có API | Không technical/CSKH; purchasing/stocktake settings ẩn (`docs/UNSHIPPED_MODULES.md`) |
+| 6 | Menu = màn có API (CSKH ẩn) | CSKH tắt (`CSKH_MODULE_ENABLED`); purchasing/stocktake settings ẩn (`docs/UNSHIPPED_MODULES.md`) |
 | 7 | Health ops | `GET /health` = 200; `GET /health/ready` = 200 khi DB OK |
 
 Gộp 1–3:

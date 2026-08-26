@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
-import { ChevronDown, ChevronsLeft, ChevronLeft, Warehouse as WarehouseIcon, ClipboardCheck, Users, UserCheck, ShieldCheck, Settings, Wrench, ShoppingCart, Building2, Activity, LayoutDashboard } from 'lucide-react';
+import { ChevronDown, ChevronsLeft, ChevronLeft, Warehouse as WarehouseIcon, ClipboardCheck, Users, UserCheck, ShieldCheck, Settings, Wrench, Headphones, ShoppingCart, Building2, Activity, LayoutDashboard } from 'lucide-react';
 import type { SidebarMenuItem } from '../../types';
 import type { LucideIcon } from 'lucide-react';
 import type { PermissionKey } from '../../lib/permissions';
@@ -11,7 +11,7 @@ import {
   type PermissionNavItem,
 } from '../../lib/protectedNavigation';
 
-type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin' | 'technical' | 'purchasing' | 'suppliers' | 'operations';
+type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin' | 'technical' | 'cskh' | 'purchasing' | 'suppliers' | 'operations';
 
 const moduleIcons: Record<Module, LucideIcon> = { 
   warehouse: WarehouseIcon, 
@@ -20,6 +20,7 @@ const moduleIcons: Record<Module, LucideIcon> = {
   recruitment: UserCheck,
   admin: ShieldCheck,
   technical: Wrench,
+  cskh: Headphones,
   purchasing: ShoppingCart,
   suppliers: Building2,
   operations: Activity,
@@ -31,9 +32,10 @@ const moduleLabels: Record<Module, string> = {
   recruitment: 'TUYỂN DỤNG',
   admin: 'ADMIN',
   technical: 'KỸ THUẬT',
+  cskh: 'CSKH',
   purchasing: 'MUA HÀNG',
   suppliers: 'NHÀ CUNG CẤP',
-  operations: 'VẬN HÀNH',
+  operations: 'SLC',
 };
 
 interface SidebarProps {
@@ -227,7 +229,7 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
   const isModuleAlt =
     currentModule === 'warehouse' || currentModule === 'stocktake'
     || currentModule === 'members' || currentModule === 'recruitment' || currentModule === 'admin'
-      || currentModule === 'technical' || currentModule === 'purchasing' || currentModule === 'suppliers';
+      || currentModule === 'technical' || currentModule === 'cskh' || currentModule === 'purchasing' || currentModule === 'suppliers';
 
   return (
     <aside
