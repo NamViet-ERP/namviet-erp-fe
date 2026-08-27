@@ -44,6 +44,16 @@ dist-ssr
 /blob-report/
 /playwright/.cache/
 e2e/.auth/
+e2e/_tmp*/
+
+# tsc composite emit from tsconfig.node.json (Vite reads *.ts)
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
+vite.config.js.map
+vitest.config.js
+vitest.config.d.ts
+vitest.config.js.map
 
 # Local scratch under docs/ — allowlist tracked docs
 docs/*

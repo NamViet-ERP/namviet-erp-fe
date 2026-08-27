@@ -3,30 +3,48 @@ import { CSKH_MODULE_ENABLED } from '../constants/cskh';
 
 export interface RoutePermissionRule {
   match: (pathname: string) => boolean;
-  permissions: PermissionKey[];
+  /** Omit = any authenticated user (redirect aliases, home). */
+  permissions?: PermissionKey[];
 }
 
+export type RouteAccess =
+  | { kind: 'unknown' }
+  | { kind: 'authenticated' }
+  | { kind: 'permissions'; permissions: PermissionKey[] };
+
+const WMS_PROJECTS: PermissionKey[] = ['wms.projects.view:all'];
+const WMS_MATERIALS: PermissionKey[] = ['wms.materials.view:all'];
+const WMS_CATEGORIES: PermissionKey[] = ['wms.categories.view:all'];
+const WMS_UNITS: PermissionKey[] = ['wms.material_units.view:all'];
+const SUPPLIERS: PermissionKey[] = ['purchasing.suppliers.view', 'wms.suppliers.view:all'];
+const CSKH: PermissionKey[] = ['cskh.dashboard.view', 'wms.projects.view:all'];
+const PUR_DASH: PermissionKey[] = ['purchasing.dashboard.view'];
+const STOCKTAKE: PermissionKey[] = ['wms.stocktakes.view:all'];
+const CANDIDATES: PermissionKey[] = ['hrm.candidates.view:all'];
+
 export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
-  { match: p => p === '/dashboard', permissions: ['core.dashboard.view'] },
-  { match: p => p === '/warehouse/dashboard', permissions: ['core.dashboard.view'] },
+  { match: p => p === '/' },
+
+  { match: p => p === '/dashboard' || p === '/warehouse/dashboard' || p === '/operations' || p === '/operations/dashboard', permissions: WMS_PROJECTS },
   { match: p => p === '/profile', permissions: ['core.profile.view'] },
 
   { match: p => p === '/warehouse/dashboard-warehouse', permissions: ['wms.dashboard.view'] },
   { match: p => p === '/warehouse/stock', permissions: ['wms.stock.view:all'] },
   { match: p => p === '/warehouse/arrival-plans', permissions: ['purchasing.arrival_plans.view'] },
-  { match: p => p === '/warehouse/projects', permissions: ['wms.projects.view:all'] },
-  { match: p => p.startsWith('/warehouse/projects/'), permissions: ['wms.projects.view:all'] },
-  { match: p => p === '/warehouse/materials', permissions: ['wms.materials.view:all'] },
-  { match: p => p === '/operations/dashboard' || p === '/operations', permissions: ['wms.projects.view:all'] },
-  { match: p => p === '/operations/projects', permissions: ['wms.projects.view:all'] },
-  { match: p => p === '/operations/materials', permissions: ['wms.materials.view:all'] },
+  { match: p => p === '/warehouse/projects' || p === '/warehouse/list' || p === '/warehouse/locations' || p.startsWith('/warehouse/projects/'), permissions: WMS_PROJECTS },
+  { match: p => p === '/warehouse/materials' || p === '/operations/materials', permissions: WMS_MATERIALS },
+  { match: p => p === '/operations/projects', permissions: WMS_PROJECTS },
   {
-    match: p => p === '/operations/settings' || p === '/operations/settings/material-categories' || p === '/warehouse/settings/material-categories',
-    permissions: ['wms.categories.view:all'],
+    match: p =>
+      p === '/operations/settings'
+      || p === '/operations/settings/material-categories'
+      || p === '/warehouse/settings'
+      || p === '/warehouse/settings/material-categories',
+    permissions: WMS_CATEGORIES,
   },
   {
     match: p => p === '/operations/settings/material-units' || p === '/warehouse/settings/material-units',
-    permissions: ['wms.material_units.view:all'],
+    permissions: WMS_UNITS,
   },
   { match: p => p === '/warehouse/import', permissions: ['wms.imports.view:all'] },
   { match: p => p === '/warehouse/export', permissions: ['wms.exports.view:all'] },
@@ -35,55 +53,48 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
   { match: p => p === '/warehouse/defects', permissions: ['wms.defects.view:all'] },
   { match: p => p === '/warehouse/reports', permissions: ['wms.reports.view:all'] },
 
-  { match: p => p === '/stocktake/list', permissions: ['wms.stocktakes.view:all'] },
+  { match: p => p === '/stocktake/list' || p === '/stocktake/settings', permissions: STOCKTAKE },
 
   { match: p => p === '/members/list', permissions: ['hrm.employees.view:all'] },
   { match: p => p === '/members/new', permissions: ['hrm.employees.create'] },
   { match: p => p === '/members/settings', permissions: ['hrm.members.settings.view'] },
   {
-    match: p => /^\/members\/[^/]+$/.test(p) && p !== '/members/new' && p !== '/members/settings',
+    match: p => /^\/members\/[^/]+$/.test(p) && p !== '/members/new' && p !== '/members/settings' && p !== '/members/list' && p !== '/members/recruits',
     permissions: ['hrm.employees.view:all', 'hrm.employees.view:own'],
   },
-  { match: p => p === '/recruitment/dashboard', permissions: ['hrm.candidates.view:all'] },
+  { match: p => p === '/members/recruits', permissions: CANDIDATES },
+  { match: p => p === '/recruitment/dashboard', permissions: CANDIDATES },
   { match: p => p === '/recruitment/plans', permissions: ['hrm.recruitment.plans.view'] },
   { match: p => p === '/recruitment/costs', permissions: ['hrm.recruitment.costs.view'] },
-  { match: p => p === '/recruitment/candidates', permissions: ['hrm.candidates.view:all'] },
-  {
-    match: p => p.startsWith('/recruitment/candidates/'),
-    permissions: ['hrm.candidates.view:all'],
-  },
-  { match: p => p === '/recruitment/calendar', permissions: ['hrm.candidates.view:all'] },
+  { match: p => p === '/recruitment/candidates' || p.startsWith('/recruitment/candidates/'), permissions: CANDIDATES },
+  { match: p => p === '/recruitment/calendar', permissions: CANDIDATES },
   { match: p => p === '/recruitment/reports', permissions: ['hrm.recruitment.reports.view'] },
   { match: p => p === '/recruitment/hr-stats', permissions: ['hrm.candidates.view:all', 'hrm.employees.view:all'] },
   { match: p => p === '/recruitment/settings', permissions: ['hrm.recruitment.positions.view'] },
 
-  { match: p => p === '/admin/users', permissions: ['admin.users.view:all'] },
-  {
-    match: p => p.startsWith('/admin/users/'),
-    permissions: ['admin.users.view:all'],
-  },
+  { match: p => p === '/admin/users' || p.startsWith('/admin/users/'), permissions: ['admin.users.view:all'] },
   { match: p => p === '/admin/settings', permissions: ['admin.roles.view:all'] },
   {
     match: p => /^\/admin\/settings\/roles\/[^/]+\/permissions$/.test(p),
     permissions: ['admin.roles.view:all'],
   },
 
-  { match: p => p.startsWith('/suppliers') || p.startsWith('/purchasing/suppliers'), permissions: ['purchasing.suppliers.view', 'wms.suppliers.view:all'] },
+  {
+    match: p =>
+      p.startsWith('/suppliers')
+      || p.startsWith('/purchasing/suppliers')
+      || p === '/warehouse/suppliers'
+      || p === '/warehouse/settings/suppliers',
+    permissions: SUPPLIERS,
+  },
   ...(CSKH_MODULE_ENABLED
-    ? [{ match: (p: string) => p === '/cskh' || p.startsWith('/cskh/'), permissions: ['cskh.dashboard.view', 'wms.projects.view:all'] as PermissionKey[] }]
-    : []),
+    ? [{ match: (p: string) => p === '/cskh' || p.startsWith('/cskh/'), permissions: CSKH }]
+    : [{ match: (p: string) => p === '/cskh' || p.startsWith('/cskh/') }]),
+  { match: p => p === '/technical' || p.startsWith('/technical/') },
 
-  { match: p => p === '/purchasing/dashboard' || p === '/purchasing', permissions: ['purchasing.dashboard.view'] },
-  { match: p => p === '/purchasing/plans', permissions: ['purchasing.plans.view'] },
-  {
-    match: p => p.startsWith('/purchasing/plans/'),
-    permissions: ['purchasing.plans.view'],
-  },
-  { match: p => p === '/purchasing/adhoc', permissions: ['purchasing.plans.view'] },
-  {
-    match: p => p.startsWith('/purchasing/adhoc/'),
-    permissions: ['purchasing.plans.view'],
-  },
+  { match: p => p === '/purchasing' || p === '/purchasing/dashboard' || p === '/purchasing/settings', permissions: PUR_DASH },
+  { match: p => p === '/purchasing/plans' || p.startsWith('/purchasing/plans/'), permissions: ['purchasing.plans.view'] },
+  { match: p => p === '/purchasing/adhoc' || p.startsWith('/purchasing/adhoc/'), permissions: ['purchasing.plans.view'] },
   { match: p => p === '/purchasing/orders', permissions: ['purchasing.orders.view'] },
   { match: p => p === '/purchasing/orders/new', permissions: ['purchasing.orders.create', 'purchasing.orders.view'] },
   {
@@ -111,9 +122,19 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
   },
 ];
 
-export function getRequiredPermissionsForPath(pathname: string): PermissionKey[] | null {
+export function getRouteAccess(pathname: string): RouteAccess {
   const rule = ROUTE_PERMISSION_RULES.find(r => r.match(pathname));
-  return rule?.permissions ?? null;
+  if (!rule) return { kind: 'unknown' };
+  if (!rule.permissions?.length) return { kind: 'authenticated' };
+  return { kind: 'permissions', permissions: rule.permissions };
+}
+
+/** `null` = unmatched (deny unknown). `[]` = any authenticated user. */
+export function getRequiredPermissionsForPath(pathname: string): PermissionKey[] | null {
+  const access = getRouteAccess(pathname);
+  if (access.kind === 'unknown') return null;
+  if (access.kind === 'authenticated') return [];
+  return access.permissions;
 }
 
 export function getFallbackRoute(permissions: readonly PermissionKey[]): string {

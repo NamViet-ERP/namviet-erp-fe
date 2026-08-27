@@ -33,18 +33,6 @@ export function usePurchasingDashboardSummary(
   });
 }
 
-export function usePurchasingDashboardChart(
-  params: PurchasingDashboardQueryParams,
-  options?: { live?: boolean },
-) {
-  const live = options?.live ?? false;
-  return useQuery({
-    queryKey: queryKeys.purchasingDashboard.chart(params),
-    queryFn: () => purchasingDashboardService.chart(params),
-    refetchInterval: pollInterval(live),
-  });
-}
-
 export function usePurchasingActivityFeed(
   params: PurchasingDashboardQueryParams,
   options?: { live?: boolean },

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { formatDateVi } from '../../lib/hrm/formatters';
 import {
@@ -11,9 +11,9 @@ import {
 import type { ProjectPurchasingProgressApiDto } from '../../types/wms';
 
 const ROW_H = 42;
-const HEADER_H = 36;
-const PX_PER_DAY = 20;
-const MIN_BAR_PX = 40;
+const HEADER_H = 40;
+const PX_PER_DAY = 28;
+const MIN_BAR_PX = PX_PER_DAY;
 
 type GanttKind = 'project' | 'plan' | 'po' | 'line' | 'nk';
 
@@ -214,20 +214,12 @@ function monthTicks(minDate: string, totalDays: number): { x: number; label: str
   return ticks;
 }
 
-function isSameDay(a: Date, b: Date): boolean {
-  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-}
-
-function dayTicks(minDate: string, totalDays: number, today: string): { x: number; label: string }[] {
-  const todayDate = parseYmd(today);
+function dayTicks(minDate: string, totalDays: number): { x: number; label: string }[] {
   const ticks: { x: number; label: string }[] = [];
   for (let i = 0; i < totalDays; i += 1) {
     const d = parseYmd(minDate);
     d.setDate(d.getDate() + i);
-    if (isSameDay(d, todayDate)) continue;
-    if (d.getDate() === 1 || d.getDate() === 8 || d.getDate() === 15 || d.getDate() === 22) {
-      ticks.push({ x: i * PX_PER_DAY, label: String(d.getDate()) });
-    }
+    ticks.push({ x: i * PX_PER_DAY, label: String(d.getDate()) });
   }
   return ticks;
 }
@@ -356,19 +348,32 @@ export default function ProjectPurchasingGantt({
     });
   };
   const rows = useMemo(() => flattenVisible(tree), [tree]);
-  const dates = collectDates(groups);
-  if (dates.length === 0) return null;
-
-  const minDate = dates.reduce((a, b) => (ymd(a) < ymd(b) ? a : b));
-  const maxDate = dates.reduce((a, b) => (ymd(a) > ymd(b) ? a : b));
-  const totalDays = Math.max(14, daysBetween(minDate, maxDate) + 4);
-  const chartWidth = Math.max(totalDays * PX_PER_DAY, 320);
   const today = todayYmd();
-  const todayX = Math.max(0, daysBetween(minDate, today) * PX_PER_DAY);
+  const timeline = useMemo(() => {
+    const dates = collectDates(groups);
+    if (dates.length === 0) return null;
+    const minDate = dates.reduce((a, b) => (ymd(a) < ymd(b) ? a : b));
+    const maxDate = dates.reduce((a, b) => (ymd(a) > ymd(b) ? a : b));
+    const totalDays = Math.max(14, daysBetween(minDate, maxDate) + 4);
+    const chartWidth = Math.max(totalDays * PX_PER_DAY, 320);
+    const todayX = Math.max(0, daysBetween(minDate, today) * PX_PER_DAY);
+    return { minDate, totalDays, chartWidth, todayX };
+  }, [groups, today]);
+
+  useEffect(() => {
+    if (!timeline) return;
+    const chart = chartRef.current;
+    if (!chart) return;
+    chart.scrollLeft = Math.max(0, timeline.todayX - Math.round(chart.clientWidth * 0.28));
+  }, [timeline]);
+
+  if (!timeline) return null;
+
+  const { minDate, totalDays, chartWidth, todayX } = timeline;
   const todayMid = todayX + PX_PER_DAY / 2;
   const todayDateLabel = formatDateVi(today) ?? today;
   const months = monthTicks(minDate, totalDays);
-  const days = dayTicks(minDate, totalDays, today);
+  const days = dayTicks(minDate, totalDays);
   const hovered = rows.find(r => r.id === hoverId) ?? null;
   const hoveredMeta = hovered ? purchasingProgressMeta(hovered.status) : null;
 
@@ -418,7 +423,7 @@ export default function ProjectPurchasingGantt({
     const startX = Math.max(0, daysBetween(minDate, node.plannedStart) * PX_PER_DAY);
     const endX = Math.max(startX, daysBetween(minDate, node.plannedEnd || node.plannedStart) * PX_PER_DAY);
     const isNkPoint = node.kind === 'nk' && node.plannedStart === node.plannedEnd;
-    const barW = Math.max(isNkPoint ? 8 : MIN_BAR_PX, endX - startX);
+    const barW = isNkPoint ? 8 : Math.max(MIN_BAR_PX, endX - startX + PX_PER_DAY);
     const actualX = node.actualEnd != null
       ? Math.max(0, daysBetween(minDate, node.actualEnd) * PX_PER_DAY)
       : null;
@@ -533,14 +538,15 @@ export default function ProjectPurchasingGantt({
                 </span>
               ))}
               {days.map(tick => (
-                <span key={`d-${tick.label}-${tick.x}`} className="ops-gantt__day" style={{ left: tick.x }}>
+                <span
+                  key={`d-${tick.label}-${tick.x}`}
+                  className={`ops-gantt__day${tick.x === todayX ? ' ops-gantt__day--today' : ''}`}
+                  style={{ left: tick.x, width: PX_PER_DAY }}
+                  title={tick.x === todayX ? `Hôm nay ${todayDateLabel}` : undefined}
+                >
                   {tick.label}
                 </span>
               ))}
-              <span className="ops-gantt__today-label" style={{ left: todayMid }} title={`Hôm nay ${todayDateLabel}`}>
-                <span className="ops-gantt__today-kicker">Hôm nay</span>
-                <span className="ops-gantt__today-date tabular-nums">{todayDateLabel}</span>
-              </span>
             </div>
             <div className="ops-gantt__today-col" style={{ left: todayX, top: HEADER_H }} aria-hidden />
             <div className="ops-gantt__today" style={{ left: todayMid, top: HEADER_H }} aria-hidden />

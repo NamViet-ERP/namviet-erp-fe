@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { MessageSquare, Pencil, Trash2 } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import Button from '../ui/Button';
 import ConfirmDialog from '../ui/ConfirmDialog';
 import FormField from '../ui/FormField';
 import { showToast } from '../ui/Toast';
@@ -122,9 +123,9 @@ export default function PoCommentsPanel({ poCode, canComment }: PoCommentsPanelP
           <p className="po-comments-thread__msg">
             {getApiErrorMessage(commentsQ.error, 'Không tải được bình luận.')}
           </p>
-          <button type="button" className="btn btn-primary btn-sm" onClick={() => { void commentsQ.refetch(); }}>
+          <Button type="button" variant="filled" size="sm" onClick={() => { void commentsQ.refetch(); }}>
             Thử lại
-          </button>
+          </Button>
         </div>
       ) : commentsQ.isLoading ? (
         <div className="po-comments-thread" aria-busy="true" aria-label="Đang tải bình luận">
@@ -180,9 +181,10 @@ export default function PoCommentsPanel({ poCode, canComment }: PoCommentsPanelP
                       <div className="po-comments-compose__bar">
                         <span className="po-comments-compose__helper" />
                         <div className="po-comments-compose__actions">
-                          <button
+                          <Button
                             type="button"
-                            className="btn btn-outline btn-sm"
+                            variant="outlined"
+                            size="sm"
                             disabled={updateMut.isPending}
                             onClick={() => {
                               setEditingId(null);
@@ -190,15 +192,16 @@ export default function PoCommentsPanel({ poCode, canComment }: PoCommentsPanelP
                             }}
                           >
                             Hủy
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             type="button"
-                            className="btn btn-primary btn-sm"
+                            variant="filled"
+                            size="sm"
                             disabled={updateMut.isPending || !editDraft.trim()}
                             onClick={saveEdit}
                           >
                             Lưu
-                          </button>
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -265,14 +268,15 @@ export default function PoCommentsPanel({ poCode, canComment }: PoCommentsPanelP
           <div className="po-comments-compose__bar">
             <p className="po-comments-compose__helper">Ctrl+Enter để gửi. Tối đa 4000 ký tự.</p>
             <div className="po-comments-compose__actions">
-              <button
+              <Button
                 type="button"
-                className="btn btn-primary btn-sm"
+                variant="filled"
+                size="sm"
                 disabled={createMut.isPending || !draft.trim()}
                 onClick={submit}
               >
                 {createMut.isPending ? 'Đang gửi…' : 'Gửi'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

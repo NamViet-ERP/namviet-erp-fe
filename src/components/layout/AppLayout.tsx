@@ -3,16 +3,20 @@ import { Outlet, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import ToastContainer, { showToast } from '../ui/Toast';
+import { FolderKanban } from 'lucide-react';
 import { unifiedSidebarMenu } from '../../constants/sidebarMenus';
-import { getSessionUser, getSessionPermissions } from '../../constants/systemUsers';
+import { cskhProjectCodeFromPath, cskhProjectMenu } from '../../constants/cskhProject';
+import { cskhSettingsMenu } from '../../constants/cskhSettings';
+import { useSession } from '../../auth/AuthProvider';
 import { authService } from '../../services/authService';
 import {
   getFallbackRoute,
-  getRequiredPermissionsForPath,
+  getRouteAccess,
 } from '../../lib/routePermissions';
 import { hasAnyPermission } from '../../lib/permissions';
 import { UI_PERMISSION_DENIED } from '../../lib/uiMessages';
 import PageLoader from '../ui/PageLoader';
+import Button from '../ui/Button';
 import type { SessionCheckResult } from '../../services/authService';
 
 type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin' | 'technical' | 'cskh' | 'purchasing' | 'suppliers' | 'operations';
@@ -42,24 +46,28 @@ export default function AppLayout() {
     return checkSession();
   }, [checkSession]);
 
-  const sessionUser = getSessionUser();
-  const permissions = getSessionPermissions();
+  const { user: sessionUser, permissions } = useSession();
+  const routeAccess = getRouteAccess(location.pathname);
+  const fallbackRoute = getFallbackRoute(permissions);
+  const permissionDenied =
+    sessionState === 'authenticated'
+    && Boolean(sessionUser)
+    && routeAccess.kind === 'permissions'
+    && !hasAnyPermission(permissions, routeAccess.permissions);
+  const unknownRoute =
+    sessionState === 'authenticated'
+    && Boolean(sessionUser)
+    && routeAccess.kind === 'unknown';
 
   useEffect(() => {
-    if (sessionState !== 'authenticated' || !sessionUser) return;
-
-    const requiredPermissions = getRequiredPermissionsForPath(location.pathname);
-    if (!requiredPermissions || hasAnyPermission(permissions, requiredPermissions)) {
+    if (!permissionDenied) {
       deniedToastShown.current = null;
       return;
     }
-
     if (deniedToastShown.current === location.pathname) return;
     deniedToastShown.current = location.pathname;
-
     showToast('warning', UI_PERMISSION_DENIED.route, UI_PERMISSION_DENIED.title);
-    navigate(getFallbackRoute(permissions), { replace: true });
-  }, [location.pathname, sessionState, sessionUser, permissions, navigate]);
+  }, [permissionDenied, location.pathname]);
 
   if (sessionState === 'checking') return <PageLoader />;
 
@@ -71,16 +79,17 @@ export default function AppLayout() {
           <p className="mt-2 text-sm text-[var(--md-on-surface-variant)]">
             Máy chủ chưa phản hồi. Phiên của bạn chưa được tin cậy cho đến khi xác minh thành công.
           </p>
-          <button
+          <Button
             type="button"
-            className="btn btn-primary mt-4"
+            variant="filled"
+            className="mt-4"
             onClick={() => {
               setSessionState('checking');
               checkSession();
             }}
           >
             Thử lại
-          </button>
+          </Button>
         </div>
       </main>
     );
@@ -90,9 +99,8 @@ export default function AppLayout() {
     return <Navigate to="/login" replace />;
   }
 
-  const requiredPermissions = getRequiredPermissionsForPath(location.pathname);
-  if (requiredPermissions && !hasAnyPermission(permissions, requiredPermissions)) {
-    return <PageLoader />;
+  if (permissionDenied || unknownRoute) {
+    return <Navigate to={fallbackRoute} replace />;
   }
 
   const currentModule: Module =
@@ -107,6 +115,9 @@ export default function AppLayout() {
     location.pathname.startsWith('/purchasing') ? 'purchasing' : 'warehouse';
 
   const hideSidebar = location.pathname === '/profile';
+  const isCskhSettings = location.pathname.startsWith('/cskh/settings');
+  const cskhProjectCode = isCskhSettings ? null : cskhProjectCodeFromPath(location.pathname);
+  const isCskhProject = Boolean(cskhProjectCode);
   const isWmsModule =
     currentModule === 'warehouse'
     || currentModule === 'stocktake'
@@ -125,9 +136,12 @@ export default function AppLayout() {
         <Sidebar
           collapsed={sidebarCollapsed}
           onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-          menuItems={unifiedSidebarMenu}
+          menuItems={isCskhSettings ? cskhSettingsMenu : cskhProjectCode ? cskhProjectMenu(cskhProjectCode) : unifiedSidebarMenu}
           permissions={permissions}
           currentModule={currentModule}
+          contextLabel={isCskhSettings ? 'THIẾT LẬP' : cskhProjectCode ?? undefined}
+          contextIcon={isCskhProject ? FolderKanban : undefined}
+          onBack={isCskhSettings || isCskhProject ? () => navigate('/cskh') : undefined}
         />
       )}
       <main className={mainClass}>

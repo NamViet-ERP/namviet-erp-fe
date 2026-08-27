@@ -29,15 +29,6 @@ export function useImports(params?: VoucherListParams) {
   });
 }
 
-/** Fetch a single import voucher by id. */
-export function useImport(id: string | undefined) {
-  return useQuery({
-    queryKey: queryKeys.imports.detail(id ?? ''),
-    queryFn: () => importsService.getById(id as string),
-    enabled: Boolean(id),
-  });
-}
-
 export function useCreateImport() {
   const qc = useQueryClient();
   return useMutation({

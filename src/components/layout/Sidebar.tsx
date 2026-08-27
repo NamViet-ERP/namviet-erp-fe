@@ -45,10 +45,11 @@ interface SidebarProps {
   permissions: readonly PermissionKey[];
   currentModule: Module;
   contextLabel?: string;
+  contextIcon?: LucideIcon;
   onBack?: () => void;
 }
 
-export default function Sidebar({ collapsed, onToggle, menuItems, permissions, currentModule, contextLabel, onBack }: SidebarProps) {
+export default function Sidebar({ collapsed, onToggle, menuItems, permissions, currentModule, contextLabel, contextIcon, onBack }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
@@ -63,7 +64,7 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
   /** Sidebar thống nhất: luôn hiện nhãn hệ thống; contextLabel (vd. Thiết lập) vẫn ưu tiên. */
   const isUnifiedNav = menuItems.some(item => (item.children?.length ?? 0) > 0);
   const ModuleIcon = onBack
-    ? Settings
+    ? (contextIcon ?? Settings)
     : isUnifiedNav
       ? LayoutDashboard
       : (moduleIcons[currentModule] || WarehouseIcon);
@@ -92,7 +93,7 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
       const next = { ...prev };
       let changed = false;
       menuItems.forEach(item => {
-        if (item.children && isParentActive(item) && !userCollapsed.has(item.id) && !next[item.id]) {
+        if (item.children && (onBack || isParentActive(item)) && !userCollapsed.has(item.id) && !next[item.id]) {
           next[item.id] = true;
           changed = true;
         }
@@ -111,7 +112,7 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
     } else {
       const init: Record<string, boolean> = {};
       menuItems.forEach(item => {
-        if (item.children && isParentActive(item)) init[item.id] = true;
+        if (item.children && (onBack || isParentActive(item))) init[item.id] = true;
       });
       setExpandedItems(init);
       setUserCollapsed(new Set());
@@ -252,7 +253,8 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
                 <button
                   type="button"
                   onClick={onBack}
-                  title="Quay lại Kho hàng"
+                  title="Quay lại"
+                  aria-label="Quay lại"
                   className="sidebar-module-btn sidebar-module-btn--back"
                 >
                   <ChevronLeft size={16} />
@@ -275,7 +277,7 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
         )}
       </div>
 
-      <nav key={isUnifiedNav ? 'unified' : currentModule} className="sidebar-nav sidebar-nav-enter">
+      <nav key={onBack ? 'drill-in' : isUnifiedNav ? 'unified' : currentModule} className="sidebar-nav sidebar-nav-enter">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const hasChildren = (item.children?.length ?? 0) > 0;

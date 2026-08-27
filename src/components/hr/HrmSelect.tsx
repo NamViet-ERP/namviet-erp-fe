@@ -14,7 +14,9 @@ import { hrmFieldClass } from './hrmFieldClass';
 
 const ITEM_HEIGHT = 40;
 
-export type HrmSelectOption = string | { value: string; label: string };
+export type HrmSelectTone = 'ok' | 'warn' | 'danger';
+
+export type HrmSelectOption = string | { value: string; label: string; tone?: HrmSelectTone };
 
 export interface HrmSelectProps {
   value: string;
@@ -27,11 +29,30 @@ export interface HrmSelectProps {
   className?: string;
   id?: string;
   name?: string;
+  /** When false, hide the empty "-- Chọn --" row. Default true. */
+  allowEmpty?: boolean;
   'aria-label'?: string;
 }
 
-function toItem(option: HrmSelectOption): { value: string; label: string } {
+function toItem(option: HrmSelectOption): { value: string; label: string; tone?: HrmSelectTone } {
   return typeof option === 'string' ? { value: option, label: option } : option;
+}
+
+function OptionText({
+  label,
+  tone,
+  muted,
+}: {
+  label: string;
+  tone?: HrmSelectTone;
+  muted?: boolean;
+}) {
+  return (
+    <span className={muted ? 'hrm-select__placeholder' : 'hrm-select__value'}>
+      {tone ? <span className={`hrm-select__swatch hrm-select__swatch--${tone}`} aria-hidden /> : null}
+      {label}
+    </span>
+  );
 }
 
 export default function HrmSelect({
@@ -45,6 +66,7 @@ export default function HrmSelect({
   className = '',
   id,
   name,
+  allowEmpty = true,
   'aria-label': ariaLabel,
 }: HrmSelectProps) {
   const listId = useId();
@@ -148,16 +170,18 @@ export default function HrmSelect({
           : { visibility: 'hidden' }
       }
     >
-      <button
-        type="button"
-        role="option"
-        aria-selected={!value}
-        className={`hrm-select__option${!value ? ' hrm-select__option--active' : ''}`}
-        onMouseDown={e => e.preventDefault()}
-        onClick={() => pick('')}
-      >
-        {placeholder}
-      </button>
+      {allowEmpty ? (
+        <button
+          type="button"
+          role="option"
+          aria-selected={!value}
+          className={`hrm-select__option${!value ? ' hrm-select__option--active' : ''}`}
+          onMouseDown={e => e.preventDefault()}
+          onClick={() => pick('')}
+        >
+          {placeholder}
+        </button>
+      ) : null}
       {items.map((item, index) => (
         <button
           key={item.value}
@@ -173,7 +197,7 @@ export default function HrmSelect({
           onClick={() => pick(item.value)}
           onMouseEnter={() => setActiveIndex(index)}
         >
-          {item.label}
+          <OptionText label={item.label} tone={item.tone} />
         </button>
       ))}
     </div>
@@ -195,9 +219,7 @@ export default function HrmSelect({
         onClick={() => (open ? close() : openMenu())}
         onKeyDown={onTriggerKeyDown}
       >
-        <span className={isPlaceholder ? 'hrm-select__placeholder' : 'hrm-select__value'}>
-          {selectedLabel}
-        </span>
+        <OptionText label={selectedLabel} tone={selected?.tone} muted={isPlaceholder} />
         <ChevronDown size={18} className="hrm-select__chevron" aria-hidden />
       </button>
       {menu && createPortal(menu, document.body)}

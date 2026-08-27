@@ -1,12 +1,11 @@
 import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { MATERIAL_CATEGORY_LEVELS } from '../constants/materialCategoryLevels';
 import {
   categoriesService,
   type UpsertMaterialCategoryRequest,
 } from '../services/categoriesService';
 import { queryKeys } from '../services/queryKeys';
-import { childrenOf, distinctNamesAtLevel } from '../lib/wms/materialCategoryTree';
+import { childrenOf } from '../lib/wms/materialCategoryTree';
 import type { MaterialCategoryApiDto } from '../types/wms';
 
 export function useCategoryTree() {
@@ -14,18 +13,6 @@ export function useCategoryTree() {
     queryKey: queryKeys.categories.tree,
     queryFn: () => categoriesService.getTree(),
   });
-}
-
-/** Tùy chọn lọc tự do: mỗi cấp độc lập, không cascade */
-export function useCategoryFilterOptions() {
-  const { data: categories = [], ...rest } = useCategoryTree();
-
-  const optionsByLevel = useMemo(
-    () => MATERIAL_CATEGORY_LEVELS.map(lvl => distinctNamesAtLevel(categories, lvl.level)),
-    [categories],
-  );
-
-  return { optionsByLevel, ...rest };
 }
 
 /** 5 cấp cascade — dùng cho form tạo mới */

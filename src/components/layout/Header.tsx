@@ -8,7 +8,8 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { showToast } from '../ui/Toast';
-import { getSessionUser, clearSessionUser } from '../../constants/systemUsers';
+import { clearSessionUser } from '../../constants/systemUsers';
+import { useSession } from '../../auth/AuthProvider';
 import { authService } from '../../services/authService';
 import { UI_COMING_SOON } from '../../lib/uiMessages';
 import { useWmsNotifications } from '../../hooks/useWmsNotifications';
@@ -171,7 +172,7 @@ interface HeaderProps {
 
 export default function Header({ currentModule: _currentModule, onModuleSwitch: _onModuleSwitch }: HeaderProps) {
   const navigate = useNavigate();
-  const sessionUser = getSessionUser();
+  const { user: sessionUser } = useSession();
   const currentUser = sessionUser ?? { name: 'User', initials: 'U', roleLabel: '', email: '' };
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);

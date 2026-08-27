@@ -1,6 +1,5 @@
 import { lazy } from 'react';
 
-export const DashboardPage = lazy(() => import('../pages/DashboardPage'));
 export const DashboardWarehousePage = lazy(() => import('../pages/warehouse/DashboardWarehousePage'));
 export const TransferListPage = lazy(() => import('../pages/warehouse/TransferListPageApi'));
 export const MaterialReturnPage = lazy(() => import('../pages/warehouse/MaterialReturnPage'));

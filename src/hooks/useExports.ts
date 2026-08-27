@@ -10,14 +10,6 @@ export function useExports(params?: VoucherListParams) {
   });
 }
 
-export function useExport(id: string | undefined) {
-  return useQuery({
-    queryKey: queryKeys.exports.detail(id ?? ''),
-    queryFn: () => exportsService.getById(id as string),
-    enabled: Boolean(id),
-  });
-}
-
 export function useCreateExport() {
   const qc = useQueryClient();
   return useMutation({
@@ -64,13 +56,5 @@ export function useSubmitExport() {
       qc.invalidateQueries({ queryKey: queryKeys.exports.all });
       qc.invalidateQueries({ queryKey: queryKeys.exports.detail(id) });
     },
-  });
-}
-
-export function useDeleteExport() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => exportsService.remove(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.exports.all }),
   });
 }

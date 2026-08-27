@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react';
-import { AUTH_CHANGED_EVENT, getSessionPermissions } from '../constants/systemUsers';
+import { useSession } from '../auth/AuthProvider';
 import {
   hasAllPermissions,
   hasAnyPermission,
@@ -8,15 +7,7 @@ import {
 } from '../lib/permissions';
 
 export function usePermission() {
-  const [, setRevision] = useState(0);
-
-  useEffect(() => {
-    const onAuthChanged = () => setRevision(v => v + 1);
-    window.addEventListener(AUTH_CHANGED_EVENT, onAuthChanged);
-    return () => window.removeEventListener(AUTH_CHANGED_EVENT, onAuthChanged);
-  }, []);
-
-  const permissions = getSessionPermissions();
+  const { permissions } = useSession();
 
   return {
     permissions,

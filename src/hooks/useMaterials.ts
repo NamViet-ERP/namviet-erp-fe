@@ -43,17 +43,6 @@ export function useUpdateMaterial() {
   });
 }
 
-export function useDeleteMaterial() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (code: string) => materialsService.remove(code),
-    onSuccess: (_data, code) => {
-      qc.invalidateQueries({ queryKey: queryKeys.materials.all });
-      qc.removeQueries({ queryKey: queryKeys.materials.detail(code) });
-    },
-  });
-}
-
 export function useDiscontinueMaterial() {
   const qc = useQueryClient();
   return useMutation({

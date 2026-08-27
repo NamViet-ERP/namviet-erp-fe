@@ -1,4 +1,5 @@
 import type { StatusKey } from '../../types';
+import Button from '../ui/Button';
 
 interface VoucherDetailFooterProps {
   status: StatusKey;
@@ -23,24 +24,24 @@ export default function VoucherDetailFooter({
   return (
     <>
       {canSubmit && (
-        <button
+        <Button
           type="button"
-          className="btn btn-outline"
+          variant="outlined"
           disabled={isSubmitPending}
           onClick={onSubmit}
         >
           Duyệt dự kiến
-        </button>
+        </Button>
       )}
       {canApprove && (
-        <button
+        <Button
           type="button"
-          className="btn btn-filled"
+          variant="filled"
           disabled={isApprovePending}
           onClick={onApprove}
         >
           Duyệt kho
-        </button>
+        </Button>
       )}
     </>
   );

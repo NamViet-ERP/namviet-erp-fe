@@ -16,14 +16,6 @@ export function useDefects(enabled = true) {
   });
 }
 
-export function useDefect(id: string | undefined, enabled = true) {
-  return useQuery({
-    queryKey: queryKeys.defects.detail(id ?? ''),
-    queryFn: () => defectsService.getById(id!),
-    enabled: enabled && Boolean(id),
-  });
-}
-
 export function usePoDefectPreview(poCode: string | undefined, enabled = true) {
   return useQuery({
     queryKey: queryKeys.defects.poPreview(poCode ?? ''),

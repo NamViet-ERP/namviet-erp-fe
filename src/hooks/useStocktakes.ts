@@ -6,14 +6,6 @@ export function useStocktakes() {
   return useQuery({ queryKey: queryKeys.stocktakes.all, queryFn: () => stocktakesService.list() });
 }
 
-export function useStocktake(id: string | undefined) {
-  return useQuery({
-    queryKey: queryKeys.stocktakes.detail(id ?? ''),
-    queryFn: () => stocktakesService.getById(id as string),
-    enabled: Boolean(id),
-  });
-}
-
 export function useCreateStocktake() {
   const qc = useQueryClient();
   return useMutation({
@@ -39,13 +31,5 @@ export function useApproveStocktake() {
       qc.invalidateQueries({ queryKey: queryKeys.stock.matrix });
       qc.invalidateQueries({ queryKey: queryKeys.projects.all });
     },
-  });
-}
-
-export function useDeleteStocktake() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => stocktakesService.remove(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.stocktakes.all }),
   });
 }

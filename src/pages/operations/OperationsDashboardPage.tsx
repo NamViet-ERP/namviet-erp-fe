@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   AlertTriangle,
@@ -25,6 +26,38 @@ import {
 } from '../../lib/purchasing/purchaseOrderStatus';
 import { formatCurrency } from '../../utils/formatCurrency';
 import type { PurchaseOrderApiDto } from '../../types/api/purchasingApi';
+import CskhFilterTabs, { type CskhFilterOption } from '../cskh/CskhFilterTabs';
+
+type StockFilter = 'all' | 'zero' | 'low';
+type OrderFilter = 'all' | 'none' | 'partial';
+type PaymentFilter = 'all' | 'draft' | 'submitted';
+type ProjectFilter = 'all' | 'noPm' | 'hasPm';
+
+const STOCK_FILTERS: CskhFilterOption<StockFilter>[] = [
+  { id: 'all', label: 'Tất cả', tone: 'navy' },
+  { id: 'zero', label: 'Hết tồn', tone: 'danger' },
+  { id: 'low', label: 'Dưới ngưỡng', tone: 'warn' },
+];
+
+const ORDER_FILTERS: CskhFilterOption<OrderFilter>[] = [
+  { id: 'all', label: 'Tất cả', tone: 'navy' },
+  { id: 'none', label: 'Chưa giao', tone: 'warn' },
+  { id: 'partial', label: 'Giao 1 phần', tone: 'info' },
+];
+
+const PAYMENT_FILTERS: CskhFilterOption<PaymentFilter>[] = [
+  { id: 'all', label: 'Tất cả', tone: 'navy' },
+  { id: 'draft', label: 'Nháp', tone: 'info' },
+  { id: 'submitted', label: 'Đã gửi', tone: 'warn' },
+];
+
+const PROJECT_FILTERS: CskhFilterOption<ProjectFilter>[] = [
+  { id: 'all', label: 'Tất cả', tone: 'navy' },
+  { id: 'noPm', label: 'Chưa gán PM', tone: 'warn' },
+  { id: 'hasPm', label: 'Có PM', tone: 'ok' },
+];
+
+const EMPTY_PM_ID = '00000000-0000-0000-0000-000000000000';
 
 function projectStatusLabel(status: string) {
   if (status === 'Active') return 'Đang triển khai';
@@ -47,28 +80,8 @@ function paymentStatusLabel(status: string) {
   }
 }
 
-function SectionHeading({
-  title,
-  sub,
-  action,
-}: {
-  title: string;
-  sub?: string;
-  action?: { to: string; label: string };
-}) {
-  return (
-    <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
-      <div className="min-w-0">
-        <h2 className="section-heading__title m-0">{title}</h2>
-        {sub ? <p className="section-heading__sub mb-0 text-pretty">{sub}</p> : null}
-      </div>
-      {action ? (
-        <Link to={action.to} className="btn btn-outlined btn-sm shrink-0">
-          {action.label}
-        </Link>
-      ) : null}
-    </div>
-  );
+function hasPm(row: { pmName?: string | null; pmId?: string | null }): boolean {
+  return Boolean(row.pmName?.trim()) && row.pmId !== EMPTY_PM_ID;
 }
 
 function OpenPoRows({ rows }: { rows: PurchaseOrderApiDto[] }) {
@@ -76,7 +89,7 @@ function OpenPoRows({ rows }: { rows: PurchaseOrderApiDto[] }) {
     return (
       <tr>
         <td colSpan={6}>
-          <EmptyState message="Không có đơn hàng đang mở." icon={ShoppingCart} />
+          <EmptyState message="Không có đơn hàng khớp bộ lọc." icon={ShoppingCart} />
         </td>
       </tr>
     );
@@ -101,29 +114,56 @@ function OpenPoRows({ rows }: { rows: PurchaseOrderApiDto[] }) {
   ));
 }
 
-/** Tổng quan Vận hành — reuse chrome/KPI/table pattern của Kho + Mua hàng. */
+/** Tổng quan Vận hành — chrome bàn làm việc CSKH (khung navy, toolbar xếp lớp, chip lọc). */
 export default function OperationsDashboardPage() {
   const dash = useOperationsDashboard();
   const { counts } = dash;
+  const [stockFilter, setStockFilter] = useState<StockFilter>('all');
+  const [orderFilter, setOrderFilter] = useState<OrderFilter>('all');
+  const [paymentFilter, setPaymentFilter] = useState<PaymentFilter>('all');
+  const [projectFilter, setProjectFilter] = useState<ProjectFilter>('all');
+
+  const stockRows = useMemo(() => {
+    if (stockFilter === 'zero') return dash.stockPreview.filter(row => row.actualQty <= 0);
+    if (stockFilter === 'low') return dash.stockPreview.filter(row => row.actualQty > 0);
+    return dash.stockPreview;
+  }, [dash.stockPreview, stockFilter]);
+
+  const orderRows = useMemo(() => {
+    if (orderFilter === 'all') return dash.openOrderRows;
+    return dash.openOrderRows.filter(row => row.deliveryStatus === orderFilter);
+  }, [dash.openOrderRows, orderFilter]);
+
+  const paymentRows = useMemo(() => {
+    if (paymentFilter === 'all') return dash.pendingPaymentRows;
+    return dash.pendingPaymentRows.filter(row => row.status === paymentFilter);
+  }, [dash.pendingPaymentRows, paymentFilter]);
+
+  const projectRows = useMemo(() => {
+    if (projectFilter === 'noPm') return dash.activeProjects.filter(row => !hasPm(row));
+    if (projectFilter === 'hasPm') return dash.activeProjects.filter(row => hasPm(row));
+    return dash.activeProjects;
+  }, [dash.activeProjects, projectFilter]);
 
   if (dash.isBootLoading) {
     return <PageLoader />;
   }
 
   return (
-    <div className="page-stack operations-dashboard">
+    <div className="page-stack operations-dashboard cskh-desk">
       <PageHeader
-          eyebrow="Tổng quan"
-          title="Tổng quan SLC"
-          actions={(
-            <p className="page-header__updated">
-              Cập nhật lúc {new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
-            </p>
-          )}
-        />
+        eyebrow="Tổng quan"
+        title="Tổng quan SLC"
+        actions={(
+          <p className="page-header__updated">
+            Cập nhật lúc {new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+          </p>
+        )}
+      />
 
       <div className="dashboard-kpi-grid" role="list" aria-label="Chỉ số vận hành">
         <Card
+          className="cskh-desk__kpi-card"
           title="Dự án"
           to="/operations/projects"
           accent="info"
@@ -135,6 +175,7 @@ export default function OperationsDashboardPage() {
           ]}
         />
         <Card
+          className="cskh-desk__kpi-card"
           title="Phân công"
           to="/operations/projects"
           accent="neutral"
@@ -146,6 +187,7 @@ export default function OperationsDashboardPage() {
           ]}
         />
         <Card
+          className="cskh-desk__kpi-card"
           title="Tồn thấp"
           to="/warehouse/stock"
           accent="warning"
@@ -157,6 +199,7 @@ export default function OperationsDashboardPage() {
           ]}
         />
         <Card
+          className="cskh-desk__kpi-card"
           title="Vật tư"
           to="/operations/materials"
           accent="stone"
@@ -168,6 +211,7 @@ export default function OperationsDashboardPage() {
           ]}
         />
         <Card
+          className="cskh-desk__kpi-card"
           title="Đơn hàng"
           to="/purchasing/orders"
           accent="success"
@@ -179,6 +223,7 @@ export default function OperationsDashboardPage() {
           ]}
         />
         <Card
+          className="cskh-desk__kpi-card"
           title="Hàng về"
           to="/warehouse/arrival-plans"
           accent="primary"
@@ -190,6 +235,7 @@ export default function OperationsDashboardPage() {
           ]}
         />
         <Card
+          className="cskh-desk__kpi-card"
           title="Đề nghị TT"
           to="/purchasing/payments"
           accent="purple"
@@ -201,6 +247,7 @@ export default function OperationsDashboardPage() {
           ]}
         />
         <Card
+          className="cskh-desk__kpi-card"
           title="Thanh toán PO"
           to="/purchasing/orders"
           accent="danger"
@@ -213,13 +260,20 @@ export default function OperationsDashboardPage() {
         />
       </div>
 
-      <HrmPanel>
-        <SectionHeading
-          title="Cảnh báo tồn kho thấp"
-          sub="Tồn hiện tại thấp hơn ngưỡng tối thiểu đã thiết lập."
-          action={{ to: '/warehouse/stock', label: 'Đi tới Kho →' }}
-        />
-        <div className="overflow-x-auto table-scroll wms-inventory-table-wrap -mx-1">
+      <HrmPanel className="cskh-desk__panel">
+        <div className="cskh-desk__section-head cskh-desk__section-head--stack">
+          <div>
+            <h2 className="section-heading__title m-0">Cảnh báo tồn kho thấp</h2>
+            <p className="section-heading__sub mb-0">Tồn hiện tại thấp hơn ngưỡng tối thiểu đã thiết lập.</p>
+          </div>
+          <div className="cskh-desk__toolbar">
+            <CskhFilterTabs value={stockFilter} options={STOCK_FILTERS} onChange={setStockFilter} label="Lọc tồn thấp" />
+            <Link to="/warehouse/stock" className="btn btn-outlined btn-sm cskh-desk__toolbar-add">
+              Đi tới Kho
+            </Link>
+          </div>
+        </div>
+        <div className="wms-inventory-table-wrap cskh-desk__table">
           <table className="wms-inventory-table">
             <thead>
               <tr>
@@ -231,14 +285,14 @@ export default function OperationsDashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {dash.stockPreview.length === 0 ? (
+              {stockRows.length === 0 ? (
                 <tr>
                   <td colSpan={5}>
-                    <EmptyState message="Không có cảnh báo tồn thấp." />
+                    <EmptyState message="Không có cảnh báo khớp bộ lọc." icon={AlertTriangle} />
                   </td>
                 </tr>
               ) : (
-                dash.stockPreview.map(row => (
+                stockRows.map(row => (
                   <tr key={`${row.projectCode}-${row.materialCode}`} className="table-row">
                     <td className="table-cell font-mono text-sm">{row.materialCode}</td>
                     <td className="table-cell font-semibold">{row.materialName}</td>
@@ -257,13 +311,20 @@ export default function OperationsDashboardPage() {
         </div>
       </HrmPanel>
 
-      <HrmPanel>
-        <SectionHeading
-          title="Đơn hàng cần theo dõi"
-          sub="PO chưa giao đủ - đặt hàng, nhận hàng, duyệt."
-          action={{ to: '/purchasing/orders', label: 'Đi tới Mua hàng →' }}
-        />
-        <div className="overflow-x-auto table-scroll wms-inventory-table-wrap -mx-1">
+      <HrmPanel className="cskh-desk__panel">
+        <div className="cskh-desk__section-head cskh-desk__section-head--stack">
+          <div>
+            <h2 className="section-heading__title m-0">Đơn hàng cần theo dõi</h2>
+            <p className="section-heading__sub mb-0">PO chưa giao đủ - đặt hàng, nhận hàng, duyệt.</p>
+          </div>
+          <div className="cskh-desk__toolbar">
+            <CskhFilterTabs value={orderFilter} options={ORDER_FILTERS} onChange={setOrderFilter} label="Lọc đơn hàng" />
+            <Link to="/purchasing/orders" className="btn btn-outlined btn-sm cskh-desk__toolbar-add">
+              Đi tới Mua hàng
+            </Link>
+          </div>
+        </div>
+        <div className="wms-inventory-table-wrap cskh-desk__table">
           <table className="wms-inventory-table">
             <thead>
               <tr>
@@ -276,19 +337,26 @@ export default function OperationsDashboardPage() {
               </tr>
             </thead>
             <tbody>
-              <OpenPoRows rows={dash.openOrderRows} />
+              <OpenPoRows rows={orderRows} />
             </tbody>
           </table>
         </div>
       </HrmPanel>
 
-      <HrmPanel>
-        <SectionHeading
-          title="Đề nghị thanh toán chờ xử lý"
-          sub="DNTT nháp hoặc đã gửi, chưa thanh toán."
-          action={{ to: '/purchasing/payments', label: 'Đi tới Đề nghị TT →' }}
-        />
-        <div className="overflow-x-auto table-scroll wms-inventory-table-wrap -mx-1">
+      <HrmPanel className="cskh-desk__panel">
+        <div className="cskh-desk__section-head cskh-desk__section-head--stack">
+          <div>
+            <h2 className="section-heading__title m-0">Đề nghị thanh toán chờ xử lý</h2>
+            <p className="section-heading__sub mb-0">DNTT nháp hoặc đã gửi, chưa thanh toán.</p>
+          </div>
+          <div className="cskh-desk__toolbar">
+            <CskhFilterTabs value={paymentFilter} options={PAYMENT_FILTERS} onChange={setPaymentFilter} label="Lọc đề nghị TT" />
+            <Link to="/purchasing/payments" className="btn btn-outlined btn-sm cskh-desk__toolbar-add">
+              Đi tới Đề nghị TT
+            </Link>
+          </div>
+        </div>
+        <div className="wms-inventory-table-wrap cskh-desk__table">
           <table className="wms-inventory-table">
             <thead>
               <tr>
@@ -300,14 +368,14 @@ export default function OperationsDashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {dash.pendingPaymentRows.length === 0 ? (
+              {paymentRows.length === 0 ? (
                 <tr>
                   <td colSpan={5}>
-                    <EmptyState message="Không có đề nghị thanh toán chờ xử lý." icon={Wallet} />
+                    <EmptyState message="Không có đề nghị khớp bộ lọc." icon={Wallet} />
                   </td>
                 </tr>
               ) : (
-                dash.pendingPaymentRows.map(row => (
+                paymentRows.map(row => (
                   <tr key={row.code} className="table-row">
                     <td className="table-cell">
                       <Link
@@ -329,13 +397,20 @@ export default function OperationsDashboardPage() {
         </div>
       </HrmPanel>
 
-      <HrmPanel>
-        <SectionHeading
-          title="Dự án đang triển khai"
-          sub="Danh sách nhanh - tạo mới sẽ tự sinh kho dự án."
-          action={{ to: '/operations/projects', label: 'Danh sách dự án →' }}
-        />
-        <div className="overflow-x-auto table-scroll wms-inventory-table-wrap">
+      <HrmPanel className="cskh-desk__panel">
+        <div className="cskh-desk__section-head cskh-desk__section-head--stack">
+          <div>
+            <h2 className="section-heading__title m-0">Dự án đang triển khai</h2>
+            <p className="section-heading__sub mb-0">Danh sách nhanh - tạo mới sẽ tự sinh kho dự án.</p>
+          </div>
+          <div className="cskh-desk__toolbar">
+            <CskhFilterTabs value={projectFilter} options={PROJECT_FILTERS} onChange={setProjectFilter} label="Lọc phân công" />
+            <Link to="/operations/projects" className="btn btn-outlined btn-sm cskh-desk__toolbar-add">
+              Danh sách dự án
+            </Link>
+          </div>
+        </div>
+        <div className="wms-inventory-table-wrap cskh-desk__table">
           <table className="wms-inventory-table project-warehouse-table">
             <thead>
               <tr>
@@ -347,14 +422,14 @@ export default function OperationsDashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {dash.activeProjects.length === 0 ? (
+              {projectRows.length === 0 ? (
                 <tr>
                   <td colSpan={5}>
-                    <EmptyState message="Chưa có dự án đang triển khai." icon={FolderKanban} />
+                    <EmptyState message="Không có dự án khớp bộ lọc." icon={FolderKanban} />
                   </td>
                 </tr>
               ) : (
-                dash.activeProjects.map(row => (
+                projectRows.map(row => (
                   <tr key={row.projectCode} className="table-row">
                     <td className="table-cell font-mono text-sm text-[var(--md-primary)] whitespace-nowrap project-col-code">
                       {row.projectCode}

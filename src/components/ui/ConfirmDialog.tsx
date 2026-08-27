@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import Button from './Button';
 
 interface ConfirmDialogProps {
   isOpen: boolean;
@@ -49,17 +50,18 @@ export default function ConfirmDialog({
           <div id="confirm-dialog-message" className="md-confirm__message">{message}</div>
         </div>
         <div className="md-confirm__actions">
-          <button type="button" className="btn btn-outline flex-1 text-sm" onClick={onClose} disabled={isLoading}>
+          <Button type="button" variant="outlined" className="flex-1" onClick={onClose} disabled={isLoading}>
             {cancelLabel}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className={`btn flex-1 text-sm ${variant === 'danger' ? 'btn-danger' : 'btn-primary'}`}
+            variant={variant === 'danger' ? 'danger' : 'filled'}
+            className="flex-1"
             onClick={onConfirm}
             disabled={isLoading}
           >
             {isLoading ? 'Đang xử lý...' : confirmLabel}
-          </button>
+          </Button>
         </div>
       </div>
     </div>,

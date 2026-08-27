@@ -395,35 +395,3 @@ export interface DropdownItem {
   danger?: boolean;
   divider?: boolean;
 }
-
-/** Generic column definition for DetailModal table */
-export interface ColumnDef<T = Record<string, unknown>> {
-  key: string;
-  label?: string;
-  align?: 'left' | 'right' | 'center';
-  render?: (item: T) => React.ReactNode;
-}
-
-/** Generic data shape expected by DetailModal */
-export interface DetailModalData {
-  voucherCode?: string;
-  createdBy?: string;
-  date?: string;
-  warehouseName?: string;
-  note?: string;
-  items?: Record<string, unknown>[];
-  [key: string]: unknown;
-}
-
-/** Validation result returned by validator functions */
-export interface ValidationResult {
-  valid: boolean;
-  message: string;
-}
-
-/** Stock quantities shape used in validators */
-export interface StockQuantities {
-  actual: number;
-  held: number;
-  available: number;
-}

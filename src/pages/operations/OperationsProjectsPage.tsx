@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Pencil, FolderKanban, CheckCircle2, Archive, X } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import HrmPanel from '../../components/hr/HrmPanel';
+import HrmSelect from '../../components/hr/HrmSelect';
 import Card from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
 import EmptyState from '../../components/ui/EmptyState';
 import Modal from '../../components/ui/Modal';
 import FormField from '../../components/ui/FormField';
@@ -13,6 +15,7 @@ import Pagination from '../../components/ui/Pagination';
 import SearchBar from '../../components/ui/SearchBar';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import ProjectPurchasingGantt from '../../components/operations/ProjectPurchasingGantt';
+import CskhFilterTabs, { type CskhFilterOption } from '../cskh/CskhFilterTabs';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage, getApiFieldErrors } from '../../lib/apiClient';
 import { formatDateCell, formatDateVi } from '../../lib/hrm/formatters';
@@ -75,10 +78,18 @@ const emptyForm = (): FormState => ({
 
 const EMPTY_PM_ID = '00000000-0000-0000-0000-000000000000';
 
+type StatusFilter = 'all' | 'Active' | 'Closed';
+
+const STATUS_FILTERS: CskhFilterOption<StatusFilter>[] = [
+  { id: 'all', label: 'Tất cả', tone: 'navy' },
+  { id: 'Active', label: 'Đang triển khai', tone: 'ok' },
+  { id: 'Closed', label: 'Đã đóng', tone: 'muted' },
+];
+
 /** CRUD dự án vận hành - Gantt tiến độ mua hàng theo dự án. */
 export default function OperationsProjectsPage() {
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_LIST_PAGE_SIZE);
   const [showForm, setShowForm] = useState(false);
@@ -91,7 +102,7 @@ export default function OperationsProjectsPage() {
     page,
     pageSize,
     search: search || undefined,
-    status: statusFilter || undefined,
+    status: statusFilter === 'all' ? undefined : statusFilter,
   });
   const { data: statsAll } = useProjects({ page: 1, pageSize: 1 });
   const { data: statsActive } = useProjects({ page: 1, pageSize: 1, status: 'Active' });
@@ -105,7 +116,7 @@ export default function OperationsProjectsPage() {
   const items = data?.items ?? [];
   const totalCount = data?.totalCount ?? 0;
   const totalPages = data?.totalPages ?? 1;
-  const hasFilters = Boolean(search.trim() || statusFilter);
+  const hasFilters = Boolean(search.trim() || statusFilter !== 'all');
 
   const openCreate = () => {
     setEditing(null);
@@ -132,7 +143,7 @@ export default function OperationsProjectsPage() {
 
   const resetFilters = () => {
     setSearch('');
-    setStatusFilter('');
+    setStatusFilter('all');
     setPage(1);
   };
 
@@ -199,6 +210,16 @@ export default function OperationsProjectsPage() {
 
   const pending = createMutation.isPending || updateMutation.isPending;
   const projectSelectItems = projectOptions?.items ?? items;
+  const ganttProjectOptions = useMemo(
+    () => [
+      { value: 'all', label: 'Tất cả dự án' },
+      ...projectSelectItems.map(p => ({
+        value: p.projectCode,
+        label: `${p.projectCode} - ${p.projectName}`,
+      })),
+    ],
+    [projectSelectItems],
+  );
   const progressGroups = progressQ.data ?? [];
   const progressOrders = progressGroups.flatMap(g =>
     g.orders.map(order => ({ ...order, projectCode: g.projectCode, projectName: g.projectName })),
@@ -208,66 +229,56 @@ export default function OperationsProjectsPage() {
   );
 
   return (
-    <div className="hrm-page">
+    <div className="page-stack operations-dashboard cskh-desk">
       <PageHeader
+        eyebrow="SLC"
         title="Dự án"
-        subtitle="Luồng: KHMH/MHPS - PO - NK. Thanh là hạn giao. Chấm xanh là nhập thực tế."
         actions={(
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="page-header__updated">Hôm nay: {formatTaskDate(todayIso())}</p>
-            <PermissionGate permission="wms.projects.create">
-              <button
-                type="button"
-                className="btn btn-primary flex items-center gap-2"
-                onClick={openCreate}
-              >
-                <Plus size={16} aria-hidden />
-                Dự án mới
-              </button>
-            </PermissionGate>
-          </div>
+          <p className="page-header__updated">Hôm nay: {formatTaskDate(todayIso())}</p>
         )}
       />
 
       <div className="dashboard-kpi-grid dashboard-kpi-grid--3" role="list" aria-label="Thống kê dự án">
         <Card
+          className="cskh-desk__kpi-card"
           title="Tổng dự án"
           value={statsAll?.totalCount ?? '-'}
-          accent="amber"
+          accent="info"
           icon={FolderKanban}
         />
         <Card
+          className="cskh-desk__kpi-card"
           title="Đang triển khai"
           value={statsActive?.totalCount ?? '-'}
-          accent="blue"
+          accent="success"
           icon={CheckCircle2}
         />
         <Card
+          className="cskh-desk__kpi-card"
           title="Đã đóng"
           value={statsClosed?.totalCount ?? '-'}
-          accent="teal"
+          accent="neutral"
           icon={Archive}
         />
       </div>
 
-      <HrmPanel title="Gantt tiến độ mua hàng">
-        <div className="hrm-list-toolbar">
-          <div className="hrm-list-toolbar__filters">
-            <div className="hrm-filter-select-wrap">
-              <select
-                className="hrm-filter-select"
-                value={progressProjectFilter}
-                onChange={e => setProgressProjectFilter(e.target.value)}
+      <HrmPanel className="cskh-desk__panel">
+        <div className="cskh-desk__section-head cskh-desk__section-head--stack">
+          <div>
+            <h2 className="section-heading__title m-0">Gantt tiến độ mua hàng</h2>
+            <p className="section-heading__sub mb-0">Luồng KHMH/MHPS - PO - NK. Thanh là hạn giao, chấm xanh là nhập thực tế.</p>
+          </div>
+          <div className="cskh-desk__toolbar">
+            <label className="cskh-desk__year cskh-desk__year--wide">
+              <span className="form-label">Dự án</span>
+              <HrmSelect
                 aria-label="Lọc dự án trên Gantt"
-              >
-                <option value="">Tất cả dự án</option>
-                {projectSelectItems.map(p => (
-                  <option key={p.projectCode} value={p.projectCode}>
-                    {p.projectCode} - {p.projectName}
-                  </option>
-                ))}
-              </select>
-            </div>
+                value={progressProjectFilter || 'all'}
+                options={ganttProjectOptions}
+                allowEmpty={false}
+                onChange={value => setProgressProjectFilter(value === 'all' ? '' : value)}
+              />
+            </label>
           </div>
         </div>
         {progressQ.isLoading ? (
@@ -286,14 +297,18 @@ export default function OperationsProjectsPage() {
             icon={FolderKanban}
           />
         ) : (
-          <>
-            <ProjectPurchasingGantt groups={progressGroups} />
-          </>
+          <ProjectPurchasingGantt groups={progressGroups} />
         )}
       </HrmPanel>
 
-      <HrmPanel title="Bảng tiến độ theo đơn đặt hàng">
-        <div className="overflow-x-auto table-scroll wms-inventory-table-wrap">
+      <HrmPanel className="cskh-desk__panel">
+        <div className="cskh-desk__section-head cskh-desk__section-head--stack">
+          <div>
+            <h2 className="section-heading__title m-0">Bảng tiến độ theo đơn đặt hàng</h2>
+            <p className="section-heading__sub mb-0">Theo dự án đang lọc trên Gantt.</p>
+          </div>
+        </div>
+        <div className="wms-inventory-table-wrap cskh-desk__table">
           <table className="wms-inventory-table ops-progress-table">
             <thead>
               <tr>
@@ -365,36 +380,39 @@ export default function OperationsProjectsPage() {
         </div>
       </HrmPanel>
 
-      <HrmPanel noPadding>
-        <div className="hrm-list-toolbar">
-          <div className="hrm-list-toolbar__filters">
+      <HrmPanel className="cskh-desk__panel">
+        <div className="cskh-desk__section-head cskh-desk__section-head--stack">
+          <div>
+            <h2 className="section-heading__title m-0">Danh sách dự án</h2>
+            <p className="section-heading__sub mb-0">Bấm Sửa để cập nhật PIC, khách hàng và ngày kết thúc.</p>
+          </div>
+          <div className="cskh-desk__toolbar">
             <SearchBar
               value={search}
               onChange={v => { setSearch(v); setPage(1); }}
-              placeholder="Tìm mã DA, tên dự án…"
+              placeholder="Tìm mã DA, tên dự án"
             />
-            <div className="hrm-filter-select-wrap">
-              <select
-                className="hrm-filter-select"
-                value={statusFilter}
-                onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
-                aria-label="Lọc trạng thái"
-              >
-                <option value="">Tất cả trạng thái</option>
-                <option value="Active">Đang triển khai</option>
-                <option value="Closed">Đã đóng</option>
-              </select>
-            </div>
-            {hasFilters && (
+            <CskhFilterTabs
+              value={statusFilter}
+              options={STATUS_FILTERS}
+              onChange={id => { setStatusFilter(id); setPage(1); }}
+              label="Lọc trạng thái"
+            />
+            {hasFilters ? (
               <button type="button" onClick={resetFilters} className="hrm-filter-reset">
                 <X size={14} aria-hidden />
                 Xóa lọc
               </button>
-            )}
+            ) : null}
+            <PermissionGate permission="wms.projects.create">
+              <Button type="button" className="cskh-desk__toolbar-add" leftIcon={Plus} onClick={openCreate}>
+                Dự án mới
+              </Button>
+            </PermissionGate>
           </div>
         </div>
 
-        <div className="overflow-x-auto table-scroll wms-inventory-table-wrap">
+        <div className="wms-inventory-table-wrap cskh-desk__table">
           <table className="wms-inventory-table project-warehouse-table project-warehouse-table--wide">
             <thead>
               <tr>
@@ -411,11 +429,7 @@ export default function OperationsProjectsPage() {
             </thead>
             <tbody>
               {isLoading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i} className="hrm-table-skeleton-row" aria-hidden>
-                    <td colSpan={9}><div className="hrm-table-skeleton" /></td>
-                  </tr>
-                ))
+                <TableSkeletonRows colSpan={9} rows={5} />
               ) : items.length === 0 ? (
                 <tr>
                   <td colSpan={9}>
@@ -423,7 +437,7 @@ export default function OperationsProjectsPage() {
                       message={
                         hasFilters
                           ? 'Không tìm thấy dự án phù hợp bộ lọc.'
-                          : 'Chưa có dự án. Nhấn Dự án mới để bắt đầu.'
+                          : 'Chưa có dự án. Bấm Dự án mới để bắt đầu.'
                       }
                       icon={FolderKanban}
                     />

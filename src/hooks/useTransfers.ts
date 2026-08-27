@@ -10,14 +10,6 @@ export function useTransfers(params?: VoucherListParams) {
   });
 }
 
-export function useTransfer(id: string | undefined) {
-  return useQuery({
-    queryKey: queryKeys.transfers.detail(id ?? ''),
-    queryFn: () => transfersService.getById(id as string),
-    enabled: Boolean(id),
-  });
-}
-
 export function useCreateTransfer() {
   const qc = useQueryClient();
   return useMutation({
@@ -66,13 +58,5 @@ export function useSubmitTransfer() {
       qc.invalidateQueries({ queryKey: queryKeys.transfers.all });
       qc.invalidateQueries({ queryKey: queryKeys.transfers.detail(id) });
     },
-  });
-}
-
-export function useDeleteTransfer() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => transfersService.remove(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.transfers.all }),
   });
 }

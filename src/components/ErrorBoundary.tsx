@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import Button from './ui/Button';
 
 interface Props {
   children: ReactNode;
@@ -33,13 +34,13 @@ export default class ErrorBoundary extends Component<Props, State> {
           <p className="error-fallback-page__message">
             Ứng dụng gặp sự cố không mong muốn. Vui lòng tải lại trang hoặc thử lại sau.
           </p>
-          <button
+          <Button
             type="button"
-            className="btn btn-filled"
+            variant="filled"
             onClick={() => window.location.reload()}
           >
             Tải lại trang
-          </button>
+          </Button>
         </div>
       );
     }

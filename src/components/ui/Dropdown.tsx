@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { ChevronDown } from 'lucide-react';
 import type { DropdownItem } from '../../types';
 import type { ReactNode, CSSProperties } from 'react';
+import Button from './Button';
 
 /**
  * MD3 Menu / Dropdown
@@ -92,10 +93,11 @@ export default function Dropdown({ trigger, items, className = '' }: DropdownPro
 
   return (
     <div className={`relative inline-block ${className}`} ref={ref}>
-      <button
+      <Button
         type="button"
+        variant="tonal"
         onClick={handleToggle}
-        className="btn btn-tonal nv-dropdown__trigger"
+        className="nv-dropdown__trigger"
         aria-expanded={open}
         aria-haspopup="menu"
       >
@@ -104,7 +106,7 @@ export default function Dropdown({ trigger, items, className = '' }: DropdownPro
           size={16}
           className={`nv-dropdown__chevron${open ? ' nv-dropdown__chevron--open' : ''}`}
         />
-      </button>
+      </Button>
 
       {open && createPortal(
         <div

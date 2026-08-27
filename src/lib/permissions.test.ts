@@ -44,11 +44,14 @@ describe('permissions', () => {
 
 describe('routePermissions', () => {
   it('maps pilot routes to permission keys', () => {
-    expect(getRequiredPermissionsForPath('/warehouse/dashboard')).toEqual(['core.dashboard.view']);
+    expect(getRequiredPermissionsForPath('/warehouse/dashboard')).toEqual(['wms.projects.view:all']);
     expect(getRequiredPermissionsForPath('/warehouse/import')).toEqual(['wms.imports.view:all']);
     expect(getRequiredPermissionsForPath('/members/new')).toEqual(['hrm.employees.create']);
     expect(getRequiredPermissionsForPath('/admin/settings/roles/admin/permissions')).toEqual(['admin.roles.view:all']);
     expect(getRequiredPermissionsForPath('/unknown')).toBeNull();
+    expect(getRequiredPermissionsForPath('/')).toEqual([]);
+    expect(getRequiredPermissionsForPath('/stocktake/settings')).toEqual(['wms.stocktakes.view:all']);
+    expect(getRequiredPermissionsForPath('/purchasing/settings')).toEqual(['purchasing.dashboard.view']);
   });
 
   it('maps material return route to export return permission', () => {

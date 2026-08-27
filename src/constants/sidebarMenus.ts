@@ -4,10 +4,10 @@ import {
   LayoutDashboard, Package,
   PackagePlus, PackageMinus, Settings,
   ClipboardCheck, Users, UserCheck, UserCog,
-  Layers, FolderKanban, ArrowLeftRight, Building2, Ruler, BarChart3, RotateCcw, AlertTriangle,
+  Layers, FolderKanban, ArrowLeftRight, Building2, BarChart3, RotateCcw, AlertTriangle,
   Target, CalendarDays, DollarSign, ShoppingCart, ShoppingBag, Star, Truck, WalletCards, Ban,
   History, PieChart, Activity, Warehouse, ShieldCheck, FolderOpen, ScrollText,
-  Calculator, BookOpen, Headphones, FileEdit, MessageSquare, ClipboardList,
+  Calculator, BookOpen, Headphones,
 } from 'lucide-react';
 
 function toSidebarChildren(items: SidebarMenuItem[]): SidebarChildItem[] {
@@ -92,27 +92,6 @@ export const warehouseMenu: SidebarMenuItem[] = [
     permission: 'wms.reports.view:all',
   },
 ];
-
-/** Sidebar khi đang trong Thiết lập SLC (cây VT / ĐVT) */
-export const operationsSettingsMenu: SidebarMenuItem[] = [
-  {
-    id: 'ops-settings-categories',
-    label: 'Cây vật tư',
-    icon: Package,
-    path: '/operations/settings/material-categories',
-    permission: 'wms.categories.view:all',
-  },
-  {
-    id: 'ops-settings-units',
-    label: 'Đơn vị tính',
-    icon: Ruler,
-    path: '/operations/settings/material-units',
-    permission: 'wms.material_units.view:all',
-  },
-];
-
-/** @deprecated Alias — dùng operationsSettingsMenu */
-export const warehouseSettingsMenu = operationsSettingsMenu;
 
 export const stocktakeMenu: SidebarMenuItem[] = [
   {
@@ -214,83 +193,13 @@ export const adminMenu: SidebarMenuItem[] = [
   },
 ];
 
-/** CSKH — theo luồng: KH → yêu cầu → hồ sơ → theo dõi/báo cáo → BH → thiết lập. */
+/** CSKH — tổng quan và thiết lập. */
 export const cskhMenu: SidebarMenuItem[] = [
   {
     id: 'cskh-dashboard',
     label: 'Tổng quan',
     icon: LayoutDashboard,
     path: '/cskh',
-    permission: CSKH_VIEW_PERMISSION,
-  },
-  {
-    id: 'cskh-customers',
-    label: 'Khách hàng CĐT',
-    icon: Building2,
-    path: '/cskh/customers',
-    permission: CSKH_VIEW_PERMISSION,
-  },
-  {
-    id: 'cskh-requests',
-    label: 'Yêu cầu',
-    icon: ClipboardList,
-    path: '/cskh/requests',
-    permission: CSKH_VIEW_PERMISSION,
-  },
-  {
-    id: 'cskh-approval',
-    label: 'Soạn và duyệt',
-    icon: FileEdit,
-    path: '/cskh/documents/approval',
-    permission: CSKH_VIEW_PERMISSION,
-  },
-  {
-    id: 'cskh-transit',
-    label: 'Giao nhận hồ sơ',
-    icon: ArrowLeftRight,
-    path: '/cskh/documents/transit',
-    permission: CSKH_VIEW_PERMISSION,
-  },
-  {
-    id: 'cskh-feedback',
-    label: 'Theo dõi phản hồi',
-    icon: MessageSquare,
-    path: '/cskh/documents/feedback',
-    permission: CSKH_VIEW_PERMISSION,
-  },
-  {
-    id: 'cskh-archive',
-    label: 'Lưu trữ',
-    icon: FolderOpen,
-    path: '/cskh/documents/archive',
-    permission: CSKH_VIEW_PERMISSION,
-  },
-  {
-    id: 'cskh-gantt',
-    label: 'Gantt và báo cáo',
-    icon: CalendarDays,
-    path: '/cskh/gantt',
-    permission: CSKH_VIEW_PERMISSION,
-  },
-  {
-    id: 'cskh-meetings',
-    label: 'Cuộc họp',
-    icon: Users,
-    path: '/cskh/meetings',
-    permission: CSKH_VIEW_PERMISSION,
-  },
-  {
-    id: 'cskh-bottlenecks',
-    label: 'Điểm nghẽn',
-    icon: AlertTriangle,
-    path: '/cskh/bottlenecks',
-    permission: CSKH_VIEW_PERMISSION,
-  },
-  {
-    id: 'cskh-warranties',
-    label: 'Bảo hành CĐT',
-    icon: ShieldCheck,
-    path: '/cskh/warranties',
     permission: CSKH_VIEW_PERMISSION,
   },
   {
@@ -301,8 +210,6 @@ export const cskhMenu: SidebarMenuItem[] = [
     permission: CSKH_VIEW_PERMISSION,
   },
 ];
-/** @deprecated Alias — menu kỹ thuật cũ; CSKH nằm ở cskhMenu. */
-export const technicalMenu: SidebarMenuItem[] = [];
 /** Mua hàng — theo luồng: tham chiếu giá → cầu mua → PO → hợp đồng/hồ sơ → thanh toán → BH. */
 export const purchasingMenu: SidebarMenuItem[] = [
   {

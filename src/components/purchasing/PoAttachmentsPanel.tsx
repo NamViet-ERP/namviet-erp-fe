@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { Download, FileText, Save, Trash2, Upload } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
+import Button from '../ui/Button';
 import ConfirmDialog from '../ui/ConfirmDialog';
 import { showToast } from '../ui/Toast';
 import { getApiErrorMessage, saveBlob } from '../../lib/apiClient';
@@ -67,15 +68,16 @@ function PoAttachmentSlot({
         </div>
         {canUpload ? (
           <>
-            <button
+            <Button
               type="button"
-              className="btn btn-outline btn-sm"
+              variant="outlined"
+              size="sm"
               disabled={busy}
               onClick={() => fileInputRef.current?.click()}
             >
               <Upload size={14} strokeWidth={1.75} aria-hidden />
               Tải lên
-            </button>
+            </Button>
             <input
               ref={fileInputRef}
               type="file"
@@ -110,16 +112,17 @@ function PoAttachmentSlot({
               </div>
               {canUpload ? (
                 <div className="po-attach-slot__actions">
-                  <button
+                  <Button
                     type="button"
-                    className="btn btn-outline btn-sm"
+                    variant="outlined"
+                    size="sm"
                     title={`Bỏ ${p.file.name}`}
                     aria-label={`Bỏ ${p.file.name}`}
                     disabled={busy}
                     onClick={() => onRemovePending(p.localId)}
                   >
                     <Trash2 size={13} strokeWidth={1.75} aria-hidden />
-                  </button>
+                  </Button>
                 </div>
               ) : null}
             </li>
@@ -139,9 +142,10 @@ function PoAttachmentSlot({
                 </div>
               </div>
               <div className="po-attach-slot__actions">
-                <button
+                <Button
                   type="button"
-                  className="btn btn-outline btn-sm"
+                  variant="outlined"
+                  size="sm"
                   title={`Tải ${att.fileName}`}
                   aria-label={`Tải ${att.fileName}`}
                   disabled={busy}
@@ -150,18 +154,19 @@ function PoAttachmentSlot({
                   }}
                 >
                   <Download size={13} strokeWidth={1.75} aria-hidden />
-                </button>
+                </Button>
                 {canUpload ? (
-                  <button
+                  <Button
                     type="button"
-                    className="btn btn-outline btn-sm"
+                    variant="outlined"
+                    size="sm"
                     title={`Xóa ${att.fileName}`}
                     aria-label={`Xóa ${att.fileName}`}
                     disabled={busy}
                     onClick={() => onDeleteSaved(att.id, att.fileName)}
                   >
                     <Trash2 size={13} strokeWidth={1.75} aria-hidden />
-                  </button>
+                  </Button>
                 ) : null}
               </div>
             </li>
@@ -276,15 +281,16 @@ export default function PoAttachmentsPanel({
           ) : null}
         </h2>
         {canUpload && hasUnsaved ? (
-          <button
+          <Button
             type="button"
-            className="btn btn-primary btn-sm"
+            variant="filled"
+            size="sm"
             disabled={saving}
             onClick={() => { void savePending(); }}
           >
             <Save size={14} strokeWidth={1.75} aria-hidden />
             {saving ? 'Đang lưu…' : `Lưu hồ sơ (${pending.length})`}
-          </button>
+          </Button>
         ) : null}
       </div>
 
