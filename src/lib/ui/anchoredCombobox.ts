@@ -1,7 +1,8 @@
 import type { CSSProperties } from 'react';
 
-export const COMBOBOX_PANEL_MAX_H = 220;
-export const COMBOBOX_PANEL_MIN_H = 88;
+/** Cao đủ ~7–8 dòng option trong bảng ERP; không nuốt hết viewport. */
+export const COMBOBOX_PANEL_MAX_H = 320;
+export const COMBOBOX_PANEL_MIN_H = 140;
 export const COMBOBOX_VIEWPORT_PAD = 8;
 export const COMBOBOX_GAP = 6;
 
@@ -60,10 +61,16 @@ export function computeAnchoredPanelStyle(
   compact: boolean,
 ): { placement: ComboboxPlacement; style: CSSProperties } {
   const spaceBelow = window.innerHeight - rect.bottom - COMBOBOX_GAP - COMBOBOX_VIEWPORT_PAD;
-  const available = Math.max(COMBOBOX_PANEL_MIN_H, spaceBelow);
+  const spaceAbove = rect.top - COMBOBOX_GAP - COMBOBOX_VIEWPORT_PAD;
+  /* Ưu tiên phía còn nhiều chỗ — tránh list chỉ 1–2 dòng khi ô gần đáy trang */
+  const placement: ComboboxPlacement = spaceAbove > spaceBelow + 24 ? 'above' : 'below';
+  const room = placement === 'below' ? spaceBelow : spaceAbove;
+  const available = Math.max(COMBOBOX_PANEL_MIN_H, room);
   const maxHeight = Math.min(COMBOBOX_PANEL_MAX_H, available);
-  const minPanelWidth = compact ? 280 : 260;
-  const width = Math.max(rect.width, minPanelWidth);
+
+  const minPanelWidth = compact ? 300 : 340;
+  const maxPanelWidth = window.innerWidth - COMBOBOX_VIEWPORT_PAD * 2;
+  const width = Math.min(Math.max(rect.width, minPanelWidth), maxPanelWidth);
 
   let left = rect.left;
   if (left + width > window.innerWidth - COMBOBOX_VIEWPORT_PAD) {
@@ -73,15 +80,16 @@ export function computeAnchoredPanelStyle(
     );
   }
 
-  const placement: ComboboxPlacement = 'below';
   const style: CSSProperties = {
     position: 'fixed',
-    top: rect.bottom + COMBOBOX_GAP,
     left,
     width,
     maxHeight,
     transform: 'none',
     zIndex: 1200,
+    ...(placement === 'below'
+      ? { top: rect.bottom + COMBOBOX_GAP, bottom: 'auto' }
+      : { top: 'auto', bottom: window.innerHeight - rect.top + COMBOBOX_GAP }),
   };
 
   return { placement, style };

@@ -1,13 +1,31 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { AlertTriangle, ChevronDown, ChevronRight, FolderLock, FolderOpen } from 'lucide-react';
+import {
+  AlertTriangle,
+  CheckCircle2,
+  ChevronDown,
+  ChevronRight,
+  CopyPlus,
+  FolderLock,
+  FolderOpen,
+  Pencil,
+  Send,
+  XCircle,
+} from 'lucide-react';
 import { HrmDetailHeader } from '../../components/hr/HrmPageChrome';
+import CreatePurchasePlanModal from '../../components/purchasing/CreatePurchasePlanModal';
 import EmptyState from '../../components/ui/EmptyState';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import { showToast } from '../../components/ui/Toast';
+import { usePermission } from '../../hooks/usePermission';
 import {
+  useApprovePurchasePlanL1,
+  useApprovePurchasePlanL2,
   usePurchasePlan,
+  useRejectPurchasePlan,
+  useRemakePurchasePlan,
+  useSubmitPurchasePlan,
   useSupplierMaterialRisks,
   useUpdatePurchasePlan,
 } from '../../hooks/usePurchasePlans';
@@ -96,9 +114,18 @@ export default function PurchasePlanDetailPage() {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  const { has } = usePermission();
   const { data: plan, isLoading, isError, error, refetch } = usePurchasePlan(code);
   const updateMutation = useUpdatePurchasePlan();
+  const submitMutation = useSubmitPurchasePlan();
+  const approveL1Mutation = useApprovePurchasePlanL1();
+  const approveL2Mutation = useApprovePurchasePlanL2();
+  const rejectMutation = useRejectPurchasePlan();
+  const remakeMutation = useRemakePurchasePlan();
   const [confirmClose, setConfirmClose] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
   const isAdhoc =
     location.pathname.startsWith('/purchasing/adhoc')
     || plan?.kind === 'adhoc'
@@ -106,7 +133,31 @@ export default function PurchasePlanDetailPage() {
   const listPath = isAdhoc ? '/purchasing/adhoc' : '/purchasing/plans';
   const back = () => navigate(listPath);
 
+  const canSubmit = has('purchasing.plans.submit');
+  const canApproveL1 = has('purchasing.plans.approve_l1');
+  const canApproveL2 = has('purchasing.plans.approve_l2');
+  const canReject = has('purchasing.plans.reject');
+  const canRemake = has('purchasing.plans.remake');
+
   const lines = plan?.lines ?? [];
+
+  const actionBusy =
+    updateMutation.isPending
+    || submitMutation.isPending
+    || approveL1Mutation.isPending
+    || approveL2Mutation.isPending
+    || rejectMutation.isPending
+    || remakeMutation.isPending;
+
+  const runAction = async (okMsg: string, fn: () => Promise<unknown>) => {
+    try {
+      await fn();
+      showToast('success', okMsg);
+      await refetch();
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Thao tác thất bại.'));
+    }
+  };
 
   const riskPairs = useMemo((): SupplierMaterialRiskPairRequest[] => {
     const seen = new Set<string>();
@@ -203,7 +254,11 @@ export default function PurchasePlanDetailPage() {
   }
 
   const projectSubtitle = plan.projectName || plan.projectCode || undefined;
+  const isDraft = plan.status === 'draft';
+  const isPendingL1 = plan.status === 'pending_l1';
+  const isPendingL2 = plan.status === 'pending_l2';
   const isApproved = plan.status === 'approved' || plan.status === 'active';
+  const isRejected = plan.status === 'rejected';
   const isClosed = plan.status === 'closed';
 
   return (
@@ -215,11 +270,98 @@ export default function PurchasePlanDetailPage() {
         actions={(
           <div className="pur-detail__actions">
             <PlanStatusBadge status={plan.status} />
+            {isDraft ? (
+              <>
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  disabled={actionBusy}
+                  onClick={() => setEditOpen(true)}
+                >
+                  <Pencil size={15} strokeWidth={1.75} aria-hidden />
+                  Chỉnh sửa
+                </button>
+                {canSubmit ? (
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-sm"
+                    disabled={actionBusy}
+                    onClick={() => {
+                      void runAction(`Đã gửi duyệt ${plan.code}.`, () =>
+                        submitMutation.mutateAsync(plan.code));
+                    }}
+                  >
+                    <Send size={15} strokeWidth={1.75} aria-hidden />
+                    Gửi duyệt
+                  </button>
+                ) : null}
+              </>
+            ) : null}
+            {isPendingL1 && canApproveL1 ? (
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                disabled={actionBusy}
+                onClick={() => {
+                  void runAction(`Đã duyệt cấp 1 ${plan.code}.`, () =>
+                    approveL1Mutation.mutateAsync(plan.code));
+                }}
+              >
+                <CheckCircle2 size={15} strokeWidth={1.75} aria-hidden />
+                Duyệt cấp 1
+              </button>
+            ) : null}
+            {isPendingL2 && canApproveL2 ? (
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                disabled={actionBusy}
+                onClick={() => {
+                  void runAction(`Đã duyệt cấp 2 ${plan.code}.`, () =>
+                    approveL2Mutation.mutateAsync(plan.code));
+                }}
+              >
+                <CheckCircle2 size={15} strokeWidth={1.75} aria-hidden />
+                Duyệt cấp 2
+              </button>
+            ) : null}
+            {(isPendingL1 || isPendingL2) && canReject ? (
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                disabled={actionBusy}
+                onClick={() => { setRejectReason(''); setRejectOpen(true); }}
+              >
+                <XCircle size={15} strokeWidth={1.75} aria-hidden />
+                Từ chối
+              </button>
+            ) : null}
+            {isRejected && canRemake ? (
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                disabled={actionBusy}
+                onClick={() => {
+                  void (async () => {
+                    try {
+                      const created = await remakeMutation.mutateAsync(plan.code);
+                      showToast('success', `Đã lập phiếu nháp ${created.code}.`);
+                      navigate(`${listPath}/${encodeURIComponent(created.code)}`);
+                    } catch (err) {
+                      showToast('error', getApiErrorMessage(err, 'Không lập được phiếu mới.'));
+                    }
+                  })();
+                }}
+              >
+                <CopyPlus size={15} strokeWidth={1.75} aria-hidden />
+                Lập phiếu mới
+              </button>
+            ) : null}
             {isClosed ? (
               <button
                 type="button"
                 className="btn btn-primary btn-sm"
-                disabled={updateMutation.isPending}
+                disabled={actionBusy}
                 onClick={() => { void setPlanStatus('approved'); }}
               >
                 <FolderOpen size={15} strokeWidth={1.75} aria-hidden />
@@ -230,7 +372,7 @@ export default function PurchasePlanDetailPage() {
               <button
                 type="button"
                 className="btn btn-outline btn-sm"
-                disabled={updateMutation.isPending}
+                disabled={actionBusy}
                 onClick={() => setConfirmClose(true)}
               >
                 <FolderLock size={15} strokeWidth={1.75} aria-hidden />
@@ -381,6 +523,48 @@ export default function PurchasePlanDetailPage() {
         confirmLabel="Đóng"
         variant="danger"
         isLoading={updateMutation.isPending}
+      />
+
+      <ConfirmDialog
+        isOpen={rejectOpen}
+        onClose={() => { setRejectOpen(false); setRejectReason(''); }}
+        onConfirm={() => {
+          void runAction(`Đã từ chối ${plan.code}.`, async () => {
+            await rejectMutation.mutateAsync({
+              code: plan.code,
+              reason: rejectReason.trim() || undefined,
+            });
+            setRejectOpen(false);
+            setRejectReason('');
+          });
+        }}
+        title="Từ chối duyệt?"
+        message={(
+          <div className="space-y-2">
+            <p>Từ chối {plan.code}? Phiếu sẽ đánh dấu từ chối; cung ứng có thể Lập phiếu mới.</p>
+            <textarea
+              className="form-input w-full"
+              rows={3}
+              placeholder="Lý do từ chối (tuỳ chọn)"
+              value={rejectReason}
+              onChange={e => setRejectReason(e.target.value)}
+            />
+          </div>
+        )}
+        confirmLabel="Từ chối"
+        variant="danger"
+        isLoading={rejectMutation.isPending}
+      />
+
+      <CreatePurchasePlanModal
+        open={editOpen}
+        kind={isAdhoc ? 'adhoc' : 'plan'}
+        editCode={plan.code}
+        onClose={() => setEditOpen(false)}
+        onSaved={() => {
+          setEditOpen(false);
+          void refetch();
+        }}
       />
     </div>
   );

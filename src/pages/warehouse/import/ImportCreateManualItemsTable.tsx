@@ -34,17 +34,21 @@ export default function ImportCreateManualItemsTable({
   onDuplicateMaterialAttempt,
   qtyColumnLabel = 'SL',
 }: ImportCreateManualItemsTableProps) {
+  const amountColSpan = canViewPrices ? 4 : 2;
+
   return (
     <div className="overflow-x-auto table-scroll">
-      <table className="form-table import-items-table import-items-table--import text-xs">
+      <table className="form-table import-items-table import-items-table--import import-items-table--manual text-xs">
         <thead>
           <tr>
-            <th className="table-header-cell">Vật tư</th>
-            <th className="table-header-cell text-right">{qtyColumnLabel}</th>
-            <th className="table-header-cell text-center">ĐVT</th>
-            {canViewPrices && <th className="table-header-cell text-right">Đơn giá</th>}
-            {canViewPrices && <th className="table-header-cell text-right">Thành tiền</th>}
-            <th className="table-header-cell text-center" />
+            <th className="table-header-cell text-center">Mặt hàng</th>
+            <th className="table-header-cell text-center import-manual-col-qty">{qtyColumnLabel}</th>
+            <th className="table-header-cell text-center import-po-col-unit">ĐVT</th>
+            {canViewPrices && <th className="table-header-cell text-center">Đơn giá</th>}
+            {canViewPrices && (
+              <th className="table-header-cell text-center import-po-col-amount">Thành tiền</th>
+            )}
+            <th className="table-header-cell text-center import-manual-col-action" />
           </tr>
         </thead>
         <tbody>
@@ -66,46 +70,52 @@ export default function ImportCreateManualItemsTable({
                           return;
                         }
                       }
-                      const mat = materials.find(m => m.materialCode === code);
+                      const nextMat = materials.find(m => m.materialCode === code);
                       const next = [...items];
                       next[idx] = {
                         ...next[idx],
                         materialCode: code,
-                        materialName: mat?.materialName ?? next[idx].materialName,
-                        unit: mat?.unit ?? next[idx].unit,
+                        materialName: nextMat?.materialName ?? next[idx].materialName,
+                        unit: nextMat?.unit ?? next[idx].unit,
                       };
                       onItemsChange(next);
                       onMaterialLineChange?.(idx, code);
                     }}
                     materials={materials}
-                    placeholder="— Vật tư —"
+                    placeholder="- Vật tư -"
                   />
                   {lineErr?.materialCode && (
-                    <p className="mt-0.5 text-[10px] text-[var(--md-error)]">{lineErr.materialCode}</p>
+                    <p className="mt-0.5 text-[length:var(--fs-micro)] text-[var(--md-error)]">
+                      {lineErr.materialCode}
+                    </p>
                   )}
                 </td>
-                <td className="table-cell text-right align-top">
-                  <QtyStepper
-                    value={it.qty}
-                    className={lineErr?.qty ? 'qty-stepper--error' : ''}
-                    onChange={qtyVal => {
-                      const next = [...items];
-                      next[idx] = { ...next[idx], qty: qtyVal };
-                      onItemsChange(next);
-                    }}
-                  />
+                <td className="table-cell text-center align-top import-manual-col-qty">
+                  <div className="import-cell-placeholder import-cell-placeholder--center">
+                    <QtyStepper
+                      value={it.qty}
+                      className={`qty-stepper--compact${lineErr?.qty ? ' qty-stepper--error' : ''}`}
+                      onChange={qtyVal => {
+                        const next = [...items];
+                        next[idx] = { ...next[idx], qty: qtyVal };
+                        onItemsChange(next);
+                      }}
+                    />
+                  </div>
                   {lineErr?.qty && (
-                    <p className="mt-0.5 text-[10px] text-[var(--md-error)] text-right">{lineErr.qty}</p>
+                    <p className="mt-0.5 text-[length:var(--fs-micro)] text-[var(--md-error)] text-center">
+                      {lineErr.qty}
+                    </p>
                   )}
                 </td>
-                <td className="table-cell text-center text-[var(--md-on-surface-variant)]">
+                <td className="table-cell text-center import-po-col-unit">
                   <div className="import-cell-placeholder import-cell-placeholder--center">
                     {it.unit?.trim()
-                      || (it.materialCode ? materialUnit(it.materialCode) : '—')}
+                      || (it.materialCode ? materialUnit(it.materialCode) : '-')}
                   </div>
                 </td>
                 {canViewPrices && (
-                  <td className="table-cell text-right align-top">
+                  <td className="table-cell text-center align-top">
                     <CurrencyInput
                       className={`form-input text-xs text-right input-no-spinner${lineErr?.unitPrice ? ' form-input--error' : ''}`}
                       value={it.unitPrice}
@@ -116,18 +126,20 @@ export default function ImportCreateManualItemsTable({
                       }}
                     />
                     {lineErr?.unitPrice && (
-                      <p className="mt-0.5 text-[10px] text-[var(--md-error)] text-right">{lineErr.unitPrice}</p>
+                      <p className="mt-0.5 text-[length:var(--fs-micro)] text-[var(--md-error)] text-center">
+                        {lineErr.unitPrice}
+                      </p>
                     )}
                   </td>
                 )}
                 {canViewPrices && (
-                  <td className="table-cell text-right tabular-nums font-semibold text-[var(--md-on-surface)]">
-                    <div className="import-cell-placeholder import-cell-placeholder--end font-semibold">
-                      {total > 0 ? formatCurrency(total) : '—'}
+                  <td className="table-cell text-center tabular-nums font-semibold text-[var(--md-on-surface)] import-po-col-amount">
+                    <div className="import-cell-placeholder import-cell-placeholder--center font-semibold">
+                      {total > 0 ? formatCurrency(total) : '-'}
                     </div>
                   </td>
                 )}
-                <td className="table-cell text-center">
+                <td className="table-cell text-center import-manual-col-action">
                   <div className="import-cell-placeholder import-cell-placeholder--center">
                     {items.length > 1 && (
                       <button
@@ -148,10 +160,13 @@ export default function ImportCreateManualItemsTable({
         {canViewPrices && (
           <tfoot>
             <tr className="border-t border-[var(--md-outline-variant)]">
-              <td colSpan={4} className="table-cell text-right font-bold text-[var(--md-on-surface-variant)] py-2">
+              <td
+                colSpan={amountColSpan}
+                className="table-cell text-right font-bold text-[var(--md-on-surface-variant)] py-2"
+              >
                 Tổng cộng
               </td>
-              <td className="table-cell text-right font-bold tabular-nums text-[var(--md-primary)] py-2">
+              <td className="table-cell text-center font-bold tabular-nums text-[var(--md-primary)] py-2">
                 {formatCurrency(formGrandTotal)} đ
               </td>
               <td />

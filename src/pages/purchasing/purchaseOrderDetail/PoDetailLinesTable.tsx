@@ -36,8 +36,8 @@ export function PoDetailLinesTable({
               <col className="pur-po-col pur-po-col--amount" />
               <col className="pur-po-col pur-po-col--date" />
               <col className="pur-po-col pur-po-col--recv" />
-              <col className="pur-po-col pur-po-col--qty" />
-              <col className="pur-po-col pur-po-col--date" />
+              <col className="pur-po-col pur-po-col--warranty" />
+              <col className="pur-po-col pur-po-col--anchor" />
               <col className="pur-po-col pur-po-col--note" />
             </colgroup>
             <thead>

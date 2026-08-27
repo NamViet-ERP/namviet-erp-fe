@@ -196,18 +196,18 @@ export default function MaterialAutocomplete({
           key={m.materialCode}
           role="option"
           aria-selected={i === safeHighlight}
-          className={`search-autocomplete__option${i === safeHighlight ? ' is-active' : ''}`}
+          className={`search-autocomplete__option search-autocomplete__option--stack${i === safeHighlight ? ' is-active' : ''}`}
           onMouseEnter={() => setHighlight(i)}
           onMouseDown={e => {
             e.preventDefault();
             selectMaterial(m);
           }}
         >
-          <span className="search-autocomplete__name" title={m.materialName}>
-            {m.materialName}
-          </span>
           <span className="search-autocomplete__code" title={m.materialCode}>
             {m.materialCode}
+          </span>
+          <span className="search-autocomplete__name" title={m.materialName}>
+            {m.materialName}
           </span>
         </li>
       ))}

@@ -108,19 +108,24 @@ export function usePoStockInFlow({ poCode, order }: Props) {
 
   const canPlaceImport = Boolean(
     order
+    && order.approvalStatus === 'approved'
     && order.orderPlacementStatus === 'placed'
     && hasAvailableQty,
   );
 
   const placeImportBlockedReason = !order
     ? 'Chưa tải được PO'
-    : order.orderPlacementStatus !== 'placed'
-      ? 'Chỉ tạo khi PO đã đặt NCC'
-      : poPreviewQuery.isFetching && !poPreviewQuery.data
-        ? 'Đang kiểm tra SL còn lại trên PO'
-        : !hasAvailableQty
-          ? 'Không còn SL khả dụng (đã nhập thực tế / đang chờ duyệt)'
-          : '';
+    : order.approvalStatus !== 'approved'
+      ? 'Duyệt PO rồi xác nhận đặt NCC mới tạo được phiếu nhập'
+      : order.orderPlacementStatus !== 'placed'
+        ? 'Xác nhận đã đặt NCC mới tạo được phiếu nhập'
+        : poPreviewQuery.isError
+          ? getApiErrorMessage(poPreviewQuery.error, 'Không tải được dòng PO còn nhập được')
+          : poPreviewQuery.isFetching && !poPreviewQuery.data
+            ? 'Đang kiểm tra SL còn lại trên PO…'
+            : !hasAvailableQty
+              ? 'Không còn SL khả dụng để nhập (đã nhập / đang chờ duyệt / không có dòng)'
+              : '';
 
   const poOptions = useMemo(
     () => (order ? [order] : []),
@@ -166,7 +171,15 @@ export function usePoStockInFlow({ poCode, order }: Props) {
   }, [poPreviewQuery.data, editing, showCreate, order?.supplierName, poCode]);
 
   const openCreate = () => {
-    if (!canCreate || !canPlaceImport) return;
+    if (!canCreate) {
+      showToast('error', 'Bạn không có quyền tạo phiếu nhập.');
+      return;
+    }
+    if (!canPlaceImport) {
+      showToast('error', placeImportBlockedReason || 'Không thể tạo phiếu nhập.');
+      if (poPreviewQuery.isError) void poPreviewQuery.refetch();
+      return;
+    }
     resetForm();
     setShowCreate(true);
   };

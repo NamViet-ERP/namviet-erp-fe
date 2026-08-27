@@ -3,6 +3,7 @@ import {
   purchaseEstimatesService,
   type PurchaseEstimateListParams,
 } from '../services/purchaseEstimatesService';
+import { queryKeys } from '../services/queryKeys';
 import type {
   CreatePurchaseEstimateRequest,
   SubmitPublicPurchaseEstimateRequest,
@@ -83,6 +84,7 @@ export function useSubmitEstimateApproval() {
     mutationFn: (id: string) => purchaseEstimatesService.submitApproval(id),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: LIST_KEY });
+      void qc.invalidateQueries({ queryKey: queryKeys.wmsNotifications.pending });
     },
   });
 }
@@ -94,6 +96,7 @@ export function useApproveEstimateL1() {
       purchaseEstimatesService.approveL1(id, { note }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: LIST_KEY });
+      void qc.invalidateQueries({ queryKey: queryKeys.wmsNotifications.pending });
     },
   });
 }
@@ -116,6 +119,7 @@ export function useRejectEstimateApproval() {
       purchaseEstimatesService.reject(id, { note }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: LIST_KEY });
+      void qc.invalidateQueries({ queryKey: queryKeys.wmsNotifications.pending });
     },
   });
 }

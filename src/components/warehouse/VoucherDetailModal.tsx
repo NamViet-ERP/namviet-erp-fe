@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import Badge from '../ui/Badge';
 import Modal from '../ui/Modal';
-import type { StatusKey } from '../../types';
+import type { ModalSize, StatusKey } from '../../types';
 import { buildApprovalFields } from './voucherDetailUtils';
 import type { VoucherDetailField } from './voucherDetailUtils';
 import { getVoucherStatusLabel, type WmsVoucherKind } from '../../lib/wms/voucherStatusLabels';
@@ -14,6 +14,8 @@ interface VoucherDetailModalProps {
   voucherCode: string;
   status: StatusKey;
   voucherKind?: WmsVoucherKind;
+  /** Override nhãn badge (vd. HL: Đang xử lý / Đã xử lý). */
+  statusLabel?: string;
   statusHint?: string;
   approvedBy?: string;
   approvedAt?: string;
@@ -21,6 +23,9 @@ interface VoucherDetailModalProps {
   footer: ReactNode;
   children: ReactNode;
   itemsTitle?: string;
+  /** Phiếu nhiều cột (settlement NK) dùng `wide`. */
+  size?: ModalSize;
+  className?: string;
 }
 
 export default function VoucherDetailModal({
@@ -29,6 +34,7 @@ export default function VoucherDetailModal({
   voucherCode,
   status,
   voucherKind,
+  statusLabel: statusLabelOverride,
   statusHint,
   approvedBy,
   approvedAt,
@@ -36,8 +42,13 @@ export default function VoucherDetailModal({
   footer,
   children,
   itemsTitle = 'Danh sách vật tư',
+  size = 'full',
+  className,
 }: VoucherDetailModalProps) {
   const allFields = [...fields, ...buildApprovalFields(status, approvedBy, approvedAt)];
+  const badgeLabel =
+    statusLabelOverride
+    ?? (voucherKind ? getVoucherStatusLabel(status, voucherKind) : undefined);
 
   const infoPanel = (
     <div className="md-dialog__info-panel">
@@ -57,14 +68,14 @@ export default function VoucherDetailModal({
       isOpen={isOpen}
       onClose={onClose}
       title={voucherCode}
-      size="full"
-      className="md-dialog--detail wms-voucher-detail"
+      size={size}
+      className={['md-dialog--detail wms-voucher-detail', className].filter(Boolean).join(' ')}
       headerCompact
       titleClassName="md-dialog__title--mono"
       titleAdornment={
         <Badge
           status={status}
-          label={voucherKind ? getVoucherStatusLabel(status, voucherKind) : undefined}
+          label={badgeLabel}
         />
       }
       subtitle={statusHint ? <p className="wms-voucher-detail__hint">{statusHint}</p> : undefined}

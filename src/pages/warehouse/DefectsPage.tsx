@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Check, Eye, Plus, Trash2, XCircle } from 'lucide-react';
+import { Check, Plus, Trash2, XCircle } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import PermissionGate from '../../components/auth/PermissionGate';
 import SearchBar from '../../components/ui/SearchBar';
@@ -133,9 +133,7 @@ export default function DefectsPage() {
   };
 
   const buildRowActions = (row: PurchaseDefectApiDto): DropdownItem[] => {
-    const items: DropdownItem[] = [
-      { label: 'Xem chi tiết', icon: Eye, onClick: () => void openDetail(row) },
-    ];
+    const items: DropdownItem[] = [];
     if (canApprove && row.status === 'pending') {
       items.push({
         label: 'Duyệt',
@@ -216,6 +214,7 @@ export default function DefectsPage() {
           isLoading={listQuery.isLoading}
           rows={paged}
           buildRowActions={buildRowActions}
+          onOpenDetail={row => { void openDetail(row); }}
         />
 
         <Pagination

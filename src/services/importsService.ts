@@ -10,7 +10,7 @@ import { appendVoucherDateQuery, type VoucherListParams } from '../lib/wms/vouch
 
 export type CreateImportDto = Omit<Import, 'id' | 'createdBy'> & { createdBy?: string };
 export type UpdateImportDto = Partial<CreateImportDto>;
-export type ImportAttachmentKind = 'document' | 'photo';
+export type ImportAttachmentKind = 'document' | 'photo' | 'defect_photo';
 
 const ENDPOINT = '/api/imports';
 async function downloadBlob(path: string, fileName: string): Promise<void> {

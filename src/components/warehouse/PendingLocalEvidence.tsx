@@ -273,6 +273,8 @@ type SavedImportPhotoGridProps = {
   canEdit?: boolean;
   onDelete?: (attachmentId: string) => void;
   onDownload?: (attachmentId: string, fileName: string) => void;
+  /** Mặc định chỉ ảnh nhận hàng (`photo`). */
+  kinds?: string[];
 };
 
 /** Ảnh đã lưu trên phiếu nhập — cùng chrome với PendingPhotoGrid. */
@@ -282,10 +284,11 @@ export function SavedImportPhotoGrid({
   canEdit = false,
   onDelete,
   onDownload,
+  kinds = ['photo'],
 }: SavedImportPhotoGridProps) {
   const photos = useMemo(
-    () => attachments.filter(a => a.kind === 'photo'),
-    [attachments],
+    () => attachments.filter(a => kinds.includes(a.kind)),
+    [attachments, kinds],
   );
   const photoKey = photos.map(p => p.id).join(',');
   const [urls, setUrls] = useState<Record<string, string>>({});

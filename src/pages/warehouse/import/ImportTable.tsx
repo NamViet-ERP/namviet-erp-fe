@@ -1,8 +1,6 @@
-import { Eye, Send, Pencil, Trash2 } from 'lucide-react';
 import type { Import } from '../../../types';
 import VoucherStatusCell from '../../../components/warehouse/VoucherStatusCell';
 import VoucherCodeCell from '../../../components/warehouse/VoucherCodeCell';
-import Dropdown from '../../../components/ui/Dropdown';
 import EmptyState from '../../../components/ui/EmptyState';
 import TableSkeletonRows from '../../../components/ui/TableSkeletonRows';
 import { formatCurrency } from '../../../utils/formatCurrency';
@@ -16,12 +14,6 @@ interface ImportTableProps {
   error: unknown;
   projectName: (code?: string) => string;
   onOpenDetail: (imp: Import) => void;
-  onEdit?: (imp: Import) => void;
-  onSubmit: (imp: Import) => void;
-  onDelete?: (imp: Import) => void;
-  canEdit?: boolean;
-  canSubmit?: boolean;
-  canDelete?: boolean;
   /** Ẩn cột tổng giá trị khi không có wms.prices.view */
   showPrices?: boolean;
 }
@@ -33,15 +25,10 @@ export default function ImportTable({
   error,
   projectName,
   onOpenDetail,
-  onEdit,
-  onSubmit,
-  onDelete,
-  canEdit = false,
-  canSubmit = false,
-  canDelete = false,
   showPrices = true,
 }: ImportTableProps) {
-  const colSpan = showPrices ? 8 : 7;
+  const colSpan = showPrices ? 7 : 6;
+
   return (
     <div className="overflow-x-auto table-scroll wms-inventory-table-wrap">
       <table className="wms-inventory-table">
@@ -56,7 +43,6 @@ export default function ImportTable({
               <th className="table-header-cell text-center">Tổng giá trị</th>
             ) : null}
             <th className="table-header-cell text-center">Trạng thái</th>
-            <th className="table-header-cell text-center w-16">Tác vụ</th>
           </tr>
         </thead>
         <tbody>
@@ -86,12 +72,12 @@ export default function ImportTable({
                 </td>
                 <td className="table-cell text-center max-w-[200px]">
                   <span className="line-clamp-1" title={projectName(imp.project)}>
-                    {imp.project ? projectName(imp.project) : '—'}
+                    {imp.project ? projectName(imp.project) : '-'}
                   </span>
                 </td>
-                <td className="table-cell text-center">{imp.supplier || '—'}</td>
-                <td className="table-cell text-center">{imp.referenceCode || '—'}</td>
-                <td className="table-cell text-center">{imp.planCode?.trim() || '—'}</td>
+                <td className="table-cell text-center">{imp.supplier || '-'}</td>
+                <td className="table-cell text-center">{imp.referenceCode || '-'}</td>
+                <td className="table-cell text-center">{imp.planCode?.trim() || '-'}</td>
                 {showPrices ? (
                   <td className="table-cell text-center tabular-nums">{formatCurrency(imp.totalValue)}</td>
                 ) : null}
@@ -101,30 +87,6 @@ export default function ImportTable({
                     status={imp.status}
                     approvedBy={imp.approvedBy}
                     approvedAt={imp.approvedAt}
-                  />
-                </td>
-                <td className="table-cell text-center" onClick={e => e.stopPropagation()}>
-                  <Dropdown
-                    items={[
-                      { label: 'Xem chi tiết', icon: Eye, onClick: () => onOpenDetail(imp) },
-                      ...(canEdit && imp.status === 'draft'
-                        ? [{ label: 'Sửa phiếu', icon: Pencil, onClick: () => onEdit?.(imp) }]
-                        : []),
-                      ...(canSubmit && imp.status === 'draft'
-                        ? [{ label: 'Chốt dự kiến', icon: Send, onClick: () => onSubmit(imp) }]
-                        : []),
-                      ...(canDelete && imp.status === 'draft'
-                        ? [
-                            { divider: true },
-                            {
-                              label: 'Xóa phiếu',
-                              icon: Trash2,
-                              danger: true,
-                              onClick: () => onDelete?.(imp),
-                            },
-                          ]
-                        : []),
-                    ]}
                   />
                 </td>
               </tr>

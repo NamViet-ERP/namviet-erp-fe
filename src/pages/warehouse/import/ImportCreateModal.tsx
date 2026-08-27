@@ -208,6 +208,27 @@ export default function ImportCreateModal({
     });
   };
 
+  const toggleSelectAllPoLines = (checked: boolean) => {
+    setPoLineDrafts(prev => {
+      const next = { ...prev };
+      for (const line of poPreviewLines) {
+        if (line.available <= 0) continue;
+        const existing = next[line.poItemId] ?? {
+          selected: false,
+          qty: String(line.available),
+        };
+        const qtyNum = Number(existing.qty) || 0;
+        next[line.poItemId] = {
+          ...existing,
+          selected: checked,
+          qty: checked && qtyNum <= 0 ? String(line.available) : existing.qty,
+        };
+      }
+      onItemsChange(poDraftsToItems(poPreviewLines, next));
+      return next;
+    });
+  };
+
   const submitCreate = (status: 'draft' | 'pending') => {
     const synced = poDraftsToItems(poPreviewLines, poLineDrafts);
     onItemsChange(synced);
@@ -346,6 +367,7 @@ export default function ImportCreateModal({
               isPending={isPending}
               formGrandTotal={formGrandTotal}
               onSetPoLine={setPoLine}
+              onToggleSelectAll={toggleSelectAllPoLines}
               qtyColumnLabel={
                 canApprove && editVoucher?.status === 'pending' ? 'SL thực nhận' : 'SL dự kiến'
               }

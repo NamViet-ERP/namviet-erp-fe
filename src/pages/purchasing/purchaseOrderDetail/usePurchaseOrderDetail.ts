@@ -177,7 +177,16 @@ export function usePurchaseOrderDetail(code: string) {
         showToast('success', `Đã hủy duyệt ${code}.`);
       } else {
         await placeMutation.mutateAsync(code);
-        showToast('success', `Đã đánh dấu đặt hàng ${code}.`);
+        showToast(
+          'success',
+          `Đã đánh dấu đặt hàng ${code}. Kéo xuống mục Phiếu nhập kho để tạo phiếu nhập.`,
+        );
+        requestAnimationFrame(() => {
+          document.getElementById('po-related-imports')?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+          });
+        });
       }
     } catch (err) {
       showToast('error', getApiErrorMessage(err, 'Thao tác thất bại.'));

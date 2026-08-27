@@ -1,4 +1,4 @@
-import { Eye, Pencil, Plus, Send, Trash2 } from 'lucide-react';
+import { Pencil, Plus, Send, Trash2 } from 'lucide-react';
 import EmptyState from '../../../components/ui/EmptyState';
 import ConfirmDialog from '../../../components/ui/ConfirmDialog';
 import Dropdown from '../../../components/ui/Dropdown';
@@ -29,29 +29,37 @@ type Props = {
 export function PoRelatedImportsSection({ poCode, order }: Props) {
   const flow = usePoStockInFlow({ poCode, order });
 
-  const actionItems = (imp: Import) => [
-    { label: 'Xem chi tiết', icon: Eye, onClick: () => flow.openDetail(imp) },
-    ...(flow.canUpdate && imp.status === 'draft'
-      ? [{ label: 'Sửa phiếu', icon: Pencil, onClick: () => flow.openEdit(imp) }]
-      : []),
-    ...(flow.canSubmit && imp.status === 'draft'
-      ? [{ label: 'Chốt dự kiến', icon: Send, onClick: () => { void flow.handleSubmit(imp); } }]
-      : []),
-    ...(flow.canDelete && imp.status === 'draft'
-      ? [
-          { divider: true as const },
-          {
-            label: 'Xóa phiếu',
-            icon: Trash2,
-            danger: true,
-            onClick: () => flow.setDeleteTarget(imp),
-          },
-        ]
-      : []),
-  ];
+  const actionItems = (imp: Import) => {
+    const items: Array<
+      | { label: string; icon: typeof Pencil; onClick: () => void; danger?: boolean; divider?: never }
+      | { divider: true; label?: never; icon?: never; onClick?: never; danger?: never }
+    > = [];
+    if (flow.canUpdate && imp.status === 'draft') {
+      items.push({ label: 'Sửa phiếu', icon: Pencil, onClick: () => flow.openEdit(imp) });
+    }
+    if (flow.canSubmit && imp.status === 'draft') {
+      items.push({ label: 'Chốt dự kiến', icon: Send, onClick: () => { void flow.handleSubmit(imp); } });
+    }
+    if (flow.canDelete && imp.status === 'draft') {
+      if (items.length > 0) items.push({ divider: true });
+      items.push({
+        label: 'Xóa phiếu',
+        icon: Trash2,
+        danger: true,
+        onClick: () => flow.setDeleteTarget(imp),
+      });
+    }
+    return items;
+  };
+
+  const showActionsCol = flow.relatedImports.some(imp => actionItems(imp).length > 0);
 
   return (
-    <section className="pur-detail__card" aria-label="Phiếu nhập kho liên quan">
+    <section
+      id="po-related-imports"
+      className="pur-detail__card"
+      aria-label="Phiếu nhập kho liên quan"
+    >
       <div className="flex items-start justify-between gap-3 flex-wrap mb-3">
         <h2 className="purchasing-section-title mb-0">
           Phiếu nhập kho
@@ -66,7 +74,7 @@ export function PoRelatedImportsSection({ poCode, order }: Props) {
             disabled={!flow.canPlaceImport}
             title={
               flow.canPlaceImport
-                ? 'Tạo phiếu nhập từ PO này'
+                ? 'Mở form tạo phiếu nhập từ PO này'
                 : flow.placeImportBlockedReason || 'Không thể tạo phiếu nhập'
             }
             onClick={flow.openCreate}
@@ -77,8 +85,25 @@ export function PoRelatedImportsSection({ poCode, order }: Props) {
       </div>
 
       <p className="text-xs text-[var(--md-on-surface-variant)] mb-3 text-pretty">
-        Cung ứng tạo nháp / chốt dự kiến tại đây (có giá). Thủ kho duyệt thực tế ở màn Nhập kho.
+        Bấm Tạo phiếu nhập để mở form, rồi Lưu nháp / Chốt dự kiến. Thủ kho duyệt thực tế ở màn Nhập kho.
       </p>
+      {!flow.canPlaceImport && flow.placeImportBlockedReason ? (
+        <p className="pur-detail__alert mb-3" role="status">
+          {flow.placeImportBlockedReason}
+          {flow.poPreviewQuery.isError ? (
+            <>
+              {' '}
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                onClick={() => { void flow.poPreviewQuery.refetch(); }}
+              >
+                Thử lại
+              </button>
+            </>
+          ) : null}
+        </p>
+      ) : null}
 
       {flow.importsLoading ? (
         <table className="pur-erp__table"><tbody><TableSkeletonRows rows={3} colSpan={6} /></tbody></table>
@@ -96,37 +121,44 @@ export function PoRelatedImportsSection({ poCode, order }: Props) {
                 {flow.canViewPrices ? (
                   <th className="pur-detail__th text-right">Tổng giá trị</th>
                 ) : null}
-                <th className="pur-detail__th text-center w-14">Tác vụ</th>
+                {showActionsCol ? (
+                  <th className="pur-detail__th text-center w-14">Tác vụ</th>
+                ) : null}
               </tr>
             </thead>
             <tbody>
-              {flow.relatedImports.map(imp => (
-                <tr
-                  key={imp.id}
-                  className="table-row cursor-pointer"
-                  onClick={() => flow.openDetail(imp)}
-                >
-                  <td className="table-cell font-semibold">{imp.voucherCode}</td>
-                  <td className="table-cell">{imp.project || '—'}</td>
-                  <td className="table-cell">
-                    <VoucherStatusCell
-                      voucherKind="import"
-                      status={imp.status}
-                      approvedBy={imp.approvedBy}
-                      approvedAt={imp.approvedAt}
-                    />
-                  </td>
-                  <td className="table-cell tabular-nums">{receiptDateLabel(imp)}</td>
-                  {flow.canViewPrices ? (
-                    <td className="table-cell text-right tabular-nums">
-                      {formatCurrency(imp.totalValue)}
+              {flow.relatedImports.map(imp => {
+                const actions = showActionsCol ? actionItems(imp) : [];
+                return (
+                  <tr
+                    key={imp.id}
+                    className="table-row cursor-pointer"
+                    onClick={() => flow.openDetail(imp)}
+                  >
+                    <td className="table-cell font-semibold">{imp.voucherCode}</td>
+                    <td className="table-cell">{imp.project || '—'}</td>
+                    <td className="table-cell">
+                      <VoucherStatusCell
+                        voucherKind="import"
+                        status={imp.status}
+                        approvedBy={imp.approvedBy}
+                        approvedAt={imp.approvedAt}
+                      />
                     </td>
-                  ) : null}
-                  <td className="table-cell text-center" onClick={e => e.stopPropagation()}>
-                    <Dropdown items={actionItems(imp)} />
-                  </td>
-                </tr>
-              ))}
+                    <td className="table-cell tabular-nums">{receiptDateLabel(imp)}</td>
+                    {flow.canViewPrices ? (
+                      <td className="table-cell text-right tabular-nums">
+                        {formatCurrency(imp.totalValue)}
+                      </td>
+                    ) : null}
+                    {showActionsCol ? (
+                      <td className="table-cell text-center" onClick={e => e.stopPropagation()}>
+                        {actions.length > 0 ? <Dropdown items={actions} /> : null}
+                      </td>
+                    ) : null}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

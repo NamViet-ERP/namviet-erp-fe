@@ -1,4 +1,4 @@
-import { Eye, Check, Send, Pencil } from 'lucide-react';
+import { Check, Send, Pencil } from 'lucide-react';
 import type { Export } from '../../../types';
 import VoucherStatusCell from '../../../components/warehouse/VoucherStatusCell';
 import VoucherCodeCell from '../../../components/warehouse/VoucherCodeCell';
@@ -20,6 +20,27 @@ interface ExportTableProps {
   onApprove: (exp: Export) => void;
 }
 
+function rowActionItems(
+  exp: Export,
+  opts: {
+    onEdit?: (exp: Export) => void;
+    onSubmit: (exp: Export) => void;
+    onApprove: (exp: Export) => void;
+  },
+) {
+  const items: Array<{ label: string; icon: typeof Pencil; onClick: () => void }> = [];
+  if (exp.status === 'draft' || exp.status === 'pending') {
+    items.push({ label: 'Sửa phiếu', icon: Pencil, onClick: () => opts.onEdit?.(exp) });
+  }
+  if (exp.status === 'draft') {
+    items.push({ label: 'Chốt dự kiến', icon: Send, onClick: () => opts.onSubmit(exp) });
+  }
+  if (exp.status === 'pending') {
+    items.push({ label: 'Duyệt thực tế', icon: Check, onClick: () => opts.onApprove(exp) });
+  }
+  return items;
+}
+
 export default function ExportTable({
   rows,
   isLoading,
@@ -30,6 +51,9 @@ export default function ExportTable({
   onSubmit,
   onApprove,
 }: ExportTableProps) {
+  const showActionsCol = rows.some(exp => rowActionItems(exp, { onEdit, onSubmit, onApprove }).length > 0);
+  const colSpan = showActionsCol ? 5 : 4;
+
   return (
     <div className="overflow-x-auto table-scroll wms-inventory-table-wrap">
       <table className="wms-inventory-table">
@@ -39,66 +63,60 @@ export default function ExportTable({
             <th className="table-header-cell">Kho dự án</th>
             <th className="table-header-cell">Mã tham chiếu</th>
             <th className="table-header-cell text-center">Trạng thái</th>
-            <th className="table-header-cell text-center w-16">Tác vụ</th>
+            {showActionsCol ? (
+              <th className="table-header-cell text-center w-16">Tác vụ</th>
+            ) : null}
           </tr>
         </thead>
         <tbody>
           {isLoading ? (
-            <TableSkeletonRows colSpan={5} />
+            <TableSkeletonRows colSpan={colSpan} />
           ) : isError ? (
             <tr>
-              <td colSpan={5}>
+              <td colSpan={colSpan}>
                 <EmptyState message={getApiErrorMessage(error, WMS_ERROR.loadExports)} />
               </td>
             </tr>
           ) : rows.length === 0 ? (
             <tr>
-              <td colSpan={5}>
+              <td colSpan={colSpan}>
                 <EmptyState message={WMS_EMPTY.noExports} />
               </td>
             </tr>
           ) : (
-            rows.map(exp => (
-              <tr
-                key={exp.id}
-                className="table-row wms-inventory-row--interactive"
-                onClick={() => onOpenDetail(exp)}
-              >
-                <td className="table-cell">
-                  <VoucherCodeCell code={exp.voucherCode} voucher={exp} />
-                </td>
-                <td className="table-cell max-w-[220px]">
-                  <span className="line-clamp-1" title={exportProjectLabel(exp)}>
-                    {exportProjectLabel(exp)}
-                  </span>
-                </td>
-                <td className="table-cell">{exp.soCode || '—'}</td>
-                <td className="table-cell text-center">
-                  <VoucherStatusCell
-                    voucherKind="export"
-                    status={exp.status}
-                    approvedBy={exp.approvedBy}
-                    approvedAt={exp.approvedAt}
-                  />
-                </td>
-                <td className="table-cell text-center" onClick={e => e.stopPropagation()}>
-                  <Dropdown
-                    items={[
-                      { label: 'Xem chi tiết', icon: Eye, onClick: () => onOpenDetail(exp) },
-                      ...(exp.status === 'draft' || exp.status === 'pending'
-                        ? [{ label: 'Sửa phiếu', icon: Pencil, onClick: () => onEdit?.(exp) }]
-                        : []),
-                      ...(exp.status === 'draft'
-                        ? [{ label: 'Chốt dự kiến', icon: Send, onClick: () => onSubmit(exp) }]
-                        : []),
-                      ...(exp.status === 'pending'
-                        ? [{ label: 'Duyệt thực tế', icon: Check, onClick: () => onApprove(exp) }]
-                        : []),
-                    ]}
-                  />
-                </td>
-              </tr>
-            ))
+            rows.map(exp => {
+              const actions = rowActionItems(exp, { onEdit, onSubmit, onApprove });
+              return (
+                <tr
+                  key={exp.id}
+                  className="table-row wms-inventory-row--interactive"
+                  onClick={() => onOpenDetail(exp)}
+                >
+                  <td className="table-cell">
+                    <VoucherCodeCell code={exp.voucherCode} voucher={exp} />
+                  </td>
+                  <td className="table-cell max-w-[220px]">
+                    <span className="line-clamp-1" title={exportProjectLabel(exp)}>
+                      {exportProjectLabel(exp)}
+                    </span>
+                  </td>
+                  <td className="table-cell">{exp.soCode || '—'}</td>
+                  <td className="table-cell text-center">
+                    <VoucherStatusCell
+                      voucherKind="export"
+                      status={exp.status}
+                      approvedBy={exp.approvedBy}
+                      approvedAt={exp.approvedAt}
+                    />
+                  </td>
+                  {showActionsCol ? (
+                    <td className="table-cell text-center" onClick={e => e.stopPropagation()}>
+                      {actions.length > 0 ? <Dropdown items={actions} /> : null}
+                    </td>
+                  ) : null}
+                </tr>
+              );
+            })
           )}
         </tbody>
       </table>

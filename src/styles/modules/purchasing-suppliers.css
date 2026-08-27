@@ -4747,6 +4747,50 @@
   .pur-detail__table-wrap .pur-erp__table {
     margin: 0;
   }
+
+  /* Create PO line picker — column widths + compact numeric controls only */
+  .pur-create-po-lines .pur-create-po-lines__col-qty {
+    width: 6.5rem;
+    min-width: 6.5rem;
+  }
+  .pur-create-po-lines .pur-create-po-lines__col-price {
+    width: 7.5rem;
+    min-width: 7rem;
+    white-space: nowrap;
+  }
+  .pur-create-po-lines .pur-create-po-lines__col-warranty {
+    width: 4.75rem;
+    min-width: 4.75rem;
+  }
+  .pur-create-po-lines .pur-create-po-lines__col-anchor {
+    width: 9.5rem;
+    min-width: 9rem;
+  }
+  .pur-create-po-lines .pur-create-po-lines__input-num,
+  .pur-create-po-lines .pur-create-po-lines__input-warranty {
+    width: 100%;
+    margin-inline-start: auto;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .pur-create-po-lines .pur-create-po-lines__input-num {
+    max-width: 5.5rem;
+  }
+  .pur-create-po-lines .pur-create-po-lines__input-warranty {
+    max-width: 3.75rem;
+    text-align: center;
+    margin-inline: auto;
+  }
+  .pur-create-po-lines .pur-create-po-lines__select-anchor {
+    width: 100%;
+    min-width: 0;
+  }
+  .pur-create-po-lines .pur-create-po-lines__input-num:disabled,
+  .pur-create-po-lines .pur-create-po-lines__input-warranty:disabled,
+  .pur-create-po-lines .pur-create-po-lines__select-anchor:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
   .pur-detail .pur-detail__lines-table {
     font-size: var(--fs-md);
     table-layout: auto;
@@ -4812,6 +4856,8 @@
   .pur-detail .pur-detail__lines-table--po .pur-po-col--amount { width: 7.25rem; }
   .pur-detail .pur-detail__lines-table--po .pur-po-col--date { width: 6.75rem; }
   .pur-detail .pur-detail__lines-table--po .pur-po-col--recv { width: 4.5rem; }
+  .pur-detail .pur-detail__lines-table--po .pur-po-col--warranty { width: 5.75rem; min-width: 5.75rem; }
+  .pur-detail .pur-detail__lines-table--po .pur-po-col--anchor { width: 6.5rem; min-width: 6.5rem; }
   .pur-detail .pur-detail__lines-table--po .pur-po-col--note { width: auto; }
   .pur-detail .pur-detail__lines-table--po td:nth-child(1),
   .pur-detail .pur-detail__lines-table--po th:nth-child(1),
@@ -7004,6 +7050,7 @@
   /* Clip góc bo; vẫn cho cuộn ngang nếu bảng rộng */
   overflow-x: auto;
   overflow-y: hidden;
+  overflow-anchor: none;
   background: var(--md-surface-container-high);
 }
 
@@ -7150,12 +7197,30 @@
 }
 
 /* Estimate detail — edit lines (actions above table; narrow SL) */
+.pur-estimate-edit .pur-create-plan__section-head {
+  /* Tránh wrap làm header nhảy khi số dòng đổi */
+  flex-wrap: nowrap;
+  align-items: center;
+  min-height: 40px;
+}
+
+.pur-estimate-edit .pur-create-plan__section-hint {
+  min-height: 1.4em;
+}
+
 .pur-estimate-edit .pur-create-plan__table-shell {
   border: 1px solid var(--md-outline);
   border-radius: var(--radius-md);
   overflow-x: auto;
   overflow-y: hidden;
+  /* Tắt scroll anchoring — xóa dòng không kéo phần trên “thục” xuống */
+  overflow-anchor: none;
   background: var(--md-surface-container-high);
+}
+
+.pur-estimate-edit__table tbody,
+.modal-form-bordered .pur-estimate-create__table tbody {
+  overflow-anchor: none;
 }
 
 .pur-estimate-edit__table {
@@ -7286,6 +7351,96 @@
   width: 32px;
   height: 32px;
   flex-shrink: 0;
+}
+
+/* Khối quyết định duyệt — full width note + actions dưới, không lệch hàng */
+.pur-estimate-decide {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--md-outline);
+  border-radius: var(--radius-md);
+  background: var(--md-surface);
+}
+
+.pur-estimate-decide__head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pur-estimate-decide__title {
+  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-semibold);
+  color: var(--md-on-surface);
+  letter-spacing: -0.01em;
+}
+
+.pur-estimate-decide__hint {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--md-on-surface-variant);
+}
+
+.pur-estimate-decide .form-field {
+  margin: 0;
+}
+
+.pur-estimate-decide .form-field__error--reserved {
+  display: none;
+}
+
+.pur-estimate-decide textarea.form-input {
+  min-height: 72px;
+  resize: vertical;
+  width: 100%;
+  border-color: var(--md-outline);
+  background: var(--md-surface);
+}
+
+.pur-estimate-decide__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/*
+ * Chi tiết dự toán — border đậm theo token :root --md-outline (#C5CAD3),
+ * không dùng --md-outline-variant (#E8E8E8) gần như mất trên nền trắng.
+ */
+.pur-estimate-detail__versions {
+  border: 1px solid var(--md-outline);
+}
+
+.pur-estimate-detail__versions-head {
+  border-bottom: 1px solid var(--md-outline);
+}
+
+.pur-estimate-detail__ver {
+  border: 1px solid var(--md-outline);
+  background: var(--md-surface);
+}
+
+.pur-estimate-detail__ver:hover:not(:disabled) {
+  background: var(--tint-primary-weak);
+}
+
+.pur-estimate-detail__ver.is-selected {
+  border-color: var(--md-primary);
+  background: var(--tint-primary-weak);
+}
+
+/* Bảng: không bọc khung ngoài (trùng header navy → nhìn “kép” / kì) */
+.pur-estimate-detail .wms-inventory-table .table-cell {
+  border-color: var(--md-outline);
+}
+
+.pur-estimate-detail .pur-create-plan__table-shell {
+  border-color: var(--md-outline);
 }
 
 

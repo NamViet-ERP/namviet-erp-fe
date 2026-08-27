@@ -9,9 +9,18 @@ interface DefectsTableProps {
   isLoading: boolean;
   rows: PurchaseDefectApiDto[];
   buildRowActions: (row: PurchaseDefectApiDto) => DropdownItem[];
+  onOpenDetail: (row: PurchaseDefectApiDto) => void;
 }
 
-export default function DefectsTable({ isLoading, rows, buildRowActions }: DefectsTableProps) {
+export default function DefectsTable({
+  isLoading,
+  rows,
+  buildRowActions,
+  onOpenDetail,
+}: DefectsTableProps) {
+  const showActionsCol = rows.some(row => buildRowActions(row).length > 0);
+  const colSpan = showActionsCol ? 8 : 7;
+
   return (
     <div className="overflow-x-auto table-scroll wms-inventory-table-wrap">
       <table className="wms-inventory-table">
@@ -24,39 +33,50 @@ export default function DefectsTable({ isLoading, rows, buildRowActions }: Defec
             <th className="table-header-cell text-center">Dự án</th>
             <th className="table-header-cell text-center">NCC</th>
             <th className="table-header-cell text-center">Trạng thái</th>
-            <th className="table-header-cell text-center">Tác vụ</th>
+            {showActionsCol ? (
+              <th className="table-header-cell text-center">Tác vụ</th>
+            ) : null}
           </tr>
         </thead>
         <tbody>
           {isLoading ? (
-            <TableSkeletonRows rows={5} colSpan={8} />
+            <TableSkeletonRows rows={5} colSpan={colSpan} />
           ) : rows.length === 0 ? (
             <tr>
-              <td colSpan={8}>
+              <td colSpan={colSpan}>
                 <EmptyState message="Chưa có phiếu hàng lỗi." />
               </td>
             </tr>
           ) : (
-            rows.map(row => (
-              <tr key={row.ticketCode} className="table-row">
-                <td className="table-cell text-center font-semibold">{row.ticketCode}</td>
-                <td className="table-cell text-center">
-                  <span className={`badge ${row.sourceType === 'stock' ? 'badge-md-neutral' : 'badge-new'}`}>
-                    {row.sourceType === 'stock' ? 'Tồn kho' : 'PO'}
-                  </span>
-                </td>
-                <td className="table-cell text-center">{row.poCode || '—'}</td>
-                <td className="table-cell text-center">{row.planCode || '—'}</td>
-                <td className="table-cell text-center">{row.projectCode || '—'}</td>
-                <td className="table-cell text-center">{row.supplierName || '—'}</td>
-                <td className="table-cell text-center">
-                  <DefectStatusCell row={row} />
-                </td>
-                <td className="table-cell text-center">
-                  <Dropdown items={buildRowActions(row)} />
-                </td>
-              </tr>
-            ))
+            rows.map(row => {
+              const actions = showActionsCol ? buildRowActions(row) : [];
+              return (
+                <tr
+                  key={row.ticketCode}
+                  className="table-row wms-inventory-row--interactive"
+                  onClick={() => onOpenDetail(row)}
+                >
+                  <td className="table-cell text-center font-semibold">{row.ticketCode}</td>
+                  <td className="table-cell text-center">
+                    <span className={`badge ${row.sourceType === 'stock' ? 'badge-md-neutral' : 'badge-new'}`}>
+                      {row.sourceType === 'stock' ? 'Tồn kho' : 'PO'}
+                    </span>
+                  </td>
+                  <td className="table-cell text-center">{row.poCode || '—'}</td>
+                  <td className="table-cell text-center">{row.planCode || '—'}</td>
+                  <td className="table-cell text-center">{row.projectCode || '—'}</td>
+                  <td className="table-cell text-center">{row.supplierName || '—'}</td>
+                  <td className="table-cell text-center">
+                    <DefectStatusCell row={row} />
+                  </td>
+                  {showActionsCol ? (
+                    <td className="table-cell text-center" onClick={e => e.stopPropagation()}>
+                      {actions.length > 0 ? <Dropdown items={actions} /> : null}
+                    </td>
+                  ) : null}
+                </tr>
+              );
+            })
           )}
         </tbody>
       </table>

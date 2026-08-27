@@ -127,13 +127,51 @@ export default function PurchaseEstimateFillPage() {
     );
   } else if (!row.canFill) {
     body = (
-      <div>
-        <span className="badge badge-success">Đã gửi dự toán thành công</span>
-        <p className="mt-3">
-          Dự toán này đã được <strong>{row.preparerName || 'người lập'}</strong>
-          {row.preparerDate ? ` gửi ngày ${formatDateTimeVi(row.preparerDate)}` : ''}.
-          Phòng Cung ứng đã nhận dữ liệu và đang xử lý.
-        </p>
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="badge badge-info">Chỉ xem</span>
+          <span className="text-[length:var(--fs-sm)] text-[var(--md-on-surface-variant)]">
+            Ver mới nhất · {row.code} · {row.projectCode}
+            {row.projectName ? ` - ${row.projectName}` : ''}
+          </span>
+        </div>
+        <h2 className="text-[length:var(--fs-lg)] font-semibold text-[var(--md-on-surface)] m-0">{row.title}</h2>
+        <div className="wms-inventory-table-wrap">
+          <table className="wms-inventory-table">
+            <thead>
+              <tr>
+                <th className="table-header-cell">Hạng mục</th>
+                <th className="table-header-cell">Hàng hoá</th>
+                <th className="table-header-cell">ĐVT</th>
+                <th className="table-header-cell text-right">SL</th>
+              </tr>
+            </thead>
+            <tbody>
+              {row.lines.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="table-cell">
+                    <EmptyState message="Chưa có dòng vật tư." />
+                  </td>
+                </tr>
+              ) : (
+                groupPublicLines(row).flatMap(([cat, lines]) =>
+                  lines.map(line => (
+                    <tr key={line.materialCode} className="table-row">
+                      <td className="table-cell">{cat}</td>
+                      <td className="table-cell">
+                        <span className="font-mono">{line.materialCode}</span>
+                        {' '}
+                        {line.materialName}
+                      </td>
+                      <td className="table-cell">{line.unit || '-'}</td>
+                      <td className="table-cell text-right tabular-nums">{line.qty}</td>
+                    </tr>
+                  )),
+                )
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     );
   } else if (step === 'review') {

@@ -10437,6 +10437,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "orderableOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
           }
         ],
         "responses": {
@@ -16725,6 +16733,42 @@
         },
         "additionalProperties": false
       },
+      "ApproveImportLineSettlementRequest": {
+        "required": [
+          "acceptedQty",
+          "defectQty",
+          "lineId",
+          "shortageQty"
+        ],
+        "type": "object",
+        "properties": {
+          "lineId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "acceptedQty": {
+            "type": "number",
+            "format": "double"
+          },
+          "defectQty": {
+            "type": "number",
+            "format": "double"
+          },
+          "shortageQty": {
+            "type": "number",
+            "format": "double"
+          },
+          "defectLineReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "shortageLineReason": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "ApproveImportRequest": {
         "required": [
           "confirmOverBudget"
@@ -16733,6 +16777,21 @@
         "properties": {
           "confirmOverBudget": {
             "type": "boolean"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApproveImportLineSettlementRequest"
+            },
+            "nullable": true
+          },
+          "shortageReport": {
+            "type": "string",
+            "nullable": true
+          },
+          "defectReason": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -19876,6 +19935,14 @@
               "$ref": "#/components/schemas/ImportAttachmentDto"
             },
             "nullable": true
+          },
+          "shortageReport": {
+            "type": "string",
+            "nullable": true
+          },
+          "linkedDefectTicketCode": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -19921,6 +19988,39 @@
             "nullable": true
           },
           "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "lineId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "plannedQty": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "acceptedQty": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "defectQty": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "shortageQty": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "defectLineReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "shortageLineReason": {
             "type": "string",
             "nullable": true
           }
@@ -22035,6 +22135,10 @@
             "items": {
               "$ref": "#/components/schemas/PurchaseDefectAttachmentDto"
             }
+          },
+          "importTicketCode": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false

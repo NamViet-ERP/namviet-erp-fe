@@ -42,6 +42,7 @@ export function useCreatePurchaseOrderForm(onCreated: (code: string) => void) {
     pageSize: 200,
     kind: sourceKind,
     status: 'approved',
+    orderableOnly: true,
   });
   const { data: suppliersPage } = useQuery({
     queryKey: ['warehouse-suppliers', 'po-create'],
@@ -59,6 +60,7 @@ export function useCreatePurchaseOrderForm(onCreated: (code: string) => void) {
   const suppliers = useMemo(() => {
     const set = new Set<string>();
     for (const line of allLines) {
+      if (line.remainingOrderableQty <= 0) continue;
       const s = supplierOf(line);
       if (s) set.add(s);
     }

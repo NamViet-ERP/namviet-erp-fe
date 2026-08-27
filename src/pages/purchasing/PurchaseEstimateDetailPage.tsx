@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Plus, Trash2 } from 'lucide-react';
+import { Link2, Plus, Trash2 } from 'lucide-react';
 import FormField from '../../components/ui/FormField';
 import EmptyState from '../../components/ui/EmptyState';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
@@ -13,6 +13,7 @@ import {
   useConvertEstimateToPlan,
   usePurchaseEstimate,
   useRejectEstimateApproval,
+  useShareEstimateLink,
   useSubmitEstimateApproval,
   useUpdatePurchaseEstimate,
 } from '../../hooks/usePurchaseEstimates';
@@ -49,6 +50,7 @@ export default function PurchaseEstimateDetailPage() {
   const canEdit = has('purchasing.estimates.update');
   const canApproveL1 = has('purchasing.estimates.approve_l1');
   const canConvert = has('purchasing.plans.create');
+  const canShare = has('purchasing.estimates.view') || has('purchasing.estimates.update');
   const [viewVersion, setViewVersion] = useState<number | undefined>(undefined);
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState('');
@@ -61,6 +63,7 @@ export default function PurchaseEstimateDetailPage() {
   const approveL1Mutation = useApproveEstimateL1();
   const rejectMutation = useRejectEstimateApproval();
   const convertMutation = useConvertEstimateToPlan();
+  const shareMutation = useShareEstimateLink();
   const { data: materialsPage } = useMaterials({ page: 1, pageSize: 500 });
   const materials = materialsPage?.items ?? [];
   const row = detail.data;
@@ -99,8 +102,8 @@ export default function PurchaseEstimateDetailPage() {
       showToast('error', 'Giữ ít nhất một dòng vật tư.');
       return;
     }
-    if (lines.some(l => l.newQty <= 0)) {
-      showToast('error', 'Số lượng mỗi dòng phải lớn hơn 0.');
+    if (lines.some(l => l.newQty <= 0 || l.estimateUnitPrice <= 0)) {
+      showToast('error', 'Mỗi dòng phải có số lượng và giá dự toán lớn hơn 0.');
       return;
     }
     try {
@@ -117,10 +120,15 @@ export default function PurchaseEstimateDetailPage() {
   };
 
   const runSubmit = async () => {
-    if (!id) return;
+    if (!id || !row) return;
+    const incomplete = row.lines.some(l => Number(l.newQty) <= 0 || Number(l.estimateUnitPrice) <= 0);
+    if (row.lines.length === 0 || incomplete) {
+      showToast('error', 'Mỗi dòng phải có số lượng và giá dự toán lớn hơn 0. Bấm Sửa dòng vật tư để bổ sung.');
+      return;
+    }
     try {
       await submitMutation.mutateAsync(id);
-      showToast('success', 'Đã gửi duyệt (Trưởng bộ phận CSKH).');
+      showToast('success', 'Đã gửi duyệt (Trưởng dự án).');
     } catch (err) {
       showToast('error', getApiErrorMessage(err, 'Không gửi duyệt được.'));
     }
@@ -159,29 +167,53 @@ export default function PurchaseEstimateDetailPage() {
     }
   };
 
+  const runShareLink = async () => {
+    if (!id) return;
+    try {
+      const link = await shareMutation.mutateAsync(id);
+      const url = `${window.location.origin}${link.path}`;
+      await navigator.clipboard.writeText(url);
+      showToast('success', 'Đã copy link xem Ver mới nhất.');
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không lấy được link xem.'));
+    }
+  };
+
   const meta = useMemo(() => {
     if (!row) return '';
     return `Tạo ${formatDateTimeVi(row.createdAt)} · ${row.createdByName} · Sửa ${formatDateTimeVi(row.updatedAt)} · ${row.updatedByName}`;
   }, [row]);
 
-  const canDecideCurrent = Boolean(nextApproval && canApproveL1);
+  const canDecideCurrent = Boolean(nextApproval && canApproveL1 && viewingLatest);
 
   const busy = updateMutation.isPending
     || submitMutation.isPending
     || approveL1Mutation.isPending
     || rejectMutation.isPending
-    || convertMutation.isPending;
+    || convertMutation.isPending
+    || shareMutation.isPending;
 
   const back = () => navigate('/purchasing/estimate-procurement?tab=estimates');
 
   return (
-    <div className="page-shell space-y-3">
+    <div className="page-shell space-y-3 pur-estimate-detail">
       <HrmDetailHeader
         onBack={back}
         title={row ? `${row.code} · ${row.title}` : 'Dự toán'}
         subtitle={row ? `${row.projectCode} · ${meta}` : 'Mua hàng dự toán'}
         actions={(
           <div className="flex flex-wrap gap-2 justify-end">
+            {canShare && viewingLatest && !editing ? (
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                disabled={busy}
+                onClick={() => void runShareLink()}
+              >
+                <Link2 size={14} aria-hidden />
+                Lấy link xem
+              </button>
+            ) : null}
             {canEdit && viewingLatest && !editing && canEditEstimate(row?.status) ? (
               <button type="button" className="btn btn-outline btn-sm" onClick={startEdit}>
                 Sửa dòng vật tư
@@ -192,7 +224,7 @@ export default function PurchaseEstimateDetailPage() {
                 Gửi duyệt
               </button>
             ) : null}
-            {canConvert && row?.status === 'approved' && !row.convertedPlanCode ? (
+            {canConvert && viewingLatest && row?.status === 'approved' && !row.convertedPlanCode ? (
               <button type="button" className="btn btn-primary btn-sm" disabled={busy} onClick={() => void runConvert()}>
                 Tạo kế hoạch mua hàng
               </button>
@@ -226,10 +258,10 @@ export default function PurchaseEstimateDetailPage() {
 
           <div className="flex flex-col gap-3 lg:flex-row lg:items-start">
             <aside
-              className="w-full shrink-0 rounded-[var(--radius-md)] border border-[var(--md-outline-variant)] bg-[var(--md-surface)] lg:w-56"
+              className="pur-estimate-detail__versions w-full shrink-0 rounded-[var(--radius-md)] bg-[var(--md-surface)] lg:w-56"
               aria-label="Lịch sử version"
             >
-              <div className="border-b border-[var(--md-outline-variant)] px-3 py-2 text-[length:var(--fs-xs)] font-semibold uppercase tracking-wide text-[var(--md-on-surface-variant)]">
+              <div className="pur-estimate-detail__versions-head px-3 py-2 text-[length:var(--fs-xs)] font-semibold uppercase tracking-wide text-[var(--md-on-surface-variant)]">
                 Lịch sử version
               </div>
               <div className="flex max-h-[28rem] flex-col gap-2 overflow-y-auto p-2">
@@ -246,13 +278,12 @@ export default function PurchaseEstimateDetailPage() {
                         disabled={editing}
                         onClick={() => setViewVersion(isLatest ? undefined : v.versionNumber)}
                         className={[
-                          'w-full rounded-[var(--radius-sm)] border px-2.5 py-2 text-left transition-[background-color,border-color,transform] duration-150',
+                          'pur-estimate-detail__ver',
+                          'w-full rounded-[var(--radius-sm)] px-2.5 py-2 text-left transition-[background-color,border-color,transform] duration-150',
                           'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--md-primary)]',
                           'disabled:cursor-not-allowed disabled:opacity-60',
                           'active:scale-[0.97]',
-                          selected
-                            ? 'border-[var(--md-primary)] bg-[var(--tint-primary-weak)]'
-                            : 'border-[var(--md-outline-variant)] bg-[var(--md-surface)] hover:bg-[var(--tint-primary-weak)]',
+                          selected ? 'is-selected' : '',
                         ].join(' ')}
                       >
                         <div className="flex items-center justify-between gap-2">
@@ -314,7 +345,7 @@ export default function PurchaseEstimateDetailPage() {
                         disabled={updateMutation.isPending}
                         onClick={() => void save()}
                       >
-                        {updateMutation.isPending ? 'Đang lưu…' : `Lưu Ver ${latest + 1}`}
+                        {updateMutation.isPending ? 'Đang lưu…' : 'Lưu chỉnh sửa'}
                       </button>
                     </div>
                   </div>
@@ -360,9 +391,25 @@ export default function PurchaseEstimateDetailPage() {
                                 type="button"
                                 className="icon-btn icon-btn--danger"
                                 aria-label={`Xóa dòng ${index + 1}`}
-                                onClick={() => setDraftLines(prev => (prev.length <= 1
-                                  ? [{ key: String(Date.now()), materialCode: '', newQty: '', estimateUnitPrice: '' }]
-                                  : prev.filter(l => l.key !== line.key)))}
+                                onMouseDown={e => e.preventDefault()}
+                                onClick={e => {
+                                  /* blur trước khi unmount — tránh browser kéo scroll theo focus */
+                                  (e.currentTarget as HTMLButtonElement).blur();
+                                  const y = window.scrollY;
+                                  setDraftLines(prev => {
+                                    if (prev.length <= 1) {
+                                      return prev.map(l => (
+                                        l.key === line.key
+                                          ? { ...l, materialCode: '', newQty: '', estimateUnitPrice: '' }
+                                          : l
+                                      ));
+                                    }
+                                    return prev.filter(l => l.key !== line.key);
+                                  });
+                                  requestAnimationFrame(() => {
+                                    if (window.scrollY !== y) window.scrollTo(0, y);
+                                  });
+                                }}
                               >
                                 <Trash2 size={16} aria-hidden />
                               </button>
@@ -436,11 +483,11 @@ export default function PurchaseEstimateDetailPage() {
 
                   {row.approvals.length > 0 ? (
                     <div className="space-y-2">
-                      <div className="text-[length:var(--fs-sm)] font-medium">Luồng duyệt</div>
                       <div className="wms-inventory-table-wrap">
                         <table className="wms-inventory-table">
                           <thead>
                             <tr>
+                              <th className="table-header-cell">Cấp duyệt</th>
                               <th className="table-header-cell">Người duyệt</th>
                               <th className="table-header-cell">Trạng thái</th>
                               <th className="table-header-cell">Thời điểm</th>
@@ -450,7 +497,10 @@ export default function PurchaseEstimateDetailPage() {
                           <tbody>
                             {row.approvals.map(a => (
                               <tr key={a.id} className="table-row">
-                                <td className="table-cell">{a.name}{a.actionByName ? ` · ${a.actionByName}` : ''}</td>
+                                <td className="table-cell">{a.name}</td>
+                                <td className="table-cell font-medium">
+                                  {a.actionByName?.trim() || '-'}
+                                </td>
                                 <td className="table-cell">
                                   <span className={`badge ${a.status === 'approved' ? 'badge-success' : a.status === 'rejected' ? 'badge-error' : 'badge-pending'}`}>
                                     {a.status === 'approved' ? 'Đã duyệt' : a.status === 'rejected' ? 'Từ chối' : 'Chờ duyệt'}
@@ -464,21 +514,40 @@ export default function PurchaseEstimateDetailPage() {
                         </table>
                       </div>
                       {canDecideCurrent && row.status === 'pending_approval' && nextApproval ? (
-                        <div className="flex flex-wrap gap-2 items-end">
-                          <FormField label={`Ý kiến (${nextApproval.name})`}>
-                            <input
+                        <div className="pur-estimate-decide" aria-label="Quyết định duyệt">
+                          <div className="pur-estimate-decide__head">
+                            <h3 className="pur-estimate-decide__title">Quyết định duyệt</h3>
+                            <p className="pur-estimate-decide__hint">
+                              {nextApproval.name} · Ver {latest}
+                            </p>
+                          </div>
+                          <FormField label="Ý kiến (tuỳ chọn)">
+                            <textarea
                               className="form-input"
+                              rows={3}
                               value={decideNote}
                               onChange={e => setDecideNote(e.target.value)}
-                              placeholder="Ghi chú (tuỳ chọn)"
+                              placeholder="Nhập ý kiến duyệt…"
                             />
                           </FormField>
-                          <button type="button" className="btn btn-primary btn-sm" disabled={busy} onClick={() => void runApprove()}>
-                            Duyệt
-                          </button>
-                          <button type="button" className="btn btn-outline btn-sm" disabled={busy} onClick={() => void runReject()}>
-                            Từ chối
-                          </button>
+                          <div className="pur-estimate-decide__actions">
+                            <button
+                              type="button"
+                              className="btn btn-outline btn-sm"
+                              disabled={busy}
+                              onClick={() => void runReject()}
+                            >
+                              Từ chối
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-primary btn-sm"
+                              disabled={busy}
+                              onClick={() => void runApprove()}
+                            >
+                              Duyệt
+                            </button>
+                          </div>
                         </div>
                       ) : null}
                     </div>

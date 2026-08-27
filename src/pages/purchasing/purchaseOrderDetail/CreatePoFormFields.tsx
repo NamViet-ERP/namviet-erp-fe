@@ -1,5 +1,6 @@
 import FormField from '../../../components/ui/FormField';
 import { Link } from 'react-router-dom';
+import PlanAutocomplete from '../../../components/purchasing/PlanAutocomplete';
 import { formatDateCell } from '../../../lib/hrm/formatters';
 import { getApiErrorMessage } from '../../../lib/apiClient';
 import { formatCurrencyFull } from '../../../utils/formatCurrency';
@@ -65,22 +66,15 @@ export function CreatePoFormFields({
           </select>
         </FormField>
         <FormField label={`Mã ${sourceLabel}`} required>
-          <select
-            className="form-input form-input-md"
+          <PlanAutocomplete
             value={planCode}
+            onChange={onSelectPlan}
+            plans={plans}
             disabled={plansLoading}
-            onChange={e => onSelectPlan(e.target.value)}
-            aria-label={`Mã ${sourceLabel}`}
-          >
-            <option value="">
-              {plansLoading ? 'Đang tải…' : `Chọn ${sourceLabel} đã duyệt`}
-            </option>
-            {plans.map(p => (
-              <option key={p.code} value={p.code}>
-                {p.code} — {p.projectCode}
-              </option>
-            ))}
-          </select>
+            placeholder={plansLoading ? 'Đang tải…' : `Tìm ${sourceLabel} còn đặt được…`}
+            ariaLabel={`Mã ${sourceLabel}`}
+            emptyMessage={`Không có ${sourceLabel} khớp.`}
+          />
         </FormField>
         <FormField label={`Nhà cung cấp (theo ${sourceLabel})`} required>
           <select
@@ -90,7 +84,13 @@ export function CreatePoFormFields({
             onChange={e => onSelectSupplier(e.target.value)}
             aria-label={`Nhà cung cấp theo ${sourceLabel}`}
           >
-            <option value="">{!planCode ? `Chọn ${sourceLabel} trước` : 'Chọn NCC'}</option>
+            <option value="">
+              {!planCode
+                ? `Chọn ${sourceLabel} trước`
+                : suppliers.length === 0
+                  ? 'Không còn NCC khả dụng'
+                  : 'Chọn NCC'}
+            </option>
             {suppliers.map(s => (
               <option key={s} value={s}>{s}</option>
             ))}
@@ -116,6 +116,11 @@ export function CreatePoFormFields({
       {planError ? (
         <p role="alert" className="pur-detail__alert">
           {getApiErrorMessage(planErr, `Không tải được chi tiết ${sourceLabel}.`)}
+        </p>
+      ) : null}
+      {planCode && !planLoading && !planError && suppliers.length === 0 ? (
+        <p role="status" className="pur-detail__muted">
+          {sourceLabel} này không còn NCC nào có SL đặt được. Đóng kế hoạch trên danh sách KHMH nếu đã hoàn tất.
         </p>
       ) : null}
       {supplierName && !matchedSupplier ? (

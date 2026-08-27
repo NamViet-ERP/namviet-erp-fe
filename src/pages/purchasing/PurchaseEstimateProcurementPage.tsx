@@ -201,8 +201,8 @@ export default function PurchaseEstimateProcurementPage() {
       showToast('error', 'Thêm ít nhất một vật tư.');
       return;
     }
-    if (lines.some(l => l.newQty <= 0)) {
-      showToast('error', 'Số lượng mỗi dòng phải lớn hơn 0.');
+    if (lines.some(l => l.newQty <= 0 || l.estimateUnitPrice <= 0)) {
+      showToast('error', 'Mỗi dòng phải có số lượng và giá dự toán lớn hơn 0.');
       return;
     }
     try {
@@ -311,7 +311,7 @@ export default function PurchaseEstimateProcurementPage() {
             </div>
           </div>
           <p className="mb-3 px-4 text-[length:var(--fs-sm)] text-[var(--md-on-surface-variant)]">
-            Chọn dự án → thêm vật tư, số lượng, giá dự toán → Gửi duyệt → Trưởng bộ phận CSKH duyệt → tạo Kế hoạch mua hàng.
+            Chọn dự án → thêm vật tư, số lượng, giá dự toán → Gửi duyệt → Trưởng dự án duyệt → tạo Kế hoạch mua hàng.
           </p>
           <div className="wms-inventory-table-wrap">
             <table className="wms-inventory-table">
@@ -496,7 +496,18 @@ export default function PurchaseEstimateProcurementPage() {
                             type="button"
                             className="icon-btn icon-btn--danger"
                             aria-label={`Xóa dòng ${index + 1}`}
-                            onClick={() => setCreateLines(prev => (prev.length <= 1 ? [emptyLine()] : prev.filter(l => l.key !== line.key)))}
+                            onMouseDown={e => e.preventDefault()}
+                            onClick={e => {
+                              (e.currentTarget as HTMLButtonElement).blur();
+                              setCreateLines(prev => {
+                                if (prev.length <= 1) {
+                                  return prev.map(l => (
+                                    l.key === line.key ? { ...l, materialCode: '', qty: '', price: '' } : l
+                                  ));
+                                }
+                                return prev.filter(l => l.key !== line.key);
+                              });
+                            }}
                           >
                             <Trash2 size={16} aria-hidden />
                           </button>

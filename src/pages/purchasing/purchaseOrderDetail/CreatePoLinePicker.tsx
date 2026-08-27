@@ -68,14 +68,14 @@ export function CreatePoLinePicker({
       ) : planLoading ? (
         <table className="pur-erp__table"><tbody><TableSkeletonRows rows={5} colSpan={4} /></tbody></table>
       ) : !supplierName ? (
-        <EmptyState message="Chọn nhà cung cấp. Đổi NCC sẽ xóa lựa chọn dòng hiện tại." />
+        <EmptyState message="Chọn nhà cung cấp còn SL đặt được trên kế hoạch này." />
       ) : supplierLines.length === 0 ? (
-        <EmptyState message="Không còn dòng hàng khả dụng cho NCC này." />
+        <EmptyState message="NCC này không còn SL đặt trên KHMH (đã tạo PO hết hoặc không gắn dòng)." />
       ) : visibleSupplierLines.length === 0 ? (
         <EmptyState message="Không có mặt hàng khớp tìm kiếm." />
       ) : (
         <div className="pur-detail__table-wrap overflow-x-auto table-scroll">
-          <table className="pur-erp__table">
+          <table className="pur-erp__table pur-create-po-lines">
             <thead>
               <tr>
                 <th className="pur-erp__th-check">
@@ -95,10 +95,20 @@ export function CreatePoLinePicker({
                 <th>Quy cách</th>
                 <th>ĐVT</th>
                 <th className="pur-erp__th-num">Còn lại</th>
-                <th className="pur-erp__th-num">SL đặt</th>
-                <th className="pur-erp__th-num">Đơn giá</th>
-                <th className="pur-erp__th-num">Tháng BH</th>
-                <th>Mốc BH</th>
+                <th className="pur-erp__th-num pur-create-po-lines__col-qty">SL đặt</th>
+                <th className="pur-erp__th-num pur-create-po-lines__col-price">Đơn giá</th>
+                <th
+                  className="pur-erp__th-num pur-create-po-lines__col-warranty"
+                  title="Số tháng bảo hành"
+                >
+                  Tháng BH
+                </th>
+                <th
+                  className="pur-create-po-lines__col-anchor"
+                  title="Thời điểm bắt đầu tính bảo hành: giao hàng hoặc nghiệm thu"
+                >
+                  Mốc BH
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -114,29 +124,37 @@ export function CreatePoLinePicker({
                         aria-label={`Chọn ${line.productName}`}
                       />
                     </td>
-                    <td>{line.systemName || '—'}</td>
-                    <td>{line.category || '—'}</td>
+                    <td>{line.systemName || '-'}</td>
+                    <td>{line.category || '-'}</td>
                     <td>{line.productName}</td>
-                    <td>{line.spec || '—'}</td>
-                    <td>{line.unit || '—'}</td>
+                    <td>{line.spec || '-'}</td>
+                    <td>{line.unit || '-'}</td>
                     <td className="pur-erp__td-num">{line.remainingOrderableQty}</td>
-                    <td className="pur-erp__td-num">
+                    <td className="pur-erp__td-num pur-create-po-lines__col-qty">
                       <input
-                        className="pur-erp__planing-input"
+                        className="form-input form-input-sm pur-create-po-lines__input-num"
+                        type="number"
                         inputMode="decimal"
+                        min={0}
+                        max={line.remainingOrderableQty}
+                        step="any"
                         disabled={!checked}
                         value={qtyByLine[line.id] ?? ''}
                         onChange={e => onQtyChange(prev => ({ ...prev, [line.id]: e.target.value }))}
                         aria-label={`Số lượng đặt ${line.productName}`}
                       />
                     </td>
-                    <td className="pur-erp__td-num">{formatCurrency(unitPriceOf(line))}</td>
-                    <td className="pur-erp__td-num">
+                    <td className="pur-erp__td-num pur-create-po-lines__col-price">
+                      {formatCurrency(unitPriceOf(line))} (VNĐ)
+                    </td>
+                    <td className="pur-erp__td-num pur-create-po-lines__col-warranty">
                       <input
-                        className="pur-erp__planing-input"
+                        className="form-input form-input-sm pur-create-po-lines__input-warranty"
                         type="number"
+                        inputMode="numeric"
                         min={0}
                         max={120}
+                        step={1}
                         disabled={!checked}
                         value={warrantyMonthsByLine[line.id] ?? '0'}
                         onChange={e => onWarrantyMonthsChange(prev => ({
@@ -146,9 +164,9 @@ export function CreatePoLinePicker({
                         aria-label={`Tháng bảo hành ${line.productName}`}
                       />
                     </td>
-                    <td>
+                    <td className="pur-create-po-lines__col-anchor">
                       <select
-                        className="form-input form-input-sm"
+                        className="form-input form-input-sm pur-create-po-lines__select-anchor"
                         disabled={!checked}
                         value={warrantyAnchorByLine[line.id] ?? 'delivery'}
                         onChange={e => onWarrantyAnchorChange(prev => ({
@@ -156,6 +174,7 @@ export function CreatePoLinePicker({
                           [line.id]: e.target.value,
                         }))}
                         aria-label={`Mốc bảo hành ${line.productName}`}
+                        title="Thời điểm bắt đầu tính bảo hành"
                       >
                         <option value="delivery">Giao hàng</option>
                         <option value="acceptance">Nghiệm thu</option>

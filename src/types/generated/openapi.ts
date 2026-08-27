@@ -8701,6 +8701,7 @@ export interface paths {
                     dateFrom?: string;
                     dateTo?: string;
                     kind?: string;
+                    orderableOnly?: boolean;
                 };
                 header?: never;
                 path?: never;
@@ -13588,8 +13589,23 @@ export interface components {
             /** Format: int32 */
             approverId?: number | null;
         };
+        ApproveImportLineSettlementRequest: {
+            /** Format: int32 */
+            lineId: number;
+            /** Format: double */
+            acceptedQty: number;
+            /** Format: double */
+            defectQty: number;
+            /** Format: double */
+            shortageQty: number;
+            defectLineReason?: string | null;
+            shortageLineReason?: string | null;
+        };
         ApproveImportRequest: {
             confirmOverBudget: boolean;
+            lines?: components["schemas"]["ApproveImportLineSettlementRequest"][] | null;
+            shortageReport?: string | null;
+            defectReason?: string | null;
         };
         ApproveLeaveRequest: {
             approve: boolean;
@@ -14470,6 +14486,8 @@ export interface components {
             planCode?: string | null;
             receiptEvaluation?: string | null;
             attachments?: components["schemas"]["ImportAttachmentDto"][] | null;
+            shortageReport?: string | null;
+            linkedDefectTicketCode?: string | null;
         };
         ImportItemDto: {
             productId: string;
@@ -14484,6 +14502,18 @@ export interface components {
             /** Format: int32 */
             supplierId?: number | null;
             notes?: string | null;
+            /** Format: int32 */
+            lineId?: number | null;
+            /** Format: double */
+            plannedQty?: number | null;
+            /** Format: double */
+            acceptedQty?: number | null;
+            /** Format: double */
+            defectQty?: number | null;
+            /** Format: double */
+            shortageQty?: number | null;
+            defectLineReason?: string | null;
+            shortageLineReason?: string | null;
         };
         ImportParseErrorDto: {
             /** Format: int32 */
@@ -15110,6 +15140,7 @@ export interface components {
             processedAt?: string | null;
             items: components["schemas"]["PurchaseDefectItemDto"][];
             attachments: components["schemas"]["PurchaseDefectAttachmentDto"][];
+            importTicketCode?: string | null;
         };
         PurchaseDefectItemDto: {
             /** Format: int32 */

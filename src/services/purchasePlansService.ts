@@ -25,6 +25,8 @@ export interface PurchasePlanListParams {
   dateFrom?: string;
   dateTo?: string;
   kind?: PurchasePlanKind | string;
+  /** Chỉ phiếu còn ít nhất 1 dòng Quantity > OrderedQty. */
+  orderableOnly?: boolean;
 }
 
 export const purchasePlansService = {
@@ -39,6 +41,7 @@ export const purchasePlansService = {
       dateFrom: params.dateFrom,
       dateTo: params.dateTo,
       kind: params.kind,
+      orderableOnly: params.orderableOnly === true ? true : undefined,
     });
   },
 

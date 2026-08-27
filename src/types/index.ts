@@ -110,12 +110,21 @@ export interface ImportItem {
   supplierId?: number;
   /** Ghi chú dòng — giữ khi sửa (vd. poItem:{id} từ PO) */
   notes?: string | null;
+  /** Id dòng warehouse_transaction_items — dùng khi kiểm nhận duyệt */
+  lineId?: number;
+  /** SL dự kiến (trước duyệt). Sau duyệt qty = đạt. */
+  plannedQty?: number;
+  acceptedQty?: number | null;
+  defectQty?: number | null;
+  shortageQty?: number | null;
+  defectLineReason?: string | null;
+  shortageLineReason?: string | null;
   [key: string]: unknown;
 }
 
 export interface ImportAttachment {
   id: string;
-  kind: 'document' | 'photo' | string;
+  kind: 'document' | 'photo' | 'defect_photo' | string;
   fileName: string;
   storageKey: string;
   uploadedAt: string;
@@ -143,12 +152,13 @@ export interface Import {
   isDirectProcurement?: boolean;
   /** Dự án thụ hưởng khi isDirectProcurement = true */
   project?: string;
-  /** Mã KHMH khi NK tạo từ PO */
   planCode?: string | null;
-  /** Đánh giá nhận hàng (bắt buộc lúc duyệt kho) */
   receiptEvaluation?: string | null;
-  /** Chứng từ + ảnh nhận hàng đã upload */
   attachments?: ImportAttachment[];
+  /** Báo cáo thiếu hàng khi duyệt có ShortageQty */
+  shortageReport?: string | null;
+  /** HL tạo từ kiểm nhận */
+  linkedDefectTicketCode?: string | null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

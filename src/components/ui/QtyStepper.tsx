@@ -6,6 +6,7 @@ interface QtyStepperProps {
   onRequestAboveMax?: () => void;
   className?: string;
   ariaLabel?: string;
+  disabled?: boolean;
 }
 
 export default function QtyStepper({
@@ -16,10 +17,12 @@ export default function QtyStepper({
   onRequestAboveMax,
   className = '',
   ariaLabel = 'Số lượng',
+  disabled = false,
 }: QtyStepperProps) {
   const n = Number(value) || 0;
 
   const applyValue = (raw: number) => {
+    if (disabled) return;
     let next = Math.max(min, raw);
     if (max !== undefined && next > max) {
       const overflow = next - max;
@@ -32,6 +35,7 @@ export default function QtyStepper({
   };
 
   const bump = (delta: number) => {
+    if (disabled) return;
     if (delta > 0 && max !== undefined && n >= max) {
       onRequestAboveMax?.();
       return;
@@ -46,7 +50,7 @@ export default function QtyStepper({
         className="qty-stepper__btn"
         aria-label="Giảm số lượng"
         onClick={() => bump(-1)}
-        disabled={n <= min}
+        disabled={disabled || n <= min}
       >
         −
       </button>
@@ -58,6 +62,7 @@ export default function QtyStepper({
         inputMode="numeric"
         className="qty-stepper__input"
         value={value}
+        disabled={disabled}
         onChange={e => applyValue(Number(e.target.value) || 0)}
       />
       <button
@@ -65,7 +70,7 @@ export default function QtyStepper({
         className="qty-stepper__btn"
         aria-label="Tăng số lượng"
         onClick={() => bump(1)}
-        disabled={max !== undefined && n >= max}
+        disabled={disabled || (max !== undefined && n >= max)}
       >
         +
       </button>

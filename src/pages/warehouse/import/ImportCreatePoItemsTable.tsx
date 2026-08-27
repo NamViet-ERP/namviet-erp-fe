@@ -13,6 +13,7 @@ export interface ImportCreatePoItemsTableProps {
   isPending: boolean;
   formGrandTotal: number;
   onSetPoLine: (poItemId: number, patch: Partial<PoLineDraft>) => void;
+  onToggleSelectAll: (checked: boolean) => void;
   /** Khi thủ kho duyệt: cột SL đổi nhãn thành thực nhận */
   qtyColumnLabel?: string;
 }
@@ -25,15 +26,33 @@ export default function ImportCreatePoItemsTable({
   isPending,
   formGrandTotal,
   onSetPoLine,
+  onToggleSelectAll,
   qtyColumnLabel = 'SL dự kiến',
 }: ImportCreatePoItemsTableProps) {
   const colCount = canViewPrices ? 10 : 8;
+  const selectableLines = poPreviewLines.filter(line => line.available > 0);
+  const allSelected = selectableLines.length > 0
+    && selectableLines.every(line => poLineDrafts[line.poItemId]?.selected);
+  const someSelected = selectableLines.some(line => poLineDrafts[line.poItemId]?.selected)
+    && !allSelected;
+
   return (
     <div className="overflow-x-auto table-scroll">
       <table className="form-table import-items-table import-items-table--po-select import-items-table--po-import text-xs">
         <thead>
           <tr>
-            <th className="table-header-cell w-10 text-center" />
+            <th className="table-header-cell w-10 text-center">
+              <input
+                type="checkbox"
+                checked={allSelected}
+                disabled={selectableLines.length === 0 || isPending}
+                ref={el => {
+                  if (el) el.indeterminate = someSelected;
+                }}
+                onChange={e => onToggleSelectAll(e.target.checked)}
+                aria-label="Chọn tất cả mặt hàng"
+              />
+            </th>
             <th className="table-header-cell text-center">Mặt hàng</th>
             <th className="table-header-cell text-center">Đặt</th>
             <th className="table-header-cell text-center import-po-col-unit">ĐVT</th>
@@ -72,14 +91,14 @@ export default function ImportCreatePoItemsTable({
                     />
                   </td>
                   <td className="table-cell">
-                    <div className="font-medium text-[var(--md-on-surface)] leading-snug">{line.name}</div>
-                    <div className="mt-0.5 text-[var(--md-on-surface-variant)] leading-snug">
-                      {line.materialCode?.trim() || '—'}
+                    <div className="import-line-item__name">{line.name}</div>
+                    <div className="import-line-item__code">
+                      {line.materialCode?.trim() || '-'}
                     </div>
                   </td>
                   <td className="table-cell text-center tabular-nums">{line.ordered}</td>
                   <td className="table-cell text-center import-po-col-unit">
-                    {line.unit?.trim() || '—'}
+                    {line.unit?.trim() || '-'}
                   </td>
                   <td className="table-cell text-center tabular-nums">{line.received}</td>
                   <td className="table-cell text-center tabular-nums">{line.reservedPending}</td>
@@ -90,7 +109,7 @@ export default function ImportCreatePoItemsTable({
                   <td className="table-cell text-center import-po-col-qty">
                     {disabled || !draft.selected ? (
                       <div className="import-cell-placeholder import-cell-placeholder--center text-[var(--md-on-surface-variant)]">
-                        —
+                        -
                       </div>
                     ) : (
                       <div className="import-cell-placeholder import-cell-placeholder--center">
@@ -105,7 +124,7 @@ export default function ImportCreatePoItemsTable({
                   </td>
                   {canViewPrices && (
                     <td className="table-cell text-center tabular-nums font-semibold text-[var(--md-on-surface)] import-po-col-amount">
-                      {lineTotal > 0 ? formatCurrencyFull(lineTotal) : '—'}
+                      {lineTotal > 0 ? formatCurrencyFull(lineTotal) : '-'}
                     </td>
                   )}
                 </tr>

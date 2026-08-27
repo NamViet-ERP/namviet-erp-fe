@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { NAMVIET_GROUP_LOGO_URL } from '../../constants/branding';
 import {
   Settings, BarChart3, Bell, ChevronDown,
-  User, LogOut, X, PackagePlus, PackageMinus, ArrowLeftRight, ClipboardCheck,
+  User, LogOut, X, PackagePlus, PackageMinus, ArrowLeftRight, ClipboardCheck, FileSpreadsheet,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -18,12 +18,13 @@ import { isOwnWmsBellToastSuppressed } from '../../lib/wms/ownWmsBellToast';
 import type { WmsNotificationItemApiDto } from '../../services/notificationsService';
 
 type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin' | 'technical' | 'cskh' | 'purchasing' | 'suppliers' | 'operations';
-type NotifType = 'warning' | 'import' | 'export' | 'info' | 'transfer' | 'stocktake';
+type NotifType = 'warning' | 'import' | 'export' | 'info' | 'transfer' | 'stocktake' | 'estimate';
 
 const NOTIF_READ_KEY = 'nv-wms-notif-read';
 const BELL_TOAST_MS = 4000;
 
 type BellToast = {
+  kind: 'import' | 'estimate';
   title: string;
   voucherCode: string;
   extraCount: number;
@@ -46,7 +47,9 @@ function persistNotifRead(id: string) {
 }
 
 function mapNotifType(kind: string): NotifType {
-  if (kind === 'import' || kind === 'export' || kind === 'transfer' || kind === 'stocktake') return kind;
+  if (kind === 'import' || kind === 'export' || kind === 'transfer' || kind === 'stocktake' || kind === 'estimate') {
+    return kind;
+  }
   return 'info';
 }
 
@@ -55,6 +58,7 @@ function mapNotifIcon(kind: string): LucideIcon {
   if (kind === 'export') return PackageMinus;
   if (kind === 'transfer') return ArrowLeftRight;
   if (kind === 'stocktake') return ClipboardCheck;
+  if (kind === 'estimate') return FileSpreadsheet;
   return Bell;
 }
 
@@ -110,6 +114,7 @@ const notifIconClass: Record<NotifType, string> = {
   info: 'notif-icon--info',
   transfer: 'notif-icon--info',
   stocktake: 'notif-icon--warning',
+  estimate: 'notif-icon--warning',
 };
 
 /* ── Shared Icon Button ── */
@@ -191,23 +196,41 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
 
   useEffect(() => {
     if (!pendingNotifications) return;
-    const importItems = pendingNotifications.items.filter(item => item.kind === 'import');
-    const ids = importItems.map(item => item.id);
+    const pendingItems = pendingNotifications.items.filter(
+      item => item.kind === 'import' || item.kind === 'estimate',
+    );
+    const ids = pendingItems.map(item => item.id);
     if (seenImportIdsRef.current === null) {
       seenImportIdsRef.current = new Set(ids);
       return;
     }
-    const fresh = importItems.filter(item => !seenImportIdsRef.current!.has(item.id));
+    const fresh = pendingItems.filter(item => !seenImportIdsRef.current!.has(item.id));
     ids.forEach(id => seenImportIdsRef.current!.add(id));
     const toAnnounce = fresh.filter(item => !isOwnWmsBellToastSuppressed(item.voucherCode));
     if (toAnnounce.length === 0 || showNotificationsRef.current) return;
-    const first = toAnnounce[0];
+    const estimateFresh = toAnnounce.filter(item => item.kind === 'estimate');
+    const importFresh = toAnnounce.filter(item => item.kind === 'import');
+    if (estimateFresh.length > 0) {
+      const first = estimateFresh[0];
+      setBellToast({
+        kind: 'estimate',
+        title: estimateFresh.length === 1
+          ? '1 dự toán chờ duyệt'
+          : `${estimateFresh.length} dự toán chờ duyệt`,
+        voucherCode: first.voucherCode || '',
+        extraCount: Math.max(0, estimateFresh.length - 1),
+      });
+      return;
+    }
+    if (importFresh.length === 0) return;
+    const first = importFresh[0];
     setBellToast({
-      title: toAnnounce.length === 1
+      kind: 'import',
+      title: importFresh.length === 1
         ? '1 phiếu nhập kho được tạo'
-        : `${toAnnounce.length} phiếu nhập kho được tạo`,
+        : `${importFresh.length} phiếu nhập kho được tạo`,
       voucherCode: first.voucherCode || '',
-      extraCount: Math.max(0, toAnnounce.length - 1),
+      extraCount: Math.max(0, importFresh.length - 1),
     });
   }, [pendingNotifications]);
 
@@ -328,11 +351,18 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
                       setShowUserMenu(false);
                     }}
                   >
-                    <span className="notif-icon notif-icon--import" aria-hidden>
-                      <PackagePlus size={16} />
+                    <span
+                      className={`notif-icon ${bellToast.kind === 'estimate' ? 'notif-icon--warning' : 'notif-icon--import'}`}
+                      aria-hidden
+                    >
+                      {bellToast.kind === 'estimate'
+                        ? <FileSpreadsheet size={16} />
+                        : <PackagePlus size={16} />}
                     </span>
                     <span className="nv-notif-toast__copy">
-                      <span className="nv-notif-toast__kicker">Nhập kho</span>
+                      <span className="nv-notif-toast__kicker">
+                        {bellToast.kind === 'estimate' ? 'Dự toán' : 'Nhập kho'}
+                      </span>
                       <span className="nv-notif-toast__title">{bellToast.title}</span>
                       {(bellToast.voucherCode || bellToast.extraCount > 0) && (
                         <span className="nv-notif-toast__meta">

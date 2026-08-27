@@ -362,12 +362,20 @@
     white-space: nowrap;
   }
 
-  .form-table.import-items-table.import-items-table--defect-select :is(th, td):nth-child(8) {
-    width: 7.5rem;
-    min-width: 7.5rem;
+  .form-table.import-items-table.import-items-table--defect-select {
+    min-width: 56rem;
   }
 
-  .form-table.import-items-table.import-items-table--defect-select :is(th, td):nth-child(9) {
+  .form-table.import-items-table.import-items-table--defect-stock {
+    min-width: 44rem;
+  }
+
+  .form-table.import-items-table.import-items-table--defect-select .defect-col-qty {
+    width: 9rem;
+    min-width: 9rem;
+  }
+
+  .form-table.import-items-table.import-items-table--defect-select .defect-col-reason {
     width: 28%;
     min-width: 14rem;
   }
@@ -386,11 +394,157 @@
     resize: vertical;
   }
 
-  .form-table.import-items-table.import-items-table--defect-select .qty-stepper {
-    max-width: none;
-    width: 6.75rem;
-    margin-left: auto;
-    margin-right: auto;
+  .form-table.import-items-table .import-line-item__name {
+    font-weight: var(--fw-medium);
+    color: var(--md-on-surface);
+    line-height: 1.35;
+  }
+
+  .form-table.import-items-table .import-line-item__code {
+    margin-top: 2px;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-regular);
+    color: var(--md-on-surface-variant);
+    line-height: 1.35;
+  }
+
+  .form-table.import-items-table.import-items-table--manual thead .table-header-cell {
+    text-align: center;
+  }
+
+  .form-table.import-items-table.import-items-table--manual td {
+    vertical-align: middle !important;
+  }
+
+  .form-table.import-items-table.import-items-table--manual .import-manual-col-qty {
+    width: 9rem;
+    min-width: 9rem;
+  }
+
+  .form-table.import-items-table.import-items-table--manual td.import-manual-col-qty {
+    overflow: visible !important;
+  }
+
+  .form-table.import-items-table.import-items-table--manual .import-manual-col-action {
+    width: 2.5rem;
+    min-width: 2.5rem;
+  }
+
+  /* HL detail: ưu tiên Mặt hàng + Lý do; SL/ĐVT gọn */
+  .form-table.import-items-table.import-items-table--defect-detail {
+    min-width: 44rem;
+    width: 100%;
+  }
+
+  .form-table.import-items-table.import-items-table--defect-detail .import-line-item-col {
+    width: 34%;
+    min-width: 12rem;
+  }
+
+  .form-table.import-items-table.import-items-table--defect-detail .import-manual-col-qty {
+    width: 9rem;
+    min-width: 9rem;
+    max-width: 9rem;
+  }
+
+  .form-table.import-items-table.import-items-table--defect-detail .import-po-col-unit {
+    width: 4rem;
+    min-width: 4rem;
+    max-width: 4rem;
+  }
+
+  .form-table.import-items-table.import-items-table--defect-detail .defect-col-reason {
+    width: 36%;
+    min-width: 14rem;
+    white-space: normal;
+    overflow: visible !important;
+    word-break: break-word;
+  }
+
+  .form-table.import-items-table.import-items-table--import-detail {
+    min-width: 32rem;
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  .form-table.import-items-table.import-items-table--import-receive {
+    min-width: 78rem;
+    width: 100%;
+  }
+
+  .form-table.import-items-table.import-items-table--import-receive .import-line-item-col,
+  .form-table.import-items-table.import-items-table--import-detail .import-line-item-col {
+    width: auto;
+    min-width: 12rem;
+  }
+
+  .form-table.import-items-table.import-items-table--import-detail .import-manual-col-qty {
+    width: 4rem;
+    min-width: 4rem;
+    max-width: 4.5rem;
+  }
+
+  .form-table.import-items-table.import-items-table--import-detail .import-po-col-unit {
+    width: 3.5rem;
+    min-width: 3.5rem;
+    max-width: 3.75rem;
+  }
+
+  .form-table.import-items-table.import-items-table--import-detail .import-po-col-amount {
+    width: 7.75rem;
+    min-width: 7.25rem;
+    max-width: 8.5rem;
+    white-space: nowrap;
+  }
+
+  .form-table.import-items-table.import-items-table--import-detail td.import-po-col-amount {
+    overflow: visible !important;
+    white-space: nowrap;
+  }
+
+  .form-table.import-items-table .import-receive-col-qty {
+    width: 9rem;
+    min-width: 9rem;
+    max-width: 9rem;
+  }
+
+  .form-table.import-items-table td.import-receive-col-qty,
+  .form-table.import-items-table td.import-manual-col-qty {
+    overflow: visible !important;
+  }
+
+  /* Căn giữa dọc — tránh số/stepper “bay lên trời” */
+  .form-table.import-items-table.import-items-table--defect-detail td,
+  .form-table.import-items-table.import-items-table--import-detail td,
+  .form-table.import-items-table.import-items-table--import-receive td,
+  .form-table.import-items-table.import-items-table--manual td {
+    vertical-align: middle !important;
+  }
+
+  .form-table.import-items-table.import-items-table--import-receive .import-po-col-unit {
+    width: 3.5rem;
+    min-width: 3.5rem;
+    max-width: 3.75rem;
+  }
+
+  .form-table.import-items-table.import-items-table--import-receive .import-po-col-amount {
+    width: 7.75rem;
+    min-width: 7.25rem;
+    white-space: nowrap;
+  }
+
+  .form-table.import-items-table.import-items-table--import-receive td.import-po-col-amount {
+    overflow: visible !important;
+    white-space: nowrap;
+  }
+
+  .form-table.import-items-table.import-items-table--import-receive .defect-col-reason {
+    width: 14rem;
+    min-width: 12rem;
+    white-space: normal;
+    word-break: break-word;
+    overflow: visible !important;
   }
 
   .defect-create-form__meta {
@@ -786,16 +940,16 @@
     white-space: nowrap !important;
   }
 
-  /* Compact controls inside form-table cells */
+  /* Compact controls inside form-table cells — bold frame = editable */
   .form-table .form-input,
   .form-table .form-select {
     height: 32px !important;
     padding: 0 8px !important;
     font-family: var(--font-sans) !important;
     font-size: var(--fs-xs) !important; /* text-xs */
-    background: var(--md-surface-container-low) !important;
-    border: 1px solid var(--md-outline-variant) !important;
-    border-radius: 4px !important;
+    background: var(--md-surface) !important;
+    border: 1.5px solid var(--md-outline) !important;
+    border-radius: var(--radius-xs) !important;
     width: 100% !important;
     box-sizing: border-box !important;
     color: var(--md-on-surface) !important;
@@ -803,11 +957,16 @@
     transition: border-color 200ms var(--md-easing) !important;
   }
 
+  .form-table .form-input:hover:not(:disabled):not(:read-only),
+  .form-table .form-select:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--nv-steel) 55%, var(--md-outline)) !important;
+  }
+
   .form-table .form-input:focus,
   .form-table .form-select:focus {
     border: 1.5px solid var(--md-primary) !important;
     outline: none !important;
-    box-shadow: 0 0 0 1px var(--md-primary) !important;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--md-primary) 22%, transparent) !important;
     padding-bottom: 0 !important; /* keep height constant */
   }
 
@@ -838,29 +997,33 @@
 
   .form-table .qty-stepper {
     display: inline-flex;
-    align-items: stretch;
+    align-items: center;
     width: 100%;
     max-width: 9rem;
     margin-left: auto;
-    margin-right: 0;
-    vertical-align: top;
-    border: 1px solid var(--md-outline-variant);
+    margin-right: auto;
+    vertical-align: middle;
+    border: 1.5px solid var(--md-outline);
     border-radius: var(--radius-sm);
     overflow: hidden;
     background: var(--md-surface);
+    height: 32px;
+    box-sizing: border-box;
   }
 
   .form-table .qty-stepper__btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 30px;
+    width: 28px;
+    height: 100%;
     flex-shrink: 0;
     border: none;
     background: var(--md-surface-container-low);
     color: var(--md-on-surface);
-    font-size: var(--fs-xl);
+    font-size: var(--fs-lg);
     line-height: 1;
+    padding: 0;
     cursor: pointer;
     transition: background 150ms ease-out;
   }
@@ -876,18 +1039,30 @@
 
   .form-table .qty-stepper__input {
     width: 0;
-    flex: 1;
-    min-width: 3.5rem;
-    height: 32px !important;
+    flex: 1 1 auto;
+    min-width: 2.5rem;
+    height: 100% !important;
     border: none !important;
-    border-left: 1px solid var(--md-outline-variant) !important;
-    border-right: 1px solid var(--md-outline-variant) !important;
+    border-left: 1.5px solid var(--md-outline) !important;
+    border-right: 1.5px solid var(--md-outline) !important;
     border-radius: 0 !important;
     text-align: center !important;
+    font-size: var(--fs-sm) !important;
     font-variant-numeric: tabular-nums;
-    padding: 0 4px !important;
+    line-height: 1 !important;
+    padding: 0 2px !important;
+    margin: 0 !important;
     -moz-appearance: textfield;
     background: var(--md-surface) !important;
+    box-sizing: border-box !important;
+    vertical-align: middle;
+  }
+
+  .form-table .qty-stepper.qty-stepper--compact {
+    max-width: 8.5rem;
+    width: 8.5rem;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .form-table .qty-stepper__input:focus {

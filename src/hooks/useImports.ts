@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { importsService, type CreateImportDto, type UpdateImportDto } from '../services/importsService';
 import type { CreateImportFromPoRequest } from '../types/api/poImportApi';
+import type { ApproveImportRequestApiDto } from '../types/api/importBudgetApi';
 import { queryKeys } from '../services/queryKeys';
 import type { Import } from '../types';
 import type { VoucherListParams } from '../lib/wms/voucherDateUtils';
@@ -102,14 +103,31 @@ export function useUpdateImport() {
 export function useApproveImport() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, confirmOverBudget }: { id: string; confirmOverBudget?: boolean }) =>
-      importsService.approve(id, { confirmOverBudget: confirmOverBudget ?? false }),
+    mutationFn: ({
+      id,
+      confirmOverBudget,
+      lines,
+      shortageReport,
+      defectReason,
+    }: {
+      id: string;
+      confirmOverBudget?: boolean;
+      lines?: ApproveImportRequestApiDto['lines'];
+      shortageReport?: string | null;
+      defectReason?: string | null;
+    }) =>
+      importsService.approve(id, {
+        confirmOverBudget: confirmOverBudget ?? false,
+        lines: lines ?? null,
+        shortageReport: shortageReport ?? null,
+        defectReason: defectReason ?? null,
+      }),
     onSuccess: (data, { id }) => {
       invalidateImportSideEffects(qc, data);
       qc.invalidateQueries({ queryKey: queryKeys.imports.detail(id) });
-      // PO.Received / DeliveryStatus may change when ReferenceCode is a PO code
       qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all });
       qc.invalidateQueries({ queryKey: queryKeys.purchasePlans.all });
+      qc.invalidateQueries({ queryKey: ['warehouse', 'defects'] });
       const ref = data?.referenceCode?.trim();
       if (ref) qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.detail(ref) });
     },

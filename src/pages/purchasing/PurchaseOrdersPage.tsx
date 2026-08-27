@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, Eye, Plus, RefreshCw, Send, Undo2 } from 'lucide-react';
+import { Check, Plus, RefreshCw, Send, Undo2 } from 'lucide-react';
 import EmptyState from '../../components/ui/EmptyState';
 import EntityCodeLink from '../../components/ui/EntityCodeLink';
 import Pagination from '../../components/ui/Pagination';
@@ -57,7 +57,7 @@ const WARNING_OPTIONS = [
   { value: 'false', label: 'Không cảnh báo' },
 ];
 
-const COL_COUNT = 13;
+const COL_COUNT_BASE = 12;
 
 function nameInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -205,7 +205,6 @@ export default function PurchaseOrdersPage() {
   };
 
   const rowActions = (row: (typeof items)[number]): DropdownItem[] => [
-    { label: 'Xem chi tiết', icon: Eye, onClick: () => navigate(`/purchasing/orders/${encodeURIComponent(row.code)}`) },
     ...(canUnapprove && row.approvalStatus === 'approved' && row.orderPlacementStatus !== 'placed'
       ? [{ label: 'Hủy duyệt', icon: Undo2, onClick: () => void handleUnapprove(row.code) }]
       : []),
@@ -213,6 +212,13 @@ export default function PurchaseOrdersPage() {
       ? [{ label: 'Đã đặt NCC', icon: Send, onClick: () => void handlePlace(row.code) }]
       : []),
   ];
+
+  const showActionsCol = items.some(row => rowActions(row).length > 0);
+  const colCount = COL_COUNT_BASE + (showActionsCol ? 1 : 0);
+
+  const openOrder = (code: string) => {
+    navigate(`/purchasing/orders/${encodeURIComponent(code)}`);
+  };
 
   const resetFilters = () => {
     setSupplierName('');
@@ -249,7 +255,7 @@ export default function PurchaseOrdersPage() {
       <th className="pur-erp__th-status">Tình trạng thanh toán</th>
       <th className="pur-erp__th-status">Cảnh báo thanh toán</th>
       <th>Ghi chú</th>
-      <th>Tác vụ</th>
+      {showActionsCol ? <th>Tác vụ</th> : null}
     </tr>
   );
 
@@ -377,7 +383,7 @@ export default function PurchaseOrdersPage() {
               <table className="pur-erp__table pur-erp__table--po">
                 <thead>{tableHead}</thead>
                 <tbody>
-                  <TableSkeletonRows rows={8} colSpan={COL_COUNT} />
+                  <TableSkeletonRows rows={8} colSpan={colCount} />
                 </tbody>
               </table>
             </div>
@@ -394,16 +400,21 @@ export default function PurchaseOrdersPage() {
                       const delivery = poDeliveryStatus(row.deliveryStatus);
                       const payment = poPaymentStatus(row.paymentStatus);
                       const warning = poPaymentWarningStatus(row.paymentWarning);
+                      const actions = showActionsCol ? rowActions(row) : [];
                       return (
-                        <tr key={row.code}>
+                        <tr
+                          key={row.code}
+                          className="cursor-pointer"
+                          onClick={() => openOrder(row.code)}
+                        >
                           <td className="pur-erp__td-datetime">{formatDateTimeVi(row.createdAt) ?? '—'}</td>
-                          <td className="pur-erp__td-code">
+                          <td className="pur-erp__td-code" onClick={e => e.stopPropagation()}>
                             <EntityCodeLink
                               code={row.code}
                               to={`/purchasing/orders/${encodeURIComponent(row.code)}`}
                             />
                           </td>
-                        <td className="pur-erp__td-code">
+                        <td className="pur-erp__td-code" onClick={e => e.stopPropagation()}>
                           {row.planCode ? (
                             <EntityCodeLink
                               code={row.planCode}
@@ -424,7 +435,7 @@ export default function PurchaseOrdersPage() {
                         </td>
                         <td>{row.supplierName || '—'}</td>
                         <td className="pur-erp__td-num">{formatCurrency(row.totalAmount)} (VNĐ)</td>
-                          <td className="pur-erp__td-status">
+                          <td className="pur-erp__td-status" onClick={e => e.stopPropagation()}>
                             <PoApprovalStatusCell
                               row={row}
                               canApprove={canApprove}
@@ -445,9 +456,13 @@ export default function PurchaseOrdersPage() {
                             <PoStatusPill label={warning.label} tone={warning.tone} />
                           </td>
                           <td>{row.note || '—'}</td>
-                          <td className="text-center">
-                            <Dropdown trigger="Tác vụ" items={rowActions(row)} />
-                          </td>
+                          {showActionsCol ? (
+                            <td className="text-center" onClick={e => e.stopPropagation()}>
+                              {actions.length > 0 ? (
+                                <Dropdown trigger="Tác vụ" items={actions} />
+                              ) : null}
+                            </td>
+                          ) : null}
                         </tr>
                       );
                     })}

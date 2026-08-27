@@ -170,15 +170,15 @@ export default function TransferCreateModal({
             <p className="text-[11px] text-[var(--md-on-surface-variant)]">Chọn kho dự án trước khi thêm vật tư.</p>
           ) : (
             <div className="overflow-x-auto table-scroll">
-              <table className="form-table import-items-table import-items-table--transfer text-xs">
+              <table className="form-table import-items-table import-items-table--transfer import-items-table--manual text-xs">
                 <thead>
                   <tr>
-                    <th className="table-header-cell">Vật tư</th>
-                    <th className="table-header-cell text-right">SL</th>
-                    <th className="table-header-cell text-center">ĐVT</th>
-                    <th className="table-header-cell text-right" title="Tồn thực tế − dự kiến xuất/chuyển">Tồn TT</th>
-                    <th className="table-header-cell">Công đoạn (tùy chọn)</th>
-                    <th className="table-header-cell text-center" />
+                    <th className="table-header-cell text-center">Mặt hàng</th>
+                    <th className="table-header-cell text-center import-manual-col-qty">SL</th>
+                    <th className="table-header-cell text-center import-po-col-unit">ĐVT</th>
+                    <th className="table-header-cell text-center" title="Tồn thực tế - dự kiến xuất/chuyển">Tồn TT</th>
+                    <th className="table-header-cell text-center">Công đoạn (tùy chọn)</th>
+                    <th className="table-header-cell text-center import-manual-col-action" />
                   </tr>
                 </thead>
                 <tbody>
@@ -206,31 +206,36 @@ export default function TransferCreateModal({
                               onItemsChange(next);
                             }}
                             materials={stockMaterials}
-                            placeholder="— Vật tư —"
+                            placeholder="- Vật tư -"
                           />
                           {lineErr?.materialCode && (
-                            <p className="mt-0.5 text-[10px] text-[var(--md-error)]">{lineErr.materialCode}</p>
+                            <p className="mt-0.5 text-[length:var(--fs-micro)] text-[var(--md-error)]">
+                              {lineErr.materialCode}
+                            </p>
                           )}
                         </td>
-                        <td className="table-cell text-right">
-                          <QtyStepper
-                            value={it.qty}
-                            max={maxQty}
-                            onChange={qtyVal => {
-                              const next = [...items];
-                              next[idx] = { ...next[idx], qty: qtyVal };
-                              onItemsChange(next);
-                            }}
-                          />
-                        </td>
-                        <td className="table-cell text-center text-[var(--md-on-surface-variant)]">
+                        <td className="table-cell text-center import-manual-col-qty">
                           <div className="import-cell-placeholder import-cell-placeholder--center">
-                            {it.materialCode ? materialUnit(it.materialCode) : '—'}
+                            <QtyStepper
+                              value={it.qty}
+                              max={maxQty}
+                              className="qty-stepper--compact"
+                              onChange={qtyVal => {
+                                const next = [...items];
+                                next[idx] = { ...next[idx], qty: qtyVal };
+                                onItemsChange(next);
+                              }}
+                            />
                           </div>
                         </td>
-                        <td className="table-cell text-right tabular-nums font-semibold">
-                          <div className="import-cell-placeholder import-cell-placeholder--end font-semibold">
-                            {it.materialCode ? fmtStockQty(maxQty ?? 0) : '—'}
+                        <td className="table-cell text-center import-po-col-unit">
+                          <div className="import-cell-placeholder import-cell-placeholder--center">
+                            {it.materialCode ? materialUnit(it.materialCode) : '-'}
+                          </div>
+                        </td>
+                        <td className="table-cell text-center tabular-nums font-semibold">
+                          <div className="import-cell-placeholder import-cell-placeholder--center font-semibold">
+                            {it.materialCode ? fmtStockQty(maxQty ?? 0) : '-'}
                           </div>
                         </td>
                         <td className="table-cell">
@@ -245,18 +250,18 @@ export default function TransferCreateModal({
                             }}
                           />
                         </td>
-                        <td className="table-cell text-center">
+                        <td className="table-cell text-center import-manual-col-action">
                           <div className="import-cell-placeholder import-cell-placeholder--center">
-                          {items.length > 1 && (
-                            <button
-                              type="button"
-                              className="p-1 text-[var(--md-error)] opacity-80 hover:opacity-100"
-                              aria-label="Xóa dòng"
-                              onClick={() => onItemsChange(items.filter((_, i) => i !== idx))}
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          )}
+                            {items.length > 1 && (
+                              <button
+                                type="button"
+                                className="p-1 text-[var(--md-error)] opacity-80 hover:opacity-100"
+                                aria-label="Xóa dòng"
+                                onClick={() => onItemsChange(items.filter((_, i) => i !== idx))}
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>

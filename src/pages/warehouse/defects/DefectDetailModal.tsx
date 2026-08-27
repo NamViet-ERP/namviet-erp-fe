@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import Modal from '../../../components/ui/Modal';
 import PermissionGate from '../../../components/auth/PermissionGate';
 import QtyStepper from '../../../components/ui/QtyStepper';
 import { showToast } from '../../../components/ui/Toast';
+import VoucherDetailModal from '../../../components/warehouse/VoucherDetailModal';
+import { displayValue } from '../../../components/warehouse/voucherDetailUtils';
 import { getApiErrorMessage } from '../../../lib/apiClient';
+import { formatDateTimeVi } from '../../../lib/hrm/formatters';
 import {
   useApproveDefect,
   useSubmitDefect,
@@ -15,7 +17,11 @@ import { defectsService } from '../../../services/defectsService';
 import type { PurchaseDefectApiDto } from '../../../types/api/poDefectApi';
 import DefectDetailEvidence from './DefectDetailEvidence';
 import DefectDetailProcessing from './DefectDetailProcessing';
-import DefectStatusCell from './DefectStatusCell';
+import {
+  defectDetailBadgeLabel,
+  defectDetailBadgeStatus,
+  defectStatusHint,
+} from './defectUtils';
 
 interface DefectDetailModalProps {
   isOpen: boolean;
@@ -120,23 +126,59 @@ export default function DefectDetailModal({
     }
   };
 
-  const canEditEvidence = selected && selected.status !== 'approved' && selected.status !== 'rejected';
-  const canEditProcessing = Boolean(canApprove && selected && selected.status === 'approved');
+  if (!selected) return null;
+
+  const canEditEvidence = selected.status !== 'approved' && selected.status !== 'rejected';
+  const canEditProcessing = Boolean(canApprove && selected.status === 'approved');
+  const status = defectDetailBadgeStatus(selected);
+  const importTicket = selected.importTicketCode;
 
   return (
-    <Modal
-      isOpen={isOpen && Boolean(selected)}
+    <VoucherDetailModal
+      isOpen={isOpen}
       onClose={onClose}
-      title={selected ? `Phiếu hàng lỗi - ${selected.ticketCode}` : 'Chi tiết'}
-      size="full"
-      footer={selected ? (
-        <>
-          <button type="button" className="btn btn-outline" onClick={onHide}>Đóng</button>
-          <div className="md-dialog__footer-actions flex items-center gap-2 flex-wrap">
-            <DefectStatusCell row={selected} />
-            <span className="text-sm text-[var(--md-on-surface-variant)]">
-              {selected.sourceType === 'stock' ? selected.projectCode : selected.poCode}
-            </span>
+      voucherCode={selected.ticketCode}
+      status={status}
+      size="wide"
+      className="wms-voucher-detail--lines"
+      statusLabel={defectDetailBadgeLabel(selected)}
+      statusHint={defectStatusHint(selected)}
+      approvedBy={selected.approvedByName ?? undefined}
+      approvedAt={selected.approvedAt ? String(selected.approvedAt) : undefined}
+      fields={[
+        {
+          label: 'Nguồn',
+          value: selected.sourceType === 'stock' ? 'Hàng lỗi tồn kho' : 'Hàng lỗi PO',
+        },
+        { label: 'Kho dự án', value: displayValue(selected.projectCode) },
+        ...(selected.sourceType === 'stock'
+          ? []
+          : [
+              { label: 'PO', value: displayValue(selected.poCode) },
+              { label: 'KHMH', value: displayValue(selected.planCode) },
+              { label: 'Nhà cung cấp', value: displayValue(selected.supplierName) },
+            ]),
+        ...(importTicket ? [{ label: 'NK liên kết', value: displayValue(importTicket) }] : []),
+        {
+          label: 'Tạo lúc',
+          value: displayValue(formatDateTimeVi(
+            typeof selected.createdAt === 'string'
+              ? selected.createdAt
+              : selected.createdAt
+                ? new Date(selected.createdAt).toISOString()
+                : undefined,
+          )),
+        },
+        { label: 'Người lập', value: displayValue(selected.createdByName) },
+        { label: 'Ghi chú', value: displayValue(selected.note ?? selected.reason), wide: true },
+      ]}
+      itemsTitle={`Danh sách vật tư (${selected.items.length})`}
+      footer={
+        <div className="flex w-full items-center justify-between gap-3 flex-wrap">
+          <button type="button" className="btn btn-outline btn-sm" onClick={onHide}>
+            Đóng
+          </button>
+          <div className="flex items-center gap-2 flex-wrap">
             {canEditQty && qtyDirty ? (
               <PermissionGate permission="wms.defects.create">
                 <button
@@ -184,13 +226,16 @@ export default function DefectDetailModal({
               <PermissionGate permission="wms.defects.approve">
                 <button
                   type="button"
-                  className="btn btn-filled"
+                  className="btn btn-primary"
                   disabled={approveMutation.isPending || qtyDirty}
                   onClick={async () => {
                     try {
                       const updated = await approveMutation.mutateAsync(selected.ticketCode);
                       onSelectedChange(updated);
-                      showToast('success', `Đã duyệt ${selected.ticketCode} - cập nhật PO/KHMH, không cộng tồn.`);
+                      showToast(
+                        'success',
+                        `Đã duyệt ${selected.ticketCode} - cập nhật PO/KHMH, không cộng tồn.`,
+                      );
                     } catch (err) {
                       showToast('error', getApiErrorMessage(err, 'Không duyệt được'));
                     }
@@ -201,97 +246,106 @@ export default function DefectDetailModal({
               </PermissionGate>
             ) : null}
           </div>
-        </>
-      ) : null}
+        </div>
+      }
     >
-      {selected ? (
-        <div className="space-y-3 text-sm defect-detail-form">
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div>Nguồn: <strong>{selected.sourceType === 'stock' ? 'Hàng lỗi nhập kho' : 'Hàng lỗi PO'}</strong></div>
-            <div>Dự án: <strong>{dash(selected.projectCode)}</strong></div>
-            {selected.sourceType === 'stock' ? null : (
-              <>
-                <div>PO: <strong>{dash(selected.poCode)}</strong></div>
-                <div>KHMH: <strong>{dash(selected.planCode)}</strong></div>
-                <div>NCC: <strong>{dash(selected.supplierName)}</strong></div>
-              </>
-            )}
-          </div>
-
-          <div>
-            <div className="text-xs font-bold uppercase text-[var(--md-on-surface-variant)] mb-1">Dòng hàng</div>
-            <div className="wms-voucher-detail-table-wrap">
-              <table className="wms-voucher-detail-table">
-              <thead>
-                <tr>
-                  <th className="table-header-cell">Mặt hàng</th>
-                  <th className="table-header-cell text-center">SL lỗi</th>
-                  <th className="table-header-cell">Lý do dòng</th>
-                </tr>
-              </thead>
-              <tbody>
-                {selected.items.map(it => (
-                  <tr key={it.id} className="table-row">
-                    <td className="table-cell">
-                      <div className="font-medium">{it.name}</div>
-                      <div className="text-[length:var(--fs-micro)] text-[var(--md-on-surface-variant)]">
-                        {[it.materialCode, it.unit].filter(Boolean).join(' · ') || '-'}
-                      </div>
-                    </td>
-                    <td className="table-cell text-center tabular-nums">
-                      {canEditQty ? (
+      <div className="overflow-x-auto table-scroll">
+        <table className="form-table import-items-table import-items-table--defect-detail text-xs">
+          <thead>
+            <tr>
+              <th className="table-header-cell text-center import-line-item-col">Mặt hàng</th>
+              <th className="table-header-cell text-center import-manual-col-qty">SL lỗi</th>
+              <th className="table-header-cell text-center import-po-col-unit">ĐVT</th>
+              <th className="table-header-cell text-center defect-col-reason">Lý do dòng</th>
+            </tr>
+          </thead>
+          <tbody>
+            {selected.items.map(it => {
+              const code = (it.materialCode ?? '').trim();
+              return (
+                <tr key={it.id} className="table-row">
+                  <td className="table-cell import-line-item-col">
+                    <div className="import-line-item__name">{it.name}</div>
+                    <div className="import-line-item__code">{code || '-'}</div>
+                  </td>
+                  <td className="table-cell text-center import-manual-col-qty">
+                    {canEditQty ? (
+                      <div className="import-cell-placeholder import-cell-placeholder--center">
                         <QtyStepper
                           value={qtyDrafts[it.id] ?? String(it.quantity)}
-                          min={1}
+                          min={0}
+                          max={it.quantity}
+                          className="qty-stepper--compact"
                           ariaLabel={`Số lượng lỗi ${it.name}`}
-                          onChange={qty => setQtyDrafts(prev => ({ ...prev, [it.id]: qty }))}
+                          onChange={qtyVal =>
+                            setQtyDrafts(prev => ({ ...prev, [it.id]: qtyVal }))
+                          }
                         />
-                      ) : (
-                        it.quantity
-                      )}
-                    </td>
-                    <td className="table-cell whitespace-pre-wrap">{it.lineReason || '-'}</td>
-                  </tr>
-                ))}
-              </tbody>
-              </table>
-            </div>
-            {canEditQty ? (
-              <p className="mt-2 text-[length:var(--fs-micro)] text-[var(--md-on-surface-variant)]">
-                Có thể giảm SL nếu tồn đã thấp hơn lúc gửi duyệt. Lưu xong mới duyệt được.
-              </p>
-            ) : null}
-          </div>
+                      </div>
+                    ) : (
+                      <div className="import-cell-placeholder import-cell-placeholder--center tabular-nums font-semibold">
+                        {it.quantity}
+                      </div>
+                    )}
+                  </td>
+                  <td className="table-cell text-center import-po-col-unit">
+                    <div className="import-cell-placeholder import-cell-placeholder--center">
+                      {it.unit?.trim() || '-'}
+                    </div>
+                  </td>
+                  <td className="table-cell defect-col-reason text-[var(--md-on-surface)]">
+                    {dash(it.lineReason)}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+          <tfoot>
+            <tr className="border-t border-[var(--md-outline-variant)]">
+              <td className="table-cell text-right font-bold text-[var(--md-on-surface-variant)] py-2">
+                Tổng cộng ({selected.items.length} dòng)
+              </td>
+              <td className="table-cell text-center tabular-nums font-bold text-[var(--md-primary)] py-2">
+                {selected.items.reduce((sum, it) => {
+                  const q = canEditQty ? Number(qtyDrafts[it.id]) : it.quantity;
+                  return sum + (Number.isFinite(q) ? q : 0);
+                }, 0)}
+              </td>
+              <td className="table-cell" />
+              <td className="table-cell" />
+            </tr>
+          </tfoot>
+        </table>
+      </div>
 
-          <DefectDetailProcessing
-            selected={selected}
-            canEditProcessing={canEditProcessing}
-            causeSource={causeSource}
-            supplierFeedback={supplierFeedback}
-            handlingMethod={handlingMethod}
-            onCauseSourceChange={setCauseSource}
-            onSupplierFeedbackChange={setSupplierFeedback}
-            onHandlingMethodChange={setHandlingMethod}
-            onSave={() => void handleSaveProcessing()}
-            saving={updateProcessingMutation.isPending}
-          />
-
-          <DefectDetailEvidence
-            selected={selected}
-            canEditEvidence={Boolean(canEditEvidence)}
-            uploading={uploading}
-            onUploadingChange={setUploading}
-            onReloadSelected={reloadSelected}
-          />
-          {selected.status === 'pending' ? (
-            <p className="text-[length:var(--fs-micro)] text-[var(--md-on-surface-variant)]">
-              {selected.sourceType === 'stock'
-                ? 'Phiếu đang giữ chỗ tồn kho dự án. Xuất/chuyển kho không lấy phần này cho đến khi duyệt hoặc hủy. Duyệt sẽ trừ tồn thực tế.'
-                : 'Duyệt cần lý do trên từng dòng + ít nhất 1 ảnh. Duyệt xong chỉ cập nhật PO/KHMH - không cộng tồn kho.'}
-            </p>
-          ) : null}
-        </div>
+      {canEditQty ? (
+        <p className="mt-2 text-[length:var(--fs-micro)] text-[var(--md-on-surface-variant)] text-pretty">
+          Có thể giảm SL rồi bấm Lưu số lượng trước khi duyệt.
+        </p>
       ) : null}
-    </Modal>
+
+      <div className="mt-4 space-y-3">
+        <DefectDetailProcessing
+          selected={selected}
+          canEditProcessing={canEditProcessing}
+          causeSource={causeSource}
+          supplierFeedback={supplierFeedback}
+          handlingMethod={handlingMethod}
+          onCauseSourceChange={setCauseSource}
+          onSupplierFeedbackChange={setSupplierFeedback}
+          onHandlingMethodChange={setHandlingMethod}
+          onSave={() => void handleSaveProcessing()}
+          saving={updateProcessingMutation.isPending}
+        />
+
+        <DefectDetailEvidence
+          selected={selected}
+          canEditEvidence={canEditEvidence}
+          uploading={uploading}
+          onUploadingChange={setUploading}
+          onReloadSelected={reloadSelected}
+        />
+      </div>
+    </VoucherDetailModal>
   );
 }

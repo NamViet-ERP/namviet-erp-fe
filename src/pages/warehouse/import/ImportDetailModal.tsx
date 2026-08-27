@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Import } from '../../../types';
 import { FileText, Pencil } from 'lucide-react';
-import { formatCurrency } from '../../../utils/formatCurrency';
+import { formatCurrencyVnd } from '../../../utils/formatCurrency';
 import VoucherDetailModal from '../../../components/warehouse/VoucherDetailModal';
 import { displayValue } from '../../../components/warehouse/voucherDetailUtils';
 import FormField from '../../../components/ui/FormField';
+import QtyStepper from '../../../components/ui/QtyStepper';
 import {
   SavedImportDocList,
   SavedImportPhotoGrid,
@@ -15,6 +16,18 @@ import { getVoucherCreatedAt } from '../../../lib/wms/voucherDateUtils';
 import { printVoucherWithFeedback } from '../../../lib/wms/printVoucher';
 import { buildImportPrintPayload } from '../../../lib/wms/voucherPrintBuilders';
 import ImportCreateEvidenceSection from './ImportCreateEvidenceSection';
+import {
+  buildReceiveLineDrafts,
+  hasPoReference,
+  lineNeedsReason,
+  missingReasonLineIds,
+  recomputeShortage,
+  settlementTotals,
+  toApproveSettlementPayload,
+  validateReceiveSettlement,
+  type ImportApproveSettlementPayload,
+  type ReceiveLineDraft,
+} from './importReceiveSettlement';
 
 interface ImportDetailModalProps {
   isOpen: boolean;
@@ -24,12 +37,16 @@ interface ImportDetailModalProps {
   /** Chỉ dùng cho phiếu nháp: mở form sửa header / dòng hàng. */
   onEdit?: (imp: Import) => void;
   /** Thủ kho duyệt thực tế từ chi tiết (phiếu pending) sau khi đủ 3 mục chứng từ. */
-  onApprove?: (imp: Import, evaluation?: string) => void;
+  onApprove?: (imp: Import, payload: ImportApproveSettlementPayload) => void;
   onDownloadAttachment?: (imp: Import, attachmentId: string, fileName: string) => Promise<void>;
   /** Thủ kho được cập nhật đánh giá / ảnh / file trên phiếu pending. */
   canUpdateEvidence?: boolean;
   isEvidencePending?: boolean;
-  onUploadAttachment?: (imp: Import, file: File, kind: 'document' | 'photo') => Promise<void>;
+  onUploadAttachment?: (
+    imp: Import,
+    file: File,
+    kind: 'document' | 'photo' | 'defect_photo',
+  ) => Promise<void>;
   onDeleteAttachment?: (imp: Import, attachmentId: string) => Promise<void>;
   onSaveEvaluation?: (imp: Import, evaluation: string) => Promise<void>;
   /** Ẩn đơn giá / thành tiền / tổng khi không có wms.prices.view */
@@ -54,18 +71,36 @@ export default function ImportDetailModal({
   isApproving = false,
 }: ImportDetailModalProps) {
   const [evaluationDraft, setEvaluationDraft] = useState('');
+  const [shortageReport, setShortageReport] = useState('');
+  const [defectReason, setDefectReason] = useState('');
+  const [lineDrafts, setLineDrafts] = useState<ReceiveLineDraft[]>([]);
   const [showEvidenceErrors, setShowEvidenceErrors] = useState(false);
+  const [settlementError, setSettlementError] = useState<string | null>(null);
+  const [reasonErrorLineIds, setReasonErrorLineIds] = useState<number[]>([]);
   const evidenceInputRef = useRef<HTMLInputElement>(null);
   const evidenceDocInputRef = useRef<HTMLInputElement>(null);
+  const defectPhotoInputRef = useRef<HTMLInputElement>(null);
+  const reasonInputRefs = useRef<Map<number, HTMLInputElement | null>>(new Map());
+  const tableScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!isOpen) {
+    if (!isOpen || !selected) {
       setShowEvidenceErrors(false);
+      setSettlementError(null);
       return;
     }
-    setEvaluationDraft(selected?.receiptEvaluation ?? '');
+    setEvaluationDraft(selected.receiptEvaluation ?? '');
+    setShortageReport(selected.shortageReport ?? '');
+    setDefectReason('');
+    setLineDrafts(buildReceiveLineDrafts(selected.items));
     setShowEvidenceErrors(false);
-  }, [isOpen, selected?.id, selected?.receiptEvaluation]);
+    setSettlementError(null);
+    setReasonErrorLineIds([]);
+    // Chỉ seed lại khi đổi phiếu / mở modal — tránh reset khi upload ảnh reload selected.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: seed by voucher id
+  }, [isOpen, selected?.id]);
+
+  const totals = useMemo(() => settlementTotals(lineDrafts), [lineDrafts]);
 
   if (!selected) return null;
 
@@ -76,6 +111,8 @@ export default function ImportDetailModal({
   const evaluation = (selected.receiptEvaluation ?? '').trim();
   const hasPhoto = attachments.some(a => a.kind === 'photo');
   const hasDocument = attachments.some(a => a.kind === 'document');
+  const hasDefectPhoto = attachments.some(a => a.kind === 'defect_photo');
+  const defectPhotos = attachments.filter(a => a.kind === 'defect_photo');
   const evidenceErrors = showEvidenceErrors
     ? {
         evaluation: !evaluationDraft.trim() ? 'Vui lòng nhập đánh giá nhận hàng' : undefined,
@@ -84,12 +121,46 @@ export default function ImportDetailModal({
       }
     : undefined;
 
+  const showSettlement = canReceiveHere || selected.status === 'approved';
+  const settlementEditable = canReceiveHere;
+
   const handleApproveClick = () => {
     if (!evaluationDraft.trim() || !hasPhoto || !hasDocument) {
       setShowEvidenceErrors(true);
       return;
     }
-    onApprove?.(selected, evaluationDraft);
+    const err = validateReceiveSettlement(
+      lineDrafts,
+      shortageReport,
+      hasDefectPhoto,
+      hasPoReference(selected),
+    );
+    if (err) {
+      setSettlementError(err);
+      const missing = missingReasonLineIds(lineDrafts);
+      setReasonErrorLineIds(missing);
+      if (missing.length > 0) {
+        requestAnimationFrame(() => {
+          const el = reasonInputRefs.current.get(missing[0]);
+          el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el?.focus();
+        });
+      } else {
+        requestAnimationFrame(() => {
+          tableScrollRef.current
+            ?.closest('.md-dialog__body')
+            ?.querySelector('[data-settlement-error]')
+            ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+      }
+      return;
+    }
+    setSettlementError(null);
+    setReasonErrorLineIds([]);
+    onApprove?.(
+      selected,
+      toApproveSettlementPayload(lineDrafts, evaluationDraft, shortageReport, defectReason),
+    );
   };
 
   const persistEvaluation = () => {
@@ -99,8 +170,24 @@ export default function ImportDetailModal({
     void onSaveEvaluation(selected, evaluationDraft);
   };
 
+  const patchLine = (lineId: number, patch: Partial<ReceiveLineDraft>) => {
+    setLineDrafts(prev =>
+      prev.map(d => {
+        if (d.lineId !== lineId) return d;
+        let next = { ...d, ...patch };
+        if (patch.accepted !== undefined) next = recomputeShortage(next, 'accepted', patch.accepted);
+        if (patch.defect !== undefined) next = recomputeShortage(next, 'defect', patch.defect);
+        return next;
+      }),
+    );
+    setSettlementError(null);
+    if (patch.lineReason !== undefined) {
+      setReasonErrorLineIds(prev => prev.filter(id => id !== lineId));
+    }
+  };
+
   const statusHint = evidenceEditable
-    ? 'Nhập dự kiến - cập nhật đánh giá, ảnh và chứng từ rồi duyệt thực tế'
+    ? 'Kiểm nhận SL thực tế / Lỗi / Thiếu, đủ chứng từ rồi duyệt'
     : importStatusHint(selected.status);
 
   return (
@@ -110,6 +197,8 @@ export default function ImportDetailModal({
       voucherCode={selected.voucherCode}
       status={selected.status}
       voucherKind="import"
+      size={showSettlement ? 'wide' : 'full'}
+      className={showSettlement ? 'wms-voucher-detail--receive' : 'wms-voucher-detail--lines'}
       statusHint={statusHint}
       approvedBy={selected.approvedBy}
       approvedAt={selected.approvedAt}
@@ -126,6 +215,9 @@ export default function ImportDetailModal({
           value: displayValue(formatDateTimeVi(getVoucherCreatedAt(selected)?.toISOString())),
         },
         { label: 'Người lập', value: displayValue(selected.createdBy) },
+        ...(selected.linkedDefectTicketCode
+          ? [{ label: 'HL liên kết', value: displayValue(selected.linkedDefectTicketCode) }]
+          : []),
         { label: 'Ghi chú', value: displayValue(selected.note), wide: true },
       ]}
       itemsTitle={`Danh sách vật tư (${selected.items.length})`}
@@ -164,81 +256,303 @@ export default function ImportDetailModal({
         </div>
       }
     >
-      <div className="wms-voucher-detail-table-wrap">
-        <table className="wms-voucher-detail-table wms-voucher-detail-table--fixed">
+      <div className="overflow-x-auto table-scroll" ref={tableScrollRef}>
+        <table
+          className={`form-table import-items-table import-items-table--import-detail text-xs${
+            showSettlement ? ' import-items-table--import-receive' : ''
+          }`}
+        >
           <thead>
             <tr>
-              <th className="table-header-cell wms-voucher-detail-col-stt">STT</th>
-              <th className="table-header-cell wms-voucher-detail-col-code text-left">Mã VT</th>
-              <th className="table-header-cell text-left">Tên vật tư</th>
-              <th className="table-header-cell wms-voucher-detail-col-qty text-right">SL</th>
-              <th className="table-header-cell wms-voucher-detail-col-unit">ĐVT</th>
+              <th className="table-header-cell text-center import-line-item-col">Mặt hàng</th>
+              {showSettlement ? (
+                <>
+                  <th className="table-header-cell text-center import-receive-col-qty">SL tạo phiếu</th>
+                  <th className="table-header-cell text-center import-receive-col-qty">SL thực tế</th>
+                  <th className="table-header-cell text-center import-receive-col-qty">Lỗi</th>
+                  <th className="table-header-cell text-center import-receive-col-qty">Thiếu</th>
+                </>
+              ) : (
+                <th className="table-header-cell text-center import-manual-col-qty">SL</th>
+              )}
+              <th className="table-header-cell text-center import-po-col-unit">ĐVT</th>
               {showPrices ? (
                 <>
-                  <th className="table-header-cell wms-voucher-detail-col-money text-right">Đơn giá</th>
-                  <th className="table-header-cell wms-voucher-detail-col-money text-right">Thành tiền</th>
+                  <th className="table-header-cell text-center import-po-col-amount">Đơn giá</th>
+                  <th className="table-header-cell text-center import-po-col-amount">Thành tiền</th>
                 </>
+              ) : null}
+              {showSettlement ? (
+                <th className="table-header-cell text-center defect-col-reason">Lý do</th>
               ) : null}
             </tr>
           </thead>
           <tbody>
             {selected.items.map((it, i) => {
               const code = (it.sku || it.productId || '').trim();
+              const draft = lineDrafts.find(d => d.lineId === Number(it.lineId));
+              const planned = Number(it.plannedQty) > 0 ? Number(it.plannedQty) : Number(it.qty) || 0;
               return (
                 <tr key={`${code}-${i}`} className="table-row">
-                  <td className="table-cell wms-voucher-detail-col-stt text-center tabular-nums text-[var(--md-on-surface-variant)]">
-                    {i + 1}
+                  <td className="table-cell import-line-item-col">
+                    <div className="import-line-item__name">{it.name}</div>
+                    <div className="import-line-item__code">{code || '-'}</div>
                   </td>
-                  <td className="table-cell wms-voucher-detail-col-code font-mono text-[var(--md-on-surface)]" title={code || undefined}>
-                    {code || '-'}
-                  </td>
-                  <td className="table-cell font-semibold text-[var(--md-on-surface)]">
-                    {it.name}
-                  </td>
-                  <td className="table-cell wms-voucher-detail-col-qty text-right tabular-nums">
-                    {it.qty}
-                  </td>
-                  <td className="table-cell wms-voucher-detail-col-unit text-center">
-                    {it.unit?.trim() || '-'}
+                  {showSettlement ? (
+                    settlementEditable && draft ? (
+                      <>
+                        <td className="table-cell text-center tabular-nums import-receive-col-qty font-semibold">
+                          {draft.planned}
+                        </td>
+                        <td className="table-cell text-center import-receive-col-qty">
+                          <div className="import-cell-placeholder import-cell-placeholder--center">
+                            <QtyStepper
+                              value={draft.accepted}
+                              min={0}
+                              max={draft.planned}
+                              className="qty-stepper--compact"
+                              ariaLabel={`SL thực tế ${code}`}
+                              onChange={qtyVal => patchLine(draft.lineId, { accepted: qtyVal })}
+                            />
+                          </div>
+                        </td>
+                        <td className="table-cell text-center import-receive-col-qty">
+                          <div className="import-cell-placeholder import-cell-placeholder--center">
+                            <QtyStepper
+                              value={draft.defect}
+                              min={0}
+                              max={draft.planned}
+                              className="qty-stepper--compact"
+                              ariaLabel={`Lỗi ${code}`}
+                              onChange={qtyVal => patchLine(draft.lineId, { defect: qtyVal })}
+                            />
+                          </div>
+                        </td>
+                        <td className="table-cell text-center import-receive-col-qty">
+                          <div className="import-cell-placeholder import-cell-placeholder--center">
+                            <QtyStepper
+                              value={draft.shortage}
+                              min={0}
+                              max={draft.planned}
+                              className="qty-stepper--compact"
+                              ariaLabel={`Thiếu ${code}`}
+                              onChange={qtyVal => patchLine(draft.lineId, { shortage: qtyVal })}
+                            />
+                          </div>
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td className="table-cell text-center tabular-nums import-receive-col-qty">{planned}</td>
+                        <td className="table-cell text-center tabular-nums import-receive-col-qty">{it.acceptedQty ?? it.qty}</td>
+                        <td className="table-cell text-center tabular-nums import-receive-col-qty">{it.defectQty ?? 0}</td>
+                        <td className="table-cell text-center tabular-nums import-receive-col-qty">{it.shortageQty ?? 0}</td>
+                      </>
+                    )
+                  ) : (
+                    <td className="table-cell text-center tabular-nums import-manual-col-qty font-semibold">
+                      {it.qty}
+                    </td>
+                  )}
+                  <td className="table-cell text-center import-po-col-unit">
+                    <div className="import-cell-placeholder import-cell-placeholder--center">
+                      {it.unit?.trim() || '-'}
+                    </div>
                   </td>
                   {showPrices ? (
                     <>
-                      <td className="table-cell wms-voucher-detail-col-money table-cell--money">
-                        {formatCurrency(it.unitPrice)}
+                      <td className="table-cell text-center tabular-nums import-po-col-amount">
+                        {formatCurrencyVnd(it.unitPrice)}
                       </td>
-                      <td className="table-cell wms-voucher-detail-col-money table-cell--money font-semibold text-[var(--md-primary)]">
-                        {formatCurrency(it.qty * it.unitPrice)}
+                      <td className="table-cell text-center tabular-nums font-semibold text-[var(--md-primary)] import-po-col-amount">
+                        {formatCurrencyVnd((Number(draft?.accepted ?? it.acceptedQty ?? it.qty) || 0) * it.unitPrice)}
                       </td>
                     </>
+                  ) : null}
+                  {showSettlement ? (
+                    settlementEditable && draft ? (
+                      <td className="table-cell defect-col-reason">
+                        {lineNeedsReason(draft) ? (
+                          <input
+                            ref={el => {
+                              reasonInputRefs.current.set(draft.lineId, el);
+                            }}
+                            className={`form-input min-h-9${
+                              reasonErrorLineIds.includes(draft.lineId) ? ' form-input--error' : ''
+                            }`}
+                            value={draft.lineReason}
+                            onChange={e => patchLine(draft.lineId, { lineReason: e.target.value })}
+                            placeholder="Lý do"
+                            aria-invalid={reasonErrorLineIds.includes(draft.lineId)}
+                            aria-label={`Lý do ${code}`}
+                            required
+                          />
+                        ) : (
+                          <div className="import-cell-placeholder import-cell-placeholder--center">-</div>
+                        )}
+                      </td>
+                    ) : (
+                      <td className="table-cell defect-col-reason whitespace-pre-wrap">
+                        {(it.defectLineReason || it.shortageLineReason || '-').toString()}
+                      </td>
+                    )
                   ) : null}
                 </tr>
               );
             })}
           </tbody>
           <tfoot>
-            <tr>
-              <td
-                colSpan={3}
-                className="table-cell text-[var(--md-on-surface-variant)]"
-              >
-                {selected.items.length} dòng
+            <tr className="border-t border-[var(--md-outline-variant)]">
+              <td className="table-cell text-right font-bold text-[var(--md-on-surface-variant)] py-2">
+                Tổng cộng ({selected.items.length} dòng)
               </td>
-              <td className="table-cell wms-voucher-detail-col-qty text-right tabular-nums font-semibold">
-                {selected.items.reduce((sum, it) => sum + (Number(it.qty) || 0), 0)}
-              </td>
-              <td className="table-cell wms-voucher-detail-col-unit" />
+              {showSettlement ? (
+                <>
+                  <td className="table-cell text-center tabular-nums font-bold py-2 import-receive-col-qty">
+                    {lineDrafts.reduce((s, d) => s + d.planned, 0)
+                      || selected.items.reduce((s, it) => s + (Number(it.plannedQty) || Number(it.qty) || 0), 0)}
+                  </td>
+                  <td className="table-cell text-center tabular-nums font-bold py-2 import-receive-col-qty">{totals.accepted}</td>
+                  <td className="table-cell text-center tabular-nums font-bold py-2 import-receive-col-qty">{totals.defect}</td>
+                  <td className="table-cell text-center tabular-nums font-bold py-2 import-receive-col-qty">{totals.shortage}</td>
+                </>
+              ) : (
+                <td className="table-cell text-center tabular-nums font-bold py-2 import-manual-col-qty">
+                  {selected.items.reduce((sum, it) => sum + (Number(it.qty) || 0), 0)}
+                </td>
+              )}
+              <td className="table-cell py-2" />
               {showPrices ? (
                 <>
-                  <td className="table-cell wms-voucher-detail-col-money" />
-                  <td className="table-cell wms-voucher-detail-col-money table-cell--money font-semibold text-[var(--md-primary)]">
-                    {formatCurrency(selected.totalValue)}
+                  <td className="table-cell py-2" />
+                  <td className="table-cell text-center tabular-nums font-bold text-[var(--md-primary)] py-2 import-po-col-amount">
+                    {formatCurrencyVnd(
+                      settlementEditable
+                        ? lineDrafts.reduce((sum, d, idx) => {
+                            const price = selected.items[idx]?.unitPrice ?? 0;
+                            return sum + (Number(d.accepted) || 0) * price;
+                          }, 0)
+                        : selected.totalValue,
+                    )}
                   </td>
                 </>
               ) : null}
+              {showSettlement ? <td className="table-cell py-2" /> : null}
             </tr>
           </tfoot>
         </table>
       </div>
+
+      {settlementEditable ? (
+        <p
+          className={`mt-2 text-[length:var(--fs-micro)] text-pretty${
+            reasonErrorLineIds.length > 0
+              ? ' text-[var(--md-error)] font-semibold'
+              : ' text-[var(--md-on-surface-variant)]'
+          }`}
+        >
+          SL thực tế + Lỗi + Thiếu = SL tạo phiếu. Có Lỗi/Thiếu thì nhập Lý do trên dòng.
+        </p>
+      ) : null}
+
+      {settlementEditable && totals.defect > 0 ? (
+        <div className="mt-3 space-y-2 rounded-[var(--radius-md)] border border-[var(--md-outline)] bg-[var(--md-surface-container-low)] p-3">
+          <p className="text-[length:var(--fs-sm)] font-semibold text-[var(--md-on-surface)]">Hàng lỗi - ảnh</p>
+          <FormField label="Lý do chung phiếu HL (tuỳ chọn)">
+            <input
+              className="form-input"
+              value={defectReason}
+              onChange={e => setDefectReason(e.target.value)}
+              placeholder="Ghi chú chung cho phiếu HL"
+            />
+          </FormField>
+          <div>
+            <p className="mb-1 text-[length:var(--fs-xs)] font-medium text-[var(--md-on-surface-variant)]">
+              Ảnh hàng lỗi <span className="text-[var(--md-error)]">*</span>
+            </p>
+            <input
+              ref={defectPhotoInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="sr-only"
+              multiple
+              onChange={e => {
+                const files = Array.from(e.target.files ?? []);
+                e.target.value = '';
+                files.forEach(file => {
+                  void onUploadAttachment?.(selected, file, 'defect_photo');
+                });
+              }}
+            />
+            <button
+              type="button"
+              className="btn btn-outlined"
+              disabled={isEvidencePending || !onUploadAttachment}
+              onClick={() => defectPhotoInputRef.current?.click()}
+            >
+              Chọn ảnh hàng lỗi
+            </button>
+            {defectPhotos.length > 0 ? (
+              <div className="mt-2">
+                <SavedImportPhotoGrid
+                  importId={selected.id}
+                  attachments={defectPhotos}
+                  kinds={['defect_photo']}
+                  canEdit={Boolean(onDeleteAttachment)}
+                  onDelete={id => {
+                    void onDeleteAttachment?.(selected, id);
+                  }}
+                  onDownload={
+                    onDownloadAttachment
+                      ? (id, name) => {
+                          void onDownloadAttachment(selected, id, name);
+                        }
+                      : undefined
+                  }
+                />
+              </div>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+
+      {settlementEditable && totals.shortage > 0 ? (
+        <div className="mt-3">
+          <FormField label="Báo cáo thiếu hàng" required>
+            <textarea
+              className="form-input min-h-[4.5rem]"
+              value={shortageReport}
+              onChange={e => {
+                setShortageReport(e.target.value);
+                setSettlementError(null);
+              }}
+              placeholder="NCC giao thiếu bao nhiêu, lý do, hạn giao bù..."
+            />
+          </FormField>
+          <p className="mt-1 text-[length:var(--fs-micro)] text-[var(--md-on-surface-variant)]">
+            Cung ứng dùng báo cáo này để tạo phiếu nhập lần sau từ PO.
+          </p>
+        </div>
+      ) : null}
+
+      {!settlementEditable && selected.shortageReport ? (
+        <div className="mt-3 rounded-[var(--radius-md)] border border-[var(--md-outline)] bg-[var(--md-surface-container-low)] p-3">
+          <p className="text-[length:var(--fs-xs)] font-medium text-[var(--md-on-surface-variant)]">Báo cáo thiếu hàng</p>
+          <p className="mt-1 whitespace-pre-wrap text-[length:var(--fs-sm)] text-[var(--md-on-surface)]">
+            {selected.shortageReport}
+          </p>
+        </div>
+      ) : null}
+
+      {settlementError ? (
+        <p
+          data-settlement-error
+          className="mt-2 text-[length:var(--fs-sm)] text-[var(--md-error)] font-semibold"
+          role="alert"
+        >
+          {settlementError}
+        </p>
+      ) : null}
 
       <div className="mt-4 space-y-3">
         {evidenceEditable ? (
@@ -259,9 +573,9 @@ export default function ImportDetailModal({
             evidenceInputRef={evidenceInputRef}
             evidenceDocInputRef={evidenceDocInputRef}
             editVoucherCode={selected.id}
-            editAttachments={attachments}
+            editAttachments={attachments.filter(a => a.kind === 'photo' || a.kind === 'document')}
             isEvidencePending={isEvidencePending}
-            hint="Cập nhật đánh giá, ảnh nhận hàng và file chứng từ. Đủ 3 mục mới duyệt thực tế."
+            hint="Cần đánh giá, ảnh nhận hàng và file chứng từ trước khi duyệt."
             onUploadEditAttachment={
               onUploadAttachment
                 ? (file, kind) => onUploadAttachment(selected, file, kind)

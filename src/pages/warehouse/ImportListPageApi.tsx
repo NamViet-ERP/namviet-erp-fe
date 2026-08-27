@@ -26,6 +26,7 @@ import { getApiErrorMessage, saveBlob } from '../../lib/apiClient';
 
 import { parseImportBudgetExceeded } from '../../lib/wms/projectBudget';
 import { downloadVoucherExport } from '../../lib/wms/voucherExportDownload';
+import type { ImportApproveSettlementPayload } from './import/importReceiveSettlement';
 
 import { formatCurrencyFull } from '../../utils/formatCurrency';
 
@@ -129,6 +130,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
   const [budgetConfirmImport, setBudgetConfirmImport] = useState<Import | null>(null);
 
   const [budgetExceeded, setBudgetExceeded] = useState<ImportBudgetExceededApiDto | null>(null);
+  const [pendingSettlement, setPendingSettlement] = useState<ImportApproveSettlementPayload | null>(null);
 
   const [editing, setEditing] = useState<Import | null>(null);
 
@@ -619,49 +621,56 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
 
 
-  const runApprove = async (imp: Import, confirmOverBudget = false) => {
-
+  const runApprove = async (
+    imp: Import,
+    confirmOverBudget = false,
+    settlement?: ImportApproveSettlementPayload | null,
+  ) => {
     try {
-
-      await approveMutation.mutateAsync({ id: imp.id, confirmOverBudget });
-
+      await approveMutation.mutateAsync({
+        id: imp.id,
+        confirmOverBudget,
+        lines: settlement?.lines,
+        shortageReport: settlement?.shortageReport,
+        defectReason: settlement?.defectReason,
+      });
       setBudgetConfirmImport(null);
-
       setBudgetExceeded(null);
-
+      setPendingSettlement(null);
+      setShowDetail(false);
+      setSelected(null);
       showToast('success', `Thủ kho đã duyệt kho phiếu ${imp.voucherCode}`);
-
     } catch (err) {
-
       const exceeded = parseImportBudgetExceeded(err);
-
       if (exceeded) {
-
         setBudgetConfirmImport(imp);
-
         setBudgetExceeded(exceeded);
-
+        if (settlement) setPendingSettlement(settlement);
         return;
-
       }
-
-      showToast('error', getApiErrorMessage(err, 'Không thể duyệt phiếu'));
-
+      const msg = getApiErrorMessage(err, 'Không thể duyệt phiếu');
+      // Duyệt đã thành công trước đó nhưng modal còn mở với status cũ → làm mới + đóng.
+      if (/không thể duyệt lại/i.test(msg) || /already.*approved/i.test(msg)) {
+        try {
+          await reloadImport(imp.id);
+        } catch {
+          /* ignore */
+        }
+        setShowDetail(false);
+        setSelected(null);
+        showToast('success', `Phiếu ${imp.voucherCode} đã được duyệt`);
+        return;
+      }
+      showToast('error', msg);
     }
-
   };
 
-
-
-  const handleApprove = async (imp: Import, evaluationText?: string) => {
-    const text = (evaluationText ?? imp.receiptEvaluation ?? '').trim();
+  const handleApprove = async (imp: Import, settlement: ImportApproveSettlementPayload) => {
+    const text = settlement.evaluation.trim();
     const hasPhoto = (imp.attachments ?? []).some(a => a.kind === 'photo');
     const hasDocument = (imp.attachments ?? []).some(a => a.kind === 'document');
 
     if (!text || !hasPhoto || !hasDocument) {
-      if (evaluationText === undefined) {
-        openDetail(imp);
-      }
       showToast(
         'error',
         !text
@@ -679,7 +688,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
         await importsService.updateReceiptEvaluation(imp.id, text);
         await reloadImport(imp.id);
       }
-      await runApprove(imp, false);
+      await runApprove(imp, false, settlement);
     } catch (err) {
       showToast('error', getApiErrorMessage(err, 'Không thể duyệt phiếu'));
     } finally {
@@ -739,7 +748,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
   const handleUploadAttachment = async (
     imp: Import,
     file: File,
-    kind: 'document' | 'photo',
+    kind: 'document' | 'photo' | 'defect_photo',
   ) => {
     try {
       setIsEvidencePending(true);
@@ -847,31 +856,13 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
 
         <ImportTable
-
           rows={paginated}
-
           isLoading={isLoading}
-
           isError={isError}
-
           error={error}
-
           projectName={projectName}
-
           onOpenDetail={openDetail}
-
-          onEdit={openEdit}
-
-          onSubmit={handleSubmit}
-
-          canEdit={false}
-
-          canSubmit={false}
-
-          canDelete={false}
-
           showPrices={canViewPrices}
-
         />
 
 
@@ -1054,7 +1045,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
         projectName={projectName}
 
-        onApprove={canApproveImport ? (imp, evaluation) => { void handleApprove(imp, evaluation); } : undefined}
+        onApprove={canApproveImport ? (imp, settlement) => { void handleApprove(imp, settlement); } : undefined}
 
         isApproving={approveMutation.isPending}
 
@@ -1088,7 +1079,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
         onConfirm={() => {
 
-          if (budgetConfirmImport) void runApprove(budgetConfirmImport, true);
+          if (budgetConfirmImport) void runApprove(budgetConfirmImport, true, pendingSettlement);
 
         }}
 

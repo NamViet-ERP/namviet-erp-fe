@@ -7,4 +7,6 @@ import type { components } from '../generated/openapi';
 type Schemas = components['schemas'];
 
 export type ImportBudgetExceededApiDto = Schemas['ImportBudgetExceededDto'];
+
+export type ApproveImportLineSettlementApiDto = Schemas['ApproveImportLineSettlementRequest'];
 export type ApproveImportRequestApiDto = Schemas['ApproveImportRequest'];

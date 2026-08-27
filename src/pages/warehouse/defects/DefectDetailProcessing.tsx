@@ -29,8 +29,8 @@ export default function DefectDetailProcessing({
 }: DefectDetailProcessingProps) {
   if (canEditProcessing) {
     return (
-      <div className="rounded-lg border border-[var(--md-outline-variant)] bg-[var(--md-surface-container-low)] p-3 space-y-3">
-        <div className="text-xs font-bold uppercase text-[var(--md-on-surface-variant)]">Xử lý bảo hành</div>
+      <div className="rounded-[var(--radius-md)] border border-[var(--md-outline)] bg-[var(--md-surface-container-low)] p-3 space-y-3">
+        <p className="wms-voucher-detail__section-label">Xử lý bảo hành</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <FormField label="Nguyên nhân">
             <select
@@ -38,7 +38,7 @@ export default function DefectDetailProcessing({
               value={causeSource}
               onChange={e => onCauseSourceChange(e.target.value)}
             >
-              <option value="">— Chọn nguyên nhân —</option>
+              <option value="">- Chọn nguyên nhân -</option>
               <option value="supplier">NCC</option>
               <option value="customer">Khách hàng</option>
             </select>
@@ -49,7 +49,7 @@ export default function DefectDetailProcessing({
               value={handlingMethod}
               onChange={e => onHandlingMethodChange(e.target.value)}
             >
-              <option value="">— Chọn hướng xử lý —</option>
+              <option value="">- Chọn hướng xử lý -</option>
               <option value="warranty_repair">Bảo hành sửa chữa</option>
               <option value="replace">Đổi mới</option>
             </select>
@@ -57,20 +57,15 @@ export default function DefectDetailProcessing({
         </div>
         <FormField label="Phản hồi của NCC">
           <textarea
-            className="form-input"
+            className="form-input min-h-[4.5rem]"
             rows={3}
             value={supplierFeedback}
             onChange={e => onSupplierFeedbackChange(e.target.value)}
-            placeholder="Ghi nhận phản hồi từ nhà cung cấp…"
+            placeholder="Ghi nhận phản hồi từ nhà cung cấp..."
           />
         </FormField>
         <div className="flex justify-end">
-          <button
-            type="button"
-            className="btn btn-filled"
-            disabled={saving}
-            onClick={onSave}
-          >
+          <button type="button" className="btn btn-filled" disabled={saving} onClick={onSave}>
             Lưu xử lý
           </button>
         </div>
@@ -80,12 +75,23 @@ export default function DefectDetailProcessing({
 
   if (selected.status === 'approved' && selected.processingPhase !== 'approved') {
     return (
-      <div className="rounded-lg border border-[var(--md-outline-variant)] bg-[var(--md-surface-container-low)] p-3 space-y-1 text-xs">
-        <div className="text-xs font-bold uppercase text-[var(--md-on-surface-variant)] mb-1">Xử lý bảo hành</div>
-        <div>Nguyên nhân: <strong>{causeSourceLabel(selected.causeSource)}</strong></div>
-        <div>Phản hồi của NCC: <strong className="whitespace-pre-wrap">{selected.supplierFeedback || '—'}</strong></div>
-        <div>
-          Hướng xử lý: <strong>{handlingMethodLabel(selected.handlingMethod)}</strong>
+      <div className="rounded-[var(--radius-md)] border border-[var(--md-outline)] bg-[var(--md-surface-container-low)] p-3 space-y-2">
+        <p className="wms-voucher-detail__section-label">Xử lý bảo hành</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[length:var(--fs-sm)]">
+          <div>
+            <span className="text-[var(--md-on-surface-variant)]">Nguyên nhân: </span>
+            <strong className="text-[var(--md-on-surface)]">{causeSourceLabel(selected.causeSource)}</strong>
+          </div>
+          <div>
+            <span className="text-[var(--md-on-surface-variant)]">Hướng xử lý: </span>
+            <strong className="text-[var(--md-on-surface)]">{handlingMethodLabel(selected.handlingMethod)}</strong>
+          </div>
+          <div className="md:col-span-2">
+            <span className="text-[var(--md-on-surface-variant)]">Phản hồi NCC: </span>
+            <strong className="whitespace-pre-wrap text-[var(--md-on-surface)]">
+              {selected.supplierFeedback?.trim() || '-'}
+            </strong>
+          </div>
         </div>
       </div>
     );

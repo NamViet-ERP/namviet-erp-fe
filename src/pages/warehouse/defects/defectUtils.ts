@@ -17,6 +17,34 @@ export function statusLabel(status: string) {
   return status;
 }
 
+/** Nhãn badge trên chi tiết phiếu (gồm phase xử lý sau duyệt). */
+export function defectDetailBadgeLabel(row: PurchaseDefectApiDto): string {
+  if (row.status === 'approved') {
+    if (row.processingPhase === 'processing') return 'Đang xử lý';
+    if (row.processingPhase === 'processed') return 'Đã xử lý';
+    return 'Đã duyệt';
+  }
+  return statusLabel(row.status);
+}
+
+/** Tone badge khớp nhãn (Đang xử lý dùng pending). */
+export function defectDetailBadgeStatus(row: PurchaseDefectApiDto): StatusKey {
+  if (row.status === 'approved' && row.processingPhase === 'processing') return 'pending';
+  return toStatusKey(row.status);
+}
+
+export function defectStatusHint(row: PurchaseDefectApiDto): string {
+  if (row.status === 'draft') return 'Bổ sung ảnh và lý do trước khi gửi duyệt';
+  if (row.status === 'pending') {
+    return row.sourceType === 'stock'
+      ? 'Duyệt sẽ trừ tồn thực tế dự án'
+      : 'Duyệt cập nhật PO/KHMH - không cộng tồn';
+  }
+  if (row.status === 'approved') return 'Đã duyệt - chỉ xem';
+  if (row.status === 'rejected') return 'Phiếu đã hủy';
+  return '';
+}
+
 export function toStatusKey(status: string): StatusKey {
   if (
     status === 'draft'
