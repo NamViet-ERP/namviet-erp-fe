@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import SearchBar from '../../components/ui/SearchBar';
 import Pagination from '../../components/ui/Pagination';
 import EmptyState from '../../components/ui/EmptyState';
@@ -22,11 +21,11 @@ import {
 } from '../../lib/wms/stockTerminology';
 import { WMS_EMPTY, WMS_ERROR } from '../../lib/wms/messages';
 import type { StockMatrixRowApiDto } from '../../types/wms';
-import { formatCurrency } from '../../utils/formatCurrency';
+import { formatCurrencyVnd } from '../../utils/formatCurrency';
 
 export default function ApiStockMatrixView() {
   const { data: rows = [], isLoading, isError } = useStockMatrix();
-  /** Thủ kho không bao giờ thấy Giá BQ (BE PriceVisibility cũng mask). */
+  /** Thủ kho không bao giờ thấy giá bình quân (BE PriceVisibility cũng mask). */
   const canViewPrices = useCanViewWmsPrices();
   const colSpan = canViewPrices ? 12 : 11;
   const [search, setSearch] = useState('');
@@ -86,23 +85,23 @@ export default function ApiStockMatrixView() {
               <tr>
                 <th className="table-header-cell text-left stock-col-code">Mã vật tư</th>
                 <th className="table-header-cell text-left stock-col-name">Tên vật tư</th>
-                <th className="table-header-cell text-center w-14">ĐVT</th>
-                <th className="table-header-cell text-right w-20">{GENERAL_WAREHOUSE_LABEL}</th>
-                <th className="table-header-cell text-right w-20" title="Tồn thực tế − xuất/chuyển dự kiến − HL tồn kho chờ duyệt (kèm kho trung tâm − giữ)">Khả dụng</th>
-                <th className="table-header-cell text-right w-20">Nhập dự kiến</th>
-                <th className="table-header-cell text-right w-20">Xuất dự kiến</th>
-                <th className="table-header-cell text-right stock-col-project whitespace-nowrap">Tồn thực tế</th>
+                <th className="table-header-cell text-center stock-col-unit">Đơn vị</th>
+                <th className="table-header-cell text-right stock-col-qty">{GENERAL_WAREHOUSE_LABEL}</th>
+                <th className="table-header-cell text-right stock-col-qty">Tồn thực tế</th>
+                <th className="table-header-cell text-right stock-col-qty" title="Tồn thực tế − xuất/chuyển dự kiến − hàng lỗi tồn kho chờ duyệt (kèm kho trung tâm − giữ)">Khả dụng</th>
+                <th className="table-header-cell text-right stock-col-qty">Nhập dự kiến</th>
+                <th className="table-header-cell text-right stock-col-qty">Xuất dự kiến</th>
                 <th
-                  className="table-header-cell text-right w-20 whitespace-nowrap"
+                  className="table-header-cell text-right stock-col-qty"
                   title="Tổng SL phiếu hàng lỗi (HL) chưa từ chối theo mã vật tư"
                 >
                   Hàng lỗi
                 </th>
-                <th className="table-header-cell text-right stock-col-project whitespace-nowrap" title="Tồn thực tế + nhập/hoàn trả/chuyển kho dự kiến">Tồn dự kiến</th>
+                <th className="table-header-cell text-right stock-col-qty" title="Tồn thực tế + nhập/hoàn trả/chuyển kho dự kiến">Tồn dự kiến</th>
                 {canViewPrices ? (
-                  <th className="table-header-cell text-right w-24" title="WAC từ phiếu nhập đã duyệt trong 12 tháng (ngày duyệt)">Giá BQ</th>
+                  <th className="table-header-cell text-right stock-col-price" title="WAC từ phiếu nhập đã duyệt trong 12 tháng (ngày duyệt)">Giá bình quân</th>
                 ) : null}
-                <th className="table-header-cell text-center w-14">Dự án</th>
+                <th className="table-header-cell text-center stock-col-projects">Dự án</th>
               </tr>
             </thead>
             <tbody>
@@ -132,17 +131,10 @@ export default function ApiStockMatrixView() {
                     <tr
                       key={row.materialCode}
                       onClick={() => setSelectedRow(row)}
-                      className="wms-inventory-row--interactive stock-matrix-row table-row cursor-pointer"
+                      className="wms-inventory-row--interactive table-row"
                     >
-                      <td className="table-cell font-mono font-bold stock-col-code" onClick={e => e.stopPropagation()}>
-                        <Link
-                          to="/warehouse/materials"
-                          state={{ highlightCode: row.materialCode }}
-                          className="text-[var(--md-primary)] hover:underline stock-cell-truncate"
-                          title={row.materialCode}
-                        >
-                          {row.materialCode}
-                        </Link>
+                      <td className="table-cell stock-col-code">
+                        <span className="entity-code stock-cell-truncate">{row.materialCode}</span>
                       </td>
                       <td className="table-cell stock-col-name">
                         <span className="font-semibold stock-cell-truncate block" title={row.materialName}>
@@ -152,36 +144,36 @@ export default function ApiStockMatrixView() {
                           <span className="wms-badge-inactive">Ngừng SD</span>
                         )}
                       </td>
-                      <td className="table-cell text-center">{row.unit}</td>
-                      <td className="table-cell text-right font-bold tabular-nums stock-cell-general">
+                      <td className="table-cell text-center stock-col-unit">{row.unit}</td>
+                      <td className="table-cell text-right font-bold tabular-nums stock-col-qty stock-cell-general">
                         {row.generalActualQty}
                       </td>
-                      <td className="table-cell text-right font-bold tabular-nums text-[var(--md-success)]">
-                        {usableQty}
-                      </td>
-                      <td className="table-cell text-right tabular-nums stock-qty--pending">
-                        {fmtStockQtyOrDash(plannedImport)}
-                      </td>
-                      <td className="table-cell text-right tabular-nums stock-qty--reserved">
-                        {fmtStockQtyOrDash(plannedExport)}
-                      </td>
-                      <td className="table-cell text-right font-bold tabular-nums">
+                      <td className="table-cell text-right font-bold tabular-nums stock-col-qty">
                         {projectActual}
                       </td>
-                      <td className="table-cell text-right tabular-nums stock-qty--reserved">
+                      <td className="table-cell text-right font-bold tabular-nums stock-col-qty text-[var(--md-success)]">
+                        {usableQty}
+                      </td>
+                      <td className="table-cell text-right tabular-nums stock-col-qty stock-qty--pending">
+                        {fmtStockQtyOrDash(plannedImport)}
+                      </td>
+                      <td className="table-cell text-right tabular-nums stock-col-qty stock-qty--reserved">
+                        {fmtStockQtyOrDash(plannedExport)}
+                      </td>
+                      <td className="table-cell text-right tabular-nums stock-col-qty stock-qty--reserved">
                         {fmtStockQtyOrDash(Number(row.defectedQty) || 0)}
                       </td>
-                      <td className="table-cell text-right font-semibold tabular-nums">
+                      <td className="table-cell text-right font-semibold tabular-nums stock-col-qty">
                         {fmtPlannedStock(projectActual, plannedImport)}
                       </td>
                       {canViewPrices ? (
-                        <td className="table-cell text-right tabular-nums text-[var(--md-on-surface)]">
+                        <td className="table-cell text-right tabular-nums stock-col-price text-[var(--md-on-surface)]">
                           {row.weightedAverageUnitCost > 0
-                            ? formatCurrency(row.weightedAverageUnitCost)
+                            ? formatCurrencyVnd(row.weightedAverageUnitCost)
                             : '—'}
                         </td>
                       ) : null}
-                      <td className="table-cell text-center">
+                      <td className="table-cell text-center stock-col-projects">
                         {activeCount > 0 ? (
                           <span className="stock-project-badge tabular-nums">{activeCount}</span>
                         ) : (

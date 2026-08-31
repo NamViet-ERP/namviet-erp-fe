@@ -72,6 +72,7 @@ export function ImportCreateItemsToolbar({
   excelBar,
   onAddMaterialLine,
   projectCode,
+  issueFromGeneralWarehouse = false,
 }: {
   isPoLineMode: boolean;
   selectedPoCode: string;
@@ -80,6 +81,7 @@ export function ImportCreateItemsToolbar({
   excelBar: React.ReactNode;
   onAddMaterialLine: () => void;
   projectCode: string;
+  issueFromGeneralWarehouse?: boolean;
 }) {
   return (
     <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -91,7 +93,9 @@ export function ImportCreateItemsToolbar({
           <p className="mt-0.5 text-[11px] text-[var(--md-on-surface-variant)]">
             {selectedPoLineCount > 0
               ? `Đã chọn ${selectedPoLineCount} dòng · tick/bỏ tick và chỉnh SL trước khi lưu`
-              : 'Tick ít nhất một dòng còn SL trên PO'}
+              : issueFromGeneralWarehouse
+                ? 'Tick dòng còn khả dụng trung tâm - hết hàng thì không tăng SL'
+                : 'Tick ít nhất một dòng còn SL trên PO'}
           </p>
         ) : null}
       </div>

@@ -31,15 +31,55 @@ import { emptyQtyPriceLine, type MaterialQtyPriceLine } from '../../warehouse/vo
 import { importLineTotal } from '../../warehouse/import/importUtils';
 import { resolvePoImportItems } from '../../warehouse/import/importCreatePoDrafts';
 
+function toImportUpdateDto(imp: Import, patch: Partial<CreateImportDto> = {}): CreateImportDto {
+  return {
+    voucherCode: imp.voucherCode,
+    date: imp.date,
+    supplier: imp.supplier,
+    referenceCode: imp.referenceCode,
+    totalValue: imp.totalValue,
+    status: imp.status,
+    warehouseApproval: imp.warehouseApproval,
+    approvedBy: imp.approvedBy ?? '',
+    warehouseKeeper: imp.warehouseKeeper ?? '',
+    items: imp.items.map(it => ({
+      productId: it.productId,
+      sku: it.sku,
+      name: it.name,
+      qty: it.qty,
+      unit: it.unit,
+      unitPrice: it.unitPrice,
+      supplier: it.supplier,
+      supplierId: it.supplierId,
+      notes: it.notes ?? undefined,
+    })),
+    note: imp.note,
+    warehouseId: imp.warehouseId,
+    isDirectProcurement: Boolean(imp.isDirectProcurement),
+    issueFromGeneralWarehouse: Boolean(imp.issueFromGeneralWarehouse),
+    project: imp.project,
+    planCode: imp.planCode ?? undefined,
+    ...patch,
+  };
+}
+
+function directDispatchNote(imp: Import): string {
+  return /^Nhập kho từ PO/i.test(imp.note.trim())
+    ? `Xuất thẳng công trường từ PO ${imp.referenceCode}`
+    : imp.note;
+}
+
 type Props = {
   poCode: string;
   order: PurchaseOrderApiDto | undefined;
+  /** true = panel xuất thẳng công trường (cung ứng tạo + chốt dự kiến). */
+  directDispatch?: boolean;
 };
 
 /**
  * Tạo / sửa / chốt dự kiến / xóa phiếu nhập gắn PO — luồng cung ứng trên chi tiết PO.
  */
-export function usePoStockInFlow({ poCode, order }: Props) {
+export function usePoStockInFlow({ poCode, order, directDispatch = false }: Props) {
   const { has } = usePermission();
   const canCreate = has('wms.imports.create');
   const canUpdate = has('wms.imports.update');
@@ -56,6 +96,7 @@ export function usePoStockInFlow({ poCode, order }: Props) {
       };
       return (importsQuery.data ?? [])
         .filter(imp => (imp.referenceCode ?? '').trim().toLowerCase() === poCode.trim().toLowerCase())
+        .filter(imp => Boolean(imp.isDirectProcurement) === directDispatch)
         .slice()
         .sort((a, b) => {
           const byStatus = rank(a.status) - rank(b.status);
@@ -63,7 +104,7 @@ export function usePoStockInFlow({ poCode, order }: Props) {
           return (b.approvedAt || b.date || '').localeCompare(a.approvedAt || a.date || '');
         });
     },
-    [importsQuery.data, poCode],
+    [importsQuery.data, poCode, directDispatch],
   );
 
   const [showCreate, setShowCreate] = useState(false);
@@ -71,6 +112,7 @@ export function usePoStockInFlow({ poCode, order }: Props) {
   const [selected, setSelected] = useState<Import | null>(null);
   const [editing, setEditing] = useState<Import | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Import | null>(null);
+  const [convertTarget, setConvertTarget] = useState<Import | null>(null);
   const [isEvidencePending, setIsEvidencePending] = useState(false);
 
   const [defaultSupplier, setDefaultSupplier] = useState('');
@@ -81,6 +123,7 @@ export function usePoStockInFlow({ poCode, order }: Props) {
   const [note, setNote] = useState('');
   const [items, setItems] = useState<MaterialQtyPriceLine[]>([{ ...emptyQtyPriceLine }]);
   const [createErrors, setCreateErrors] = useState<ImportFormFieldErrors>({});
+  const [issueFromGeneralWarehouse, setIssueFromGeneralWarehouse] = useState(false);
 
   const { data: materialsPage } = useMaterials({ pageSize: 500 });
   const { data: projectsPage } = useProjects({ pageSize: 100, status: 'Active' });
@@ -110,7 +153,7 @@ export function usePoStockInFlow({ poCode, order }: Props) {
     order
     && order.approvalStatus === 'approved'
     && order.orderPlacementStatus === 'placed'
-    && hasAvailableQty,
+    && (directDispatch || hasAvailableQty),
   );
 
   const placeImportBlockedReason = !order
@@ -123,7 +166,7 @@ export function usePoStockInFlow({ poCode, order }: Props) {
           ? getApiErrorMessage(poPreviewQuery.error, 'Không tải được dòng PO còn nhập được')
           : poPreviewQuery.isFetching && !poPreviewQuery.data
             ? 'Đang kiểm tra SL còn lại trên PO…'
-            : !hasAvailableQty
+            : !directDispatch && !hasAvailableQty
               ? 'Không còn SL khả dụng để nhập (đã nhập / đang chờ duyệt / không có dòng)'
               : '';
 
@@ -136,6 +179,15 @@ export function usePoStockInFlow({ poCode, order }: Props) {
     () => items.reduce((sum, it) => sum + importLineTotal(it), 0),
     [items],
   );
+
+  const getQtyCap = useMemo(() => {
+    if (!directDispatch || !issueFromGeneralWarehouse) return undefined;
+    return (line: { generalAvailableQty?: number | null }) => {
+      if (line.generalAvailableQty == null) return 0;
+      const qty = Number(line.generalAvailableQty);
+      return Number.isFinite(qty) ? Math.max(0, qty) : 0;
+    };
+  }, [directDispatch, issueFromGeneralWarehouse]);
 
   const projectName = (code?: string) =>
     projects.find(p => p.projectCode === code)?.projectName ?? code ?? '—';
@@ -151,6 +203,7 @@ export function usePoStockInFlow({ poCode, order }: Props) {
     setNote('');
     setItems([{ ...emptyQtyPriceLine }]);
     setCreateErrors({});
+    setIssueFromGeneralWarehouse(false);
   };
 
   useEffect(() => {
@@ -181,6 +234,7 @@ export function usePoStockInFlow({ poCode, order }: Props) {
       return;
     }
     resetForm();
+    void poPreviewQuery.refetch();
     setShowCreate(true);
   };
 
@@ -203,6 +257,10 @@ export function usePoStockInFlow({ poCode, order }: Props) {
     setNote(imp.note);
     setItems(importToFormLines(imp.items));
     setCreateErrors({});
+    setIssueFromGeneralWarehouse(
+      Boolean(imp.issueFromGeneralWarehouse)
+      || (Boolean(imp.isDirectProcurement) && Boolean(imp.warehouseId?.trim())),
+    );
     setShowCreate(true);
   };
 
@@ -212,7 +270,7 @@ export function usePoStockInFlow({ poCode, order }: Props) {
       setCreateErrors(e => ({ ...e, projectCode: 'PO thiếu mã dự án — không thể lưu phiếu nhập.' }));
       return null;
     }
-    const priceOpts = { requireUnitPrice: canViewPrices };
+    const priceOpts = { requireUnitPrice: canViewPrices && !issueFromGeneralWarehouse };
     const validItems = items.filter(line => isImportLineComplete(line, priceOpts));
     const supplierValid = Boolean(findSupplierByName(suppliers, defaultSupplier));
     const fieldErrors = getImportFormFieldErrors(
@@ -264,7 +322,8 @@ export function usePoStockInFlow({ poCode, order }: Props) {
       createdBy: '',
       note,
       warehouseId: '',
-      isDirectProcurement: false,
+      isDirectProcurement: directDispatch,
+      issueFromGeneralWarehouse: directDispatch && issueFromGeneralWarehouse,
       project: lockedProject,
     };
   };
@@ -292,25 +351,42 @@ export function usePoStockInFlow({ poCode, order }: Props) {
     try {
       const created = await createFromPoMutation.mutateAsync({
         poCode: selectedPoCode,
-        request: { items: selectedItems },
+        request: {
+          items: selectedItems,
+          isDirectProcurement: directDispatch,
+          issueFromGeneralWarehouse: directDispatch && issueFromGeneralWarehouse,
+        },
       });
+      let voucher = created;
+      if (directDispatch && !voucher.isDirectProcurement) {
+        voucher = await updateMutation.mutateAsync({
+          id: voucher.id,
+          dto: toImportUpdateDto(voucher, {
+            isDirectProcurement: true,
+            status: 'draft',
+            note: directDispatchNote(voucher),
+          }),
+        });
+      }
       const files = evidence?.files ?? [];
       const evaluation = (evidence?.evaluation ?? '').trim();
       if (evaluation) {
-        await importsService.updateReceiptEvaluation(created.id, evaluation);
+        await importsService.updateReceiptEvaluation(voucher.id, evaluation);
       }
       for (const file of files) {
         const kind = file.type.startsWith('image/') ? 'photo' : 'document';
-        await importsService.uploadAttachment(created.id, file, kind);
+        await importsService.uploadAttachment(voucher.id, file, kind);
       }
       if (status === 'pending') {
-        await submitMutation.mutateAsync(created.id);
+        await submitMutation.mutateAsync(voucher.id);
       }
       showToast(
         'success',
         status === 'draft'
-          ? `Phiếu nháp ${created.voucherCode} — chưa chốt dự kiến.`
-          : `Phiếu ${created.voucherCode} — nhập dự kiến, chờ thủ kho duyệt thực tế.`,
+          ? `Phiếu nháp ${voucher.voucherCode} — chưa chốt dự kiến.`
+          : directDispatch
+            ? `Phiếu ${voucher.voucherCode} - xuất thẳng dự kiến, chờ thủ kho duyệt ở Xuất kho.`
+            : `Phiếu ${voucher.voucherCode} — nhập dự kiến, chờ thủ kho duyệt thực tế.`,
       );
       setShowCreate(false);
       resetForm();
@@ -341,7 +417,12 @@ export function usePoStockInFlow({ poCode, order }: Props) {
   const handleSubmit = async (imp: Import) => {
     try {
       await submitMutation.mutateAsync(imp.id);
-      showToast('success', `Đã chốt dự kiến phiếu ${imp.voucherCode}`);
+      showToast(
+        'success',
+        directDispatch
+          ? `Đã chốt dự kiến ${imp.voucherCode}. Thủ kho duyệt thực tế ở tab Xuất kho.`
+          : `Đã chốt dự kiến phiếu ${imp.voucherCode}`,
+      );
     } catch (err) {
       showToast('error', getApiErrorMessage(err, 'Không thể chốt phiếu'));
     }
@@ -421,7 +502,26 @@ export function usePoStockInFlow({ poCode, order }: Props) {
     }
   };
 
+  const handleConfirmConvert = async () => {
+    if (!convertTarget) return;
+    try {
+      await updateMutation.mutateAsync({
+        id: convertTarget.id,
+        dto: toImportUpdateDto(convertTarget, {
+          isDirectProcurement: true,
+          status: convertTarget.status === 'pending' ? 'pending' : 'draft',
+          note: directDispatchNote(convertTarget),
+        }),
+      });
+      showToast('success', `Đã chuyển ${convertTarget.voucherCode} sang xuất thẳng công trường.`);
+      setConvertTarget(null);
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không chuyển được phiếu sang xuất thẳng.'));
+    }
+  };
+
   return {
+    directDispatch,
     relatedImports,
     importsLoading: importsQuery.isLoading,
     canCreate,
@@ -439,6 +539,8 @@ export function usePoStockInFlow({ poCode, order }: Props) {
     editing,
     deleteTarget,
     setDeleteTarget,
+    convertTarget,
+    setConvertTarget,
     isEvidencePending,
     defaultSupplier,
     setDefaultSupplier,
@@ -459,6 +561,12 @@ export function usePoStockInFlow({ poCode, order }: Props) {
     poOptions,
     poPreviewQuery,
     formGrandTotal,
+    issueFromGeneralWarehouse,
+    setIssueFromGeneralWarehouse: (next: boolean) => {
+      setIssueFromGeneralWarehouse(next);
+      if (next) void poPreviewQuery.refetch();
+    },
+    getQtyCap,
     projectName,
     materialUnit,
     openCreate,
@@ -468,6 +576,7 @@ export function usePoStockInFlow({ poCode, order }: Props) {
     handleUpdate,
     handleSubmit,
     handleConfirmDelete,
+    handleConfirmConvert,
     handleUploadAttachment,
     handleDeleteAttachment,
     handleDownloadAttachment,
@@ -477,5 +586,6 @@ export function usePoStockInFlow({ poCode, order }: Props) {
       || updateMutation.isPending
       || submitMutation.isPending,
     deletePending: deleteMutation.isPending,
+    convertPending: updateMutation.isPending && convertTarget != null,
   };
 }

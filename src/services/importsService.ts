@@ -76,9 +76,16 @@ export const importsService = {
     poCode: string,
     request?: CreateImportFromPoRequest | null,
   ): Promise<Import> {
+    const isDirectProcurement = Boolean(request?.isDirectProcurement);
+    const body: CreateImportFromPoRequest = {
+      items: request?.items,
+      isDirectProcurement,
+      issueFromGeneralWarehouse: Boolean(request?.issueFromGeneralWarehouse),
+    };
+    const qs = isDirectProcurement ? '?isDirectProcurement=true' : '';
     return apiClient.post<Import>(
-      `${ENDPOINT}/from-po/${encodeURIComponent(poCode)}`,
-      request ?? {},
+      `${ENDPOINT}/from-po/${encodeURIComponent(poCode)}${qs}`,
+      body,
     );
   },
 

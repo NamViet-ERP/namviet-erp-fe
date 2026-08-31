@@ -93,7 +93,12 @@ export default function TransferTable({
                   onClick={() => onOpenDetail(tf)}
                 >
                   <td className="table-cell">
-                    <VoucherCodeCell code={tf.voucherCode} voucher={tf} showCreator />
+                    <VoucherCodeCell
+                      code={tf.voucherCode}
+                      voucher={tf}
+                      showCreator
+                      onCodeClick={() => onOpenDetail(tf)}
+                    />
                   </td>
                   <td className="table-cell max-w-[220px]">
                     <span className="line-clamp-1" title={transferProjectLabel(tf)}>

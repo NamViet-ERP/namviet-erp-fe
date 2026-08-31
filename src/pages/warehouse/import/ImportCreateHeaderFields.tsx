@@ -30,6 +30,10 @@ export interface ImportCreateHeaderFieldsProps {
   onReferenceCodeChange: (code: string) => void;
   note: string;
   onNoteChange: (note: string) => void;
+  /** Xuất thẳng trên PO: mở chọn nguồn kho dự án / kho trung tâm. */
+  allowWarehouseSourcePicker?: boolean;
+  issueFromGeneralWarehouse?: boolean;
+  onIssueFromGeneralWarehouseChange?: (value: boolean) => void;
 }
 
 export default function ImportCreateHeaderFields({
@@ -55,22 +59,27 @@ export default function ImportCreateHeaderFields({
   onReferenceCodeChange,
   note,
   onNoteChange,
+  allowWarehouseSourcePicker = false,
+  issueFromGeneralWarehouse = false,
+  onIssueFromGeneralWarehouseChange,
 }: ImportCreateHeaderFieldsProps) {
   return (
     <>
       {isCreateMode || isPoBoundEdit ? (
         <>
-          <FormField label="Phiếu PO" required error={errors?.referenceCode}>
+          <FormField label="Mã đơn hàng" required error={errors?.referenceCode}>
             {isPoBoundEdit || poLocked ? (
               <input
                 className="form-input"
                 value={
                   selectedPo
-                    ? `${selectedPo.code} · ${selectedPo.supplierName || 'NCC'} · ${selectedPo.planCode} · ${selectedPo.projectCode}`
+                    ? issueFromGeneralWarehouse
+                      ? `${selectedPo.code} · ${selectedPo.planCode} · ${selectedPo.projectCode}`
+                      : `${selectedPo.code} · ${selectedPo.supplierName || 'NCC'} · ${selectedPo.planCode} · ${selectedPo.projectCode}`
                     : selectedPoCode
                 }
                 readOnly
-                aria-label="Phiếu PO"
+                aria-label="Mã đơn hàng"
               />
             ) : (
               <select
@@ -91,22 +100,40 @@ export default function ImportCreateHeaderFields({
             )}
           </FormField>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField label="Kho dự án (từ PO)" required error={errors?.projectCode}>
-              <input
-                className="form-input"
-                value={projectLabel}
-                readOnly
-                placeholder="Chọn PO để tự điền kho dự án"
-              />
-            </FormField>
-            <FormField label="Nhà cung cấp (từ PO)">
-              <input
-                className="form-input"
-                value={selectedPo?.supplierName || defaultSupplier || ''}
-                readOnly
-                placeholder="Chọn PO để tự điền NCC"
-              />
-            </FormField>
+            {allowWarehouseSourcePicker ? (
+              <FormField label="Nguồn hàng" required error={errors?.projectCode}>
+                <select
+                  className="form-input"
+                  value={issueFromGeneralWarehouse ? 'general' : 'project'}
+                  onChange={e => onIssueFromGeneralWarehouseChange?.(e.target.value === 'general')}
+                  aria-label="Nguồn hàng"
+                >
+                  <option value="project">
+                    {projectLabel ? `Kho dự án (từ PO) - ${projectLabel}` : 'Kho dự án (từ PO)'}
+                  </option>
+                  <option value="general">Kho trung tâm</option>
+                </select>
+              </FormField>
+            ) : (
+              <FormField label="Kho dự án (từ PO)" required error={errors?.projectCode}>
+                <input
+                  className="form-input"
+                  value={projectLabel}
+                  readOnly
+                  placeholder="Chọn PO để tự điền kho dự án"
+                />
+              </FormField>
+            )}
+            {issueFromGeneralWarehouse ? null : (
+              <FormField label="Nhà cung cấp (từ PO)">
+                <input
+                  className="form-input"
+                  value={selectedPo?.supplierName || defaultSupplier || ''}
+                  readOnly
+                  placeholder="Chọn PO để tự điền NCC"
+                />
+              </FormField>
+            )}
           </div>
         </>
       ) : (
@@ -132,7 +159,7 @@ export default function ImportCreateHeaderFields({
                 placeholder="Chọn NCC từ danh mục…"
               />
             </FormField>
-            <FormField label="Mã tham chiếu / PO" required error={errors?.referenceCode}>
+            <FormField label="Mã đơn hàng" required error={errors?.referenceCode}>
               <input className="form-input" value={referenceCode} onChange={e => onReferenceCodeChange(e.target.value)} />
             </FormField>
           </div>
@@ -149,6 +176,20 @@ export default function ImportCreateHeaderFields({
               Vật tư theo phiếu PO — tick dòng và chỉnh <strong className="text-[var(--md-on-surface)]">SL dự kiến</strong>.
               Không thêm vật tư ngoài PO.
             </>
+          ) : allowWarehouseSourcePicker ? (
+            issueFromGeneralWarehouse ? (
+              <>
+                Nguồn <strong className="text-[var(--md-on-surface)]">kho trung tâm</strong>: SL theo tồn khả dụng trung tâm.
+                Khả dụng trung tâm = 0 là hết hàng - không chọn và không tăng SL.
+                Tạm thời chỉ ghi số lượng, chưa lấy đơn giá.
+                Duyệt trừ kho trung tâm, không đổi Đã nhận / Còn lại trên PO.
+              </>
+            ) : (
+              <>
+                Nguồn <strong className="text-[var(--md-on-surface)]">kho dự án (từ PO)</strong>: SL theo Còn lại.
+                Duyệt tăng Đã nhận như nhập kho.
+              </>
+            )
           ) : (
             <>
               Chọn PO trước — kho dự án và NCC lấy từ PO.

@@ -1,34 +1,34 @@
 import type { MouseEvent, ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 
-const CODE_LINK_CLASS =
-  'appearance-none border-0 bg-transparent p-0 font-mono text-sm font-bold underline underline-offset-2 text-[var(--md-on-surface)] hover:text-[var(--md-primary)] cursor-pointer text-left';
-
 interface EntityCodeLinkProps {
   code: string;
   to?: string;
+  state?: unknown;
   onClick?: (e: MouseEvent) => void;
   className?: string;
   title?: string;
   children?: ReactNode;
 }
 
-/** Mã nghiệp vụ: đậm + gạch chân, click mở chi tiết. */
+/** Mã nghiệp vụ bấm được: một kiểu trên mọi bảng (mono, gạch chân, hover primary). */
 export default function EntityCodeLink({
   code,
   to,
+  state,
   onClick,
   className,
   title,
   children,
 }: EntityCodeLinkProps) {
-  const cls = className ? `${CODE_LINK_CLASS} ${className}` : CODE_LINK_CLASS;
+  const cls = className ? `entity-code-link ${className}` : 'entity-code-link';
   const label = children ?? code;
 
   if (to) {
     return (
       <Link
         to={to}
+        state={state}
         className={cls}
         title={title ?? code}
         onClick={e => {

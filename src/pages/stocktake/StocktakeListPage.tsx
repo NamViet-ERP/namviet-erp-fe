@@ -23,6 +23,7 @@ import Badge from '../../components/ui/Badge';
 import Dropdown from '../../components/ui/Dropdown';
 import EmptyState from '../../components/ui/EmptyState';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
+import EntityCodeLink from '../../components/ui/EntityCodeLink';
 import Modal from '../../components/ui/Modal';
 import FormField from '../../components/ui/FormField';
 import MaterialAutocomplete from '../../components/ui/MaterialAutocomplete';
@@ -382,13 +383,17 @@ export default function StocktakeListPage() {
                 </tr>
               ) : (
                 paginated.map(st => (
-                  <tr key={st.id} className="table-row">
+                  <tr
+                    key={st.id}
+                    className="table-row wms-inventory-row--interactive"
+                    onClick={() => { setSelectedItem(st); setShowDetail(true); }}
+                  >
                     <td className="table-cell">{st.date}</td>
-                    <td
-                      className="table-cell font-semibold text-[var(--md-primary)] cursor-pointer hover:underline"
-                      onClick={() => { setSelectedItem(st); setShowDetail(true); }}
-                    >
-                      {st.voucherCode}
+                    <td className="table-cell">
+                      <EntityCodeLink
+                        code={st.voucherCode}
+                        onClick={() => { setSelectedItem(st); setShowDetail(true); }}
+                      />
                     </td>
                     <td className="table-cell">
                       <div className="flex items-center gap-2">
@@ -401,12 +406,16 @@ export default function StocktakeListPage() {
                     <td className="table-cell"><Badge status={st.status} /></td>
                     <td className="table-cell font-medium">
                       <div>{st.warehouseName}</div>
-                      <div className="text-[10px] font-mono text-[var(--md-on-surface-variant)]">{st.warehouseId}</div>
+                      {st.warehouseId ? (
+                        <span className="entity-code">{st.warehouseId}</span>
+                      ) : null}
                     </td>
                     <td className="table-cell"><Badge status={st.condition} /></td>
                     <td className="table-cell text-center w-28 min-w-[7rem]">{renderFreezeBadge(st)}</td>
                     <td className="table-cell text-[var(--md-on-surface-variant)] max-w-[180px] truncate">{st.note || '—'}</td>
-                    <td className="table-cell text-center"><Dropdown items={getActions(st)} /></td>
+                    <td className="table-cell text-center" onClick={e => e.stopPropagation()}>
+                      <Dropdown items={getActions(st)} />
+                    </td>
                   </tr>
                 ))
               )}
@@ -591,7 +600,7 @@ export default function StocktakeListPage() {
         {selectedItem && (
           <>
             <div className="wms-detail-summary">
-              <div><span className="wms-detail-tile__label">Mã chứng từ</span><p className="font-semibold text-[var(--md-primary)]">{selectedItem.voucherCode}</p></div>
+              <div><span className="wms-detail-tile__label">Mã chứng từ</span><p className="entity-code">{selectedItem.voucherCode}</p></div>
               <div><span className="wms-detail-tile__label">Ngày</span><p className="font-medium text-sm">{selectedItem.date}</p></div>
               <div><span className="wms-detail-tile__label">Kho dự án</span><p className="font-medium text-sm">{selectedItem.warehouseName}</p></div>
               <div><span className="wms-detail-tile__label">Trạng thái</span><div className="mt-0.5"><Badge status={selectedItem.status} /></div></div>

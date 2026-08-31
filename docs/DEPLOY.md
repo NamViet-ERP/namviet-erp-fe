@@ -122,15 +122,9 @@ Thực hiện **sau** BE migrate và chạy API (chi tiết BE doc):
 
 ---
 
-## 7. Master data tùy chọn (BE)
+## 7. Master data (BE)
 
-Cây vật tư **không** seed tự động. Sau khi business chốt taxonomy:
-
-```bash
-psql -h <host> -U <user> -d <database> -f scripts/seed-material-category-tree.sql
-```
-
-(Script nằm repo BE — chạy thủ công, không bắt buộc deploy lần đầu.)
+Cây vật tư / danh mục nhập trên UI (SLC). Không seed bằng script khi deploy.
 
 ---
 

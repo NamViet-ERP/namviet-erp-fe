@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import TabFilter from '../../components/ui/TabFilter';
 import SearchBar from '../../components/ui/SearchBar';
@@ -43,7 +43,6 @@ interface MaterialReturnPageProps {
 }
 
 function MaterialReturnPage({ initialProjectCode }: MaterialReturnPageProps) {
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('all');
   const [search, setSearch] = useState('');
   const [dateFrom, setDateFrom] = useState('');
@@ -228,6 +227,17 @@ function MaterialReturnPage({ initialProjectCode }: MaterialReturnPageProps) {
     }
   };
 
+  const openDetail = async (row: ExportReturn) => {
+    setSelected(row);
+    setShowDetail(true);
+    try {
+      const fresh = await exportReturnsService.getById(row.id);
+      setSelected(fresh);
+    } catch {
+      /* giữ bản list nếu tải chi tiết lỗi */
+    }
+  };
+
   const openEdit = (row: ExportReturn) => {
     setEditing(row);
     setProjectCode(row.project ?? '');
@@ -302,13 +312,7 @@ function MaterialReturnPage({ initialProjectCode }: MaterialReturnPageProps) {
           isLoading={returnsLoading}
           isError={returnsError}
           error={returnsQueryError}
-          onOpenDetail={row => { setSelected(row); setShowDetail(true); }}
-          onOpenSourceExport={row => {
-            if (!row.sourceExportCode) return;
-            navigate('/warehouse/export', {
-              state: { openVoucherCode: row.sourceExportCode },
-            });
-          }}
+          onOpenDetail={row => { void openDetail(row); }}
           onEdit={openEdit}
           onSubmit={row => void handleSubmit(row)}
           onApprove={row => void handleApprove(row)}

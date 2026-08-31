@@ -150,6 +150,8 @@ export interface Import {
   warehouseId: string;
   /** Mua phát sinh trực tiếp cho dự án (không qua kho chung) */
   isDirectProcurement?: boolean;
+  /** Xuất thẳng lấy hàng từ kho trung tâm - không quyết toán Đã nhận PO. */
+  issueFromGeneralWarehouse?: boolean;
   /** Dự án thụ hưởng khi isDirectProcurement = true */
   project?: string;
   planCode?: string | null;
@@ -159,6 +161,8 @@ export interface Import {
   shortageReport?: string | null;
   /** HL tạo từ kiểm nhận */
   linkedDefectTicketCode?: string | null;
+  /** Mã phiếu XK liên kết khi xuất thẳng công trường. */
+  linkedTicketCode?: string | null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -192,6 +196,10 @@ export interface Export {
   approvedAt?: string;
   project?: string;
   projectName?: string;
+  /** Xuất thẳng công trường (cung ứng lập từ PO), không trừ tồn kho. */
+  isDirectProcurement?: boolean;
+  /** Mã phiếu nhận hàng liên kết (NK) khi xuất thẳng. */
+  linkedTicketCode?: string | null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

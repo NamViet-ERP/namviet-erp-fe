@@ -6,13 +6,29 @@ export type PoLineDraft = {
   qty: string;
 };
 
-export function defaultPoLineDrafts(lines: PoImportLinePreviewApiDto[]): Record<number, PoLineDraft> {
+export type PoLineQtyCap = (line: PoImportLinePreviewApiDto) => number;
+
+export function poLineQtyCap(
+  line: PoImportLinePreviewApiDto,
+  getQtyCap?: PoLineQtyCap,
+): number {
+  if (!getQtyCap) return Number(line.available) || 0;
+  const cap = getQtyCap(line);
+  if (!Number.isFinite(cap)) return Number.POSITIVE_INFINITY;
+  return cap > 0 ? cap : 0;
+}
+
+export function defaultPoLineDrafts(
+  lines: PoImportLinePreviewApiDto[],
+  getQtyCap?: PoLineQtyCap,
+): Record<number, PoLineDraft> {
   const next: Record<number, PoLineDraft> = {};
   for (const line of lines) {
-    const available = Number(line.available) || 0;
+    const available = poLineQtyCap(line, getQtyCap);
+    const usable = Number.isFinite(available) && available > 0;
     next[line.poItemId] = {
-      selected: available > 0,
-      qty: available > 0 ? String(available) : '0',
+      selected: usable,
+      qty: usable ? String(available) : '0',
     };
   }
   return next;
@@ -28,14 +44,17 @@ function clampPositiveQty(raw: number, available: number): number {
 export function selectedPoItemsFromDrafts(
   lines: PoImportLinePreviewApiDto[],
   drafts: Record<number, PoLineDraft>,
+  getQtyCap?: PoLineQtyCap,
 ): { poItemId: number; qty: number }[] {
   return lines.flatMap(line => {
     const draft = drafts[line.poItemId];
     if (!draft?.selected) return [];
-    const available = Number(line.available) || 0;
+    const available = poLineQtyCap(line, getQtyCap);
     let qty = Number(draft.qty);
-    if (!Number.isFinite(qty) || qty <= 0) qty = available;
-    qty = clampPositiveQty(qty, available);
+    if (!Number.isFinite(qty) || qty <= 0) {
+      qty = Number.isFinite(available) && available > 0 ? available : 0;
+    }
+    qty = clampPositiveQty(qty, Number.isFinite(available) ? available : qty);
     if (qty <= 0) return [];
     return [{ poItemId: line.poItemId, qty }];
   });
@@ -108,6 +127,7 @@ function parsePoItemId(notes?: string | null): number | null {
 export function draftsFromExistingItems(
   lines: PoImportLinePreviewApiDto[],
   items: MaterialQtyPriceLine[],
+  getQtyCap?: PoLineQtyCap,
 ): Record<number, PoLineDraft> {
   const byPoItem = new Map<number, MaterialQtyPriceLine>();
   for (const it of items) {
@@ -118,7 +138,9 @@ export function draftsFromExistingItems(
   for (const line of lines) {
     const existing = byPoItem.get(line.poItemId);
     if (existing) {
-      const qty = Math.min(Number(existing.qty) || 0, line.available);
+      const cap = poLineQtyCap(line, getQtyCap);
+      const raw = Number(existing.qty) || 0;
+      const qty = cap > 0 ? Math.min(raw, cap) : raw;
       next[line.poItemId] = {
         selected: qty > 0,
         qty: qty > 0 ? String(qty) : '0',

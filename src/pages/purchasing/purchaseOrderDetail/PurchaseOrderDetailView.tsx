@@ -87,6 +87,12 @@ export function PurchaseOrderDetailView({ code }: { code: string }) {
               order={d.order}
             />
 
+            <PoRelatedImportsSection
+              poCode={code}
+              order={d.order}
+              directDispatch
+            />
+
             <PoDeliveryEvaluationsSection poCode={code} />
 
             <PoInstallmentsSection

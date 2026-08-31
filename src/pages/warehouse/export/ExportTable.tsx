@@ -7,7 +7,7 @@ import EmptyState from '../../../components/ui/EmptyState';
 import TableSkeletonRows from '../../../components/ui/TableSkeletonRows';
 import { getApiErrorMessage } from '../../../lib/apiClient';
 import { WMS_EMPTY, WMS_ERROR } from '../../../lib/wms/messages';
-import { exportProjectLabel } from './exportUtils';
+import { exportKindLabel, exportProjectLabel } from './exportUtils';
 
 interface ExportTableProps {
   rows: Export[];
@@ -29,6 +29,12 @@ function rowActionItems(
   },
 ) {
   const items: Array<{ label: string; icon: typeof Pencil; onClick: () => void }> = [];
+  if (exp.isDirectProcurement) {
+    if (exp.status === 'pending') {
+      items.push({ label: 'Duyệt thực tế', icon: Check, onClick: () => opts.onApprove(exp) });
+    }
+    return items;
+  }
   if (exp.status === 'draft' || exp.status === 'pending') {
     items.push({ label: 'Sửa phiếu', icon: Pencil, onClick: () => opts.onEdit?.(exp) });
   }
@@ -52,7 +58,7 @@ export default function ExportTable({
   onApprove,
 }: ExportTableProps) {
   const showActionsCol = rows.some(exp => rowActionItems(exp, { onEdit, onSubmit, onApprove }).length > 0);
-  const colSpan = showActionsCol ? 5 : 4;
+  const colSpan = (showActionsCol ? 6 : 5);
 
   return (
     <div className="overflow-x-auto table-scroll wms-inventory-table-wrap">
@@ -60,8 +66,9 @@ export default function ExportTable({
         <thead>
           <tr>
             <th className="table-header-cell whitespace-nowrap">Mã chứng từ</th>
+            <th className="table-header-cell">Loại</th>
             <th className="table-header-cell">Kho dự án</th>
-            <th className="table-header-cell">Mã tham chiếu</th>
+            <th className="table-header-cell">Mã đơn hàng</th>
             <th className="table-header-cell text-center">Trạng thái</th>
             {showActionsCol ? (
               <th className="table-header-cell text-center w-16">Tác vụ</th>
@@ -93,14 +100,25 @@ export default function ExportTable({
                   onClick={() => onOpenDetail(exp)}
                 >
                   <td className="table-cell">
-                    <VoucherCodeCell code={exp.voucherCode} voucher={exp} />
+                    <VoucherCodeCell
+                      code={exp.voucherCode}
+                      voucher={exp}
+                      onCodeClick={() => onOpenDetail(exp)}
+                    />
+                  </td>
+                  <td className="table-cell">
+                    <span className={`badge ${exp.isDirectProcurement ? 'badge-new' : 'badge-md-neutral'}`}>
+                      {exportKindLabel(exp)}
+                    </span>
                   </td>
                   <td className="table-cell max-w-[220px]">
                     <span className="line-clamp-1" title={exportProjectLabel(exp)}>
                       {exportProjectLabel(exp)}
                     </span>
                   </td>
-                  <td className="table-cell">{exp.soCode || '—'}</td>
+                  <td className="table-cell">
+                    {exp.soCode ? <span className="entity-code">{exp.soCode}</span> : '—'}
+                  </td>
                   <td className="table-cell text-center">
                     <VoucherStatusCell
                       voucherKind="export"

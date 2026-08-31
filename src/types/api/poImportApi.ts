@@ -6,7 +6,13 @@ import type { components } from '../generated/openapi';
 
 type Schemas = components['schemas'];
 
-export type PoImportLinePreviewApiDto = Schemas['PoImportLinePreviewDto'];
+/** Wire + tồn kho trung tâm (BE DTO; live swagger may omit until API restart). */
+export type PoImportLinePreviewApiDto = Schemas['PoImportLinePreviewDto'] & {
+  generalAvailableQty?: number;
+};
 export type PoImportPreviewApiDto = Schemas['PoImportPreviewDto'];
 export type CreateImportFromPoLineRequest = Schemas['CreateImportFromPoLineRequest'];
-export type CreateImportFromPoRequest = Schemas['CreateImportFromPoRequest'];
+/** Wire + `issueFromGeneralWarehouse` (BE DTO; live swagger may omit until API restart). */
+export type CreateImportFromPoRequest = Schemas['CreateImportFromPoRequest'] & {
+  issueFromGeneralWarehouse?: boolean;
+};

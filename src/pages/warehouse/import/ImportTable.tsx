@@ -6,6 +6,7 @@ import TableSkeletonRows from '../../../components/ui/TableSkeletonRows';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { getApiErrorMessage } from '../../../lib/apiClient';
 import { WMS_EMPTY, WMS_ERROR } from '../../../lib/wms/messages';
+import { isIssueFromGeneralWarehouse } from './importUtils';
 
 interface ImportTableProps {
   rows: Import[];
@@ -36,8 +37,8 @@ export default function ImportTable({
           <tr>
             <th className="table-header-cell text-center whitespace-nowrap">Mã chứng từ</th>
             <th className="table-header-cell text-center">Kho dự án</th>
-            <th className="table-header-cell text-center">Nhà cung cấp</th>
             <th className="table-header-cell text-center">Mã đơn hàng</th>
+            <th className="table-header-cell text-center">Nhà cung cấp</th>
             <th className="table-header-cell text-center">Mã KHMH</th>
             {showPrices ? (
               <th className="table-header-cell text-center">Tổng giá trị</th>
@@ -68,18 +69,28 @@ export default function ImportTable({
                 onClick={() => onOpenDetail(imp)}
               >
                 <td className="table-cell text-center">
-                  <VoucherCodeCell code={imp.voucherCode} voucher={imp} />
+                  <VoucherCodeCell
+                    code={imp.voucherCode}
+                    voucher={imp}
+                    onCodeClick={() => onOpenDetail(imp)}
+                  />
                 </td>
                 <td className="table-cell text-center max-w-[200px]">
                   <span className="line-clamp-1" title={projectName(imp.project)}>
                     {imp.project ? projectName(imp.project) : '-'}
                   </span>
                 </td>
+                <td className="table-cell text-center">
+                  {imp.referenceCode ? <span className="entity-code">{imp.referenceCode}</span> : '-'}
+                </td>
                 <td className="table-cell text-center">{imp.supplier || '-'}</td>
-                <td className="table-cell text-center">{imp.referenceCode || '-'}</td>
-                <td className="table-cell text-center">{imp.planCode?.trim() || '-'}</td>
+                <td className="table-cell text-center">
+                  {imp.planCode?.trim() ? <span className="entity-code">{imp.planCode.trim()}</span> : '-'}
+                </td>
                 {showPrices ? (
-                  <td className="table-cell text-center tabular-nums">{formatCurrency(imp.totalValue)}</td>
+                  <td className="table-cell text-center tabular-nums">
+                    {isIssueFromGeneralWarehouse(imp) ? '—' : formatCurrency(imp.totalValue)}
+                  </td>
                 ) : null}
                 <td className="table-cell text-center">
                   <VoucherStatusCell

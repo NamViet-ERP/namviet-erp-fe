@@ -6,6 +6,7 @@ import PageHeader from '../../components/ui/PageHeader';
 import SearchBar from '../../components/ui/SearchBar';
 import Pagination from '../../components/ui/Pagination';
 import EmptyState from '../../components/ui/EmptyState';
+import EntityCodeLink from '../../components/ui/EntityCodeLink';
 import TabFilter from '../../components/ui/TabFilter';
 import HrmPanel from '../../components/hr/HrmPanel';
 import HrmStatCard from '../../components/hr/HrmStatCard';
@@ -289,7 +290,16 @@ export default function AdminUsersPage() {
                     onClick={e => handleRowNavigate(user, e)}
                     title="Xem chi tiết"
                   >
-                    <td className="table-cell font-mono text-sm text-[var(--md-primary)]">{user.employeeCode}</td>
+                    <td className="table-cell">
+                      {user.employeeCode ? (
+                        <EntityCodeLink
+                          code={user.employeeCode}
+                          to={`/admin/users/${user.id}?source=${user.source}`}
+                        />
+                      ) : (
+                        <span className="entity-code">—</span>
+                      )}
+                    </td>
                     <td className="table-cell member-name">{user.fullName}</td>
                     <td className="table-cell">{user.email}</td>
                     <td className="table-cell whitespace-nowrap">{user.phone}</td>

@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import PurchasingListLayout from '../../components/purchasing/PurchasingListLayout';
 import ProjectAutocomplete from '../../components/purchasing/ProjectAutocomplete';
 import EmptyState from '../../components/ui/EmptyState';
+import EntityCodeLink from '../../components/ui/EntityCodeLink';
 import Pagination from '../../components/ui/Pagination';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import { showToast } from '../../components/ui/Toast';
@@ -152,8 +153,20 @@ export default function PurchaseDocumentsPage() {
                           {row.fileName}
                         </div>
                       </td>
-                      <td className="table-cell font-mono text-sm">{row.poCode}</td>
-                      <td className="table-cell font-mono text-sm">{row.projectCode || '—'}</td>
+                      <td className="table-cell">
+                        <EntityCodeLink
+                          code={row.poCode}
+                          to={`/purchasing/orders/${encodeURIComponent(row.poCode)}`}
+                        />
+                      </td>
+                      <td className="table-cell">
+                        {row.projectCode ? (
+                          <EntityCodeLink
+                            code={row.projectCode}
+                            to={`/warehouse/projects/${encodeURIComponent(row.projectCode)}`}
+                          />
+                        ) : '—'}
+                      </td>
                       <td className="table-cell">{row.supplierName || '—'}</td>
                       <td className="table-cell">{row.uploadedByName || '—'}</td>
                       <td className="table-cell tabular-nums">

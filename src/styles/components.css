@@ -282,13 +282,24 @@
     font-size: var(--fs-xs);
     color: var(--nv-epc-muted);
   }
-  a.kpi-card.kpi-card--link {
+  a.kpi-card.kpi-card--link,
+  button.kpi-card.kpi-card--link {
     text-decoration: none;
     color: inherit;
     cursor: pointer;
     min-width: 0;
   }
-  a.kpi-card.kpi-card--link:focus-visible {
+  button.kpi-card {
+    font: inherit;
+    width: 100%;
+    text-align: left;
+  }
+  a.kpi-card.kpi-card--link:focus-visible,
+  button.kpi-card.kpi-card--link:focus-visible {
+    outline: 2px solid var(--nv-amber);
+    outline-offset: -2px;
+  }
+  .kpi-card--selected {
     outline: 2px solid var(--nv-amber);
     outline-offset: -2px;
   }
@@ -698,6 +709,11 @@
     height: fit-content;
     max-height: min(90dvh, 920px);
   }
+  /* Cùng bề ngang phiếu nhập kho nhiều cột — bảng PO + khả dụng TT không bị cắt header. */
+  .md-dialog--wide.md-dialog--import-create {
+    max-width: min(1520px, calc(100vw - 24px));
+    width: min(1520px, calc(100vw - 24px));
+  }
   .md-dialog--import-create .md-dialog__body {
     flex: 0 1 auto;
   }
@@ -1067,6 +1083,13 @@
 
   .dark .tab-filter__tab:hover {
     background: var(--tint-primary-hover);
+    color: var(--md-on-surface);
+  }
+
+  /* ── Entity codes: one look for “click mã → chi tiết” ── */
+  .entity-code {
+    font-family: var(--font-mono);
+    font-weight: var(--fw-semibold);
     color: var(--md-on-surface);
   }
 
@@ -1664,6 +1687,7 @@
   }
   @media (min-width: 768px) {
     .dashboard-ops-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .dashboard-ops-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   }
   .dashboard-ops-card {
     display: flex;
@@ -5801,33 +5825,37 @@
     padding-right: 6px;
   }
 
-  /* ── Stock matrix — column widths + drawer ── */
-  /* Stock matrix: horizontal rules only (dense chart), still uses --table-* tokens */
-  .stock-matrix-table .table-header-cell,
-  .stock-matrix-table .table-cell {
-    border-left: none;
-    border-right: none;
-    border-top: none;
-    border-bottom: 1px solid var(--table-border);
-  }
-  .stock-matrix-table thead .table-header-cell {
-    border-bottom: 2px solid var(--table-header-lip);
+  /* Tồn kho — column widths only (shared square wms-inventory-table skin) */
+  .stock-matrix-table {
+    table-layout: auto;
+    min-width: 94rem;
   }
   .stock-col-code {
     width: 12rem;
     min-width: 12rem;
     max-width: 14rem;
-    overflow: hidden;
   }
   .stock-col-name {
-    width: 10rem;
-    min-width: 9rem;
-    max-width: 14rem;
-    overflow: hidden;
+    min-width: 12rem;
   }
-  .stock-col-project {
-    width: 6.5rem;
-    min-width: 6.5rem;
+  .stock-col-unit {
+    width: 4.5rem;
+    min-width: 4.5rem;
+    white-space: nowrap;
+  }
+  .stock-col-qty {
+    width: 7.5rem;
+    min-width: 7.5rem;
+    white-space: nowrap;
+  }
+  .stock-col-price {
+    width: 9.5rem;
+    min-width: 9.5rem;
+    white-space: nowrap;
+  }
+  .stock-col-projects {
+    width: 4.5rem;
+    min-width: 4.5rem;
     white-space: nowrap;
   }
   .stock-cell-truncate {
@@ -5835,9 +5863,6 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     max-width: 100%;
-  }
-  .stock-matrix-row:hover {
-    background: var(--tint-primary-weak);
   }
   .stock-cell-general {
     background: var(--tint-primary-weak);
@@ -5871,9 +5896,9 @@
     min-width: 1.75rem;
     height: 1.75rem;
     padding: 0 0.35rem;
-    border-radius: 9999px;
+    border-radius: var(--radius-xs);
     font-size: var(--fs-micro);
-    font-weight: 700;
+    font-weight: var(--fw-bold);
     background: var(--md-primary-container);
     color: var(--md-on-primary-container);
   }
@@ -6107,4 +6132,37 @@
   /* Purchasing module styles: ./modules/purchasing.css
      Supplier module styles: ./modules/suppliers.css */
 
+}
+
+/* Unlayered so <a> and <button> stay identical (beats preflight + :visited). */
+a.entity-code-link,
+button.entity-code-link,
+a.entity-code-link:link,
+a.entity-code-link:visited {
+  appearance: none;
+  display: inline;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: inherit;
+  font-weight: var(--fw-semibold);
+  line-height: inherit;
+  color: var(--md-on-surface);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  text-decoration-skip-ink: auto;
+  text-align: left;
+  cursor: pointer;
+}
+a.entity-code-link:hover,
+button.entity-code-link:hover {
+  color: var(--md-primary);
+}
+a.entity-code-link:focus-visible,
+button.entity-code-link:focus-visible {
+  outline: 2px solid var(--nv-amber);
+  outline-offset: 2px;
 }

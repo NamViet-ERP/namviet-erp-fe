@@ -53,7 +53,7 @@ export default function DefectCreatePoLinesTable({
               <th className="table-header-cell text-center import-po-col-unit">ĐVT</th>
               <th className="table-header-cell text-center">Đã nhận</th>
               <th className="table-header-cell text-center">Đã lỗi</th>
-              <th className="table-header-cell text-center">Chờ NK</th>
+              <th className="table-header-cell text-center whitespace-nowrap">Chờ nhập kho</th>
               <th className="table-header-cell text-center">Còn lại</th>
               <th className="table-header-cell text-center defect-col-qty">SL lỗi</th>
               <th className="table-header-cell text-center defect-col-reason">Lý do dòng</th>
@@ -63,7 +63,7 @@ export default function DefectCreatePoLinesTable({
             {lines.length === 0 ? (
               <tr>
                 <td colSpan={10}>
-                  <EmptyState message="PO không còn SL để ghi lỗi (đã trừ đã nhận / chờ NK / HL chờ duyệt)." />
+                  <EmptyState message="PO không còn SL để ghi lỗi (đã trừ đã nhận / chờ nhập kho / HL chờ duyệt)." />
                 </td>
               </tr>
             ) : (

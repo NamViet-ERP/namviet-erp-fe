@@ -12,6 +12,7 @@ import { clearSessionUser } from '../../constants/systemUsers';
 import { useSession } from '../../auth/AuthProvider';
 import { authService } from '../../services/authService';
 import { UI_COMING_SOON } from '../../lib/uiMessages';
+import { WMS_REPORTS_ENABLED } from '../../constants/sidebarMenus';
 import { useWmsNotifications } from '../../hooks/useWmsNotifications';
 import { useActivityRealtime } from '../../hooks/useActivityRealtime';
 import { useDarkMode } from '../../hooks/useDarkMode';
@@ -301,14 +302,16 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
         </button>
 
         <div className="nv-header__actions">
-          <button
-            type="button"
-            className="nv-header-report-btn"
-            onClick={() => navigate('/warehouse/reports')}
-          >
-            <BarChart3 size={15} aria-hidden />
-            Báo cáo kho
-          </button>
+          {WMS_REPORTS_ENABLED ? (
+            <button
+              type="button"
+              className="nv-header-report-btn"
+              onClick={() => navigate('/warehouse/reports')}
+            >
+              <BarChart3 size={15} aria-hidden />
+              Báo cáo kho
+            </button>
+          ) : null}
 
           <div className="nv-header__divider nv-header__divider--wide" aria-hidden />
 
@@ -479,7 +482,7 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
                     )}
                   </div>
 
-                  {notifications.length > 0 && (
+                  {WMS_REPORTS_ENABLED && notifications.length > 0 && (
                     <div className="nv-notif-panel__footer">
                       <button
                         type="button"

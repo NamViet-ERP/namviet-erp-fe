@@ -46,7 +46,11 @@ export function mapWarehouseDashboardFromApi(
     color: CHART_COLORS[index % CHART_COLORS.length],
   }));
 
-  const materialSkuCount = categories.reduce((sum, row) => sum + Number(row.value), 0);
+  const stockByWarehouse = projects.map((row, index) => ({
+    name: row.category,
+    value: Number(row.value),
+    color: CHART_COLORS[index % CHART_COLORS.length],
+  }));
 
   const recentActivity = activity.map((row) => ({
     type: row.type.toLowerCase(),
@@ -54,12 +58,6 @@ export function mapWarehouseDashboardFromApi(
     value: row.code,
     time: row.time,
     accent: ACTIVITY_ACCENT[row.type] ?? 'var(--chart-5)',
-  }));
-
-  const stockByWarehouse = projects.map((row, index) => ({
-    name: row.category,
-    value: Number(row.value),
-    color: CHART_COLORS[index % CHART_COLORS.length],
   }));
 
   return {
@@ -72,6 +70,11 @@ export function mapWarehouseDashboardFromApi(
     recentActivity,
     miniStats: [
       {
+        label: 'Chờ duyệt',
+        value: `${kpi.pendingApprovals} phiếu`,
+        color: 'var(--status-error)',
+      },
+      {
         label: 'Nhập hôm nay',
         value: `${kpi.todayImports} phiếu`,
         color: 'var(--status-success)',
@@ -80,16 +83,6 @@ export function mapWarehouseDashboardFromApi(
         label: 'Xuất hôm nay',
         value: `${kpi.todayExports} phiếu`,
         color: 'var(--status-warning)',
-      },
-      {
-        label: 'Chờ duyệt',
-        value: `${kpi.pendingApprovals} phiếu`,
-        color: 'var(--status-error)',
-      },
-      {
-        label: 'Mã vật tư',
-        value: `${materialSkuCount} mặt hàng`,
-        color: 'var(--chart-5)',
       },
     ],
   };

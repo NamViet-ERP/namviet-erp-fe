@@ -104,7 +104,7 @@ export default function ExportCreateModal({
             }}
           />
         </FormField>
-        <FormField label="Mã tham chiếu / lý do xuất">
+        <FormField label="Mã đơn hàng">
           <input className="form-input" value={referenceCode} onChange={e => onReferenceCodeChange(e.target.value)} />
         </FormField>
         <FormField label="Ghi chú">

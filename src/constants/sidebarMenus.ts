@@ -19,6 +19,10 @@ function toSidebarChildren(items: SidebarMenuItem[]): SidebarChildItem[] {
     permission: item.permission,
   }));
 }
+
+/** Tắt tab / nút Báo cáo kho. Bật `true` khi dùng lại phân hệ. */
+export const WMS_REPORTS_ENABLED = false;
+
 /** Thứ tự theo luồng nghiệp vụ: kho dự án → tồn → nhập/xuất/chuyển → danh mục */
 export const warehouseMenu: SidebarMenuItem[] = [
   {
@@ -84,13 +88,15 @@ export const warehouseMenu: SidebarMenuItem[] = [
     path: '/warehouse/defects',
     permission: 'wms.defects.view:all',
   },
-  {
-    id: 'reports',
-    label: 'Báo cáo kho',
-    icon: BarChart3,
-    path: '/warehouse/reports',
-    permission: 'wms.reports.view:all',
-  },
+  ...(WMS_REPORTS_ENABLED
+    ? [{
+        id: 'reports',
+        label: 'Báo cáo kho',
+        icon: BarChart3,
+        path: '/warehouse/reports',
+        permission: 'wms.reports.view:all',
+      } satisfies SidebarMenuItem]
+    : []),
 ];
 
 export const stocktakeMenu: SidebarMenuItem[] = [
@@ -175,6 +181,26 @@ export const membersMenu: SidebarMenuItem[] = [
     path: '/members/settings',
     permission: 'hrm.members.settings.view',
   },
+];
+
+function menuItem(items: SidebarMenuItem[], id: string): SidebarMenuItem {
+  const item = items.find(i => i.id === id);
+  if (!item) throw new Error(`Missing sidebar item: ${id}`);
+  return item;
+}
+
+/** HRM — tổng quan → hồ sơ/thống kê → luồng tuyển dụng → thiết lập cuối. */
+export const hrmMenu: SidebarMenuItem[] = [
+  menuItem(recruitmentMenu, 'recruitment-dashboard'),
+  menuItem(membersMenu, 'members-list'),
+  menuItem(recruitmentMenu, 'recruitment-hr-stats'),
+  menuItem(recruitmentMenu, 'recruitment-plans'),
+  menuItem(recruitmentMenu, 'candidates-list'),
+  menuItem(recruitmentMenu, 'recruitment-calendar'),
+  menuItem(recruitmentMenu, 'recruitment-costs'),
+  menuItem(recruitmentMenu, 'recruitment-reports'),
+  menuItem(membersMenu, 'members-settings'),
+  menuItem(recruitmentMenu, 'recruitment-settings'),
 ];
 export const adminMenu: SidebarMenuItem[] = [
   {
@@ -437,8 +463,8 @@ export const unifiedSidebarMenu: SidebarMenuItem[] = [
     id: 'mod-hrm',
     label: 'HRM',
     icon: Users,
-    path: '/members/list',
-    children: toSidebarChildren([...membersMenu, ...recruitmentMenu]),
+    path: '/recruitment/dashboard',
+    children: toSidebarChildren(hrmMenu),
   },
   {
     id: 'mod-admin',

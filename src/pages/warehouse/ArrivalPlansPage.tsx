@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { CalendarClock, PackagePlus, Truck } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import HrmPanel from '../../components/hr/HrmPanel';
@@ -67,7 +66,7 @@ export default function ArrivalPlansPage() {
     <div className="hrm-page arrival-plans-page">
       <PageHeader
         title="Kế hoạch hàng về"
-        subtitle="Theo ngày dự kiến (Ngày DK) trên KHMH — hàng đã nhận thực tế sẽ biến mất khỏi danh sách này."
+        subtitle="Theo dõi ngày dự kiến trên KHMH: nhập kho hoặc xuất thẳng ra công trường. Không thao tác trên tab này."
       />
 
       <div className="hrm-stat-grid">
@@ -247,24 +246,17 @@ function ArrivalProjectCard({
                   <th className="table-header-cell">Mặt hàng</th>
                   <th className="table-header-cell text-right">Còn lại</th>
                   <th className="table-header-cell">ĐVT</th>
-                  <th className="table-header-cell whitespace-nowrap">Ngày DK</th>
+                  <th className="table-header-cell whitespace-nowrap">Ngày dự kiến</th>
                   <th className="table-header-cell">Trạng thái</th>
                   <th className="table-header-cell">NCC</th>
                   {canViewPrices && <th className="table-header-cell text-right">Đơn giá</th>}
-                  <th className="table-header-cell text-center">Thao tác</th>
                 </tr>
               </thead>
               <tbody>
                 {project.lines.map(line => (
                   <tr key={line.lineId} className="table-row">
-                    <td className="table-cell font-mono text-sm">
-                      <Link
-                        to={`/purchasing/plans/${encodeURIComponent(line.planCode)}`}
-                        className="text-[var(--md-primary)]"
-                        onClick={e => e.stopPropagation()}
-                      >
-                        {line.planCode}
-                      </Link>
+                    <td className="table-cell">
+                      <span className="entity-code">{line.planCode}</span>
                     </td>
                     <td className="table-cell">
                       <div className="font-semibold line-clamp-2" title={line.productName}>
@@ -296,23 +288,13 @@ function ArrivalProjectCard({
                         {line.unitPrice != null ? formatCurrencyFull(line.unitPrice) : '—'}
                       </td>
                     )}
-                    <td className="table-cell text-center">
-                      <Link
-                        to={`/warehouse/import?project=${encodeURIComponent(project.projectCode)}&plan=${encodeURIComponent(line.planCode)}`}
-                        className="btn btn-outline btn-sm inline-flex items-center gap-1"
-                        onClick={e => e.stopPropagation()}
-                      >
-                        <PackagePlus size={14} />
-                        Nhập kho
-                      </Link>
-                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
           <p className="arrival-plans-hint">
-            Khi duyệt phiếu nhập thực tế, hệ thống ghi Ngày TT trên KHMH và dòng sẽ không còn trong kế hoạch hàng về.
+            Khi nhận đủ trên phiếu nhập kho hoặc xuất thẳng (đã duyệt), dòng không còn trong kế hoạch hàng về.
           </p>
         </div>
       )}

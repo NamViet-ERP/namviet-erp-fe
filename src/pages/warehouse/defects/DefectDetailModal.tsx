@@ -154,7 +154,7 @@ export default function DefectDetailModal({
         ...(selected.sourceType === 'stock'
           ? []
           : [
-              { label: 'PO', value: displayValue(selected.poCode) },
+              { label: 'Mã đơn hàng', value: displayValue(selected.poCode) },
               { label: 'KHMH', value: displayValue(selected.planCode) },
               { label: 'Nhà cung cấp', value: displayValue(selected.supplierName) },
             ]),

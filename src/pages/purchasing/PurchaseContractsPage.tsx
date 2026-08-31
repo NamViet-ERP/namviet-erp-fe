@@ -5,6 +5,7 @@ import ProjectAutocomplete from '../../components/purchasing/ProjectAutocomplete
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import CurrencyInput from '../../components/ui/CurrencyInput';
 import EmptyState from '../../components/ui/EmptyState';
+import EntityCodeLink from '../../components/ui/EntityCodeLink';
 import FormField from '../../components/ui/FormField';
 import Modal from '../../components/ui/Modal';
 import Pagination from '../../components/ui/Pagination';
@@ -376,12 +377,21 @@ export default function PurchaseContractsPage() {
                         style={{ cursor: 'pointer' }}
                         onClick={() => openEdit(row)}
                       >
-                        <td className="table-cell font-mono text-sm pur-contracts-col-code">{row.code}</td>
+                        <td className="table-cell pur-contracts-col-code">
+                          <EntityCodeLink code={row.code} onClick={() => openEdit(row)} />
+                        </td>
                         <td className="table-cell font-semibold pur-contracts-col-no">{row.contractNo}</td>
                         <td className="table-cell">{row.title}</td>
                         <td className="table-cell">{row.supplierName || '—'}</td>
                         <td className="table-cell pur-contracts-col-po">
-                          <div className="font-mono text-sm">{row.poCode || '—'}</div>
+                          {row.poCode ? (
+                            <EntityCodeLink
+                              code={row.poCode}
+                              to={`/purchasing/orders/${encodeURIComponent(row.poCode)}`}
+                            />
+                          ) : (
+                            <span className="entity-code">—</span>
+                          )}
                           <div className="text-xs text-[var(--md-on-surface-variant)] font-mono">
                             {row.projectCode || '—'}
                           </div>

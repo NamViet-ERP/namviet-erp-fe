@@ -21,6 +21,9 @@ interface CardProps {
   trend?: number;
   trendLabel?: string;
   className?: string;
+  /** Lọc / chọn KPI trên trang danh sách. */
+  onClick?: () => void;
+  selected?: boolean;
 }
 
 function cardAriaLabel(title: string, value: string | number | undefined, stats?: KpiStat[]) {
@@ -41,6 +44,8 @@ export default function Card({
   trend,
   trendLabel,
   className = '',
+  onClick,
+  selected = false,
 }: CardProps) {
   const trendClass =
     trend !== undefined && trend > 0 ? 'badge-md-success'
@@ -54,6 +59,8 @@ export default function Card({
     `kpi-card--accent-${accent}`,
     hasStats ? 'kpi-card--breakdown' : '',
     to ? 'kpi-card--link' : '',
+    onClick ? 'kpi-card--link' : '',
+    selected ? 'kpi-card--selected' : '',
     className,
   ].filter(Boolean).join(' ');
   const label = cardAriaLabel(title, value, stats);
@@ -107,6 +114,21 @@ export default function Card({
       <Link to={to} className={cls} role="listitem" aria-label={label}>
         {inner}
       </Link>
+    );
+  }
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        className={cls}
+        role="listitem"
+        aria-label={label}
+        aria-pressed={selected}
+        onClick={onClick}
+      >
+        {inner}
+      </button>
     );
   }
 

@@ -4516,7 +4516,9 @@ export interface paths {
         put?: never;
         post: {
             parameters: {
-                query?: never;
+                query?: {
+                    isDirectProcurement?: boolean;
+                };
                 header?: never;
                 path: {
                     poCode: string;
@@ -13916,6 +13918,7 @@ export interface components {
             isDirectProcurement?: boolean | null;
             project?: string | null;
             planCode?: string | null;
+            issueFromGeneralWarehouse: boolean;
         };
         CreateImportFromPoLineRequest: {
             /** Format: int32 */
@@ -13925,6 +13928,8 @@ export interface components {
         };
         CreateImportFromPoRequest: {
             items?: components["schemas"]["CreateImportFromPoLineRequest"][] | null;
+            isDirectProcurement: boolean;
+            issueFromGeneralWarehouse: boolean;
         };
         CreateInsuranceRecordRequest: {
             /** Format: int32 */
@@ -14373,6 +14378,8 @@ export interface components {
             project?: string | null;
             projectName?: string | null;
             createdAt: string;
+            isDirectProcurement: boolean;
+            linkedTicketCode?: string | null;
         };
         ExportItemDto: {
             productId: string;
@@ -14488,6 +14495,8 @@ export interface components {
             attachments?: components["schemas"]["ImportAttachmentDto"][] | null;
             shortageReport?: string | null;
             linkedDefectTicketCode?: string | null;
+            linkedTicketCode?: string | null;
+            issueFromGeneralWarehouse: boolean;
         };
         ImportItemDto: {
             productId: string;
@@ -14686,6 +14695,8 @@ export interface components {
             available: number;
             /** Format: double */
             unitPrice: number;
+            /** Format: double */
+            generalAvailableQty: number;
         };
         PoImportPreviewDto: {
             poCode: string;
@@ -14904,6 +14915,10 @@ export interface components {
             minStockQty: number;
             /** Format: double */
             pendingDefectQty: number;
+            /** Format: double */
+            issuedFromPoQty: number;
+            /** Format: double */
+            issuedFromGeneralQty: number;
         };
         ProjectLedgerEntryDto: {
             id: string;

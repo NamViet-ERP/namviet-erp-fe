@@ -5325,6 +5325,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "isDirectProcurement",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
           }
         ],
         "requestBody": {
@@ -17850,6 +17858,7 @@
         "required": [
           "approvedBy",
           "date",
+          "issueFromGeneralWarehouse",
           "items",
           "note",
           "referenceCode",
@@ -17918,6 +17927,9 @@
           "planCode": {
             "type": "string",
             "nullable": true
+          },
+          "issueFromGeneralWarehouse": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false
@@ -17941,6 +17953,10 @@
         "additionalProperties": false
       },
       "CreateImportFromPoRequest": {
+        "required": [
+          "isDirectProcurement",
+          "issueFromGeneralWarehouse"
+        ],
         "type": "object",
         "properties": {
           "items": {
@@ -17949,6 +17965,12 @@
               "$ref": "#/components/schemas/CreateImportFromPoLineRequest"
             },
             "nullable": true
+          },
+          "isDirectProcurement": {
+            "type": "boolean"
+          },
+          "issueFromGeneralWarehouse": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false
@@ -19449,6 +19471,7 @@
           "customer",
           "date",
           "id",
+          "isDirectProcurement",
           "items",
           "note",
           "soCode",
@@ -19513,6 +19536,13 @@
           },
           "createdAt": {
             "type": "string"
+          },
+          "isDirectProcurement": {
+            "type": "boolean"
+          },
+          "linkedTicketCode": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -19847,6 +19877,7 @@
           "createdBy",
           "date",
           "id",
+          "issueFromGeneralWarehouse",
           "items",
           "note",
           "referenceCode",
@@ -19943,6 +19974,13 @@
           "linkedDefectTicketCode": {
             "type": "string",
             "nullable": true
+          },
+          "linkedTicketCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "issueFromGeneralWarehouse": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false
@@ -20570,6 +20608,7 @@
       "PoImportLinePreviewDto": {
         "required": [
           "available",
+          "generalAvailableQty",
           "name",
           "ordered",
           "poItemId",
@@ -20611,6 +20650,10 @@
             "format": "double"
           },
           "unitPrice": {
+            "type": "number",
+            "format": "double"
+          },
+          "generalAvailableQty": {
             "type": "number",
             "format": "double"
           }
@@ -21242,6 +21285,8 @@
           "actualExportQty",
           "actualImportQty",
           "actualInventoryQty",
+          "issuedFromGeneralQty",
+          "issuedFromPoQty",
           "materialCode",
           "materialName",
           "minStockQty",
@@ -21300,6 +21345,14 @@
             "format": "double"
           },
           "pendingDefectQty": {
+            "type": "number",
+            "format": "double"
+          },
+          "issuedFromPoQty": {
+            "type": "number",
+            "format": "double"
+          },
+          "issuedFromGeneralQty": {
             "type": "number",
             "format": "double"
           }

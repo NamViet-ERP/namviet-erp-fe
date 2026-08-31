@@ -1,4 +1,5 @@
 import EmptyState from '../../../components/ui/EmptyState';
+import EntityCodeLink from '../../../components/ui/EntityCodeLink';
 import TableSkeletonRows from '../../../components/ui/TableSkeletonRows';
 import Dropdown from '../../../components/ui/Dropdown';
 import type { DropdownItem } from '../../../types';
@@ -28,7 +29,7 @@ export default function DefectsTable({
           <tr>
             <th className="table-header-cell text-center">Mã phiếu</th>
             <th className="table-header-cell text-center">Nguồn</th>
-            <th className="table-header-cell text-center">PO</th>
+            <th className="table-header-cell text-center">Mã đơn hàng</th>
             <th className="table-header-cell text-center">KHMH</th>
             <th className="table-header-cell text-center">Dự án</th>
             <th className="table-header-cell text-center">NCC</th>
@@ -56,15 +57,26 @@ export default function DefectsTable({
                   className="table-row wms-inventory-row--interactive"
                   onClick={() => onOpenDetail(row)}
                 >
-                  <td className="table-cell text-center font-semibold">{row.ticketCode}</td>
+                  <td className="table-cell text-center">
+                    <EntityCodeLink
+                      code={row.ticketCode}
+                      onClick={() => onOpenDetail(row)}
+                    />
+                  </td>
                   <td className="table-cell text-center">
                     <span className={`badge ${row.sourceType === 'stock' ? 'badge-md-neutral' : 'badge-new'}`}>
                       {row.sourceType === 'stock' ? 'Tồn kho' : 'PO'}
                     </span>
                   </td>
-                  <td className="table-cell text-center">{row.poCode || '—'}</td>
-                  <td className="table-cell text-center">{row.planCode || '—'}</td>
-                  <td className="table-cell text-center">{row.projectCode || '—'}</td>
+                  <td className="table-cell text-center">
+                    {row.poCode ? <span className="entity-code">{row.poCode}</span> : '—'}
+                  </td>
+                  <td className="table-cell text-center">
+                    {row.planCode ? <span className="entity-code">{row.planCode}</span> : '—'}
+                  </td>
+                  <td className="table-cell text-center">
+                    {row.projectCode ? <span className="entity-code">{row.projectCode}</span> : '—'}
+                  </td>
                   <td className="table-cell text-center">{row.supplierName || '—'}</td>
                   <td className="table-cell text-center">
                     <DefectStatusCell row={row} />

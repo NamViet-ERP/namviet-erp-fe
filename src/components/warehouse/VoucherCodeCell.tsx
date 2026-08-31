@@ -8,7 +8,6 @@ interface VoucherCodeCellProps {
   code: string;
   voucher: VoucherDateFields & { createdBy?: string };
   showCreator?: boolean;
-  /** Khi có: mã đậm + gạch chân, click mở chi tiết. */
   onCodeClick?: (e: MouseEvent) => void;
   to?: string;
 }
@@ -32,17 +31,15 @@ export default function VoucherCodeCell({
       {clickable ? (
         <EntityCodeLink code={code} to={to} onClick={onCodeClick} className="whitespace-nowrap" />
       ) : (
-        <div className="font-mono text-sm font-semibold text-[var(--md-primary)] whitespace-nowrap">
-          {code}
-        </div>
+        <span className="entity-code whitespace-nowrap">{code}</span>
       )}
       {createdLabel && (
-        <div className="text-[10px] leading-snug text-[var(--md-on-surface-variant)] tabular-nums mt-0.5">
+        <div className="text-[length:var(--fs-micro)] leading-snug text-[var(--md-on-surface-variant)] tabular-nums mt-0.5">
           {createdLabel}
         </div>
       )}
       {showCreator && creator && creator !== 'USER' && (
-        <div className="text-[10px] leading-snug text-[var(--md-on-surface-variant)] truncate mt-0.5" title={creator}>
+        <div className="text-[length:var(--fs-micro)] leading-snug text-[var(--md-on-surface-variant)] truncate mt-0.5" title={creator}>
           {creator}
         </div>
       )}

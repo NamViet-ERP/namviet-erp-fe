@@ -1,5 +1,6 @@
 import { Plus } from 'lucide-react';
 import EmptyState from '../../../components/ui/EmptyState';
+import EntityCodeLink from '../../../components/ui/EntityCodeLink';
 import Pagination from '../../../components/ui/Pagination';
 import TableSkeletonRows from '../../../components/ui/TableSkeletonRows';
 import ProjectAutocomplete from '../../../components/purchasing/ProjectAutocomplete';
@@ -148,8 +149,22 @@ export default function WarrantyRegistryPanel({
                     </div>
                   </td>
                   <td className="table-cell">{row.supplierName || '-'}</td>
-                  <td className="table-cell font-mono warranty-col-project">{row.projectCode || '-'}</td>
-                  <td className="table-cell font-mono warranty-col-po">{row.poCode}</td>
+                  <td className="table-cell warranty-col-project">
+                    {row.projectCode ? (
+                      <EntityCodeLink
+                        code={row.projectCode}
+                        to={`/warehouse/projects/${encodeURIComponent(row.projectCode)}`}
+                      />
+                    ) : '-'}
+                  </td>
+                  <td className="table-cell warranty-col-po">
+                    {row.poCode ? (
+                      <EntityCodeLink
+                        code={row.poCode}
+                        to={`/purchasing/orders/${encodeURIComponent(row.poCode)}`}
+                      />
+                    ) : '-'}
+                  </td>
                   <td className="table-cell tabular-nums">
                     {formatDateCell(row.deliveryDate ?? undefined)}
                   </td>

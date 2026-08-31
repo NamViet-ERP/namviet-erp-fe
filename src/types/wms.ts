@@ -19,7 +19,11 @@ export type ProjectWarehouseKeeperDto = Schemas['ProjectWarehouseKeeperDto'];
 export type WarehouseProjectApiDto = Schemas['ProjectDto'];
 export type CreateWarehouseProjectRequest = Schemas['CreateProjectRequest'];
 export type UpdateWarehouseProjectRequest = Schemas['UpdateProjectRequest'];
-export type WarehouseProjectInventoryApiDto = Schemas['ProjectInventoryDto'];
+/** Wire + SL cấp công trường (BE `ProjectInventoryDto`; live swagger may omit until API restart). */
+export type WarehouseProjectInventoryApiDto = Schemas['ProjectInventoryDto'] & {
+  issuedFromPoQty?: number;
+  issuedFromGeneralQty?: number;
+};
 export type WarehouseProjectLedgerEntryApiDto = Schemas['ProjectLedgerEntryDto'];
 
 export type ProjectConstructionTaskStatus = 'planned' | 'in_progress' | 'completed' | 'late';

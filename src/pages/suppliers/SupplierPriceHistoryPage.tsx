@@ -212,7 +212,14 @@ export default function SupplierPriceHistoryPage() {
                         to={`/purchasing/orders/${encodeURIComponent(row.poCode)}`}
                       />
                     </td>
-                    <td className="table-cell font-mono text-sm">{row.projectCode}</td>
+                    <td className="table-cell">
+                      {row.projectCode ? (
+                        <EntityCodeLink
+                          code={row.projectCode}
+                          to={`/warehouse/projects/${encodeURIComponent(row.projectCode)}`}
+                        />
+                      ) : '—'}
+                    </td>
                   </tr>
                 ))
               )}

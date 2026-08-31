@@ -12,7 +12,7 @@ interface Props {
   onClose: () => void;
 }
 
-function StockMaterialProjectContent({ row, onClose }: { row: StockMatrixRowApiDto; onClose: () => void }) {
+function StockMaterialProjectContent({ row }: { row: StockMatrixRowApiDto }) {
   const [q, setQ] = useState('');
 
   const activeProjects = useMemo(() => {
@@ -42,6 +42,10 @@ function StockMaterialProjectContent({ row, onClose }: { row: StockMatrixRowApiD
           <span className="stock-modal-stat-value tabular-nums">{row.generalActualQty}</span>
         </div>
         <div className="stock-modal-stat">
+          <span className="stock-modal-stat-label">Tồn thực tế</span>
+          <span className="stock-modal-stat-value tabular-nums">{projectActualTotal}</span>
+        </div>
+        <div className="stock-modal-stat">
           <span className="stock-modal-stat-label">Khả dụng</span>
           <span className="stock-modal-stat-value tabular-nums text-[var(--md-success)]">{usableQty}</span>
         </div>
@@ -52,10 +56,6 @@ function StockMaterialProjectContent({ row, onClose }: { row: StockMatrixRowApiD
         <div className="stock-modal-stat">
           <span className="stock-modal-stat-label">Xuất dự kiến</span>
           <span className="stock-modal-stat-value tabular-nums stock-qty--reserved">{fmtStockQtyOrDash(plannedExportTotal)}</span>
-        </div>
-        <div className="stock-modal-stat">
-          <span className="stock-modal-stat-label">Tồn thực tế</span>
-          <span className="stock-modal-stat-value tabular-nums">{projectActualTotal}</span>
         </div>
         <div className="stock-modal-stat">
           <span className="stock-modal-stat-label">Hàng lỗi</span>
@@ -92,24 +92,18 @@ function StockMaterialProjectContent({ row, onClose }: { row: StockMatrixRowApiD
             <thead>
               <tr>
                 <th className="table-header-cell text-left">Dự án / công trình</th>
-                <th className="table-header-cell text-right">Tồn TT</th>
-                <th className="table-header-cell text-right">Nhập DK</th>
-                <th className="table-header-cell text-right">Xuất DK</th>
-                <th className="table-header-cell text-right" title="Tồn thực tế + nhập dự kiến">Tồn DK</th>
+                <th className="table-header-cell text-right whitespace-nowrap">Tồn thực tế</th>
+                <th className="table-header-cell text-right whitespace-nowrap">Nhập dự kiến</th>
+                <th className="table-header-cell text-right whitespace-nowrap">Xuất dự kiến</th>
+                <th className="table-header-cell text-right whitespace-nowrap" title="Tồn thực tế + nhập dự kiến">Tồn dự kiến</th>
               </tr>
             </thead>
             <tbody>
               {activeProjects.map(p => (
                 <tr key={p.projectCode} className="table-row">
                   <td className="table-cell">
-                    <Link
-                      to={`/warehouse/projects/${p.projectCode}`}
-                      className="font-semibold text-[var(--md-primary)] hover:underline text-pretty line-clamp-2"
-                      onClick={onClose}
-                    >
-                      {p.projectName}
-                    </Link>
-                    <div className="font-mono text-[length:var(--fs-micro)] text-[var(--md-on-surface-variant)]">{p.projectCode}</div>
+                    <div className="text-pretty line-clamp-2 font-semibold">{p.projectName}</div>
+                    <span className="entity-code">{p.projectCode}</span>
                   </td>
                   <td className="table-cell text-right font-bold tabular-nums">{p.actualQty}</td>
                   <td className="table-cell text-right tabular-nums stock-qty--pending">
@@ -140,14 +134,14 @@ export default function StockMaterialProjectModal({ row, onClose }: Props) {
     <Modal
       isOpen={!!row}
       onClose={onClose}
-      title={row ? `${row.materialCode} — ${row.materialName}` : ''}
+      title={row ? `${row.materialCode} - ${row.materialName}` : ''}
       size="xl"
       footer={
         <div className="flex w-full justify-between items-center gap-2">
           <Link
             to="/warehouse/materials"
             state={{ highlightCode: row?.materialCode }}
-            className="text-xs text-[var(--md-primary)] hover:underline"
+            className="btn btn-ghost btn-sm"
             onClick={onClose}
           >
             Xem danh mục vật tư
@@ -156,7 +150,7 @@ export default function StockMaterialProjectModal({ row, onClose }: Props) {
         </div>
       }
     >
-      {row && <StockMaterialProjectContent key={row.materialCode} row={row} onClose={onClose} />}
+      {row && <StockMaterialProjectContent key={row.materialCode} row={row} />}
     </Modal>
   );
 }

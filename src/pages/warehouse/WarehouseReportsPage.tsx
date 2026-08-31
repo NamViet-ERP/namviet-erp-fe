@@ -8,6 +8,7 @@ import VoucherDateFilter from '../../components/warehouse/VoucherDateFilter';
 import PermissionGate from '../../components/auth/PermissionGate';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import EmptyState from '../../components/ui/EmptyState';
+import EntityCodeLink from '../../components/ui/EntityCodeLink';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { WMS_ERROR } from '../../lib/wms/messages';
@@ -20,6 +21,13 @@ const KIND_LABELS: Record<string, string> = {
   export: 'Xuất kho',
   transfer: 'Chuyển kho',
   stocktake: 'Kiểm kê',
+};
+
+const KIND_LIST_PATH: Record<string, string> = {
+  import: '/warehouse/import',
+  export: '/warehouse/export',
+  transfer: '/warehouse/transfer',
+  stocktake: '/stocktake/list',
 };
 
 export default function WarehouseReportsPage() {
@@ -148,7 +156,7 @@ export default function WarehouseReportsPage() {
               <option value="">Tất cả dự án</option>
               {projects.map(p => (
                 <option key={p.projectCode} value={p.projectCode}>
-                  {p.projectCode} — {p.projectName}
+                  {p.projectCode} - {p.projectName}
                 </option>
               ))}
             </select>
@@ -196,9 +204,20 @@ export default function WarehouseReportsPage() {
                     <tr key={`${row.projectCode}-${row.materialCode}`} className="table-row">
                       <td className="table-cell">
                         <span className="font-medium">{row.projectName}</span>
-                        <span className="block text-[11px] font-mono text-[var(--md-on-surface-variant)]">{row.projectCode}</span>
+                        <div>
+                          <EntityCodeLink
+                            code={row.projectCode}
+                            to={`/warehouse/projects/${encodeURIComponent(row.projectCode)}`}
+                          />
+                        </div>
                       </td>
-                      <td className="table-cell font-mono text-xs">{row.materialCode}</td>
+                      <td className="table-cell">
+                        <EntityCodeLink
+                          code={row.materialCode}
+                          to="/operations/materials"
+                          state={{ highlightCode: row.materialCode }}
+                        />
+                      </td>
                       <td className="table-cell">{row.materialName}</td>
                       <td className="table-cell text-center">{row.unit}</td>
                       <td className="table-cell text-right tabular-nums font-semibold">{row.qty}</td>
@@ -210,7 +229,7 @@ export default function WarehouseReportsPage() {
           </div>
           {stockRows.length > 100 && (
             <p className="text-xs text-[var(--md-on-surface-variant)]">
-              Hiển thị 100/{stockRows.length} dòng — xuất Excel để xem đầy đủ.
+              Hiển thị 100/{stockRows.length} dòng - xuất Excel để xem đầy đủ.
             </p>
           )}
         </div>
@@ -277,7 +296,13 @@ export default function WarehouseReportsPage() {
                   pending.items.map(item => (
                     <tr key={`${item.kind}-${item.voucherCode}`} className="table-row">
                       <td className="table-cell">{KIND_LABELS[item.kind] ?? item.kind}</td>
-                      <td className="table-cell font-mono text-xs text-[var(--md-primary)]">{item.voucherCode}</td>
+                      <td className="table-cell">
+                        {KIND_LIST_PATH[item.kind] ? (
+                          <EntityCodeLink code={item.voucherCode} to={KIND_LIST_PATH[item.kind]} />
+                        ) : (
+                          <span className="entity-code">{item.voucherCode}</span>
+                        )}
+                      </td>
                       <td className="table-cell">{item.date}</td>
                       <td className="table-cell">{item.createdBy}</td>
                       <td className="table-cell">{item.project || '—'}</td>

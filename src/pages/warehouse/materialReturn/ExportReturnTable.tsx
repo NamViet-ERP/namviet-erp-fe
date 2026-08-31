@@ -4,7 +4,6 @@ import VoucherStatusCell from '../../../components/warehouse/VoucherStatusCell';
 import VoucherCodeCell from '../../../components/warehouse/VoucherCodeCell';
 import Dropdown from '../../../components/ui/Dropdown';
 import EmptyState from '../../../components/ui/EmptyState';
-import EntityCodeLink from '../../../components/ui/EntityCodeLink';
 import TableSkeletonRows from '../../../components/ui/TableSkeletonRows';
 import { getApiErrorMessage } from '../../../lib/apiClient';
 
@@ -14,7 +13,6 @@ interface ExportReturnTableProps {
   isError: boolean;
   error: unknown;
   onOpenDetail: (row: ExportReturn) => void;
-  onOpenSourceExport?: (row: ExportReturn) => void;
   onEdit?: (row: ExportReturn) => void;
   onSubmit: (row: ExportReturn) => void;
   onApprove: (row: ExportReturn) => void;
@@ -47,7 +45,6 @@ export default function ExportReturnTable({
   isError,
   error,
   onOpenDetail,
-  onOpenSourceExport,
   onEdit,
   onSubmit,
   onApprove,
@@ -102,16 +99,8 @@ export default function ExportReturnTable({
                       onCodeClick={() => onOpenDetail(row)}
                     />
                   </td>
-                  <td className="table-cell" onClick={e => e.stopPropagation()}>
-                    {row.sourceExportCode && onOpenSourceExport ? (
-                      <EntityCodeLink
-                        code={row.sourceExportCode}
-                        className="text-xs"
-                        onClick={() => onOpenSourceExport(row)}
-                      />
-                    ) : (
-                      <span className="font-mono text-xs">{row.sourceExportCode || '—'}</span>
-                    )}
+                  <td className="table-cell">
+                    <span className="entity-code">{row.sourceExportCode || '—'}</span>
                   </td>
                   <td className="table-cell export-return-project-cell" title={row.projectName || row.project || undefined}>
                     {row.projectName || row.project || '—'}

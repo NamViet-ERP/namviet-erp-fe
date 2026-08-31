@@ -50,6 +50,8 @@ export interface ImportCreateModalProps {
   onSelectedPoCodeChange?: (code: string) => void;
   /** Khi true (tạo từ chi tiết PO): khóa chọn PO. */
   poLocked?: boolean;
+  /** Tiêu đề modal — mặc định tạo phiếu nhập kho. */
+  title?: string;
   poLoading?: boolean;
   poPreviewLines?: PoImportLinePreviewApiDto[];
   /** Sửa phiếu: chứng từ đã lưu + upload ngay khi chọn file. */
@@ -62,4 +64,8 @@ export interface ImportCreateModalProps {
   canApprove?: boolean;
   onApprove?: (payload?: { evaluation: string }) => void;
   isApproving?: boolean;
+  allowWarehouseSourcePicker?: boolean;
+  issueFromGeneralWarehouse?: boolean;
+  onIssueFromGeneralWarehouseChange?: (value: boolean) => void;
+  getQtyCap?: (line: PoImportLinePreviewApiDto) => number;
 }

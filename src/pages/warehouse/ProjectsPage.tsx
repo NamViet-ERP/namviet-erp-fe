@@ -202,18 +202,24 @@ export default function ProjectsPage() {
           value={statsAll?.totalCount ?? '-'}
           accent="amber"
           icon={FolderKanban}
+          selected={!statusFilter}
+          onClick={() => { setStatusFilter(''); setPage(1); }}
         />
         <Card
           title="Đang hoạt động"
           value={statsActive?.totalCount ?? '-'}
           accent="blue"
           icon={CheckCircle2}
+          selected={statusFilter === 'Active'}
+          onClick={() => { setStatusFilter('Active'); setPage(1); }}
         />
         <Card
           title="Đã đóng kho"
           value={statsClosed?.totalCount ?? '-'}
           accent="teal"
           icon={Archive}
+          selected={statusFilter === 'Closed'}
+          onClick={() => { setStatusFilter('Closed'); setPage(1); }}
         />
       </div>
 
@@ -253,8 +259,8 @@ export default function ProjectsPage() {
                 <th className="table-header-cell whitespace-nowrap project-col-code">Mã kho</th>
                 <th className="table-header-cell project-col-name">Tên công trình</th>
                 <th className="table-header-cell project-col-pm">Thủ kho phụ trách</th>
-                <th className="table-header-cell project-col-date whitespace-nowrap">Ngày bắt đầu</th>
                 <th className="table-header-cell text-right project-col-count">Mặt hàng</th>
+                <th className="table-header-cell project-col-date whitespace-nowrap">Ngày bắt đầu</th>
                 <th className="table-header-cell text-center project-col-status">Trạng thái</th>
               </tr>
             </thead>
@@ -308,10 +314,10 @@ export default function ProjectsPage() {
                           : <span className="hrm-empty-cell">—</span>;
                       })()}
                     </td>
+                    <ProjectMaterialCountCell project={p} />
                     <td className="table-cell project-col-date whitespace-nowrap tabular-nums">
                       {formatDateCell(p.startDate)}
                     </td>
-                    <ProjectMaterialCountCell project={p} />
                     <td className="table-cell text-center project-col-status">
                       <Badge status={projectStatusBadge(p.status)} />
                     </td>

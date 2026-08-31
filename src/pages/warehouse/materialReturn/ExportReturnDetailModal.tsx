@@ -103,7 +103,7 @@ export default function ExportReturnDetailModal({
             </tr>
           </thead>
           <tbody>
-            {selected.items.map((item, i) => (
+            {(selected.items ?? []).map((item, i) => (
               <tr key={i} className="table-row">
                 <td className="table-cell">
                   <span className="font-medium text-[var(--md-on-surface)]">{item.name}</span>

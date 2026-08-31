@@ -44,6 +44,7 @@ export function useApproveExport() {
       qc.invalidateQueries({ queryKey: queryKeys.exports.detail(id) });
       qc.invalidateQueries({ queryKey: queryKeys.stock.matrix });
       qc.invalidateQueries({ queryKey: queryKeys.projects.all });
+      qc.invalidateQueries({ queryKey: queryKeys.imports.all });
     },
   });
 }

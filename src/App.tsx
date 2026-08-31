@@ -5,6 +5,7 @@ import PageLoader from './components/ui/PageLoader';
 import ErrorBoundary from './components/ErrorBoundary';
 import { Agentation } from 'agentation';
 import { CSKH_MODULE_ENABLED } from './constants/cskh';
+import { WMS_REPORTS_ENABLED } from './constants/sidebarMenus';
 import { getDefaultRoute } from './utils/getDefaultRoute';
 import { getActiveRole } from './lib/getActiveRole';
 import * as Pages from './routes/lazyPages';
@@ -42,7 +43,14 @@ export default function App() {
             <Route path="/warehouse/defects" element={<Pages.DefectsPage />} />
             <Route path="/warehouse/import" element={<Pages.ImportListPage />} />
             <Route path="/warehouse/export" element={<Pages.ExportListPage />} />
-            <Route path="/warehouse/reports" element={<Pages.WarehouseReportsPage />} />
+            <Route
+              path="/warehouse/reports"
+              element={
+                WMS_REPORTS_ENABLED
+                  ? <Pages.WarehouseReportsPage />
+                  : <Navigate to="/warehouse/dashboard-warehouse" replace />
+              }
+            />
             <Route path="/warehouse/settings" element={<Navigate to="/operations/settings/material-categories" replace />} />
             <Route path="/warehouse/settings/material-categories" element={<Navigate to="/operations/settings/material-categories" replace />} />
             <Route path="/warehouse/settings/material-units" element={<Navigate to="/operations/settings/material-units" replace />} />

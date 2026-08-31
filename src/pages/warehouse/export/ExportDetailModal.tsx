@@ -37,12 +37,13 @@ export default function ExportDetailModal({
       voucherCode={selected.voucherCode}
       status={selected.status}
       voucherKind="export"
-      statusHint={exportStatusHint(selected.status)}
+        statusHint={exportStatusHint(selected.status, Boolean(selected.isDirectProcurement))}
       approvedBy={selected.approvedBy}
       approvedAt={selected.approvedAt}
       fields={[
+        { label: 'Loại', value: selected.isDirectProcurement ? 'Xuất thẳng công trường' : 'Xuất từ kho' },
         { label: 'Kho dự án', value: exportProjectLabel(selected) },
-        { label: 'Mã tham chiếu', value: displayValue(selected.soCode) },
+        { label: 'Mã đơn hàng', value: displayValue(selected.soCode) },
         {
           label: 'Tạo lúc',
           value: displayValue(formatDateTimeVi(getVoucherCreatedAt(selected)?.toISOString())),
@@ -64,7 +65,7 @@ export default function ExportDetailModal({
               status={selected.status}
               isSubmitPending={isSubmitPending}
               isApprovePending={isApprovePending}
-              onSubmit={() => onSubmit(selected)}
+              onSubmit={selected.isDirectProcurement ? undefined : () => onSubmit(selected)}
               onApprove={() => onApprove(selected)}
             />
           </div>

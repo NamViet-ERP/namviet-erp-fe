@@ -2,7 +2,6 @@ import { Package, DollarSign, Warehouse, TrendingUp, ArrowUpRight, Activity, Ale
 import type { CSSProperties } from 'react';
 import type { XAxisTickContentProps } from 'recharts';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import type { LucideIcon } from 'lucide-react';
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip,
@@ -11,11 +10,12 @@ import {
 
 import Card from '../../components/ui/Card';
 import EmptyState from '../../components/ui/EmptyState';
+import EntityCodeLink from '../../components/ui/EntityCodeLink';
 import PageHeader from '../../components/ui/PageHeader';
 import PageLoader from '../../components/ui/PageLoader';
 import { dashboardChartTooltipProps } from '../../components/warehouse/dashboardChartTooltipProps';
 import { DashboardBarChartPortalTooltip } from '../../components/warehouse/DashboardChartTooltip';
-import { WMS_EMPTY, WMS_ERROR } from '../../lib/wms/messages';
+import { WMS_ERROR } from '../../lib/wms/messages';
 import { formatCurrencyShort } from '../../utils/formatCurrency';
 import { fmtStockQty } from '../../lib/wms/stockQtyFormat';
 import { useWarehouseDashboard } from '../../hooks/useWarehouseDashboard';
@@ -142,10 +142,9 @@ function ChartEmpty({ message }: { message: string }) {
 }
 
 const OPS_STAT_ICONS: Record<string, LucideIcon> = {
+  'Chờ duyệt': Activity,
   'Nhập hôm nay': TrendingUp,
   'Xuất hôm nay': ArrowUpRight,
-  'Chờ duyệt': Activity,
-  'Mã vật tư': Package,
 };
 
 const RADIAN = Math.PI / 180;
@@ -258,6 +257,55 @@ function DashboardWarehouseContent({
         </div>
       )}
 
+      {lowStockAlerts.length > 0 && (
+        <div className="alert-banner alert-banner--warning" role="alert">
+          <AlertTriangle size={18} className="alert-banner__icon" aria-hidden />
+          <div className="min-w-0 flex-1">
+            <p className="alert-banner__title">
+              {lowStockAlerts.length} cảnh báo tồn dưới ngưỡng tối thiểu
+            </p>
+            <ul className="alert-banner__list">
+              {lowStockAlerts.slice(0, 5).map(a => (
+                <li key={`${a.projectCode}-${a.materialCode}`}>
+                  <EntityCodeLink
+                    code={a.projectCode}
+                    to={`/warehouse/projects/${encodeURIComponent(a.projectCode)}`}
+                  />
+                  {' - '}
+                  <EntityCodeLink
+                    code={a.materialCode}
+                    to="/warehouse/materials"
+                    state={{ highlightCode: a.materialCode }}
+                  />
+                  {' '}
+                  ({a.actualQty}/{a.minStockQty} {a.unit})
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+
+      <div className="dashboard-ops-grid dashboard-ops-grid--3" aria-label="Việc cần xử lý">
+        {data.miniStats.map(stat => {
+          const Icon = OPS_STAT_ICONS[stat.label] ?? Activity;
+          return (
+            <div key={stat.label} className="dashboard-ops-card">
+              <div
+                className="dashboard-ops-card__icon"
+                style={{ '--ops-color': stat.color } as CSSProperties }
+              >
+                <Icon size={18} />
+              </div>
+              <div className="min-w-0">
+                <p className="dashboard-ops-card__value">{stat.value}</p>
+                <p className="dashboard-ops-card__label">{stat.label}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
       <div className="dashboard-kpi-grid" role="list" aria-label="Chỉ số kho">
         <Card
           title="Tổng tồn kho"
@@ -284,51 +332,6 @@ function DashboardWarehouseContent({
         />
       </div>
 
-      {lowStockAlerts.length > 0 && (
-        <div className="alert-banner alert-banner--warning" role="alert">
-          <AlertTriangle size={18} className="alert-banner__icon" aria-hidden />
-          <div className="min-w-0 flex-1">
-            <p className="alert-banner__title">
-              {lowStockAlerts.length} cảnh báo tồn dưới ngưỡng tối thiểu
-            </p>
-            <ul className="alert-banner__list">
-              {lowStockAlerts.slice(0, 5).map(a => (
-                <li key={`${a.projectCode}-${a.materialCode}`}>
-                  <Link
-                    className="text-[var(--md-primary)] hover:underline"
-                    to={`/warehouse/projects/${encodeURIComponent(a.projectCode)}`}
-                  >
-                    {a.projectCode}
-                  </Link>
-                  {' - '}
-                  {a.materialCode} ({a.actualQty}/{a.minStockQty} {a.unit})
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      )}
-
-      <div className="dashboard-ops-grid" aria-label="Hoạt động hôm nay">
-        {data.miniStats.map(stat => {
-          const Icon = OPS_STAT_ICONS[stat.label] ?? Activity;
-          return (
-            <div key={stat.label} className="dashboard-ops-card">
-              <div
-                className="dashboard-ops-card__icon"
-                style={{ '--ops-color': stat.color } as CSSProperties}
-              >
-                <Icon size={18} />
-              </div>
-              <div className="min-w-0">
-                <p className="dashboard-ops-card__value">{stat.value}</p>
-                <p className="dashboard-ops-card__label">{stat.label}</p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
       <div className="dashboard-grid-charts">
         <BentoCard className="bento-card--chart">
           <SectionHeading sub="6 tháng gần nhất — giá trị">Xu hướng Nhập / Xuất</SectionHeading>
@@ -342,7 +345,7 @@ function DashboardWarehouseContent({
         </BentoCard>
 
         <BentoCard className="bento-card--chart">
-          <SectionHeading sub="Số mã vật tư theo danh mục">Cơ cấu tồn kho</SectionHeading>
+          <SectionHeading sub="Số lượng tồn theo từng vật tư">Cơ cấu tồn kho</SectionHeading>
           <CategoryPieChart data={data.stockByCategory} />
         </BentoCard>
       </div>
@@ -504,11 +507,10 @@ function CategoryBreakdownList({ data }: { data: CategoryDataPoint[] }) {
 }
 
 function CategoryPieChart({ data }: { data: CategoryDataPoint[] }) {
-  if (data.length === 0) {
-    return <ChartEmpty message={WMS_EMPTY.noStock} />;
-  }
-
   const total = data.reduce((sum, item) => sum + item.value, 0);
+  if (data.length === 0 || total <= 0) {
+    return <ChartEmpty message="Chưa có số lượng tồn kho." />;
+  }
 
   return (
     <div className="chart-breakdown">
@@ -538,7 +540,7 @@ function CategoryPieChart({ data }: { data: CategoryDataPoint[] }) {
         </ResponsiveContainer>
         <div className="chart-breakdown__center" aria-hidden>
           <span className="chart-breakdown__center-value">{fmtStockQty(total)}</span>
-          <span className="chart-breakdown__center-label">Tổng tồn</span>
+          <span className="chart-breakdown__center-label">Tồn</span>
         </div>
       </div>
       <CategoryBreakdownList data={data} />

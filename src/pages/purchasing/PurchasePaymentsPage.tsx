@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CircleCheck, Eye, Plus, RefreshCw, Send, XCircle } from 'lucide-react';
 import Dropdown from '../../components/ui/Dropdown';
 import EmptyState from '../../components/ui/EmptyState';
+import EntityCodeLink from '../../components/ui/EntityCodeLink';
 import Pagination from '../../components/ui/Pagination';
 import SearchBar from '../../components/ui/SearchBar';
 import TabFilter from '../../components/ui/TabFilter';
@@ -253,8 +254,20 @@ export default function PurchasePaymentsPage() {
                           style={{ cursor: 'pointer' }}
                           onClick={() => navigate(`/purchasing/payments/${encodeURIComponent(row.code)}`)}
                         >
-                          <td className="pur-erp__td-code">{row.code}</td>
-                          <td className="pur-erp__td-code">{row.poCode}</td>
+                          <td className="pur-erp__td-code">
+                            <EntityCodeLink
+                              code={row.code}
+                              to={`/purchasing/payments/${encodeURIComponent(row.code)}`}
+                            />
+                          </td>
+                          <td className="pur-erp__td-code">
+                            {row.poCode ? (
+                              <EntityCodeLink
+                                code={row.poCode}
+                                to={`/purchasing/orders/${encodeURIComponent(row.poCode)}`}
+                              />
+                            ) : '—'}
+                          </td>
                           <td className="pur-erp__td-num">{row.stageNumber ?? '—'}</td>
                           <td>{row.supplierName || '—'}</td>
                           <td>{row.invoiceNo || '—'}</td>

@@ -5,6 +5,7 @@ import { HrmDetailHeader } from '../../components/hr/HrmPageChrome';
 import HrmPanel from '../../components/hr/HrmPanel';
 import HrmStatCard from '../../components/hr/HrmStatCard';
 import EmptyState from '../../components/ui/EmptyState';
+import EntityCodeLink from '../../components/ui/EntityCodeLink';
 import Badge from '../../components/ui/Badge';
 import { projectStatusBadge } from '../../lib/wms/projectStatusBadge';
 import TabFilter from '../../components/ui/TabFilter';
@@ -185,7 +186,9 @@ export default function ProjectDetailPage() {
         || r.plannedImportQty !== 0
         || r.plannedExportQty !== 0
         || r.pendingDefectQty !== 0
-        || r.minStockQty > 0,
+        || r.minStockQty > 0
+        || (r.issuedFromPoQty ?? 0) !== 0
+        || (r.issuedFromGeneralQty ?? 0) !== 0,
     ),
     [inventory],
   );
@@ -409,7 +412,7 @@ export default function ProjectDetailPage() {
                 <tbody>
                   {Array.from({ length: 4 }).map((_, i) => (
                     <tr key={i} className="hrm-table-skeleton-row" aria-hidden>
-                      <td colSpan={8}><div className="hrm-table-skeleton" /></td>
+                      <td colSpan={11}><div className="hrm-table-skeleton" /></td>
                     </tr>
                   ))}
                 </tbody>
@@ -440,6 +443,9 @@ export default function ProjectDetailPage() {
                       <th className="table-header-cell text-right">Nhập dự kiến</th>
                       <th className="table-header-cell text-right">Xuất dự kiến</th>
                       <th className="table-header-cell text-right" title="Tồn thực tế + nhập/hoàn trả/chuyển kho dự kiến">Tồn dự kiến</th>
+                      <th className="table-header-cell text-right" title="Đã cấp công trường qua phiếu gắn PO">Từ PO</th>
+                      <th className="table-header-cell text-right" title="Đã cấp công trường từ kho trung tâm">Từ kho trung tâm</th>
+                      <th className="table-header-cell text-right">Tổng</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -450,8 +456,12 @@ export default function ProjectDetailPage() {
                       const isSavingRow = savingMinStockCode === row.materialCode;
                       return (
                       <tr key={row.materialCode} className={`table-row wms-inventory-row--interactive${isBelowMin ? ' bg-[color-mix(in_srgb,var(--md-warning)_8%,transparent)]' : ''}`}>
-                        <td className="table-cell font-mono text-sm text-[var(--md-primary)] whitespace-nowrap">
-                          {row.materialCode}
+                        <td className="table-cell whitespace-nowrap">
+                          <EntityCodeLink
+                            code={row.materialCode}
+                            to="/warehouse/materials"
+                            state={{ highlightCode: row.materialCode }}
+                          />
                         </td>
                         <td className="table-cell max-w-[280px]">
                           <span className="line-clamp-2" title={row.materialName}>{row.materialName}</span>
@@ -520,6 +530,15 @@ export default function ProjectDetailPage() {
                         </td>
                         <td className="table-cell text-right font-semibold tabular-nums">
                           {fmtPlannedStock(row.actualInventoryQty, row.plannedImportQty)}
+                        </td>
+                        <td className="table-cell text-right tabular-nums">
+                          {fmtStockQtyOrDash(row.issuedFromPoQty ?? 0)}
+                        </td>
+                        <td className="table-cell text-right tabular-nums">
+                          {fmtStockQtyOrDash(row.issuedFromGeneralQty ?? 0)}
+                        </td>
+                        <td className="table-cell text-right font-semibold tabular-nums">
+                          {fmtStockQtyOrDash((row.issuedFromPoQty ?? 0) + (row.issuedFromGeneralQty ?? 0))}
                         </td>
                       </tr>
                       );

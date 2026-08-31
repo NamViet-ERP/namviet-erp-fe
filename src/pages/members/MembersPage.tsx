@@ -5,6 +5,7 @@ import PageHeader from '../../components/ui/PageHeader';
 import SearchBar from '../../components/ui/SearchBar';
 import Pagination from '../../components/ui/Pagination';
 import EmptyState from '../../components/ui/EmptyState';
+import EntityCodeLink from '../../components/ui/EntityCodeLink';
 import TabFilter from '../../components/ui/TabFilter';
 import HrmPanel from '../../components/hr/HrmPanel';
 import HrmStatCard from '../../components/hr/HrmStatCard';
@@ -171,8 +172,12 @@ export default function MembersPage() {
                     className="table-row hrm-table-row--interactive"
                     onClick={() => navigate(`/members/${emp.id}`)}
                   >
-                    <td className="table-cell font-mono text-sm text-[var(--md-primary)] whitespace-nowrap tabular-nums hrm-table-sticky-col">
-                      {emp.code || '—'}
+                    <td className="table-cell whitespace-nowrap tabular-nums hrm-table-sticky-col">
+                      {emp.code ? (
+                        <EntityCodeLink code={emp.code} to={`/members/${emp.id}`} />
+                      ) : (
+                        <span className="entity-code">—</span>
+                      )}
                     </td>
                     <td className="table-cell member-name hrm-table-sticky-col hrm-table-sticky-col--name">
                       <div className="hrm-member-cell">

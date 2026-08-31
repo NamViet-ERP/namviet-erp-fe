@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { ClipboardCheck } from 'lucide-react';
 import PurchasingStatusBadge from '../purchasing/PurchasingStatusBadge';
 import CompleteDeliveryEvaluationModal from './CompleteDeliveryEvaluationModal';
 import EmptyState from '../ui/EmptyState';
+import EntityCodeLink from '../ui/EntityCodeLink';
 import Pagination from '../ui/Pagination';
 import SearchBar from '../ui/SearchBar';
 import TableSkeletonRows from '../ui/TableSkeletonRows';
@@ -144,12 +144,10 @@ export default function SupplierOrderEvaluationsPanel() {
                 pendingItems.map(row => (
                   <tr key={row.id} className="table-row">
                     <td className="table-cell whitespace-nowrap">
-                      <Link
+                      <EntityCodeLink
+                        code={row.poCode}
                         to={`/purchasing/orders/${encodeURIComponent(row.poCode)}`}
-                        className="text-[var(--md-primary)] hover:underline"
-                      >
-                        {row.poCode}
-                      </Link>
+                      />
                     </td>
                     <td className="table-cell font-semibold">{row.supplierName}</td>
                     <td className="table-cell whitespace-nowrap tabular-nums">
@@ -228,7 +226,12 @@ export default function SupplierOrderEvaluationsPanel() {
                       {row.evaluatedAt ? formatDateCell(row.evaluatedAt) : '—'}
                     </td>
                     <td className="table-cell font-semibold">{row.supplierName}</td>
-                    <td className="table-cell whitespace-nowrap">{row.poCode}</td>
+                    <td className="table-cell whitespace-nowrap">
+                      <EntityCodeLink
+                        code={row.poCode}
+                        to={`/purchasing/orders/${encodeURIComponent(row.poCode)}`}
+                      />
+                    </td>
                     <td className="table-cell">{row.evaluatedByName || '—'}</td>
                     <td className="table-cell text-center tabular-nums">{criteriaCell(row.quality)}</td>
                     <td className="table-cell text-center tabular-nums">{criteriaCell(row.delivery)}</td>

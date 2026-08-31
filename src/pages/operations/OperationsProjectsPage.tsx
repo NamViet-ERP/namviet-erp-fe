@@ -14,6 +14,7 @@ import Badge from '../../components/ui/Badge';
 import Pagination from '../../components/ui/Pagination';
 import SearchBar from '../../components/ui/SearchBar';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
+import EntityCodeLink from '../../components/ui/EntityCodeLink';
 import ProjectPurchasingGantt from '../../components/operations/ProjectPurchasingGantt';
 import CskhFilterTabs, { type CskhFilterOption } from '../cskh/CskhFilterTabs';
 import { showToast } from '../../components/ui/Toast';
@@ -446,8 +447,11 @@ export default function OperationsProjectsPage() {
               ) : (
                 items.map(row => (
                   <tr key={row.projectCode} className="table-row">
-                    <td className="table-cell font-mono text-sm text-[var(--md-primary)] whitespace-nowrap project-col-code">
-                      {row.projectCode}
+                    <td className="table-cell whitespace-nowrap project-col-code">
+                      <EntityCodeLink
+                        code={row.projectCode}
+                        to={`/warehouse/projects/${encodeURIComponent(row.projectCode)}`}
+                      />
                     </td>
                     <td className="table-cell font-semibold project-col-name">
                       <span title={row.projectName}>{row.projectName}</span>

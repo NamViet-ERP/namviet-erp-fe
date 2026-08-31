@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Download } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
+import EntityCodeLink from '../../components/ui/EntityCodeLink';
 import EmptyState from '../../components/ui/EmptyState';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import Skeleton from '../../components/ui/Skeleton';
@@ -279,11 +280,21 @@ export default function SupplierPayablesPage() {
                           <div className="text-[var(--md-on-surface-variant)]">còn {row.daysUntilDue} ngày</div>
                         </td>
                         <td className="table-cell">{row.supplierName || '-'}</td>
-                        <td className="table-cell font-mono">{row.projectCode || '-'}</td>
                         <td className="table-cell">
-                          <Link to={`/purchasing/orders/${encodeURIComponent(row.poCode)}`}>
-                            {row.poCode}
-                          </Link>
+                          {row.projectCode ? (
+                            <EntityCodeLink
+                              code={row.projectCode}
+                              to={`/warehouse/projects/${encodeURIComponent(row.projectCode)}`}
+                            />
+                          ) : (
+                            <span className="entity-code">-</span>
+                          )}
+                        </td>
+                        <td className="table-cell">
+                          <EntityCodeLink
+                            code={row.poCode}
+                            to={`/purchasing/orders/${encodeURIComponent(row.poCode)}`}
+                          />
                           <div className="font-mono text-[var(--md-on-surface-variant)]">{row.paymentCode}</div>
                         </td>
                         <td className="table-cell text-right tabular-nums whitespace-nowrap">
@@ -396,15 +407,23 @@ export default function SupplierPayablesPage() {
                           {line.supplierName || '-'}
                         </td>
                         <td className="table-cell">
-                          <span className="font-mono">{line.projectCode || '-'}</span>
+                          {line.projectCode ? (
+                            <EntityCodeLink
+                              code={line.projectCode}
+                              to={`/warehouse/projects/${encodeURIComponent(line.projectCode)}`}
+                            />
+                          ) : (
+                            <span className="entity-code">-</span>
+                          )}
                           {line.projectName ? (
                             <div className="text-[var(--md-on-surface-variant)]">{line.projectName}</div>
                           ) : null}
                         </td>
                         <td className="table-cell">
-                          <Link className="font-mono" to={`/purchasing/orders/${encodeURIComponent(line.poCode)}`}>
-                            {line.poCode}
-                          </Link>
+                          <EntityCodeLink
+                            code={line.poCode}
+                            to={`/purchasing/orders/${encodeURIComponent(line.poCode)}`}
+                          />
                           <div className="font-mono text-[var(--md-on-surface-variant)]">
                             {line.paymentCode}
                             {line.stageNumber > 1 ? ` · đợt ${line.stageNumber}` : ''}

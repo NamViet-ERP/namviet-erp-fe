@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Import } from '../../../types';
-import { FileText, Pencil } from 'lucide-react';
+import { ArrowRightLeft, FileText, Pencil, Trash2 } from 'lucide-react';
 import { formatCurrencyVnd } from '../../../utils/formatCurrency';
 import VoucherDetailModal from '../../../components/warehouse/VoucherDetailModal';
 import { displayValue } from '../../../components/warehouse/voucherDetailUtils';
@@ -10,7 +10,7 @@ import {
   SavedImportDocList,
   SavedImportPhotoGrid,
 } from '../../../components/warehouse/PendingLocalEvidence';
-import { importStatusHint } from './importUtils';
+import { importStatusHint, isIssueFromGeneralWarehouse } from './importUtils';
 import { formatDateTimeVi } from '../../../lib/hrm/formatters';
 import { getVoucherCreatedAt } from '../../../lib/wms/voucherDateUtils';
 import { printVoucherWithFeedback } from '../../../lib/wms/printVoucher';
@@ -36,6 +36,10 @@ interface ImportDetailModalProps {
   projectName: (code?: string) => string;
   /** Chỉ dùng cho phiếu nháp: mở form sửa header / dòng hàng. */
   onEdit?: (imp: Import) => void;
+  /** Xóa phiếu nháp (chi tiết PO không còn cột Tác vụ). */
+  onDeleteDraft?: (imp: Import) => void;
+  /** Chuyển phiếu nhập kho sang xuất thẳng. */
+  onConvertToDirect?: (imp: Import) => void;
   /** Thủ kho duyệt thực tế từ chi tiết (phiếu pending) sau khi đủ 3 mục chứng từ. */
   onApprove?: (imp: Import, payload: ImportApproveSettlementPayload) => void;
   onDownloadAttachment?: (imp: Import, attachmentId: string, fileName: string) => Promise<void>;
@@ -60,6 +64,8 @@ export default function ImportDetailModal({
   selected,
   projectName,
   onEdit,
+  onDeleteDraft,
+  onConvertToDirect,
   onApprove,
   onDownloadAttachment,
   canUpdateEvidence = false,
@@ -104,7 +110,13 @@ export default function ImportDetailModal({
 
   if (!selected) return null;
 
+  const isDirect = Boolean(selected.isDirectProcurement);
+  const displayPrices = showPrices && !isIssueFromGeneralWarehouse(selected);
   const canEditDraft = Boolean(onEdit) && selected.status === 'draft';
+  const canDeleteDraft = Boolean(onDeleteDraft) && selected.status === 'draft';
+  const canConvertToDirect = Boolean(onConvertToDirect)
+    && !isDirect
+    && (selected.status === 'draft' || selected.status === 'pending');
   const canReceiveHere = Boolean(onApprove) && selected.status === 'pending';
   const evidenceEditable = canUpdateEvidence && selected.status === 'pending';
   const attachments = selected.attachments ?? [];
@@ -187,8 +199,10 @@ export default function ImportDetailModal({
   };
 
   const statusHint = evidenceEditable
-    ? 'Kiểm nhận SL thực tế / Lỗi / Thiếu, đủ chứng từ rồi duyệt'
-    : importStatusHint(selected.status);
+    ? (isDirect
+      ? 'Xuất thẳng: kiểm nhận SL, đủ chứng từ rồi duyệt. Tồn kho không tăng.'
+      : 'Kiểm nhận SL thực tế / Lỗi / Thiếu, đủ chứng từ rồi duyệt')
+    : importStatusHint(selected.status, isDirect);
 
   return (
     <VoucherDetailModal
@@ -196,25 +210,31 @@ export default function ImportDetailModal({
       onClose={onClose}
       voucherCode={selected.voucherCode}
       status={selected.status}
-      voucherKind="import"
+      voucherKind={isDirect ? 'export' : 'import'}
       size={showSettlement ? 'wide' : 'full'}
       className={showSettlement ? 'wms-voucher-detail--receive' : 'wms-voucher-detail--lines'}
       statusHint={statusHint}
       approvedBy={selected.approvedBy}
       approvedAt={selected.approvedAt}
       fields={[
+        ...(isDirect
+          ? [{ label: 'Loại', value: 'Xuất thẳng công trường' }]
+          : []),
         {
           label: 'Kho dự án',
           value: selected.project ? projectName(selected.project) : displayValue(),
         },
         { label: 'Nhà cung cấp', value: displayValue(selected.supplier) },
-        { label: 'Mã tham chiếu', value: displayValue(selected.referenceCode) },
+        { label: 'Mã đơn hàng', value: displayValue(selected.referenceCode) },
         { label: 'KHMH', value: displayValue(selected.planCode) },
         {
           label: 'Tạo lúc',
           value: displayValue(formatDateTimeVi(getVoucherCreatedAt(selected)?.toISOString())),
         },
         { label: 'Người lập', value: displayValue(selected.createdBy) },
+        ...(isDirect && selected.linkedTicketCode
+          ? [{ label: 'Phiếu xuất', value: displayValue(selected.linkedTicketCode) }]
+          : []),
         ...(selected.linkedDefectTicketCode
           ? [{ label: 'HL liên kết', value: displayValue(selected.linkedDefectTicketCode) }]
           : []),
@@ -231,28 +251,48 @@ export default function ImportDetailModal({
                 buildImportPrintPayload(
                   selected,
                   selected.project ? projectName(selected.project) : '-',
-                  { showPrices },
+                  { showPrices: displayPrices },
                 ),
               )
             }
           >
             <FileText size={14} /> In phiếu
           </button>
-          {canEditDraft ? (
-            <button type="button" className="btn btn-filled" onClick={() => onEdit?.(selected)}>
-              <Pencil size={14} /> Sửa phiếu
-            </button>
-          ) : null}
-          {canReceiveHere ? (
-            <button
-              type="button"
-              className="btn btn-primary"
-              disabled={isApproving || isEvidencePending}
-              onClick={handleApproveClick}
-            >
-              Duyệt thực tế
-            </button>
-          ) : null}
+          <div className="flex items-center gap-2 flex-wrap">
+            {canDeleteDraft ? (
+              <button
+                type="button"
+                className="btn btn-danger btn-sm"
+                onClick={() => onDeleteDraft?.(selected)}
+              >
+                <Trash2 size={14} /> Xóa nháp
+              </button>
+            ) : null}
+            {canConvertToDirect ? (
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                onClick={() => onConvertToDirect?.(selected)}
+              >
+                <ArrowRightLeft size={14} /> Chuyển sang xuất thẳng
+              </button>
+            ) : null}
+            {canEditDraft ? (
+              <button type="button" className="btn btn-filled" onClick={() => onEdit?.(selected)}>
+                <Pencil size={14} /> Sửa phiếu
+              </button>
+            ) : null}
+            {canReceiveHere ? (
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={isApproving || isEvidencePending}
+                onClick={handleApproveClick}
+              >
+                Duyệt thực tế
+              </button>
+            ) : null}
+          </div>
         </div>
       }
     >
@@ -276,7 +316,7 @@ export default function ImportDetailModal({
                 <th className="table-header-cell text-center import-manual-col-qty">SL</th>
               )}
               <th className="table-header-cell text-center import-po-col-unit">ĐVT</th>
-              {showPrices ? (
+              {displayPrices ? (
                 <>
                   <th className="table-header-cell text-center import-po-col-amount">Đơn giá</th>
                   <th className="table-header-cell text-center import-po-col-amount">Thành tiền</th>
@@ -359,7 +399,7 @@ export default function ImportDetailModal({
                       {it.unit?.trim() || '-'}
                     </div>
                   </td>
-                  {showPrices ? (
+                  {displayPrices ? (
                     <>
                       <td className="table-cell text-center tabular-nums import-po-col-amount">
                         {formatCurrencyVnd(it.unitPrice)}
@@ -422,7 +462,7 @@ export default function ImportDetailModal({
                 </td>
               )}
               <td className="table-cell py-2" />
-              {showPrices ? (
+              {displayPrices ? (
                 <>
                   <td className="table-cell py-2" />
                   <td className="table-cell text-center tabular-nums font-bold text-[var(--md-primary)] py-2 import-po-col-amount">

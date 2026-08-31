@@ -17,7 +17,7 @@ export function buildImportPrintPayload(
     fields: [
       { label: 'Kho dự án', value: projectLabel },
       { label: 'Nhà cung cấp', value: imp.supplier || '—' },
-      { label: 'Mã tham chiếu', value: imp.referenceCode || '—' },
+      { label: 'Mã đơn hàng', value: imp.referenceCode || '—' },
       { label: 'Người lập', value: imp.createdBy || '—' },
       { label: 'Tạo lúc', value: formatDateTimeVi(getVoucherCreatedAt(imp)?.toISOString()) || '—' },
       { label: 'Ghi chú', value: imp.note || '—' },
@@ -49,7 +49,7 @@ export function buildExportPrintPayload(
     fields: [
       { label: 'Kho dự án', value: projectLabel },
       { label: 'Khách hàng', value: exp.customer || '—' },
-      { label: 'Mã SO', value: exp.soCode || '—' },
+      { label: 'Mã đơn hàng', value: exp.soCode || '—' },
       { label: 'Người lập', value: exp.createdBy || '—' },
       { label: 'Tạo lúc', value: formatDateTimeVi(getVoucherCreatedAt(exp)?.toISOString()) || '—' },
       { label: 'Ghi chú', value: exp.note || '—' },

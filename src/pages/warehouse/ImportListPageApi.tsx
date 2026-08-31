@@ -76,7 +76,7 @@ import { importsService } from '../../services/importsService';
 
 import { emptyQtyPriceLine, type MaterialQtyPriceLine } from './voucher/voucherFormTypes';
 
-import { importLineTotal } from './import/importUtils';
+import { importLineTotal, isIssueFromGeneralWarehouse } from './import/importUtils';
 import { resolvePoImportItems } from './import/importCreatePoDrafts';
 
 import ImportTable from './import/ImportTable';
@@ -205,7 +205,9 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
   // Thủ kho: chỉ dự kiến + thực tế (phiếu nháp quản lý trên PO).
   const warehouseImports = useMemo(
-    () => imports.filter(i => i.status === 'pending' || i.status === 'approved'),
+    () => imports.filter(i =>
+      (i.status === 'pending' || i.status === 'approved')
+      && !i.isDirectProcurement),
     [imports],
   );
 
@@ -487,7 +489,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
       try {
         const created = await createFromPoMutation.mutateAsync({
           poCode: selectedPoCode,
-          request: { items: selectedItems },
+          request: { items: selectedItems, isDirectProcurement: false, issueFromGeneralWarehouse: false },
         });
 
         const files = evidence?.files ?? [];
@@ -1061,7 +1063,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
         onSaveEvaluation={handleSaveEvaluation}
 
-        showPrices={canViewPrices}
+        showPrices={canViewPrices && !isIssueFromGeneralWarehouse(selected)}
 
       />
 

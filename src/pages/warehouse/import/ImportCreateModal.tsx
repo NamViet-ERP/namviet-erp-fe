@@ -55,6 +55,7 @@ export default function ImportCreateModal({
   selectedPoCode = '',
   onSelectedPoCodeChange,
   poLocked = false,
+  title,
   poLoading = false,
   poPreviewLines = [],
   editAttachments = [],
@@ -65,6 +66,10 @@ export default function ImportCreateModal({
   canApprove = false,
   onApprove,
   isApproving = false,
+  allowWarehouseSourcePicker = false,
+  issueFromGeneralWarehouse = false,
+  onIssueFromGeneralWarehouseChange,
+  getQtyCap,
 }: ImportCreateModalProps) {
   const canViewPrices = useCanViewWmsPrices();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -162,12 +167,26 @@ export default function ImportCreateModal({
     () => Object.values(poLineDrafts).filter(d => d.selected).length,
     [poLineDrafts],
   );
+  const poDraftGrandTotal = useMemo(
+    () => poPreviewLines.reduce((sum, line) => {
+      const draft = poLineDrafts[line.poItemId];
+      if (!draft?.selected) return sum;
+      const qty = Number(draft.qty) || 0;
+      if (qty <= 0) return sum;
+      return sum + qty * (Number(line.unitPrice) || 0);
+    }, 0),
+    [poPreviewLines, poLineDrafts],
+  );
+  const displayGrandTotal = isPoLineMode ? poDraftGrandTotal : formGrandTotal;
 
   // Chỉ khởi tạo lại khi đổi PO / dữ liệu preview — không phụ thuộc onItemsChange
   // (callback inline của parent sẽ re-create mỗi render → reset tick).
   const poPreviewKey = useMemo(
-    () => `${selectedPoCode}|${poPreviewLines.map(l => `${l.poItemId}:${l.available}`).join(',')}`,
-    [selectedPoCode, poPreviewLines],
+    () =>
+      `${selectedPoCode}|${issueFromGeneralWarehouse ? 'general' : 'project'}|${poPreviewLines
+        .map(l => `${l.poItemId}:${l.available}:${l.generalAvailableQty ?? ''}`)
+        .join(',')}`,
+    [selectedPoCode, issueFromGeneralWarehouse, poPreviewLines],
   );
 
   useEffect(() => {
@@ -180,7 +199,14 @@ export default function ImportCreateModal({
       onItemsChange([]);
       return;
     }
-    const nextDrafts = defaultPoLineDrafts(poPreviewLines);
+    const cap = issueFromGeneralWarehouse
+      ? (line: (typeof poPreviewLines)[number]) => {
+          if (line.generalAvailableQty == null) return 0;
+          const qty = Number(line.generalAvailableQty);
+          return Number.isFinite(qty) ? Math.max(0, qty) : 0;
+        }
+      : undefined;
+    const nextDrafts = defaultPoLineDrafts(poPreviewLines, cap);
     setPoLineDrafts(nextDrafts);
     onItemsChange(poDraftsToItems(poPreviewLines, nextDrafts));
     // eslint-disable-next-line react-hooks/exhaustive-deps -- chỉ reset khi đổi PO/preview
@@ -191,7 +217,7 @@ export default function ImportCreateModal({
     const key = `${editVoucher!.code}|${poPreviewKey}`;
     if (editPoSeedKeyRef.current === key) return;
     editPoSeedKeyRef.current = key;
-    const nextDrafts = draftsFromExistingItems(poPreviewLines, items);
+    const nextDrafts = draftsFromExistingItems(poPreviewLines, items, getQtyCap);
     setPoLineDrafts(nextDrafts);
     onItemsChange(poDraftsToItems(poPreviewLines, nextDrafts));
     // eslint-disable-next-line react-hooks/exhaustive-deps -- seed một lần khi mở sửa + preview sẵn
@@ -212,16 +238,19 @@ export default function ImportCreateModal({
     setPoLineDrafts(prev => {
       const next = { ...prev };
       for (const line of poPreviewLines) {
-        if (line.available <= 0) continue;
+        const cap = getQtyCap ? getQtyCap(line) : Number(line.available) || 0;
+        const knownEmpty = !(Number.isFinite(cap) && cap > 0);
+        if (knownEmpty) continue;
+        const fallbackQty = Number.isFinite(cap) && cap > 0 ? String(cap) : '1';
         const existing = next[line.poItemId] ?? {
           selected: false,
-          qty: String(line.available),
+          qty: fallbackQty,
         };
         const qtyNum = Number(existing.qty) || 0;
         next[line.poItemId] = {
           ...existing,
           selected: checked,
-          qty: checked && qtyNum <= 0 ? String(line.available) : existing.qty,
+          qty: checked && qtyNum <= 0 ? fallbackQty : existing.qty,
         };
       }
       onItemsChange(poDraftsToItems(poPreviewLines, next));
@@ -235,7 +264,7 @@ export default function ImportCreateModal({
     onCreate(status, {
       files: [...evidencePhotos, ...evidenceDocs],
       evaluation: evaluationDraft,
-      poItems: selectedPoItemsFromDrafts(poPreviewLines, poLineDrafts),
+      poItems: selectedPoItemsFromDrafts(poPreviewLines, poLineDrafts, getQtyCap),
     });
   };
 
@@ -243,7 +272,11 @@ export default function ImportCreateModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={editVoucher ? `Sửa phiếu nhập - ${editVoucher.code}` : 'Tạo phiếu nhập kho dự án'}
+      title={
+        editVoucher
+          ? `Sửa phiếu - ${editVoucher.code}`
+          : (title ?? 'Tạo phiếu nhập kho dự án')
+      }
       size="wide"
       className="md-dialog--import-create"
       footer={
@@ -251,16 +284,18 @@ export default function ImportCreateModal({
           <button type="button" className="btn btn-outline" onClick={onClose}>Hủy</button>
           <div className="flex items-center gap-3 flex-wrap md-dialog__footer-actions">
             <div className="text-sm mr-1">
-              {canViewPrices ? (
+              {canViewPrices && !issueFromGeneralWarehouse ? (
                 <>
                   <span className="text-[var(--md-on-surface-variant)]">Tổng giá trị: </span>
-                  <span className="font-bold text-[var(--md-primary)] tabular-nums">{formatCurrency(formGrandTotal)} đ</span>
+                  <span className="font-bold text-[var(--md-primary)] tabular-nums">{formatCurrency(displayGrandTotal)} đ</span>
                 </>
               ) : (
                 <span className="text-[var(--md-on-surface-variant)]">
                   {selectedPoLineCount > 0
                     ? `${selectedPoLineCount} dòng vật tư`
-                    : 'Không hiển thị giá'}
+                    : issueFromGeneralWarehouse
+                      ? 'Chỉ ghi số lượng'
+                      : 'Không hiển thị giá'}
                 </span>
               )}
             </div>
@@ -328,6 +363,9 @@ export default function ImportCreateModal({
           onReferenceCodeChange={onReferenceCodeChange}
           note={note}
           onNoteChange={onNoteChange}
+          allowWarehouseSourcePicker={allowWarehouseSourcePicker}
+          issueFromGeneralWarehouse={issueFromGeneralWarehouse}
+          onIssueFromGeneralWarehouseChange={onIssueFromGeneralWarehouseChange}
         />
 
         <div className="space-y-2">
@@ -335,6 +373,7 @@ export default function ImportCreateModal({
             isPoLineMode={isPoLineMode}
             selectedPoCode={selectedPoCode}
             selectedPoLineCount={selectedPoLineCount}
+            issueFromGeneralWarehouse={issueFromGeneralWarehouse}
             showExcelBar={Boolean(!isPoLineMode && onDownloadTemplate && onImportFile)}
             projectCode={projectCode}
             onAddMaterialLine={addMaterialLine}
@@ -365,12 +404,13 @@ export default function ImportCreateModal({
               poPreviewLines={poPreviewLines}
               poLineDrafts={poLineDrafts}
               isPending={isPending}
-              formGrandTotal={formGrandTotal}
+              formGrandTotal={displayGrandTotal}
               onSetPoLine={setPoLine}
               onToggleSelectAll={toggleSelectAllPoLines}
               qtyColumnLabel={
                 canApprove && editVoucher?.status === 'pending' ? 'SL thực nhận' : 'SL dự kiến'
               }
+              getQtyCap={getQtyCap}
             />
           ) : !projectCode ? (
             <p className="text-[11px] text-[var(--md-on-surface-variant)]">Chọn kho dự án trước khi thêm vật tư.</p>

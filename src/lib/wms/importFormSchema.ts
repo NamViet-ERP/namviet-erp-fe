@@ -110,7 +110,7 @@ export function getImportFormFieldErrors(
   const projectFreezeError = getFrozenProjectError(frozenByProjectCode, projectCode);
   if (!projectCode.trim()) errors.projectCode = 'Vui lòng chọn kho dự án';
   else if (projectFreezeError) errors.projectCode = projectFreezeError;
-  if (!referenceCode.trim()) errors.referenceCode = 'Vui lòng nhập mã tham chiếu / PO';
+  if (!referenceCode.trim()) errors.referenceCode = 'Vui lòng nhập mã đơn hàng';
   if (!defaultSupplier.trim() || !supplierValid) {
     errors.defaultSupplier = 'Vui lòng chọn NCC từ danh mục';
   }

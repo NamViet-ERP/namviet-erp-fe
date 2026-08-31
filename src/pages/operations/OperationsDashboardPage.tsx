@@ -15,6 +15,7 @@ import EmptyState from '../../components/ui/EmptyState';
 import Card from '../../components/ui/Card';
 import HrmPanel from '../../components/hr/HrmPanel';
 import Badge from '../../components/ui/Badge';
+import EntityCodeLink from '../../components/ui/EntityCodeLink';
 import { useOperationsDashboard } from '../../hooks/useOperationsDashboard';
 import { fmtStockQty } from '../../lib/wms/stockQtyFormat';
 import { projectStatusBadge } from '../../lib/wms/projectStatusBadge';
@@ -98,14 +99,19 @@ function OpenPoRows({ rows }: { rows: PurchaseOrderApiDto[] }) {
   return rows.map(row => (
     <tr key={row.code} className="table-row">
       <td className="table-cell">
-        <Link
-          className="font-mono text-sm text-[var(--md-primary)] hover:underline"
+        <EntityCodeLink
+          code={row.code}
           to={`/purchasing/orders/${encodeURIComponent(row.code)}`}
-        >
-          {row.code}
-        </Link>
+        />
       </td>
-      <td className="table-cell tabular-nums">{row.projectCode}</td>
+      <td className="table-cell">
+        {row.projectCode ? (
+          <EntityCodeLink
+            code={row.projectCode}
+            to={`/warehouse/projects/${encodeURIComponent(row.projectCode)}`}
+          />
+        ) : '-'}
+      </td>
       <td className="table-cell">{row.supplierName || '-'}</td>
       <td className="table-cell"><PoStatusPill {...poPlacementStatus(row.orderPlacementStatus)} /></td>
       <td className="table-cell"><PoStatusPill {...poDeliveryStatus(row.deliveryStatus)} /></td>
@@ -294,9 +300,20 @@ export default function OperationsDashboardPage() {
               ) : (
                 stockRows.map(row => (
                   <tr key={`${row.projectCode}-${row.materialCode}`} className="table-row">
-                    <td className="table-cell font-mono text-sm">{row.materialCode}</td>
+                    <td className="table-cell">
+                      <EntityCodeLink
+                        code={row.materialCode}
+                        to="/warehouse/materials"
+                        state={{ highlightCode: row.materialCode }}
+                      />
+                    </td>
                     <td className="table-cell font-semibold">{row.materialName}</td>
-                    <td className="table-cell font-mono text-sm text-[var(--md-primary)]">{row.projectCode}</td>
+                    <td className="table-cell">
+                      <EntityCodeLink
+                        code={row.projectCode}
+                        to={`/warehouse/projects/${encodeURIComponent(row.projectCode)}`}
+                      />
+                    </td>
                     <td className="table-cell text-right tabular-nums font-semibold text-[var(--md-error)]">
                       {fmtStockQty(row.actualQty)} {row.unit}
                     </td>
@@ -378,12 +395,10 @@ export default function OperationsDashboardPage() {
                 paymentRows.map(row => (
                   <tr key={row.code} className="table-row">
                     <td className="table-cell">
-                      <Link
-                        className="font-mono text-sm text-[var(--md-primary)] hover:underline"
+                      <EntityCodeLink
+                        code={row.code}
                         to={`/purchasing/payments/${encodeURIComponent(row.code)}`}
-                      >
-                        {row.code}
-                      </Link>
+                      />
                     </td>
                     <td className="table-cell tabular-nums">{row.poCode}</td>
                     <td className="table-cell">{row.supplierName || '-'}</td>
@@ -431,8 +446,11 @@ export default function OperationsDashboardPage() {
               ) : (
                 projectRows.map(row => (
                   <tr key={row.projectCode} className="table-row">
-                    <td className="table-cell font-mono text-sm text-[var(--md-primary)] whitespace-nowrap project-col-code">
-                      {row.projectCode}
+                    <td className="table-cell whitespace-nowrap project-col-code">
+                      <EntityCodeLink
+                        code={row.projectCode}
+                        to={`/warehouse/projects/${encodeURIComponent(row.projectCode)}`}
+                      />
                     </td>
                     <td className="table-cell font-semibold project-col-name">{row.projectName}</td>
                     <td className="table-cell project-col-client">{row.clientName?.trim() || '-'}</td>
