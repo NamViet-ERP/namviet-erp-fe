@@ -18,6 +18,10 @@ export type DepartmentApiDto = Schemas['DepartmentDto'];
 export type DepartmentMemberApiDto = Schemas['DepartmentMemberDto'];
 export type UpsertDepartmentRequest = Schemas['UpsertDepartmentRequest'];
 
+/** OpenAPI aliases — Branches */
+export type BranchApiDto = Schemas['BranchDto'];
+export type UpsertBranchRequest = Schemas['UpsertBranchRequest'];
+
 /** OpenAPI aliases — Recruitment plans */
 export type RecruitmentPlanApiDto = Schemas['RecruitmentPlanDto'];
 export type CreateRecruitmentPlanRequest = Schemas['CreateRecruitmentPlanRequest'];

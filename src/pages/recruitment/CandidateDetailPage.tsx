@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FileText, Download, UserPlus } from 'lucide-react';
 import { showToast } from '../../components/ui/Toast';
@@ -6,6 +6,7 @@ import { useCandidate, useUpdateCandidate, useUpdateCandidateStatus } from '../.
 import { useHrStaffSelectOptions } from '../../hooks/useHrStaff';
 import { RECRUITMENT_SOURCES, EDUCATION_LEVELS } from '../../constants/recruitment';
 import { usePositionSelectOptions } from '../../hooks/usePositions';
+import { useDepartments } from '../../hooks/useDepartments';
 import { candidatesService } from '../../services/candidatesService';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { UI_ERROR } from '../../lib/uiMessages';
@@ -37,6 +38,13 @@ export default function CandidateDetailPage() {
   const form = isEditing ? draft : candidate;
   const positionOptions = usePositionSelectOptions(form?.position ?? candidate?.position);
   const hrStaffOptions = useHrStaffSelectOptions(form?.hrResponsible ?? candidate?.hrResponsible);
+  const { data: hrDepartments = [] } = useDepartments(true);
+  const departmentOptions = useMemo(() => {
+    const names = hrDepartments.map(d => d.name);
+    const current = form?.targetDepartment?.trim();
+    if (current && !names.includes(current)) return [current, ...names];
+    return names;
+  }, [hrDepartments, form?.targetDepartment]);
 
   if (isLoading) return <HrmLoadingState />;
   if (isError || !candidate || !form) {
@@ -213,7 +221,7 @@ export default function CandidateDetailPage() {
             <>
               <FieldSelect label="Lọc/ứng tuyển" value={form.screeningType ?? ''} onChange={v => set('screeningType', v)} options={['Lọc', 'Ứng tuyển']} />
               <FieldInput label="Chức vụ cần tuyển" value={form.targetPosition ?? ''} onChange={v => set('targetPosition', v)} />
-              <FieldInput label="Bộ phận cần tuyển" value={form.targetDepartment ?? ''} onChange={v => set('targetDepartment', v)} />
+              <FieldSelect label="Bộ phận cần tuyển" value={form.targetDepartment ?? ''} onChange={v => set('targetDepartment', v)} options={departmentOptions} />
               <FieldSelect label="Sơ tuyển qua ĐT/Zalo/FB" value={form.preScreenResult ?? ''} onChange={v => set('preScreenResult', v)} options={['ĐT', 'Zalo', 'FB', 'Khác']} />
               <FieldInput label="Kết quả liên hệ" value={form.contactResult ?? ''} onChange={v => set('contactResult', v)} />
               <FieldInput label="Ngày phỏng vấn" value={form.interviewDate ?? ''} onChange={v => set('interviewDate', v)} type="date" />

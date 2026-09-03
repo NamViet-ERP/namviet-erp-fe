@@ -8,7 +8,7 @@ const recruitmentPages: Array<{ path: string; title: string | RegExp }> = [
   { path: '/recruitment/calendar', title: 'Lịch phỏng vấn' },
   { path: '/recruitment/reports', title: 'Báo cáo tuyển dụng' },
   { path: '/recruitment/hr-stats', title: 'Thống kê nhân sự' },
-  { path: '/recruitment/settings', title: 'Thiết lập tuyển dụng' },
+  { path: '/recruitment/settings', title: 'Tuyển dụng' },
 ];
 
 test.describe('Recruitment pages', () => {

@@ -6,9 +6,10 @@ const hrmPages: Array<{ path: string; title: string | RegExp }> = [
   { path: '/dashboard', title: /Xin chào/ },
   { path: '/members/list', title: 'Danh sách nhân viên' },
   { path: '/members/new', title: 'Thêm nhân viên' },
-  { path: '/members/settings', title: 'Thiết lập nhân sự' },
+  { path: '/members/settings', title: 'Phòng ban' },
+  { path: '/members/settings/branches', title: 'Chi nhánh' },
   { path: '/recruitment/candidates', title: 'Hồ sơ ứng viên' },
-  { path: '/recruitment/settings', title: 'Thiết lập tuyển dụng' },
+  { path: '/recruitment/settings', title: 'Tuyển dụng' },
 ];
 
 test.describe('HRM pages', () => {
@@ -28,6 +29,7 @@ test.describe('HRM pages', () => {
 
   test('members settings shows one-time onboarding invites', async ({ page }) => {
     await page.goto('/members/settings');
+    await expect(page.getByRole('heading', { level: 1, name: 'Phòng ban' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Form khai báo thông tin nhân viên' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Tạo liên kết 7 ngày' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Liên kết đã tạo' })).toBeVisible();

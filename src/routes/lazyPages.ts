@@ -15,14 +15,13 @@ export const ArrivalPlansPage = lazy(() => import('../pages/warehouse/ArrivalPla
 export const MembersPage = lazy(() => import('../pages/members/MembersPage'));
 export const EmployeeCreatePage = lazy(() => import('../pages/members/EmployeeCreatePage'));
 export const EmployeeDetailPage = lazy(() => import('../pages/members/EmployeeDetailPage'));
-export const MembersSettingsPage = lazy(() => import('../pages/members/MembersSettingsPage'));
+export const MembersSettingsPage = lazy(() => import('../pages/members/HrmSettingsPage'));
 export const UserProfilePage = lazy(() => import('../pages/profile/UserProfilePage'));
 export const LoginPage = lazy(() => import('../pages/auth/LoginPage'));
 export const CandidateApplyPage = lazy(() => import('../pages/public/CandidateApplyPage'));
 export const EmployeeOnboardPage = lazy(() => import('../pages/public/EmployeeOnboardPage'));
 export const CandidateListPage = lazy(() => import('../pages/recruitment/CandidateListPage'));
 export const CandidateDetailPage = lazy(() => import('../pages/recruitment/CandidateDetailPage'));
-export const RecruitmentSettingsPage = lazy(() => import('../pages/recruitment/RecruitmentSettingsPage'));
 export const RecruitmentPlansPage = lazy(() => import('../pages/recruitment/RecruitmentPlansPage'));
 export const RecruitmentDashboardPage = lazy(() => import('../pages/recruitment/RecruitmentDashboardPage'));
 export const RecruitmentCostsPage = lazy(() => import('../pages/recruitment/RecruitmentCostsPage'));

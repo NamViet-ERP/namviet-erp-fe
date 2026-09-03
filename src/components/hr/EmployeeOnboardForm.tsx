@@ -20,6 +20,8 @@ import { readProfileImageFile } from '../../lib/hrm/attachments';
 import { validateFullName } from '../../lib/hrm/validateFullName';
 import { zPhoneField, zTrimmedString } from '../../lib/hrm/sanitizeInput';
 import { registerHrmPhone, registerHrmText } from '../../lib/hrm/registerHrmField';
+import { useDepartments } from '../../hooks/useDepartments';
+import { useBranches } from '../../hooks/useBranches';
 
 const employeeSchema = z.object({
   fullName: zTrimmedString().superRefine((val, ctx) => {
@@ -53,7 +55,7 @@ const employeeSchema = z.object({
   code: zTrimmedString().optional(),
   segment: zTrimmedString().optional(),
   branch: zTrimmedString().optional(),
-  department: zTrimmedString().optional(),
+  departmentId: z.string().optional(),
   position: zTrimmedString().optional(),
 });
 
@@ -114,6 +116,8 @@ export default function EmployeeOnboardForm({
   prefillFromCandidate,
 }: EmployeeOnboardFormProps) {
   const isHr = mode === 'hr';
+  const { data: departments = [] } = useDepartments(true, isHr);
+  const { data: branches = [] } = useBranches(true, isHr);
   const [profilePhoto, setProfilePhoto] = useState<FileState | null>(null);
   const [cccdFront, setCccdFront] = useState<FileState | null>(null);
   const [cccdBack, setCccdBack] = useState<FileState | null>(null);
@@ -149,7 +153,7 @@ export default function EmployeeOnboardForm({
       code: '',
       segment: '',
       branch: '',
-      department: '',
+      departmentId: '',
       position: '',
       gender: undefined,
       maritalStatus: undefined,
@@ -252,7 +256,8 @@ export default function EmployeeOnboardForm({
         code: data.code?.trim() || undefined,
         segment: data.segment?.trim() || undefined,
         branch: data.branch?.trim() || undefined,
-        department: data.department?.trim() || undefined,
+        department: departments.find(d => String(d.id) === data.departmentId)?.name,
+        departmentId: data.departmentId ? Number(data.departmentId) : null,
         position: data.position?.trim() || undefined,
         profilePhoto: profileAtt,
         cmndNumber: data.cmndNumber,
@@ -329,11 +334,39 @@ export default function EmployeeOnboardForm({
             </div>
             <div>
               <HrmFieldLabel>Chi nhánh</HrmFieldLabel>
-              <input className="hrm-field-input" {...registerHrmText(register, setValue, 'branch')} />
+              <Controller
+                name="branch"
+                control={control}
+                render={({ field }) => (
+                  <HrmSelect
+                    id="emp-branch"
+                    value={field.value ?? ''}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    options={branches.map(b => b.name)}
+                    placeholder="Chưa chọn chi nhánh"
+                    aria-label="Chi nhánh"
+                  />
+                )}
+              />
             </div>
             <div>
               <HrmFieldLabel>Bộ phận</HrmFieldLabel>
-              <input className="hrm-field-input" {...registerHrmText(register, setValue, 'department')} />
+              <Controller
+                name="departmentId"
+                control={control}
+                render={({ field }) => (
+                  <HrmSelect
+                    id="emp-department"
+                    value={field.value ?? ''}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    options={departments.map(d => ({ value: String(d.id), label: d.name }))}
+                    placeholder="Chưa phân phòng"
+                    aria-label="Bộ phận"
+                  />
+                )}
+              />
             </div>
             <div>
               <HrmFieldLabel>Chức vụ</HrmFieldLabel>

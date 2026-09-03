@@ -7,7 +7,7 @@ import {
   Layers, FolderKanban, ArrowLeftRight, Building2, BarChart3, RotateCcw, AlertTriangle,
   Target, CalendarDays, DollarSign, ShoppingCart, ShoppingBag, Star, Truck, WalletCards, Ban,
   History, PieChart, Activity, Warehouse, ShieldCheck, FolderOpen, ScrollText,
-  Calculator, BookOpen, Headphones,
+  Calculator, BookOpen, Headphones, Briefcase, MapPin,
 } from 'lucide-react';
 
 function toSidebarChildren(items: SidebarMenuItem[]): SidebarChildItem[] {
@@ -158,13 +158,6 @@ export const recruitmentMenu: SidebarMenuItem[] = [
     path: '/recruitment/hr-stats',
     permission: 'hrm.candidates.view:all',
   },
-  {
-    id: 'recruitment-settings',
-    label: 'Thiết lập tuyển dụng',
-    icon: Settings,
-    path: '/recruitment/settings',
-    permission: 'hrm.recruitment.positions.view',
-  },
 ];
 export const membersMenu: SidebarMenuItem[] = [
   {
@@ -176,10 +169,35 @@ export const membersMenu: SidebarMenuItem[] = [
   },
   {
     id: 'members-settings',
-    label: 'Thiết lập nhân sự',
+    label: 'Thiết lập',
     icon: Settings,
     path: '/members/settings',
+    permission: ['hrm.members.settings.view', 'hrm.recruitment.positions.view'],
+  },
+];
+
+/** Sidebar cấp 2 khi đang trong Thiết lập HRM (drill-in). */
+export const hrmSettingsMenu: SidebarMenuItem[] = [
+  {
+    id: 'hrm-settings-departments',
+    label: 'Phòng ban',
+    icon: Building2,
+    path: '/members/settings/departments',
     permission: 'hrm.members.settings.view',
+  },
+  {
+    id: 'hrm-settings-branches',
+    label: 'Chi nhánh',
+    icon: MapPin,
+    path: '/members/settings/branches',
+    permission: 'hrm.members.settings.view',
+  },
+  {
+    id: 'hrm-settings-recruitment',
+    label: 'Tuyển dụng',
+    icon: Briefcase,
+    path: '/members/settings/recruitment',
+    permission: 'hrm.recruitment.positions.view',
   },
 ];
 
@@ -200,7 +218,6 @@ export const hrmMenu: SidebarMenuItem[] = [
   menuItem(recruitmentMenu, 'recruitment-costs'),
   menuItem(recruitmentMenu, 'recruitment-reports'),
   menuItem(membersMenu, 'members-settings'),
-  menuItem(recruitmentMenu, 'recruitment-settings'),
 ];
 export const adminMenu: SidebarMenuItem[] = [
   {

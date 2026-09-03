@@ -98,8 +98,8 @@ export default function MembersSettingsPage() {
   return (
     <div className="hrm-page">
       <PageHeader
-        eyebrow="Nhân sự"
-        title="Thiết lập nhân sự"
+        eyebrow="Thiết lập"
+        title="Phòng ban"
         subtitle="Quản lý phòng ban, gán nhân viên, liên kết khai báo và quy tắc thông tin nhạy cảm."
       />
 

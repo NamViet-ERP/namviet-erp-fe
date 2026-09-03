@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { KeyRound, UserPlus } from 'lucide-react';
-import DetailSection from '../../components/hr/DetailSection';
-import DetailFieldGrid from '../../components/hr/DetailFieldGrid';
-import { FieldView } from '../../components/hr/DetailFields';
-import { HrmDetailHeader } from '../../components/hr/HrmPageChrome';
+import PageHeader from '../../components/ui/PageHeader';
+import { HrmBackButton } from '../../components/hr/HrmPageChrome';
+import HrmPanel from '../../components/hr/HrmPanel';
 import HrmNotFound, { HrmLoadingState } from '../../components/hr/HrmNotFound';
 import Modal from '../../components/ui/Modal';
 import FormField from '../../components/ui/FormField';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import AdminPasswordField from '../../components/admin/AdminPasswordField';
+import AdminAccountSwitch from '../../components/admin/AdminAccountSwitch';
 import { validatePassword } from '../../lib/validatePassword';
 import { showToast } from '../../components/ui/Toast';
 import {
@@ -22,7 +22,7 @@ import {
 import { useActiveRoleOptions } from '../../hooks/useRoles';
 import { formatAdminDateCell } from '../../lib/hrm/formatters';
 import { getApiErrorMessage } from '../../lib/apiClient';
-import type { AdminUserSource } from '../../services/adminUsersService';
+import type { AdminUserRow, AdminUserSource } from '../../services/adminUsersService';
 import { type SystemUserRole } from '../../constants/systemUsers';
 import { getSessionUser } from '../../constants/systemUsers';
 import { isCurrentAdminUserRow } from '../../lib/admin/isCurrentAdminUser';
@@ -31,32 +31,14 @@ function parseSource(value: string | null): AdminUserSource {
   return value === 'manual' ? 'manual' : 'employee';
 }
 
-interface AccountSwitchProps {
-  checked: boolean;
-  disabled?: boolean;
-  onChange: (next: boolean) => void;
-  title?: string;
+function dash(value?: string): string {
+  if (!value || value === '—' || value.trim() === '') return '-';
+  return value;
 }
 
-function AccountSwitch({ checked, disabled, onChange, title }: AccountSwitchProps) {
-  return (
-    <button
-      type="button"
-      onMouseDown={e => e.stopPropagation()}
-      onClick={e => {
-        e.stopPropagation();
-        if (!disabled) onChange(!checked);
-      }}
-      disabled={disabled}
-      className={`hrm-toggle-switch${checked ? ' hrm-toggle-switch--on' : ''}${disabled ? ' hrm-toggle-switch--disabled' : ''}`}
-      role="switch"
-      aria-checked={checked}
-      aria-disabled={disabled}
-      title={title}
-    >
-      <span className="hrm-toggle-switch__thumb" aria-hidden />
-    </button>
-  );
+function statusBadgeClass(user: AdminUserRow): string {
+  if (!user.hasAccount) return 'badge badge-neutral';
+  return user.isActive ? 'badge badge-success' : 'badge badge-warning';
 }
 
 export default function AdminUserDetailPage() {
@@ -93,7 +75,13 @@ export default function AdminUserDetailPage() {
     setSelectedRole(user?.roleCode ?? '');
   }
 
-  if (isLoading) return <HrmLoadingState />;
+  if (isLoading) {
+    return (
+      <div className="hrm-page admin-user-detail-page">
+        <HrmLoadingState />
+      </div>
+    );
+  }
   if (isError || !user) {
     return (
       <HrmNotFound
@@ -103,12 +91,14 @@ export default function AdminUserDetailPage() {
     );
   }
 
-  const title = user.fullName;
   const subtitle = user.employeeCode !== '—'
     ? `Mã NV: ${user.employeeCode}`
     : source === 'manual'
       ? 'Tài khoản hệ thống'
       : 'Chưa có mã nhân viên';
+
+  const isSelfAccount = isCurrentAdminUserRow(sessionUser, user);
+  const roleDirty = Boolean(user.hasAccount && selectedRole && selectedRole !== user.roleCode);
 
   const handleToggle = async (next: boolean) => {
     if (!user.hasAccount) return;
@@ -116,7 +106,7 @@ export default function AdminUserDetailPage() {
       showToast('warning', 'Nhân viên đã nghỉ việc, không thể bật tài khoản');
       return;
     }
-    if (!next && isCurrentAdminUserRow(sessionUser, user)) {
+    if (!next && isSelfAccount) {
       showToast('warning', 'Không thể khóa tài khoản đang đăng nhập.');
       return;
     }
@@ -149,8 +139,6 @@ export default function AdminUserDetailPage() {
       showToast('error', getApiErrorMessage(err, 'Không thể thay đổi trạng thái'));
     }
   };
-
-  const isSelfAccount = isCurrentAdminUserRow(sessionUser, user);
 
   const handleChangeRole = async () => {
     if (!user.hasAccount || !selectedRole || selectedRole === user.roleCode) return;
@@ -213,100 +201,149 @@ export default function AdminUserDetailPage() {
     }
   };
 
-  return (
-    <div className="hrm-page w-full">
-      <HrmDetailHeader
-        onBack={() => navigate('/admin/users')}
-        title={title}
-        subtitle={subtitle}
-        actions={
-          <div className="flex flex-wrap gap-2">
-            {user.canProvision && (
-              <button
-                type="button"
-                className="btn btn-primary flex items-center gap-2 rounded-full px-5"
-                onClick={() => setShowProvision(true)}
-              >
-                <UserPlus size={16} />
-                Cấp tài khoản
-              </button>
-            )}
-            {user.hasAccount && user.accountUserId && (
-              <button
-                type="button"
-                className="btn btn-outline flex items-center gap-2 rounded-full px-5"
-                onClick={() => setShowReset(true)}
-              >
-                <KeyRound size={16} />
-                Đặt lại MK
-              </button>
-            )}
-          </div>
-        }
-      />
+  const toggleTitle = user.isActive && isSelfAccount
+    ? 'Không thể khóa tài khoản đang đăng nhập'
+    : !user.canToggle
+      ? 'Nhân viên đã nghỉ việc'
+      : user.isActive
+        ? 'Khóa tài khoản'
+        : 'Mở khóa tài khoản';
 
-      <DetailSection title="Tài khoản hệ thống">
-        <DetailFieldGrid>
-          <FieldView label="Loại" value={source === 'manual' ? 'Tài khoản hệ thống' : 'Nhân viên HR'} />
-          <FieldView label="Trạng thái" value={user.statusLabel} />
-          <FieldView label="Email đăng nhập" value={user.email} />
-          <FieldView label="Số điện thoại" value={user.phone} />
-          <FieldView label="Bộ phận" value={user.department} />
-          <FieldView label="Chức vụ" value={user.position} />
-          <FieldView label="Ngày tạo / vào làm" value={formatAdminDateCell(user.createdAt)} />
-          <div className="col-span-full flex items-center gap-3 pt-1">
-            <span className="text-sm text-[var(--md-on-surface-variant)]">Bật/Tắt tài khoản</span>
-            {user.hasAccount ? (
-              <AccountSwitch
-                checked={user.isActive}
-                disabled={toggleMutation.isPending || !user.canToggle}
-                onChange={handleToggle}
-                title={
-                  user.isActive && isSelfAccount
-                    ? 'Không thể khóa tài khoản đang đăng nhập'
-                    : !user.canToggle
-                      ? 'Nhân viên đã nghỉ việc'
-                      : user.isActive
-                        ? 'Khóa tài khoản'
-                        : 'Mở khóa tài khoản'
-                }
-              />
-            ) : (
-              <span className="text-sm text-[var(--md-on-surface-variant)]">—</span>
-            )}
-          </div>
-          {user.hasAccount && (
-            <div className="col-span-full flex flex-wrap items-end gap-3 pt-2">
-              <FormField label="Vai trò hệ thống" className="min-w-[220px] flex-1">
-                <select
-                  className="form-select"
-                  value={selectedRole}
-                  onChange={e => setSelectedRole(e.target.value)}
-                  disabled={changeRoleMutation.isPending}
+  const toggleHint = !user.canToggle
+    ? 'Nhân viên đã nghỉ việc, không thể bật tài khoản.'
+    : user.isActive && isSelfAccount
+      ? 'Không thể khóa tài khoản đang đăng nhập.'
+      : null;
+
+  return (
+    <div className="hrm-page admin-user-detail-page">
+      <div className="admin-user-detail-chrome">
+        <HrmBackButton onBack={() => navigate('/admin/users')} />
+        <PageHeader
+          title={user.fullName}
+          subtitle={subtitle}
+          actions={
+            <div className="flex flex-wrap items-center gap-2">
+              {user.canProvision && (
+                <button
+                  type="button"
+                  className="btn btn-primary flex items-center gap-2"
+                  onClick={() => setShowProvision(true)}
                 >
-                  {roleOptions.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              </FormField>
-              <button
-                type="button"
-                className="btn btn-primary h-10"
-                disabled={changeRoleMutation.isPending || !selectedRole || selectedRole === user.roleCode}
-                onClick={handleChangeRole}
-              >
-                {changeRoleMutation.isPending ? 'Đang lưu...' : 'Lưu vai trò'}
-              </button>
+                  <UserPlus size={16} aria-hidden />
+                  Cấp tài khoản
+                </button>
+              )}
+              {user.hasAccount && user.accountUserId && (
+                <button
+                  type="button"
+                  className="btn btn-outline flex items-center gap-2"
+                  onClick={() => setShowReset(true)}
+                >
+                  <KeyRound size={16} aria-hidden />
+                  Đặt lại MK
+                </button>
+              )}
             </div>
-          )}
-        </DetailFieldGrid>
-      </DetailSection>
+          }
+        />
+      </div>
+
+      <HrmPanel noPadding className="admin-user-detail-board">
+        <header className="admin-user-detail-board__head">
+          <h2 className="admin-user-detail-board__title">Tài khoản hệ thống</h2>
+          <span className={statusBadgeClass(user)}>{user.statusLabel}</span>
+        </header>
+
+        <dl className="admin-user-detail-facts">
+          <div>
+            <dt>Email đăng nhập</dt>
+            <dd className="admin-user-detail-facts__mono">{dash(user.email)}</dd>
+          </div>
+          <div>
+            <dt>Số điện thoại</dt>
+            <dd>{dash(user.phone)}</dd>
+          </div>
+          <div>
+            <dt>Loại</dt>
+            <dd>{source === 'manual' ? 'Tài khoản hệ thống' : 'Nhân viên HR'}</dd>
+          </div>
+          <div>
+            <dt>Bộ phận</dt>
+            <dd>{dash(user.department)}</dd>
+          </div>
+          <div>
+            <dt>Chức vụ</dt>
+            <dd>{dash(user.position)}</dd>
+          </div>
+          <div>
+            <dt>Ngày tạo / vào làm</dt>
+            <dd className="tabular-nums">{dash(formatAdminDateCell(user.createdAt))}</dd>
+          </div>
+        </dl>
+
+        {user.hasAccount ? (
+          <div className="admin-user-detail-actions">
+            <div className="admin-user-detail-actions__block">
+              <span className="admin-user-detail-actions__label">Tài khoản</span>
+              <div className="admin-user-detail-actions__row">
+                <AdminAccountSwitch
+                  checked={user.isActive}
+                  disabled={toggleMutation.isPending || !user.canToggle}
+                  onChange={handleToggle}
+                  title={toggleTitle}
+                />
+              </div>
+              {toggleHint && (
+                <p className="admin-user-detail-actions__hint">{toggleHint}</p>
+              )}
+            </div>
+
+            <div className="admin-user-detail-actions__block">
+              <div className="admin-user-detail-role">
+                <span className="admin-user-detail-actions__label" id="admin-user-role-label">Vai trò</span>
+                <div className="admin-user-detail-actions__row">
+                  <select
+                    className="form-select"
+                    aria-labelledby="admin-user-role-label"
+                    value={selectedRole}
+                    onChange={e => setSelectedRole(e.target.value)}
+                    disabled={changeRoleMutation.isPending}
+                  >
+                    {roleOptions.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    disabled={changeRoleMutation.isPending || !roleDirty}
+                    onClick={() => void handleChangeRole()}
+                  >
+                    {changeRoleMutation.isPending ? 'Đang lưu...' : 'Lưu vai trò'}
+                  </button>
+                </div>
+                {roleDirty && (
+                  <p className="admin-user-detail-actions__hint admin-user-detail-actions__dirty">
+                    Chưa lưu
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p className="admin-user-detail-pending">
+            Chưa có tài khoản hệ thống.
+            {user.canProvision ? ' Dùng Cấp tài khoản ở trên để tạo.' : ''}
+          </p>
+        )}
+      </HrmPanel>
 
       <Modal
         isOpen={showProvision}
         onClose={() => { setShowProvision(false); setProvisionPassword(''); setProvisionErrors({}); }}
         title="Cấp tài khoản"
-        size="xl"
+        size="md"
         footer={
           <>
             <button type="button" className="btn btn-outline" onClick={() => setShowProvision(false)}>Hủy</button>

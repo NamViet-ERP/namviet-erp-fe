@@ -11,10 +11,11 @@ const keys = {
   members: (id: number) => [...keys.all, 'members', id] as const,
 };
 
-export function useDepartments(activeOnly = false) {
+export function useDepartments(activeOnly = false, enabled = true) {
   return useQuery({
     queryKey: keys.list(activeOnly),
     queryFn: () => departmentsService.list(activeOnly),
+    enabled,
   });
 }
 

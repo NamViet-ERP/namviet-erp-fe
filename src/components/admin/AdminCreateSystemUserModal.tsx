@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Modal from '../ui/Modal';
 import FormField from '../ui/FormField';
+import HrmSelect from '../hr/HrmSelect';
 import AdminPasswordField from './AdminPasswordField';
 import { showToast } from '../ui/Toast';
 import { validatePassword } from '../../lib/validatePassword';
@@ -11,10 +12,6 @@ import type { CreateSystemUserDto, SystemUserRole } from '../../constants/system
 const EMPTY_FORM: CreateSystemUserDto = {
   name: '',
   email: '',
-  phone: '',
-  employeeCode: '',
-  department: '',
-  position: '',
   role: 'storekeeper',
 };
 
@@ -29,6 +26,7 @@ interface AdminCreateSystemUserModalProps {
   roleOptions: RoleOption[];
 }
 
+/** Design read: compact ERP create-account modal - identity + role + password only. */
 export default function AdminCreateSystemUserModal({
   open,
   onClose,
@@ -55,6 +53,7 @@ export default function AdminCreateSystemUserModal({
     if (!form.name.trim()) next.name = 'Vui lòng nhập họ tên';
     if (!form.email.trim()) next.email = 'Vui lòng nhập email';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) next.email = 'Email không hợp lệ';
+    if (!form.role) next.role = 'Vui lòng chọn vai trò';
     const passErr = validatePassword(createPassword);
     if (passErr) next.password = passErr;
     setErrors(next);
@@ -70,14 +69,12 @@ export default function AdminCreateSystemUserModal({
 
     try {
       await createMutation.mutateAsync({
-        ...form,
-        phone: form.phone?.trim() || undefined,
-        employeeCode: form.employeeCode?.trim() || undefined,
-        department: form.department?.trim() || undefined,
-        position: form.position?.trim() || undefined,
+        name: form.name,
+        email: form.email,
+        role: form.role,
         password: createPassword,
       });
-      showToast('success', 'Đã thêm tài khoản hệ thống — gửi mật khẩu cho người dùng qua kênh nội bộ');
+      showToast('success', 'Đã thêm tài khoản hệ thống - gửi mật khẩu cho người dùng qua kênh nội bộ');
       close();
     } catch (err: unknown) {
       showToast('error', getApiErrorMessage(err, 'Không thể thêm tài khoản'));
@@ -89,7 +86,7 @@ export default function AdminCreateSystemUserModal({
       isOpen={open}
       onClose={close}
       title="Thêm tài khoản hệ thống"
-      size="xl"
+      size="md"
       footer={
         <>
           <button type="button" className="btn btn-outline" onClick={close}>
@@ -108,7 +105,7 @@ export default function AdminCreateSystemUserModal({
     >
       <form id="admin-user-create-form" onSubmit={handleCreate} className="space-y-4 modal-form-bordered">
         <p className="text-sm text-[var(--md-on-surface-variant)]">
-          Dùng cho tài khoản admin, dịch vụ… không gắn hồ sơ nhân viên HR.
+          Dùng cho tài khoản admin, dịch vụ - không gắn hồ sơ nhân viên HR.
         </p>
         <FormField label="Họ tên" required error={errors.name}>
           <input
@@ -127,52 +124,15 @@ export default function AdminCreateSystemUserModal({
             placeholder="email@namviet.vn"
           />
         </FormField>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <FormField label="Số điện thoại">
-            <input
-              className="form-input"
-              value={form.phone ?? ''}
-              onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-              placeholder="0901234567"
-            />
-          </FormField>
-          <FormField label="Mã nhân viên (tùy chọn)">
-            <input
-              className="form-input"
-              value={form.employeeCode ?? ''}
-              onChange={e => setForm(f => ({ ...f, employeeCode: e.target.value }))}
-              placeholder="NV-0008"
-            />
-          </FormField>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <FormField label="Bộ phận">
-            <input
-              className="form-input"
-              value={form.department ?? ''}
-              onChange={e => setForm(f => ({ ...f, department: e.target.value }))}
-              placeholder="Kế toán"
-            />
-          </FormField>
-          <FormField label="Chức vụ">
-            <input
-              className="form-input"
-              value={form.position ?? ''}
-              onChange={e => setForm(f => ({ ...f, position: e.target.value }))}
-              placeholder="Chuyên viên"
-            />
-          </FormField>
-        </div>
-        <FormField label="Vai trò" required>
-          <select
-            className="form-select"
+        <FormField label="Vai trò" required error={errors.role}>
+          <HrmSelect
             value={form.role}
-            onChange={e => setForm(f => ({ ...f, role: e.target.value as SystemUserRole }))}
-          >
-            {roleOptions.map(opt => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
+            onChange={value => setForm(f => ({ ...f, role: value as SystemUserRole }))}
+            options={roleOptions}
+            placeholder="Chọn vai trò"
+            allowEmpty={false}
+            aria-label="Vai trò"
+          />
         </FormField>
         <AdminPasswordField
           value={createPassword}

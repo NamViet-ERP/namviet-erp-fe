@@ -4,7 +4,7 @@ import Header from './Header';
 import Sidebar from './Sidebar';
 import ToastContainer, { showToast } from '../ui/Toast';
 import { FolderKanban } from 'lucide-react';
-import { unifiedSidebarMenu } from '../../constants/sidebarMenus';
+import { unifiedSidebarMenu, hrmSettingsMenu } from '../../constants/sidebarMenus';
 import { cskhProjectCodeFromPath, cskhProjectMenu } from '../../constants/cskhProject';
 import { cskhSettingsMenu } from '../../constants/cskhSettings';
 import { useSession } from '../../auth/AuthProvider';
@@ -116,6 +116,7 @@ export default function AppLayout() {
 
   const hideSidebar = location.pathname === '/profile';
   const isCskhSettings = location.pathname.startsWith('/cskh/settings');
+  const isHrmSettings = location.pathname.startsWith('/members/settings');
   const cskhProjectCode = isCskhSettings ? null : cskhProjectCodeFromPath(location.pathname);
   const isCskhProject = Boolean(cskhProjectCode);
   const isWmsModule =
@@ -129,6 +130,22 @@ export default function AppLayout() {
     hideSidebar ? 'app-main--full' : sidebarCollapsed ? 'app-main--collapsed' : '',
   ].filter(Boolean).join(' ');
 
+  const sidebarMenuItems = isCskhSettings
+    ? cskhSettingsMenu
+    : isHrmSettings
+      ? hrmSettingsMenu
+      : cskhProjectCode
+        ? cskhProjectMenu(cskhProjectCode)
+        : unifiedSidebarMenu;
+  const sidebarBack = isCskhSettings || isCskhProject
+    ? () => navigate('/cskh')
+    : isHrmSettings
+      ? () => navigate('/recruitment/dashboard')
+      : undefined;
+  const sidebarContextLabel = isCskhSettings || isHrmSettings
+    ? 'THIẾT LẬP'
+    : cskhProjectCode ?? undefined;
+
   return (
     <div className={`app-shell ${shellModuleClass}${hideSidebar ? ' app-shell--no-sidebar' : sidebarCollapsed ? ' app-shell--sidebar-collapsed' : ''}`}>
       <Header currentModule={currentModule} onModuleSwitch={() => {}} />
@@ -136,12 +153,12 @@ export default function AppLayout() {
         <Sidebar
           collapsed={sidebarCollapsed}
           onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-          menuItems={isCskhSettings ? cskhSettingsMenu : cskhProjectCode ? cskhProjectMenu(cskhProjectCode) : unifiedSidebarMenu}
+          menuItems={sidebarMenuItems}
           permissions={permissions}
           currentModule={currentModule}
-          contextLabel={isCskhSettings ? 'THIẾT LẬP' : cskhProjectCode ?? undefined}
+          contextLabel={sidebarContextLabel}
           contextIcon={isCskhProject ? FolderKanban : undefined}
-          onBack={isCskhSettings || isCskhProject ? () => navigate('/cskh') : undefined}
+          onBack={sidebarBack}
         />
       )}
       <main className={mainClass}>

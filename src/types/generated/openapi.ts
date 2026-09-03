@@ -1074,6 +1074,151 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/hr/branches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    activeOnly?: boolean;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["BranchDto"][];
+                        "application/json": components["schemas"]["BranchDto"][];
+                        "text/json": components["schemas"]["BranchDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpsertBranchRequest"];
+                    "text/json": components["schemas"]["UpsertBranchRequest"];
+                    "application/*+json": components["schemas"]["UpsertBranchRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hr/branches/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["BranchDto"];
+                        "application/json": components["schemas"]["BranchDto"];
+                        "text/json": components["schemas"]["BranchDto"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpsertBranchRequest"];
+                    "text/json": components["schemas"]["UpsertBranchRequest"];
+                    "application/*+json": components["schemas"]["UpsertBranchRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/candidates": {
         parameters: {
             query?: never;
@@ -13683,6 +13828,15 @@ export interface components {
         BlacklistSupplierRequest: {
             reason: string;
         };
+        BranchDto: {
+            /** Format: int32 */
+            id: number;
+            code: string;
+            name: string;
+            isActive: boolean;
+            /** Format: int32 */
+            employeeCount: number;
+        };
         CandidateDto: {
             id: string;
             fullName: string;
@@ -17034,6 +17188,10 @@ export interface components {
             leaveDays: number;
             /** Format: double */
             otHours: number;
+        };
+        UpsertBranchRequest: {
+            code: string;
+            name: string;
         };
         UpsertDepartmentRequest: {
             code: string;

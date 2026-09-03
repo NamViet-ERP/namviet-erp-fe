@@ -69,6 +69,7 @@ export default function App() {
 
             <Route path="/members/list" element={<Pages.MembersPage />} />
             <Route path="/members/settings" element={<Pages.MembersSettingsPage />} />
+            <Route path="/members/settings/:tab" element={<Pages.MembersSettingsPage />} />
             <Route path="/members/new" element={<Pages.EmployeeCreatePage />} />
             <Route path="/members/:id" element={<Pages.EmployeeDetailPage />} />
 
@@ -80,7 +81,7 @@ export default function App() {
             <Route path="/recruitment/calendar" element={<Pages.RecruitmentCalendarPage />} />
             <Route path="/recruitment/reports" element={<Pages.RecruitmentReportsPage />} />
             <Route path="/recruitment/hr-stats" element={<Pages.RecruitmentHrStatsPage />} />
-            <Route path="/recruitment/settings" element={<Pages.RecruitmentSettingsPage />} />
+            <Route path="/recruitment/settings" element={<Navigate to="/members/settings/recruitment" replace />} />
 
             <Route path="/members/recruits" element={<Navigate to="/recruitment/candidates" replace />} />
 

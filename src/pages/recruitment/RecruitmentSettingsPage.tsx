@@ -78,8 +78,8 @@ export default function RecruitmentSettingsPage() {
   return (
     <div className="hrm-page">
       <PageHeader
-        eyebrow="Tuyển dụng"
-        title="Thiết lập tuyển dụng"
+        eyebrow="Thiết lập"
+        title="Tuyển dụng"
         subtitle="Quản lý vị trí ứng tuyển và liên kết cổng nộp hồ sơ công khai."
       />
 

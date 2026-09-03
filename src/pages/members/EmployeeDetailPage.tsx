@@ -4,6 +4,7 @@ import { Clock } from 'lucide-react';
 import { showToast } from '../../components/ui/Toast';
 import { useEmployee, useUpdateEmployee } from '../../hooks/useEmployees';
 import { useDepartments } from '../../hooks/useDepartments';
+import { useBranches } from '../../hooks/useBranches';
 import { getSuggestedEmployeeCode } from '../../services/employeesService';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { UI_ERROR } from '../../lib/uiMessages';
@@ -36,6 +37,7 @@ export default function EmployeeDetailPage() {
   const navigate = useNavigate();
   const { data: employee, isLoading, isError } = useEmployee(id);
   const { data: departments = [] } = useDepartments(true);
+  const { data: branches = [] } = useBranches(true);
   const updateMutation = useUpdateEmployee();
   const { isEditing, setIsEditing, form, setForm, setField, cancelEdit } = useEditableForm(employee);
   const [codeError, setCodeError] = useState('');
@@ -89,6 +91,10 @@ export default function EmployeeDetailPage() {
   }
 
   const seniority = calcSeniority(form.joinDate);
+  const branchNames = branches.map(b => b.name);
+  const branchOptions = form.branch && !branchNames.includes(form.branch)
+    ? [form.branch, ...branchNames]
+    : branchNames;
 
   const handleSave = async () => {
     if (!id || !form) return;
@@ -197,7 +203,13 @@ export default function EmployeeDetailPage() {
                 <p className="text-xs text-[var(--md-on-surface-variant)] col-span-full -mt-2">{codeHint}</p>
               )}
               <FieldInput label="Mảng" value={form.segment ?? ''} onChange={v => setField('segment', v)} />
-              <FieldInput label="Chi nhánh" value={form.branch ?? ''} onChange={v => setField('branch', v)} />
+              <FieldSelect
+                label="Chi nhánh"
+                value={form.branch ?? ''}
+                onChange={v => setField('branch', v)}
+                options={branchOptions}
+                placeholder="Chưa chọn chi nhánh"
+              />
               <div className="hrm-field">
                 <label className="hrm-field__label" htmlFor="emp-department">Phòng ban</label>
                 <select

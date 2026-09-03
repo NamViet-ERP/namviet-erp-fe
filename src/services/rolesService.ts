@@ -21,17 +21,22 @@ export interface RoleListParams {
   activeOnly?: boolean;
 }
 
+function sortByLabel<T extends { label: string }>(roles: T[]): T[] {
+  return [...roles].sort((a, b) => a.label.localeCompare(b.label, 'vi', { sensitivity: 'base' }));
+}
+
 export const rolesService = {
   async listActiveOptions(): Promise<{ value: string; label: string }[]> {
     const roles = await apiClient.get<SystemRole[]>(ROLES_ENDPOINT, { activeOnly: true });
-    return roles.map((r) => ({ value: r.code, label: r.label }));
+    return sortByLabel(roles).map((r) => ({ value: r.code, label: r.label }));
   },
 
   async listAsync(params: RoleListParams = {}): Promise<SystemRole[]> {
-    return apiClient.get<SystemRole[]>(ROLES_ENDPOINT, {
+    const roles = await apiClient.get<SystemRole[]>(ROLES_ENDPOINT, {
       search: params.search?.trim() || undefined,
       activeOnly: params.activeOnly ?? false,
     });
+    return sortByLabel(roles);
   },
 
   async create(dto: CreateRoleDto): Promise<SystemRole> {

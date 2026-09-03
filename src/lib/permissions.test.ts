@@ -5,7 +5,12 @@ import {
   hasAnyPermission,
   hasPermission,
 } from './permissions';
-import { groupPermissionCatalog } from './permissions/groupPermissionCatalog';
+import {
+  filterPermissionGroups,
+  getModuleLabel,
+  getResourceLabel,
+  groupPermissionCatalog,
+} from './permissions/groupPermissionCatalog';
 import { getRequiredPermissionsForPath } from './routePermissions';
 import { departments } from '../constants/departments';
 
@@ -47,6 +52,19 @@ describe('routePermissions', () => {
     expect(getRequiredPermissionsForPath('/warehouse/dashboard')).toEqual(['wms.projects.view:all']);
     expect(getRequiredPermissionsForPath('/warehouse/import')).toEqual(['wms.imports.view:all']);
     expect(getRequiredPermissionsForPath('/members/new')).toEqual(['hrm.employees.create']);
+    expect(getRequiredPermissionsForPath('/members/settings')).toEqual([
+      'hrm.members.settings.view',
+      'hrm.recruitment.positions.view',
+    ]);
+    expect(getRequiredPermissionsForPath('/members/settings/departments')).toEqual([
+      'hrm.members.settings.view',
+    ]);
+    expect(getRequiredPermissionsForPath('/members/settings/branches')).toEqual([
+      'hrm.members.settings.view',
+    ]);
+    expect(getRequiredPermissionsForPath('/members/settings/recruitment')).toEqual([
+      'hrm.recruitment.positions.view',
+    ]);
     expect(getRequiredPermissionsForPath('/admin/settings/roles/admin/permissions')).toEqual(['admin.roles.view:all']);
     expect(getRequiredPermissionsForPath('/unknown')).toBeNull();
     expect(getRequiredPermissionsForPath('/')).toEqual([]);
@@ -104,8 +122,29 @@ describe('groupPermissionCatalog', () => {
       { key: 'core.dashboard.view', module: 'Core', resource: 'Dashboard', label: 'Xem dashboard' },
       { key: 'admin.users.view:all', module: 'Admin', resource: 'Users', label: 'Xem user' },
       { key: 'hrm.employees.view:all', module: 'HRM', resource: 'Employees', label: 'Xem NV' },
+      { key: 'purchasing.plans.view', module: 'Purchasing', resource: 'Plans', label: 'Xem kế hoạch mua' },
     ]);
-    expect(groups.map(g => g.module)).toEqual(['Core', 'Admin', 'HRM']);
+    expect(groups.map(g => g.module)).toEqual(['Core', 'Admin', 'HRM', 'Purchasing']);
+    expect(groups.map(g => g.moduleLabel)).toEqual(['Hệ thống', 'Quản trị', 'Nhân sự', 'Mua hàng']);
+    expect(groups[0]?.resources[0]?.resourceLabel).toBe('Tổng quan');
     expect(groups[0]?.resources[0]?.entries).toHaveLength(1);
+  });
+
+  it('filters by Vietnamese module and resource labels', () => {
+    const groups = groupPermissionCatalog([
+      { key: 'wms.stock.view:all', module: 'WMS', resource: 'Stock', label: 'Xem tồn kho' },
+      { key: 'admin.users.view:all', module: 'Admin', resource: 'Users', label: 'Xem user' },
+    ]);
+    expect(filterPermissionGroups(groups, 'kho').map(g => g.module)).toEqual(['WMS']);
+    expect(filterPermissionGroups(groups, 'tồn').map(g => g.module)).toEqual(['WMS']);
+    expect(filterPermissionGroups(groups, 'quản trị').map(g => g.module)).toEqual(['Admin']);
+  });
+});
+
+describe('permission catalog labels', () => {
+  it('maps known modules and resources to Vietnamese', () => {
+    expect(getModuleLabel('Purchasing')).toBe('Mua hàng');
+    expect(getResourceLabel('Employees')).toBe('Nhân viên');
+    expect(getResourceLabel('UNKNOWN_ALLCAPS')).toBe('Unknown_allcaps');
   });
 });

@@ -19,6 +19,7 @@ export default function AdminAccountSwitch({ checked, disabled, onChange, title 
       role="switch"
       aria-checked={checked}
       aria-disabled={disabled}
+      aria-label={title ?? (checked ? 'Đang bật' : 'Đang tắt')}
       title={title ?? (checked ? 'Đang bật' : 'Đang tắt')}
     >
       <span className="hrm-toggle-switch__thumb" aria-hidden />
