@@ -1,13 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Download } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import EntityCodeLink from '../../components/ui/EntityCodeLink';
 import EmptyState from '../../components/ui/EmptyState';
+import SearchBar from '../../components/ui/SearchBar';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import Skeleton from '../../components/ui/Skeleton';
 import HrmPanel from '../../components/hr/HrmPanel';
-import FormField from '../../components/ui/FormField';
 import SupplierPayablesOverview from '../../components/suppliers/SupplierPayablesOverview';
 import { usePermission } from '../../hooks/usePermission';
 import { useSupplierPayables } from '../../hooks/useSupplierPayables';
@@ -18,6 +18,16 @@ import type { SupplierPayableLineApiDto } from '../../types/api/purchasingApi';
 
 const LINE_COL_COUNT = 9;
 
+type StatusFilter = '' | 'unpaid' | 'partial' | 'overdue' | 'paid';
+
+const STATUS_FILTERS: { id: StatusFilter; label: string }[] = [
+  { id: '', label: 'Tất cả' },
+  { id: 'unpaid', label: 'Chưa thanh toán' },
+  { id: 'partial', label: 'Thanh toán 1 phần' },
+  { id: 'overdue', label: 'Quá hạn' },
+  { id: 'paid', label: 'Đã thanh toán đủ' },
+];
+
 function lineStatusLabel(line: SupplierPayableLineApiDto) {
   if (line.lineStatus === 'paid') return 'Đã TT đủ';
   if (line.lineStatus === 'overdue') return `Quá hạn ${line.daysOverdue} ngày`;
@@ -25,17 +35,18 @@ function lineStatusLabel(line: SupplierPayableLineApiDto) {
   return 'Chưa TT';
 }
 
+function lineStatusClass(line: SupplierPayableLineApiDto) {
+  if (line.lineStatus === 'paid') return 'badge badge-success';
+  if (line.lineStatus === 'overdue') return 'badge badge-error';
+  return 'badge badge-warning';
+}
+
 function lineStatusBadge(line: SupplierPayableLineApiDto) {
-  const tone = line.lineStatus === 'paid'
-    ? 'success'
-    : line.lineStatus === 'overdue'
-      ? 'danger'
-      : 'warning';
   const paidTime = line.lineStatus === 'paid' ? formatDateTimeVi(line.paidAt ?? undefined) : undefined;
   const paidBy = line.lineStatus === 'paid' ? (line.paidByName?.trim() || '') : '';
   return (
     <div className="pur-plan-status-cell">
-      <span className={`hrm-badge hrm-badge--${tone}`}>{lineStatusLabel(line)}</span>
+      <span className={lineStatusClass(line)}>{lineStatusLabel(line)}</span>
       {paidTime || paidBy ? (
         <div className="pur-plan-status-meta">
           {paidTime ? <div className="tabular-nums">{paidTime}</div> : null}
@@ -75,7 +86,7 @@ function exportLinesCsv(lines: SupplierPayableLineApiDto[]) {
       line.lineStatus === 'paid' && (line.paidAt || line.paidByName)
         ? [lineStatusLabel(line), formatDateTimeVi(line.paidAt ?? undefined), line.paidByName?.trim()]
           .filter(Boolean)
-          .join(' · ')
+          .join(' - ')
         : lineStatusLabel(line),
     ),
     csvCell(line.daysOverdue),
@@ -91,11 +102,66 @@ function exportLinesCsv(lines: SupplierPayableLineApiDto[]) {
   URL.revokeObjectURL(url);
 }
 
+function ApFilterTabs({
+  value,
+  onChange,
+}: {
+  value: StatusFilter;
+  onChange: (id: StatusFilter) => void;
+}) {
+  return (
+    <div className="ops-projects-tabs" role="tablist" aria-label="Lọc trạng thái thanh toán">
+      {STATUS_FILTERS.map(item => {
+        const active = value === item.id;
+        return (
+          <button
+            key={item.id || 'all'}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            className={`ops-projects-tabs__btn${active ? ' is-active' : ''}`}
+            onClick={() => onChange(item.id)}
+          >
+            {item.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function ApBoard({
+  title,
+  desc,
+  toolbar,
+  children,
+}: {
+  title: string;
+  desc: string;
+  toolbar?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <HrmPanel noPadding className="ops-projects-board">
+      <div className="ops-projects-board__head">
+        <h2 className="ops-projects-board__title">{title}</h2>
+        <p className="ops-projects-board__desc">{desc}</p>
+      </div>
+      {toolbar ? (
+        <div className="hrm-list-toolbar">
+          <div className="ops-projects__toolbar">{toolbar}</div>
+        </div>
+      ) : null}
+      {children}
+    </HrmPanel>
+  );
+}
+
 export default function SupplierPayablesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const supplierIdRaw = searchParams.get('supplierId');
   const supplierId = supplierIdRaw ? Number(supplierIdRaw) : undefined;
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState<StatusFilter>('');
   const [search, setSearch] = useState('');
   const { hasAny } = usePermission();
   const canPay = hasAny(['purchasing.payments.pay', 'purchasing.payments.view']);
@@ -116,6 +182,7 @@ export default function SupplierPayablesPage() {
   const upcoming = data?.upcoming ?? [];
   const lines = data?.lines ?? [];
   const filteredSupplierName = suppliers.find(s => s.supplierId === supplierId)?.supplierName;
+  const hasFilters = Boolean(supplierId || status || search.trim());
 
   const setSupplierFilter = (next: string) => {
     const nextParams = new URLSearchParams(searchParams);
@@ -124,8 +191,14 @@ export default function SupplierPayablesPage() {
     setSearchParams(nextParams, { replace: true });
   };
 
+  const resetFilters = () => {
+    setStatus('');
+    setSearch('');
+    setSupplierFilter('');
+  };
+
   return (
-    <div className="page-shell">
+    <div className="page-shell sup-ap">
       <PageHeader
         eyebrow="Nhà cung cấp"
         title="Công nợ NCC"
@@ -144,28 +217,39 @@ export default function SupplierPayablesPage() {
       />
 
       {isError ? (
-        <HrmPanel>
-          <EmptyState message={getApiErrorMessage(error, 'Không tải được công nợ NCC.')} />
-        </HrmPanel>
+        <ApBoard
+          title="Công nợ NCC"
+          desc="Không tải được dữ liệu công nợ."
+        >
+          <div className="ops-projects-board__body">
+            <EmptyState message={getApiErrorMessage(error, 'Không tải được công nợ NCC.')} />
+          </div>
+        </ApBoard>
       ) : (
         <>
-          {isLoading || !kpis ? (
-            <HrmPanel noPadding>
-              <Skeleton variant="rect" height={196} />
-            </HrmPanel>
-          ) : (
-            <HrmPanel noPadding>
+          <ApBoard
+            title="Tổng quan công nợ"
+            desc="Còn phải trả theo DNTT đã lập."
+          >
+            {isLoading || !kpis ? (
+              <div className="ops-projects-board__body">
+                <Skeleton variant="rect" height={196} />
+              </div>
+            ) : (
               <SupplierPayablesOverview
                 kpis={kpis}
                 aging={aging}
                 upcoming7Total={data?.upcoming7Total ?? 0}
                 upcoming30Total={data?.upcoming30Total ?? 0}
               />
-            </HrmPanel>
-          )}
+            )}
+          </ApBoard>
 
-          <HrmPanel title="Công nợ theo nhà cung cấp">
-            <div className="overflow-x-auto table-scroll">
+          <ApBoard
+            title="Công nợ theo nhà cung cấp"
+            desc="Tổng hợp đề nghị, đã trả và còn nợ theo từng NCC."
+          >
+            <div className="wms-inventory-table-wrap overflow-x-auto table-scroll">
               <table className="wms-inventory-table">
                 <thead>
                   <tr>
@@ -214,27 +298,27 @@ export default function SupplierPayablesPage() {
                               <>
                                 <span className="tabular-nums whitespace-nowrap">{formatCurrencyFull(row.creditLimit)}</span>
                                 {row.overLimit ? (
-                                  <div><span className="hrm-badge hrm-badge--danger">Vượt hạn mức</span></div>
+                                  <div><span className="badge badge-error">Vượt hạn mức</span></div>
                                 ) : null}
                               </>
                             )
-                            : <span className="text-[var(--md-on-surface-variant)]">Không giới hạn</span>}
+                            : <span className="sup-ap-meta">Không giới hạn</span>}
                         </td>
                         <td className="table-cell">
                           {row.overdueCount > 0 ? (
-                            <span className="hrm-badge hrm-badge--danger">
+                            <span className="badge badge-error">
                               {row.overdueCount} DNTT quá hạn - {formatCurrencyFull(row.overdueAmount)}
                             </span>
                           ) : row.unpaidCount > 0 ? (
-                            <span className="hrm-badge hrm-badge--warning">{row.unpaidCount} DNTT chưa đến hạn</span>
+                            <span className="badge badge-warning">{row.unpaidCount} DNTT chưa đến hạn</span>
                           ) : (
-                            <span className="hrm-badge hrm-badge--success">Không nợ</span>
+                            <span className="badge badge-success">Không nợ</span>
                           )}
                         </td>
                         <td className="table-cell hrm-table-col-actions">
                           <button
                             type="button"
-                            className="btn btn-outline btn-sm"
+                            className="btn btn-outline"
                             onClick={() => {
                               setSupplierFilter(String(row.supplierId));
                               const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -253,14 +337,14 @@ export default function SupplierPayablesPage() {
                 </tbody>
               </table>
             </div>
-          </HrmPanel>
+          </ApBoard>
 
           {!isLoading && upcoming.length > 0 ? (
-            <HrmPanel
-              title="Lịch thanh toán sắp tới (30 ngày)"
-              subtitle="Khoản còn nợ chưa quá hạn, phục vụ kế hoạch dòng tiền."
+            <ApBoard
+              title="Lịch thanh toán sắp tới"
+              desc="Khoản còn nợ chưa quá hạn trong 30 ngày - phục vụ kế hoạch dòng tiền."
             >
-              <div className="overflow-x-auto table-scroll">
+              <div className="wms-inventory-table-wrap overflow-x-auto table-scroll">
                 <table className="wms-inventory-table">
                   <thead>
                     <tr>
@@ -277,7 +361,7 @@ export default function SupplierPayablesPage() {
                       <tr key={row.paymentCode} className="table-row">
                         <td className="table-cell">
                           {formatDateCell(row.dueDate)}
-                          <div className="text-[var(--md-on-surface-variant)]">còn {row.daysUntilDue} ngày</div>
+                          <div className="sup-ap-meta">còn {row.daysUntilDue} ngày</div>
                         </td>
                         <td className="table-cell">{row.supplierName || '-'}</td>
                         <td className="table-cell">
@@ -295,14 +379,14 @@ export default function SupplierPayablesPage() {
                             code={row.poCode}
                             to={`/purchasing/orders/${encodeURIComponent(row.poCode)}`}
                           />
-                          <div className="font-mono text-[var(--md-on-surface-variant)]">{row.paymentCode}</div>
+                          <div className="sup-ap-meta sup-ap-meta--mono">{row.paymentCode}</div>
                         </td>
                         <td className="table-cell text-right tabular-nums whitespace-nowrap">
                           {formatCurrencyFull(row.outstanding)}
                         </td>
                         <td className="table-cell hrm-table-col-actions">
                           {canPay ? (
-                            <Link className="btn btn-filled btn-sm" to={`/purchasing/payments/${encodeURIComponent(row.paymentCode)}`}>
+                            <Link className="btn btn-primary" to={`/purchasing/payments/${encodeURIComponent(row.paymentCode)}`}>
                               Ghi nhận TT
                             </Link>
                           ) : null}
@@ -312,69 +396,46 @@ export default function SupplierPayablesPage() {
                   </tbody>
                 </table>
               </div>
-            </HrmPanel>
+            </ApBoard>
           ) : null}
 
-          <HrmPanel
-            title="Danh sách DNTT và công nợ chi tiết"
-            subtitle={
+          <ApBoard
+            title="DNTT và công nợ chi tiết"
+            desc={
               filteredSupplierName
                 ? `Đang lọc theo ${filteredSupplierName}.`
                 : 'Từng đề nghị thanh toán đã lập. PO chưa có DNTT không xuất hiện.'
             }
-          >
-            <div id="sup-ap-lines" className="sup-analytics__filters">
-              <FormField label="Nhà cung cấp">
-                <select
-                  className="form-input form-input-md"
-                  value={supplierId ? String(supplierId) : ''}
-                  onChange={e => setSupplierFilter(e.target.value)}
-                >
-                  <option value="">Tất cả NCC</option>
-                  {suppliers.map(s => (
-                    <option key={s.supplierId} value={s.supplierId}>{s.supplierCode} - {s.supplierName}</option>
-                  ))}
-                </select>
-              </FormField>
-              <FormField label="Trạng thái thanh toán">
-                <select
-                  className="form-input form-input-md"
-                  value={status}
-                  onChange={e => setStatus(e.target.value)}
-                >
-                  <option value="">Tất cả</option>
-                  <option value="unpaid">Chưa thanh toán (kể cả 1 phần)</option>
-                  <option value="partial">Đã thanh toán một phần</option>
-                  <option value="overdue">Quá hạn</option>
-                  <option value="paid">Đã thanh toán đủ</option>
-                </select>
-              </FormField>
-              <FormField label="Tìm PO / DNTT / NCC">
-                <input
-                  className="form-input form-input-md"
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  placeholder="Nhập số PO, mã DNTT hoặc tên NCC"
-                />
-              </FormField>
-              {supplierId || status || search ? (
-                <div className="sup-analytics__filter-actions">
-                  <button
-                    type="button"
-                    className="btn btn-outline"
-                    onClick={() => {
-                      setStatus('');
-                      setSearch('');
-                      setSupplierFilter('');
-                    }}
+            toolbar={(
+              <>
+                <label className="ops-projects__filter-field">
+                  Nhà cung cấp
+                  <select
+                    className="form-input form-input-md"
+                    value={supplierId ? String(supplierId) : ''}
+                    onChange={e => setSupplierFilter(e.target.value)}
                   >
-                    Bỏ lọc
+                    <option value="">Tất cả NCC</option>
+                    {suppliers.map(s => (
+                      <option key={s.supplierId} value={s.supplierId}>{s.supplierCode} - {s.supplierName}</option>
+                    ))}
+                  </select>
+                </label>
+                <ApFilterTabs value={status} onChange={setStatus} />
+                <SearchBar
+                  value={search}
+                  onChange={setSearch}
+                  placeholder="Tìm PO, DNTT hoặc NCC"
+                />
+                {hasFilters ? (
+                  <button type="button" className="btn btn-text" onClick={resetFilters} title="Đặt lại bộ lọc">
+                    Xóa lọc
                   </button>
-                </div>
-              ) : null}
-            </div>
-
-            <div className="overflow-x-auto table-scroll">
+                ) : null}
+              </>
+            )}
+          >
+            <div id="sup-ap-lines" className="wms-inventory-table-wrap overflow-x-auto table-scroll">
               <table className="wms-inventory-table">
                 <thead>
                   <tr>
@@ -416,7 +477,7 @@ export default function SupplierPayablesPage() {
                             <span className="entity-code">-</span>
                           )}
                           {line.projectName ? (
-                            <div className="text-[var(--md-on-surface-variant)]">{line.projectName}</div>
+                            <div className="sup-ap-meta">{line.projectName}</div>
                           ) : null}
                         </td>
                         <td className="table-cell">
@@ -424,9 +485,9 @@ export default function SupplierPayablesPage() {
                             code={line.poCode}
                             to={`/purchasing/orders/${encodeURIComponent(line.poCode)}`}
                           />
-                          <div className="font-mono text-[var(--md-on-surface-variant)]">
+                          <div className="sup-ap-meta sup-ap-meta--mono">
                             {line.paymentCode}
-                            {line.stageNumber > 1 ? ` · đợt ${line.stageNumber}` : ''}
+                            {line.stageNumber > 1 ? ` - đợt ${line.stageNumber}` : ''}
                           </div>
                         </td>
                         <td className="table-cell">{formatDateCell(line.poDate ?? undefined)}</td>
@@ -438,15 +499,15 @@ export default function SupplierPayablesPage() {
                         <td className="table-cell sup-ap-col-status">{lineStatusBadge(line)}</td>
                         <td className="table-cell hrm-table-col-actions">
                           {line.lineStatus === 'paid' ? (
-                            <Link className="btn btn-outline btn-sm" to={`/purchasing/orders/${encodeURIComponent(line.poCode)}`}>
+                            <Link className="btn btn-outline" to={`/purchasing/orders/${encodeURIComponent(line.poCode)}`}>
                               Xem PO
                             </Link>
                           ) : canPay ? (
-                            <Link className="btn btn-filled btn-sm" to={`/purchasing/payments/${encodeURIComponent(line.paymentCode)}`}>
+                            <Link className="btn btn-primary" to={`/purchasing/payments/${encodeURIComponent(line.paymentCode)}`}>
                               Xác nhận TT
                             </Link>
                           ) : (
-                            <Link className="btn btn-outline btn-sm" to={`/purchasing/payments/${encodeURIComponent(line.paymentCode)}`}>
+                            <Link className="btn btn-outline" to={`/purchasing/payments/${encodeURIComponent(line.paymentCode)}`}>
                               Xem DNTT
                             </Link>
                           )}
@@ -457,7 +518,7 @@ export default function SupplierPayablesPage() {
                 </tbody>
               </table>
             </div>
-          </HrmPanel>
+          </ApBoard>
         </>
       )}
     </div>

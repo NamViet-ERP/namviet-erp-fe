@@ -37,17 +37,17 @@ function paymentStatusLabel(status: string | null | undefined): string {
     case 'paid':
     case 'completed': return 'Đã thanh toán';
     case 'cancelled': return 'Đã hủy';
-    default: return status || '—';
+    default: return status || '-';
   }
 }
 
 function paymentStatusBadgeClass(status: string | null | undefined): string {
   switch (status?.trim().toLowerCase()) {
     case 'paid':
-    case 'completed': return 'pur-erp__pill pur-erp__pill--ok';
-    case 'cancelled': return 'pur-erp__pill pur-erp__pill--danger';
-    case 'submitted': return 'pur-erp__pill pur-erp__pill--info';
-    default: return 'pur-erp__pill pur-erp__pill--warn';
+    case 'completed': return 'badge badge-success';
+    case 'cancelled': return 'badge badge-error';
+    case 'submitted': return 'badge badge-info';
+    default: return 'badge badge-warning';
   }
 }
 
@@ -162,7 +162,7 @@ export default function PurchasePaymentsPage() {
         <div className="pur-erp__head-text">
           <h1 className="pur-erp__title">Đề nghị thanh toán</h1>
           <p className="pur-erp__subtitle">
-            DNTT chi NCC theo đợt PO — Nháp → Gửi đề nghị → Ghi nhận đã thanh toán
+            DNTT chi NCC theo đợt PO - Nháp - Gửi đề nghị - Ghi nhận đã thanh toán
           </p>
         </div>
         <div className="pur-erp__head-actions">
@@ -266,11 +266,11 @@ export default function PurchasePaymentsPage() {
                                 code={row.poCode}
                                 to={`/purchasing/orders/${encodeURIComponent(row.poCode)}`}
                               />
-                            ) : '—'}
+                            ) : '-'}
                           </td>
-                          <td className="pur-erp__td-num">{row.stageNumber ?? '—'}</td>
-                          <td>{row.supplierName || '—'}</td>
-                          <td>{row.invoiceNo || '—'}</td>
+                          <td className="pur-erp__td-num">{row.stageNumber ?? '-'}</td>
+                          <td>{row.supplierName || '-'}</td>
+                          <td>{row.invoiceNo || '-'}</td>
                           <td className="pur-erp__td-num">{formatCurrency(row.amount)}</td>
                           <td>{formatDateCell(row.dueDate)}</td>
                           <td className="pur-erp__td-status">

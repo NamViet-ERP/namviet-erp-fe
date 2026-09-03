@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react';
 import type { XAxisTickContentProps } from 'recharts';
 import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
+import type { CardAccent } from '../../types';
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip,
   AreaChart, Area, XAxis, YAxis, CartesianGrid, BarChart, Bar, LabelList,
@@ -31,6 +32,8 @@ import { emptyWarehouseDashboardData } from '../../lib/wms/warehouseDashboardDat
 
 const ACTIVITY_PREVIEW_COUNT = 5;
 const CHART_AXIS_STROKE = 'var(--md-outline-variant)';
+const CHART_IMPORT = 'var(--md-success)';
+const CHART_EXPORT = 'var(--nv-amber)';
 const CHART_AXIS_TICK = {
   fill: 'var(--md-on-surface-variant)',
   fontSize: 11,
@@ -91,7 +94,7 @@ function WarehouseBarLegend({ data }: { data: CategoryDataPoint[] }) {
   return (
     <div className="warehouse-bar-legend-wrap">
       <p className="warehouse-bar-legend__heading">
-        {WAREHOUSE_BAR_X_AXIS.title} — {WAREHOUSE_BAR_X_AXIS.unit}. Tên đầy đủ:
+        {WAREHOUSE_BAR_X_AXIS.title} - {WAREHOUSE_BAR_X_AXIS.unit}. Tên đầy đủ:
       </p>
       <ul className="warehouse-bar-legend" aria-label="Danh sách kho dự án">
         {data.map((item, index) => (
@@ -141,10 +144,10 @@ function ChartEmpty({ message }: { message: string }) {
   );
 }
 
-const OPS_STAT_ICONS: Record<string, LucideIcon> = {
-  'Chờ duyệt': Activity,
-  'Nhập hôm nay': TrendingUp,
-  'Xuất hôm nay': ArrowUpRight,
+const OPS_STAT_META: Record<string, { accent: CardAccent; icon: LucideIcon }> = {
+  'Chờ duyệt': { accent: 'danger', icon: Activity },
+  'Nhập hôm nay': { accent: 'success', icon: TrendingUp },
+  'Xuất hôm nay': { accent: 'warning', icon: ArrowUpRight },
 };
 
 const RADIAN = Math.PI / 180;
@@ -224,7 +227,7 @@ function DashboardWarehouseContent({
   const hasMoreActivity = data.recentActivity.length > ACTIVITY_PREVIEW_COUNT;
 
   return (
-    <div className="page-stack">
+    <div className="page-stack warehouse-dash">
       <PageHeader
           eyebrow="Tổng quan"
           title="Tổng quan kho hàng"
@@ -286,32 +289,27 @@ function DashboardWarehouseContent({
         </div>
       )}
 
-      <div className="dashboard-ops-grid dashboard-ops-grid--3" aria-label="Việc cần xử lý">
+      <div className="dashboard-kpi-grid warehouse-dash-kpis" role="list" aria-label="Việc cần xử lý">
         {data.miniStats.map(stat => {
-          const Icon = OPS_STAT_ICONS[stat.label] ?? Activity;
+          const meta = OPS_STAT_META[stat.label] ?? { accent: 'info' as const, icon: Activity };
           return (
-            <div key={stat.label} className="dashboard-ops-card">
-              <div
-                className="dashboard-ops-card__icon"
-                style={{ '--ops-color': stat.color } as CSSProperties }
-              >
-                <Icon size={18} />
-              </div>
-              <div className="min-w-0">
-                <p className="dashboard-ops-card__value">{stat.value}</p>
-                <p className="dashboard-ops-card__label">{stat.label}</p>
-              </div>
-            </div>
+            <Card
+              key={stat.label}
+              title={stat.label}
+              value={hasLoadError ? '-' : stat.value}
+              accent={meta.accent}
+              icon={meta.icon}
+            />
           );
         })}
       </div>
 
-      <div className="dashboard-kpi-grid" role="list" aria-label="Chỉ số kho">
+      <div className="dashboard-kpi-grid warehouse-dash-kpis" role="list" aria-label="Chỉ số kho">
         <Card
           title="Tổng tồn kho"
           value={hasLoadError ? '-' : fmtStockQty(data.totalStock)}
           subtitle="vật tư trong tất cả kho dự án"
-          accent="amber"
+          accent="info"
           icon={Package}
         />
         {canViewPrices && (
@@ -319,7 +317,7 @@ function DashboardWarehouseContent({
             title="Tổng giá trị"
             value={hasLoadError ? '-' : formatCurrencyShort(data.totalValue)}
             subtitle="ước tính từ giá bình quân"
-            accent="blue"
+            accent="warning"
             icon={DollarSign}
           />
         )}
@@ -327,14 +325,14 @@ function DashboardWarehouseContent({
           title="Kho dự án hoạt động"
           value={hasLoadError ? '-' : data.activeProjects}
           subtitle="dự án chưa đóng"
-          accent="teal"
+          accent="neutral"
           icon={Warehouse}
         />
       </div>
 
       <div className="dashboard-grid-charts">
         <BentoCard className="bento-card--chart">
-          <SectionHeading sub="6 tháng gần nhất — giá trị">Xu hướng Nhập / Xuất</SectionHeading>
+          <SectionHeading sub="6 tháng gần nhất - giá trị">Xu hướng Nhập / Xuất</SectionHeading>
           {canViewPrices ? (
             <TrendChart data={data.trendData} />
           ) : (
@@ -398,11 +396,11 @@ function TrendChart({ data }: { data: TrendDataPoint[] }) {
     <div className="chart-panel">
       <div className="trend-summary">
         <span className="trend-summary__pill">
-          <span className="trend-summary__dot" style={{ background: 'var(--status-success)' }} />
+          <span className="trend-summary__dot" style={{ background: CHART_IMPORT }} />
           Nhập: <strong>{formatCurrencyShort(totalImports)}</strong>
         </span>
         <span className="trend-summary__pill">
-          <span className="trend-summary__dot" style={{ background: 'var(--md-secondary)' }} />
+          <span className="trend-summary__dot" style={{ background: CHART_EXPORT }} />
           Xuất: <strong>{formatCurrencyShort(totalExports)}</strong>
         </span>
       </div>
@@ -412,12 +410,12 @@ function TrendChart({ data }: { data: TrendDataPoint[] }) {
             <AreaChart data={data} margin={{ top: 12, right: 8, left: -4, bottom: 4 }}>
               <defs>
                 <linearGradient id="gradImport" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="var(--status-success)" stopOpacity={0.35} />
-                  <stop offset="100%" stopColor="var(--status-success)" stopOpacity={0.02} />
+                  <stop offset="0%" stopColor={CHART_IMPORT} stopOpacity={0.35} />
+                  <stop offset="100%" stopColor={CHART_IMPORT} stopOpacity={0.02} />
                 </linearGradient>
                 <linearGradient id="gradExport" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="var(--md-secondary)" stopOpacity={0.35} />
-                  <stop offset="100%" stopColor="var(--md-secondary)" stopOpacity={0.02} />
+                  <stop offset="0%" stopColor={CHART_EXPORT} stopOpacity={0.35} />
+                  <stop offset="100%" stopColor={CHART_EXPORT} stopOpacity={0.02} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="4 4" stroke="var(--md-outline-variant)" vertical={false} opacity={0.25} />
@@ -446,21 +444,21 @@ function TrendChart({ data }: { data: TrendDataPoint[] }) {
                 type="monotone"
                 dataKey="imports"
                 name="Nhập kho"
-                stroke="var(--status-success)"
+                stroke={CHART_IMPORT}
                 strokeWidth={2}
                 fill="url(#gradImport)"
-                dot={{ r: 3, strokeWidth: 0, fill: 'var(--status-success)' }}
-                activeDot={{ r: 5, strokeWidth: 2, stroke: 'var(--md-surface-container)', fill: 'var(--status-success)' }}
+                dot={{ r: 3, strokeWidth: 0, fill: CHART_IMPORT }}
+                activeDot={{ r: 5, strokeWidth: 2, stroke: 'var(--md-surface-container)', fill: CHART_IMPORT }}
               />
               <Area
                 type="monotone"
                 dataKey="exports"
                 name="Xuất kho"
-                stroke="var(--md-secondary)"
+                stroke={CHART_EXPORT}
                 strokeWidth={2}
                 fill="url(#gradExport)"
-                dot={{ r: 3, strokeWidth: 0, fill: 'var(--md-secondary)' }}
-                activeDot={{ r: 5, strokeWidth: 2, stroke: 'var(--md-surface-container)', fill: 'var(--md-secondary)' }}
+                dot={{ r: 3, strokeWidth: 0, fill: CHART_EXPORT }}
+                activeDot={{ r: 5, strokeWidth: 2, stroke: 'var(--md-surface-container)', fill: CHART_EXPORT }}
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -468,8 +466,8 @@ function TrendChart({ data }: { data: TrendDataPoint[] }) {
       </div>
       <ChartLegendInline
         items={[
-          { color: 'var(--status-success)', label: 'Nhập kho' },
-          { color: 'var(--md-secondary)', label: 'Xuất kho' },
+          { color: CHART_IMPORT, label: 'Nhập kho' },
+          { color: CHART_EXPORT, label: 'Xuất kho' },
         ]}
       />
     </div>

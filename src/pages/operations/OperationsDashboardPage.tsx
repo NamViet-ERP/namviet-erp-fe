@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import {
   AlertTriangle,
@@ -27,35 +27,34 @@ import {
 } from '../../lib/purchasing/purchaseOrderStatus';
 import { formatCurrency } from '../../utils/formatCurrency';
 import type { PurchaseOrderApiDto } from '../../types/api/purchasingApi';
-import CskhFilterTabs, { type CskhFilterOption } from '../cskh/CskhFilterTabs';
 
 type StockFilter = 'all' | 'zero' | 'low';
 type OrderFilter = 'all' | 'none' | 'partial';
 type PaymentFilter = 'all' | 'draft' | 'submitted';
 type ProjectFilter = 'all' | 'noPm' | 'hasPm';
 
-const STOCK_FILTERS: CskhFilterOption<StockFilter>[] = [
-  { id: 'all', label: 'Tất cả', tone: 'navy' },
-  { id: 'zero', label: 'Hết tồn', tone: 'danger' },
-  { id: 'low', label: 'Dưới ngưỡng', tone: 'warn' },
+const STOCK_FILTERS: { id: StockFilter; label: string }[] = [
+  { id: 'all', label: 'Tất cả' },
+  { id: 'zero', label: 'Hết tồn' },
+  { id: 'low', label: 'Dưới ngưỡng' },
 ];
 
-const ORDER_FILTERS: CskhFilterOption<OrderFilter>[] = [
-  { id: 'all', label: 'Tất cả', tone: 'navy' },
-  { id: 'none', label: 'Chưa giao', tone: 'warn' },
-  { id: 'partial', label: 'Giao 1 phần', tone: 'info' },
+const ORDER_FILTERS: { id: OrderFilter; label: string }[] = [
+  { id: 'all', label: 'Tất cả' },
+  { id: 'none', label: 'Chưa giao' },
+  { id: 'partial', label: 'Giao 1 phần' },
 ];
 
-const PAYMENT_FILTERS: CskhFilterOption<PaymentFilter>[] = [
-  { id: 'all', label: 'Tất cả', tone: 'navy' },
-  { id: 'draft', label: 'Nháp', tone: 'info' },
-  { id: 'submitted', label: 'Đã gửi', tone: 'warn' },
+const PAYMENT_FILTERS: { id: PaymentFilter; label: string }[] = [
+  { id: 'all', label: 'Tất cả' },
+  { id: 'draft', label: 'Nháp' },
+  { id: 'submitted', label: 'Đã gửi' },
 ];
 
-const PROJECT_FILTERS: CskhFilterOption<ProjectFilter>[] = [
-  { id: 'all', label: 'Tất cả', tone: 'navy' },
-  { id: 'noPm', label: 'Chưa gán PM', tone: 'warn' },
-  { id: 'hasPm', label: 'Có PM', tone: 'ok' },
+const PROJECT_FILTERS: { id: ProjectFilter; label: string }[] = [
+  { id: 'all', label: 'Tất cả' },
+  { id: 'noPm', label: 'Chưa gán PM' },
+  { id: 'hasPm', label: 'Có PM' },
 ];
 
 const EMPTY_PM_ID = '00000000-0000-0000-0000-000000000000';
@@ -64,6 +63,21 @@ function projectStatusLabel(status: string) {
   if (status === 'Active') return 'Đang triển khai';
   if (status === 'Closed') return 'Đã đóng';
   return status;
+}
+
+function paymentStatusClass(status: string) {
+  switch (status) {
+    case 'draft':
+      return 'badge badge-neutral';
+    case 'submitted':
+      return 'badge badge-warning';
+    case 'paid':
+      return 'badge badge-success';
+    case 'cancelled':
+      return 'badge badge-error';
+    default:
+      return 'badge badge-neutral';
+  }
 }
 
 function paymentStatusLabel(status: string) {
@@ -83,6 +97,74 @@ function paymentStatusLabel(status: string) {
 
 function hasPm(row: { pmName?: string | null; pmId?: string | null }): boolean {
   return Boolean(row.pmName?.trim()) && row.pmId !== EMPTY_PM_ID;
+}
+
+function OpsFilterTabs<T extends string>({
+  value,
+  options,
+  onChange,
+  label,
+}: {
+  value: T;
+  options: { id: T; label: string }[];
+  onChange: (id: T) => void;
+  label: string;
+}) {
+  return (
+    <div className="ops-projects-tabs" role="tablist" aria-label={label}>
+      {options.map(item => {
+        const active = value === item.id;
+        return (
+          <button
+            key={item.id}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            className={`ops-projects-tabs__btn${active ? ' is-active' : ''}`}
+            onClick={() => onChange(item.id)}
+          >
+            {item.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function OpsBoard({
+  title,
+  desc,
+  filter,
+  to,
+  toLabel,
+  children,
+}: {
+  title: string;
+  desc: string;
+  filter: ReactNode;
+  to: string;
+  toLabel: string;
+  children: ReactNode;
+}) {
+  return (
+    <HrmPanel noPadding className="ops-projects-board">
+      <div className="ops-projects-board__head">
+        <h2 className="ops-projects-board__title">{title}</h2>
+        <p className="ops-projects-board__desc">{desc}</p>
+      </div>
+      <div className="hrm-list-toolbar">
+        <div className="ops-projects__toolbar">
+          {filter}
+          <Link to={to} className="btn btn-outline ops-projects__add">
+            {toLabel}
+          </Link>
+        </div>
+      </div>
+      <div className="wms-inventory-table-wrap overflow-x-auto table-scroll">
+        {children}
+      </div>
+    </HrmPanel>
+  );
 }
 
 function OpenPoRows({ rows }: { rows: PurchaseOrderApiDto[] }) {
@@ -120,7 +202,7 @@ function OpenPoRows({ rows }: { rows: PurchaseOrderApiDto[] }) {
   ));
 }
 
-/** Tổng quan Vận hành — chrome bàn làm việc CSKH (khung navy, toolbar xếp lớp, chip lọc). */
+/** Tổng quan SLC - KPI + bảng cảnh báo theo chrome ERP. */
 export default function OperationsDashboardPage() {
   const dash = useOperationsDashboard();
   const { counts } = dash;
@@ -156,10 +238,11 @@ export default function OperationsDashboardPage() {
   }
 
   return (
-    <div className="page-stack operations-dashboard cskh-desk">
+    <div className="page-shell operations-dashboard">
       <PageHeader
-        eyebrow="Tổng quan"
+        eyebrow="SLC"
         title="Tổng quan SLC"
+        subtitle="Chỉ số dự án, mua hàng, tồn kho - bấm thẻ để đi tới màn chi tiết."
         actions={(
           <p className="page-header__updated">
             Cập nhật lúc {new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
@@ -169,7 +252,6 @@ export default function OperationsDashboardPage() {
 
       <div className="dashboard-kpi-grid" role="list" aria-label="Chỉ số vận hành">
         <Card
-          className="cskh-desk__kpi-card"
           title="Dự án"
           to="/operations/projects"
           accent="info"
@@ -181,7 +263,6 @@ export default function OperationsDashboardPage() {
           ]}
         />
         <Card
-          className="cskh-desk__kpi-card"
           title="Phân công"
           to="/operations/projects"
           accent="neutral"
@@ -193,7 +274,6 @@ export default function OperationsDashboardPage() {
           ]}
         />
         <Card
-          className="cskh-desk__kpi-card"
           title="Tồn thấp"
           to="/warehouse/stock"
           accent="warning"
@@ -205,10 +285,9 @@ export default function OperationsDashboardPage() {
           ]}
         />
         <Card
-          className="cskh-desk__kpi-card"
           title="Vật tư"
           to="/operations/materials"
-          accent="stone"
+          accent="success"
           icon={Package}
           stats={[
             { label: 'Đang dùng', value: counts.materialActive, tone: 'ok' },
@@ -217,10 +296,9 @@ export default function OperationsDashboardPage() {
           ]}
         />
         <Card
-          className="cskh-desk__kpi-card"
           title="Đơn hàng"
           to="/purchasing/orders"
-          accent="success"
+          accent="amber"
           icon={ShoppingCart}
           stats={[
             { label: 'Chưa giao', value: counts.orderNone, tone: 'warn' },
@@ -229,7 +307,6 @@ export default function OperationsDashboardPage() {
           ]}
         />
         <Card
-          className="cskh-desk__kpi-card"
           title="Hàng về"
           to="/warehouse/arrival-plans"
           accent="primary"
@@ -241,7 +318,6 @@ export default function OperationsDashboardPage() {
           ]}
         />
         <Card
-          className="cskh-desk__kpi-card"
           title="Đề nghị TT"
           to="/purchasing/payments"
           accent="purple"
@@ -253,7 +329,6 @@ export default function OperationsDashboardPage() {
           ]}
         />
         <Card
-          className="cskh-desk__kpi-card"
           title="Thanh toán PO"
           to="/purchasing/orders"
           accent="danger"
@@ -266,205 +341,205 @@ export default function OperationsDashboardPage() {
         />
       </div>
 
-      <HrmPanel className="cskh-desk__panel">
-        <div className="cskh-desk__section-head cskh-desk__section-head--stack">
-          <div>
-            <h2 className="section-heading__title m-0">Cảnh báo tồn kho thấp</h2>
-            <p className="section-heading__sub mb-0">Tồn hiện tại thấp hơn ngưỡng tối thiểu đã thiết lập.</p>
-          </div>
-          <div className="cskh-desk__toolbar">
-            <CskhFilterTabs value={stockFilter} options={STOCK_FILTERS} onChange={setStockFilter} label="Lọc tồn thấp" />
-            <Link to="/warehouse/stock" className="btn btn-outlined btn-sm cskh-desk__toolbar-add">
-              Đi tới Kho
-            </Link>
-          </div>
-        </div>
-        <div className="wms-inventory-table-wrap cskh-desk__table">
-          <table className="wms-inventory-table">
-            <thead>
+      <OpsBoard
+        title="Cảnh báo tồn kho thấp"
+        desc="Tồn hiện tại thấp hơn ngưỡng tối thiểu đã thiết lập."
+        to="/warehouse/stock"
+        toLabel="Đi tới Kho"
+        filter={(
+          <OpsFilterTabs
+            value={stockFilter}
+            options={STOCK_FILTERS}
+            onChange={setStockFilter}
+            label="Lọc tồn thấp"
+          />
+        )}
+      >
+        <table className="wms-inventory-table">
+          <thead>
+            <tr>
+              <th className="table-header-cell">Mã hàng</th>
+              <th className="table-header-cell">Tên hàng</th>
+              <th className="table-header-cell">Dự án</th>
+              <th className="table-header-cell text-right">Tồn hiện tại</th>
+              <th className="table-header-cell text-right">Tối thiểu</th>
+            </tr>
+          </thead>
+          <tbody>
+            {stockRows.length === 0 ? (
               <tr>
-                <th className="table-header-cell">Mã hàng</th>
-                <th className="table-header-cell">Tên hàng</th>
-                <th className="table-header-cell">Dự án</th>
-                <th className="table-header-cell text-right">Tồn hiện tại</th>
-                <th className="table-header-cell text-right">Tối thiểu</th>
+                <td colSpan={5}>
+                  <EmptyState message="Không có cảnh báo khớp bộ lọc." icon={AlertTriangle} />
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {stockRows.length === 0 ? (
-                <tr>
-                  <td colSpan={5}>
-                    <EmptyState message="Không có cảnh báo khớp bộ lọc." icon={AlertTriangle} />
+            ) : (
+              stockRows.map(row => (
+                <tr key={`${row.projectCode}-${row.materialCode}`} className="table-row">
+                  <td className="table-cell">
+                    <EntityCodeLink
+                      code={row.materialCode}
+                      to="/warehouse/materials"
+                      state={{ highlightCode: row.materialCode }}
+                    />
+                  </td>
+                  <td className="table-cell">{row.materialName}</td>
+                  <td className="table-cell">
+                    <EntityCodeLink
+                      code={row.projectCode}
+                      to={`/warehouse/projects/${encodeURIComponent(row.projectCode)}`}
+                    />
+                  </td>
+                  <td className="table-cell text-right tabular-nums ops-dash__qty-low">
+                    {fmtStockQty(row.actualQty)} {row.unit}
+                  </td>
+                  <td className="table-cell text-right tabular-nums">
+                    {fmtStockQty(row.minStockQty)} {row.unit}
                   </td>
                 </tr>
-              ) : (
-                stockRows.map(row => (
-                  <tr key={`${row.projectCode}-${row.materialCode}`} className="table-row">
-                    <td className="table-cell">
-                      <EntityCodeLink
-                        code={row.materialCode}
-                        to="/warehouse/materials"
-                        state={{ highlightCode: row.materialCode }}
-                      />
-                    </td>
-                    <td className="table-cell font-semibold">{row.materialName}</td>
-                    <td className="table-cell">
-                      <EntityCodeLink
-                        code={row.projectCode}
-                        to={`/warehouse/projects/${encodeURIComponent(row.projectCode)}`}
-                      />
-                    </td>
-                    <td className="table-cell text-right tabular-nums font-semibold text-[var(--md-error)]">
-                      {fmtStockQty(row.actualQty)} {row.unit}
-                    </td>
-                    <td className="table-cell text-right tabular-nums">
-                      {fmtStockQty(row.minStockQty)} {row.unit}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </HrmPanel>
+              ))
+            )}
+          </tbody>
+        </table>
+      </OpsBoard>
 
-      <HrmPanel className="cskh-desk__panel">
-        <div className="cskh-desk__section-head cskh-desk__section-head--stack">
-          <div>
-            <h2 className="section-heading__title m-0">Đơn hàng cần theo dõi</h2>
-            <p className="section-heading__sub mb-0">PO chưa giao đủ - đặt hàng, nhận hàng, duyệt.</p>
-          </div>
-          <div className="cskh-desk__toolbar">
-            <CskhFilterTabs value={orderFilter} options={ORDER_FILTERS} onChange={setOrderFilter} label="Lọc đơn hàng" />
-            <Link to="/purchasing/orders" className="btn btn-outlined btn-sm cskh-desk__toolbar-add">
-              Đi tới Mua hàng
-            </Link>
-          </div>
-        </div>
-        <div className="wms-inventory-table-wrap cskh-desk__table">
-          <table className="wms-inventory-table">
-            <thead>
-              <tr>
-                <th className="table-header-cell">Mã PO</th>
-                <th className="table-header-cell">Dự án</th>
-                <th className="table-header-cell">NCC</th>
-                <th className="table-header-cell">Đặt NCC</th>
-                <th className="table-header-cell">Giao hàng</th>
-                <th className="table-header-cell">Duyệt</th>
-              </tr>
-            </thead>
-            <tbody>
-              <OpenPoRows rows={orderRows} />
-            </tbody>
-          </table>
-        </div>
-      </HrmPanel>
+      <OpsBoard
+        title="Đơn hàng cần theo dõi"
+        desc="PO chưa giao đủ - đặt hàng, nhận hàng, duyệt."
+        to="/purchasing/orders"
+        toLabel="Đi tới Mua hàng"
+        filter={(
+          <OpsFilterTabs
+            value={orderFilter}
+            options={ORDER_FILTERS}
+            onChange={setOrderFilter}
+            label="Lọc đơn hàng"
+          />
+        )}
+      >
+        <table className="wms-inventory-table">
+          <thead>
+            <tr>
+              <th className="table-header-cell">Mã PO</th>
+              <th className="table-header-cell">Dự án</th>
+              <th className="table-header-cell">NCC</th>
+              <th className="table-header-cell">Đặt NCC</th>
+              <th className="table-header-cell">Giao hàng</th>
+              <th className="table-header-cell">Duyệt</th>
+            </tr>
+          </thead>
+          <tbody>
+            <OpenPoRows rows={orderRows} />
+          </tbody>
+        </table>
+      </OpsBoard>
 
-      <HrmPanel className="cskh-desk__panel">
-        <div className="cskh-desk__section-head cskh-desk__section-head--stack">
-          <div>
-            <h2 className="section-heading__title m-0">Đề nghị thanh toán chờ xử lý</h2>
-            <p className="section-heading__sub mb-0">DNTT nháp hoặc đã gửi, chưa thanh toán.</p>
-          </div>
-          <div className="cskh-desk__toolbar">
-            <CskhFilterTabs value={paymentFilter} options={PAYMENT_FILTERS} onChange={setPaymentFilter} label="Lọc đề nghị TT" />
-            <Link to="/purchasing/payments" className="btn btn-outlined btn-sm cskh-desk__toolbar-add">
-              Đi tới Đề nghị TT
-            </Link>
-          </div>
-        </div>
-        <div className="wms-inventory-table-wrap cskh-desk__table">
-          <table className="wms-inventory-table">
-            <thead>
+      <OpsBoard
+        title="Đề nghị thanh toán chờ xử lý"
+        desc="DNTT nháp hoặc đã gửi, chưa thanh toán."
+        to="/purchasing/payments"
+        toLabel="Đi tới Đề nghị TT"
+        filter={(
+          <OpsFilterTabs
+            value={paymentFilter}
+            options={PAYMENT_FILTERS}
+            onChange={setPaymentFilter}
+            label="Lọc đề nghị TT"
+          />
+        )}
+      >
+        <table className="wms-inventory-table">
+          <thead>
+            <tr>
+              <th className="table-header-cell">Mã DNTT</th>
+              <th className="table-header-cell">PO</th>
+              <th className="table-header-cell">NCC</th>
+              <th className="table-header-cell text-right">Số tiền</th>
+              <th className="table-header-cell">Trạng thái</th>
+            </tr>
+          </thead>
+          <tbody>
+            {paymentRows.length === 0 ? (
               <tr>
-                <th className="table-header-cell">Mã DNTT</th>
-                <th className="table-header-cell">PO</th>
-                <th className="table-header-cell">NCC</th>
-                <th className="table-header-cell text-right">Số tiền</th>
-                <th className="table-header-cell">Trạng thái</th>
+                <td colSpan={5}>
+                  <EmptyState message="Không có đề nghị khớp bộ lọc." icon={Wallet} />
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {paymentRows.length === 0 ? (
-                <tr>
-                  <td colSpan={5}>
-                    <EmptyState message="Không có đề nghị khớp bộ lọc." icon={Wallet} />
+            ) : (
+              paymentRows.map(row => (
+                <tr key={row.code} className="table-row">
+                  <td className="table-cell">
+                    <EntityCodeLink
+                      code={row.code}
+                      to={`/purchasing/payments/${encodeURIComponent(row.code)}`}
+                    />
+                  </td>
+                  <td className="table-cell tabular-nums">{row.poCode}</td>
+                  <td className="table-cell">{row.supplierName || '-'}</td>
+                  <td className="table-cell text-right tabular-nums">{formatCurrency(row.amount)}</td>
+                  <td className="table-cell">
+                    <span className={paymentStatusClass(row.status)}>
+                      {paymentStatusLabel(row.status)}
+                    </span>
                   </td>
                 </tr>
-              ) : (
-                paymentRows.map(row => (
-                  <tr key={row.code} className="table-row">
-                    <td className="table-cell">
-                      <EntityCodeLink
-                        code={row.code}
-                        to={`/purchasing/payments/${encodeURIComponent(row.code)}`}
-                      />
-                    </td>
-                    <td className="table-cell tabular-nums">{row.poCode}</td>
-                    <td className="table-cell">{row.supplierName || '-'}</td>
-                    <td className="table-cell text-right tabular-nums">{formatCurrency(row.amount)}</td>
-                    <td className="table-cell">{paymentStatusLabel(row.status)}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </HrmPanel>
+              ))
+            )}
+          </tbody>
+        </table>
+      </OpsBoard>
 
-      <HrmPanel className="cskh-desk__panel">
-        <div className="cskh-desk__section-head cskh-desk__section-head--stack">
-          <div>
-            <h2 className="section-heading__title m-0">Dự án đang triển khai</h2>
-            <p className="section-heading__sub mb-0">Danh sách nhanh - tạo mới sẽ tự sinh kho dự án.</p>
-          </div>
-          <div className="cskh-desk__toolbar">
-            <CskhFilterTabs value={projectFilter} options={PROJECT_FILTERS} onChange={setProjectFilter} label="Lọc phân công" />
-            <Link to="/operations/projects" className="btn btn-outlined btn-sm cskh-desk__toolbar-add">
-              Danh sách dự án
-            </Link>
-          </div>
-        </div>
-        <div className="wms-inventory-table-wrap cskh-desk__table">
-          <table className="wms-inventory-table project-warehouse-table">
-            <thead>
+      <OpsBoard
+        title="Dự án đang triển khai"
+        desc="Danh sách nhanh - tạo mới sẽ tự sinh kho dự án."
+        to="/operations/projects"
+        toLabel="Danh sách dự án"
+        filter={(
+          <OpsFilterTabs
+            value={projectFilter}
+            options={PROJECT_FILTERS}
+            onChange={setProjectFilter}
+            label="Lọc phân công"
+          />
+        )}
+      >
+        <table className="wms-inventory-table project-warehouse-table">
+          <thead>
+            <tr>
+              <th className="table-header-cell project-col-code">Mã</th>
+              <th className="table-header-cell project-col-name">Tên công trình</th>
+              <th className="table-header-cell project-col-client">Khách hàng</th>
+              <th className="table-header-cell project-col-pm">PM</th>
+              <th className="table-header-cell text-center project-col-status">Trạng thái</th>
+            </tr>
+          </thead>
+          <tbody>
+            {projectRows.length === 0 ? (
               <tr>
-                <th className="table-header-cell project-col-code">Mã</th>
-                <th className="table-header-cell project-col-name">Tên công trình</th>
-                <th className="table-header-cell project-col-client">Khách hàng</th>
-                <th className="table-header-cell project-col-pm">PM</th>
-                <th className="table-header-cell text-center project-col-status">Trạng thái</th>
+                <td colSpan={5}>
+                  <EmptyState message="Không có dự án khớp bộ lọc." icon={FolderKanban} />
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {projectRows.length === 0 ? (
-                <tr>
-                  <td colSpan={5}>
-                    <EmptyState message="Không có dự án khớp bộ lọc." icon={FolderKanban} />
+            ) : (
+              projectRows.map(row => (
+                <tr key={row.projectCode} className="table-row">
+                  <td className="table-cell whitespace-nowrap project-col-code">
+                    <EntityCodeLink
+                      code={row.projectCode}
+                      to={`/warehouse/projects/${encodeURIComponent(row.projectCode)}`}
+                    />
+                  </td>
+                  <td className="table-cell project-col-name">{row.projectName}</td>
+                  <td className="table-cell project-col-client">{row.clientName?.trim() || '-'}</td>
+                  <td className="table-cell project-col-pm">{row.pmName || '-'}</td>
+                  <td className="table-cell text-center project-col-status">
+                    <Badge status={projectStatusBadge(row.status)} label={projectStatusLabel(row.status)} />
                   </td>
                 </tr>
-              ) : (
-                projectRows.map(row => (
-                  <tr key={row.projectCode} className="table-row">
-                    <td className="table-cell whitespace-nowrap project-col-code">
-                      <EntityCodeLink
-                        code={row.projectCode}
-                        to={`/warehouse/projects/${encodeURIComponent(row.projectCode)}`}
-                      />
-                    </td>
-                    <td className="table-cell font-semibold project-col-name">{row.projectName}</td>
-                    <td className="table-cell project-col-client">{row.clientName?.trim() || '-'}</td>
-                    <td className="table-cell project-col-pm">{row.pmName || '-'}</td>
-                    <td className="table-cell text-center project-col-status">
-                      <Badge status={projectStatusBadge(row.status)} label={projectStatusLabel(row.status)} />
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </HrmPanel>
+              ))
+            )}
+          </tbody>
+        </table>
+      </OpsBoard>
     </div>
   );
 }

@@ -6,6 +6,7 @@ import Pagination from '../../components/ui/Pagination';
 import EmptyState from '../../components/ui/EmptyState';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import PageHeader from '../../components/ui/PageHeader';
+import HrmPanel from '../../components/hr/HrmPanel';
 import PermissionGate from '../../components/auth/PermissionGate';
 import Modal from '../../components/ui/Modal';
 import FormField from '../../components/ui/FormField';
@@ -33,7 +34,7 @@ import type { MaterialApiDto } from '../../types/wms';
 const emptySelection: Array<number | ''> = ['', '', '', '', ''];
 
 function pathCell(m: MaterialApiDto, key: keyof MaterialApiDto['categoryPath']) {
-  return m.categoryPath?.[key]?.trim() || '—';
+  return m.categoryPath?.[key]?.trim() || '-';
 }
 
 /** Tách mã theo dấu `-` để hiển thị chip phân đoạn (prototype SCM-EPC). */
@@ -198,86 +199,91 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
   }
 
   return (
-    <div className="page-shell">
+    <div className="page-shell mat-catalog">
       <PageHeader
         eyebrow="SLC"
         title="Danh mục vật tư"
+        subtitle="Lọc theo cây 5 cấp, bấm dòng để mở chi tiết."
         actions={
           <PermissionGate permission="wms.materials.create">
             <button
               type="button"
-              className="btn btn-primary flex items-center gap-2"
+              className="btn btn-primary"
               onClick={() => { resetCreateForm(); setShowCreate(true); }}
             >
-              <Plus size={16} />
+              <Plus size={16} aria-hidden />
               Tạo mã vật tư
             </button>
           </PermissionGate>
         }
       />
 
-      <p className="text-xs text-[var(--md-on-surface-variant)] max-w-4xl">
-        Lọc theo cây danh mục — chọn Danh mục trước, các cấp sau hiện theo nhánh đã chọn (không bắt buộc).
-        Khi tạo mã vật tư: chọn ba cấp danh mục đầu và nhập mã, tên vật tư.
-      </p>
-
-      <div className="surface-panel surface-panel--rounded-xl p-4 shadow-card space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-          {MATERIAL_CATEGORY_LEVELS.map((lvl, idx) => (
-            <label key={lvl.key} className="text-xs space-y-1">
-              <span className="font-semibold text-[var(--md-on-surface-variant)]">{lvl.label}</span>
-              <select
-                className="form-select w-full text-sm"
-                disabled={categoriesLoading || (idx > 0 && filterSelection[idx - 1] === '')}
-                value={filterSelection[idx]}
-                onChange={e => {
-                  const v = e.target.value;
-                  setFilterLevel(idx, v === '' ? '' : Number(v));
-                }}
-              >
-                <option value="">— Tất cả —</option>
-                {filterOptions[idx]
-                  ?.filter(c => idx > 0 || c.code !== 'UNCATEGORIZED')
-                  .map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-              </select>
-            </label>
-          ))}
-        </div>
-        <div className="hrm-filter-bar">
-          <div className="hrm-filter-bar__search flex-1 min-w-[220px]">
-            <SearchBar
-              value={search}
-              onChange={v => { setSearch(v); setPage(1); }}
-              placeholder="Tìm mã vật tư, tên vật tư..."
-            />
-          </div>
-          <button
-            type="button"
-            onClick={() => { setShowInactive(v => !v); setPage(1); }}
-            className={`h-10 px-3 flex items-center gap-2 rounded whitespace-nowrap text-sm font-semibold border ${
-              showInactive
-                ? 'bg-[var(--md-secondary-container)] border-[var(--md-outline)] text-[var(--md-on-secondary-container)]'
-                : 'border-[var(--md-outline-variant)] text-[var(--md-on-surface-variant)]'
-            }`}
-          >
-            {showInactive ? 'Đang hiện cả ngừng SD' : 'Chỉ đang dùng'}
-          </button>
-          <button
-            type="button"
-            onClick={resetFilters}
-            className="btn-clear-filters"
-            title="Đặt lại bộ lọc"
-          >
-            <RotateCcw size={15} />
-            <span className="hidden sm:inline">XÓA BỘ LỌC</span>
-          </button>
-        </div>
+      <div className="mat-catalog__help">
+        Chọn Danh mục trước, các cấp sau hiện theo nhánh đã chọn (không bắt buộc).
+        Khi tạo mã: chọn ba cấp đầu rồi nhập mã và tên vật tư.
       </div>
 
-      <div className="surface-panel surface-panel--rounded-xl surface-panel--table shadow-card">
-        <div className="overflow-x-auto table-scroll wms-inventory-table-wrap">
+      <HrmPanel noPadding className="mat-catalog-board">
+        <div className="mat-catalog-board__head">
+          <h2 className="mat-catalog-board__title">Danh sách mã vật tư</h2>
+          <p className="mat-catalog-board__desc">
+            Mã hiển thị theo phân đoạn cây vật tư. Bấm dòng để mở chi tiết.
+          </p>
+        </div>
+
+        <div className="hrm-list-toolbar">
+          <div className="hrm-list-toolbar__filters">
+            <div className="mat-catalog__filters">
+              {MATERIAL_CATEGORY_LEVELS.map((lvl, idx) => (
+                <label key={lvl.key} className="mat-catalog__filter-field">
+                  <span>{lvl.label}</span>
+                  <select
+                    className="form-input form-input-md"
+                    disabled={categoriesLoading || (idx > 0 && filterSelection[idx - 1] === '')}
+                    value={filterSelection[idx]}
+                    onChange={e => {
+                      const v = e.target.value;
+                      setFilterLevel(idx, v === '' ? '' : Number(v));
+                    }}
+                  >
+                    <option value="">- Tất cả -</option>
+                    {filterOptions[idx]
+                      ?.filter(c => idx > 0 || c.code !== 'UNCATEGORIZED')
+                      .map(c => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                  </select>
+                </label>
+              ))}
+            </div>
+            <div className="mat-catalog__toolbar">
+              <SearchBar
+                value={search}
+                onChange={v => { setSearch(v); setPage(1); }}
+                placeholder="Tìm mã vật tư, tên vật tư..."
+              />
+              <button
+                type="button"
+                onClick={() => { setShowInactive(v => !v); setPage(1); }}
+                className={`mat-catalog__status${showInactive ? ' is-on' : ''}`}
+                aria-pressed={showInactive}
+              >
+                {showInactive ? 'Hiện cả ngừng SD' : 'Chỉ đang dùng'}
+              </button>
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="btn btn-text"
+                title="Đặt lại bộ lọc"
+              >
+                <RotateCcw size={14} aria-hidden />
+                Xóa lọc
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="wms-inventory-table-wrap overflow-x-auto table-scroll">
           <table className="wms-inventory-table mat-catalog-table">
             <thead>
               <tr>
@@ -332,7 +338,7 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
                           </div>
                         )}
                         {m.isActive === false && (
-                          <span className="wms-badge-inactive">Ngừng SD</span>
+                          <span className="badge badge-warning">Ngừng SD</span>
                         )}
                       </div>
                     </td>
@@ -347,15 +353,15 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
                     <td className="table-cell">{pathCell(m, 'loaiVatTu')}</td>
                     <td className="table-cell">{pathCell(m, 'phanLoai')}</td>
                     <td className="table-cell">{pathCell(m, 'kieu')}</td>
-                    <td className="table-cell">{m.technicalSpec ?? '—'}</td>
+                    <td className="table-cell">{m.technicalSpec ?? '-'}</td>
                     <td className="table-cell mat-col-general-spec">
                       <div className="mat-spec-cell" title={m.generalTechnicalSpec ?? undefined}>
                         {m.generalTechnicalSpec?.trim() || '-'}
                       </div>
                     </td>
-                    <td className="table-cell">{m.qualityStandard ?? '—'}</td>
+                    <td className="table-cell">{m.qualityStandard ?? '-'}</td>
                     <td className="table-cell table-cell--money mat-col-ceiling">
-                      {m.ceilingPrice != null ? formatCurrencyFull(m.ceilingPrice) : '—'}
+                      {m.ceilingPrice != null ? formatCurrencyFull(m.ceilingPrice) : '-'}
                     </td>
                   </tr>
                   );
@@ -365,18 +371,17 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
           </table>
         </div>
         {totalCount > 0 && !isLoading && (
-          <div className="surface-panel__footer px-4 pb-4">
-            <Pagination
-              currentPage={page}
-              totalPages={totalPages}
-              onPageChange={setPage}
-              pageSize={pageSize}
-              onPageSizeChange={s => { setPageSize(s); setPage(1); }}
-              totalItems={totalCount}
-            />
-          </div>
+          <Pagination
+            embedded
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            pageSize={pageSize}
+            onPageSizeChange={s => { setPageSize(s); setPage(1); }}
+            totalItems={totalCount}
+          />
         )}
-      </div>
+      </HrmPanel>
 
       <Modal
         isOpen={showCreate}
@@ -403,10 +408,10 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
           </>
         }
       >
-        <div className="space-y-4 modal-form-bordered">
+        <div className="space-y-4 modal-form-bordered mat-catalog-create">
           {!createCategoriesLoading && (createOptions[0]?.length ?? 0) === 0 && (
-            <p className="alert-banner alert-banner--error text-xs">
-              Chưa có dữ liệu cây vật tư. Vào <strong>SLC → Thiết lập → Cây vật tư</strong> để khai báo trước khi tạo vật tư mới.
+            <p className="alert-banner alert-banner--error">
+              Chưa có dữ liệu cây vật tư. Vào <strong>SLC - Thiết lập - Cây vật tư</strong> để khai báo trước khi tạo vật tư mới.
             </p>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
@@ -418,7 +423,7 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
                 error={createErrors[`level${lvl.level}`]}
               >
                 <select
-                  className="form-select w-full text-sm"
+                  className="form-input form-input-md w-full"
                   disabled={createCategoriesLoading || (idx > 0 && createSelection[idx - 1] === '')}
                   value={createSelection[idx]}
                   onChange={e => {
@@ -440,7 +445,7 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <FormField label="Mã vật tư" required error={createErrors.materialCode}>
               <input
-                className="form-input w-full text-sm"
+                className="form-input w-full"
                 value={createForm.materialCode}
                 onChange={e => setCreateForm(f => ({ ...f, materialCode: e.target.value }))}
                 placeholder={MATERIAL_FIELD_PLACEHOLDERS.materialCode}
@@ -448,7 +453,7 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
             </FormField>
             <FormField label="Tên vật tư" required error={createErrors.materialName}>
               <input
-                className="form-input w-full text-sm"
+                className="form-input w-full"
                 value={createForm.materialName}
                 onChange={e => setCreateForm(f => ({ ...f, materialName: e.target.value }))}
                 placeholder={MATERIAL_FIELD_PLACEHOLDERS.materialName}
@@ -462,7 +467,7 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
             />
             <FormField label="Quy cách">
               <input
-                className="form-input w-full text-sm"
+                className="form-input w-full"
                 value={createForm.technicalSpec}
                 onChange={e => setCreateForm(f => ({ ...f, technicalSpec: e.target.value }))}
                 placeholder={MATERIAL_FIELD_PLACEHOLDERS.technicalSpec}
@@ -479,7 +484,7 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
             </FormField>
             <FormField label="Tiêu chuẩn chất lượng" className="sm:col-span-2">
               <input
-                className="form-input w-full text-sm"
+                className="form-input w-full"
                 value={createForm.qualityStandard}
                 onChange={e => setCreateForm(f => ({ ...f, qualityStandard: e.target.value }))}
                 placeholder={MATERIAL_FIELD_PLACEHOLDERS.qualityStandard}

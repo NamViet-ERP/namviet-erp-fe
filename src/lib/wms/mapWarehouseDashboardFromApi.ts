@@ -16,9 +16,9 @@ const CHART_COLORS = [
 ];
 
 const ACTIVITY_ACCENT: Record<string, string> = {
-  Import: 'var(--status-success)',
-  Export: 'var(--status-error)',
-  Transfer: 'var(--status-warning)',
+  Import: 'var(--md-success)',
+  Export: 'var(--nv-amber)',
+  Transfer: 'var(--nv-action)',
 };
 
 function trendMonthLabel(beMonth: string): string {

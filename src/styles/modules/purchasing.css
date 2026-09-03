@@ -6573,6 +6573,116 @@
   gap: 8px;
 }
 
+  /* DNTT list — ERP chrome: table-border, keycap, semantic badges */
+  .pur-erp--payment {
+    --pur-border: var(--table-border);
+    --pur-accent: var(--nv-action);
+    --pur-accent-soft: color-mix(in srgb, var(--nv-navy) 8%, var(--md-surface));
+    --plan-accent: var(--nv-action);
+    --plan-accent-soft: color-mix(in srgb, var(--nv-navy) 8%, var(--md-surface));
+    --plan-accent-border: var(--table-border);
+  }
+  .pur-erp--payment .pur-erp__workspace {
+    border-color: var(--table-border);
+    border-radius: var(--radius-md);
+  }
+  .pur-erp--payment.pur-erp--po .pur-erp__workspace > .pur-erp__filter-card {
+    background: var(--md-surface-container);
+    border-bottom: 1px solid var(--table-border);
+  }
+  .pur-erp--payment.pur-erp--plan .pur-erp__tabs-row {
+    background: transparent;
+    border-bottom: 1px solid var(--table-border);
+    padding: 0 0 0.35rem;
+  }
+  .pur-erp--payment .tab-filter {
+    margin-bottom: 0;
+    border-bottom-color: transparent;
+  }
+  .pur-erp--payment .tab-filter__tab {
+    font-weight: var(--fw-medium);
+    transition: color 150ms var(--md-easing), border-color 150ms var(--md-easing), background-color 150ms var(--md-easing);
+  }
+  .pur-erp--payment .tab-filter__tab:hover {
+    background: color-mix(in srgb, var(--nv-action) 8%, transparent);
+    color: var(--md-on-surface);
+  }
+  .pur-erp--payment .tab-filter__tab--active {
+    color: var(--nv-navy);
+    border-bottom-color: var(--nv-amber);
+    font-weight: var(--fw-semibold);
+  }
+  .pur-erp--payment .tab-filter__tab:focus-visible {
+    outline: 2px solid var(--nv-amber);
+    outline-offset: 2px;
+  }
+  .pur-erp--payment .search-bar {
+    width: 100%;
+  }
+  .pur-erp--payment .search-bar__input.form-input-compact {
+    border: 1px solid var(--table-border);
+    border-radius: var(--radius-xs);
+    background: var(--md-surface-container-high);
+  }
+  .pur-erp--payment .search-bar__input.form-input-compact:focus {
+    border-color: var(--nv-navy);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--nv-amber) 28%, transparent);
+  }
+  .pur-erp--payment.pur-erp--po .pur-erp__head-actions .pur-erp__action {
+    height: 36px;
+    padding: 0 14px;
+    border-radius: var(--radius-sm);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-semibold);
+    letter-spacing: 0;
+    text-transform: none;
+    box-shadow: none;
+    border: 1px solid var(--table-border);
+    background: var(--md-surface-container-high);
+    color: var(--md-on-surface);
+  }
+  .pur-erp--payment.pur-erp--po .pur-erp__head-actions .pur-erp__action:hover:not(:disabled) {
+    border-color: var(--nv-navy);
+    background: var(--md-surface-container);
+  }
+  .pur-erp--payment.pur-erp--po .pur-erp__head-actions .pur-erp__action:focus-visible {
+    outline: 2px solid var(--nv-amber);
+    outline-offset: 2px;
+  }
+  .pur-erp--payment.pur-erp--po .pur-erp__head-actions .pur-erp__action--primary {
+    border-color: var(--nv-action);
+    background: var(--nv-action);
+    color: var(--nv-table-header-text);
+    box-shadow: none;
+  }
+  .pur-erp--payment.pur-erp--po .pur-erp__head-actions .pur-erp__action--primary:hover:not(:disabled) {
+    border-color: var(--nv-navy);
+    background: var(--nv-navy);
+    box-shadow: none;
+  }
+  .pur-erp--payment .pur-erp__table tbody tr:hover td {
+    background: color-mix(in srgb, var(--nv-action) 8%, var(--md-surface-container));
+  }
+  .dark .pur-erp--payment .pur-erp__workspace,
+  .dark .pur-erp--payment.pur-erp--po .pur-erp__workspace {
+    border-color: var(--table-border);
+  }
+  .dark .pur-erp--payment.pur-erp--po .pur-erp__workspace > .pur-erp__filter-card,
+  .dark .pur-erp--payment.pur-erp--plan .pur-erp__tabs-row {
+    background: var(--md-surface-container);
+    border-bottom-color: var(--table-border);
+  }
+  .dark .pur-erp--payment .tab-filter__tab--active {
+    color: var(--nv-table-header-text);
+  }
+  .dark .pur-erp--payment.pur-erp--po .pur-erp__head-actions .pur-erp__action--primary,
+  .dark .pur-erp--payment.pur-erp--po .pur-erp__head-actions .pur-erp__action--primary:hover:not(:disabled) {
+    background: var(--nv-action);
+    border-color: var(--nv-action);
+    color: var(--nv-table-header-text);
+    box-shadow: none;
+  }
+
 /*
  * Chi tiết dự toán — border đậm theo token :root --md-outline (#C5CAD3),
  * không dùng --md-outline-variant (#E8E8E8) gần như mất trên nền trắng.
@@ -6607,5 +6717,4 @@
 .pur-estimate-detail .pur-create-plan__table-shell {
   border-color: var(--md-outline);
 }
-
 

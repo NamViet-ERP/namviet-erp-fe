@@ -17,7 +17,7 @@ function materialOptionKey(row: SupplierPriceHistoryRow) {
 }
 
 function materialOptionLabel(row: SupplierPriceHistoryRow) {
-  return `${row.materialCode} — ${row.materialName}`;
+  return `${row.materialCode} - ${row.materialName}`;
 }
 
 function uniqueSorted(values: string[]) {
@@ -76,22 +76,22 @@ export default function SupplierPriceHistoryPage() {
   };
 
   return (
-    <div className="page-shell">
+    <div className="page-shell sup-price-history">
       <PageHeader
         eyebrow="Nhà cung cấp"
         title="Lịch sử giá"
-        subtitle="Đơn giá từng vật tư theo từng PO / nhà cung cấp — dùng đối chiếu khi mua lại."
+        subtitle="Đơn giá từng vật tư theo từng PO / nhà cung cấp - dùng đối chiếu khi mua lại."
       />
 
       <div className="sup-analytics__help">
-        Mỗi khi tạo PO, đơn giá của từng mặt hàng theo từng NCC được tổng hợp tại đây — lần mua sau
+        Mỗi khi tạo PO, đơn giá của từng mặt hàng theo từng NCC được tổng hợp tại đây - lần mua sau
         chỉ cần đối chiếu giá đã có.
       </div>
 
-      <HrmPanel>
-        <div className="sup-analytics__head">
-          <h2 className="sup-analytics__title">Lịch sử giá theo mặt hàng — nhà cung cấp</h2>
-          <p className="sup-analytics__desc">
+      <HrmPanel noPadding className="sup-price-history-board">
+        <div className="sup-price-history-board__head">
+          <h2 className="sup-price-history-board__title">Lịch sử giá theo mặt hàng - nhà cung cấp</h2>
+          <p className="sup-price-history-board__desc">
             Mỗi dòng là đơn giá 1 đơn vị vật tư trên phiếu PO (không phải thành tiền dòng).
           </p>
         </div>
@@ -158,8 +158,8 @@ export default function SupplierPriceHistoryPage() {
           </div>
         </div>
 
-        <div className="overflow-x-auto table-scroll">
-          <table className="wms-inventory-table sup-analytics__table">
+        <div className="wms-inventory-table-wrap overflow-x-auto table-scroll">
+          <table className="wms-inventory-table">
             <thead>
               <tr>
                 <th className="table-header-cell">Ngày PO</th>
@@ -186,7 +186,7 @@ export default function SupplierPriceHistoryPage() {
                       message={
                         hasFilters
                           ? 'Không tìm thấy dòng giá phù hợp.'
-                          : 'Chưa có lịch sử giá — sẽ xuất hiện khi có dòng vật tư trên PO.'
+                          : 'Chưa có lịch sử giá - sẽ xuất hiện khi có dòng vật tư trên PO.'
                       }
                     />
                   </td>
@@ -218,7 +218,7 @@ export default function SupplierPriceHistoryPage() {
                           code={row.projectCode}
                           to={`/warehouse/projects/${encodeURIComponent(row.projectCode)}`}
                         />
-                      ) : '—'}
+                      ) : '-'}
                     </td>
                   </tr>
                 ))

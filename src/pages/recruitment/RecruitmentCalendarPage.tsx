@@ -20,6 +20,29 @@ import type { Candidate } from '../../types/hr';
 
 const MAX_CHIPS_PER_CELL = 3;
 
+function chipTone(status: string): string {
+  switch (status) {
+    case 'Interview1':
+      return 'round1';
+    case 'Interview2':
+      return 'round2';
+    case 'InterviewPassed':
+      return 'passed';
+    case 'Offered':
+      return 'offer';
+    case 'Accepted':
+    case 'Probation':
+    case 'Official':
+      return 'hired';
+    case 'Rejected':
+    case 'OfferDeclined':
+    case 'Cancelled':
+      return 'closed';
+    default:
+      return 'scheduled';
+  }
+}
+
 export default function RecruitmentCalendarPage() {
   const navigate = useNavigate();
   const statusMutation = useUpdateCandidateStatus();
@@ -88,7 +111,7 @@ export default function RecruitmentCalendarPage() {
     <div className="hrm-page space-y-4">
       <PageHeader
         title="Lịch phỏng vấn"
-        subtitle="Xem và quản lý lịch PV theo tháng — bấm vào buổi PV để xem chi tiết."
+        subtitle="Xem và quản lý lịch PV theo tháng - bấm vào buổi PV để xem chi tiết."
         actions={(
           <button type="button" className="btn btn-primary" onClick={() => setPickerOpen(true)}>
             <Plus size={16} aria-hidden />
@@ -97,7 +120,7 @@ export default function RecruitmentCalendarPage() {
         )}
       />
 
-      <HrmPanel className="surface-panel surface-panel--table flex flex-col !p-0 overflow-hidden">
+      <HrmPanel noPadding className="recruitment-cal-board">
         <div className="recruitment-cal-nav">
           <div className="recruitment-cal-nav__left">
             <button type="button" className="recruitment-cal-nav__today" onClick={goToday}>
@@ -112,10 +135,10 @@ export default function RecruitmentCalendarPage() {
           </div>
 
           <div className="recruitment-cal-nav__actions">
-            <button type="button" onClick={() => shiftMonth(-1)} className="portal-calendar-nav__btn" aria-label="Tháng trước">
+            <button type="button" onClick={() => shiftMonth(-1)} className="recruitment-cal-nav__btn" aria-label="Tháng trước">
               <ChevronLeft size={16} strokeWidth={2.25} aria-hidden />
             </button>
-            <button type="button" onClick={() => shiftMonth(1)} className="portal-calendar-nav__btn" aria-label="Tháng sau">
+            <button type="button" onClick={() => shiftMonth(1)} className="recruitment-cal-nav__btn" aria-label="Tháng sau">
               <ChevronRight size={16} strokeWidth={2.25} aria-hidden />
             </button>
           </div>
@@ -168,9 +191,9 @@ export default function RecruitmentCalendarPage() {
                           <button
                             key={`${ev.candidateId}-${ev.sortAt}`}
                             type="button"
-                            className="recruitment-cal-chip"
+                            className={`recruitment-cal-chip recruitment-cal-chip--${chipTone(ev.status)}`}
                             onClick={e => openEvent(ev, e)}
-                            title={`${timeLabel ? `${timeLabel} · ` : ''}${ev.fullName} — ${ev.position}`}
+                            title={`${timeLabel ? `${timeLabel} - ` : ''}${ev.fullName} - ${ev.position}`}
                           >
                             {timeLabel && (
                               <span className="recruitment-cal-chip__time">{timeLabel}</span>

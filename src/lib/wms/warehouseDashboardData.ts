@@ -56,9 +56,9 @@ export function emptyWarehouseDashboardData(): WarehouseDashboardData {
     stockByWarehouse: [],
     recentActivity: [],
     miniStats: [
-      { label: 'Chờ duyệt', value: '—', color: 'var(--status-error)' },
-      { label: 'Nhập hôm nay', value: '—', color: 'var(--status-success)' },
-      { label: 'Xuất hôm nay', value: '—', color: 'var(--status-warning)' },
+      { label: 'Chờ duyệt', value: '-', color: 'var(--md-error)' },
+      { label: 'Nhập hôm nay', value: '-', color: 'var(--md-success)' },
+      { label: 'Xuất hôm nay', value: '-', color: 'var(--nv-amber)' },
     ],
   };
 }

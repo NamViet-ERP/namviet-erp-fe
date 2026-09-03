@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Package, Plus, Trash2, RotateCcw } from 'lucide-react';
+import HrmPanel from '../../components/hr/HrmPanel';
 import IOSSwitch from '../../components/ui/IOSSwitch';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import SearchBar from '../../components/ui/SearchBar';
@@ -21,8 +22,8 @@ import { generateCategoryCode } from '../../services/categoriesService';
 import type { MaterialCategoryApiDto } from '../../types/wms';
 
 function parentName(categories: MaterialCategoryApiDto[], parentId: number | null): string {
-  if (!parentId) return '—';
-  return categories.find(c => c.id === parentId)?.name ?? '—';
+  if (!parentId) return '-';
+  return categories.find(c => c.id === parentId)?.name ?? '-';
 }
 
 export default function MaterialCategoriesSettingsPanel() {
@@ -176,93 +177,94 @@ export default function MaterialCategoriesSettingsPanel() {
         : `Chưa có ${levelLabel.toLowerCase()} nào.`;
 
   return (
-    <div
-      className="surface-panel surface-panel--rounded-xl p-6 shadow-card"
-    >
-      <div className="flex items-center gap-3 mb-4">
-        <div className="wms-settings-hero__icon">
-          <Package size={20} />
-        </div>
+    <HrmPanel noPadding className="mat-cat-settings-board">
+      <div className="mat-cat-settings-board__head">
+        <Package size={18} aria-hidden />
         <div>
-          <h3 className="wms-settings-hero__title">
-            CÂY VẬT TƯ
-          </h3>
-          <p className="wms-settings-hero__sub">
-            Quản lý 5 cấp: Danh mục → Nhóm → Loại → Phân loại → Kiểu
+          <h2 className="mat-cat-settings-board__title">Cây vật tư</h2>
+          <p className="mat-cat-settings-board__desc">
+            Quản lý 5 cấp: Danh mục - Nhóm - Loại - Phân loại - Kiểu
           </p>
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-4">
-        {MATERIAL_CATEGORY_LEVELS.map(lvl => (
-          <button
-            key={lvl.level}
-            type="button"
-            className={`btn btn-sm ${activeLevel === lvl.level ? 'btn-primary' : 'btn-outline'}`}
-            onClick={() => { setActiveLevel(lvl.level); setParentId(''); setSearch(''); setPage(1); }}
-          >
-            {lvl.label}
-          </button>
-        ))}
+      <div className="mat-cat-levels" role="tablist" aria-label="Cấp cây vật tư">
+        {MATERIAL_CATEGORY_LEVELS.map(lvl => {
+          const isActive = activeLevel === lvl.level;
+          return (
+            <button
+              key={lvl.level}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
+              className={`mat-cat-levels__btn${isActive ? ' is-active' : ''}`}
+              onClick={() => { setActiveLevel(lvl.level); setParentId(''); setSearch(''); setPage(1); }}
+            >
+              {lvl.label}
+            </button>
+          );
+        })}
       </div>
 
-      {activeLevel > 1 && (
-        <div className="mb-4">
-          <label className="text-xs font-semibold text-[var(--md-on-surface-variant)]">
-            {MATERIAL_CATEGORY_LEVELS[activeLevel - 2].label} (cha)
+      <div className="mat-cat-settings-board__body">
+        {activeLevel > 1 && (
+          <label className="mat-cat-settings-board__parent">
+            <span>{MATERIAL_CATEGORY_LEVELS[activeLevel - 2].label} (cha)</span>
+            <select
+              className="form-input form-input-md"
+              value={parentId}
+              onChange={e => { setParentId(e.target.value === '' ? '' : Number(e.target.value)); setPage(1); }}
+            >
+              <option value="">- Chọn {MATERIAL_CATEGORY_LEVELS[activeLevel - 2].label} -</option>
+              {parentCandidates.map(p => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
           </label>
-          <select
-            className="form-select w-full mt-1 text-sm"
-            value={parentId}
-            onChange={e => { setParentId(e.target.value === '' ? '' : Number(e.target.value)); setPage(1); }}
-          >
-            <option value="">— Chọn {MATERIAL_CATEGORY_LEVELS[activeLevel - 2].label} —</option>
-            {parentCandidates.map(p => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
-        </div>
-      )}
+        )}
 
-      <form onSubmit={handleAdd} className="flex gap-2 mb-4">
-        <input
-          type="text"
-          value={newName}
-          onChange={e => setNewName(e.target.value)}
-          placeholder={`Thêm ${levelLabel} mới...`}
-          className="hrm-field-input flex-1"
-          disabled={createMutation.isPending || (activeLevel > 1 && parentId === '')}
-        />
-        <button
-          type="submit"
-          className="btn btn-primary flex items-center gap-2 px-4 h-10"
-          disabled={createMutation.isPending || (activeLevel > 1 && parentId === '')}
-        >
-          <Plus size={18} />
-          Thêm
-        </button>
-      </form>
-
-      <div className="hrm-filter-bar mb-4">
-        <div className="hrm-filter-bar__search flex-1 min-w-[220px]">
-          <SearchBar
-            value={search}
-            onChange={v => { setSearch(v); setPage(1); }}
-            placeholder={`Tìm ${levelLabel.toLowerCase()}...`}
+        <form onSubmit={handleAdd} className="mat-cat-settings-board__add">
+          <input
+            type="text"
+            value={newName}
+            onChange={e => setNewName(e.target.value)}
+            placeholder={`Thêm ${levelLabel} mới...`}
+            className="hrm-field-input flex-1"
+            disabled={createMutation.isPending || (activeLevel > 1 && parentId === '')}
           />
-        </div>
-        <button
-          type="button"
-          onClick={resetFilters}
-          className="btn-clear-filters"
-          title="Đặt lại bộ lọc"
-        >
-          <RotateCcw size={15} />
-          <span className="hidden sm:inline">XÓA BỘ LỌC</span>
-        </button>
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={createMutation.isPending || (activeLevel > 1 && parentId === '')}
+          >
+            <Plus size={16} aria-hidden />
+            Thêm
+          </button>
+        </form>
       </div>
 
-      <div className="overflow-x-auto table-scroll rounded-lg border border-[var(--md-outline-variant)]">
+      <div className="hrm-list-toolbar">
+        <div className="hrm-list-toolbar__filters">
+          <div className="mat-cat-settings-board__toolbar">
+            <SearchBar
+              value={search}
+              onChange={v => { setSearch(v); setPage(1); }}
+              placeholder={`Tìm ${levelLabel.toLowerCase()}...`}
+            />
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="btn btn-text btn-sm"
+              title="Đặt lại bộ lọc"
+            >
+              <RotateCcw size={14} aria-hidden />
+              Xóa lọc
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="wms-inventory-table-wrap overflow-x-auto table-scroll">
         <table className="wms-inventory-table">
           <thead>
             <tr>
@@ -271,7 +273,7 @@ export default function MaterialCategoriesSettingsPanel() {
                 <th className="table-header-cell text-left">Thuộc</th>
               )}
               <th className="table-header-cell text-center">Trạng thái</th>
-              <th className="table-header-cell text-center w-36">Thao tác</th>
+              <th className="table-header-cell text-center">Thao tác</th>
             </tr>
           </thead>
           <tbody>
@@ -295,7 +297,7 @@ export default function MaterialCategoriesSettingsPanel() {
                     <td className="table-cell">
                       {editingId === item.id ? (
                         <input
-                          className="hrm-field-input w-full text-sm"
+                          className="hrm-field-input w-full"
                           value={editName}
                           onChange={e => setEditName(e.target.value)}
                           onKeyDown={e => {
@@ -305,29 +307,23 @@ export default function MaterialCategoriesSettingsPanel() {
                           autoFocus
                         />
                       ) : (
-                        <span className={`font-medium ${!item.isActive ? 'opacity-60' : ''}`}>
+                        <span className={!item.isActive ? 'mat-cat-settings-board__name--off' : undefined}>
                           {item.name}
                         </span>
                       )}
                     </td>
                     {activeLevel > 1 && (
-                      <td className="table-cell text-[var(--md-on-surface-variant)]">
+                      <td className="table-cell">
                         {parentName(categories, item.parentId ?? null)}
                       </td>
                     )}
                     <td className="table-cell text-center">
-                      <span
-                        className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded ${
-                          item.isActive
-                            ? 'bg-[var(--md-surface-container-high)] text-[var(--md-on-surface)]'
-                            : 'bg-[var(--md-error-container)] text-[var(--md-on-error-container)]'
-                        }`}
-                      >
+                      <span className={item.isActive ? 'badge badge-success' : 'badge badge-error'}>
                         {item.isActive ? 'Đang dùng' : 'Tắt'}
                       </span>
                     </td>
                     <td className="table-cell">
-                      <div className="flex items-center justify-center gap-1">
+                      <div className="mat-cat-settings-board__actions">
                         {editingId === item.id ? (
                           <button
                             type="button"
@@ -354,10 +350,11 @@ export default function MaterialCategoriesSettingsPanel() {
                         <button
                           type="button"
                           onClick={() => setDeleteTarget(item)}
-                          className="text-[var(--md-error)] p-1 rounded-lg hover:bg-[var(--md-error-container)]"
+                          className="mat-cat-settings-board__delete"
                           title="Xóa"
+                          aria-label={`Xóa ${item.name}`}
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={16} aria-hidden />
                         </button>
                       </div>
                     </td>
@@ -369,23 +366,19 @@ export default function MaterialCategoriesSettingsPanel() {
       </div>
 
       {!isLoading && visibleItems.length > 0 && (
-        <div className="mt-3 wms-settings-divider pt-3">
-          <Pagination
-            embedded
-            itemLabel="mục"
-            currentPage={page}
-            totalPages={totalPages}
-            onPageChange={setPage}
-            pageSize={pageSize}
-            onPageSizeChange={s => { setPageSize(s); setPage(1); }}
-            totalItems={visibleItems.length}
-          />
-        </div>
+        <Pagination
+          embedded
+          itemLabel="mục"
+          currentPage={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          pageSize={pageSize}
+          onPageSizeChange={s => { setPageSize(s); setPage(1); }}
+          totalItems={visibleItems.length}
+        />
       )}
 
-      <div
-        className="mt-4 pt-3 flex justify-between text-xs text-[var(--md-on-surface-variant)] wms-settings-divider"
-      >
+      <div className="mat-cat-settings-board__foot">
         <span>Tổng {levelLabel}: <strong>{totalAtLevel}</strong></span>
         <span>Đang hiển thị: <strong>{visibleItems.length}</strong></span>
       </div>
@@ -399,13 +392,13 @@ export default function MaterialCategoriesSettingsPanel() {
           <>
             Xóa <strong>&ldquo;{deleteTarget?.name}&rdquo;</strong>?
             <br />
-            <span className="text-[13px] opacity-85">Không xóa được nếu còn mục con hoặc vật tư đang dùng.</span>
+            Không xóa được nếu còn mục con hoặc vật tư đang dùng.
           </>
         }
         confirmLabel="Xóa"
         cancelLabel="Hủy"
         isLoading={deleteMutation.isPending}
       />
-    </div>
+    </HrmPanel>
   );
 }

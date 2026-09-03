@@ -25,7 +25,7 @@ export const MATERIAL_TABLE_COLUMNS = [
 ] as const;
 
 /** Placeholder chung cho mọi dropdown trong form vật tư */
-export const MATERIAL_SELECT_PLACEHOLDER = '— Chọn —' as const;
+export const MATERIAL_SELECT_PLACEHOLDER = '- Chọn -' as const;
 
 /**
  * Gợi ý nhập liệu — cùng một ví dụ: tấm thép SA516 dày 12mm.

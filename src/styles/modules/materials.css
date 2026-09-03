@@ -1,4 +1,152 @@
-/* Danh mục vật tư — hiển thị mã + phân đoạn (theo prototype SCM-EPC) */
+/* Danh mục vật tư - ERP chrome + mã phân đoạn */
+
+.mat-catalog__help {
+  border: 1px solid var(--table-border);
+  border-radius: var(--radius-md);
+  background: var(--md-info-container);
+  color: var(--md-on-info-container);
+  box-shadow: inset 4px 0 0 var(--nv-action);
+  padding: 10px 14px;
+  font-size: var(--fs-sm);
+}
+
+.mat-catalog-board.hrm-panel {
+  border-color: var(--table-border);
+}
+
+.mat-catalog-board__head {
+  padding: 12px 16px 10px;
+  background: var(--nv-table-header-bg);
+  color: var(--nv-table-header-text);
+  box-shadow: inset 0 -2px 0 var(--table-header-lip);
+}
+
+.mat-catalog-board__title {
+  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-semibold);
+  color: var(--nv-table-header-text);
+}
+
+.mat-catalog-board__desc {
+  margin: 4px 0 0;
+  font-size: var(--fs-xs);
+  color: color-mix(in srgb, var(--nv-table-header-text) 82%, var(--nv-amber));
+}
+
+.mat-catalog__filters {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+}
+
+@media (max-width: 1024px) {
+  .mat-catalog__filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .mat-catalog__filters {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mat-catalog__filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--md-on-surface-variant);
+}
+
+.mat-catalog__filter-field select,
+.mat-catalog-create select,
+.mat-catalog-create .form-input {
+  border-color: var(--table-border);
+  border-radius: var(--radius-xs);
+  min-height: 36px;
+}
+
+.mat-catalog__filter-field select:hover:not(:disabled),
+.mat-catalog-create select:hover:not(:disabled) {
+  border-color: var(--nv-navy);
+}
+
+.mat-catalog__filter-field select:focus,
+.mat-catalog-create select:focus,
+.mat-catalog-create .form-input:focus {
+  outline: none;
+  border-color: var(--nv-navy);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--nv-amber) 28%, transparent);
+}
+
+.mat-catalog__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.mat-catalog__toolbar .search-bar {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+
+.mat-catalog__toolbar .search-bar__input.form-input-compact {
+  border-color: var(--table-border);
+}
+
+.mat-catalog__toolbar .search-bar__input.form-input-compact:focus {
+  border-color: var(--nv-navy);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--nv-amber) 28%, transparent);
+}
+
+.mat-catalog__status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  min-width: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--table-border);
+  border-radius: var(--radius-sm);
+  background: var(--md-surface-container-high);
+  color: var(--md-on-surface);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 150ms var(--md-easing), border-color 150ms var(--md-easing);
+}
+
+.mat-catalog__status:hover {
+  border-color: var(--nv-navy);
+  background: var(--md-surface-container);
+}
+
+.mat-catalog__status.is-on {
+  background: var(--md-warning-container);
+  color: var(--md-on-warning-container);
+  border-color: var(--nv-amber);
+  box-shadow: inset 0 -2px 0 var(--nv-amber);
+  font-weight: var(--fw-semibold);
+}
+
+.mat-catalog__status:focus-visible {
+  outline: 2px solid var(--nv-amber);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mat-catalog__status {
+    transition: none;
+  }
+}
 
 .mat-code-cell {
   display: flex;
@@ -11,13 +159,12 @@
 .mat-code-cell__badge {
   display: inline-block;
   font-family: var(--font-mono);
-  background: var(--md-primary, #132a45);
-  color: #fff;
+  background: var(--nv-navy);
+  color: var(--nv-table-header-text);
   padding: 2px 7px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   font-size: var(--fs-micro);
-  font-weight: 600;
-  letter-spacing: 0.3px;
+  font-weight: var(--fw-semibold);
   line-height: 1.4;
 }
 
@@ -29,31 +176,31 @@
 
 .mat-code-cell__part {
   padding: 3px 7px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   font-family: var(--font-mono);
   font-size: var(--fs-micro);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   line-height: 1.2;
 }
 
 .mat-code-cell__part--1 {
-  background: #dce7f0;
-  color: var(--md-primary, #132a45);
+  background: color-mix(in srgb, var(--nv-navy) 14%, var(--md-surface-container-high));
+  color: var(--nv-navy);
 }
 
 .mat-code-cell__part--2 {
-  background: #fbe4cb;
-  color: #9a5a10;
+  background: color-mix(in srgb, var(--nv-amber) 22%, var(--md-surface-container-high));
+  color: color-mix(in srgb, var(--nv-amber) 42%, var(--md-on-surface));
 }
 
 .mat-code-cell__part--3 {
-  background: #e4efe6;
-  color: var(--md-success, #2e7d32);
+  background: var(--md-success-container);
+  color: var(--md-on-success-container);
 }
 
 .mat-code-cell__part--4 {
-  background: #f0e6f2;
-  color: #7b4b8a;
+  background: color-mix(in srgb, var(--nv-action) 16%, var(--md-surface-container-high));
+  color: var(--nv-action);
 }
 
 .mat-name-cell {
@@ -64,7 +211,7 @@
 }
 
 .mat-name-cell__title {
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: var(--md-on-surface);
   line-height: 1.35;
 }
@@ -73,7 +220,7 @@
   font-size: var(--fs-micro);
   line-height: 1.35;
   color: var(--md-on-surface-variant);
-  font-weight: 400;
+  font-weight: var(--fw-regular);
 }
 
 .mat-col-ceiling {
@@ -96,4 +243,8 @@
   display: -webkit-box;
   -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
+}
+
+.dark .mat-catalog-board.hrm-panel {
+  border-color: var(--table-border);
 }
