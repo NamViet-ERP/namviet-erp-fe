@@ -391,7 +391,7 @@
   }
   .kpi-card.card-md.kpi-card--accent-warning {
     --kpi-accent: var(--md-warning);
-    background: color-mix(in srgb, var(--md-warning) 22%, var(--md-surface-container-high));
+    background: var(--md-warning-container);
   }
   .kpi-card.card-md.kpi-card--accent-danger {
     --kpi-accent: var(--md-error);

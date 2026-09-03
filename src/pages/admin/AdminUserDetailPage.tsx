@@ -10,6 +10,7 @@ import FormField from '../../components/ui/FormField';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import AdminPasswordField from '../../components/admin/AdminPasswordField';
 import AdminAccountSwitch from '../../components/admin/AdminAccountSwitch';
+import HrmSelect from '../../components/hr/HrmSelect';
 import { validatePassword } from '../../lib/validatePassword';
 import { showToast } from '../../components/ui/Toast';
 import {
@@ -37,8 +38,8 @@ function dash(value?: string): string {
 }
 
 function statusBadgeClass(user: AdminUserRow): string {
-  if (!user.hasAccount) return 'badge badge-neutral';
-  return user.isActive ? 'badge badge-success' : 'badge badge-warning';
+  if (!user.hasAccount) return 'badge badge-pending';
+  return user.isActive ? 'badge badge-success' : 'badge badge-error';
 }
 
 export default function AdminUserDetailPage() {
@@ -303,17 +304,14 @@ export default function AdminUserDetailPage() {
               <div className="admin-user-detail-role">
                 <span className="admin-user-detail-actions__label" id="admin-user-role-label">Vai trò</span>
                 <div className="admin-user-detail-actions__row">
-                  <select
-                    className="form-select"
-                    aria-labelledby="admin-user-role-label"
+                  <HrmSelect
+                    aria-label="Vai trò"
                     value={selectedRole}
-                    onChange={e => setSelectedRole(e.target.value)}
+                    onChange={setSelectedRole}
+                    options={roleOptions}
+                    allowEmpty={false}
                     disabled={changeRoleMutation.isPending}
-                  >
-                    {roleOptions.map(opt => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
-                  </select>
+                  />
                   <button
                     type="button"
                     className="btn btn-primary"

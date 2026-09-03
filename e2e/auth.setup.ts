@@ -9,7 +9,7 @@ setup('authenticate as admin', async ({ page }) => {
   fs.mkdirSync(path.dirname(authFile), { recursive: true });
 
   await page.goto('/login');
-  await page.getByPlaceholder('vd: tuan.nguyen@namviet.vn').fill(e2eEnv.username);
+  await page.getByPlaceholder('vd: tuan.nguyen@mayzer.vn').fill(e2eEnv.username);
   await page.locator('input[type="password"]').fill(e2eEnv.password);
   await page.getByRole('checkbox', { name: 'Ghi nhớ đăng nhập' }).check();
   await page.getByRole('button', { name: 'ĐĂNG NHẬP' }).click();

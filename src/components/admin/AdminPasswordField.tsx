@@ -58,26 +58,29 @@ export default function AdminPasswordField({
             type="button"
             className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[var(--md-on-surface-variant)] hover:text-[var(--md-primary)]"
             onClick={() => setShow(s => !s)}
-            title={show ? 'Ẩn mật khẩu' : 'Xem mật khẩu'}
+            aria-label={show ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+            title={show ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
           >
-            {show ? <EyeOff size={16} /> : <Eye size={16} />}
+            {show ? <EyeOff size={16} aria-hidden /> : <Eye size={16} aria-hidden />}
           </button>
         </div>
         <button
           type="button"
           className="btn btn-outline px-3"
           onClick={handleGenerate}
+          aria-label="Sinh mật khẩu ngẫu nhiên"
           title="Sinh mật khẩu ngẫu nhiên"
         >
-          <RefreshCw size={16} />
+          <RefreshCw size={16} aria-hidden />
         </button>
         <button
           type="button"
           className="btn btn-outline px-3"
           onClick={handleCopy}
-          title="Sao chép"
+          aria-label="Sao chép mật khẩu"
+          title="Sao chép mật khẩu"
         >
-          {copied ? <Check size={16} /> : <Copy size={16} />}
+          {copied ? <Check size={16} aria-hidden /> : <Copy size={16} aria-hidden />}
         </button>
       </div>
     </FormField>

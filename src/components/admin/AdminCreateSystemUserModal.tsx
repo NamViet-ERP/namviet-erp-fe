@@ -8,6 +8,7 @@ import { validatePassword } from '../../lib/validatePassword';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { useCreateAdminUser } from '../../hooks/useAdminUsers';
 import type { CreateSystemUserDto, SystemUserRole } from '../../constants/systemUsers';
+import { ADMIN_EMAIL_PLACEHOLDER } from '../../constants/branding';
 
 const EMPTY_FORM: CreateSystemUserDto = {
   name: '',
@@ -86,7 +87,9 @@ export default function AdminCreateSystemUserModal({
       isOpen={open}
       onClose={close}
       title="Thêm tài khoản hệ thống"
+      subtitle="Tài khoản admin hoặc dịch vụ - không gắn hồ sơ nhân viên HR."
       size="md"
+      headerCompact
       footer={
         <>
           <button type="button" className="btn btn-outline" onClick={close}>
@@ -103,10 +106,7 @@ export default function AdminCreateSystemUserModal({
         </>
       }
     >
-      <form id="admin-user-create-form" onSubmit={handleCreate} className="space-y-4 modal-form-bordered">
-        <p className="text-sm text-[var(--md-on-surface-variant)]">
-          Dùng cho tài khoản admin, dịch vụ - không gắn hồ sơ nhân viên HR.
-        </p>
+      <form id="admin-user-create-form" onSubmit={handleCreate} className="admin-users-create-form modal-form-bordered">
         <FormField label="Họ tên" required error={errors.name}>
           <input
             className="form-input"
@@ -121,10 +121,10 @@ export default function AdminCreateSystemUserModal({
             className="form-input"
             value={form.email}
             onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-            placeholder="email@namviet.vn"
+            placeholder={ADMIN_EMAIL_PLACEHOLDER}
           />
         </FormField>
-        <FormField label="Vai trò" required error={errors.role}>
+        <FormField label="Vai trò" required error={errors.role} className="admin-users-create-form__full">
           <HrmSelect
             value={form.role}
             onChange={value => setForm(f => ({ ...f, role: value as SystemUserRole }))}
@@ -134,11 +134,13 @@ export default function AdminCreateSystemUserModal({
             aria-label="Vai trò"
           />
         </FormField>
-        <AdminPasswordField
-          value={createPassword}
-          onChange={v => { setCreatePassword(v); setErrors(e => ({ ...e, password: '' })); }}
-          error={errors.password}
-        />
+        <div className="admin-users-create-form__full">
+          <AdminPasswordField
+            value={createPassword}
+            onChange={v => { setCreatePassword(v); setErrors(e => ({ ...e, password: '' })); }}
+            error={errors.password}
+          />
+        </div>
       </form>
     </Modal>
   );

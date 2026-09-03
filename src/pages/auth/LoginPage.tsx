@@ -9,7 +9,7 @@ import { UI_ERROR } from '../../lib/uiMessages';
 import { authService } from '../../services/authService';
 import { getDefaultRoute } from '../../utils/getDefaultRoute';
 import { getActiveRole } from '../../lib/getActiveRole';
-import { NAMVIET_LOGIN_LOGO_URL } from '../../constants/branding';
+import { LOGIN_EMAIL_PLACEHOLDER, NAMVIET_LOGIN_LOGO_URL } from '../../constants/branding';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -114,7 +114,7 @@ export default function LoginPage() {
                   className="form-input w-full h-11 rounded-lg"
                   value={username}
                   onChange={e => setUsername(e.target.value)}
-                  placeholder="vd: tuan.nguyen@namviet.vn"
+                  placeholder={LOGIN_EMAIL_PLACEHOLDER}
                   autoComplete="username"
                 />
               </div>

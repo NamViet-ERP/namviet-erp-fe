@@ -1,15 +1,16 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { Plus, UserCog, UserCheck, UserX, UserPlus, KeyRound } from 'lucide-react';
+import { Clock, KeyRound, Plus, UserCheck, UserCog, Users, UserX } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
+import Card from '../../components/ui/Card';
+import type { CardAccent } from '../../types';
 import SearchBar from '../../components/ui/SearchBar';
 import Pagination from '../../components/ui/Pagination';
 import EmptyState from '../../components/ui/EmptyState';
 import EntityCodeLink from '../../components/ui/EntityCodeLink';
-import TabFilter from '../../components/ui/TabFilter';
+import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import HrmPanel from '../../components/hr/HrmPanel';
-import HrmStatCard from '../../components/hr/HrmStatCard';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import AdminAccountSwitch from '../../components/admin/AdminAccountSwitch';
 import AdminCreateSystemUserModal from '../../components/admin/AdminCreateSystemUserModal';
@@ -29,7 +30,6 @@ import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
 import type { AdminUserListParams, AdminUserPagedResult, AdminUserRow } from '../../services/adminUsersService';
 import { getSessionUser } from '../../constants/systemUsers';
 import { isCurrentAdminUserRow, adminUserToggleKey } from '../../lib/admin/isCurrentAdminUser';
-import type { TabItem } from '../../types';
 
 const TABLE_HEADERS = [
   'Mã nhân viên',
@@ -48,15 +48,23 @@ const TABLE_HEADERS = [
 type QuickFilter = 'all' | 'pending';
 type AccountStatusFilter = '' | 'pending' | 'active' | 'locked';
 type SourceFilter = '' | 'employee' | 'manual';
+type AccountKpi = 'total' | 'pending' | 'active' | 'locked';
 
-const QUICK_TABS: TabItem[] = [
-  { id: 'all', label: 'Tất cả' },
-  { id: 'pending', label: 'Chờ cấp TK' },
-];
+function cellDash(value?: string): string {
+  if (!value || value === '—' || value.trim() === '') return '-';
+  return value;
+}
+
+function currentKpi(quick: QuickFilter, status: AccountStatusFilter): AccountKpi {
+  if (quick === 'pending' || status === 'pending') return 'pending';
+  if (status === 'active') return 'active';
+  if (status === 'locked') return 'locked';
+  return 'total';
+}
 
 function statusBadgeClass(user: AdminUserRow): string {
-  if (!user.hasAccount) return 'badge badge-neutral';
-  return user.isActive ? 'badge badge-success' : 'badge badge-warning';
+  if (!user.hasAccount) return 'badge badge-pending';
+  return user.isActive ? 'badge badge-success' : 'badge badge-error';
 }
 
 export default function AdminUsersPage() {
@@ -102,6 +110,25 @@ export default function AdminUsersPage() {
     setQuickFilter('all');
     setPage(1);
   };
+
+  const applyKpi = (kpi: AccountKpi) => {
+    if (kpi === 'pending') {
+      setQuickFilter('pending');
+      setAccountStatusFilter('');
+    } else if (kpi === 'active') {
+      setQuickFilter('all');
+      setAccountStatusFilter('active');
+    } else if (kpi === 'locked') {
+      setQuickFilter('all');
+      setAccountStatusFilter('locked');
+    } else {
+      setQuickFilter('all');
+      setAccountStatusFilter('');
+    }
+    setPage(1);
+  };
+
+  const activeKpi = currentKpi(quickFilter, accountStatusFilter);
 
   const { data: roleOptions = [] } = useActiveRoleOptions();
   const toggleMutation = useToggleAdminUserStatus(listParams);
@@ -166,107 +193,99 @@ export default function AdminUsersPage() {
     }
   };
 
+  const kpiItems: { key: AccountKpi; label: string; value: number; icon: typeof Users; accent: CardAccent }[] = [
+    { key: 'total', label: 'Tổng', value: summary?.total ?? 0, icon: Users, accent: 'info' },
+    { key: 'pending', label: 'Chờ cấp', value: summary?.pending ?? 0, icon: Clock, accent: 'warning' },
+    { key: 'active', label: 'Hoạt động', value: summary?.active ?? 0, icon: UserCheck, accent: 'success' },
+    { key: 'locked', label: 'Đã khóa', value: summary?.inactive ?? 0, icon: UserX, accent: 'danger' },
+  ];
+
   return (
-    <div className="hrm-page">
+    <div className="hrm-page admin-users-page">
       <PageHeader
         title="Quản lý tài khoản người dùng"
-        subtitle="Bấm dòng để xem chi tiết và quản lý tài khoản trong phạm vi Admin."
+        subtitle="Bấm dòng để mở chi tiết."
         actions={
           <button
             type="button"
-            className="btn btn-primary flex items-center gap-2 rounded-full px-5"
+            className="btn btn-primary flex items-center gap-2"
             onClick={() => setShowCreate(true)}
           >
-            <Plus size={16} />
+            <Plus size={16} aria-hidden />
             Thêm tài khoản hệ thống
           </button>
         }
       />
 
-      <div className="hrm-stat-grid">
-        <HrmStatCard label="Tổng dòng" value={summary?.total ?? 0} icon={UserCog} tone="primary" />
-        <HrmStatCard label="Chờ cấp tài khoản" value={summary?.pending ?? 0} icon={UserPlus} tone="warning" />
-        <HrmStatCard label="Đang hoạt động" value={summary?.active ?? 0} icon={UserCheck} tone="success" />
-        <HrmStatCard label="Đã khóa" value={summary?.inactive ?? 0} icon={UserX} tone="warning" />
+      <div className="dashboard-kpi-grid admin-users-kpis" role="list" aria-label="Tóm tắt tài khoản">
+        {kpiItems.map(item => (
+          <Card
+            key={item.key}
+            title={item.label}
+            value={item.value}
+            accent={item.accent}
+            icon={item.icon}
+            selected={activeKpi === item.key}
+            onClick={() => applyKpi(item.key)}
+          />
+        ))}
       </div>
 
-      <HrmPanel noPadding>
-        <div className="px-4 pt-3 pb-1 border-b border-[var(--md-outline-variant02)]">
-          <TabFilter
-            tabs={QUICK_TABS.map(tab => (
-              tab.id === 'all'
-                ? { ...tab, count: summary?.total }
-                : { ...tab, count: summary?.pending }
-            ))}
-            activeTab={quickFilter}
-            onChange={id => { setQuickFilter(id as QuickFilter); resetPaging(); }}
-          />
-        </div>
+      <HrmPanel noPadding className="admin-users-board">
         <div className="hrm-list-toolbar">
-          <div className="hrm-list-toolbar__filters">
+          <div className="admin-users-toolbar">
             <SearchBar
               value={search}
               onChange={v => { setSearch(v); resetPaging(); }}
               placeholder="Tìm theo tên, mã NV, email..."
             />
-            <div className="hrm-list-toolbar__filters-right">
-              <input
-                className="hrm-filter-input-inline"
-                value={departmentFilter}
-                onChange={e => { setDepartmentFilter(e.target.value); resetPaging(); }}
-                placeholder="Bộ phận"
-                aria-label="Lọc bộ phận"
-              />
-              <div className="hrm-filter-select-wrap">
-                <select
-                  className="hrm-filter-select"
-                  value={accountStatusFilter}
-                  onChange={e => { setAccountStatusFilter(e.target.value as AccountStatusFilter); resetPaging(); }}
-                  aria-label="Lọc trạng thái tài khoản"
-                >
-                  <option value="">Tất cả trạng thái TK</option>
-                  <option value="pending">Chưa cấp tài khoản</option>
-                  <option value="active">Đang hoạt động</option>
-                  <option value="locked">Đã khóa</option>
-                </select>
-              </div>
-              <div className="hrm-filter-select-wrap">
-                <select
-                  className="hrm-filter-select"
-                  value={sourceFilter}
-                  onChange={e => { setSourceFilter(e.target.value as SourceFilter); resetPaging(); }}
-                  aria-label="Lọc nguồn"
-                >
-                  <option value="">Tất cả nguồn</option>
-                  <option value="employee">Nhân viên HR</option>
-                  <option value="manual">Tài khoản hệ thống</option>
-                </select>
-              </div>
-              {hasFilters && (
-                <button type="button" onClick={resetFilters} className="hrm-filter-reset">
-                  Xóa bộ lọc
-                </button>
-              )}
+            <input
+              className="hrm-filter-input-inline"
+              value={departmentFilter}
+              onChange={e => { setDepartmentFilter(e.target.value); resetPaging(); }}
+              placeholder="Bộ phận"
+              aria-label="Lọc bộ phận"
+            />
+            <div className="hrm-filter-select-wrap">
+              <select
+                className="hrm-filter-select"
+                value={sourceFilter}
+                onChange={e => { setSourceFilter(e.target.value as SourceFilter); resetPaging(); }}
+                aria-label="Lọc nguồn"
+              >
+                <option value="">Tất cả nguồn</option>
+                <option value="employee">Nhân viên HR</option>
+                <option value="manual">Tài khoản hệ thống</option>
+              </select>
             </div>
+            {hasFilters && (
+              <button type="button" onClick={resetFilters} className="hrm-filter-reset">
+                Xóa bộ lọc
+              </button>
+            )}
           </div>
         </div>
 
         <div className="overflow-x-auto table-scroll hrm-table-wrap">
-          <table className="w-full min-w-max border-collapse hrm-table">
+          <table className="w-full min-w-max border-collapse hrm-table admin-users-table">
             <thead>
               <tr>
-                {TABLE_HEADERS.map(h => (
-                  <th key={h} className="table-header-cell whitespace-nowrap">{h}</th>
-                ))}
+                <th className="table-header-cell admin-users-col-code">Mã nhân viên</th>
+                <th className="table-header-cell">Họ tên</th>
+                <th className="table-header-cell">Email</th>
+                <th className="table-header-cell admin-users-col-phone">Số điện thoại</th>
+                <th className="table-header-cell">Bộ phận</th>
+                <th className="table-header-cell">Chức vụ</th>
+                <th className="table-header-cell">Vai trò</th>
+                <th className="table-header-cell admin-users-col-status">Trạng thái</th>
+                <th className="table-header-cell admin-users-col-date">Ngày tạo</th>
+                <th className="table-header-cell admin-users-col-toggle">Bật/Tắt</th>
+                <th className="table-header-cell admin-users-col-actions">Thao tác</th>
               </tr>
             </thead>
             <tbody>
               {isPending ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i} className="hrm-table-skeleton-row" aria-hidden>
-                    <td colSpan={TABLE_HEADERS.length}><div className="hrm-table-skeleton" /></td>
-                  </tr>
-                ))
+                <TableSkeletonRows colSpan={TABLE_HEADERS.length} />
               ) : isError ? (
                 <tr>
                   <td colSpan={TABLE_HEADERS.length}>
@@ -291,25 +310,29 @@ export default function AdminUsersPage() {
                     title="Xem chi tiết"
                   >
                     <td className="table-cell">
-                      {user.employeeCode ? (
+                      {user.employeeCode && user.employeeCode !== '—' ? (
                         <EntityCodeLink
                           code={user.employeeCode}
                           to={`/admin/users/${user.id}?source=${user.source}`}
                         />
                       ) : (
-                        <span className="entity-code">—</span>
+                        <span className="entity-code">-</span>
                       )}
                     </td>
                     <td className="table-cell member-name">{user.fullName}</td>
-                    <td className="table-cell">{user.email}</td>
-                    <td className="table-cell whitespace-nowrap">{user.phone}</td>
-                    <td className="table-cell">{user.department}</td>
-                    <td className="table-cell">{user.position}</td>
-                    <td className="table-cell">{user.role}</td>
+                    <td className="table-cell">
+                      <span className="admin-users-email">{cellDash(user.email)}</span>
+                    </td>
+                    <td className="table-cell whitespace-nowrap">{cellDash(user.phone)}</td>
+                    <td className="table-cell">{cellDash(user.department)}</td>
+                    <td className="table-cell">{cellDash(user.position)}</td>
+                    <td className="table-cell">{cellDash(user.role)}</td>
                     <td className="table-cell">
                       <span className={statusBadgeClass(user)}>{user.statusLabel}</span>
                     </td>
-                    <td className="table-cell whitespace-nowrap">{formatAdminDateCell(user.createdAt)}</td>
+                    <td className="table-cell whitespace-nowrap tabular-nums">
+                      {cellDash(formatAdminDateCell(user.createdAt))}
+                    </td>
                     <td
                       className="table-cell text-center"
                       onClick={e => e.stopPropagation()}
@@ -334,11 +357,11 @@ export default function AdminUsersPage() {
                           }
                         />
                       ) : (
-                        <span className="text-xs text-[var(--md-on-surface-variant)]">—</span>
+                        <span className="admin-users-empty">-</span>
                       )}
                     </td>
                     <td className="table-cell whitespace-nowrap" onClick={e => e.stopPropagation()}>
-                      <div className="flex flex-wrap gap-2 justify-center">
+                      <div className="admin-users-row-actions">
                         {user.canProvision && (
                           <button type="button" className="btn btn-sm btn-primary" onClick={() => setProvisionTarget(user)}>
                             Cấp tài khoản
@@ -350,7 +373,7 @@ export default function AdminUsersPage() {
                             className="btn btn-sm btn-outline flex items-center gap-1"
                             onClick={() => setResetTarget(user)}
                           >
-                            <KeyRound size={14} />
+                            <KeyRound size={14} aria-hidden />
                             Đặt lại MK
                           </button>
                         )}
