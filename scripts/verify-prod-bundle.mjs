@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 /**
- * Post-build check — production dist must not ship lazy mock chunks.
+ * Post-build check — production dist must not ship mock/seed artifacts.
+ * Real purchasing/supplier page chunks are allowed; scan file names and
+ * bundle text for mock identifiers instead of denylisting page names.
  */
 
 import { readdir, readFile, stat } from 'node:fs/promises';
@@ -28,8 +30,8 @@ try {
 const mockChunks = assetFiles.filter(
   (name) =>
     /\.mock[\w.-]*\.js$/i.test(name)
-    || /Mock(?:Store|Seed)/i.test(name)
-    || /(?:DevOnlyRoutes|Purchase(?:Plans|Orders|Requests|Deliveries|Payments|Documents)|PurchasingSettings|SuppliersDashboard|Supplier(?:Groups|List|Evaluations|Settings))Page/i.test(name),
+    || /(?:^|[-.])DevOnlyRoutes(?:[-.]|$)/i.test(name)
+    || /Mock(?:Store|Seed)/i.test(name),
 );
 
 if (mockChunks.length > 0) {
