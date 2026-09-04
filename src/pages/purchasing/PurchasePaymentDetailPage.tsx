@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   Banknote,
@@ -120,25 +120,29 @@ export default function PurchasePaymentDetailPage() {
     && (order.lines ?? []).every(line => (line.received ?? 0) <= 0),
   );
 
-  useEffect(() => {
-    if (!isCreate && payment) {
-      setPoCode(payment.poCode);
-      setInvoiceNo(payment.invoiceNo ?? '');
-      setAmount(formatCurrencyInput(payment.amount));
-      setDueDate(payment.dueDate ? String(payment.dueDate).slice(0, 10) : '');
-      setNote(payment.note ?? '');
-    }
-  }, [isCreate, payment]);
+  const [hydratedPaymentCode, setHydratedPaymentCode] = useState<string | null>(null);
+  if (!isCreate && payment && payment.code !== hydratedPaymentCode) {
+    setHydratedPaymentCode(payment.code);
+    setPoCode(payment.poCode);
+    setInvoiceNo(payment.invoiceNo ?? '');
+    setAmount(formatCurrencyInput(payment.amount));
+    setDueDate(payment.dueDate ? String(payment.dueDate).slice(0, 10) : '');
+    setNote(payment.note ?? '');
+  }
 
-  useEffect(() => {
-    if (!isCreate || !order) return;
+  const createSeedKey = isCreate && order
+    ? `${poCode}|${nextStage?.amount ?? 'full'}|${order.paymentDueDate ?? ''}`
+    : null;
+  const [hydratedCreateSeed, setHydratedCreateSeed] = useState<string | null>(null);
+  if (createSeedKey && createSeedKey !== hydratedCreateSeed) {
+    setHydratedCreateSeed(createSeedKey);
     if (nextStage) {
       setAmount(formatCurrencyInput(nextStage.amount));
     } else {
-      setAmount(formatCurrencyInput(order.totalAmount ?? 0));
+      setAmount(formatCurrencyInput(order!.totalAmount ?? 0));
     }
-    setDueDate(order.paymentDueDate ? String(order.paymentDueDate).slice(0, 10) : todayIso());
-  }, [isCreate, order, nextStage]);
+    setDueDate(order!.paymentDueDate ? String(order!.paymentDueDate).slice(0, 10) : todayIso());
+  }
 
   const amountNum = useMemo(() => {
     if (isCreate) {

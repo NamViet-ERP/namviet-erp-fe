@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Plus, X } from 'lucide-react';
 import FormField from '../../../components/ui/FormField';
 import EmptyState from '../../../components/ui/EmptyState';
@@ -56,18 +56,6 @@ export default function CreateComplaintTicketPanel({
   const [lotError, setLotError] = useState('');
   const [reasonError, setReasonError] = useState('');
   const createMutation = useCreateWarrantyClaim();
-
-  useEffect(() => {
-    if (!isOpen) return;
-    setWarrantyId(preselectedId);
-    setDefectType('physical');
-    setSeverity('medium');
-    setReason('');
-    setNote('');
-    setSpecs([emptySpec()]);
-    setLotError('');
-    setReasonError('');
-  }, [isOpen, preselectedId]);
 
   const selected = lots.find(l => l.id === warrantyId);
   const canSubmit = canCreate && lots.length > 0 && !createMutation.isPending;

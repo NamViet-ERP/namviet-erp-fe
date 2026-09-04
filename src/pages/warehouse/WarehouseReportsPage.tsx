@@ -14,6 +14,7 @@ import { getApiErrorMessage } from '../../lib/apiClient';
 import { WMS_ERROR } from '../../lib/wms/messages';
 import { formatCurrency } from '../../utils/formatCurrency';
 import { reportsService } from '../../services/reportsService';
+import { queryKeys } from '../../services/queryKeys';
 import { useProjects } from '../../hooks/useProjects';
 
 const KIND_LABELS: Record<string, string> = {
@@ -43,17 +44,17 @@ export default function WarehouseReportsPage() {
   const projects = projectsPage?.items ?? [];
 
   const movementQuery = useQuery({
-    queryKey: ['wms-reports', 'movement', dateFrom, dateTo],
+    queryKey: queryKeys.wmsReports.movement(dateFrom, dateTo),
     queryFn: () => reportsService.movementSummary({ dateFrom, dateTo }),
   });
 
   const stockQuery = useQuery({
-    queryKey: ['wms-reports', 'stock', projectCode],
+    queryKey: queryKeys.wmsReports.stock(projectCode),
     queryFn: () => reportsService.stock(projectCode || undefined),
   });
 
   const pendingQuery = useQuery({
-    queryKey: ['wms-reports', 'pending'],
+    queryKey: queryKeys.wmsReports.pending,
     queryFn: () => reportsService.pending(),
   });
 

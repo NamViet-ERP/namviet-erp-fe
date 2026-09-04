@@ -401,11 +401,13 @@ export default function AdminUsersPage() {
       </HrmPanel>
 
       <AdminProvisionAccountModal
+        key={provisionTarget?.id ?? 'closed'}
         user={provisionTarget}
         onClose={() => setProvisionTarget(null)}
         roleOptions={roleOptions}
       />
       <AdminResetPasswordModal
+        key={resetTarget?.id ?? 'closed'}
         user={resetTarget}
         onClose={() => setResetTarget(null)}
       />

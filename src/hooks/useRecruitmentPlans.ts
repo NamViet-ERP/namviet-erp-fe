@@ -25,7 +25,7 @@ export function useRecruitmentPlans(params: RecruitmentPlanListParams = {}, enab
 
 export function useDepartmentOptions() {
   return useQuery({
-    queryKey: ['hr', 'departments'] as const,
+    queryKey: queryKeys.hrDepartments.all,
     queryFn: fetchDepartmentOptions,
   });
 }

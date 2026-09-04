@@ -149,7 +149,7 @@ export default function PurchasingDashboardPage() {
     [activityQ.data],
   );
 
-  const tiles: DashTile[] = [
+  const allTiles: DashTile[] = [
     {
       show: (vouchers.plans ?? EMPTY_VOUCHER).show,
       title: 'Kế hoạch mua hàng',
@@ -214,7 +214,8 @@ export default function PurchasingDashboardPage() {
       icon: ShieldCheck,
       stats: (vouchers.warranties ?? EMPTY_VOUCHER).stats,
     },
-  ].filter(t => t.show);
+  ];
+  const tiles = allTiles.filter(t => t.show);
 
   const updatedAt = summaryQ.data?.generatedAt;
   const loading = summaryQ.isLoading;

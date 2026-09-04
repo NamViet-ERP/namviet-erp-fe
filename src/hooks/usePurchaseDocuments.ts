@@ -3,8 +3,9 @@ import {
   purchaseDocumentsService,
   type PurchaseDocumentListParams,
 } from '../services/purchaseDocumentsService';
+import { queryKeys } from '../services/queryKeys';
 
-const LIST_KEY = ['purchasing', 'documents'] as const;
+const LIST_KEY = queryKeys.purchaseDocuments.all;
 
 export function usePurchaseDocuments(params: PurchaseDocumentListParams = {}) {
   return useQuery({

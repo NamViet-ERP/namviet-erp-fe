@@ -42,14 +42,23 @@ export function useActivityRealtime(module: string, enabled = true): { connected
     };
 
     const wire = async () => {
-      try {
-        await ensureHubStarted(connection);
+      const delays = [0, 2000, 5000, 10000];
+      for (let attempt = 0; attempt < delays.length; attempt++) {
         if (cancelled) return;
-        await connection.invoke('JoinModule', module.trim());
-        if (cancelled) return;
-        setConnected(true);
-      } catch {
-        if (!cancelled) setConnected(false);
+        if (delays[attempt] > 0) {
+          await new Promise(resolve => setTimeout(resolve, delays[attempt]));
+          if (cancelled) return;
+        }
+        try {
+          await ensureHubStarted(connection);
+          if (cancelled) return;
+          await connection.invoke('JoinModule', module.trim());
+          if (cancelled) return;
+          setConnected(true);
+          return;
+        } catch {
+          if (!cancelled) setConnected(false);
+        }
       }
     };
 

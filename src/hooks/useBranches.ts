@@ -3,9 +3,10 @@ import {
   branchesService,
   type UpsertBranchRequest,
 } from '../services/branchesService';
+import { queryKeys } from '../services/queryKeys';
 
 const keys = {
-  all: ['hr', 'branches'] as const,
+  all: queryKeys.hrBranches.all,
   list: (activeOnly: boolean) => [...keys.all, 'list', activeOnly] as const,
   detail: (id: number) => [...keys.all, 'detail', id] as const,
 };
@@ -33,7 +34,7 @@ export function useUpdateBranch() {
       branchesService.update(id, body),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: keys.all });
-      void qc.invalidateQueries({ queryKey: ['employees'] });
+      void qc.invalidateQueries({ queryKey: queryKeys.employees.all });
     },
   });
 }

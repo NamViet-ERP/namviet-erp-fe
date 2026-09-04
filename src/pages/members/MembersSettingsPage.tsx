@@ -6,6 +6,7 @@ import PageHeader from '../../components/ui/PageHeader';
 import HrmPanel from '../../components/hr/HrmPanel';
 import DepartmentsSettingsPanel from '../../components/hr/DepartmentsSettingsPanel';
 import { showToast } from '../../components/ui/Toast';
+import { getApiErrorMessage } from '../../lib/apiClient';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { usePermission } from '../../hooks/usePermission';
 import {
@@ -80,7 +81,7 @@ export default function MembersSettingsPage() {
       );
       showToast('success', 'Đã tạo liên kết có hiệu lực trong 7 ngày.');
     } catch (error) {
-      showToast('error', error instanceof Error ? error.message : 'Không thể tạo liên kết.');
+      showToast('error', getApiErrorMessage(error, 'Không thể tạo liên kết.'));
     }
   };
 
@@ -91,7 +92,7 @@ export default function MembersSettingsPage() {
       setInviteToRevoke(null);
       showToast('success', 'Đã thu hồi liên kết.');
     } catch (error) {
-      showToast('error', error instanceof Error ? error.message : 'Không thể thu hồi liên kết.');
+      showToast('error', getApiErrorMessage(error, 'Không thể thu hồi liên kết.'));
     }
   };
 

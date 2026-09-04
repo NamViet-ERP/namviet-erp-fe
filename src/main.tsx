@@ -4,6 +4,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import './index.css';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
+import SessionExpiredDialog from './components/SessionExpiredDialog';
 import { AuthProvider } from './auth/AuthProvider';
 import { queryClient } from './lib/queryClient';
 import { startApiKeepAlive } from './lib/apiKeepAlive';
@@ -19,6 +20,7 @@ createRoot(document.getElementById('root') as HTMLElement).render(
       <AuthProvider>
         <ErrorBoundary>
           <App />
+          <SessionExpiredDialog />
         </ErrorBoundary>
       </AuthProvider>
     </QueryClientProvider>

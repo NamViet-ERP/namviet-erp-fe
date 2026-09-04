@@ -40,7 +40,7 @@ export default function RecruitmentPlansPage() {
   const [filterOpenMonth, setFilterOpenMonth] = useState('');
   const monthOptions = useMemo(() => buildRecentMonthFilterOptions(), []);
 
-  const { data: plans = [], isLoading } = useRecruitmentPlans({
+  const { data: plans = [], isLoading, isError, error, refetch } = useRecruitmentPlans({
     departmentId: filterDepartmentId ? Number(filterDepartmentId) : undefined,
     status: filterStatus || undefined,
     period: filterPeriod || undefined,
@@ -221,6 +221,17 @@ export default function RecruitmentPlansPage() {
             <tbody>
               {isLoading ? (
                 <tr><td colSpan={7}><div className="hrm-table-skeleton" /></td></tr>
+              ) : isError ? (
+                <tr>
+                  <td colSpan={7} className="table-cell text-center py-10">
+                    <p className="text-sm text-[var(--md-error)] mb-3">
+                      {getApiErrorMessage(error, 'Không tải được kế hoạch tuyển dụng.')}
+                    </p>
+                    <button type="button" className="btn btn-secondary btn-sm" onClick={() => void refetch()}>
+                      Thử lại
+                    </button>
+                  </td>
+                </tr>
               ) : plans.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="table-cell text-center text-sm text-[var(--md-on-surface-variant)] py-10">

@@ -3,15 +3,22 @@
  *
  * - Reads the base URL from `import.meta.env.VITE_API_BASE_URL`.
  * - Sends/parses JSON and normalizes failures into `ApiError`.
- * - On 401, tries silent refresh before forcing logout.
+ * - On 401, tries silent refresh; if the session is truly expired, opens the
+ *   in-place re-login dialog (SessionExpiredDialog) instead of redirecting.
+ * - 403 (thiếu quyền) chỉ ném ApiError với message — không refresh/logout.
  */
 
-import { clearAuthSession } from './authSession';
 import { refreshAccessToken, type AuthRefreshResult } from './authRefresh';
+import { notifySessionExpired } from './sessionExpiry';
 import { UI_ERROR } from './uiMessages';
 import { translateErrorMessage, isTechnicalUserMessage, formatUserMessages } from './translateErrorMessage';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
+
+/** Timeout mặc định cho request JSON. */
+const REQUEST_TIMEOUT_MS = 20_000;
+/** Timeout riêng cho upload FormData (file lớn, mạng chậm). */
+const FORM_UPLOAD_TIMEOUT_MS = 120_000;
 
 /** Normalized API failure. Carries the HTTP status and any server payload. */
 export class ApiError extends Error {
@@ -86,19 +93,15 @@ function isPublicApiPath(path: string): boolean {
   return path.includes('/api/public/');
 }
 
-function forceLogoutExpired(): void {
+/**
+ * Phiên hết hạn thật sự (refresh bị từ chối): KHÔNG điều hướng về /login
+ * (mất form đang nhập) — mở SessionExpiredDialog để đăng nhập lại tại chỗ.
+ */
+function promptSessionExpired(): void {
   if (typeof window === 'undefined') return;
   if (window.location.pathname.startsWith('/login')) return;
   if (window.location.pathname.startsWith('/estimates/fill')) return;
-  const logoutUrl = buildUrl('/api/auth/logout');
-  void fetch(logoutUrl, {
-    method: 'POST',
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: '{}',
-  }).catch(() => undefined);
-  clearAuthSession();
-  window.location.assign('/login?expired=1');
+  notifySessionExpired();
 }
 
 export function parseApiError(data: unknown, fallback: string): string {
@@ -205,7 +208,8 @@ function fallbackForStatus(status: number): string {
 
 function throwResponseError(response: Response, data: unknown, options?: { forceLogout?: boolean }): never {
   const message = parseApiError(data, fallbackForStatus(response.status));
-  if (response.status === 401 && options?.forceLogout !== false) forceLogoutExpired();
+  // Chỉ 401 (hết phiên) mới mở dialog đăng nhập lại; 403 (thiếu quyền) chỉ báo lỗi thường.
+  if (response.status === 401 && options?.forceLogout !== false) promptSessionExpired();
   throw new ApiError(message, response.status, data);
 }
 
@@ -233,7 +237,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   const response = await fetch(buildUrl(path, params), {
     ...rest,
     credentials: 'include',
-    signal: AbortSignal.timeout(20_000),
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/json',
@@ -276,7 +280,8 @@ function requestForm<T>(path: string, formData: FormData, method: 'POST' | 'PUT'
     const response = await fetch(url, {
       method,
       credentials: 'include',
-      signal: AbortSignal.timeout(20_000),
+      // Upload file cần thời gian dài hơn request JSON thường.
+      signal: AbortSignal.timeout(FORM_UPLOAD_TIMEOUT_MS),
       headers: {
         Accept: 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -329,7 +334,7 @@ export const apiClient = {
       const response = await fetch(buildUrl(path, params), {
         method: 'GET',
         credentials: 'include',
-        signal: options?.signal ?? AbortSignal.timeout(20_000),
+        signal: options?.signal ?? AbortSignal.timeout(REQUEST_TIMEOUT_MS),
         headers: {
           Accept: '*/*',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),

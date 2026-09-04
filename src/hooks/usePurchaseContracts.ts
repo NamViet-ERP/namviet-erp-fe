@@ -7,8 +7,9 @@ import type {
   CreatePurchaseContractRequest,
   UpdatePurchaseContractRequest,
 } from '../types/api/purchasingApi';
+import { queryKeys } from '../services/queryKeys';
 
-const LIST_KEY = ['purchasing', 'contracts'] as const;
+const LIST_KEY = queryKeys.purchaseContracts.all;
 
 export function usePurchaseContracts(params: PurchaseContractListParams = {}) {
   return useQuery({

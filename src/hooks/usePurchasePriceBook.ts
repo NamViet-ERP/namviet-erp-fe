@@ -4,8 +4,9 @@ import type {
   UpsertPurchaseItemEstimatePriceRequest,
   UpsertPurchaseSellPriceRequest,
 } from '../types/api/purchasingApi';
+import { queryKeys } from '../services/queryKeys';
 
-const KEY = ['purchasing', 'price-book'] as const;
+const KEY = queryKeys.purchasePriceBook.all;
 
 export function usePriceBookItems(
   search?: string,

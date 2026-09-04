@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, ChevronDown } from 'lucide-react';
 import { showToast } from '../ui/Toast';
+import { getApiErrorMessage } from '../../lib/apiClient';
 import { useUpdateEmployee } from '../../hooks/useEmployees';
 import type { Employee, EmployeeStatus } from '../../types/hr';
 
@@ -95,7 +96,7 @@ export default function EmployeeStatusSwap({ employee }: EmployeeStatusSwapProps
         showToast('success', `Đã đổi trạng thái sang "${next}".`);
       }
     } catch (e) {
-      showToast('error', e instanceof Error ? e.message : 'Không thể cập nhật trạng thái');
+      showToast('error', getApiErrorMessage(e, 'Không thể cập nhật trạng thái'));
     }
   };
 

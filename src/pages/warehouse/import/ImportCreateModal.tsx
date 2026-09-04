@@ -83,20 +83,25 @@ export default function ImportCreateModal({
   const [evaluationDraft, setEvaluationDraft] = useState('');
   const [showEvidenceErrors, setShowEvidenceErrors] = useState(false);
   const editPoSeedKeyRef = useRef('');
+  const [modalSeedKey, setModalSeedKey] = useState('');
 
-  useEffect(() => {
+  // Reset / seed khi mở-đóng modal (điều chỉnh state trong render, tránh setState trong effect).
+  const nextSeedKey = isOpen
+    ? `open:${editVoucher?.code ?? 'new'}:${editVoucher?.receiptEvaluation ?? ''}`
+    : 'closed';
+  if (modalSeedKey !== nextSeedKey) {
+    setModalSeedKey(nextSeedKey);
     if (!isOpen) {
       setEvidencePhotos([]);
       setEvidenceDocs([]);
       setEvaluationDraft('');
       setShowEvidenceErrors(false);
       setSelectedFileName('');
-      editPoSeedKeyRef.current = '';
-      return;
+    } else {
+      if (editVoucher) setEvaluationDraft(editVoucher.receiptEvaluation ?? '');
+      setShowEvidenceErrors(false);
     }
-    if (editVoucher) setEvaluationDraft(editVoucher.receiptEvaluation ?? '');
-    setShowEvidenceErrors(false);
-  }, [isOpen, editVoucher?.code, editVoucher?.receiptEvaluation]);
+  }
 
   const resetItems = () => onItemsChange([{ ...emptyQtyPriceLine }]);
   const addMaterialLine = () => onItemsChange([...items, { ...emptyQtyPriceLine }]);
@@ -161,7 +166,7 @@ export default function ImportCreateModal({
     const code = selectedPo?.projectCode || projectCode;
     if (!code) return '';
     const name = projects.find(p => p.projectCode === code)?.projectName;
-    return name ? `${code} — ${name}` : code;
+    return name ? `${code} - ${name}` : code;
   }, [selectedPo?.projectCode, projectCode, projects]);
   const selectedPoLineCount = useMemo(
     () => Object.values(poLineDrafts).filter(d => d.selected).length,
@@ -189,6 +194,8 @@ export default function ImportCreateModal({
     [selectedPoCode, issueFromGeneralWarehouse, poPreviewLines],
   );
 
+  // Đồng bộ draft dòng PO khi đổi PO/preview (cần gọi onItemsChange của parent).
+  /* eslint-disable react-hooks/set-state-in-effect -- sync PO line drafts from preview into parent items */
   useEffect(() => {
     if (!isCreateMode || !selectedPoCode) {
       if (isCreateMode) setPoLineDrafts({});
@@ -213,6 +220,10 @@ export default function ImportCreateModal({
   }, [isCreateMode, selectedPoCode, poPreviewKey]);
 
   useEffect(() => {
+    if (!isOpen) {
+      editPoSeedKeyRef.current = '';
+      return;
+    }
     if (!isPoBoundEdit || !selectedPoCode || poPreviewLines.length === 0) return;
     const key = `${editVoucher!.code}|${poPreviewKey}`;
     if (editPoSeedKeyRef.current === key) return;
@@ -221,7 +232,8 @@ export default function ImportCreateModal({
     setPoLineDrafts(nextDrafts);
     onItemsChange(poDraftsToItems(poPreviewLines, nextDrafts));
     // eslint-disable-next-line react-hooks/exhaustive-deps -- seed một lần khi mở sửa + preview sẵn
-  }, [isPoBoundEdit, selectedPoCode, poPreviewKey, editVoucher?.code]);
+  }, [isOpen, isPoBoundEdit, selectedPoCode, poPreviewKey, editVoucher?.code]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const setPoLine = (poItemId: number, patch: Partial<PoLineDraft>) => {
     setPoLineDrafts(prev => {

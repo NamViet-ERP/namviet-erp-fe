@@ -9,8 +9,9 @@ import {
   type PurchaseWarrantyListParams,
   type UpdatePurchaseWarrantyRequest,
 } from '../services/purchaseWarrantiesService';
+import { queryKeys } from '../services/queryKeys';
 
-const LIST_KEY = ['purchasing', 'warranties'] as const;
+const LIST_KEY = queryKeys.purchaseWarranties.all;
 
 export function usePurchaseWarranties(params: PurchaseWarrantyListParams = {}) {
   return useQuery({

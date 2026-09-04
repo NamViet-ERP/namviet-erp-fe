@@ -16,6 +16,7 @@ import Card from '../../components/ui/Card';
 import HrmPanel from '../../components/hr/HrmPanel';
 import Badge from '../../components/ui/Badge';
 import EntityCodeLink from '../../components/ui/EntityCodeLink';
+import { getApiErrorMessage } from '../../lib/apiClient';
 import { useOperationsDashboard } from '../../hooks/useOperationsDashboard';
 import { fmtStockQty } from '../../lib/wms/stockQtyFormat';
 import { projectStatusBadge } from '../../lib/wms/projectStatusBadge';
@@ -235,6 +236,25 @@ export default function OperationsDashboardPage() {
 
   if (dash.isBootLoading) {
     return <PageLoader />;
+  }
+
+  if (dash.isError) {
+    return (
+      <div className="space-y-4">
+        <PageHeader
+          title="Tổng quan vận hành"
+          subtitle="Theo dõi tồn kho, đơn mua, thanh toán và dự án đang chạy."
+        />
+        <HrmPanel>
+          <EmptyState message={getApiErrorMessage(dash.error, 'Không tải được tổng quan vận hành.')} />
+          <div className="mt-3 text-center">
+            <button type="button" className="btn btn-secondary btn-sm" onClick={() => dash.refetchAll()}>
+              Thử lại
+            </button>
+          </div>
+        </HrmPanel>
+      </div>
+    );
   }
 
   return (

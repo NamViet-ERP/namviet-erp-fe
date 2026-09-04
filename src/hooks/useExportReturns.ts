@@ -35,10 +35,9 @@ export function useCreateExportReturn() {
     mutationFn: (dto: CreateExportReturnDto) => exportReturnsService.create(dto),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.exportReturns.all });
-      qc.invalidateQueries({ queryKey: ['exportReturns', 'returnable'] });
+      qc.invalidateQueries({ queryKey: queryKeys.exportReturns.returnable });
       qc.invalidateQueries({ queryKey: queryKeys.stock.matrix });
       qc.invalidateQueries({ queryKey: queryKeys.projects.all });
-      qc.invalidateQueries({ queryKey: ['projects'] });
     },
   });
 }
@@ -51,10 +50,9 @@ export function useUpdateExportReturn() {
     onSuccess: (_data, { id }) => {
       qc.invalidateQueries({ queryKey: queryKeys.exportReturns.all });
       qc.invalidateQueries({ queryKey: queryKeys.exportReturns.detail(id) });
-      qc.invalidateQueries({ queryKey: ['exportReturns', 'returnable'] });
+      qc.invalidateQueries({ queryKey: queryKeys.exportReturns.returnable });
       qc.invalidateQueries({ queryKey: queryKeys.stock.matrix });
       qc.invalidateQueries({ queryKey: queryKeys.projects.all });
-      qc.invalidateQueries({ queryKey: ['projects'] });
     },
   });
 }
@@ -66,10 +64,9 @@ export function useApproveExportReturn() {
     onSuccess: (_data, id) => {
       qc.invalidateQueries({ queryKey: queryKeys.exportReturns.all });
       qc.invalidateQueries({ queryKey: queryKeys.exportReturns.detail(id) });
-      qc.invalidateQueries({ queryKey: ['exportReturns', 'returnable'] });
+      qc.invalidateQueries({ queryKey: queryKeys.exportReturns.returnable });
       qc.invalidateQueries({ queryKey: queryKeys.stock.matrix });
       qc.invalidateQueries({ queryKey: queryKeys.projects.all });
-      qc.invalidateQueries({ queryKey: ['projects'] });
     },
   });
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Modal from '../ui/Modal';
 import FormField from '../ui/FormField';
 import AdminPasswordField from './AdminPasswordField';
@@ -29,13 +29,6 @@ export default function AdminProvisionAccountModal({
   const [provisionRole, setProvisionRole] = useState<SystemUserRole>('storekeeper');
   const [provisionPassword, setProvisionPassword] = useState('');
   const [provisionErrors, setProvisionErrors] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    if (!user) return;
-    setProvisionRole('storekeeper');
-    setProvisionPassword('');
-    setProvisionErrors({});
-  }, [user?.id]);
 
   const close = () => {
     setProvisionPassword('');

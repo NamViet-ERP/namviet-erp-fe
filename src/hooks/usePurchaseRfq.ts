@@ -5,8 +5,9 @@ import {
   type PurchaseRfqListParams,
 } from '../services/purchaseRfqService';
 import type { UpsertPurchaseRfqQuoteRequest } from '../types/api/purchasingApi';
+import { queryKeys } from '../services/queryKeys';
 
-const LIST_KEY = ['purchasing', 'rfq'] as const;
+const LIST_KEY = queryKeys.purchaseRfq.all;
 
 export function usePurchaseRfqQuotes(params: PurchaseRfqListParams = {}) {
   return useQuery({

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import PublicFormLayout from '../../components/layout/PublicFormLayout';
 import EmptyState from '../../components/ui/EmptyState';
@@ -10,7 +10,6 @@ import {
   useSubmitPublicPurchaseEstimate,
 } from '../../hooks/usePurchaseEstimates';
 import { getApiErrorMessage } from '../../lib/apiClient';
-import { formatDateTimeVi } from '../../lib/hrm/formatters';
 import type { PublicPurchaseEstimateApiDto } from '../../types/api/purchasingApi';
 
 type ProposalDraft = { key: string; name: string; spec: string; unit: string; qty: string; note: string };
@@ -38,8 +37,9 @@ export default function PurchaseEstimateFillPage() {
   const [proposals, setProposals] = useState<ProposalDraft[]>([]);
   const [hydrated, setHydrated] = useState(false);
 
-  useEffect(() => {
-    if (!row || hydrated) return;
+  // Hydrate form một lần khi dữ liệu về — điều chỉnh state ngay trong render
+  // (pattern "adjusting state when props change" của React, tránh setState trong effect).
+  if (row && !hydrated) {
     const next: Record<string, string> = {};
     for (const line of row.lines) next[line.materialCode] = String(line.qty ?? 0);
     setQtyByCode(next);
@@ -53,7 +53,7 @@ export default function PurchaseEstimateFillPage() {
       note: p.note ?? '',
     })));
     setHydrated(true);
-  }, [row, hydrated]);
+  }
 
   const filled = useMemo(() => {
     if (!row) return [];
@@ -84,6 +84,9 @@ export default function PurchaseEstimateFillPage() {
           lines: row.lines.map(l => ({
             materialCode: l.materialCode,
             newQty: Number(qtyByCode[l.materialCode] ?? 0) || 0,
+            // Form public không hiển thị giá; BE bỏ qua giá trị này khi submit public
+            // (giữ đơn giá của version hiện hành), chỉ cần thỏa contract.
+            estimateUnitPrice: 0,
           })),
           proposals: readyProposals.map(p => ({
             name: p.name.trim(),

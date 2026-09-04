@@ -184,9 +184,6 @@
     color: var(--nv-navy);
     font-weight: var(--fw-bold);
   }
-  .dark .recruitment-cal-nav__menu-item--active {
-    color: var(--nv-table-header-text);
-  }
   .recruitment-cal-nav__sep {
     color: var(--md-on-surface-variant);
     font-weight: var(--fw-bold);
@@ -1327,9 +1324,6 @@
   .admin-role-permissions-page__footer-note {
     margin-top: 0;
   }
-  .dark .admin-role-permissions-table__row--on > .table-cell {
-    background: color-mix(in srgb, var(--nv-action) 14%, var(--md-surface-container-high));
-  }
   @media (max-width: 768px) {
     .admin-role-permissions-chrome {
       flex-direction: column;
@@ -2364,162 +2358,7 @@
     border-color: var(--md-primary);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--md-primary) 16%, transparent);
   }
-
-  .dark .hrm-filter-bar .form-select,
-  .dark .hrm-filter-bar .hrm-filter-input,
-  .dark .hrm-filter-bar .search-bar__input {
-    background: var(--md-surface-container-high);
-    border-color: var(--md-outline-variant02);
-    color: var(--md-on-surface);
-  }
-  .dark .hrm-filter-bar .form-select:focus,
-  .dark .hrm-filter-bar .hrm-filter-input:focus,
-  .dark .hrm-filter-bar .search-bar__input:focus {
-    color: var(--md-on-surface);
-    border-color: var(--md-primary);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--md-primary) 20%, transparent);
-  }
-  .dark .hrm-filter-bar .hrm-filter-input::placeholder,
-  .dark .hrm-filter-bar .search-bar__input::placeholder,
-  .dark .search-bar__input::placeholder {
-    color: var(--md-on-surface-variant);
-    opacity: 0.9;
-  }
   /* ── Dark mode — HRM surfaces, tables, chips ── */
-  .dark .hrm-panel {
-    border-color: var(--md-outline-variant02);
-  }
-  .dark .admin-users-board.hrm-panel,
-  .dark .admin-user-detail-board.hrm-panel,
-  .dark .recruitment-cal-board.hrm-panel {
-    border-color: var(--table-border);
-  }
-  .dark .hrm-stat-card {
-    background: color-mix(in srgb, var(--hrm-stat-accent) 18%, var(--md-surface-container));
-    border-color: color-mix(in srgb, var(--hrm-stat-accent) 34%, var(--md-outline-variant02));
-  }
-  .dark .hrm-stat-card:hover {
-    background: color-mix(in srgb, var(--hrm-stat-accent) 24%, var(--md-surface-container));
-  }
-  .dark .hrm-stat-card--warning {
-    --hrm-stat-accent: var(--md-tertiary);
-  }
-  .dark .hrm-stat-card--warning::before {
-    background: var(--md-tertiary);
-  }
-  .dark .hrm-stat-card--warning .hrm-stat-card__value,
-  .dark .hrm-stat-card--warning .hrm-stat-card__icon {
-    color: var(--md-tertiary);
-  }
-  .dark .hrm-stat-card--neutral {
-    --hrm-stat-accent: color-mix(in srgb, var(--nv-navy-2) 45%, var(--md-on-surface));
-  }
-  .dark .hrm-stat-card--neutral::before {
-    background: color-mix(in srgb, var(--nv-navy-2) 45%, var(--md-on-surface));
-  }
-  .dark .hrm-stat-card--neutral .hrm-stat-card__value,
-  .dark .hrm-stat-card--neutral .hrm-stat-card__icon {
-    color: color-mix(in srgb, var(--nv-navy-2) 45%, var(--md-on-surface));
-  }
-  .dark .hrm-list-toolbar {
-    background: var(--md-surface-container);
-    border-bottom-color: var(--md-outline-variant02);
-  }
-  .dark .hrm-list-toolbar .search-bar__input,
-  .dark .hrm-filter-select,
-  .dark .hrm-filter-input-inline {
-    background: var(--md-surface-container-high);
-    border-color: var(--md-outline-variant02);
-    color: var(--md-on-surface);
-  }
-  .dark .hrm-filter-input-inline:focus {
-    border-color: var(--md-primary);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--md-primary) 18%, transparent);
-  }
-  .dark .hrm-status-chip {
-    background: var(--md-surface-container-high);
-    border-color: var(--md-outline-variant02);
-    color: var(--md-on-surface-variant);
-  }
-  .dark .hrm-status-chip--active {
-    background: color-mix(in srgb, var(--md-primary) 14%, var(--md-surface-container-high));
-    border-color: color-mix(in srgb, var(--md-primary) 38%, var(--md-outline-variant02));
-    color: var(--md-primary);
-  }
-  .dark .table-cell {
-    background: var(--md-surface-container);
-  }
-  .dark tbody .table-row:nth-child(even) > .table-cell {
-    background: color-mix(in srgb, var(--md-primary) 7%, var(--md-surface-container));
-  }
-  .dark tbody .table-row:hover > .table-cell {
-    background: color-mix(in srgb, var(--md-primary) 12%, var(--md-surface-container));
-  }
-  .dark .hrm-table-row--interactive:hover > .table-cell {
-    background: color-mix(in srgb, var(--md-primary) 12%, var(--md-surface-container));
-  }
-  .dark .hrm-settings-url-input,
-  .dark .hrm-recruitment-position-search .search-bar__input {
-    background: var(--md-surface-container-high);
-    border-color: var(--md-outline-variant02) !important;
-  }
-  .dark .hrm-recruitment-position-card {
-    background: var(--md-surface-container-high);
-    border-color: var(--md-outline-variant02);
-  }
-  .dark .hrm-recruitment-position-card--inactive {
-    background: var(--md-surface-container-low);
-    opacity: 0.72;
-  }
-  .dark .hrm-toggle-switch {
-    background: var(--md-outline);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--md-on-surface) 12%, transparent);
-  }
-  .dark .hrm-toggle-switch--on {
-    background: var(--status-success);
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--status-success) 55%, transparent);
-  }
-  .dark .hrm-toggle-switch__thumb {
-    background: #fff;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.42);
-  }
-  .dark .pagination-bar {
-    background: color-mix(in srgb, var(--md-primary) 4%, var(--md-surface-container));
-    border-top-color: var(--md-outline-variant02);
-  }
-  .dark .pagination-bar__btn--active {
-    background: color-mix(in srgb, var(--md-primary) 18%, var(--md-surface-container-high));
-    color: var(--md-primary);
-  }
-  .dark .pagination-bar__size-select {
-    background: var(--md-surface-container-high);
-    border-color: var(--md-outline-variant02);
-  }
-  .dark .hrm-field__value {
-    color: var(--md-on-surface);
-  }
-  .dark .hrm-table .candidate-name,
-  .dark .hrm-table .member-name {
-    color: var(--md-secondary);
-  }
-  .dark .hrm-table .candidate-name:hover,
-  .dark .hrm-table .member-name:hover {
-    color: var(--md-primary);
-  }
-  .dark .hrm-info-card {
-    background: var(--tint-primary-soft);
-    border-color: var(--md-outline-variant02);
-  }
-  .dark .hrm-cv-banner {
-    background: var(--tint-primary-hover);
-    border-color: color-mix(in srgb, var(--md-secondary) 22%, var(--md-outline-variant02));
-  }
-  .dark .btn-outline {
-    border-color: var(--md-outline-variant02);
-  }
-  .dark .btn-primary {
-    box-shadow: var(--md-shadow-1);
-  }
 
   .admin-role-card {
     background: var(--md-surface-container-low);
@@ -2918,9 +2757,6 @@
   .hrm-time-input__control {
     padding-right: 40px;
     color-scheme: light;
-  }
-  .dark .hrm-time-input__control {
-    color-scheme: dark;
   }
   .hrm-time-input__control::-webkit-calendar-picker-indicator {
     position: absolute;
@@ -3508,12 +3344,6 @@
     height: 280px;
     background: radial-gradient(circle, color-mix(in srgb, var(--nv-action) 38%, transparent) 0%, transparent 70%);
   }
-  .dark .login-page__glow--tr {
-    background: radial-gradient(circle, color-mix(in srgb, var(--nv-steel) 35%, transparent) 0%, transparent 70%);
-  }
-  .dark .login-page__glow--bl {
-    background: radial-gradient(circle, color-mix(in srgb, var(--nv-action) 30%, transparent) 0%, transparent 70%);
-  }
   .login-card {
     border-radius: var(--radius-lg);
     border: 1px solid color-mix(in srgb, var(--nv-steel) 28%, var(--md-outline-variant));
@@ -3549,14 +3379,6 @@
     max-width: 16rem;
     object-fit: contain;
     border-radius: 0;
-  }
-  .dark .login-brand {
-    box-shadow: none;
-  }
-  .dark .login-card {
-    background: var(--md-surface-container);
-    border-color: var(--md-outline-variant02);
-    box-shadow: var(--md-shadow-3);
   }
 
   .header-brand-logo {
@@ -3602,11 +3424,6 @@
       var(--md-surface);
     padding: 20px 16px 48px;
     color: var(--md-on-surface);
-  }
-  .dark .hrm-public-page {
-    background:
-      radial-gradient(ellipse 80% 50% at 50% -10%, color-mix(in srgb, var(--md-primary) 18%, transparent), transparent),
-      var(--md-surface);
   }
 
   .hrm-public-shell {
@@ -3707,11 +3524,6 @@
     box-shadow: var(--md-shadow-2);
     padding: 24px 28px;
   }
-  .dark .hrm-public-card {
-    background: var(--md-surface-container-high);
-    box-shadow: var(--md-shadow-3);
-    border-color: color-mix(in srgb, var(--md-outline) 40%, var(--md-outline-variant));
-  }
 
   .hrm-cv-chip {
     display: inline-flex;
@@ -3799,14 +3611,6 @@
     border-color: var(--md-primary);
     background: color-mix(in srgb, var(--md-secondary) 8%, var(--md-surface-container-low));
   }
-  .dark .hrm-upload-zone {
-    background: var(--md-surface-container);
-    border-color: color-mix(in srgb, var(--md-outline) 60%, var(--md-outline-variant));
-  }
-  .dark .hrm-upload-zone:hover,
-  .dark .hrm-upload-zone--active {
-    background: rgba(0, 142, 206, 0.08);
-  }
 
   .hrm-upload-file {
     display: flex;
@@ -3817,9 +3621,6 @@
     border-radius: 16px;
     border: 1px solid var(--md-outline-variant);
     background: var(--md-surface-container-low);
-  }
-  .dark .hrm-upload-file {
-    background: var(--md-surface-container);
   }
   .hrm-upload-file__icon {
     display: flex;
@@ -3876,10 +3677,6 @@
     box-shadow: var(--md-shadow-3);
     padding: 6px;
     overflow: hidden;
-  }
-  .dark .hrm-status-menu {
-    border-color: color-mix(in srgb, var(--md-outline) 35%, var(--md-outline-variant));
-    box-shadow: var(--md-shadow-3), 0 0 0 1px rgba(0, 142, 206, 0.06);
   }
   .hrm-status-menu__item {
     width: 100%;

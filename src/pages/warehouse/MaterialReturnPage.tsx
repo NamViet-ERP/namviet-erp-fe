@@ -96,11 +96,10 @@ function MaterialReturnPage({ initialProjectCode }: MaterialReturnPageProps) {
   const approveMutation = useApproveExportReturn();
   const submitMutation = useSubmitExportReturn();
 
+  /* eslint-disable react-hooks/set-state-in-effect -- hydrate return form lines from selected source export */
   useEffect(() => {
     if (!showCreate || !sourceExportId || linesLoading) return;
     if (linesError) {
-      // Query hydration intentionally replaces the modal draft after the selected source loads.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormLines([]);
       return;
     }
@@ -110,6 +109,7 @@ function MaterialReturnPage({ initialProjectCode }: MaterialReturnPageProps) {
     }
     setFormLines(linesToFormLines(returnableLines));
   }, [showCreate, sourceExportId, returnableLines, linesLoading, linesError, editing]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const voucherTabs = getVoucherTabLabels('exportReturn');
   const tabs = useMemo(() => [

@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Upload, Trash2, CheckCircle2, ChevronRight } from 'lucide-react';
 import { showToast } from '../ui/Toast';
+import { getApiErrorMessage } from '../../lib/apiClient';
 import { employeesService, getSuggestedEmployeeCode, validateUniqueCode } from '../../services/employeesService';
 import { employeeCodeNextHint } from '../../lib/hrm/suggestedEmployeeCode';
 import { filesService } from '../../services/filesService';
@@ -297,7 +298,7 @@ export default function EmployeeOnboardForm({
         showToast('success', 'Thông tin đã được gửi thành công!');
       }
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Có lỗi xảy ra, vui lòng thử lại';
+      const msg = getApiErrorMessage(e, 'Có lỗi xảy ra, vui lòng thử lại');
       showToast('error', msg);
     }
   };

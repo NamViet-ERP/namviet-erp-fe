@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { CalendarDays, Plus } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import Card from '../../components/ui/Card';
@@ -58,18 +58,20 @@ export default function CskhMeetingsPage({ project }: CskhMeetingsPageProps) {
   const [actionName, setActionName] = useState('');
   const [actionDue, setActionDue] = useState('');
   const [minutes, setMinutes] = useState('');
+  const [minutesSourceId, setMinutesSourceId] = useState<string | null>(null);
 
   const rows = ops.meetings;
-  const selected = rows.find(row => row.id === selectedId) ?? null;
+  const nextSelectedId =
+    selectedId && rows.some(row => row.id === selectedId) ? selectedId : (rows[0]?.id ?? null);
+  if (nextSelectedId !== selectedId) {
+    setSelectedId(nextSelectedId);
+  }
+  const selected = rows.find(row => row.id === nextSelectedId) ?? null;
 
-  useEffect(() => {
-    if (selectedId && rows.some(row => row.id === selectedId)) return;
-    setSelectedId(rows[0]?.id ?? null);
-  }, [rows, selectedId]);
-
-  useEffect(() => {
+  if ((selected?.id ?? null) !== minutesSourceId) {
+    setMinutesSourceId(selected?.id ?? null);
     setMinutes(selected?.minutes ?? '');
-  }, [selected?.id, selected?.minutes]);
+  }
 
   const openCreate = () => {
     setEditing(null);

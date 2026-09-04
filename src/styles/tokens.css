@@ -5,7 +5,7 @@
    File chữ Google: @import ngay dưới. Family: --font-sans.
    ═══════════════════════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,500;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
 
 :root {
   /* ── KNOBS — sửa hex / family ở đây là xong toàn app ── */
@@ -24,7 +24,7 @@
 
   --fw-regular:  400;
   --fw-medium:   500;
-  --fw-semibold: 700;
+  --fw-semibold: 600;
   --fw-bold:     700;
 
   --lh-tight:  1.2;
@@ -160,11 +160,11 @@
   --tint-error-soft:     rgba(196, 43, 34, 0.10);
   --tint-error-strong:   rgba(196, 43, 34, 0.16);
 
-  /* ── Chart series ── */
+  /* ── Chart series — 6 màu phân biệt, không lặp ── */
   --chart-1: var(--nv-navy);
   --chart-2: var(--nv-action);
   --chart-3: var(--md-success);
-  --chart-4: var(--nv-action);
+  --chart-4: var(--nv-epc-muted);
   --chart-5: var(--nv-amber);
   --chart-6: var(--md-error);
 
@@ -251,118 +251,3 @@
 }
 
 /* ── Dark knobs — chỉ đổi action / navy / surface ở đây ── */
-.dark {
-  --nv-header-bg:                #0A1F42;
-  --nv-header-on-bg:             #FFFFFF;
-  --nv-action:                   #7EC8E8;
-  --nv-action-hover:             #A0D8F0;
-  --nv-steel:                    var(--nv-action);
-
-  --nv-table-header-bg:          #0A1F42;
-  --nv-table-header-text:        #FFFFFF;
-
-  --table-border:        color-mix(in srgb, var(--md-outline) 50%, var(--md-outline-variant02));
-  --table-header-border: color-mix(in srgb, #fff 14%, var(--nv-table-header-bg));
-  --table-header-lip:    var(--md-tertiary);
-
-  --nv-badge-draft-bg:           #1C2A40;
-  --nv-badge-draft-text:         #A8B0C4;
-  --nv-badge-draft-border:       #2A3C58;
-  --nv-header-icon:              rgba(255, 255, 255, 0.75);
-  --nv-header-icon-hover:        #FFFFFF;
-  --nv-header-icon-active:       #FFFFFF;
-  --nv-header-icon-active-bg:    rgba(126, 200, 232, 0.28);
-  --nv-header-search-bg:         var(--md-surface-container-high);
-  --nv-header-search-text:       var(--md-on-surface);
-  --nv-header-search-placeholder:var(--md-on-surface-variant);
-  --nv-header-border:            rgba(255, 255, 255, 0.12);
-
-  --md-primary:                  var(--nv-action);
-  --md-on-primary:               #0A1F42;
-  --md-primary-container:        #163A52;
-  --md-on-primary-container:     #D4EAF4;
-  --md-secondary:                var(--nv-action);
-  --md-on-secondary:             #0C1E28;
-  --md-secondary-container:      #163A52;
-  --md-on-secondary-container:   #D4EAF4;
-  --md-tertiary:                 #F0C36D;
-  --md-on-tertiary:              #2A1C00;
-  --md-tertiary-container:       #5C3A08;
-  --md-on-tertiary-container:    #F8E4B5;
-  --md-surface:                  #0B1220;
-  --md-on-surface:               #E8ECF4;
-  --md-surface-variant:          #1C2A40;
-  --md-on-surface-variant:       #A8B0C4;
-  --md-surface-container:        #141C2C;
-  --md-surface-container-low:    #101828;
-  --md-surface-container-lowest: #0A1220;
-  --md-surface-container-high:   #1C2A40;
-  --md-inverse-surface:          #E8ECF4;
-  --md-inverse-on-surface:       #101828;
-  --md-outline:                  #5A6A80;
-  --md-outline-variant:          #2A3C58;
-  --md-outline-variant02:        #3A4C64;
-  --md-error:                    #F0A8A0;
-  --md-on-error:                 #5C1812;
-  --md-error-container:          #8C241C;
-  --md-on-error-container:       #FBEAE8;
-  --md-success:                  #6ED6A0;
-  --md-success-container:        #1A4030;
-  --md-on-success-container:     #C8EBD8;
-  --md-warning:                  #F0C36D;
-  --md-warning-container:        #4A3200;
-  --md-on-warning-container:     #F8E4B5;
-  --md-info:                     #8EC4E0;
-  --md-info-container:           #1E3A4C;
-  --md-on-info-container:        #D4EAF4;
-
-  --status-success: #6ED6A0;
-  --status-warning: #F0C36D;
-  --status-info:    #8EC4E0;
-  --status-error:   #F0A8A0;
-
-  --status-success-on-inverse: #1F7A4D;
-  --status-warning-on-inverse: #C47A00;
-  --status-info-on-inverse:    #3A6F8C;
-  --status-error-on-inverse:   #C42B22;
-
-  --tint-primary-weak:   rgba(126, 200, 232, 0.08);
-  --tint-primary-soft:   rgba(126, 200, 232, 0.12);
-  --tint-primary-hover:  rgba(126, 200, 232, 0.16);
-  --tint-primary-active: rgba(126, 200, 232, 0.22);
-  --tint-success-soft:   rgba(110, 214, 160, 0.12);
-  --tint-success-border: rgba(110, 214, 160, 0.22);
-  --tint-warning-soft:   rgba(240, 195, 109, 0.15);
-  --tint-warning-border: rgba(240, 195, 109, 0.28);
-  --tint-error-soft:     rgba(240, 168, 160, 0.12);
-  --tint-error-strong:   rgba(240, 168, 160, 0.18);
-
-  --chart-1: #8EC4E0;
-  --chart-2: #7EC8E8;
-  --chart-3: #6ED6A0;
-  --chart-4: #F0C36D;
-  --chart-5: #C4B8A8;
-  --chart-6: #F0A8A0;
-
-  --md-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.48), 0 0 0 1px rgba(255, 255, 255, 0.04);
-  --md-shadow-2: 0 3px 10px rgba(0, 0, 0, 0.42), 0 0 0 1px rgba(255, 255, 255, 0.04);
-  --md-shadow-3: 0 10px 28px rgba(0, 0, 0, 0.48), 0 0 0 1px rgba(255, 255, 255, 0.05);
-  --md-shadow-4: 0 16px 40px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.05);
-
-  --nv-scrollbar-thumb:          #3A4A5C;
-  --nv-scrollbar-thumb-hover:    #5A6A78;
-
-  --nv-surface-hover:            rgba(126, 200, 232, 0.12);
-  --nv-sidebar-bg:               color-mix(in srgb, #fff 8%, var(--nv-header-bg));
-  --nv-sidebar-bg-alt:           var(--nv-sidebar-bg);
-  --nv-sidebar-border:           rgba(255, 255, 255, 0.12);
-  --nv-sidebar-accent:           #4FC3F7;
-  --nv-sidebar-on:               rgba(232, 236, 244, 0.78);
-  --nv-sidebar-on-strong:        #E8ECF4;
-  --nv-sidebar-on-muted:         rgba(232, 236, 244, 0.42);
-  --nv-sidebar-item-hover:       rgba(255, 255, 255, 0.08);
-  --nv-sidebar-item-active-bg:   rgba(126, 200, 232, 0.22);
-  --nv-chrome-bg-hover:          rgba(126, 200, 232, 0.12);
-
-  --md-scrim: rgba(6, 10, 14, 0.72);
-}

@@ -239,11 +239,11 @@ export function scheduleRowTimeline(rows: CskhScheduleRow[]): { id: string; star
 
     stack.add(id);
     const duration = Math.max(0, row.days);
-    let s = 0;
-    let e = duration;
     const depId = row.dependsOnId;
     const hasDep = Boolean(depId && byId.has(depId) && depId !== id);
 
+    let s: number;
+    let e: number;
     if (row.relation === 'from_advance' || !hasDep) {
       s = row.offsetDays;
       e = s + duration;

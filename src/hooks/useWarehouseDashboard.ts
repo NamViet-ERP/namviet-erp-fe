@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { dashboardService } from '../services/dashboardService';
+import { queryKeys } from '../services/queryKeys';
 import { mapWarehouseDashboardFromApi } from '../lib/wms/mapWarehouseDashboardFromApi';
 
 export function useWarehouseDashboard() {
   const query = useQuery({
-    queryKey: ['dashboard', 'warehouse'],
+    queryKey: queryKeys.warehouseDashboard.all,
     queryFn: async () => {
       const [kpi, trend, activity, categories, projects] = await Promise.all([
         dashboardService.kpi(),

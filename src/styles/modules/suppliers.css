@@ -54,12 +54,6 @@
     color: var(--md-on-surface-variant);
     font-weight: var(--fw-regular);
   }
-  .dark .supplier-groups-name-link {
-    color: var(--md-on-primary-container);
-  }
-  .dark .supplier-groups-name-link:hover {
-    color: var(--nv-action);
-  }
 
   .ncc-master-col-code { width: 7.5rem; }
   .ncc-master-col-name { min-width: 12rem; }
@@ -479,9 +473,6 @@
   border-radius: var(--radius-xs);
   font-weight: var(--fw-semibold);
 }
-.dark .sup-price-history-board.hrm-panel {
-  border-color: var(--table-border);
-}
 
 /* Công nợ NCC — overview cockpit + column widths */
 .sup-ap-overview {
@@ -528,9 +519,6 @@
   font-weight: var(--fw-bold);
   font-variant-numeric: tabular-nums;
   line-height: var(--lh-tight);
-}
-.dark .sup-ap-overview__total {
-  color: var(--md-on-surface);
 }
 .sup-ap-overview__split {
   display: flex;
@@ -583,9 +571,6 @@
   font-weight: var(--fw-semibold);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-}
-.dark .sup-ap-overview__metric dd {
-  color: var(--md-on-surface);
 }
 .sup-ap-overview__metric.is-alert dd {
   color: var(--md-error);
@@ -717,9 +702,6 @@
 .sup-ap-aging__card--d60:not(.is-zero) .sup-ap-aging__amt { color: var(--nv-amber-dark); }
 .sup-ap-aging__card--d90:not(.is-zero) .sup-ap-aging__amt { color: var(--md-on-error-container); }
 .sup-ap-aging__card--over:not(.is-zero) .sup-ap-aging__amt { color: var(--md-on-error-container); }
-.dark .sup-ap-aging__card--current:not(.is-zero) .sup-ap-aging__amt {
-  color: var(--md-on-surface);
-}
 .sup-ap-aging__n {
   margin: 0.15rem 0 0;
   color: var(--md-on-surface);
@@ -781,10 +763,6 @@
 }
 .sup-ap-meta--mono {
   font-family: var(--font-mono);
-}
-.dark .sup-ap .sup-analytics__code {
-  background: var(--nv-navy);
-  color: var(--nv-table-header-text);
 }
 
 .sup-dash .suppliers-chart-grid {

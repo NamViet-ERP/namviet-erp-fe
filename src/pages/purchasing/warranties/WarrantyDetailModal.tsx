@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import FormField from '../../../components/ui/FormField';
 import EmptyState from '../../../components/ui/EmptyState';
 import Modal from '../../../components/ui/Modal';
@@ -41,13 +41,14 @@ export default function WarrantyDetailModal({
   const [closeClaimId, setCloseClaimId] = useState<string | null>(null);
   const [serviceRating, setServiceRating] = useState('5');
   const [serviceNote, setServiceNote] = useState('');
+  const [hydratedDataId, setHydratedDataId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!data) return;
+  if (data && data.id !== hydratedDataId) {
+    setHydratedDataId(data.id);
     setWarrantyMonths(String(data.warrantyMonths || 12));
     setAnchorType(data.anchorType || 'delivery');
     setAcceptanceDate(data.acceptanceDate?.slice(0, 10) ?? '');
-  }, [data?.id]);
+  }
 
   const onSaveMeta = async () => {
     if (!selectedId) return;

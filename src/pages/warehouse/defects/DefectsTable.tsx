@@ -2,12 +2,16 @@ import EmptyState from '../../../components/ui/EmptyState';
 import EntityCodeLink from '../../../components/ui/EntityCodeLink';
 import TableSkeletonRows from '../../../components/ui/TableSkeletonRows';
 import Dropdown from '../../../components/ui/Dropdown';
+import { getApiErrorMessage } from '../../../lib/apiClient';
 import type { DropdownItem } from '../../../types';
 import type { PurchaseDefectApiDto } from '../../../types/api/poDefectApi';
 import DefectStatusCell from './DefectStatusCell';
 
 interface DefectsTableProps {
   isLoading: boolean;
+  isError?: boolean;
+  error?: unknown;
+  onRetry?: () => void;
   rows: PurchaseDefectApiDto[];
   buildRowActions: (row: PurchaseDefectApiDto) => DropdownItem[];
   onOpenDetail: (row: PurchaseDefectApiDto) => void;
@@ -15,6 +19,9 @@ interface DefectsTableProps {
 
 export default function DefectsTable({
   isLoading,
+  isError = false,
+  error,
+  onRetry,
   rows,
   buildRowActions,
   onOpenDetail,
@@ -42,6 +49,19 @@ export default function DefectsTable({
         <tbody>
           {isLoading ? (
             <TableSkeletonRows rows={5} colSpan={colSpan} />
+          ) : isError ? (
+            <tr>
+              <td colSpan={colSpan} className="table-cell text-center py-8">
+                <EmptyState message={getApiErrorMessage(error, 'Không tải được phiếu hàng lỗi.')} />
+                {onRetry ? (
+                  <div className="mt-3">
+                    <button type="button" className="btn btn-secondary btn-sm" onClick={onRetry}>
+                      Thử lại
+                    </button>
+                  </div>
+                ) : null}
+              </td>
+            </tr>
           ) : rows.length === 0 ? (
             <tr>
               <td colSpan={colSpan}>

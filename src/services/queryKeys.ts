@@ -15,6 +15,8 @@ export const queryKeys = {
   exportReturns: {
     all: ['exportReturns'] as const,
     detail: (id: string) => ['exportReturns', id] as const,
+    /** Prefix chung cho các query "returnable" — dùng khi invalidate cả nhóm. */
+    returnable: ['exportReturns', 'returnable'] as const,
     returnableExports: (projectCode: string, excludeReturnId?: string) =>
       ['exportReturns', 'returnable', 'exports', projectCode, excludeReturnId ?? ''] as const,
     returnableLines: (sourceExportId: string, excludeReturnId?: string) =>
@@ -193,5 +195,47 @@ export const queryKeys = {
     chart: (params: object) => ['purchasingDashboard', 'chart', params] as const,
     activity: (params: object) => ['purchasingDashboard', 'activity', params] as const,
     actors: (params: object) => ['purchasingDashboard', 'actors', params] as const,
+  },
+  purchaseEstimates: {
+    all: ['purchasing', 'estimates'] as const,
+  },
+  purchaseContracts: {
+    all: ['purchasing', 'contracts'] as const,
+  },
+  purchaseWarranties: {
+    all: ['purchasing', 'warranties'] as const,
+  },
+  purchaseDocuments: {
+    all: ['purchasing', 'documents'] as const,
+  },
+  purchasePriceBook: {
+    all: ['purchasing', 'price-book'] as const,
+  },
+  purchaseRfq: {
+    all: ['purchasing', 'rfq'] as const,
+  },
+  wmsReports: {
+    all: ['wms-reports'] as const,
+    movement: (dateFrom: string, dateTo: string) =>
+      ['wms-reports', 'movement', dateFrom, dateTo] as const,
+    stock: (projectCode: string) => ['wms-reports', 'stock', projectCode] as const,
+    pending: ['wms-reports', 'pending'] as const,
+  },
+  lowStockAlerts: {
+    all: ['wms-alerts', 'low-stock'] as const,
+    list: (projectCode: string, limit: number) =>
+      ['wms-alerts', 'low-stock', projectCode, limit] as const,
+  },
+  warehouseDashboard: {
+    all: ['dashboard', 'warehouse'] as const,
+  },
+  hrDepartments: {
+    all: ['hr', 'departments'] as const,
+  },
+  hrBranches: {
+    all: ['hr', 'branches'] as const,
+  },
+  warehouseSuppliers: {
+    poCreate: ['warehouse-suppliers', 'po-create'] as const,
   },
 } as const;

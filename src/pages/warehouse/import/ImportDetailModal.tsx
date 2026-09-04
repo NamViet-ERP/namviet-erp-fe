@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import type { Import } from '../../../types';
 import { ArrowRightLeft, FileText, Pencil, Trash2 } from 'lucide-react';
 import { formatCurrencyVnd } from '../../../utils/formatCurrency';
@@ -88,23 +88,24 @@ export default function ImportDetailModal({
   const defectPhotoInputRef = useRef<HTMLInputElement>(null);
   const reasonInputRefs = useRef<Map<number, HTMLInputElement | null>>(new Map());
   const tableScrollRef = useRef<HTMLDivElement>(null);
+  const [detailSeedKey, setDetailSeedKey] = useState('');
 
-  useEffect(() => {
+  const nextDetailSeed = isOpen && selected ? `open:${selected.id}` : 'closed';
+  if (detailSeedKey !== nextDetailSeed) {
+    setDetailSeedKey(nextDetailSeed);
     if (!isOpen || !selected) {
       setShowEvidenceErrors(false);
       setSettlementError(null);
-      return;
+    } else {
+      setEvaluationDraft(selected.receiptEvaluation ?? '');
+      setShortageReport(selected.shortageReport ?? '');
+      setDefectReason('');
+      setLineDrafts(buildReceiveLineDrafts(selected.items));
+      setShowEvidenceErrors(false);
+      setSettlementError(null);
+      setReasonErrorLineIds([]);
     }
-    setEvaluationDraft(selected.receiptEvaluation ?? '');
-    setShortageReport(selected.shortageReport ?? '');
-    setDefectReason('');
-    setLineDrafts(buildReceiveLineDrafts(selected.items));
-    setShowEvidenceErrors(false);
-    setSettlementError(null);
-    setReasonErrorLineIds([]);
-    // Chỉ seed lại khi đổi phiếu / mở modal — tránh reset khi upload ảnh reload selected.
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: seed by voucher id
-  }, [isOpen, selected?.id]);
+  }
 
   const totals = useMemo(() => settlementTotals(lineDrafts), [lineDrafts]);
 

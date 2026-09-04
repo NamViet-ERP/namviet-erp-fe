@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Download, Lightbulb, Plus } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import Card from '../../components/ui/Card';
@@ -72,12 +72,12 @@ export default function CskhRequestsPage({ project }: CskhRequestsPageProps) {
   const [deleteTarget, setDeleteTarget] = useState<CskhInternalRequest | null>(null);
 
   const rows = useMemo(() => filterRequests(ops.requests, filter), [ops.requests, filter]);
-  const selected = rows.find(row => row.id === selectedId) ?? null;
-
-  useEffect(() => {
-    if (selectedId && rows.some(row => row.id === selectedId)) return;
-    setSelectedId(rows[0]?.id ?? null);
-  }, [rows, selectedId]);
+  const nextSelectedId =
+    selectedId && rows.some(row => row.id === selectedId) ? selectedId : (rows[0]?.id ?? null);
+  if (nextSelectedId !== selectedId) {
+    setSelectedId(nextSelectedId);
+  }
+  const selected = rows.find(row => row.id === nextSelectedId) ?? null;
 
   const openCreate = () => {
     setEditing(null);

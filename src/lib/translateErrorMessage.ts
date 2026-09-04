@@ -108,6 +108,23 @@ export function translateErrorMessage(message: string): string {
     return 'Email đã được sử dụng';
   }
 
+  if (
+    lower === 'internal server error'
+    || lower.includes('an error occurred while processing')
+    || lower.includes('one or more validation errors')
+    || lower.includes('a non-empty request body is required')
+    || lower.includes('the input was not valid')
+    || lower.includes('unsupported media type')
+    || /\bexception\b/.test(lower)
+    || /\bsystem\./.test(lower)
+    || /\bstack trace\b/.test(lower)
+    || /\bnullreference\b/.test(lower)
+    || /\bdbupdate\b/.test(lower)
+  ) {
+    console.error('[translateErrorMessage] Unmapped technical error:', trimmed);
+    return 'Thao tác không thành công. Vui lòng thử lại hoặc báo quản trị viên.';
+  }
+
   return trimmed;
 }
 

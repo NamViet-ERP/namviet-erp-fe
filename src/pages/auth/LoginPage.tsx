@@ -55,7 +55,7 @@ export default function LoginPage() {
         setError(
           session === 'recoverable-error'
             ? UI_ERROR.serverUnavailable
-            : 'Không xác minh được phiên sau đăng nhập. Thử lại hoặc kiểm tra API/proxy.',
+            : 'Không xác minh được phiên sau đăng nhập. Không thể kết nối máy chủ. Vui lòng thử lại hoặc báo quản trị viên.',
         );
         return;
       }

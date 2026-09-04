@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   CartesianGrid,
   ComposedChart,
@@ -238,11 +238,13 @@ export default function PurchasePriceBookPage() {
   const itemsCategoryValue = rootCategories.find(c => c.id === categoryId);
   const matrixCategoryValue = matrixCategories.find(c => c.id === matrixCategoryId);
 
-  useEffect(() => {
-    if (tab !== 'matrix' || matrixCategories.length === 0) return;
-    if (matrixCategoryId !== '' && matrixCategories.some(c => c.id === matrixCategoryId)) return;
-    setMatrixCategoryId(matrixCategories[0]!.id);
-  }, [tab, matrixCategoryId, matrixCategories]);
+  if (tab === 'matrix' && matrixCategories.length > 0) {
+    const valid =
+      matrixCategoryId !== '' && matrixCategories.some(c => c.id === matrixCategoryId);
+    if (!valid) {
+      setMatrixCategoryId(matrixCategories[0]!.id);
+    }
+  }
 
   const saveSell = async () => {
     const price = Number(String(sellForm.sellPrice).replace(/[^\d.-]/g, ''));

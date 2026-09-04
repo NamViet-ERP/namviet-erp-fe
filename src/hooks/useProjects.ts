@@ -89,7 +89,7 @@ export function useUpdateProjectInventoryMinStock() {
     }) => projectsService.updateInventoryMinStock(projectCode, materialCode, minStockQty),
     onSuccess: (_data, { projectCode }) => {
       qc.invalidateQueries({ queryKey: queryKeys.projects.inventory(projectCode) });
-      qc.invalidateQueries({ queryKey: ['wms-alerts', 'low-stock'] });
+      qc.invalidateQueries({ queryKey: queryKeys.lowStockAlerts.all });
     },
   });
 }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, Plus, RefreshCw } from 'lucide-react';
 import Dropdown from '../../components/ui/Dropdown';
@@ -115,10 +115,6 @@ export default function PurchasePaymentPlansPage() {
   );
   const colCount = 4 + stageHeaders.length;
 
-  useEffect(() => {
-    setPage(1);
-  }, [search]);
-
   const rowActions = (poCode: string): DropdownItem[] => [
     {
       label: 'Xem PO',
@@ -172,7 +168,10 @@ export default function PurchasePaymentPlansPage() {
             <div className="pur-erp__toolbar-fields" style={{ flex: 1 }}>
               <SearchBar
                 value={search}
-                onChange={setSearch}
+                onChange={(value) => {
+                  setSearch(value);
+                  setPage(1);
+                }}
                 placeholder="Mã PO, dự án…"
               />
             </div>

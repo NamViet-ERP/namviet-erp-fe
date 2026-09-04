@@ -100,8 +100,44 @@ export function useOperationsDashboard() {
     && !activeProjectsQ.data
     && !allProjectsQ.data;
 
+  const isError =
+    allProjectsQ.isError
+    || activeProjectsQ.isError
+    || lowStockQ.isError
+    || ordersNoneQ.isError
+    || ordersPartialQ.isError;
+
+  const error =
+    allProjectsQ.error
+    ?? activeProjectsQ.error
+    ?? lowStockQ.error
+    ?? ordersNoneQ.error
+    ?? ordersPartialQ.error;
+
+  const refetchAll = () => {
+    void allProjectsQ.refetch();
+    void activeProjectsQ.refetch();
+    void closedProjectsQ.refetch();
+    void lowStockQ.refetch();
+    void ordersNoneQ.refetch();
+    void ordersPartialQ.refetch();
+    void ordersUnpaidQ.refetch();
+    void ordersPartialPayQ.refetch();
+    void ordersWarningQ.refetch();
+    void paymentsDraftQ.refetch();
+    void paymentsSubmittedQ.refetch();
+    void paymentsPaidQ.refetch();
+    void plansOpenQ.refetch();
+    void arrivalsQ.refetch();
+    void materialsActiveQ.refetch();
+    void materialsAllQ.refetch();
+  };
+
   return {
     isBootLoading,
+    isError,
+    error,
+    refetchAll,
     activeProjects: (activeProjectsQ.data?.items ?? []).slice(0, 8),
     lowStock,
     stockPreview: lowStock.slice(0, 8),

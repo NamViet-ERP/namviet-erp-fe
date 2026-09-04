@@ -3,9 +3,10 @@ import {
   departmentsService,
   type UpsertDepartmentRequest,
 } from '../services/departmentsService';
+import { queryKeys } from '../services/queryKeys';
 
 const keys = {
-  all: ['hr', 'departments'] as const,
+  all: queryKeys.hrDepartments.all,
   list: (activeOnly: boolean) => [...keys.all, 'list', activeOnly] as const,
   detail: (id: number) => [...keys.all, 'detail', id] as const,
   members: (id: number) => [...keys.all, 'members', id] as const,
@@ -60,7 +61,7 @@ export function useAssignDepartmentEmployees() {
     onSuccess: (_data, vars) => {
       void qc.invalidateQueries({ queryKey: keys.all });
       void qc.invalidateQueries({ queryKey: keys.members(vars.id) });
-      void qc.invalidateQueries({ queryKey: ['employees'] });
+      void qc.invalidateQueries({ queryKey: queryKeys.employees.all });
     },
   });
 }

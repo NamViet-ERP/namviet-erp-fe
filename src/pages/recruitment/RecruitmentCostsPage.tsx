@@ -67,7 +67,7 @@ export default function RecruitmentCostsPage() {
     month: typeof filterMonth === 'number' ? filterMonth : undefined,
   };
 
-  const { data: costs = [], isLoading } = useRecruitmentCosts(listParams);
+  const { data: costs = [], isLoading, isError, error, refetch } = useRecruitmentCosts(listParams);
   const { data: summary = [] } = useRecruitmentCostSummary();
   const { data: budget } = useRecruitmentBudget(CURRENT_YEAR);
   const createMutation = useCreateRecruitmentCost();
@@ -274,17 +274,28 @@ export default function RecruitmentCostsPage() {
             <tbody>
               {isLoading ? (
                 <tr><td colSpan={8} className="table-cell py-8 text-center text-sm">Đang tải…</td></tr>
+              ) : isError ? (
+                <tr>
+                  <td colSpan={8} className="table-cell py-8 text-center">
+                    <p className="text-sm text-[var(--md-error)] mb-3">
+                      {getApiErrorMessage(error, 'Không tải được chi phí tuyển dụng.')}
+                    </p>
+                    <button type="button" className="btn btn-secondary btn-sm" onClick={() => void refetch()}>
+                      Thử lại
+                    </button>
+                  </td>
+                </tr>
               ) : costs.length === 0 ? (
                 <tr><td colSpan={8} className="table-cell py-8 text-center text-sm text-[var(--md-on-surface-variant)]">Chưa có bản ghi chi phí.</td></tr>
               ) : costs.map(row => (
                 <tr key={row.id} className="table-row">
                   <td className="table-cell tabular-nums hrm-table-col-period">{row.period}</td>
                   <td className="table-cell">{row.source}</td>
-                  <td className="table-cell">{row.positionName || '—'}</td>
+                  <td className="table-cell">{row.positionName || '-'}</td>
                   <td className="table-cell tabular-nums text-[var(--md-primary)] font-medium hrm-table-col-money">{formatCurrency(row.amount)}</td>
-                  <td className="table-cell tabular-nums hrm-table-col-tight">{row.durationDays ?? '—'}</td>
-                  <td className="table-cell tabular-nums hrm-table-col-tight">{row.paymentYear ?? '—'}</td>
-                  <td className="table-cell tabular-nums hrm-table-col-tight">{row.paymentMonth ?? '—'}</td>
+                  <td className="table-cell tabular-nums hrm-table-col-tight">{row.durationDays ?? '-'}</td>
+                  <td className="table-cell tabular-nums hrm-table-col-tight">{row.paymentYear ?? '-'}</td>
+                  <td className="table-cell tabular-nums hrm-table-col-tight">{row.paymentMonth ?? '-'}</td>
                   <td className="table-cell hrm-table-col-actions">
                     <div className="hrm-table-row-actions">
                       <PermissionGate

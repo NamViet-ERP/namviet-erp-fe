@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import PermissionGate from '../../../components/auth/PermissionGate';
 import QtyStepper from '../../../components/ui/QtyStepper';
 import { showToast } from '../../../components/ui/Toast';
@@ -51,6 +51,7 @@ export default function DefectDetailModal({
   const [supplierFeedback, setSupplierFeedback] = useState('');
   const [handlingMethod, setHandlingMethod] = useState('');
   const [qtyDrafts, setQtyDrafts] = useState<Record<number, string>>({});
+  const [hydratedSelectedKey, setHydratedSelectedKey] = useState<string | null>(null);
 
   const { has } = usePermission();
   const canApprove = has('wms.defects.approve');
@@ -65,13 +66,18 @@ export default function DefectDetailModal({
     canCreate && selected && (selected.status === 'draft' || selected.status === 'pending'),
   );
 
-  useEffect(() => {
-    if (!selected) return;
-    setCauseSource(selected.causeSource ?? '');
-    setSupplierFeedback(selected.supplierFeedback ?? '');
-    setHandlingMethod(selected.handlingMethod ?? '');
-    setQtyDrafts(Object.fromEntries(selected.items.map(it => [it.id, String(it.quantity)])));
-  }, [selected]);
+  const selectedSyncKey = selected
+    ? `${selected.ticketCode}|${selected.causeSource ?? ''}|${selected.supplierFeedback ?? ''}|${selected.handlingMethod ?? ''}|${selected.items.map(it => `${it.id}:${it.quantity}`).join(',')}`
+    : null;
+  if (selectedSyncKey !== hydratedSelectedKey) {
+    setHydratedSelectedKey(selectedSyncKey);
+    if (selected) {
+      setCauseSource(selected.causeSource ?? '');
+      setSupplierFeedback(selected.supplierFeedback ?? '');
+      setHandlingMethod(selected.handlingMethod ?? '');
+      setQtyDrafts(Object.fromEntries(selected.items.map(it => [it.id, String(it.quantity)])));
+    }
+  }
 
   const qtyDirty = useMemo(() => {
     if (!selected) return false;

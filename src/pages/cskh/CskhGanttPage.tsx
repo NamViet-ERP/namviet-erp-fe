@@ -94,7 +94,7 @@ export default function CskhGanttPage({ project }: CskhGanttPageProps) {
     ? findScheduleCombo(master, project.boilerType, project.priority)
     : undefined;
   const band = combo ? findCapacityBand(combo, parseCapacityTons(project.capacity)) : undefined;
-  const window = reportWindow(period);
+  const periodWindow = reportWindow(period);
   const day0 = project.advanceDate || project.startDate || toIsoDate(new Date());
 
   const syncRollup = (items: CskhGanttItem[]) => {
@@ -328,7 +328,7 @@ export default function CskhGanttPage({ project }: CskhGanttPageProps) {
         <div className="cskh-desk__section-head">
           <div>
             <h2 className="section-heading__title m-0">Báo cáo tiến độ cho CĐT</h2>
-            <p className="section-heading__sub mb-0">{window.label}. {isoToDisplay(toIsoDate(window.start))} - {isoToDisplay(toIsoDate(window.end))}.</p>
+            <p className="section-heading__sub mb-0">{periodWindow.label}. {isoToDisplay(toIsoDate(periodWindow.start))} - {isoToDisplay(toIsoDate(periodWindow.end))}.</p>
           </div>
           <div className="cskh-desk__board-tools">
             <CskhFilterTabs
@@ -462,13 +462,15 @@ export default function CskhGanttPage({ project }: CskhGanttPageProps) {
 }
 
 function CskhGanttChart({ items }: { items: CskhGanttItem[] }) {
+  // Mốc "hôm nay" chốt tại lần mount — tránh gọi Date.now() trong render (react-hooks/purity).
+  const [now] = useState(() => Date.now());
   const range = useMemo(() => {
     const starts = items.map(row => parseIsoDate(row.startDate)?.getTime() ?? NaN).filter(Number.isFinite);
     const ends = items.map(row => parseIsoDate(row.endDate)?.getTime() ?? NaN).filter(Number.isFinite);
-    const min = Math.min(...starts, Date.now());
-    const max = Math.max(...ends, Date.now());
+    const min = Math.min(...starts, now);
+    const max = Math.max(...ends, now);
     return { min, max, span: Math.max(1, max - min) };
-  }, [items]);
+  }, [items, now]);
 
   const months = useMemo(() => {
     const marks: Date[] = [];
@@ -482,7 +484,7 @@ function CskhGanttChart({ items }: { items: CskhGanttItem[] }) {
     return marks;
   }, [range]);
 
-  const today = ((Date.now() - range.min) / range.span) * 100;
+  const today = ((now - range.min) / range.span) * 100;
 
   return (
     <div className="cskh-gantt" role="img" aria-label="Biểu đồ Gantt">

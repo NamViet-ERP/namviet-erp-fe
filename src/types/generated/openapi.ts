@@ -14600,7 +14600,6 @@ export interface components {
             fileSize: number;
         };
         HrStaffPublicDto: {
-            id: string;
             name: string;
         };
         ImportAttachmentDto: {

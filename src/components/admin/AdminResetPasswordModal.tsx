@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Modal from '../ui/Modal';
 import AdminPasswordField from './AdminPasswordField';
 import { showToast } from '../ui/Toast';
@@ -16,12 +16,6 @@ export default function AdminResetPasswordModal({ user, onClose }: AdminResetPas
   const resetMutation = useResetAdminPassword();
   const [resetPassword, setResetPassword] = useState('');
   const [resetError, setResetError] = useState('');
-
-  useEffect(() => {
-    if (!user) return;
-    setResetPassword('');
-    setResetError('');
-  }, [user?.id]);
 
   const close = () => {
     setResetPassword('');

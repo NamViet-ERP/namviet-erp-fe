@@ -18,7 +18,6 @@ export function useCreateTransfer() {
       qc.invalidateQueries({ queryKey: queryKeys.transfers.all });
       qc.invalidateQueries({ queryKey: queryKeys.stock.matrix });
       qc.invalidateQueries({ queryKey: queryKeys.projects.all });
-      qc.invalidateQueries({ queryKey: ['projects'] });
     },
   });
 }
@@ -45,7 +44,6 @@ export function useApproveTransfer() {
       qc.invalidateQueries({ queryKey: queryKeys.transfers.detail(id) });
       qc.invalidateQueries({ queryKey: queryKeys.stock.matrix });
       qc.invalidateQueries({ queryKey: queryKeys.projects.all });
-      qc.invalidateQueries({ queryKey: ['projects'] });
     },
   });
 }

@@ -212,6 +212,9 @@ export default function DefectsPage() {
 
         <DefectsTable
           isLoading={listQuery.isLoading}
+          isError={listQuery.isError}
+          error={listQuery.error}
+          onRetry={() => { void listQuery.refetch(); }}
           rows={paged}
           buildRowActions={buildRowActions}
           onOpenDetail={row => { void openDetail(row); }}

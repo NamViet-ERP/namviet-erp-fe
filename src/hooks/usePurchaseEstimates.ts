@@ -10,7 +10,7 @@ import type {
   UpdatePurchaseEstimateRequest,
 } from '../types/api/purchasingApi';
 
-const LIST_KEY = ['purchasing', 'estimates'] as const;
+const LIST_KEY = queryKeys.purchaseEstimates.all;
 
 export function usePurchaseEstimates(params: PurchaseEstimateListParams = {}) {
   return useQuery({
@@ -130,7 +130,7 @@ export function useConvertEstimateToPlan() {
     mutationFn: (id: string) => purchaseEstimatesService.convertPlan(id),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: LIST_KEY });
-      void qc.invalidateQueries({ queryKey: ['purchasing', 'plans'] });
+      void qc.invalidateQueries({ queryKey: queryKeys.purchasePlans.all });
     },
   });
 }

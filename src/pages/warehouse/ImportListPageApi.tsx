@@ -42,8 +42,6 @@ import { parseCurrencyInput } from '../../utils/currencyInput';
 
 import { getVoucherTabLabels } from '../../lib/wms/voucherStatusLabels';
 
-import { importToFormLines } from '../../lib/wms/voucherFormPopulate';
-
 import {
 
   useImports,
@@ -112,7 +110,12 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
   const [search, setSearch] = useState('');
 
-  const [dateFrom, setDateFrom] = useState('');
+  const [dateFrom, setDateFrom] = useState(() => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    return `${y}-${m}-01`;
+  });
 
   const [dateTo, setDateTo] = useState('');
 
@@ -307,10 +310,13 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
     if (editing || !showCreate) return;
     const preview = poPreviewQuery.data;
     if (!preview) return;
+    // Seed create form when PO preview arrives
+    /* eslint-disable react-hooks/set-state-in-effect -- hydrate create form from PO preview */
     setDefaultSupplier(preview.supplierName ?? '');
     setReferenceCode(preview.poCode ?? '');
     if (preview.projectCode) setProjectCode(preview.projectCode);
     setCreateErrors({});
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [poPreviewQuery.data, editing, showCreate]);
 
   const handleDownloadImportTemplate = async () => {
@@ -569,53 +575,6 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
     } catch (err) {
 
       showToast('error', getApiErrorMessage(err, 'Không thể cập nhật phiếu nhập'));
-
-    }
-
-  };
-
-
-
-  const openEdit = (imp: Import) => {
-    if (imp.status !== 'draft') {
-      openDetail(imp);
-      return;
-    }
-
-    setShowDetail(false);
-
-    setEditing(imp);
-
-    setProjectCode(imp.project ?? '');
-
-    setDefaultSupplier(imp.supplier);
-
-    setReferenceCode(imp.referenceCode);
-    setSelectedPoCode(imp.referenceCode?.trim() || '');
-
-    setNote(imp.note);
-
-    setItems(importToFormLines(imp.items));
-
-    setCreateErrors({});
-
-    setShowCreate(true);
-
-  };
-
-
-
-  const handleSubmit = async (imp: Import) => {
-
-    try {
-
-      await submitMutation.mutateAsync(imp.id);
-
-      showToast('success', `Đã duyệt dự kiến phiếu ${imp.voucherCode}`);
-
-    } catch (err) {
-
-      showToast('error', getApiErrorMessage(err, 'Không thể chốt phiếu'));
 
     }
 

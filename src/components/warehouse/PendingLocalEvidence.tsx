@@ -118,13 +118,10 @@ export function SavedDefectPhotoGrid({
     let alive = true;
     const created: string[] = [];
     if (photos.length === 0) {
-      setUrls({});
-      setFailed({});
       return () => {
         alive = false;
       };
     }
-    setFailed({});
     void (async () => {
       const next: Record<string, string> = {};
       const nextFailed: Record<string, boolean> = {};
@@ -299,13 +296,10 @@ export function SavedImportPhotoGrid({
     let alive = true;
     const created: string[] = [];
     if (photos.length === 0) {
-      setUrls({});
-      setFailed({});
       return () => {
         alive = false;
       };
     }
-    setFailed({});
     void (async () => {
       const next: Record<string, string> = {};
       const nextFailed: Record<string, boolean> = {};
@@ -414,13 +408,10 @@ export function SavedExportReturnPhotoGrid({
     let alive = true;
     const created: string[] = [];
     if (photos.length === 0) {
-      setUrls({});
-      setFailed({});
       return () => {
         alive = false;
       };
     }
-    setFailed({});
     void (async () => {
       const next: Record<string, string> = {};
       const nextFailed: Record<string, boolean> = {};

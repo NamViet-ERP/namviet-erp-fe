@@ -3,10 +3,13 @@ import HrmSelect from '../hr/HrmSelect';
 import MaterialAutocomplete from '../ui/MaterialAutocomplete';
 import type { MaterialApiDto } from '../../services/materialsService';
 
+// Helpers colocated with the field component for shared form usage
+// eslint-disable-next-line react-refresh/only-export-components
 export function categoryOptionLabel(c: { code: string; name: string }) {
   return `${c.code} - ${c.name}`;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function rootCategoryIdOf(
   categoryId: number | null | undefined,
   categories: Array<{ id: number; parentId?: number | null }>,

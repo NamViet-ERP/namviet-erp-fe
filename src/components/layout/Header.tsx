@@ -188,7 +188,9 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
   const notifRef = useRef<HTMLDivElement>(null);
   const seenImportIdsRef = useRef<Set<string> | null>(null);
   const showNotificationsRef = useRef(showNotifications);
-  showNotificationsRef.current = showNotifications;
+  useEffect(() => {
+    showNotificationsRef.current = showNotifications;
+  }, [showNotifications]);
 
   const notifications = useMemo(
     () => pendingNotifications?.items?.map(item => mapApiNotification(item, readNotificationIds)) ?? [],
@@ -236,12 +238,14 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
     });
   }, [pendingNotifications]);
 
-  useEffect(() => {
-    if (!bellToast) {
-      setToastPaused(false);
-      return;
-    }
+  const [syncedBellToast, setSyncedBellToast] = useState(bellToast);
+  if (bellToast !== syncedBellToast) {
+    setSyncedBellToast(bellToast);
     setToastPaused(false);
+  }
+
+  useEffect(() => {
+    if (!bellToast) return;
     if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const timer = window.setTimeout(() => setBellToast(null), BELL_TOAST_MS);
     return () => window.clearTimeout(timer);

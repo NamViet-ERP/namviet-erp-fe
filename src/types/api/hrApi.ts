@@ -26,3 +26,6 @@ export type UpsertBranchRequest = Schemas['UpsertBranchRequest'];
 export type RecruitmentPlanApiDto = Schemas['RecruitmentPlanDto'];
 export type CreateRecruitmentPlanRequest = Schemas['CreateRecruitmentPlanRequest'];
 export type UpdateRecruitmentPlanRequest = Schemas['UpdateRecruitmentPlanRequest'];
+
+/** Public HR staff picker (no internal user id — security) */
+export type HrStaffPublicApiDto = Schemas['HrStaffPublicDto'];

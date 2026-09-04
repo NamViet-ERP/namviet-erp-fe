@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
@@ -56,13 +56,17 @@ export default function CskhProjectDashboardPage() {
   const [acceptanceDate, setAcceptanceDate] = useState('');
   const [warrantyMonths, setWarrantyMonths] = useState('');
   const [warrantyError, setWarrantyError] = useState('');
+  const [syncedProjectKey, setSyncedProjectKey] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!project) return;
+  const projectSyncKey = project
+    ? `${project.code}|${project.acceptanceDate ?? ''}|${project.warrantyMonths ?? ''}`
+    : null;
+  if (project && projectSyncKey !== syncedProjectKey) {
+    setSyncedProjectKey(projectSyncKey);
     setAcceptanceDate(project.acceptanceDate ?? '');
     setWarrantyMonths(project.warrantyMonths != null ? String(project.warrantyMonths) : '');
     setWarrantyError('');
-  }, [project?.acceptanceDate, project?.code, project?.warrantyMonths]);
+  }
 
   if (!project) return <CskhProjectMissing loading={isLoading} />;
 

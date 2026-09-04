@@ -18,11 +18,13 @@ const iconClass: Record<ToastType, string> = {
   info: 'nv-snackbar__icon--info',
 };
 
-const TOAST_SLOT_ID = 1;
+const MAX_TOASTS = 3;
+const DEFAULT_DURATION_MS = 2500;
+const ERROR_DURATION_MS = 6000;
 
 interface ToastItemProps {
   toast: Toast;
-  onDismiss: () => void;
+  onDismiss: (id: number) => void;
 }
 
 function restartProgressBar(el: HTMLDivElement | null) {
@@ -35,16 +37,11 @@ function restartProgressBar(el: HTMLDivElement | null) {
 function ToastItem({ toast, onDismiss }: ToastItemProps) {
   const [exiting, setExiting] = useState(false);
   const [entered, setEntered] = useState(false);
-  const [renderRevision, setRenderRevision] = useState(toast.revision);
   const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const progressRef = useRef<HTMLDivElement>(null);
   const Icon = icons[toast.type] || icons.info;
-
-  if (renderRevision !== toast.revision) {
-    setRenderRevision(toast.revision);
-    setExiting(false);
-  }
+  const duration = toast.duration || (toast.type === 'error' ? ERROR_DURATION_MS : DEFAULT_DURATION_MS);
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => setEntered(true));
@@ -54,20 +51,20 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
   const dismiss = useCallback(() => {
     setExiting(true);
     if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
-    exitTimerRef.current = setTimeout(onDismiss, 280);
-  }, [onDismiss]);
+    exitTimerRef.current = setTimeout(() => onDismiss(toast.id), 280);
+  }, [onDismiss, toast.id]);
 
   useEffect(() => {
     if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
     exitTimerRef.current = null;
 
     if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
-    dismissTimerRef.current = setTimeout(dismiss, toast.duration || 2500);
+    dismissTimerRef.current = setTimeout(dismiss, duration);
 
     return () => {
       if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
     };
-  }, [toast.revision, toast.duration, dismiss]);
+  }, [toast.revision, duration, dismiss]);
 
   useEffect(() => {
     restartProgressBar(progressRef.current);
@@ -91,17 +88,17 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
       <div
         ref={progressRef}
         className={`nv-snackbar__progress nv-snackbar__progress--${toast.type}`}
-        style={{ '--toast-duration': `${toast.duration || 2500}ms` } as CSSProperties}
+        style={{ '--toast-duration': `${duration}ms` } as CSSProperties}
       />
     </div>
   );
 }
 
-let activeToast: Toast | null = null;
+let activeToasts: Toast[] = [];
+let nextToastId = 1;
 const toastListeners = new Set<() => void>();
 
-function emitToast(toast: Toast) {
-  activeToast = toast;
+function emitToasts() {
   toastListeners.forEach(listener => listener());
 }
 
@@ -110,35 +107,43 @@ function subscribeToasts(listener: () => void) {
   return () => toastListeners.delete(listener);
 }
 
-function getToastSnapshot() {
-  return activeToast;
+function getToastsSnapshot() {
+  return activeToasts;
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-export function showToast(type: ToastType, message: string, title = '', duration = 2500): void {
-  emitToast({
-    id: TOAST_SLOT_ID,
+export function showToast(type: ToastType, message: string, title = '', duration?: number): void {
+  const resolvedDuration =
+    duration ?? (type === 'error' ? ERROR_DURATION_MS : DEFAULT_DURATION_MS);
+
+  const toast: Toast = {
+    id: nextToastId++,
     type,
     message,
     title,
-    duration,
+    duration: resolvedDuration,
     revision: Date.now(),
-  });
+  };
+
+  activeToasts = [...activeToasts, toast].slice(-MAX_TOASTS);
+  emitToasts();
 }
 
 export default function ToastContainer() {
-  const toast = useSyncExternalStore(subscribeToasts, getToastSnapshot, getToastSnapshot);
+  const toasts = useSyncExternalStore(subscribeToasts, getToastsSnapshot, getToastsSnapshot);
 
-  const handleDismiss = useCallback(() => {
-    activeToast = null;
-    toastListeners.forEach(listener => listener());
+  const handleDismiss = useCallback((id: number) => {
+    activeToasts = activeToasts.filter(t => t.id !== id);
+    emitToasts();
   }, []);
 
-  if (!toast) return null;
+  if (toasts.length === 0) return null;
 
   return createPortal(
     <div className="nv-snackbar-stack">
-      <ToastItem key={toast.id} toast={toast} onDismiss={handleDismiss} />
+      {toasts.map(toast => (
+        <ToastItem key={toast.id} toast={toast} onDismiss={handleDismiss} />
+      ))}
     </div>,
     document.body,
   );

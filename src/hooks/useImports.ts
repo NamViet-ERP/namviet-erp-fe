@@ -119,7 +119,7 @@ export function useApproveImport() {
       qc.invalidateQueries({ queryKey: queryKeys.imports.detail(id) });
       qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all });
       qc.invalidateQueries({ queryKey: queryKeys.purchasePlans.all });
-      qc.invalidateQueries({ queryKey: ['warehouse', 'defects'] });
+      qc.invalidateQueries({ queryKey: queryKeys.defects.all });
       qc.invalidateQueries({ queryKey: queryKeys.exports.all });
       const ref = data?.referenceCode?.trim();
       if (ref) qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.detail(ref) });

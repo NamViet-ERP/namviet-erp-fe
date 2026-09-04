@@ -71,7 +71,8 @@ export function fromApi(dto: EmployeeApiDto): Employee {
     cccdIssueDate: apiDateToInput(dto.cccdIssueDate),
     cccdIssuePlace: dto.cccdIssuePlace ?? undefined,
     maritalStatus: dto.maritalStatus ?? undefined,
-    taxCode: (dto.taxCode ?? undefined) as Employee['taxCode'],
+    // Pass-through nguyên trạng: null giữ null, undefined giữ undefined (round-trip với toApi).
+    taxCode: dto.taxCode as Employee['taxCode'],
     profilePhoto: urlToAttachment(dto.photoUrl, 'profile'),
     cccdFront: urlToAttachment(dto.cccdFrontUrl, 'cccd-front'),
     cccdBack: urlToAttachment(dto.cccdBackUrl, 'cccd-back'),

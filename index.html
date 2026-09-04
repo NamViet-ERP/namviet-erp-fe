@@ -7,15 +7,10 @@
     <title>Mayzer</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <!-- Font + màu: src/styles/tokens.css (:root KNOBS). File chữ load từ @import trong file đó. -->
+    <!-- Font + màu: src/styles/tokens.css (:root KNOBS). File chữ load từ @import trong file đó. App light-only. -->
     <script>
       (function () {
-        try {
-          localStorage.setItem('nv-dark', 'false');
-          document.documentElement.classList.remove('dark');
-          document.documentElement.style.colorScheme = 'light';
-        } catch (e) {}
-        // Wake Render before JS parses — first /health pays cold start, /api/auth/* can reuse the dyno.
+        // Wake Render before JS parses - first /health pays cold start, /api/auth/* can reuse the dyno.
         try {
           fetch('/health', { cache: 'no-store', credentials: 'omit', keepalive: true }).catch(function () {});
         } catch (e) {}

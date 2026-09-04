@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { AlertTriangle, Plus } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import Card from '../../components/ui/Card';
@@ -78,12 +78,12 @@ export default function CskhBottlenecksPage({ project }: CskhBottlenecksPageProp
   const [deleteTarget, setDeleteTarget] = useState<CskhBottleneck | null>(null);
 
   const rows = useMemo(() => filterBottlenecks(ops.bottlenecks, filter), [ops.bottlenecks, filter]);
-  const selected = rows.find(row => row.id === selectedId) ?? null;
-
-  useEffect(() => {
-    if (selectedId && rows.some(row => row.id === selectedId)) return;
-    setSelectedId(rows[0]?.id ?? null);
-  }, [rows, selectedId]);
+  const nextSelectedId =
+    selectedId && rows.some(row => row.id === selectedId) ? selectedId : (rows[0]?.id ?? null);
+  if (nextSelectedId !== selectedId) {
+    setSelectedId(nextSelectedId);
+  }
+  const selected = rows.find(row => row.id === nextSelectedId) ?? null;
 
   const syncCount = (bottlenecks: CskhBottleneck[]) => {
     const openCount = openBottleneckCount(bottlenecks);

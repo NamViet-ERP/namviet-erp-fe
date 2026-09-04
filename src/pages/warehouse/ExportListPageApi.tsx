@@ -386,7 +386,9 @@ function ExportListPageApi({ initialProjectCode, openVoucherCode }: ExportListPa
     const match = exports.find(
       e => e.voucherCode.toLowerCase() === openVoucherCode.toLowerCase(),
     );
-        if (match) {
+    if (match) {
+      // Deep-link from navigation state opens matching voucher once list loads
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- deep-link seeds search once
       setSearch(openVoucherCode);
       void openDetail(match);
     }

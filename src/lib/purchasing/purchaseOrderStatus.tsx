@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components -- status helpers colocated with PoStatusPill */
 export type PoPillTone = 'ok' | 'warn' | 'danger' | 'neutral' | 'info';
 
 export function poApprovalStatus(v: string | null | undefined): { label: string; tone: PoPillTone } {

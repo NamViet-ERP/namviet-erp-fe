@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import Modal from '../../../components/ui/Modal';
 import { showToast } from '../../../components/ui/Toast';
@@ -125,40 +125,41 @@ export default function DefectCreateModal({ isOpen, onClose }: DefectCreateModal
     });
   };
 
-  useEffect(() => {
+  const [poDraftSeedKey, setPoDraftSeedKey] = useState('');
+  if (poPreviewKey !== poDraftSeedKey) {
+    setPoDraftSeedKey(poPreviewKey);
     if (!selectedPoCode || poPreviewLines.length === 0) {
       setPoLineDrafts({});
-      return;
+    } else {
+      const next: Record<number, LineDraft> = {};
+      for (const line of poPreviewLines) {
+        next[line.poItemId] = {
+          selected: false,
+          qty: line.available > 0 ? String(line.available) : '0',
+          lineReason: '',
+        };
+      }
+      setPoLineDrafts(next);
     }
-    // Chỉ khởi tạo danh sách — không tick sẵn; user tự chọn dòng.
-    const next: Record<number, LineDraft> = {};
-    for (const line of poPreviewLines) {
-      next[line.poItemId] = {
-        selected: false,
-        qty: line.available > 0 ? String(line.available) : '0',
-        lineReason: '',
-      };
-    }
-    setPoLineDrafts(next);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- chỉ reset khi đổi PO/preview
-  }, [poPreviewKey]);
+  }
 
-  useEffect(() => {
+  const [stockDraftSeedKey, setStockDraftSeedKey] = useState('');
+  if (stockPreviewKey !== stockDraftSeedKey) {
+    setStockDraftSeedKey(stockPreviewKey);
     if (!stockProjectCode || stockPreviewLines.length === 0) {
       setStockLineDrafts({});
-      return;
+    } else {
+      const next: Record<string, LineDraft> = {};
+      for (const line of stockPreviewLines) {
+        next[line.materialCode] = {
+          selected: false,
+          qty: line.available > 0 ? String(line.available) : '0',
+          lineReason: '',
+        };
+      }
+      setStockLineDrafts(next);
     }
-    const next: Record<string, LineDraft> = {};
-    for (const line of stockPreviewLines) {
-      next[line.materialCode] = {
-        selected: false,
-        qty: line.available > 0 ? String(line.available) : '0',
-        lineReason: '',
-      };
-    }
-    setStockLineDrafts(next);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- chỉ reset khi đổi kho/preview
-  }, [stockPreviewKey]);
+  }
 
   const resetCreate = () => {
     setSourceType('po');
