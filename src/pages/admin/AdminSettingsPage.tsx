@@ -10,7 +10,7 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { UI_LOADING } from '../../lib/uiMessages';
-import type { SystemRole } from '../../services/rolesService';
+import { isSameRoleLabel, type SystemRole } from '../../services/rolesService';
 import { useRoles, useCreateRole, useDeleteRole, useToggleRoleStatus, useUpdateRole } from '../../hooks/useRoles';
 
 export default function AdminSettingsPage() {
@@ -21,17 +21,29 @@ export default function AdminSettingsPage() {
   const [editTarget, setEditTarget] = useState<SystemRole | null>(null);
   const [editLabel, setEditLabel] = useState('');
 
-  const { data: roles = [], isLoading } = useRoles({ search: searchTerm || undefined });
+  const { data: allRoles = [], isLoading } = useRoles();
   const createMutation = useCreateRole();
   const updateMutation = useUpdateRole();
   const deleteMutation = useDeleteRole();
   const toggleMutation = useToggleRoleStatus();
+
+  const roles = allRoles.filter(role => {
+    const q = searchTerm.trim();
+    if (!q) return true;
+    const needle = q.toLocaleLowerCase('vi');
+    return role.label.toLocaleLowerCase('vi').includes(needle)
+      || role.code.toLowerCase().includes(needle);
+  });
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     const val = label.trim();
     if (!val) {
       showToast('warning', 'Vui lòng nhập tên vai trò');
+      return;
+    }
+    if (allRoles.some(role => isSameRoleLabel(role.label, val))) {
+      showToast('warning', 'Tên vai trò đã tồn tại.');
       return;
     }
 
@@ -78,6 +90,10 @@ export default function AdminSettingsPage() {
     }
     if (val === editTarget.label) {
       setEditTarget(null);
+      return;
+    }
+    if (allRoles.some(role => role.code !== editTarget.code && isSameRoleLabel(role.label, val))) {
+      showToast('warning', 'Tên vai trò đã tồn tại.');
       return;
     }
 
@@ -146,7 +162,7 @@ export default function AdminSettingsPage() {
               {searchTerm ? 'Không tìm thấy vai trò phù hợp.' : 'Chưa có vai trò nào.'}
             </div>
           ) : (
-            <div className="hrm-recruitment-positions-grid">
+            <div className="hrm-recruitment-positions-grid" aria-label="Danh sách vai trò, sắp xếp A-Z theo tên">
               {roles.map(role => (
                 <div
                   key={role.code}
@@ -206,9 +222,9 @@ export default function AdminSettingsPage() {
           )}
 
           <p className="hrm-recruitment-positions-meta">
-            Tổng <strong>{roles.length}</strong> vai trò
+            Tổng <strong>{roles.length}</strong> vai trò · Sắp xếp A-Z theo tên
             {searchTerm && (
-              <> · Đang lọc theo &ldquo;{searchTerm}&rdquo;</>
+              <> · Đang lọc theo "{searchTerm}"</>
             )}
           </p>
         </HrmPanel>

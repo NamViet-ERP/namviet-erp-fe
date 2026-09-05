@@ -25,6 +25,10 @@ function sortByLabel<T extends { label: string }>(roles: T[]): T[] {
   return [...roles].sort((a, b) => a.label.localeCompare(b.label, 'vi', { sensitivity: 'base' }));
 }
 
+export function isSameRoleLabel(a: string, b: string): boolean {
+  return a.trim().replace(/\s+/g, ' ').localeCompare(b.trim().replace(/\s+/g, ' '), 'vi', { sensitivity: 'base' }) === 0;
+}
+
 export const rolesService = {
   async listActiveOptions(): Promise<{ value: string; label: string }[]> {
     const roles = await apiClient.get<SystemRole[]>(ROLES_ENDPOINT, { activeOnly: true });

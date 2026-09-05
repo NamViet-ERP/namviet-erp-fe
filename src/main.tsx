@@ -8,10 +8,12 @@ import SessionExpiredDialog from './components/SessionExpiredDialog';
 import { AuthProvider } from './auth/AuthProvider';
 import { queryClient } from './lib/queryClient';
 import { startApiKeepAlive } from './lib/apiKeepAlive';
+import { startProactiveTokenRefresh } from './lib/authProactiveRefresh';
 import { authService, initAuthTokenProvider } from './services/authService';
 
 initAuthTokenProvider();
 startApiKeepAlive();
+startProactiveTokenRefresh();
 void authService.ensureSession();
 
 createRoot(document.getElementById('root') as HTMLElement).render(

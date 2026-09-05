@@ -13,12 +13,23 @@ export const TOKEN_KEY = 'nv-access-token';
 export const REFRESH_KEY = 'nv-refresh-token';
 
 let memoryAccessToken: string | null = null;
+const accessTokenListeners = new Set<() => void>();
 
 /** Playwright-only: access JWT in localStorage so storageState can reuse it across tests. */
 const E2E_ACCESS_TOKEN_KEY = 'nv-e2e-access-token';
 
 function isE2E(): boolean {
   return import.meta.env.VITE_E2E === 'true';
+}
+
+function emitAccessTokenChanged(): void {
+  accessTokenListeners.forEach(listener => listener());
+}
+
+/** Subscribe to access-token set/clear (used by proactive refresh scheduler). */
+export function subscribeAccessToken(listener: () => void): () => void {
+  accessTokenListeners.add(listener);
+  return () => accessTokenListeners.delete(listener);
 }
 
 export function clearLegacyTokenStorage(): void {
@@ -39,17 +50,20 @@ export function clearAuthSession(): void {
   localStorage.removeItem('nv-session-user');
   localStorage.removeItem('nv-user-id');
   localStorage.removeItem('nv-user-role');
+  emitAccessTokenChanged();
 }
 
 export function setAccessToken(token: string | null): void {
   memoryAccessToken = token && token.trim() ? token : null;
-  if (!isE2E()) return;
-  try {
-    if (memoryAccessToken) localStorage.setItem(E2E_ACCESS_TOKEN_KEY, memoryAccessToken);
-    else localStorage.removeItem(E2E_ACCESS_TOKEN_KEY);
-  } catch {
-    // ignore
+  if (isE2E()) {
+    try {
+      if (memoryAccessToken) localStorage.setItem(E2E_ACCESS_TOKEN_KEY, memoryAccessToken);
+      else localStorage.removeItem(E2E_ACCESS_TOKEN_KEY);
+    } catch {
+      // ignore
+    }
   }
+  emitAccessTokenChanged();
 }
 
 export function getStoredToken(): string | null {
