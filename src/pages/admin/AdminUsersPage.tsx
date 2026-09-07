@@ -309,7 +309,7 @@ export default function AdminUsersPage() {
                     onClick={e => handleRowNavigate(user, e)}
                     title="Xem chi tiết"
                   >
-                    <td className="table-cell">
+                    <td className="table-cell admin-users-col-code">
                       {user.employeeCode && user.employeeCode !== '—' ? (
                         <EntityCodeLink
                           code={user.employeeCode}

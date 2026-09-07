@@ -1,5 +1,6 @@
 import { apiClient } from '../lib/apiClient';
 import type { CreateSystemUserDto } from '../constants/systemUsers';
+import { suggestNextSystemCode } from '../lib/admin/suggestedSystemCode';
 
 const USERS_ENDPOINT = '/api/admin/users';
 
@@ -133,6 +134,11 @@ export const adminUsersService = {
 
   async create(dto: CreateManualAccountDto): Promise<AdminUserRow> {
     return apiClient.post<AdminUserRow>(`${USERS_ENDPOINT}/system`, dto);
+  },
+
+  async suggestSystemCode(): Promise<string> {
+    const result = await adminUsersService.list({ page: 1, pageSize: 100, source: 'manual' });
+    return suggestNextSystemCode(result.items.map(row => row.employeeCode));
   },
 
   async provisionAccount(dto: ProvisionAccountDto): Promise<AdminUserRow> {

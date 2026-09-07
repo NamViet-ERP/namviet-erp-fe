@@ -1,18 +1,20 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Modal from '../ui/Modal';
 import FormField from '../ui/FormField';
 import HrmSelect from '../hr/HrmSelect';
 import AdminPasswordField from './AdminPasswordField';
 import { showToast } from '../ui/Toast';
 import { validatePassword } from '../../lib/validatePassword';
+import { validateSystemAccountCode } from '../../lib/admin/suggestedSystemCode';
 import { getApiErrorMessage } from '../../lib/apiClient';
-import { useCreateAdminUser } from '../../hooks/useAdminUsers';
+import { useCreateAdminUser, useSuggestedSystemCode } from '../../hooks/useAdminUsers';
 import type { CreateSystemUserDto, SystemUserRole } from '../../constants/systemUsers';
 import { ADMIN_EMAIL_PLACEHOLDER } from '../../constants/branding';
 
 const EMPTY_FORM: CreateSystemUserDto = {
   name: '',
   email: '',
+  employeeCode: '',
   role: 'storekeeper',
 };
 
@@ -27,19 +29,27 @@ interface AdminCreateSystemUserModalProps {
   roleOptions: RoleOption[];
 }
 
-/** Design read: compact ERP create-account modal - identity + role + password only. */
+/** Design read: compact ERP create-account modal - identity + system code + role + password. */
 export default function AdminCreateSystemUserModal({
   open,
   onClose,
   roleOptions,
 }: AdminCreateSystemUserModalProps) {
   const createMutation = useCreateAdminUser();
+  const { data: suggestedCode } = useSuggestedSystemCode(open);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [codeTouched, setCodeTouched] = useState(false);
   const [createPassword, setCreatePassword] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  useEffect(() => {
+    if (!open || !suggestedCode || codeTouched) return;
+    setForm(f => (f.employeeCode === suggestedCode ? f : { ...f, employeeCode: suggestedCode }));
+  }, [open, suggestedCode, codeTouched]);
+
   const resetManualForm = () => {
     setForm(EMPTY_FORM);
+    setCodeTouched(false);
     setCreatePassword('');
     setErrors({});
   };
@@ -52,6 +62,8 @@ export default function AdminCreateSystemUserModal({
   const validateManualForm = () => {
     const next: Record<string, string> = {};
     if (!form.name.trim()) next.name = 'Vui lòng nhập họ tên';
+    const codeErr = validateSystemAccountCode(form.employeeCode ?? '');
+    if (codeErr) next.employeeCode = codeErr;
     if (!form.email.trim()) next.email = 'Vui lòng nhập email';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) next.email = 'Email không hợp lệ';
     if (!form.role) next.role = 'Vui lòng chọn vai trò';
@@ -72,6 +84,7 @@ export default function AdminCreateSystemUserModal({
       await createMutation.mutateAsync({
         name: form.name,
         email: form.email,
+        employeeCode: form.employeeCode?.trim(),
         role: form.role,
         password: createPassword,
       });
@@ -115,7 +128,23 @@ export default function AdminCreateSystemUserModal({
             placeholder="Nguyễn Văn A"
           />
         </FormField>
-        <FormField label="Email" required error={errors.email}>
+        <FormField label="Mã tài khoản" required error={errors.employeeCode}>
+          <input
+            className="form-input font-mono"
+            value={form.employeeCode ?? ''}
+            onChange={e => {
+              setCodeTouched(true);
+              setForm(f => ({ ...f, employeeCode: e.target.value }));
+              setErrors(err => ({ ...err, employeeCode: '' }));
+            }}
+            placeholder="SYS-0001"
+            maxLength={50}
+            autoComplete="off"
+            spellCheck={false}
+            aria-label="Mã tài khoản hệ thống"
+          />
+        </FormField>
+        <FormField label="Email" required error={errors.email} className="admin-users-create-form__full">
           <input
             type="email"
             className="form-input"

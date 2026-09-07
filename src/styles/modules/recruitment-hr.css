@@ -1545,6 +1545,7 @@
   }
   .admin-users-col-code {
     width: 8rem;
+    white-space: nowrap;
   }
   .admin-users-col-phone {
     width: 8rem;

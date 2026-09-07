@@ -79,6 +79,14 @@ export function useAdminUser(id: string | undefined, source: AdminUserSource) {
   });
 }
 
+export function useSuggestedSystemCode(enabled: boolean) {
+  return useQuery({
+    queryKey: [...adminUsersQueryKey, 'suggested-system-code'] as const,
+    queryFn: () => adminUsersService.suggestSystemCode(),
+    enabled,
+  });
+}
+
 export function useCreateAdminUser() {
   const qc = useQueryClient();
   return useMutation({
