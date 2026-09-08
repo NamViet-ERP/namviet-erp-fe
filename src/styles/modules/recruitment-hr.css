@@ -1373,7 +1373,9 @@
     padding-top: 0;
   }
   .admin-user-detail-board.hrm-panel {
-    border-color: var(--table-border);
+    border-color: var(--md-outline);
+    /* Viền trong rõ hơn nền trắng (outline-variant quá nhạt) */
+    --table-border: var(--md-outline);
   }
   .admin-user-detail-board__head {
     display: flex;
@@ -1392,10 +1394,46 @@
     font-weight: var(--fw-semibold);
     color: var(--nv-table-header-text);
   }
+  .admin-user-detail-profile-edit {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+    margin: 0;
+    padding: 0;
+  }
+  .admin-user-detail-profile-edit > .form-field {
+    min-width: 0;
+    margin: 0;
+    padding: 10px 16px;
+    border-right: 1px solid var(--table-border);
+    border-bottom: 1px solid var(--table-border);
+  }
+  .admin-user-detail-profile-edit > .form-field:nth-child(2n) {
+    border-right: none;
+  }
+  .admin-user-detail-profile-edit .form-input {
+    border-color: var(--md-outline);
+    background: var(--md-surface-container-high);
+  }
+  .admin-user-detail-profile-edit__actions {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--table-border);
+    background: color-mix(in srgb, var(--nv-navy) 3.5%, var(--md-surface-container-high));
+  }
   .admin-user-detail-facts {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
     margin: 0;
+  }
+  .admin-user-detail-facts--cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .admin-user-detail-facts--cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .admin-user-detail-facts > div {
     min-width: 0;
@@ -1404,7 +1442,17 @@
     border-right: 1px solid var(--table-border);
     border-bottom: 1px solid var(--table-border);
   }
-  .admin-user-detail-facts > div:nth-child(3n) {
+  .admin-user-detail-facts--cols-4 > div:nth-child(4n),
+  .admin-user-detail-facts--cols-3 > div:nth-child(3n) {
+    border-right: none;
+  }
+  /* Hàng cuối thiếu ô: kéo full width, không để khoảng trống + border lệch */
+  .admin-user-detail-facts--cols-3 > div:last-child:nth-child(3n + 1) {
+    grid-column: 1 / -1;
+    border-right: none;
+  }
+  .admin-user-detail-facts--cols-3 > div:last-child:nth-child(3n + 2) {
+    grid-column: span 2;
     border-right: none;
   }
   .admin-user-detail-facts dt {
@@ -1426,7 +1474,12 @@
   }
   .admin-user-detail-actions {
     display: grid;
-    grid-template-columns: minmax(14rem, 0.9fr) minmax(0, 1.4fr);
+  }
+  .admin-user-detail-actions--cols-4 {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
+  }
+  .admin-user-detail-actions--cols-3 {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
   }
   .admin-user-detail-actions__block {
     display: flex;
@@ -1436,6 +1489,7 @@
     min-width: 0;
     padding: 12px 16px;
     border-right: 1px solid var(--table-border);
+    background: var(--md-surface-container-high);
   }
   .admin-user-detail-actions__block:last-child {
     border-right: none;
@@ -1473,8 +1527,11 @@
     min-width: 12rem;
     width: auto;
   }
-  .admin-user-detail-role .hrm-select__trigger {
+  .admin-user-detail-role .hrm-select__trigger,
+  .admin-user-detail-role .hrm-field-select {
     width: 100%;
+    border-color: var(--md-outline);
+    background: var(--md-surface);
   }
   .admin-user-detail-pending {
     margin: 0;
@@ -1491,6 +1548,9 @@
       margin-top: 0;
     }
     .admin-user-detail-facts {
+      grid-template-columns: 1fr;
+    }
+    .admin-user-detail-profile-edit {
       grid-template-columns: 1fr;
     }
     .admin-user-detail-facts > div {

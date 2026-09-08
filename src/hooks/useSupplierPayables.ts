@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { queryKeys } from '../services/queryKeys';
 import {
   supplierPayablesService,
@@ -9,6 +9,8 @@ export function useSupplierPayables(params: SupplierPayableListParams = {}) {
   return useQuery({
     queryKey: queryKeys.supplierPayables.report(params),
     queryFn: () => supplierPayablesService.getReport(params),
+    // Giữ báo cáo trước khi đổi lọc status/NCC/search → tránh skeleton làm giật layout.
+    placeholderData: keepPreviousData,
   });
 }
 

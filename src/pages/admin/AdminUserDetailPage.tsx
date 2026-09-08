@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { KeyRound, UserPlus } from 'lucide-react';
+import { KeyRound, Pencil, UserPlus } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import { HrmBackButton } from '../../components/hr/HrmPageChrome';
 import HrmPanel from '../../components/hr/HrmPanel';
@@ -19,6 +19,7 @@ import {
   useProvisionAdminAccount,
   useResetAdminPassword,
   useToggleAdminUserStatus,
+  useUpdateAdminUserProfile,
 } from '../../hooks/useAdminUsers';
 import { useActiveRoleOptions } from '../../hooks/useRoles';
 import { formatAdminDateCell } from '../../lib/hrm/formatters';
@@ -54,6 +55,7 @@ export default function AdminUserDetailPage() {
   const resetMutation = useResetAdminPassword();
   const toggleMutation = useToggleAdminUserStatus();
   const changeRoleMutation = useChangeAdminUserRole();
+  const updateProfileMutation = useUpdateAdminUserProfile();
 
   const [showProvision, setShowProvision] = useState(false);
   const [provisionRole, setProvisionRole] = useState<SystemUserRole>('storekeeper');
@@ -68,6 +70,11 @@ export default function AdminUserDetailPage() {
   const [prevRoleCode, setPrevRoleCode] = useState<string | undefined>(undefined);
 
   const [lockConfirmOpen, setLockConfirmOpen] = useState(false);
+
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [profileErrors, setProfileErrors] = useState<Record<string, string>>({});
 
   const sessionUser = getSessionUser();
 
@@ -100,6 +107,42 @@ export default function AdminUserDetailPage() {
 
   const isSelfAccount = isCurrentAdminUserRow(sessionUser, user);
   const roleDirty = Boolean(user.hasAccount && selectedRole && selectedRole !== user.roleCode);
+  const canEditProfile = source === 'manual' && user.hasAccount;
+
+  const startEditProfile = () => {
+    setEditName(user.fullName === '—' ? '' : user.fullName);
+    setEditEmail(user.email === '—' ? '' : user.email);
+    setProfileErrors({});
+    setEditingProfile(true);
+  };
+
+  const cancelEditProfile = () => {
+    setEditingProfile(false);
+    setProfileErrors({});
+  };
+
+  const handleSaveProfile = async () => {
+    const name = editName.trim();
+    const email = editEmail.trim().toLowerCase();
+    const nextErrors: Record<string, string> = {};
+    if (!name) nextErrors.name = 'Họ tên là bắt buộc.';
+    if (!email || !email.includes('@')) nextErrors.email = 'Email không hợp lệ.';
+    setProfileErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
+
+    try {
+      await updateProfileMutation.mutateAsync({
+        toggleId: user.toggleId,
+        source,
+        name,
+        email,
+      });
+      showToast('success', 'Đã cập nhật hồ sơ tài khoản');
+      setEditingProfile(false);
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không cập nhật được hồ sơ'));
+    }
+  };
 
   const handleToggle = async (next: boolean) => {
     if (!user.hasAccount) return;
@@ -235,6 +278,16 @@ export default function AdminUserDetailPage() {
                   Cấp tài khoản
                 </button>
               )}
+              {canEditProfile && !editingProfile ? (
+                <button
+                  type="button"
+                  className="btn btn-outline flex items-center gap-2"
+                  onClick={startEditProfile}
+                >
+                  <Pencil size={16} aria-hidden />
+                  Chỉnh sửa
+                </button>
+              ) : null}
               {user.hasAccount && user.accountUserId && (
                 <button
                   type="button"
@@ -256,35 +309,99 @@ export default function AdminUserDetailPage() {
           <span className={statusBadgeClass(user)}>{user.statusLabel}</span>
         </header>
 
-        <dl className="admin-user-detail-facts">
-          <div>
-            <dt>Email đăng nhập</dt>
-            <dd className="admin-user-detail-facts__mono">{dash(user.email)}</dd>
+        {editingProfile ? (
+          <div className="admin-user-detail-profile-edit">
+            <FormField label="Họ tên" required error={profileErrors.name}>
+              <input
+                id="admin-user-edit-name"
+                className="form-input"
+                value={editName}
+                onChange={e => setEditName(e.target.value)}
+                disabled={updateProfileMutation.isPending}
+                autoComplete="name"
+              />
+            </FormField>
+            <FormField label="Email đăng nhập" required error={profileErrors.email}>
+              <input
+                id="admin-user-edit-email"
+                type="email"
+                className="form-input"
+                value={editEmail}
+                onChange={e => setEditEmail(e.target.value)}
+                disabled={updateProfileMutation.isPending}
+                autoComplete="email"
+              />
+            </FormField>
+            <div className="admin-user-detail-profile-edit__actions">
+              <button
+                type="button"
+                className="btn btn-outline"
+                disabled={updateProfileMutation.isPending}
+                onClick={cancelEditProfile}
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={updateProfileMutation.isPending}
+                onClick={() => void handleSaveProfile()}
+              >
+                {updateProfileMutation.isPending ? 'Đang lưu...' : 'Lưu'}
+              </button>
+            </div>
           </div>
-          <div>
-            <dt>Số điện thoại</dt>
-            <dd>{dash(user.phone)}</dd>
-          </div>
-          <div>
-            <dt>Loại</dt>
-            <dd>{source === 'manual' ? 'Tài khoản hệ thống' : 'Nhân viên HR'}</dd>
-          </div>
-          <div>
-            <dt>Bộ phận</dt>
-            <dd>{dash(user.department)}</dd>
-          </div>
-          <div>
-            <dt>Chức vụ</dt>
-            <dd>{dash(user.position)}</dd>
-          </div>
-          <div>
-            <dt>Ngày tạo / vào làm</dt>
-            <dd className="tabular-nums">{dash(formatAdminDateCell(user.createdAt))}</dd>
-          </div>
-        </dl>
+        ) : (
+          <dl
+            className={
+              source === 'manual'
+                ? 'admin-user-detail-facts admin-user-detail-facts--cols-4'
+                : 'admin-user-detail-facts admin-user-detail-facts--cols-3'
+            }
+          >
+            <div>
+              <dt>Họ tên</dt>
+              <dd>{dash(user.fullName)}</dd>
+            </div>
+            <div>
+              <dt>Email đăng nhập</dt>
+              <dd className="admin-user-detail-facts__mono">{dash(user.email)}</dd>
+            </div>
+            <div>
+              <dt>Loại</dt>
+              <dd>{source === 'manual' ? 'Tài khoản hệ thống' : 'Nhân viên HR'}</dd>
+            </div>
+            {source === 'employee' ? (
+              <>
+                <div>
+                  <dt>Số điện thoại</dt>
+                  <dd>{dash(user.phone)}</dd>
+                </div>
+                <div>
+                  <dt>Bộ phận</dt>
+                  <dd>{dash(user.department)}</dd>
+                </div>
+                <div>
+                  <dt>Chức vụ</dt>
+                  <dd>{dash(user.position)}</dd>
+                </div>
+              </>
+            ) : null}
+            <div>
+              <dt>{source === 'manual' ? 'Ngày tạo' : 'Ngày tạo / vào làm'}</dt>
+              <dd className="tabular-nums">{dash(formatAdminDateCell(user.createdAt))}</dd>
+            </div>
+          </dl>
+        )}
 
         {user.hasAccount ? (
-          <div className="admin-user-detail-actions">
+          <div
+            className={
+              source === 'manual'
+                ? 'admin-user-detail-actions admin-user-detail-actions--cols-4'
+                : 'admin-user-detail-actions admin-user-detail-actions--cols-3'
+            }
+          >
             <div className="admin-user-detail-actions__block">
               <span className="admin-user-detail-actions__label">Tài khoản</span>
               <div className="admin-user-detail-actions__row">

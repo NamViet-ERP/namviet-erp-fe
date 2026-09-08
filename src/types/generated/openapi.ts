@@ -679,6 +679,53 @@ export interface paths {
         };
         trace?: never;
     };
+    "/api/admin/users/{id}/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: {
+                    source?: string;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateAdminUserProfileRequest"];
+                    "text/json": components["schemas"]["UpdateAdminUserProfileRequest"];
+                    "application/*+json": components["schemas"]["UpdateAdminUserProfileRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["AdminUserDto"];
+                        "application/json": components["schemas"]["AdminUserDto"];
+                        "text/json": components["schemas"]["AdminUserDto"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
     "/api/admin/users/{accountUserId}/password": {
         parameters: {
             query?: never;
@@ -16960,6 +17007,10 @@ export interface components {
         };
         UpdateAdminRoleRequest: {
             label: string;
+        };
+        UpdateAdminUserProfileRequest: {
+            name: string;
+            email: string;
         };
         UpdateAdminUserRoleRequest: {
             role: string;

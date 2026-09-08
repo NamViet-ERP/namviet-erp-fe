@@ -174,7 +174,9 @@ export default function SupplierPayablesPage() {
     }),
     [supplierId, status, search],
   );
-  const { data, isLoading, isError, error } = useSupplierPayables(params);
+  const { data, isLoading, isFetching, isPlaceholderData, isError, error } = useSupplierPayables(params);
+  const showInitialLoading = isLoading && !data;
+  const isRefetching = isFetching && isPlaceholderData;
 
   const kpis = data?.kpis;
   const aging = data?.aging ?? [];
@@ -231,7 +233,7 @@ export default function SupplierPayablesPage() {
             title="Tổng quan công nợ"
             desc="Còn phải trả theo DNTT đã lập."
           >
-            {isLoading || !kpis ? (
+            {showInitialLoading || !kpis ? (
               <div className="ops-projects-board__body">
                 <Skeleton variant="rect" height={196} />
               </div>
@@ -249,7 +251,10 @@ export default function SupplierPayablesPage() {
             title="Công nợ theo nhà cung cấp"
             desc="Tổng hợp đề nghị, đã trả và còn nợ theo từng NCC."
           >
-            <div className="wms-inventory-table-wrap overflow-x-auto table-scroll">
+            <div
+              className={`wms-inventory-table-wrap overflow-x-auto table-scroll${isRefetching ? ' is-refetching' : ''}`}
+              aria-busy={isRefetching || undefined}
+            >
               <table className="wms-inventory-table">
                 <thead>
                   <tr>
@@ -264,7 +269,7 @@ export default function SupplierPayablesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {isLoading ? (
+                  {showInitialLoading ? (
                     <TableSkeletonRows colSpan={8} rows={6} />
                   ) : suppliers.length === 0 ? (
                     <tr>
@@ -339,7 +344,7 @@ export default function SupplierPayablesPage() {
             </div>
           </ApBoard>
 
-          {!isLoading && upcoming.length > 0 ? (
+          {!showInitialLoading && upcoming.length > 0 ? (
             <ApBoard
               title="Lịch thanh toán sắp tới"
               desc="Khoản còn nợ chưa quá hạn trong 30 ngày - phục vụ kế hoạch dòng tiền."
@@ -435,7 +440,11 @@ export default function SupplierPayablesPage() {
               </>
             )}
           >
-            <div id="sup-ap-lines" className="wms-inventory-table-wrap overflow-x-auto table-scroll">
+            <div
+              id="sup-ap-lines"
+              className={`wms-inventory-table-wrap overflow-x-auto table-scroll${isRefetching ? ' is-refetching' : ''}`}
+              aria-busy={isRefetching || undefined}
+            >
               <table className="wms-inventory-table">
                 <thead>
                   <tr>
@@ -451,7 +460,7 @@ export default function SupplierPayablesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {isLoading ? (
+                  {showInitialLoading ? (
                     <TableSkeletonRows colSpan={LINE_COL_COUNT} rows={8} />
                   ) : lines.length === 0 ? (
                     <tr>

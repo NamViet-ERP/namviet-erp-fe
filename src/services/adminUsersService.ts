@@ -33,6 +33,13 @@ export interface ChangeAdminUserRoleDto {
   role: string;
 }
 
+export interface UpdateAdminUserProfileDto {
+  toggleId: string;
+  source: AdminUserSource;
+  name: string;
+  email: string;
+}
+
 export interface ProvisionAccountDto {
   employeeId: string;
   role: string;
@@ -159,6 +166,13 @@ export const adminUsersService = {
     return apiClient.patch<AdminUserRow>(
       `${USERS_ENDPOINT}/${dto.toggleId}/role?source=${dto.source}`,
       { role: dto.role },
+    );
+  },
+
+  async updateProfile(dto: UpdateAdminUserProfileDto): Promise<AdminUserRow> {
+    return apiClient.patch<AdminUserRow>(
+      `${USERS_ENDPOINT}/${dto.toggleId}/profile?source=${dto.source}`,
+      { name: dto.name, email: dto.email },
     );
   },
 };

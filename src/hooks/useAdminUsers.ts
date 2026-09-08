@@ -11,6 +11,7 @@ import {
   type CreateManualAccountDto,
   type ProvisionAccountDto,
   type ResetPasswordDto,
+  type UpdateAdminUserProfileDto,
 } from '../services/adminUsersService';
 import { queryKeys } from '../services/queryKeys';
 
@@ -125,6 +126,28 @@ export function useChangeAdminUserRole() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (dto: ChangeAdminUserRoleDto) => adminUsersService.changeRole(dto),
+    onSuccess: (user, variables) => {
+      qc.setQueriesData<AdminUserPagedResult>({ queryKey: adminUsersQueryKey }, old => {
+        if (!old?.items) return old;
+        return {
+          ...old,
+          items: old.items.map(row =>
+            row.toggleId === variables.toggleId && row.source === variables.source ? user : row,
+          ),
+        };
+      });
+      qc.setQueryData(
+        queryKeys.adminUsers.detail(variables.toggleId, variables.source),
+        user,
+      );
+    },
+  });
+}
+
+export function useUpdateAdminUserProfile() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (dto: UpdateAdminUserProfileDto) => adminUsersService.updateProfile(dto),
     onSuccess: (user, variables) => {
       qc.setQueriesData<AdminUserPagedResult>({ queryKey: adminUsersQueryKey }, old => {
         if (!old?.items) return old;

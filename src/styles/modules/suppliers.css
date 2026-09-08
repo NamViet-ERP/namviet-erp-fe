@@ -781,3 +781,14 @@
   min-width: 0;
 }
 
+
+/* Đổi lọc: giữ bảng cũ, chỉ giảm opacity nhẹ thay vì skeleton (tránh giật layout). */
+.sup-ap .wms-inventory-table-wrap.is-refetching {
+  opacity: 0.72;
+  transition: opacity var(--md-duration-fast) var(--md-easing);
+}
+@media (prefers-reduced-motion: reduce) {
+  .sup-ap .wms-inventory-table-wrap.is-refetching {
+    transition: none;
+  }
+}
