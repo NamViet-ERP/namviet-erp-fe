@@ -306,9 +306,9 @@ function DashboardWarehouseContent({
 
       <div className="dashboard-kpi-grid warehouse-dash-kpis" role="list" aria-label="Chỉ số kho">
         <Card
-          title="Tổng tồn kho"
+          title="Tồn tất cả kho"
           value={hasLoadError ? '-' : fmtStockQty(data.totalStock)}
-          subtitle="vật tư trong tất cả kho dự án"
+          subtitle="Kho trung tâm cộng các kho dự án"
           accent="info"
           icon={Package}
         />

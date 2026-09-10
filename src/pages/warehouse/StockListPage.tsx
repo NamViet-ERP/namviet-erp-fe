@@ -7,7 +7,7 @@ export default function StockListPage() {
     <div className="hrm-page">
       <PageHeader
         title="Tồn kho"
-        subtitle={`Theo dõi tồn ${GENERAL_WAREHOUSE_LABEL_LOWER} và phân bổ theo kho dự án.`}
+        subtitle={`Hai sổ riêng: ${GENERAL_WAREHOUSE_LABEL_LOWER} (kho tổng) và từng kho dự án.`}
       />
       <ApiStockMatrixView />
     </div>

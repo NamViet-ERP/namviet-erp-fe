@@ -134,6 +134,9 @@ export default function TransferCreateModal({
         {transferMode === 'return' ? (
           <FormField label="Đích">
             <input className="form-input bg-[var(--md-surface-variant)]" value={GENERAL_WAREHOUSE_LABEL} readOnly disabled />
+            <p className="mt-2 text-[length:var(--fs-xs)] text-[var(--md-on-surface-variant)]">
+              Duyệt phiếu này mới trừ kho dự án và cộng {GENERAL_WAREHOUSE_LABEL_LOWER}. Nhập/xuất không đi đường này.
+            </p>
           </FormField>
         ) : (
           <FormField label="Kho dự án đích" required error={errors?.toProjectCode}>

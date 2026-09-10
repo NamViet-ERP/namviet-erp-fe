@@ -27,7 +27,7 @@ test.describe('WMS pages', () => {
 
   test('dashboard shows KPI cards', async ({ page }) => {
     await page.goto('/warehouse/dashboard-warehouse');
-    await expect(page.getByText('Tổng tồn kho')).toBeVisible();
+    await expect(page.getByText('Tồn tất cả kho')).toBeVisible();
     await expect(page.getByText('Tổng giá trị')).toBeVisible();
     await expect(page.getByText('Kho dự án hoạt động')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Xu hướng Nhập / Xuất' })).toBeVisible();

@@ -15,8 +15,10 @@ import {
   totalUsableQty,
 } from '../../lib/wms/stockMatrixUtils';
 import {
+  COMBINED_AVAILABLE_LABEL,
   GENERAL_WAREHOUSE_LABEL,
   GENERAL_WAREHOUSE_LABEL_LOWER,
+  PROJECT_STOCK_LABEL,
   STOCK_FORMULA_LEGEND,
 } from '../../lib/wms/stockTerminology';
 import { WMS_EMPTY, WMS_ERROR } from '../../lib/wms/messages';
@@ -86,18 +88,33 @@ export default function ApiStockMatrixView() {
                 <th className="table-header-cell text-left stock-col-code">Mã vật tư</th>
                 <th className="table-header-cell text-left stock-col-name">Tên vật tư</th>
                 <th className="table-header-cell text-center stock-col-unit">Đơn vị</th>
-                <th className="table-header-cell text-right stock-col-qty">{GENERAL_WAREHOUSE_LABEL}</th>
-                <th className="table-header-cell text-right stock-col-qty">Tồn thực tế</th>
-                <th className="table-header-cell text-right stock-col-qty" title="Tồn thực tế − xuất/chuyển dự kiến − hàng lỗi tồn kho chờ duyệt (kèm kho trung tâm − giữ)">Khả dụng</th>
-                <th className="table-header-cell text-right stock-col-qty">Nhập dự kiến</th>
-                <th className="table-header-cell text-right stock-col-qty">Xuất dự kiến</th>
+                <th
+                  className="table-header-cell text-right stock-col-qty"
+                  title="Sổ kho công ty / kho tổng. Không tăng khi nhập mua vào dự án. Trừ khi xuất thẳng lấy từ kho này và đã xác nhận thực tế."
+                >
+                  {GENERAL_WAREHOUSE_LABEL}
+                </th>
+                <th
+                  className="table-header-cell text-right stock-col-qty"
+                  title="Tổng tồn các kho dự án. Cộng khi xác nhận nhập thực tế vào dự án. Không gồm kho trung tâm."
+                >
+                  {PROJECT_STOCK_LABEL}
+                </th>
+                <th
+                  className="table-header-cell text-right stock-col-qty"
+                  title="(Kho trung tâm − giữ) + Σ(tồn dự án − xuất/chuyển dự kiến − HL chờ duyệt)"
+                >
+                  {COMBINED_AVAILABLE_LABEL}
+                </th>
+                <th className="table-header-cell text-right stock-col-qty" title="Chỉ kho dự án">Nhập dự kiến</th>
+                <th className="table-header-cell text-right stock-col-qty" title="Chỉ kho dự án">Xuất dự kiến</th>
                 <th
                   className="table-header-cell text-right stock-col-qty"
                   title="Tổng SL phiếu hàng lỗi (HL) chưa từ chối theo mã vật tư"
                 >
                   Hàng lỗi
                 </th>
-                <th className="table-header-cell text-right stock-col-qty" title="Tồn thực tế + nhập/hoàn trả/chuyển kho dự kiến">Tồn dự kiến</th>
+                <th className="table-header-cell text-right stock-col-qty" title="Tồn kho dự án + nhập/hoàn trả/chuyển kho dự kiến">Tồn DK dự án</th>
                 {canViewPrices ? (
                   <th className="table-header-cell text-right stock-col-price" title="WAC từ phiếu nhập đã duyệt trong 12 tháng (ngày duyệt)">Giá bình quân</th>
                 ) : null}

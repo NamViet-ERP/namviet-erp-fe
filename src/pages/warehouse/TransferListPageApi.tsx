@@ -303,7 +303,7 @@ function TransferListPageApi({ initialProjectCode }: TransferListPageApiProps) {
     <div className="hrm-page">
       <PageHeader
         title="Chuyển kho"
-        subtitle={`Hoàn trả về ${GENERAL_WAREHOUSE_LABEL_LOWER} hoặc chuyển vật tư giữa các kho dự án — sau khi thủ kho duyệt.`}
+        subtitle={`Hàng vào ${GENERAL_WAREHOUSE_LABEL_LOWER} chỉ khi hoàn trả và thủ kho duyệt. Nhập/xuất thực tế không cộng kho tổng.`}
         actions={
           <>
             <button type="button" className="hrm-header-btn" onClick={() => void handleExportExcel()} disabled={isExporting}>

@@ -4,7 +4,12 @@ import { Search } from 'lucide-react';
 import Modal from '../ui/Modal';
 import type { StockMatrixRowApiDto } from '../../types/wms';
 import { fmtPlannedStock, fmtStockQtyOrDash } from '../../lib/wms/stockQtyFormat';
-import { STOCK_FORMULA_LEGEND_SHORT, GENERAL_WAREHOUSE_LABEL } from '../../lib/wms/stockTerminology';
+import {
+  COMBINED_AVAILABLE_LABEL,
+  GENERAL_WAREHOUSE_LABEL,
+  PROJECT_STOCK_LABEL,
+  STOCK_FORMULA_LEGEND_SHORT,
+} from '../../lib/wms/stockTerminology';
 import { totalUsableQty } from '../../lib/wms/stockMatrixUtils';
 
 interface Props {
@@ -42,11 +47,11 @@ function StockMaterialProjectContent({ row }: { row: StockMatrixRowApiDto }) {
           <span className="stock-modal-stat-value tabular-nums">{row.generalActualQty}</span>
         </div>
         <div className="stock-modal-stat">
-          <span className="stock-modal-stat-label">Tồn thực tế</span>
+          <span className="stock-modal-stat-label">{PROJECT_STOCK_LABEL}</span>
           <span className="stock-modal-stat-value tabular-nums">{projectActualTotal}</span>
         </div>
         <div className="stock-modal-stat">
-          <span className="stock-modal-stat-label">Khả dụng</span>
+          <span className="stock-modal-stat-label">{COMBINED_AVAILABLE_LABEL}</span>
           <span className="stock-modal-stat-value tabular-nums text-[var(--md-success)]">{usableQty}</span>
         </div>
         <div className="stock-modal-stat">
@@ -64,7 +69,7 @@ function StockMaterialProjectContent({ row }: { row: StockMatrixRowApiDto }) {
           </span>
         </div>
         <div className="stock-modal-stat">
-          <span className="stock-modal-stat-label">Tồn dự kiến</span>
+          <span className="stock-modal-stat-label">Tồn DK dự án</span>
           <span className="stock-modal-stat-value tabular-nums">
             {fmtPlannedStock(projectActualTotal, plannedImportTotal)}
           </span>
