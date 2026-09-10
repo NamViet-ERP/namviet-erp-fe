@@ -462,7 +462,12 @@ export default function EmployeeOnboardForm({
         </div>
         <div>
           <HrmFieldLabel required>Số điện thoại cá nhân</HrmFieldLabel>
-          <input className={hrmFieldClass(Boolean(errors.personalPhone))} {...registerHrmPhone(register, setValue, 'personalPhone')} />
+          <input
+            type="tel"
+            className={hrmFieldClass(Boolean(errors.personalPhone))}
+            placeholder="10 hoặc 11 số, bắt đầu bằng 0"
+            {...registerHrmPhone(register, setValue, 'personalPhone')}
+          />
           {errors.personalPhone && <p className="hrm-field__error">{errors.personalPhone.message}</p>}
         </div>
         <div>

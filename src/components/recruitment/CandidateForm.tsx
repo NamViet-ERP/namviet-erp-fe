@@ -296,7 +296,7 @@ export default function CandidateForm() {
           <input
             type="tel"
             className={hrmFieldClass(Boolean(errors.phone))}
-            placeholder="Nhập số điện thoại"
+            placeholder="10 hoặc 11 số, bắt đầu bằng 0"
             {...registerHrmPhone(register, setValue, 'phone')}
           />
           {errors.phone && <p className="hrm-field__error">{errors.phone.message}</p>}

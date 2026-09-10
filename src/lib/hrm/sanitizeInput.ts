@@ -8,19 +8,20 @@ export function trimFieldValue(value: string): string {
 /** Chỉ giữ chữ số; chuẩn hóa +84 → 0. */
 export function extractPhoneDigits(value: string): string {
   let digits = value.replace(/\D/g, '');
-  if (digits.startsWith('84') && digits.length === 11) {
+  if (digits.startsWith('84') && (digits.length === 11 || digits.length === 12)) {
     digits = `0${digits.slice(2)}`;
   }
   return digits;
 }
 
-/** Định dạng SĐT Việt Nam 4-3-3 (vd. 0123 456 789). */
+/** Định dạng SĐT Việt Nam 4-3-3 (10 số) hoặc 4-3-4 (11 số). */
 export function formatVietnamPhone(value: string): string {
   const digits = extractPhoneDigits(value);
   if (!digits) return '';
   if (digits.length <= 4) return digits;
   if (digits.length <= 7) return `${digits.slice(0, 4)} ${digits.slice(4)}`;
-  return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7, 10)}`;
+  if (digits.length <= 10) return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7, 10)}`;
+  return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7, 11)}`;
 }
 
 /** Trim + format 4-3-3. */
@@ -95,12 +96,14 @@ export function sanitizeEmployeeForSave(data: Record<string, unknown>): Record<s
   return out;
 }
 
+export const VN_PHONE_INVALID =
+  'Nhập 10 hoặc 11 số, bắt đầu bằng 0. Đầu 03, 05, 07, 08, 09 đều được.';
+
 export function validateVietnamPhoneMessage(value: string): string | null {
   const digits = extractPhoneDigits(value);
   if (!digits) return 'Vui lòng nhập số điện thoại';
-  if (digits.length !== 10) return 'Vui lòng nhập số điện thoại hợp lệ';
-  if (!/^0[35789]\d{8}$/.test(digits)) {
-    return 'Vui lòng nhập số điện thoại hợp lệ (ví dụ: 0912345678)';
+  if (!/^0\d{9,10}$/.test(digits)) {
+    return VN_PHONE_INVALID;
   }
   return null;
 }

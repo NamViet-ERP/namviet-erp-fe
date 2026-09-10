@@ -221,7 +221,7 @@ test.describe('HRM flows', () => {
       await expect(page.getByPlaceholder('Nhập họ tên')).toBeVisible();
       await page.getByPlaceholder('Nhập họ tên').fill(`E2E Form UV ${suffix}`);
       await fillHrmDate(page, page.locator('[data-form-field="birthDate"]'), '20/05/1998');
-      await page.getByPlaceholder('Nhập số điện thoại').fill(`08${suffix.slice(0, 8).padEnd(8, '0')}`);
+      await page.locator('[data-form-field="phone"] input').fill(`08${suffix.slice(0, 8).padEnd(8, '0')}`);
       await page.getByPlaceholder('Nhập email').fill(`e2e.form.uv.${suffix}@namviet.vn`);
       await checkRadio(page.locator('[data-form-field="gender"]'), 'Nam');
       await page.getByPlaceholder('Xã/Phường, Quận/Huyện, Tỉnh/Thành...').fill('456 Le Loi, Quan 3, TP HCM');
