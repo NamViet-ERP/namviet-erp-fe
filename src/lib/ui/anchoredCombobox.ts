@@ -59,11 +59,20 @@ export type ComboboxPlacement = 'below' | 'above';
 export function computeAnchoredPanelStyle(
   rect: DOMRect,
   compact: boolean,
+  preferPlacement: 'auto' | 'below' | 'above' = 'below',
 ): { placement: ComboboxPlacement; style: CSSProperties } {
   const spaceBelow = window.innerHeight - rect.bottom - COMBOBOX_GAP - COMBOBOX_VIEWPORT_PAD;
   const spaceAbove = rect.top - COMBOBOX_GAP - COMBOBOX_VIEWPORT_PAD;
-  /* Ưu tiên phía còn nhiều chỗ — tránh list chỉ 1–2 dòng khi ô gần đáy trang */
-  const placement: ComboboxPlacement = spaceAbove > spaceBelow + 24 ? 'above' : 'below';
+
+  let placement: ComboboxPlacement;
+  if (preferPlacement === 'below') {
+    placement = spaceBelow >= COMBOBOX_PANEL_MIN_H || spaceBelow >= spaceAbove ? 'below' : 'above';
+  } else if (preferPlacement === 'above') {
+    placement = spaceAbove >= COMBOBOX_PANEL_MIN_H || spaceAbove >= spaceBelow ? 'above' : 'below';
+  } else {
+    placement = spaceBelow < COMBOBOX_PANEL_MIN_H && spaceAbove > spaceBelow ? 'above' : 'below';
+  }
+
   const room = placement === 'below' ? spaceBelow : spaceAbove;
   const available = Math.max(COMBOBOX_PANEL_MIN_H, room);
   const maxHeight = Math.min(COMBOBOX_PANEL_MAX_H, available);
