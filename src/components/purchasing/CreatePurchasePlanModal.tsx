@@ -347,7 +347,7 @@ export default function CreatePurchasePlanModal({
       isOpen={open}
       onClose={handleClose}
       title={isEdit ? `Sửa ${entityLabel} ${editCode}` : (isAdhoc ? 'Tạo mua hàng phát sinh' : 'Tạo kế hoạch mua hàng')}
-      size="xl"
+      size="wide"
       footer={(
         <>
           <button type="button" className="btn btn-text" onClick={handleClose} disabled={busy}>

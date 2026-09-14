@@ -74,7 +74,7 @@ export default function PurchasePlanCreateLinesTable({
           <thead>
             <tr>
               <th className="table-header-cell text-center">#</th>
-              <th className="table-header-cell">Tên vật tư *</th>
+              <th className="table-header-cell text-left">Tên vật tư *</th>
               <th className="table-header-cell text-center">ĐVT *</th>
               <th className="table-header-cell text-center">SL *</th>
               <th className="table-header-cell text-right">Đơn giá dự toán</th>
@@ -116,7 +116,7 @@ export default function PurchasePlanCreateLinesTable({
                         }}
                       />
                     </td>
-                    <td className="table-cell">
+                    <td className="table-cell text-center">
                       <input
                         className="form-input form-input-sm text-center"
                         value={line.unit}
@@ -127,7 +127,7 @@ export default function PurchasePlanCreateLinesTable({
                         aria-label={`ĐVT dòng ${index + 1}`}
                       />
                     </td>
-                    <td className="table-cell">
+                    <td className="table-cell text-center">
                       <QtyStepper
                         value={line.quantity}
                         min={0}
@@ -136,7 +136,7 @@ export default function PurchasePlanCreateLinesTable({
                         ariaLabel={`Số lượng dòng ${index + 1}`}
                       />
                     </td>
-                    <td className="table-cell">
+                    <td className="table-cell text-right">
                       <CurrencyInput
                         className="form-input form-input-sm text-right input-no-spinner"
                         value={line.budgetUnitPrice}
@@ -152,7 +152,7 @@ export default function PurchasePlanCreateLinesTable({
                       />
                     </td>
                     <td className="table-cell text-right tabular-nums font-semibold">
-                      <div className="import-cell-placeholder import-cell-placeholder--end">
+                      <div className="import-cell-placeholder import-cell-placeholder--end pr-2">
                         {amount > 0 ? formatCurrency(amount) : '—'}
                       </div>
                     </td>
@@ -321,7 +321,7 @@ export default function PurchasePlanCreateLinesTable({
               <td colSpan={5} className="table-cell text-right font-semibold text-[var(--md-on-surface-variant)]">
                 {totals.filled} dòng · Tổng dự toán
               </td>
-              <td className="table-cell text-right font-bold tabular-nums text-[var(--md-primary)]">
+              <td className="table-cell text-right font-bold tabular-nums text-[var(--md-primary)] pr-2">
                 {totals.budget > 0 ? `${formatCurrency(totals.budget)} đ` : '—'}
               </td>
               <td colSpan={2} />

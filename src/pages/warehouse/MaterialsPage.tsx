@@ -154,8 +154,8 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
     if (!createForm.unit.trim()) errors.unit = materialSelectError('đơn vị tính');
 
     const categoryId = resolveLeafCategoryId(createSelection);
-    if (categoryId && categoryLevel(categories, categoryId)! < 3) {
-      errors.level3 = 'Vui lòng chọn đến cấp Loại vật tư';
+    if (categoryId && categoryLevel(categories, categoryId)! < 2) {
+      errors.level2 = 'Vui lòng chọn đến cấp Nhóm vật tư';
     }
 
     setCreateErrors(errors);

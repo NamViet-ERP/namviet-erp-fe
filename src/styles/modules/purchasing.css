@@ -4284,7 +4284,7 @@
   }
   .pur-create-plan__table {
     width: 100%;
-    min-width: 720px;
+    min-width: 820px;
     table-layout: fixed;
   }
   .pur-create-plan__table thead .table-header-cell {
@@ -4292,28 +4292,44 @@
     top: 0;
     z-index: 1;
   }
+  .pur-create-plan__table thead th:nth-child(2) {
+    text-align: left !important;
+  }
   .pur-create-plan__table tbody .table-cell,
   .pur-create-plan__table tfoot .table-cell {
     border: 1px solid var(--table-border);
     padding: var(--table-cell-py) var(--table-cell-px);
     vertical-align: middle;
   }
-  .pur-create-plan__table :is(th, td):nth-child(1) { width: 2.5rem; }
-  .pur-create-plan__table :is(th, td):nth-child(2) { width: 28%; }
-  .pur-create-plan__table :is(th, td):nth-child(3) { width: 5.5rem; }
-  .pur-create-plan__table :is(th, td):nth-child(4) { width: 7.5rem; }
-  .pur-create-plan__table :is(th, td):nth-child(5) { width: 9.5rem; min-width: 8.5rem; }
-  .pur-create-plan__table :is(th, td):nth-child(6) { width: 9rem; min-width: 8rem; }
+  .pur-create-plan__table :is(th, td):nth-child(1) { width: 2.75rem; }
+  .pur-create-plan__table :is(th, td):nth-child(2) { width: auto; min-width: 16rem; }
+  .pur-create-plan__table :is(th, td):nth-child(3) { width: 5.25rem; }
+  .pur-create-plan__table :is(th, td):nth-child(4) { width: 7.75rem; }
+  .pur-create-plan__table :is(th, td):nth-child(5) { width: 10rem; min-width: 9.5rem; }
+  .pur-create-plan__table :is(th, td):nth-child(6) { width: 11.5rem; min-width: 10.5rem; }
   .pur-create-plan__table :is(th, td):nth-child(7),
-  .pur-create-plan__table :is(th, td):nth-child(8) { width: 2.75rem; }
+  .pur-create-plan__table :is(th, td):nth-child(8) {
+    width: 3.25rem;
+    min-width: 3.25rem;
+    padding-left: 4px;
+    padding-right: 4px;
+  }
   .pur-create-plan__table .form-input {
     width: 100%;
     min-width: 0;
   }
+  .pur-create-plan__table .search-autocomplete__input {
+    padding-right: 32px !important;
+  }
+  .pur-create-plan__table .icon-btn,
   .pur-create-plan__expand {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    margin: 0 auto;
+    vertical-align: middle;
+  }
+  .pur-create-plan__expand {
     width: 32px;
     height: 32px;
     padding: 0;

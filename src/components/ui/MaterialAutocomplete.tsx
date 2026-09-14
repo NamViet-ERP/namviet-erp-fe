@@ -235,6 +235,7 @@ export default function MaterialAutocomplete({
           disabled={disabled}
           className="form-input search-autocomplete__input"
           value={inputValue}
+          title={!open && inputValue ? inputValue : undefined}
           placeholder={placeholder}
           onChange={e => {
             const next = e.target.value;

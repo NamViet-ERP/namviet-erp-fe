@@ -677,12 +677,15 @@
   }
 
   .form-table .search-autocomplete--compact .search-autocomplete__input,
-  .form-table .supplier-autocomplete--compact .supplier-autocomplete__input {
+  .form-table .supplier-autocomplete--compact .supplier-autocomplete__input,
+  .form-table .search-autocomplete .search-autocomplete__input,
+  .form-table .supplier-autocomplete .supplier-autocomplete__input {
     min-width: 0 !important;
     max-width: 100% !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
     white-space: nowrap !important;
+    padding-right: 32px !important;
   }
 
   /* Compact controls inside form-table cells — bold frame = editable */
@@ -726,6 +729,11 @@
     cursor: pointer !important;
   }
 
+  .form-table th.text-left,
+  .form-table td.text-left {
+    text-align: left !important;
+  }
+
   .form-table th.text-right,
   .form-table td.text-right {
     text-align: right !important;
@@ -734,6 +742,17 @@
   .form-table th.text-center,
   .form-table td.text-center {
     text-align: center !important;
+  }
+
+  .form-table.pur-create-plan__table th:nth-child(7),
+  .form-table.pur-create-plan__table td:nth-child(7),
+  .form-table.pur-create-plan__table th:nth-child(8),
+  .form-table.pur-create-plan__table td:nth-child(8) {
+    width: 3.25rem !important;
+    min-width: 3.25rem !important;
+    padding: 6px 4px !important;
+    text-align: center !important;
+    vertical-align: middle !important;
   }
 
   .form-table .qty-stepper {

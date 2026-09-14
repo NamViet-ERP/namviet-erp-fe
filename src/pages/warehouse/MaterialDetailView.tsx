@@ -126,8 +126,8 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
     if (!editForm.unit.trim()) errors.unit = materialSelectError('đơn vị tính');
 
     const categoryId = resolveLeafCategoryId(editSelection);
-    if (categoryId && categoryLevel(categories, categoryId)! < 3) {
-      errors.level3 = 'Vui lòng chọn đến cấp Loại vật tư';
+    if (categoryId && categoryLevel(categories, categoryId)! < 2) {
+      errors.level2 = 'Vui lòng chọn đến cấp Nhóm vật tư';
     }
 
     setEditErrors(errors);

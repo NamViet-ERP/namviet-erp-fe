@@ -8,7 +8,7 @@ export const MATERIAL_CATEGORY_LEVELS = [
 ] as const;
 
 /** Cấp bắt buộc khi tạo mã vật tư (theo spec Excel) */
-export const MATERIAL_CREATE_REQUIRED_LEVELS = [1, 2, 3] as const;
+export const MATERIAL_CREATE_REQUIRED_LEVELS = [1, 2] as const;
 
 export const MATERIAL_TABLE_COLUMNS = [
   { key: 'materialCode', label: 'Mã vật tư' },
