@@ -44,6 +44,7 @@ export default function AdminCreateSystemUserModal({
 
   useEffect(() => {
     if (!open || !suggestedCode || codeTouched) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setForm(f => (f.employeeCode === suggestedCode ? f : { ...f, employeeCode: suggestedCode }));
   }, [open, suggestedCode, codeTouched]);
 
