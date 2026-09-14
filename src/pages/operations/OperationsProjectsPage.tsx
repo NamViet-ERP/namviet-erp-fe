@@ -14,6 +14,8 @@ import SearchBar from '../../components/ui/SearchBar';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import EntityCodeLink from '../../components/ui/EntityCodeLink';
 import ProjectPurchasingGantt from '../../components/operations/ProjectPurchasingGantt';
+import ProjectPersonnelSelect from '../../components/operations/ProjectPersonnelSelect';
+import ProjectMemberMultiSelect from '../../components/operations/ProjectMemberMultiSelect';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage, getApiFieldErrors } from '../../lib/apiClient';
 import { formatDateCell, formatDateVi } from '../../lib/hrm/formatters';
@@ -57,7 +59,7 @@ type FormState = {
   projectName: string;
   clientName: string;
   pmName: string;
-  scMembers: string;
+  scMembers: string[];
   startDate: string;
   endDate: string;
   materialBudget: string;
@@ -68,7 +70,7 @@ const emptyForm = (): FormState => ({
   projectName: '',
   clientName: '',
   pmName: '',
-  scMembers: '',
+  scMembers: [],
   startDate: todayIso(),
   endDate: '',
   materialBudget: '1',
@@ -125,12 +127,16 @@ export default function OperationsProjectsPage() {
 
   const openEdit = (row: WarehouseProjectApiDto) => {
     setEditing(row);
+    const pm = row.pmName?.trim() ?? '';
     setForm({
       projectCode: row.projectCode,
       projectName: row.projectName,
       clientName: row.clientName ?? '',
-      pmName: row.pmName ?? '',
-      scMembers: row.scMembers ?? '',
+      pmName: pm,
+      scMembers: (row.scMembers ?? '')
+        .split(',')
+        .map(s => s.trim())
+        .filter(s => Boolean(s) && s.toLowerCase() !== pm.toLowerCase()),
       startDate: row.startDate?.slice(0, 10) ?? todayIso(),
       endDate: row.endDate?.slice(0, 10) ?? '',
       materialBudget: String(row.materialBudget || 1),
@@ -162,6 +168,7 @@ export default function OperationsProjectsPage() {
     }
     setErrors({});
     const budget = Number(String(form.materialBudget).replace(/[^\d.]/g, '')) || 1;
+    const scMembersString = form.scMembers.map(s => s.trim()).filter(Boolean).join(', ') || null;
     try {
       if (editing) {
         await updateMutation.mutateAsync({
@@ -175,7 +182,7 @@ export default function OperationsProjectsPage() {
             status: editing.status as 'Active' | 'Transferring' | 'Transferred' | 'Closed',
             warehouseKeepers: editing.warehouseKeepers ?? [],
             clientName: form.clientName.trim() || null,
-            scMembers: form.scMembers.trim() || null,
+            scMembers: scMembersString,
           },
         });
         showToast('success', `Đã cập nhật dự án ${editing.projectCode}.`);
@@ -191,7 +198,7 @@ export default function OperationsProjectsPage() {
           materialBudget: budget,
           warehouseKeepers: [],
           clientName: form.clientName.trim() || null,
-          scMembers: form.scMembers.trim() || null,
+          scMembers: scMembersString,
         });
         showToast(
           'success',
@@ -559,18 +566,25 @@ export default function OperationsProjectsPage() {
             />
           </FormField>
           <FormField label="PIC / Quản lý" required error={errors.pmName}>
-            <input
-              className="form-input"
+            <ProjectPersonnelSelect
               value={form.pmName}
-              onChange={e => setForm(f => ({ ...f, pmName: e.target.value }))}
+              onChange={name =>
+                setForm(f => ({
+                  ...f,
+                  pmName: name,
+                  scMembers: f.scMembers.filter(
+                    m => m.trim().toLowerCase() !== name.trim().toLowerCase(),
+                  ),
+                }))
+              }
+              excludeNames={form.scMembers}
             />
           </FormField>
           <FormField label="Thành viên SC" error={errors.scMembers}>
-            <input
-              className="form-input"
+            <ProjectMemberMultiSelect
               value={form.scMembers}
-              onChange={e => setForm(f => ({ ...f, scMembers: e.target.value }))}
-              placeholder="Cách nhau bởi dấu phẩy"
+              onChange={members => setForm(f => ({ ...f, scMembers: members }))}
+              excludeNames={form.pmName ? [form.pmName] : []}
             />
           </FormField>
           <FormField label="Ngân sách VT (tối thiểu 1)" error={errors.materialBudget}>

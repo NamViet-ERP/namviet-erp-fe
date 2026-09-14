@@ -107,6 +107,7 @@ export const queryKeys = {
       ['projects', 'construction-tasks', projectCode ?? 'all'] as const,
     purchasingProgress: (projectCode?: string) =>
       ['projects', 'purchasing-progress', projectCode ?? 'all'] as const,
+    personnel: ['projects', 'personnel'] as const,
   },
   materials: {
     all: ['materials'] as const,
