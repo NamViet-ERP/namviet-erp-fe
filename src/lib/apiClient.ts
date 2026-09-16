@@ -202,6 +202,7 @@ async function tryRefreshSession(): Promise<AuthRefreshResult> {
 function fallbackForStatus(status: number): string {
   if (status === 401) return 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
   if (status === 403) return 'Bạn không có quyền truy cập chức năng này.';
+  if (status === 429) return 'Hệ thống đang tiếp nhận nhiều yêu cầu cùng lúc. Vui lòng thử lại sau giây lát.';
   if (status === 502 || status === 503) return UI_ERROR.transient;
   return 'Yêu cầu không thành công. Vui lòng thử lại.';
 }

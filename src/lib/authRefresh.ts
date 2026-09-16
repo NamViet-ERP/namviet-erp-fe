@@ -1,6 +1,6 @@
-import { setAccessToken } from './authSession';
+import { getAccessTokenExpiryMs, getStoredToken, isAccessTokenExpired, setAccessToken } from './authSession';
 
-export const AUTH_REFRESH_TIMEOUT_MS = 10_000;
+export const AUTH_REFRESH_TIMEOUT_MS = 30_000;
 
 export type AuthRefreshResult = 'refreshed' | 'rejected' | 'unavailable';
 
@@ -17,7 +17,7 @@ interface TokenPairResponse {
   token?: string;
 }
 
-/** Coalesce concurrent refresh calls — rotation is single-use; a losing race clears the new cookie. */
+/** Coalesce concurrent refresh calls in same tab — rotation is single-use; a losing race clears the new cookie. */
 let refreshInFlight: Promise<AuthRefreshResult> | null = null;
 
 async function refreshAccessTokenOnce(): Promise<AuthRefreshResult> {
@@ -35,15 +35,27 @@ async function refreshAccessTokenOnce(): Promise<AuthRefreshResult> {
 
     if (!response.ok) {
       if (response.status >= 500) return 'unavailable';
-      setAccessToken(null);
-      return 'rejected';
+      const current = getStoredToken();
+      const expMs = current ? getAccessTokenExpiryMs(current) : null;
+      const isStillValidJwt = expMs != null && expMs > Date.now();
+      if (!isStillValidJwt) {
+        setAccessToken(null);
+        return 'rejected';
+      }
+      return 'unavailable';
     }
 
     const data = (await response.json().catch(() => null)) as TokenPairResponse | null;
     const access = data?.accessToken ?? data?.token;
     if (!access) {
-      setAccessToken(null);
-      return 'rejected';
+      const current = getStoredToken();
+      const expMs = current ? getAccessTokenExpiryMs(current) : null;
+      const isStillValidJwt = expMs != null && expMs > Date.now();
+      if (!isStillValidJwt) {
+        setAccessToken(null);
+        return 'rejected';
+      }
+      return 'unavailable';
     }
 
     setAccessToken(access);
@@ -53,10 +65,28 @@ async function refreshAccessTokenOnce(): Promise<AuthRefreshResult> {
   }
 }
 
-/** Refresh via HttpOnly cookie; puts new access JWT into memory. */
+async function refreshAccessTokenWithLock(): Promise<AuthRefreshResult> {
+  if (typeof navigator !== 'undefined' && navigator.locks?.request) {
+    try {
+      return await navigator.locks.request('nv-auth-refresh', async () => {
+        // While waiting for the lock, another tab may have refreshed and broadcasted the new token
+        const current = getStoredToken();
+        if (current && !isAccessTokenExpired(current, 2 * 60_000)) {
+          return 'refreshed';
+        }
+        return refreshAccessTokenOnce();
+      });
+    } catch {
+      return refreshAccessTokenOnce();
+    }
+  }
+  return refreshAccessTokenOnce();
+}
+
+/** Refresh via HttpOnly cookie; puts new access JWT into memory with cross-tab coordination. */
 export async function refreshAccessToken(): Promise<AuthRefreshResult> {
   if (!refreshInFlight) {
-    refreshInFlight = refreshAccessTokenOnce().finally(() => {
+    refreshInFlight = refreshAccessTokenWithLock().finally(() => {
       refreshInFlight = null;
     });
   }

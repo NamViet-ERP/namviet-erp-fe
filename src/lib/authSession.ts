@@ -41,7 +41,46 @@ export function clearLegacyTokenStorage(): void {
   localStorage.removeItem(SAVED_USER_KEY);
 }
 
-export function clearAuthSession(): void {
+const AUTH_CHANNEL_NAME = 'nv-auth-session';
+let authChannel: BroadcastChannel | null = null;
+
+interface AuthChannelMessage {
+  type: 'TOKEN_UPDATED' | 'LOGOUT';
+  token?: string | null;
+}
+
+function getAuthChannel(): BroadcastChannel | null {
+  if (typeof window === 'undefined' || typeof BroadcastChannel === 'undefined') return null;
+  if (!authChannel) {
+    try {
+      authChannel = new BroadcastChannel(AUTH_CHANNEL_NAME);
+      authChannel.onmessage = (event: MessageEvent<AuthChannelMessage>) => {
+        const data = event.data;
+        if (!data || typeof data !== 'object') return;
+        if (data.type === 'TOKEN_UPDATED') {
+          if (data.token && data.token !== memoryAccessToken) {
+            setAccessTokenInternal(data.token, false);
+          }
+        } else if (data.type === 'LOGOUT') {
+          clearAuthSessionInternal(false);
+        }
+      };
+    } catch {
+      authChannel = null;
+    }
+  }
+  return authChannel;
+}
+
+function broadcastAuthMessage(message: AuthChannelMessage): void {
+  try {
+    getAuthChannel()?.postMessage(message);
+  } catch {
+    // ignore
+  }
+}
+
+function clearAuthSessionInternal(broadcast = true): void {
   memoryAccessToken = null;
   // Keep nv-e2e-access-token in E2E so Playwright storageState / same-tab recovery still work
   // after a failed cookie refresh.
@@ -51,10 +90,19 @@ export function clearAuthSession(): void {
   localStorage.removeItem('nv-user-id');
   localStorage.removeItem('nv-user-role');
   emitAccessTokenChanged();
+  if (broadcast) {
+    broadcastAuthMessage({ type: 'LOGOUT' });
+  }
 }
 
-export function setAccessToken(token: string | null): void {
-  memoryAccessToken = token && token.trim() ? token : null;
+export function clearAuthSession(): void {
+  clearAuthSessionInternal(true);
+}
+
+function setAccessTokenInternal(token: string | null, broadcast = true): void {
+  const next = token && token.trim() ? token.trim() : null;
+  if (memoryAccessToken === next) return;
+  memoryAccessToken = next;
   if (isE2E()) {
     try {
       if (memoryAccessToken) localStorage.setItem(E2E_ACCESS_TOKEN_KEY, memoryAccessToken);
@@ -64,6 +112,17 @@ export function setAccessToken(token: string | null): void {
     }
   }
   emitAccessTokenChanged();
+  if (broadcast && memoryAccessToken) {
+    broadcastAuthMessage({ type: 'TOKEN_UPDATED', token: memoryAccessToken });
+  }
+}
+
+export function setAccessToken(token: string | null): void {
+  setAccessTokenInternal(token, true);
+}
+
+if (typeof window !== 'undefined') {
+  getAuthChannel();
 }
 
 export function getStoredToken(): string | null {

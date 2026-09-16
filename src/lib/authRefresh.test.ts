@@ -1,10 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { getStoredToken } from './authSession';
+import { getStoredToken, setAccessToken } from './authSession';
 import { AUTH_REFRESH_TIMEOUT_MS, refreshAccessToken } from './authRefresh';
 
 describe('refreshAccessToken', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    setAccessToken(null);
   });
 
   it('uses credentials and a bounded timeout; timeout is retryable', async () => {
@@ -15,7 +16,7 @@ describe('refreshAccessToken', () => {
     const request = fetchMock.mock.calls[0]?.[1] as RequestInit;
     expect(request.credentials).toBe('include');
     expect(request.signal).toBeInstanceOf(AbortSignal);
-    expect(AUTH_REFRESH_TIMEOUT_MS).toBe(10_000);
+    expect(AUTH_REFRESH_TIMEOUT_MS).toBe(30_000);
   });
 
   it('stores access token from refresh body', async () => {
@@ -30,12 +31,28 @@ describe('refreshAccessToken', () => {
     expect(getStoredToken()).toBe('new-access');
   });
 
-  it('reports rejected when refresh returns 401', async () => {
+  it('reports rejected when refresh returns 401 and no valid token exists', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({ ok: false, status: 401 }),
     );
     await expect(refreshAccessToken()).resolves.toBe('rejected');
+  });
+
+  it('does not wipe active token if refresh fails but current token is still valid', async () => {
+    const futureExpSec = Math.floor(Date.now() / 1000) + 600; // 10 minutes in future
+    const base64Payload = btoa(JSON.stringify({ exp: futureExpSec }));
+    const validToken = `header.${base64Payload}.signature`;
+    const { setAccessToken } = await import('./authSession');
+    setAccessToken(validToken);
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: false, status: 401 }),
+    );
+
+    await expect(refreshAccessToken()).resolves.toBe('unavailable');
+    expect(getStoredToken()).toBe(validToken);
   });
 
   it('coalesces concurrent refreshes into one request', async () => {
