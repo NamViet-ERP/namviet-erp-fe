@@ -1,6 +1,7 @@
 import type {
   CreatePurchasePlanLineRequest,
   PurchasePlanImportLinePreviewApiDto,
+  PurchasePlanLineApiDto,
 } from '../../types/api/purchasingApi';
 
 /** Trần đơn giá ngân sách (VNĐ) — tránh overflow / nhập nhầm. */
@@ -158,6 +159,41 @@ export function fromPreviewLines(previewLines: PurchasePlanImportLinePreviewApiD
     requiredDate: dateToDraft(l.requiredDate),
     quotes: (l.quotes ?? []).map((q, qi) => ({
       key: `q-${l.rowNumber}-${qi}`,
+      sortOrder: q.sortOrder ?? qi + 1,
+      unitPrice: numToDraft(q.unitPrice),
+      supplierName: q.supplierName ?? '',
+      amount: numToDraft(q.amount),
+    })),
+  }));
+}
+
+export function fromExistingPlanLines(lines?: PurchasePlanLineApiDto[] | null): DraftLine[] {
+  if (!lines || lines.length === 0) return [emptyLine()];
+  return lines.map(l => ({
+    key: `line-${l.id}`,
+    materialCode: l.materialCode ?? '',
+    productName: l.productName ?? '',
+    unit: l.unit ?? '',
+    quantity: String(l.quantity ?? 1),
+    systemName: l.systemName ?? '',
+    category: l.category ?? '',
+    spec: l.spec ?? '',
+    lineNote: l.lineNote ?? '',
+    kgPerUnit: numToDraft(l.kgPerUnit),
+    purchaseStatus: l.purchaseStatus ?? '',
+    budgetUnitPrice: numToDraft(l.budgetUnitPrice),
+    proposalUnitPrice: numToDraft(l.proposalUnitPrice),
+    proposalSupplierName: l.proposalSupplierName ?? '',
+    purchaseUnitPrice: numToDraft(l.purchaseUnitPrice),
+    purchaseSupplierName: l.purchaseSupplierName ?? '',
+    selectedUnitPrice: numToDraft(l.selectedUnitPrice),
+    selectedSupplierName: l.selectedSupplierName ?? '',
+    selectionReason: l.selectionReason ?? '',
+    expectedDeliveryDate: dateToDraft(l.expectedDeliveryDate),
+    actualReceiptDate: dateToDraft(l.actualReceiptDate),
+    requiredDate: dateToDraft(l.requiredDate),
+    quotes: (l.quotes ?? []).map((q, qi) => ({
+      key: `eq-${l.id}-${qi}`,
       sortOrder: q.sortOrder ?? qi + 1,
       unitPrice: numToDraft(q.unitPrice),
       supplierName: q.supplierName ?? '',

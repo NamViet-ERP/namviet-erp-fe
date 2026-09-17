@@ -20,6 +20,8 @@ import { parseCurrencyInput } from '../../utils/currencyInput';
 import { MAX_MATERIAL_BUDGET, MAX_MATERIAL_BUDGET_LABEL } from '../../constants/wmsLimits';
 import { projectStatusBadge } from '../../lib/wms/projectStatusBadge';
 import { useProjects, useCreateProject } from '../../hooks/useProjects';
+import { projectsService } from '../../services/projectsService';
+import { nextProjectCode } from '../../lib/cskh/commandCenter';
 import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
 import type { WarehouseProjectApiDto, ProjectWarehouseKeeperDto } from '../../types/wms';
 import WarehouseKeeperMultiSelect from '../../components/warehouse/WarehouseKeeperMultiSelect';
@@ -29,11 +31,6 @@ const EMPTY_PM_ID = '00000000-0000-0000-0000-000000000000';
 
 function todayIso() {
   return new Date().toISOString().slice(0, 10);
-}
-
-function suggestProjectCode() {
-  const n = String(Math.floor(Math.random() * 900) + 100);
-  return `DA-${new Date().getFullYear()}-${n}`;
 }
 
 function validateCreateForm(form: {
@@ -132,16 +129,27 @@ export default function ProjectsPage() {
   };
 
   const openCreate = () => {
+    const today = todayIso();
+    const currentYear = new Date().getFullYear();
+    const fallbackCode = nextProjectCode(items.map(p => p.projectCode), currentYear);
     setForm({
-      projectCode: suggestProjectCode(),
+      projectCode: fallbackCode,
       projectName: '',
       pmName: '',
-      startDate: todayIso(),
+      startDate: today,
       materialBudget: '',
       warehouseKeepers: [],
     });
     setErrors({});
     setShowCreate(true);
+
+    void projectsService.getNextCode(currentYear).then(res => {
+      if (res?.projectCode) {
+        setForm(f => ({ ...f, projectCode: res.projectCode }));
+      }
+    }).catch(() => {
+      // Giữ mã fallback nếu mạng hoặc BE chưa phản hồi
+    });
   };
 
   const handleCreate = async () => {
@@ -370,7 +378,7 @@ export default function ProjectsPage() {
                 setForm({ ...form, projectCode: e.target.value.toUpperCase() });
                 clearFieldError(setErrors, 'projectCode');
               }}
-              placeholder="VD: DA-2026-101"
+              placeholder="VD: DA-2026-001"
             />
           </FormField>
           <FormField label="Tên công trình" required error={errors.projectName}>

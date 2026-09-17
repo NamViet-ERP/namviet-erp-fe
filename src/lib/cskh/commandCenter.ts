@@ -129,8 +129,8 @@ export function clampPct(value: number): number {
   return Math.max(0, Math.min(100, Math.round(value)));
 }
 
-export function nextProjectCode(existingCodes: string[], now = new Date()): string {
-  const year = now.getFullYear();
+export function nextProjectCode(existingCodes: string[], now: Date | number = new Date()): string {
+  const year = typeof now === 'number' ? now : now.getFullYear();
   const prefix = `DA-${year}-`;
   const used = new Set(existingCodes.map(code => code.trim().toUpperCase()));
   let n = 1;

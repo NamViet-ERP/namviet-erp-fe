@@ -1,4 +1,4 @@
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, CheckCircle } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
@@ -15,6 +15,7 @@ interface ConfirmDialogProps {
   cancelLabel?: string;
   variant?: 'danger' | 'default';
   isLoading?: boolean;
+  icon?: ReactNode;
 }
 
 export default function ConfirmDialog({
@@ -27,6 +28,7 @@ export default function ConfirmDialog({
   cancelLabel = 'Hủy',
   variant = 'danger',
   isLoading = false,
+  icon,
 }: ConfirmDialogProps) {
   useBodyScrollLock(isOpen);
   useEscapeToClose(isOpen, onClose);
@@ -44,7 +46,7 @@ export default function ConfirmDialog({
       >
         <div className="md-confirm__body">
           <div className={`md-confirm__icon-wrap md-confirm__icon-wrap--${variant === 'danger' ? 'danger' : 'default'}`}>
-            <AlertTriangle size={28} />
+            {icon ?? (variant === 'danger' ? <AlertTriangle size={28} /> : <CheckCircle size={28} />)}
           </div>
           <h3 id="confirm-dialog-title" className="md-confirm__title">{title}</h3>
           <div id="confirm-dialog-message" className="md-confirm__message">{message}</div>

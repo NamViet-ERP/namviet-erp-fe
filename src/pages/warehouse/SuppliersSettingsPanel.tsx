@@ -945,6 +945,7 @@ export default function SuppliersSettingsPanel({
           ) : null
         }
         confirmLabel="Duyệt"
+        variant="default"
         isLoading={approveMutation.isPending}
       />
 

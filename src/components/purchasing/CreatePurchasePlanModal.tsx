@@ -25,11 +25,10 @@ import PurchasePlanCreateImportBar from './PurchasePlanCreateImportBar';
 import PurchasePlanCreateLinesTable from './PurchasePlanCreateLinesTable';
 import {
   MAX_BUDGET_UNIT_PRICE,
-  dateToDraft,
   emptyLine,
+  fromExistingPlanLines,
   fromPreviewLines,
   lineAmount,
-  numToDraft,
   parseNum,
   toApiLines,
   type DraftLine,
@@ -185,38 +184,7 @@ export default function CreatePurchasePlanModal({
     if (!editPlan || editPlan.code !== editCode || hydratedCode === editPlan.code) return;
     setProjectCode(editPlan.projectCode);
     setNote(editPlan.note ?? '');
-    const mapped = (editPlan.lines?.length ? editPlan.lines : []).map(l => ({
-      key: `line-${l.id}`,
-      materialCode: l.materialCode ?? '',
-      productName: l.productName ?? '',
-      unit: l.unit ?? '',
-      quantity: String(l.quantity ?? 1),
-      systemName: l.systemName ?? '',
-      category: l.category ?? '',
-      spec: l.spec ?? '',
-      lineNote: l.lineNote ?? '',
-      kgPerUnit: numToDraft(l.kgPerUnit),
-      purchaseStatus: l.purchaseStatus ?? '',
-      budgetUnitPrice: numToDraft(l.budgetUnitPrice),
-      proposalUnitPrice: numToDraft(l.proposalUnitPrice),
-      proposalSupplierName: l.proposalSupplierName ?? '',
-      purchaseUnitPrice: numToDraft(l.purchaseUnitPrice),
-      purchaseSupplierName: l.purchaseSupplierName ?? '',
-      selectedUnitPrice: numToDraft(l.selectedUnitPrice),
-      selectedSupplierName: l.selectedSupplierName ?? '',
-      selectionReason: l.selectionReason ?? '',
-      expectedDeliveryDate: dateToDraft(l.expectedDeliveryDate),
-      actualReceiptDate: dateToDraft(l.actualReceiptDate),
-      requiredDate: dateToDraft(l.requiredDate),
-      quotes: (l.quotes ?? []).map((q, qi) => ({
-        key: `eq-${l.id}-${qi}`,
-        sortOrder: q.sortOrder ?? qi + 1,
-        unitPrice: numToDraft(q.unitPrice),
-        supplierName: q.supplierName ?? '',
-        amount: numToDraft(q.amount),
-      })),
-    }));
-    setLines(mapped.length ? mapped : [emptyLine()]);
+    setLines(fromExistingPlanLines(editPlan.lines));
     setHydratedCode(editPlan.code);
   }, [open, isEdit, editCode, editPlan, hydratedCode]);
 
@@ -340,6 +308,13 @@ export default function CreatePurchasePlanModal({
     setFile(null);
     setPreview(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
+    if (isEdit && editPlan) {
+      setLines(fromExistingPlanLines(editPlan.lines));
+    } else {
+      setLines([emptyLine()]);
+    }
+    setExpanded({});
+    showToast('info', 'Đã xóa kết quả file và làm mới danh sách dòng hàng.');
   };
 
   return (

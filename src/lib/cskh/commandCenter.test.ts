@@ -87,6 +87,17 @@ describe('cskh command center', () => {
 
   it('allocates the next empty project code', () => {
     expect(nextProjectCode(['DA-2026-001', 'DA-2026-002'], new Date('2026-08-27'))).toBe('DA-2026-003');
+    expect(nextProjectCode(['DA-2026-001', 'DA-2026-002'], 2026)).toBe('DA-2026-003');
+  });
+
+  it('allocates the lowest unused sequence, ignoring random large numbers', () => {
+    // Có mã DA-2026-230 do random trước đây, vẫn phải sinh DA-2026-002
+    expect(nextProjectCode(['DA-2026-001', 'DA-2026-230'], 2026)).toBe('DA-2026-002');
+  });
+
+  it('resets project code to 001 for the next year', () => {
+    expect(nextProjectCode(['DA-2026-001', 'DA-2026-002'], 2027)).toBe('DA-2027-001');
+    expect(nextProjectCode(['DA-2026-001'], new Date('2027-01-01'))).toBe('DA-2027-001');
   });
 
   it('lists project years plus the current calendar year', () => {

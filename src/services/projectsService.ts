@@ -35,6 +35,12 @@ export const projectsService = {
     return apiClient.get<WarehouseProjectApiDto>(`${ENDPOINT}/${encodeURIComponent(code)}`);
   },
 
+  async getNextCode(year?: number): Promise<{ projectCode: string }> {
+    return apiClient.get<{ projectCode: string }>(`${ENDPOINT}/next-code`, {
+      year,
+    });
+  },
+
   async getInventory(code: string): Promise<WarehouseProjectInventoryApiDto[]> {
     return apiClient.get<WarehouseProjectInventoryApiDto[]>(
       `${ENDPOINT}/${encodeURIComponent(code)}/inventory`,

@@ -28,6 +28,8 @@ import {
   useUpdateProject,
   useProjectPurchasingProgress,
 } from '../../hooks/useProjects';
+import { projectsService } from '../../services/projectsService';
+import { nextProjectCode } from '../../lib/cskh/commandCenter';
 import type { WarehouseProjectApiDto } from '../../types/wms';
 
 function todayIso() {
@@ -39,11 +41,6 @@ function todayIso() {
 
 function formatTaskDate(iso?: string | null) {
   return formatDateVi(iso ?? undefined) ?? '-';
-}
-
-function suggestProjectCode() {
-  const n = String(Math.floor(Math.random() * 900) + 100);
-  return `DA-${new Date().getFullYear()}-${n}`;
 }
 
 function statusLabel(status: string) {
@@ -65,8 +62,8 @@ type FormState = {
   materialBudget: string;
 };
 
-const emptyForm = (): FormState => ({
-  projectCode: suggestProjectCode(),
+const emptyForm = (projectCode = ''): FormState => ({
+  projectCode,
   projectName: '',
   clientName: '',
   pmName: '',
@@ -120,9 +117,19 @@ export default function OperationsProjectsPage() {
 
   const openCreate = () => {
     setEditing(null);
-    setForm(emptyForm());
+    const currentYear = new Date().getFullYear();
+    const fallbackCode = nextProjectCode(items.map(p => p.projectCode), currentYear);
+    setForm(emptyForm(fallbackCode));
     setErrors({});
     setShowForm(true);
+
+    void projectsService.getNextCode(currentYear).then(res => {
+      if (res?.projectCode) {
+        setForm(f => ({ ...f, projectCode: res.projectCode }));
+      }
+    }).catch(() => {
+      // Giữ mã fallback nếu mạng hoặc BE chưa phản hồi
+    });
   };
 
   const openEdit = (row: WarehouseProjectApiDto) => {
@@ -547,7 +554,8 @@ export default function OperationsProjectsPage() {
               className="form-input"
               value={form.projectCode}
               disabled={Boolean(editing)}
-              onChange={e => setForm(f => ({ ...f, projectCode: e.target.value }))}
+              onChange={e => setForm(f => ({ ...f, projectCode: e.target.value.toUpperCase() }))}
+              placeholder="VD: DA-2026-001"
             />
           </FormField>
           <FormField label="Khách hàng (viết tắt)" error={errors.clientName}>
