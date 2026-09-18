@@ -146,34 +146,30 @@ export default function PurchaseContractsPage() {
   const selectableOrders = useMemo(() => {
     const hasSup = Boolean(form.supplierName?.trim());
     const hasProj = Boolean(form.projectCode?.trim());
-    let list = orders;
-    if (hasSup || hasProj) {
-      const filtered = orders.filter(o => {
-        if (hasSup && o.supplierName?.trim().toLowerCase() !== form.supplierName.trim().toLowerCase()) {
-          return false;
-        }
-        if (hasProj && o.projectCode?.trim().toLowerCase() !== form.projectCode.trim().toLowerCase()) {
-          return false;
-        }
-        return true;
-      });
-      if (filtered.length > 0) {
-        list = filtered;
-      } else if (hasSup) {
-        const bySup = orders.filter(
-          o => o.supplierName?.trim().toLowerCase() === form.supplierName.trim().toLowerCase(),
-        );
-        if (bySup.length > 0) list = bySup;
-      }
-    }
+    if (!hasSup && !hasProj) return orders;
 
-    if (form.poCode && !list.some(o => o.code === form.poCode)) {
-      const currentPo = orders.find(o => o.code === form.poCode);
-      if (currentPo) list = [currentPo, ...list];
-    }
+    const sup = form.supplierName.trim().toLowerCase();
+    const proj = form.projectCode.trim().toLowerCase();
 
-    return list;
-  }, [orders, form.supplierName, form.projectCode, form.poCode]);
+    return [...orders].sort((a, b) => {
+      const matchA_both = hasSup && hasProj && a.supplierName?.trim().toLowerCase() === sup && a.projectCode?.trim().toLowerCase() === proj;
+      const matchB_both = hasSup && hasProj && b.supplierName?.trim().toLowerCase() === sup && b.projectCode?.trim().toLowerCase() === proj;
+      if (matchA_both && !matchB_both) return -1;
+      if (!matchA_both && matchB_both) return 1;
+
+      const matchA_sup = hasSup && a.supplierName?.trim().toLowerCase() === sup;
+      const matchB_sup = hasSup && b.supplierName?.trim().toLowerCase() === sup;
+      if (matchA_sup && !matchB_sup) return -1;
+      if (!matchA_sup && matchB_sup) return 1;
+
+      const matchA_proj = hasProj && a.projectCode?.trim().toLowerCase() === proj;
+      const matchB_proj = hasProj && b.projectCode?.trim().toLowerCase() === proj;
+      if (matchA_proj && !matchB_proj) return -1;
+      if (!matchA_proj && matchB_proj) return 1;
+
+      return 0;
+    });
+  }, [orders, form.supplierName, form.projectCode]);
 
   const listParams = useMemo(
     () => ({
@@ -561,20 +557,30 @@ export default function PurchaseContractsPage() {
                   placeholder="Chọn đơn hàng PO (tùy chọn)…"
                   allowClear
                   onChange={code => {
+                    if (!code) {
+                      setForm(prev => ({
+                        ...prev,
+                        poCode: '',
+                      }));
+                      return;
+                    }
                     const selectedPo = orders.find(o => o.code === code);
-                    setForm(prev => ({
-                      ...prev,
-                      poCode: code,
-                      supplierName: prev.supplierName || selectedPo?.supplierName || '',
-                      projectCode: prev.projectCode || selectedPo?.projectCode || '',
-                      amount: !prev.amount && selectedPo?.totalAmount ? String(selectedPo.totalAmount) : prev.amount,
-                    }));
+                    if (selectedPo) {
+                      setForm(prev => ({
+                        ...prev,
+                        poCode: code,
+                        supplierName: selectedPo.supplierName || prev.supplierName,
+                        projectCode: selectedPo.projectCode || prev.projectCode,
+                        amount: selectedPo.totalAmount ? String(selectedPo.totalAmount) : prev.amount,
+                      }));
+                    }
                   }}
                 />
               </FormField>
               <FormField label="Giá trị">
                 <CurrencyInput
-                  className={`form-input text-right${busy || (!canCreate && !canUpdate) ? ' opacity-60 pointer-events-none' : ''}`}
+                  suffix="VNĐ"
+                  disabled={busy || (!canCreate && !canUpdate)}
                   value={form.amount}
                   onChange={(_raw, numeric) =>
                     setForm(prev => ({ ...prev, amount: numeric > 0 ? String(numeric) : '' }))

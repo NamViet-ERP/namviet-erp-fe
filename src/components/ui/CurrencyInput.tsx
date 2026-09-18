@@ -8,6 +8,7 @@ interface Props {
   min?: number;
   max?: number;
   suffix?: string;
+  disabled?: boolean;
 }
 
 export default function CurrencyInput({
@@ -18,6 +19,7 @@ export default function CurrencyInput({
   min = 0,
   max,
   suffix,
+  disabled = false,
 }: Props) {
   const display = value === '' ? '' : formatCurrencyInput(parseCurrencyInput(value));
   const inputClassName = suffix
@@ -34,6 +36,7 @@ export default function CurrencyInput({
     <input
       type="text"
       inputMode="numeric"
+      disabled={disabled}
       className={inputClassName}
       placeholder={placeholder}
       value={display}
@@ -52,7 +55,7 @@ export default function CurrencyInput({
   if (!suffix) return input;
 
   return (
-    <div className="currency-input-group">
+    <div className={`currency-input-group${disabled ? ' opacity-60 pointer-events-none' : ''}`}>
       {input}
       <span className="currency-input-group__suffix" aria-hidden>
         {suffix}
