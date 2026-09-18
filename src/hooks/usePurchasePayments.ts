@@ -6,10 +6,14 @@ import {
 import { queryKeys } from '../services/queryKeys';
 import type { CreatePurchasePaymentRequest } from '../types/api/poPaymentApi';
 
-export function usePurchasePayments(params: PurchasePaymentListParams = {}) {
+export function usePurchasePayments(
+  params: PurchasePaymentListParams = {},
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: [...queryKeys.purchasePayments.all, params] as const,
     queryFn: () => purchasePaymentsService.list(params),
+    enabled: options?.enabled,
   });
 }
 

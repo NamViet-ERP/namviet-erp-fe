@@ -16,6 +16,7 @@ interface PoAutocompleteProps {
   orders: PurchaseOrderApiDto[];
   placeholder?: string;
   disabled?: boolean;
+  allowClear?: boolean;
 }
 
 function poLabel(o: PurchaseOrderApiDto) {
@@ -30,6 +31,7 @@ export default function PoAutocomplete({
   orders,
   placeholder = 'Chọn đơn hàng PO…',
   disabled = false,
+  allowClear = false,
 }: PoAutocompleteProps) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState('');
@@ -91,6 +93,14 @@ export default function PoAutocomplete({
     inputRef.current?.blur();
   };
 
+  const clearSelection = () => {
+    onChange('');
+    setDraft('');
+    setFilterQuery('');
+    setOpen(false);
+    inputRef.current?.blur();
+  };
+
   useEffect(() => {
     if (!open) return;
     updatePanelPosition();
@@ -124,12 +134,19 @@ export default function PoAutocomplete({
       const target = e.target as Node;
       if (inputRef.current?.contains(target)) return;
       if (panelRef.current?.contains(target)) return;
+      if (!normalizeComboboxQuery(draft)) {
+        onChange('');
+        setDraft('');
+        setFilterQuery('');
+        setOpen(false);
+        return;
+      }
       setOpen(false);
       setDraft(closedLabel);
     };
     document.addEventListener('mousedown', onPointerDown);
     return () => document.removeEventListener('mousedown', onPointerDown);
-  }, [open, closedLabel]);
+  }, [open, closedLabel, draft, onChange]);
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'ArrowDown') {
@@ -171,6 +188,22 @@ export default function PoAutocomplete({
       className={panelClass}
       style={panelStyle}
     >
+      {allowClear ? (
+        <li
+          role="option"
+          aria-selected={!value}
+          className="search-autocomplete__option"
+          style={{ borderBottom: '1px solid var(--md-outline-variant02, #e5e7eb)' }}
+          onMouseDown={e => {
+            e.preventDefault();
+            clearSelection();
+          }}
+        >
+          <span className="search-autocomplete__name text-muted-foreground" style={{ fontStyle: 'italic', fontSize: 'var(--fs-xs, 12px)' }}>
+            — Không gắn PO (Bỏ chọn) —
+          </span>
+        </li>
+      ) : null}
       {filtered.map((o, i) => (
         <li
           key={o.code}
@@ -198,6 +231,21 @@ export default function PoAutocomplete({
       className={`${panelClass} search-autocomplete__empty`}
       style={panelStyle}
     >
+      {allowClear ? (
+        <div
+          role="button"
+          tabIndex={0}
+          style={{ padding: '0.4rem 0.6rem', cursor: 'pointer', borderBottom: '1px solid var(--md-outline-variant02, #e5e7eb)', textAlign: 'left' }}
+          onMouseDown={e => {
+            e.preventDefault();
+            clearSelection();
+          }}
+        >
+          <span style={{ fontStyle: 'italic', fontSize: 'var(--fs-xs, 12px)' }}>
+            — Không gắn PO (Bỏ chọn) —
+          </span>
+        </div>
+      ) : null}
       Không có PO khớp.
     </div>
   ) : null;
@@ -221,6 +269,7 @@ export default function PoAutocomplete({
             setDraft(next);
             setFilterQuery(next);
             setHighlight(0);
+            if (!next.trim()) onChange('');
             setOpen(true);
           }}
           onFocus={() => {

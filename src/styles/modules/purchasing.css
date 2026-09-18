@@ -4123,45 +4123,69 @@
     min-width: 10rem;
     white-space: normal;
   }
-  /* PO: 9 cột — vừa khung, ít cuộn */
+  /* PO: 11 cột dòng hàng PO — đủ rộng cho form inputs, không bị đè số/chữ */
   .pur-detail .pur-detail__lines-table--po {
     width: 100%;
-    min-width: 0;
+    min-width: 1180px;
     table-layout: fixed;
   }
   .pur-detail .pur-detail__lines-table--po th,
   .pur-detail .pur-detail__lines-table--po td {
-    padding: 0.55rem 0.55rem;
+    padding: 0.5rem 0.5rem;
   }
-  .pur-detail .pur-detail__lines-table--po .pur-po-col--name { width: 16%; }
-  .pur-detail .pur-detail__lines-table--po .pur-po-col--spec { width: 14%; }
-  .pur-detail .pur-detail__lines-table--po .pur-po-col--unit { width: 4.5rem; }
-  .pur-detail .pur-detail__lines-table--po .pur-po-col--qty { width: 4rem; }
-  .pur-detail .pur-detail__lines-table--po .pur-po-col--price { width: 6.5rem; }
-  .pur-detail .pur-detail__lines-table--po .pur-po-col--amount { width: 7.25rem; }
-  .pur-detail .pur-detail__lines-table--po .pur-po-col--date { width: 6.75rem; }
-  .pur-detail .pur-detail__lines-table--po .pur-po-col--recv { width: 4.5rem; }
-  .pur-detail .pur-detail__lines-table--po .pur-po-col--warranty { width: 5.75rem; min-width: 5.75rem; }
-  .pur-detail .pur-detail__lines-table--po .pur-po-col--anchor { width: 6.5rem; min-width: 6.5rem; }
-  .pur-detail .pur-detail__lines-table--po .pur-po-col--note { width: auto; }
+  .pur-detail .pur-detail__lines-table--po .pur-po-col--name { width: 14%; min-width: 9.5rem; }
+  .pur-detail .pur-detail__lines-table--po .pur-po-col--spec { width: 12%; min-width: 8rem; }
+  .pur-detail .pur-detail__lines-table--po .pur-po-col--unit { width: 4.25rem; min-width: 4.25rem; }
+  .pur-detail .pur-detail__lines-table--po .pur-po-col--qty { width: 6rem; min-width: 6rem; }
+  .pur-detail .pur-detail__lines-table--po .pur-po-col--price { width: 8.5rem; min-width: 8.5rem; }
+  .pur-detail .pur-detail__lines-table--po .pur-po-col--amount { width: 8.5rem; min-width: 8.5rem; }
+  .pur-detail .pur-detail__lines-table--po .pur-po-col--date { width: 9.5rem; min-width: 9.5rem; }
+  .pur-detail .pur-detail__lines-table--po .pur-po-col--recv { width: 4.5rem; min-width: 4.5rem; }
+  .pur-detail .pur-detail__lines-table--po .pur-po-col--warranty { width: 5.5rem; min-width: 5.5rem; }
+  .pur-detail .pur-detail__lines-table--po .pur-po-col--anchor { width: 8.75rem; min-width: 8.75rem; }
+  .pur-detail .pur-detail__lines-table--po .pur-po-col--note { width: auto; min-width: 8rem; }
   .pur-detail .pur-detail__lines-table--po td:nth-child(1),
   .pur-detail .pur-detail__lines-table--po th:nth-child(1),
   .pur-detail .pur-detail__lines-table--po td:nth-child(2),
   .pur-detail .pur-detail__lines-table--po th:nth-child(2),
-  .pur-detail .pur-detail__lines-table--po td:nth-child(9),
-  .pur-detail .pur-detail__lines-table--po th:nth-child(9) {
+  .pur-detail .pur-detail__lines-table--po td:nth-child(11),
+  .pur-detail .pur-detail__lines-table--po th:nth-child(11) {
     white-space: normal;
     word-break: break-word;
   }
   .pur-detail .pur-detail__lines-table--po td:nth-child(3),
-  .pur-detail .pur-detail__lines-table--po th:nth-child(3) {
+  .pur-detail .pur-detail__lines-table--po th:nth-child(3),
+  .pur-detail .pur-detail__lines-table--po td:nth-child(9),
+  .pur-detail .pur-detail__lines-table--po th:nth-child(9) {
     text-align: center;
   }
   .pur-detail .pur-detail__lines-table--po .form-input {
     width: 100%;
     min-width: 0;
     max-width: 100%;
+    height: 32px;
+    padding: 0 8px;
+    font-size: var(--fs-sm);
     box-sizing: border-box;
+  }
+  .pur-detail .pur-detail__lines-table--po input[type="number"]::-webkit-outer-spin-button,
+  .pur-detail .pur-detail__lines-table--po input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .pur-detail .pur-detail__lines-table--po input[type="number"] {
+    -moz-appearance: textfield;
+  }
+  .pur-detail .pur-detail__lines-table--po td.pur-erp__td-num .form-input {
+    text-align: right;
+  }
+  .pur-detail .pur-detail__lines-table--po input[type="date"].form-input {
+    padding: 0 6px;
+    font-size: var(--fs-xs);
+  }
+  .pur-detail .pur-detail__lines-table--po select.form-input {
+    padding: 0 6px 0 8px;
+    font-size: var(--fs-xs);
   }
   .pur-detail .pur-detail__lines-table thead th.pur-detail__th {
     position: sticky;

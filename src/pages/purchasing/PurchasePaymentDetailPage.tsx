@@ -28,6 +28,7 @@ import {
   useCreatePurchasePayment,
   usePayPurchasePayment,
   usePurchasePayment,
+  usePurchasePayments,
   useSubmitPurchasePayment,
 } from '../../hooks/usePurchasePayments';
 import { usePurchasePaymentNextStage } from '../../hooks/usePurchasePaymentPlans';
@@ -100,6 +101,10 @@ export default function PurchasePaymentDetailPage() {
   const ordersQuery = usePurchaseOrders({ page: 1, pageSize: 200 });
   const orderQuery = usePurchaseOrder(poCode || undefined);
   const nextStageQuery = usePurchasePaymentNextStage(isCreate ? poCode || undefined : undefined);
+  const poPaymentsQuery = usePurchasePayments(
+    isCreate && poCode ? { poCode: poCode.trim(), pageSize: 50 } : undefined,
+    { enabled: isCreate && Boolean(poCode.trim()) },
+  );
 
   const orders = ordersQuery.data?.items ?? [];
   const payment = paymentQuery.data;
@@ -120,6 +125,86 @@ export default function PurchasePaymentDetailPage() {
     && (order.lines ?? []).every(line => (line.received ?? 0) <= 0),
   );
 
+  const cannotCreateReason = (() => {
+    if (!isCreate || !poCode || !order || nextStageQuery.isLoading || nextStage) {
+      return null;
+    }
+
+    if (poPaymentsQuery.isLoading) {
+      return {
+        title: 'Đang kiểm tra các đợt thanh toán…',
+        detail: 'Hệ thống đang kiểm tra tiến độ thanh toán của đơn hàng PO.',
+        paymentCode: null as string | null,
+      };
+    }
+
+    if (order.approvalStatus !== 'approved') {
+      return {
+        title: 'PO chưa được phê duyệt',
+        detail: `Đơn hàng PO đang ở trạng thái "${order.approvalStatus}". Chỉ có thể tạo DNTT cho PO đã được duyệt.`,
+        paymentCode: null as string | null,
+      };
+    }
+
+    const stages = (order.installments ?? []).slice().sort((a, b) => a.stageNumber - b.stageNumber);
+    if (stages.length === 0) {
+      return {
+        title: 'PO chưa có cấu hình đợt thanh toán',
+        detail: 'Đơn hàng này chưa được thiết lập các đợt thanh toán (Installments).',
+        paymentCode: null as string | null,
+      };
+    }
+
+    const existingPayments = (poPaymentsQuery.data?.items ?? []).filter(
+      p => p.status !== 'cancelled',
+    );
+
+    for (const stage of stages) {
+      const sp = existingPayments.filter(p => p.stageNumber === stage.stageNumber);
+      const isPaid = sp.some(p => p.status === 'paid');
+      if (isPaid) continue;
+
+      const pending = sp.find(p => p.status === 'draft' || p.status === 'submitted');
+      if (pending) {
+        const statusText = paymentStatusLabel(pending.status);
+        return {
+          title: `Đợt ${stage.stageNumber} đang chờ thanh toán (${pending.code} · ${statusText})`,
+          detail: `Theo quy trình thanh toán tuần tự, đợt ${stage.stageNumber} (${pending.code}) cần được ghi nhận đã thanh toán trước khi có thể lập DNTT cho đợt tiếp theo.`,
+          paymentCode: pending.code,
+        };
+      }
+
+      const priorUnpaid = stages.find(
+        s => s.stageNumber < stage.stageNumber && !existingPayments.some(p => p.stageNumber === s.stageNumber && p.status === 'paid'),
+      );
+      if (priorUnpaid) {
+        return {
+          title: `Đợt ${priorUnpaid.stageNumber} chưa hoàn tất thanh toán`,
+          detail: `Cần hoàn tất thanh toán cho đợt ${priorUnpaid.stageNumber} trước khi lập DNTT cho đợt ${stage.stageNumber}.`,
+          paymentCode: null as string | null,
+        };
+      }
+    }
+
+    const paidStagesCount = stages.filter(stage =>
+      existingPayments.some(p => p.stageNumber === stage.stageNumber && p.status === 'paid'),
+    ).length;
+
+    if (paidStagesCount >= stages.length) {
+      return {
+        title: 'Đã hoàn tất thanh toán toàn bộ các đợt',
+        detail: `Đơn hàng này đã thanh toán đủ ${paidStagesCount}/${stages.length} đợt. Không còn đợt nào cần tạo DNTT.`,
+        paymentCode: null as string | null,
+      };
+    }
+
+    return {
+      title: 'Không còn đợt cần tạo DNTT',
+      detail: 'PO chưa duyệt, chưa có đợt, đã đủ DNTT, hoặc đang chờ thanh toán đợt hiện tại.',
+      paymentCode: null as string | null,
+    };
+  })();
+
   const [hydratedPaymentCode, setHydratedPaymentCode] = useState<string | null>(null);
   if (!isCreate && payment && payment.code !== hydratedPaymentCode) {
     setHydratedPaymentCode(payment.code);
@@ -131,7 +216,7 @@ export default function PurchasePaymentDetailPage() {
   }
 
   const createSeedKey = isCreate && order
-    ? `${poCode}|${nextStage?.amount ?? 'full'}|${order.paymentDueDate ?? ''}`
+    ? `${poCode}|${nextStage?.amount ?? 'none'}|${order.paymentDueDate ?? ''}`
     : null;
   const [hydratedCreateSeed, setHydratedCreateSeed] = useState<string | null>(null);
   if (createSeedKey && createSeedKey !== hydratedCreateSeed) {
@@ -139,7 +224,7 @@ export default function PurchasePaymentDetailPage() {
     if (nextStage) {
       setAmount(formatCurrencyInput(nextStage.amount));
     } else {
-      setAmount(formatCurrencyInput(order!.totalAmount ?? 0));
+      setAmount('');
     }
     setDueDate(order!.paymentDueDate ? String(order!.paymentDueDate).slice(0, 10) : todayIso());
   }
@@ -181,6 +266,8 @@ export default function PurchasePaymentDetailPage() {
     };
   }, [payment, order, poCode, invoiceNo, dueDate, amountNum, note, sessionUser?.name]);
 
+  const canSave = isCreate && canCreate && Boolean(poCode.trim()) && Boolean(nextStage) && !docsGateBlocked && amountNum > 0;
+
   const onSave = async () => {
     if (!canCreate) {
       showToast('warning', 'Không có quyền tạo DNTT.');
@@ -190,16 +277,16 @@ export default function PurchasePaymentDetailPage() {
       showToast('warning', 'Chọn đơn hàng PO.');
       return;
     }
-    if (!dueDate) {
-      showToast('warning', 'Chọn hạn thanh toán.');
+    if (!nextStage) {
+      showToast('warning', cannotCreateReason?.detail || 'PO này không còn đợt cần tạo DNTT (chưa duyệt / đã đủ / đang chờ đợt hiện tại).');
       return;
     }
     if (amountNum <= 0) {
       showToast('warning', 'Số tiền phải > 0.');
       return;
     }
-    if (!nextStage) {
-      showToast('warning', 'PO này không còn đợt cần tạo DNTT (chưa duyệt / đã đủ / đang chờ đợt hiện tại).');
+    if (!dueDate) {
+      showToast('warning', 'Chọn hạn thanh toán.');
       return;
     }
     if (missingDocTypes.length > 0) {
@@ -303,11 +390,15 @@ export default function PurchasePaymentDetailPage() {
                 <button
                   type="button"
                   className="btn btn-primary btn-sm"
-                  disabled={createMutation.isPending || docsGateBlocked}
+                  disabled={createMutation.isPending || !canSave}
                   title={
-                    docsGateBlocked
-                      ? `Thiếu chứng từ: ${missingDocTypes.join(', ')}`
-                      : undefined
+                    !poCode
+                      ? 'Vui lòng chọn đơn hàng PO'
+                      : !nextStage
+                        ? (cannotCreateReason?.title || 'Chưa có đợt thanh toán khả dụng')
+                        : docsGateBlocked
+                          ? `Thiếu chứng từ: ${missingDocTypes.join(', ')}`
+                          : undefined
                   }
                   onClick={() => { void onSave(); }}
                 >
@@ -487,11 +578,24 @@ export default function PurchasePaymentDetailPage() {
               {isCreate && poCode && order && !nextStageQuery.isLoading && !nextStage ? (
                 <div className="pur-dntt__stage-banner pur-dntt__stage-banner--warn" role="status">
                   <AlertTriangle size={16} strokeWidth={1.75} aria-hidden />
-                  <div>
-                    <strong>Không còn đợt cần tạo DNTT</strong>
+                  <div style={{ flex: 1 }}>
+                    <strong>{cannotCreateReason?.title || 'Không còn đợt cần tạo DNTT'}</strong>
                     <p>
-                      PO chưa duyệt, chưa có đợt, đã đủ DNTT, hoặc đang chờ thanh toán đợt hiện tại.
+                      {cannotCreateReason?.detail || 'PO chưa duyệt, chưa có đợt, đã đủ DNTT, hoặc đang chờ thanh toán đợt hiện tại.'}
                     </p>
+                    {cannotCreateReason?.paymentCode ? (
+                      <div style={{ marginTop: '0.5rem' }}>
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-sm"
+                          style={{ gap: '0.35rem', fontSize: 'var(--fs-xs)', padding: '0.2rem 0.5rem' }}
+                          onClick={() => navigate(`/purchasing/payments/${encodeURIComponent(cannotCreateReason.paymentCode!)}`)}
+                        >
+                          <Eye size={13} strokeWidth={1.75} aria-hidden />
+                          Xem {cannotCreateReason.paymentCode}
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               ) : null}
@@ -535,7 +639,7 @@ export default function PurchasePaymentDetailPage() {
                     className="form-input form-input-md pur-dntt__amount"
                     value={amount}
                     readOnly
-                    placeholder={order ? formatCurrency(order.totalAmount) : '0'}
+                    placeholder={nextStage ? formatCurrency(nextStage.amount) : '0'}
                     inputMode="numeric"
                     aria-label="Số tiền đề nghị"
                   />
@@ -543,6 +647,10 @@ export default function PurchasePaymentDetailPage() {
                 </div>
                 {amountNum > 0 ? (
                   <p className="pur-dntt__words-live">{amountToVietnameseWords(amountNum)}</p>
+                ) : isCreate && poCode && !nextStage ? (
+                  <p className="pur-dntt__words-live" style={{ color: 'var(--md-outline)' }}>
+                    Chưa có đợt thanh toán khả dụng cho đơn hàng này
+                  </p>
                 ) : null}
               </FormField>
 

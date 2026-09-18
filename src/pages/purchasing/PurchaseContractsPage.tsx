@@ -26,6 +26,8 @@ import {
 import { usePermission } from '../../hooks/usePermission';
 import { useProjects } from '../../hooks/useProjects';
 import { useSuppliers } from '../../hooks/useSuppliers';
+import { usePurchaseOrders } from '../../hooks/usePurchaseOrders';
+import PoAutocomplete from '../../components/purchasing/PoAutocomplete';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { formatDateCell, formatDateTimeVi } from '../../lib/hrm/formatters';
 import { findSupplierByName } from '../../services/suppliersService';
@@ -125,8 +127,10 @@ export default function PurchaseContractsPage() {
   const canUpdate = has('purchasing.contracts.update');
   const { data: projectsPage } = useProjects({ page: 1, pageSize: 200 });
   const { data: suppliersPage } = useSuppliers({ all: true });
+  const { data: ordersPage } = usePurchaseOrders({ page: 1, pageSize: 200 });
   const projects = projectsPage?.items ?? [];
   const suppliers = suppliersPage?.items ?? [];
+  const orders = ordersPage?.items ?? [];
 
   const [search, setSearch] = useState('');
   const [projectCode, setProjectCode] = useState('');
@@ -138,6 +142,38 @@ export default function PurchaseContractsPage() {
   const [form, setForm] = useState<ContractFormState>(emptyForm);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const selectableOrders = useMemo(() => {
+    const hasSup = Boolean(form.supplierName?.trim());
+    const hasProj = Boolean(form.projectCode?.trim());
+    let list = orders;
+    if (hasSup || hasProj) {
+      const filtered = orders.filter(o => {
+        if (hasSup && o.supplierName?.trim().toLowerCase() !== form.supplierName.trim().toLowerCase()) {
+          return false;
+        }
+        if (hasProj && o.projectCode?.trim().toLowerCase() !== form.projectCode.trim().toLowerCase()) {
+          return false;
+        }
+        return true;
+      });
+      if (filtered.length > 0) {
+        list = filtered;
+      } else if (hasSup) {
+        const bySup = orders.filter(
+          o => o.supplierName?.trim().toLowerCase() === form.supplierName.trim().toLowerCase(),
+        );
+        if (bySup.length > 0) list = bySup;
+      }
+    }
+
+    if (form.poCode && !list.some(o => o.code === form.poCode)) {
+      const currentPo = orders.find(o => o.code === form.poCode);
+      if (currentPo) list = [currentPo, ...list];
+    }
+
+    return list;
+  }, [orders, form.supplierName, form.projectCode, form.poCode]);
 
   const listParams = useMemo(
     () => ({
@@ -518,12 +554,22 @@ export default function PurchaseContractsPage() {
                 />
               </FormField>
               <FormField label="Mã PO">
-                <input
-                  className="form-input font-mono"
+                <PoAutocomplete
                   value={form.poCode}
+                  orders={selectableOrders}
                   disabled={busy || (!canCreate && !canUpdate)}
-                  onChange={e => setForm(prev => ({ ...prev, poCode: e.target.value }))}
-                  placeholder="Tùy chọn"
+                  placeholder="Chọn đơn hàng PO (tùy chọn)…"
+                  allowClear
+                  onChange={code => {
+                    const selectedPo = orders.find(o => o.code === code);
+                    setForm(prev => ({
+                      ...prev,
+                      poCode: code,
+                      supplierName: prev.supplierName || selectedPo?.supplierName || '',
+                      projectCode: prev.projectCode || selectedPo?.projectCode || '',
+                      amount: !prev.amount && selectedPo?.totalAmount ? String(selectedPo.totalAmount) : prev.amount,
+                    }));
+                  }}
                 />
               </FormField>
               <FormField label="Giá trị">

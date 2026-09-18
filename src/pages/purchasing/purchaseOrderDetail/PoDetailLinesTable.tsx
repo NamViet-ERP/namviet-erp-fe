@@ -69,7 +69,7 @@ export function PoDetailLinesTable({
                     <td className="pur-erp__td-num">
                       {editing ? (
                         <input
-                          className="form-input"
+                          className="form-input text-right"
                           type="number"
                           min={0}
                           step="any"
@@ -84,7 +84,7 @@ export function PoDetailLinesTable({
                     <td className="pur-erp__td-num">
                       {editing ? (
                         <input
-                          className="form-input"
+                          className="form-input text-right"
                           type="number"
                           min={0}
                           step="any"
@@ -117,7 +117,7 @@ export function PoDetailLinesTable({
                     <td className="pur-erp__td-num">
                       {editing ? (
                         <input
-                          className="form-input"
+                          className="form-input text-center"
                           type="number"
                           min={0}
                           max={120}
