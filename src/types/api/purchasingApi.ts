@@ -7,11 +7,34 @@ import type { components } from '../generated/openapi';
 type Schemas = components['schemas'];
 
 /** OpenAPI aliases — Purchase Plans */
+export interface PurchasePlanLinePoApiDto {
+  poCode: string;
+  orderedQty: number;
+  receivedQty: number;
+}
+
+export interface PurchasePlanRelatedPoApiDto {
+  code: string;
+  supplierName?: string | null;
+  totalAmount: number;
+  approvalStatus: string;
+  orderPlacementStatus: string;
+  deliveryStatus: string;
+  paymentStatus: string;
+  itemCount: number;
+  createdAt: string;
+}
+
 export type PurchasePlanKind = 'plan' | 'adhoc';
 export type PurchasePlanApiDto = Schemas['PurchasePlanDto'];
 export type PurchasePlanLineQuoteApiDto = Schemas['PurchasePlanLineQuoteDto'];
-export type PurchasePlanLineApiDto = Schemas['PurchasePlanLineDto'];
-export type PurchasePlanDetailApiDto = Schemas['PurchasePlanDetailDto'];
+export type PurchasePlanLineApiDto = Schemas['PurchasePlanLineDto'] & {
+  pos?: PurchasePlanLinePoApiDto[] | null;
+};
+export type PurchasePlanDetailApiDto = Omit<Schemas['PurchasePlanDetailDto'], 'lines'> & {
+  lines: PurchasePlanLineApiDto[];
+  relatedOrders?: PurchasePlanRelatedPoApiDto[] | null;
+};
 export type PurchasePlanPagedApiDto = Schemas['PurchasePlanPagedResponse'];
 export type PurchasePlanImportColumnMapApiDto = Schemas['PurchasePlanImportColumnMapDto'];
 export type PurchasePlanImportQuotePreviewApiDto = Schemas['PurchasePlanImportQuotePreviewDto'];

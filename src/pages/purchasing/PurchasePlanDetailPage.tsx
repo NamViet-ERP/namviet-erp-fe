@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -31,9 +31,18 @@ import {
 } from '../../hooks/usePurchasePlans';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { formatDateCell, formatDateTimeVi } from '../../lib/hrm/formatters';
+import {
+  PoStatusPill,
+  poApprovalStatus,
+  poDeliveryStatus,
+  poPlacementStatus,
+  poPaymentStatus,
+} from '../../lib/purchasing/purchaseOrderStatus';
 import { formatCurrency } from '../../utils/formatCurrency';
 import type {
   PurchasePlanLineApiDto,
+  PurchasePlanLinePoApiDto,
+  PurchasePlanRelatedPoApiDto,
   SupplierMaterialRiskPairRequest,
 } from '../../types/api/purchasingApi';
 
@@ -106,6 +115,125 @@ function LineQuotes({ line }: { line: PurchasePlanLineApiDto }) {
         </ul>
       )}
     </div>
+  );
+}
+
+function LinePoCell({ pos }: { pos?: PurchasePlanLinePoApiDto[] | null }) {
+  const [open, setOpen] = useState(false);
+  if (!pos || pos.length === 0) return <span className="hrm-empty-cell">—</span>;
+
+  if (pos.length === 1) {
+    const p = pos[0];
+    return (
+      <Link
+        to={`/purchasing/orders/${encodeURIComponent(p.poCode)}`}
+        className="pur-pay-plan__po-link font-semibold"
+        title={`Đơn ${p.poCode}: Đã đặt ${p.orderedQty}, Đã nhận ${p.receivedQty}`}
+      >
+        {p.poCode}
+      </Link>
+    );
+  }
+
+  return (
+    <div>
+      <button
+        type="button"
+        className="btn btn-text btn-sm text-xs py-0 px-1 font-semibold"
+        aria-expanded={open}
+        onClick={() => setOpen(v => !v)}
+      >
+        {open ? <ChevronDown size={12} aria-hidden /> : <ChevronRight size={12} aria-hidden />}
+        {pos.length} PO
+      </button>
+      {open && (
+        <ul className="pur-detail__quote-list">
+          {pos.map(p => (
+            <li key={p.poCode}>
+              <Link
+                to={`/purchasing/orders/${encodeURIComponent(p.poCode)}`}
+                className="pur-pay-plan__po-link font-semibold"
+              >
+                {p.poCode}
+              </Link>
+              : {p.orderedQty} đặt {p.receivedQty > 0 ? `(${p.receivedQty} nhận)` : ''}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function RelatedPurchaseOrdersCard({
+  orders,
+}: {
+  orders?: PurchasePlanRelatedPoApiDto[] | null;
+}) {
+  if (!orders || orders.length === 0) return null;
+
+  return (
+    <section className="pur-detail__card" aria-label="Đơn mua hàng liên quan">
+      <h2 className="pur-detail__section-title">
+        Đơn mua hàng liên quan ({orders.length})
+      </h2>
+      <div className="pur-detail__table-wrap overflow-x-auto table-scroll">
+        <table className="pur-erp__table pur-erp__table--po">
+          <thead>
+            <tr>
+              <th className="pur-pay-plan__th-po">Mã PO</th>
+              <th>Nhà cung cấp</th>
+              <th className="pur-erp__th-num">Số dòng</th>
+              <th className="pur-erp__th-num">Tổng tiền</th>
+              <th>Duyệt</th>
+              <th>Đặt hàng</th>
+              <th>Giao hàng</th>
+              <th>Thanh toán</th>
+              <th>Ngày tạo</th>
+            </tr>
+          </thead>
+          <tbody>
+            {orders.map(order => {
+              const approval = poApprovalStatus(order.approvalStatus);
+              const placement = poPlacementStatus(order.orderPlacementStatus);
+              const delivery = poDeliveryStatus(order.deliveryStatus);
+              const payment = poPaymentStatus(order.paymentStatus);
+
+              return (
+                <tr key={order.code}>
+                  <td className="pur-erp__td-code pur-pay-plan__td-po">
+                    <Link
+                      to={`/purchasing/orders/${encodeURIComponent(order.code)}`}
+                      className="pur-pay-plan__po-link"
+                    >
+                      {order.code}
+                    </Link>
+                  </td>
+                  <td>{order.supplierName || '—'}</td>
+                  <td className="pur-erp__td-num">{order.itemCount}</td>
+                  <td className="pur-erp__td-num tabular-nums font-semibold">
+                    {formatCurrency(order.totalAmount)}
+                  </td>
+                  <td className="pur-erp__td-status">
+                    <PoStatusPill label={approval.label} tone={approval.tone} />
+                  </td>
+                  <td className="pur-erp__td-status">
+                    <PoStatusPill label={placement.label} tone={placement.tone} />
+                  </td>
+                  <td className="pur-erp__td-status">
+                    <PoStatusPill label={delivery.label} tone={delivery.tone} />
+                  </td>
+                  <td className="pur-erp__td-status">
+                    <PoStatusPill label={payment.label} tone={payment.tone} />
+                  </td>
+                  <td>{formatDateTimeVi(order.createdAt) ?? '—'}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }
 
@@ -428,6 +556,8 @@ export default function PurchasePlanDetailPage() {
         </section>
       ) : null}
 
+      <RelatedPurchaseOrdersCard orders={plan.relatedOrders} />
+
       <section className="pur-detail__card" aria-label="Danh sách mặt hàng">
         <h2 className="pur-detail__section-title">Danh sách mặt hàng</h2>
         {lines.length === 0 ? (
@@ -495,7 +625,7 @@ export default function PurchasePlanDetailPage() {
                     <td className="pur-erp__td-num">{money(line.selectedUnitPrice)}</td>
                     <td>{line.selectionReason || '—'}</td>
                     <td><LineQuotes line={line} /></td>
-                    <td>—</td>
+                    <td className="text-center"><LinePoCell pos={line.pos} /></td>
                     <td className="pur-erp__td-num">{qty(line.orderedQty)}</td>
                     <td className="pur-erp__td-num">{qty(line.receivedQty)}</td>
                     <td className="pur-erp__td-num">{qty(line.defectQty)}</td>
