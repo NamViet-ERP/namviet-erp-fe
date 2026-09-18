@@ -12,6 +12,7 @@ export interface PurchasePaymentPlanListParams {
   pageSize?: number;
   search?: string;
   projectCode?: string;
+  paymentStatus?: string;
 }
 
 export const purchasePaymentPlansService = {
@@ -21,6 +22,7 @@ export const purchasePaymentPlansService = {
       pageSize: params.pageSize,
       search: params.search,
       projectCode: params.projectCode,
+      paymentStatus: params.paymentStatus,
     });
   },
 

@@ -1,18 +1,28 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, Plus, RefreshCw } from 'lucide-react';
+import { Eye, Plus, RefreshCw, RotateCcw } from 'lucide-react';
 import Dropdown from '../../components/ui/Dropdown';
 import EmptyState from '../../components/ui/EmptyState';
 import Pagination from '../../components/ui/Pagination';
 import SearchBar from '../../components/ui/SearchBar';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
+import ProjectAutocomplete from '../../components/purchasing/ProjectAutocomplete';
 import { DEFAULT_LIST_PAGE_SIZE, type ListPageSize } from '../../constants/pagination';
 import { usePurchasePaymentPlans } from '../../hooks/usePurchasePaymentPlans';
+import { useProjects } from '../../hooks/useProjects';
 import { usePermission } from '../../hooks/usePermission';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { formatCurrency } from '../../utils/formatCurrency';
 import type { DropdownItem } from '../../types';
 import type { PurchasePaymentPlanStageApiDto } from '../../types/api/purchasingApi';
+
+const PAYMENT_PLAN_STATUS_OPTIONS = [
+  { value: '', label: 'Tất cả trạng thái' },
+  { value: 'uncompleted', label: 'Chưa thanh toán đủ (còn đợt)' },
+  { value: 'paid', label: 'Đã thanh toán đủ' },
+  { value: 'partial', label: 'Thanh toán 1 phần' },
+  { value: 'none', label: 'Chưa thanh toán đợt nào' },
+];
 
 function stageStatusLabel(status: string): string {
   switch (status.trim().toLowerCase()) {
@@ -89,16 +99,32 @@ function ProgressCell({
 export default function PurchasePaymentPlansPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
+  const [projectCode, setProjectCode] = useState('');
+  const [paymentStatus, setPaymentStatus] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<ListPageSize>(DEFAULT_LIST_PAGE_SIZE);
   const { has } = usePermission();
   const canCreate = has('purchasing.payments.create');
 
+  const { data: projectsPage } = useProjects({ page: 1, pageSize: 200 });
+  const projects = projectsPage?.items ?? [];
+
+  const hasActiveFilters = Boolean(search.trim() || projectCode || paymentStatus);
+
+  const resetFilters = () => {
+    setSearch('');
+    setProjectCode('');
+    setPaymentStatus('');
+    setPage(1);
+  };
+
   const listParams = useMemo(() => ({
     page,
     pageSize,
     search: search.trim() || undefined,
-  }), [page, pageSize, search]);
+    projectCode: projectCode || undefined,
+    paymentStatus: paymentStatus || undefined,
+  }), [page, pageSize, search, projectCode, paymentStatus]);
 
   const { data, isLoading, isError, error, refetch } = usePurchasePaymentPlans(listParams);
 
@@ -165,16 +191,63 @@ export default function PurchasePaymentPlansPage() {
       <div className="pur-erp__workspace">
         <div className="pur-erp__filter-card pur-erp__filter-card--po">
           <div className="pur-erp__toolbar pur-erp__toolbar--po">
-            <div className="pur-erp__toolbar-fields" style={{ flex: 1 }}>
-              <SearchBar
-                value={search}
-                onChange={(value) => {
-                  setSearch(value);
-                  setPage(1);
-                }}
-                placeholder="Mã PO, dự án…"
-              />
+            <div className="pur-erp__toolbar-fields pur-erp__filter-grid pur-erp__filter-grid--pay-plan">
+              <label className="pur-erp__field">
+                <span>Tìm kiếm</span>
+                <SearchBar
+                  value={search}
+                  onChange={(value) => {
+                    setSearch(value);
+                    setPage(1);
+                  }}
+                  placeholder="Mã PO, đợt…"
+                />
+              </label>
+              <label className="pur-erp__field">
+                <span>Dự án</span>
+                <ProjectAutocomplete
+                  value={projectCode}
+                  onChange={(code) => {
+                    setProjectCode(code);
+                    setPage(1);
+                  }}
+                  projects={projects}
+                  placeholder="Mã / tên dự án"
+                  compact
+                />
+              </label>
+              <label className="pur-erp__field">
+                <span>Tình trạng thanh toán</span>
+                <select
+                  className="pur-erp__select"
+                  value={paymentStatus}
+                  onChange={(e) => {
+                    setPaymentStatus(e.target.value);
+                    setPage(1);
+                  }}
+                  aria-label="Lọc tình trạng thanh toán"
+                >
+                  {PAYMENT_PLAN_STATUS_OPTIONS.map((opt) => (
+                    <option key={opt.value || 'all'} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
+            {hasActiveFilters ? (
+              <div className="pur-erp__toolbar-actions">
+                <button
+                  type="button"
+                  className="hrm-filter-reset"
+                  onClick={resetFilters}
+                  aria-label="Xóa bộ lọc"
+                >
+                  <RotateCcw size={14} aria-hidden />
+                  Xóa lọc
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
 
@@ -219,7 +292,7 @@ export default function PurchasePaymentPlansPage() {
                       <tr>
                         <td colSpan={colCount}>
                           <EmptyState message={
-                            search.trim()
+                            hasActiveFilters
                               ? 'Không tìm thấy kế hoạch khớp bộ lọc.'
                               : 'Chưa có kế hoạch — duyệt PO có đợt thanh toán để hiện tại đây.'
                           } />
