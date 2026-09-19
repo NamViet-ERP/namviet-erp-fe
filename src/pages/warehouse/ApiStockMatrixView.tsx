@@ -151,7 +151,9 @@ export default function ApiStockMatrixView() {
                       className="wms-inventory-row--interactive table-row"
                     >
                       <td className="table-cell stock-col-code">
-                        <span className="entity-code stock-cell-truncate">{row.materialCode}</span>
+                        <span className="entity-code stock-cell-truncate" title={row.materialCode}>
+                          {row.materialCode}
+                        </span>
                       </td>
                       <td className="table-cell stock-col-name">
                         <span className="font-semibold stock-cell-truncate block" title={row.materialName}>

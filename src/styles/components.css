@@ -5644,37 +5644,67 @@
     padding-right: 6px;
   }
 
-  /* Tồn kho — column widths only (shared square wms-inventory-table skin) */
+  /* Tồn kho — column widths & compact responsive layout */
   .stock-matrix-table {
     table-layout: auto;
-    min-width: 94rem;
+    width: 100%;
+    min-width: 63rem;
+  }
+  .stock-matrix-table thead .table-header-cell {
+    padding: 7px 5px;
+    font-size: var(--fs-micro);
+    line-height: 1.22;
+    white-space: normal !important;
+    vertical-align: middle;
+    word-break: keep-all;
+    letter-spacing: 0.01em;
+  }
+  .stock-matrix-table .table-cell {
+    padding: 7px 5px;
+    font-size: var(--fs-xs);
   }
   .stock-col-code {
-    width: 12rem;
-    min-width: 12rem;
-    max-width: 14rem;
+    width: 9.5rem;
+    min-width: 8.5rem;
+    max-width: 11rem;
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: var(--md-surface);
+    box-shadow: 2px 0 4px -2px rgba(0, 0, 0, 0.12);
+  }
+  .stock-matrix-table thead .stock-col-code {
+    z-index: 3;
+    background: var(--nv-table-header-bg);
+  }
+  tbody .table-row:nth-child(even) > .table-cell.stock-col-code {
+    background: color-mix(in srgb, var(--nv-navy) 3.5%, var(--md-surface-container-high));
+  }
+  tbody .table-row:hover > .table-cell.stock-col-code {
+    background: color-mix(in srgb, var(--nv-action) 10%, var(--md-surface-container-high));
   }
   .stock-col-name {
-    min-width: 12rem;
+    min-width: 8.5rem;
+    max-width: 12.5rem;
   }
   .stock-col-unit {
-    width: 4.5rem;
-    min-width: 4.5rem;
+    width: 3.25rem;
+    min-width: 3rem;
     white-space: nowrap;
   }
   .stock-col-qty {
-    width: 8.25rem;
-    min-width: 8.25rem;
+    width: 4.75rem;
+    min-width: 4.25rem;
     white-space: nowrap;
   }
   .stock-col-price {
-    width: 9.5rem;
-    min-width: 9.5rem;
+    width: 7.25rem;
+    min-width: 6.75rem;
     white-space: nowrap;
   }
   .stock-col-projects {
-    width: 4.5rem;
-    min-width: 4.5rem;
+    width: 3.25rem;
+    min-width: 3rem;
     white-space: nowrap;
   }
   .stock-cell-truncate {
