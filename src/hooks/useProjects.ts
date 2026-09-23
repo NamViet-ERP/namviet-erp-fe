@@ -75,6 +75,17 @@ export function useCloseProject() {
   });
 }
 
+export function useDeleteProject() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (code: string) => projectsService.deleteProject(code),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.projects.all });
+      qc.invalidateQueries({ queryKey: queryKeys.stock.matrix });
+    },
+  });
+}
+
 export function useUpdateProjectInventoryMinStock() {
   const qc = useQueryClient();
   return useMutation({

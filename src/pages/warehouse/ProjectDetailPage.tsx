@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { PackagePlus, PackageMinus, PackageX, Package, UserRound, ArrowRightLeft, Pencil, CircleDollarSign, Wallet, AlertTriangle } from 'lucide-react';
+import { PackagePlus, PackageMinus, PackageX, Package, UserRound, ArrowRightLeft, Pencil, CircleDollarSign, Wallet, AlertTriangle, Trash2 } from 'lucide-react';
 import { HrmDetailHeader } from '../../components/hr/HrmPageChrome';
 import HrmPanel from '../../components/hr/HrmPanel';
 import HrmStatCard from '../../components/hr/HrmStatCard';
@@ -30,12 +30,21 @@ import {
   getBudgetRemainingTone,
   resolveMaterialBudgetRemaining,
 } from '../../lib/wms/projectBudget';
-import { useProject, useProjectInventory, useProjectLedger, useCloseProject, useUpdateProject, useUpdateProjectInventoryMinStock } from '../../hooks/useProjects';
+import {
+  useProject,
+  useProjectInventory,
+  useProjectLedger,
+  useCloseProject,
+  useUpdateProject,
+  useUpdateProjectInventoryMinStock,
+  useDeleteProject,
+} from '../../hooks/useProjects';
 import PermissionGate from '../../components/auth/PermissionGate';
 import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
 import type { WarehouseProjectApiDto, ProjectWarehouseKeeperDto, UpdateWarehouseProjectRequest } from '../../types/wms';
 import WarehouseKeeperMultiSelect from '../../components/warehouse/WarehouseKeeperMultiSelect';
 import { useCanViewWmsPrices } from '../../lib/wms/priceVisibility';
+import { getSessionUser } from '../../constants/systemUsers';
 
 type DetailTab = 'stock' | 'history' | 'info';
 
@@ -122,6 +131,10 @@ export default function ProjectDetailPage() {
   const closeMutation = useCloseProject();
   const updateMutation = useUpdateProject();
   const minStockMutation = useUpdateProjectInventoryMinStock();
+  const deleteMutation = useDeleteProject();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const sessionUser = getSessionUser();
+  const isAdmin = sessionUser?.role === 'Admin';
 
   const goBack = () => navigate('/warehouse/projects');
 
@@ -133,6 +146,17 @@ export default function ProjectDetailPage() {
       showToast('success', `Đã đóng kho dự án. Tồn còn lại đã chuyển về ${GENERAL_WAREHOUSE_LABEL_LOWER}.`);
     } catch (err) {
       showToast('error', getApiErrorMessage(err, 'Không thể đóng kho dự án'));
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!code || !project) return;
+    try {
+      await deleteMutation.mutateAsync(code);
+      showToast('success', `Đã xóa kho dự án ${project.projectCode}.`);
+      navigate('/warehouse/projects');
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không thể xóa kho dự án'));
     }
   };
 
@@ -320,43 +344,54 @@ export default function ProjectDetailPage() {
         title={project.projectName}
         subtitle={`Mã kho: ${project.projectCode}`}
         actions={
-          !isClosed ? (
-            <div className="flex flex-wrap gap-2">
-              <button type="button" className="hrm-header-btn" onClick={openEdit}>
-                <Pencil size={14} /> Chỉnh sửa
-              </button>
-              <Link
-                to="/warehouse/import"
-                state={{ projectCode: project.projectCode }}
-                className="hrm-header-btn"
-              >
-                <PackagePlus size={14} /> Nhập kho
-              </Link>
-              <Link
-                to="/warehouse/export"
-                state={{ projectCode: project.projectCode }}
-                className="hrm-header-btn"
-              >
-                <PackageMinus size={14} /> Xuất kho
-              </Link>
-              <Link
-                to="/warehouse/transfer"
-                state={{ projectCode: project.projectCode }}
-                className="hrm-header-btn"
-              >
-                <ArrowRightLeft size={14} /> Hoàn trả
-              </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            {!isClosed ? (
+              <>
+                <button type="button" className="hrm-header-btn" onClick={openEdit}>
+                  <Pencil size={14} /> Chỉnh sửa
+                </button>
+                <Link
+                  to="/warehouse/import"
+                  state={{ projectCode: project.projectCode }}
+                  className="hrm-header-btn"
+                >
+                  <PackagePlus size={14} /> Nhập kho
+                </Link>
+                <Link
+                  to="/warehouse/export"
+                  state={{ projectCode: project.projectCode }}
+                  className="hrm-header-btn"
+                >
+                  <PackageMinus size={14} /> Xuất kho
+                </Link>
+                <Link
+                  to="/warehouse/transfer"
+                  state={{ projectCode: project.projectCode }}
+                  className="hrm-header-btn"
+                >
+                  <ArrowRightLeft size={14} /> Hoàn trả
+                </Link>
+                <button
+                  type="button"
+                  className="hrm-header-btn"
+                  onClick={() => setShowCloseConfirm(true)}
+                >
+                  <PackageX size={14} /> Đóng kho
+                </button>
+              </>
+            ) : (
+              <Badge status="completed" />
+            )}
+            {isAdmin && stockWithQty.length === 0 && actualStockLines.length === 0 && (
               <button
                 type="button"
-                className="hrm-header-btn"
-                onClick={() => setShowCloseConfirm(true)}
+                className="hrm-header-btn text-[var(--md-error)] hover:bg-[color-mix(in_srgb,var(--md-error)_12%,transparent)]"
+                onClick={() => setShowDeleteConfirm(true)}
               >
-                <PackageX size={14} /> Đóng kho
+                <Trash2 size={14} /> Xóa kho
               </button>
-            </div>
-          ) : (
-            <Badge status="completed" />
-          )
+            )}
+          </div>
         }
       />
 
@@ -618,6 +653,27 @@ export default function ProjectDetailPage() {
             )}
             <p className="text-[var(--md-on-surface-variant)]">
               Sau khi đóng, không thể nhập hoặc xuất thêm cho kho dự án này.
+            </p>
+          </div>
+        }
+      />
+
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleConfirmDelete}
+        title="Xóa kho dự án"
+        confirmLabel="Xóa kho"
+        cancelLabel="Hủy"
+        variant="danger"
+        isLoading={deleteMutation.isPending}
+        message={
+          <div className="space-y-2 text-left">
+            <p>
+              Bạn có chắc chắn muốn xóa kho dự án <strong>{project.projectName}</strong> ({project.projectCode})?
+            </p>
+            <p className="text-[var(--md-on-surface-variant)] text-sm">
+              Thao tác này chỉ dành cho trường hợp tạo nhầm khi kho chưa có mặt hàng hay phát sinh giao dịch. Dữ liệu kho dự án sẽ bị xóa.
             </p>
           </div>
         }

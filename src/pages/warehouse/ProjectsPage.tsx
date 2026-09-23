@@ -1,6 +1,6 @@
 import { useState, type Dispatch, type SetStateAction } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, FolderKanban, CheckCircle2, Archive, X, Warehouse } from 'lucide-react';
+import { Plus, FolderKanban, CheckCircle2, Archive, X, Warehouse, Trash2 } from 'lucide-react';
 import SearchBar from '../../components/ui/SearchBar';
 import Pagination from '../../components/ui/Pagination';
 import EmptyState from '../../components/ui/EmptyState';
@@ -12,6 +12,7 @@ import Badge from '../../components/ui/Badge';
 import HrmPanel from '../../components/hr/HrmPanel';
 import Card from '../../components/ui/Card';
 import PermissionGate from '../../components/auth/PermissionGate';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage, getApiFieldErrors } from '../../lib/apiClient';
 import { WMS_ERROR } from '../../lib/wms/messages';
@@ -19,7 +20,7 @@ import { formatDateCell } from '../../lib/hrm/formatters';
 import { parseCurrencyInput } from '../../utils/currencyInput';
 import { MAX_MATERIAL_BUDGET, MAX_MATERIAL_BUDGET_LABEL } from '../../constants/wmsLimits';
 import { projectStatusBadge } from '../../lib/wms/projectStatusBadge';
-import { useProjects, useCreateProject } from '../../hooks/useProjects';
+import { useProjects, useCreateProject, useDeleteProject } from '../../hooks/useProjects';
 import { projectsService } from '../../services/projectsService';
 import { nextProjectCode } from '../../lib/cskh/commandCenter';
 import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
@@ -117,11 +118,31 @@ export default function ProjectsPage() {
   const { data: statsActive } = useProjects({ page: 1, pageSize: 1, status: 'Active' });
   const { data: statsClosed } = useProjects({ page: 1, pageSize: 1, status: 'Closed' });
   const createMutation = useCreateProject();
+  const deleteMutation = useDeleteProject();
+  const [deletingProject, setDeletingProject] = useState<WarehouseProjectApiDto | null>(null);
+  const sessionUser = getSessionUser();
+  const isAdmin = sessionUser?.role === 'Admin';
 
   const items = data?.items ?? [];
   const totalCount = data?.totalCount ?? 0;
   const totalPages = data?.totalPages ?? 1;
   const hasFilters = Boolean(search.trim() || statusFilter);
+
+  const handleDeleteClick = (e: React.MouseEvent, p: WarehouseProjectApiDto) => {
+    e.stopPropagation();
+    setDeletingProject(p);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingProject) return;
+    try {
+      await deleteMutation.mutateAsync(deletingProject.projectCode);
+      showToast('success', `Đã xóa kho dự án ${deletingProject.projectCode}.`);
+      setDeletingProject(null);
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không thể xóa kho dự án'));
+    }
+  };
 
   const resetFilters = () => {
     setSearch('');
@@ -275,24 +296,25 @@ export default function ProjectsPage() {
                 <th className="table-header-cell text-right project-col-count">Mặt hàng</th>
                 <th className="table-header-cell project-col-date whitespace-nowrap">Ngày bắt đầu</th>
                 <th className="table-header-cell text-center project-col-status">Trạng thái</th>
+                {isAdmin && <th className="table-header-cell text-center w-16">Thao tác</th>}
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="hrm-table-skeleton-row" aria-hidden>
-                    <td colSpan={6}><div className="hrm-table-skeleton" /></td>
+                    <td colSpan={isAdmin ? 7 : 6}><div className="hrm-table-skeleton" /></td>
                   </tr>
                 ))
               ) : isError ? (
                 <tr>
-                  <td colSpan={6}>
+                  <td colSpan={isAdmin ? 7 : 6}>
                     <EmptyState message={getApiErrorMessage(error, WMS_ERROR.loadProjects)} icon={Warehouse} />
                   </td>
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={6}>
+                  <td colSpan={isAdmin ? 7 : 6}>
                     <EmptyState message={emptyListMessage(search, statusFilter)} icon={FolderKanban} />
                   </td>
                 </tr>
@@ -334,6 +356,28 @@ export default function ProjectsPage() {
                     <td className="table-cell text-center project-col-status">
                       <Badge status={projectStatusBadge(p.status)} />
                     </td>
+                    {isAdmin && (
+                      <td className="table-cell text-center" onClick={e => e.stopPropagation()}>
+                        {(p.stockMaterialCount ?? 0) === 0 ? (
+                          <button
+                            type="button"
+                            className="btn btn-ghost btn-sm text-[var(--md-error)] hover:bg-[color-mix(in_srgb,var(--md-error)_12%,transparent)]"
+                            title={`Xóa kho dự án ${p.projectCode}`}
+                            aria-label={`Xóa kho dự án ${p.projectCode}`}
+                            onClick={e => handleDeleteClick(e, p)}
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        ) : (
+                          <span
+                            className="inline-flex items-center justify-center p-1 text-[var(--md-outline)] opacity-40 cursor-not-allowed"
+                            title="Kho đã có mặt hàng, không thể xóa"
+                          >
+                            <Trash2 size={15} />
+                          </span>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))
               )}
@@ -434,6 +478,29 @@ export default function ProjectsPage() {
           </div>
         </div>
       </Modal>
+
+      <ConfirmDialog
+        isOpen={Boolean(deletingProject)}
+        onClose={() => setDeletingProject(null)}
+        onConfirm={handleConfirmDelete}
+        title="Xóa kho dự án"
+        message={
+          deletingProject ? (
+            <div className="space-y-2 text-left">
+              <p>
+                Bạn có chắc chắn muốn xóa kho dự án <strong>{deletingProject.projectName}</strong> ({deletingProject.projectCode})?
+              </p>
+              <p className="text-[var(--md-on-surface-variant)] text-sm">
+                Thao tác này chỉ dành cho trường hợp tạo nhầm khi kho chưa có mặt hàng hay phát sinh giao dịch. Dữ liệu kho dự án sẽ bị xóa.
+              </p>
+            </div>
+          ) : ''
+        }
+        confirmLabel="Xóa kho"
+        cancelLabel="Hủy"
+        variant="danger"
+        isLoading={deleteMutation.isPending}
+      />
     </div>
   );
 }

@@ -67,6 +67,10 @@ export const projectsService = {
     );
   },
 
+  async deleteProject(code: string): Promise<void> {
+    await apiClient.delete<void>(`${ENDPOINT}/${encodeURIComponent(code)}`);
+  },
+
   async updateInventoryMinStock(
     projectCode: string,
     materialCode: string,
