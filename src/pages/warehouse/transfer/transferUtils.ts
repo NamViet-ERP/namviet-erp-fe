@@ -24,7 +24,7 @@ export function destinationLabel(tf: Transfer) {
 }
 
 export function isCrossProjectTransfer(tf: Transfer) {
-  return Boolean(tf.toProject);
+  return Boolean(tf.toProject || tf.toProjectName);
 }
 
 export function transferProjectLabel(tf: Transfer) {

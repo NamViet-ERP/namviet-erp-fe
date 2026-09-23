@@ -201,11 +201,23 @@ function ArrivalProjectCard({
   canViewPrices: boolean;
   onToggle: () => void;
 }) {
+  const planCodes = useMemo(
+    () => Array.from(new Set(project.lines.map(l => l.planCode).filter(Boolean))),
+    [project.lines],
+  );
+
   return (
     <li className="arrival-plans-project is-highlight">
       <button type="button" className="arrival-plans-project__head" onClick={onToggle}>
         <div className="arrival-plans-project__title">
-          <span className="arrival-plans-project__code font-mono">{project.projectCode}</span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="arrival-plans-project__code font-mono">{project.projectCode}</span>
+            {planCodes.length > 0 && (
+              <span className="arrival-plans-pill font-mono text-[var(--md-primary)]">
+                KHMH: {planCodes.join(', ')}
+              </span>
+            )}
+          </div>
           <span className="arrival-plans-project__name">{project.projectName}</span>
         </div>
         <div className="arrival-plans-project__meta">
@@ -242,7 +254,6 @@ function ArrivalProjectCard({
             <table className="wms-inventory-table arrival-plans-table">
               <thead>
                 <tr>
-                  <th className="table-header-cell">KHMH</th>
                   <th className="table-header-cell">Mặt hàng</th>
                   <th className="table-header-cell text-right">Còn lại</th>
                   <th className="table-header-cell">ĐVT</th>
@@ -255,9 +266,6 @@ function ArrivalProjectCard({
               <tbody>
                 {project.lines.map(line => (
                   <tr key={line.lineId} className="table-row">
-                    <td className="table-cell">
-                      <span className="entity-code">{line.planCode}</span>
-                    </td>
                     <td className="table-cell">
                       <div className="font-semibold line-clamp-2" title={line.productName}>
                         {line.productName}

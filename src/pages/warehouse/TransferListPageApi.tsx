@@ -34,6 +34,7 @@ import { emptyQtyPhaseLine } from './voucher/voucherFormTypes';
 import {
   availableReturnQty,
   inventoryRow,
+  isCrossProjectTransfer,
   type TransferMode,
   type MaterialQtyPhaseLine,
 } from './transfer/transferUtils';
@@ -52,6 +53,7 @@ interface TransferListPageApiProps {
 }
 
 function TransferListPageApi({ initialProjectCode }: TransferListPageApiProps) {
+  const [transferTypeTab, setTransferTypeTab] = useState<'all' | 'return' | 'cross-project'>('all');
   const [activeTab, setActiveTab] = useState('all');
   const [search, setSearch] = useState('');
   const [dateFrom, setDateFrom] = useState('');
@@ -118,16 +120,36 @@ function TransferListPageApi({ initialProjectCode }: TransferListPageApiProps) {
     return materials.filter(m => codes.has(m.materialCode));
   }, [materials, projectInventory, projectCode]);
 
+  const returnTransfers = useMemo(
+    () => transfers.filter(t => !isCrossProjectTransfer(t)),
+    [transfers],
+  );
+  const crossProjectTransfers = useMemo(
+    () => transfers.filter(t => isCrossProjectTransfer(t)),
+    [transfers],
+  );
+  const typeFiltered = useMemo(() => {
+    if (transferTypeTab === 'return') return returnTransfers;
+    if (transferTypeTab === 'cross-project') return crossProjectTransfers;
+    return transfers;
+  }, [transferTypeTab, returnTransfers, crossProjectTransfers, transfers]);
+
+  const typeTabs = [
+    { id: 'all', label: 'Tất cả', count: transfers.length },
+    { id: 'return', label: 'Hoàn trả kho trung tâm', count: returnTransfers.length },
+    { id: 'cross-project', label: 'Chuyển kho dự án', count: crossProjectTransfers.length },
+  ];
+
   const voucherTabs = getVoucherTabLabels('transfer');
   const tabs = [
-    { id: 'all', label: 'Tất cả', count: transfers.length },
-    { id: 'draft', label: voucherTabs.draft, count: transfers.filter(t => t.status === 'draft').length },
-    { id: 'pending', label: voucherTabs.pending, count: transfers.filter(t => t.status === 'pending').length },
-    { id: 'approved', label: voucherTabs.approved, count: transfers.filter(t => t.status === 'approved').length },
+    { id: 'all', label: 'Tất cả', count: typeFiltered.length },
+    { id: 'draft', label: voucherTabs.draft, count: typeFiltered.filter(t => t.status === 'draft').length },
+    { id: 'pending', label: voucherTabs.pending, count: typeFiltered.filter(t => t.status === 'pending').length },
+    { id: 'approved', label: voucherTabs.approved, count: typeFiltered.filter(t => t.status === 'approved').length },
   ];
 
   const filtered = useMemo(() => {
-    let list = transfers;
+    let list = typeFiltered;
     if (activeTab !== 'all') list = list.filter(t => t.status === activeTab);
     if (search.trim()) {
       const q = search.toLowerCase();
@@ -141,7 +163,7 @@ function TransferListPageApi({ initialProjectCode }: TransferListPageApiProps) {
       );
     }
     return list;
-  }, [transfers, activeTab, search]);
+  }, [typeFiltered, activeTab, search]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
@@ -324,7 +346,24 @@ function TransferListPageApi({ initialProjectCode }: TransferListPageApiProps) {
 
       <HrmPanel noPadding>
         <div className="px-4 pt-3 pb-1 border-b border-[var(--md-outline-variant02)]">
-          <TabFilter tabs={tabs} activeTab={activeTab} onChange={id => { setActiveTab(id); setPage(1); }} />
+          <TabFilter
+            tabs={typeTabs}
+            activeTab={transferTypeTab}
+            onChange={id => {
+              setTransferTypeTab(id as 'all' | 'return' | 'cross-project');
+              setPage(1);
+            }}
+          />
+        </div>
+        <div className="px-4 pt-2 pb-1 border-b border-[var(--md-outline-variant02)]">
+          <TabFilter
+            tabs={tabs}
+            activeTab={activeTab}
+            onChange={id => {
+              setActiveTab(id);
+              setPage(1);
+            }}
+          />
         </div>
         <div className="hrm-list-toolbar">
           <div className="hrm-list-toolbar__filters">
