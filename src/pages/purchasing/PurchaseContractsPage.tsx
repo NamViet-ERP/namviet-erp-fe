@@ -450,30 +450,21 @@ export default function PurchaseContractsPage() {
                           </div>
                         </td>
                         <td className="table-cell text-center" onClick={e => e.stopPropagation()}>
-                          <div className="inline-flex items-center gap-1">
-                            {row.hasFile ? (
-                              <button
-                                type="button"
-                                className="btn btn-ghost btn-sm"
-                                aria-label={`Tải ${row.fileName}`}
-                                onClick={() => {
-                                  void onDownload(row);
-                                }}
-                              >
-                                <Download size={14} aria-hidden />
-                              </button>
-                            ) : null}
-                            {canUpdate ? (
-                              <button
-                                type="button"
-                                className="btn btn-ghost btn-sm"
-                                aria-label={`Xóa ${row.code}`}
-                                onClick={() => setDeleteId(row.id)}
-                              >
-                                <Trash2 size={14} aria-hidden />
-                              </button>
-                            ) : null}
-                          </div>
+                          {row.hasFile ? (
+                            <button
+                              type="button"
+                              className="btn btn-ghost btn-sm"
+                              title={`Tải ${row.fileName || 'file đính kèm'}`}
+                              aria-label={`Tải ${row.fileName || 'file đính kèm'}`}
+                              onClick={() => {
+                                void onDownload(row);
+                              }}
+                            >
+                              <Download size={14} aria-hidden />
+                            </button>
+                          ) : (
+                            <span className="text-[var(--md-on-surface-variant)] text-xs">—</span>
+                          )}
                         </td>
                       </tr>
                     ))
@@ -674,13 +665,28 @@ export default function PurchaseContractsPage() {
             ) : null}
 
             {(canCreate || canUpdate) ? (
-              <div className="flex justify-end gap-2 border-t border-[var(--md-outline-variant)] pt-3">
-                <button type="button" className="btn btn-outline btn-sm" disabled={busy} onClick={closeModal}>
-                  Đóng
-                </button>
-                <button type="button" className="btn btn-primary btn-sm" disabled={busy} onClick={() => { void onSave(); }}>
-                  {busy ? 'Đang lưu…' : creating ? 'Tạo' : 'Lưu'}
-                </button>
+              <div className="flex items-center justify-between gap-2 border-t border-[var(--md-outline-variant)] pt-3">
+                <div>
+                  {!creating && selectedId && canUpdate ? (
+                    <button
+                      type="button"
+                      className="btn btn-danger btn-sm"
+                      disabled={busy}
+                      onClick={() => setDeleteId(selectedId)}
+                    >
+                      <Trash2 size={14} aria-hidden />
+                      Xóa hợp đồng
+                    </button>
+                  ) : null}
+                </div>
+                <div className="flex gap-2">
+                  <button type="button" className="btn btn-outline btn-sm" disabled={busy} onClick={closeModal}>
+                    Đóng
+                  </button>
+                  <button type="button" className="btn btn-primary btn-sm" disabled={busy} onClick={() => { void onSave(); }}>
+                    {busy ? 'Đang lưu…' : creating ? 'Tạo' : 'Lưu'}
+                  </button>
+                </div>
               </div>
             ) : null}
           </div>
@@ -692,7 +698,19 @@ export default function PurchaseContractsPage() {
         onClose={() => setDeleteId(null)}
         onConfirm={() => { void onConfirmDelete(); }}
         title="Xóa hợp đồng"
-        message="Xóa hợp đồng này? Thao tác không hoàn tác."
+        message={
+          <span>
+            Bạn có chắc chắn muốn xóa hợp đồng{' '}
+            <strong>
+              {detailQuery.data?.contractNo
+                ? `${detailQuery.data.contractNo} (${detailQuery.data.code})`
+                : form.contractNo
+                  ? `${form.contractNo}`
+                  : detailQuery.data?.code || 'này'}
+            </strong>
+            ? Thao tác này không thể hoàn tác.
+          </span>
+        }
         confirmLabel="Xóa"
         variant="danger"
         isLoading={deleteMutation.isPending}

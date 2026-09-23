@@ -26,6 +26,7 @@ import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
 import type { WarehouseProjectApiDto, ProjectWarehouseKeeperDto } from '../../types/wms';
 import WarehouseKeeperMultiSelect from '../../components/warehouse/WarehouseKeeperMultiSelect';
 import EntityCodeLink from '../../components/ui/EntityCodeLink';
+import { getSessionUser } from '../../constants/systemUsers';
 
 const EMPTY_PM_ID = '00000000-0000-0000-0000-000000000000';
 
@@ -132,13 +133,17 @@ export default function ProjectsPage() {
     const today = todayIso();
     const currentYear = new Date().getFullYear();
     const fallbackCode = nextProjectCode(items.map(p => p.projectCode), currentYear);
+    const me = getSessionUser();
+    const defaultKeepers: ProjectWarehouseKeeperDto[] = me?.id
+      ? [{ userId: me.id, displayName: me.name || me.username || 'Thủ kho' }]
+      : [];
     setForm({
       projectCode: fallbackCode,
       projectName: '',
       pmName: '',
       startDate: today,
       materialBudget: '',
-      warehouseKeepers: [],
+      warehouseKeepers: defaultKeepers,
     });
     setErrors({});
     setShowCreate(true);

@@ -1,7 +1,8 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X } from 'lucide-react';
+import { X, ChevronDown, Loader2 } from 'lucide-react';
 import { apiClient } from '../../lib/apiClient';
+import { projectPersonnelService } from '../../services/projectPersonnelService';
 import type { ProjectWarehouseKeeperDto } from '../../types/wms';
 import {
   collectScrollParents,
@@ -24,6 +25,7 @@ export default function WarehouseKeeperMultiSelect({
   placeholder = 'Chọn ≥1 thủ kho…',
 }: WarehouseKeeperMultiSelectProps) {
   const [options, setOptions] = useState<ProjectWarehouseKeeperDto[]>([]);
+  const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState('');
   const [highlight, setHighlight] = useState(0);
@@ -35,11 +37,40 @@ export default function WarehouseKeeperMultiSelect({
   useEffect(() => {
     let cancelled = false;
     void (async () => {
+      setLoading(true);
       try {
         const rows = await apiClient.get<ProjectWarehouseKeeperDto[]>('/api/warehouse/keepers');
-        if (!cancelled) setOptions(rows);
+        if (!cancelled && Array.isArray(rows) && rows.length > 0) {
+          setOptions(rows);
+          setLoading(false);
+          return;
+        }
       } catch {
-        if (!cancelled) setOptions([]);
+        // Fallback below
+      }
+
+      try {
+        const personnel = await projectPersonnelService.getPersonnel();
+        if (!cancelled && Array.isArray(personnel) && personnel.length > 0) {
+          const mapped: ProjectWarehouseKeeperDto[] = personnel
+            .filter(p => Boolean(p.id))
+            .map(p => ({
+              userId: p.id!,
+              displayName: p.name,
+            }));
+          if (mapped.length > 0) {
+            setOptions(mapped);
+            setLoading(false);
+            return;
+          }
+        }
+      } catch {
+        // Ignore fallback failure
+      }
+
+      if (!cancelled) {
+        setOptions([]);
+        setLoading(false);
       }
     })();
     return () => {
@@ -108,14 +139,16 @@ export default function WarehouseKeeperMultiSelect({
           >
             {filtered.length === 0 ? (
               <li className="warehouse-keeper-multi__empty" role="presentation">
-                {options.length === 0
-                  ? 'Chưa có tài khoản thủ kho. Gán role Thủ kho trong Quản trị.'
-                  : selectedIds.size === options.length
-                    ? 'Đã chọn hết thủ kho trong danh sách.'
-                    : 'Không tìm thấy thủ kho phù hợp.'}
+                {loading
+                  ? 'Đang tải danh sách người dùng…'
+                  : options.length === 0
+                    ? 'Chưa có tài khoản người dùng phù hợp.'
+                    : selectedIds.size === options.length
+                      ? 'Đã chọn hết người phụ trách trong danh sách.'
+                      : 'Không tìm thấy người dùng phù hợp.'}
               </li>
             ) : (
-              filtered.slice(0, 12).map((opt, idx) => (
+              filtered.slice(0, 50).map((opt, idx) => (
                 <li key={opt.userId}>
                   <button
                     type="button"
@@ -141,7 +174,15 @@ export default function WarehouseKeeperMultiSelect({
 
   return (
     <div className="warehouse-keeper-multi" ref={rootRef}>
-      <div className="warehouse-keeper-multi__chips">
+      <div
+        className="warehouse-keeper-multi__chips cursor-text"
+        onClick={() => {
+          if (!disabled) {
+            inputRef.current?.focus();
+            setOpen(true);
+          }
+        }}
+      >
         {value.map(k => (
           <span key={k.userId} className="warehouse-keeper-chip">
             {k.displayName}
@@ -150,7 +191,10 @@ export default function WarehouseKeeperMultiSelect({
                 type="button"
                 className="warehouse-keeper-chip__remove"
                 aria-label={`Bỏ ${k.displayName}`}
-                onClick={() => remove(k.userId)}
+                onClick={e => {
+                  e.stopPropagation();
+                  remove(k.userId);
+                }}
               >
                 <X size={12} />
               </button>
@@ -170,7 +214,7 @@ export default function WarehouseKeeperMultiSelect({
           }}
           onFocus={() => setOpen(true)}
           onBlur={() => {
-            window.setTimeout(() => setOpen(false), 120);
+            window.setTimeout(() => setOpen(false), 200);
           }}
           onKeyDown={e => {
             if (e.key === 'ArrowDown') {
@@ -184,6 +228,8 @@ export default function WarehouseKeeperMultiSelect({
               add(filtered[highlight]);
             } else if (e.key === 'Backspace' && !draft && value.length > 0) {
               remove(value[value.length - 1].userId);
+            } else if (e.key === 'Escape') {
+              setOpen(false);
             }
           }}
           role="combobox"
@@ -191,6 +237,32 @@ export default function WarehouseKeeperMultiSelect({
           aria-controls={listId}
           aria-autocomplete="list"
         />
+        <button
+          type="button"
+          tabIndex={-1}
+          className="warehouse-keeper-multi__toggle text-neutral-400 hover:text-neutral-600 p-1 flex-shrink-0 cursor-pointer"
+          aria-label="Mở danh sách người phụ trách"
+          disabled={disabled}
+          onClick={e => {
+            e.stopPropagation();
+            if (!disabled) {
+              setOpen(prev => {
+                const next = !prev;
+                if (next) inputRef.current?.focus();
+                return next;
+              });
+            }
+          }}
+        >
+          {loading ? (
+            <Loader2 size={16} className="animate-spin text-neutral-400" />
+          ) : (
+            <ChevronDown
+              size={18}
+              className={`transition-transform duration-150 ${open ? 'rotate-180' : ''}`}
+            />
+          )}
+        </button>
       </div>
       {panel}
     </div>

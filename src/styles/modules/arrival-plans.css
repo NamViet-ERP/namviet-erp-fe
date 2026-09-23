@@ -48,6 +48,23 @@
   line-height: 1;
 }
 
+.warehouse-keeper-multi__toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: var(--md-outline, #747775);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  margin-left: auto;
+}
+
+.warehouse-keeper-multi__toggle:hover {
+  color: var(--md-on-surface, #1d1b20);
+}
+
 .warehouse-keeper-multi__panel {
   margin: 0;
   padding: 4px;
