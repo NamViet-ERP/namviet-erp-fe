@@ -36,6 +36,7 @@ interface FormItem {
   materialCode: string;
   systemQty: string;
   actualQty: string;
+  reason: string;
 }
 
 interface StocktakeForm {
@@ -53,7 +54,7 @@ interface FormErrors {
 const emptyForm: StocktakeForm = {
   projectCode: '',
   note: '',
-  items: [{ materialCode: '', systemQty: '', actualQty: '' }],
+  items: [{ materialCode: '', systemQty: '', actualQty: '', reason: '' }],
 };
 
 function diffTone(systemQty: number, actualQty: number): string {
@@ -69,15 +70,18 @@ function buildStocktakeItem(
   systemQty: number,
   actualQty: number,
   materials: Material[],
+  fallbackName?: string,
+  reason?: string,
 ): StocktakeItem {
   const mat = materials.find(m => m.materialCode === materialCode);
   return {
     productId: materialCode,
     sku: materialCode,
-    name: mat?.materialName ?? materialCode,
+    name: mat?.materialName ?? fallbackName ?? materialCode,
     systemQty,
     actualQty,
     diff: actualQty - systemQty,
+    reason: reason?.trim() ? reason.trim() : undefined,
   };
 }
 
@@ -121,7 +125,7 @@ export default function StocktakeListPage() {
 
   const projects = useMemo(() => projectsPage?.items ?? [], [projectsPage?.items]);
   const materials = useMemo(() => materialsPage?.items ?? [], [materialsPage?.items]);
-  const { data: projectInventory = [] } = useProjectInventory(form.projectCode || undefined);
+  const { data: projectInventory = [], isFetching: isInventoryFetching } = useProjectInventory(form.projectCode || undefined);
 
   const inventoryByCode = useMemo(() => {
     const map = new Map<string, number>();
@@ -130,6 +134,47 @@ export default function StocktakeListPage() {
     }
     return map;
   }, [projectInventory]);
+
+  const inventoryNameByCode = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const row of projectInventory) {
+      map.set(row.materialCode, row.materialName);
+    }
+    return map;
+  }, [projectInventory]);
+
+  const [lastPopulatedProject, setLastPopulatedProject] = useState<string | null>(null);
+
+  if (!showCreate || !form.projectCode) {
+    if (lastPopulatedProject !== null) {
+      setLastPopulatedProject(null);
+    }
+  } else if (lastPopulatedProject !== form.projectCode) {
+    if (projectInventory.length > 0) {
+      setLastPopulatedProject(form.projectCode);
+      setForm(prev => {
+        if (prev.projectCode !== form.projectCode) return prev;
+        return {
+          ...prev,
+          items: projectInventory.map(r => ({
+            materialCode: r.materialCode,
+            systemQty: String(r.actualInventoryQty ?? 0),
+            actualQty: String(r.actualInventoryQty ?? 0),
+            reason: '',
+          })),
+        };
+      });
+    } else if (!isInventoryFetching) {
+      setLastPopulatedProject(form.projectCode);
+      setForm(prev => {
+        if (prev.projectCode !== form.projectCode) return prev;
+        return {
+          ...prev,
+          items: [{ materialCode: '', systemQty: '', actualQty: '', reason: '' }],
+        };
+      });
+    }
+  }
 
   const tabs = [
     { id: 'all', label: 'Tất cả', count: list.length },
@@ -162,8 +207,13 @@ export default function StocktakeListPage() {
     if (!form.projectCode) errs.projectCode = 'Vui lòng chọn kho dự án kiểm kê';
     const validItems = form.items.filter(it => it.materialCode);
     if (validItems.length === 0) errs.items = 'Phải có ít nhất 1 vật tư kiểm kê';
+    const seen = new Set<string>();
     form.items.forEach((it, i) => {
       if (it.materialCode) {
+        if (seen.has(it.materialCode)) {
+          errs.items = `Vật tư ${it.materialCode} bị trùng lặp trong danh sách kiểm kê`;
+        }
+        seen.add(it.materialCode);
         if (it.systemQty === '' || Number(it.systemQty) < 0) errs[`sysqty_${i}`] = 'Tồn hệ thống phải ≥ 0';
         if (it.actualQty === '' || Number(it.actualQty) < 0) errs[`actqty_${i}`] = 'Số đếm thực tế phải ≥ 0';
       }
@@ -178,7 +228,14 @@ export default function StocktakeListPage() {
     const mappedItems = form.items
       .filter(it => it.materialCode)
       .map(it =>
-        buildStocktakeItem(it.materialCode, Number(it.systemQty), Number(it.actualQty), materials),
+        buildStocktakeItem(
+          it.materialCode,
+          Number(it.systemQty),
+          Number(it.actualQty),
+          materials,
+          inventoryNameByCode.get(it.materialCode),
+          it.reason,
+        ),
       );
 
     return {
@@ -260,7 +317,7 @@ export default function StocktakeListPage() {
   };
 
   const addItem = (): void =>
-    setForm({ ...form, items: [...form.items, { materialCode: '', systemQty: '', actualQty: '' }] });
+    setForm({ ...form, items: [...form.items, { materialCode: '', systemQty: '', actualQty: '', reason: '' }] });
 
   const removeItem = (i: number): void =>
     setForm({ ...form, items: form.items.filter((_, idx) => idx !== i) });
@@ -438,12 +495,26 @@ export default function StocktakeListPage() {
 
       <Modal
         isOpen={showCreate}
-        onClose={() => { setShowCreate(false); setErrors({}); }}
+        onClose={() => {
+          setLastPopulatedProject(null);
+          setShowCreate(false);
+          setForm({ ...emptyForm });
+          setErrors({});
+        }}
         title="TẠO PHIẾU KIỂM KÊ"
         size="full"
         footer={
           <>
-            <button type="button" className="btn btn-outline" onClick={() => { setShowCreate(false); setErrors({}); }}>
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={() => {
+                setLastPopulatedProject(null);
+                setShowCreate(false);
+                setForm({ ...emptyForm });
+                setErrors({});
+              }}
+            >
               Hủy bỏ
             </button>
             <button type="button" className="btn btn-primary" disabled={createMutation.isPending} onClick={handleSubmit}>
@@ -458,7 +529,11 @@ export default function StocktakeListPage() {
               <select
                 className="form-select"
                 value={form.projectCode}
-                onChange={e => setForm({ ...emptyForm, projectCode: e.target.value, note: form.note })}
+                onChange={e => {
+                  setLastPopulatedProject(null);
+                  setForm({ ...emptyForm, projectCode: e.target.value, note: form.note });
+                  setErrors({});
+                }}
               >
                 <option value="">— Chọn kho dự án —</option>
                 {projects.map(p => (
@@ -487,13 +562,19 @@ export default function StocktakeListPage() {
 
           <div className="alert-banner alert-banner--info mb-3 text-xs">
             <p>
-              Chọn kho dự án trước. <strong>Tồn hệ thống</strong> tự điền từ tồn thực tế dự án.
-              Chênh lệch = số đếm thực tế − tồn hệ thống (+ thừa, − thiếu, 0 khớp).
+              Danh sách vật tư và <strong>Tồn hệ thống</strong> được tự động tải từ kho dự án đã chọn.
+              Chỉ cần tăng hoặc giảm <strong>SL thực tế</strong> nếu có sai lệch (+ thừa, − thiếu, 0 khớp).
             </p>
           </div>
 
           {!form.projectCode && (
-            <p className="text-xs text-[var(--md-on-surface-variant)] mb-2">Chọn kho dự án để thêm vật tư kiểm kê.</p>
+            <p className="text-xs text-[var(--md-on-surface-variant)] mb-2">Chọn kho dự án để hiển thị vật tư kiểm kê.</p>
+          )}
+          {form.projectCode && isInventoryFetching && projectInventory.length === 0 && (
+            <p className="text-xs text-[var(--md-primary)] mb-2">Đang tải danh sách vật tư từ kho dự án...</p>
+          )}
+          {form.projectCode && !isInventoryFetching && projectInventory.length === 0 && (
+            <p className="text-xs text-[var(--md-on-surface-variant)] mb-2">Kho dự án này hiện chưa có dữ liệu tồn kho. Bạn có thể bấm "+ Thêm dòng" để thêm thủ công.</p>
           )}
           {errors.items && <p className="text-[var(--md-error)] text-xs mb-2">{errors.items}</p>}
 
@@ -502,10 +583,11 @@ export default function StocktakeListPage() {
               <thead>
                 <tr>
                   <th className="table-header-cell w-12">STT</th>
-                  <th className="table-header-cell">Vật tư</th>
+                  <th className="table-header-cell min-w-[220px]">Vật tư</th>
                   <th className="table-header-cell w-28">Tồn hệ thống</th>
                   <th className="table-header-cell w-28">SL thực tế</th>
                   <th className="table-header-cell w-24 text-right">Chênh lệch</th>
+                  <th className="table-header-cell min-w-[180px]">Lý do chênh lệch</th>
                   <th className="table-header-cell w-12" />
                 </tr>
               </thead>
@@ -525,6 +607,7 @@ export default function StocktakeListPage() {
                           value={it.materialCode}
                           onChange={code => updateItem(i, 'materialCode', code)}
                           materials={materials}
+                          fallbackLabel={inventoryNameByCode.get(it.materialCode)}
                           disabled={!form.projectCode}
                           placeholder={form.projectCode ? 'Chọn vật tư...' : 'Chọn kho trước'}
                         />
@@ -558,6 +641,15 @@ export default function StocktakeListPage() {
                             ? fmtStocktakeDiff(sys, act)
                             : '—'}
                         </span>
+                      </td>
+                      <td className="table-cell">
+                        <input
+                          type="text"
+                          className="form-input text-xs"
+                          value={it.reason}
+                          onChange={e => updateItem(i, 'reason', e.target.value)}
+                          placeholder="Lý do chênh lệch (nếu có)..."
+                        />
                       </td>
                       <td className="table-cell text-center">
                         {form.items.length > 1 && (
@@ -626,6 +718,7 @@ export default function StocktakeListPage() {
                     <th className="table-header-cell text-right">Tồn HT</th>
                     <th className="table-header-cell text-right">SL thực tế</th>
                     <th className="table-header-cell text-right">Chênh lệch</th>
+                    <th className="table-header-cell">Lý do</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -637,6 +730,9 @@ export default function StocktakeListPage() {
                       <td className="table-cell text-right tabular-nums">{it.actualQty}</td>
                       <td className={`table-cell text-right font-bold tabular-nums ${diffTone(it.systemQty, it.actualQty)}`}>
                         {fmtStocktakeDiff(it.systemQty, it.actualQty)}
+                      </td>
+                      <td className="table-cell text-xs text-[var(--md-on-surface-variant)]">
+                        {it.reason || '—'}
                       </td>
                     </tr>
                   ))}

@@ -77,7 +77,6 @@ function ExportListPageApi({ initialProjectCode, openVoucherCode }: ExportListPa
   const [editing, setEditing] = useState<Export | null>(null);
 
   const [projectCode, setProjectCode] = useState(initialProjectCode ?? '');
-  const [referenceCode, setReferenceCode] = useState('');
   const [note, setNote] = useState('');
   const [items, setItems] = useState<MaterialQtyLine[]>([{ ...emptyQtyLine }]);
   const [createErrors, setCreateErrors] = useState<ExportFormFieldErrors>({});
@@ -104,13 +103,22 @@ function ExportListPageApi({ initialProjectCode, openVoucherCode }: ExportListPa
 
   const stockMaterials = useMemo(() => {
     if (!projectCode) return materials;
+    const editingItems = editing && editing.project === projectCode ? editing.items : [];
+    const editingItemCodes = new Set(editingItems.map(it => it.sku || it.productId));
     const codes = new Set(
       projectInventory
-        .filter(r => projectInventoryAvailable(r) > 0)
+        .filter(r => {
+          const originalQty = editingItemCodes.has(r.materialCode)
+            ? editingItems
+                .filter(it => (it.sku || it.productId) === r.materialCode)
+                .reduce((sum, it) => sum + (Number(it.qty) || 0), 0)
+            : 0;
+          return projectInventoryAvailable(r) + originalQty > 0;
+        })
         .map(r => r.materialCode),
     );
-    return materials.filter(m => codes.has(m.materialCode));
-  }, [materials, projectInventory, projectCode]);
+    return materials.filter(m => codes.has(m.materialCode) || editingItemCodes.has(m.materialCode));
+  }, [materials, projectInventory, projectCode, editing]);
 
   const voucherTabs = getVoucherTabLabels('export');
   const stockExports = useMemo(() => exports.filter(e => !e.isDirectProcurement), [exports]);
@@ -156,7 +164,6 @@ function ExportListPageApi({ initialProjectCode, openVoucherCode }: ExportListPa
   const resetForm = () => {
     setEditing(null);
     setProjectCode('');
-    setReferenceCode('');
     setNote('');
     setItems([{ ...emptyQtyLine }]);
     setCreateErrors({});
@@ -164,8 +171,9 @@ function ExportListPageApi({ initialProjectCode, openVoucherCode }: ExportListPa
 
   const buildDto = (status: 'draft' | 'pending'): CreateExportDto | null => {
     const validItems = items.filter(it => it.materialCode && Number(it.qty) > 0);
+    const editingItems = editing && editing.project === projectCode ? editing.items : undefined;
     const overflow = validItems.some((it, idx) => {
-      const max = availableExportQty(projectInventory, it.materialCode, items, idx);
+      const max = availableExportQty(projectInventory, it.materialCode, items, idx, editingItems);
       return Number(it.qty) > max;
     });
     const fieldErrors = getExportFormFieldErrors(projectCode, items, overflow, frozenByProjectCode);
@@ -196,7 +204,7 @@ function ExportListPageApi({ initialProjectCode, openVoucherCode }: ExportListPa
     return {
       voucherCode: '',
       date: new Date().toLocaleDateString('vi-VN'),
-      soCode: referenceCode.trim(),
+      soCode: editing?.soCode ?? '',
       customer: '',
       warehouseId: '',
       items: mappedItems,
@@ -243,7 +251,6 @@ function ExportListPageApi({ initialProjectCode, openVoucherCode }: ExportListPa
   const openEdit = (exp: Export) => {
     setEditing(exp);
     setProjectCode(exp.project ?? '');
-    setReferenceCode(exp.soCode ?? '');
     setNote(exp.note);
     setItems(exportToFormLines(exp.items));
     setCreateErrors({});
@@ -495,8 +502,6 @@ function ExportListPageApi({ initialProjectCode, openVoucherCode }: ExportListPa
             projectCode: getFrozenProjectError(frozenByProjectCode, code),
           }));
         }}
-        referenceCode={referenceCode}
-        onReferenceCodeChange={setReferenceCode}
         note={note}
         onNoteChange={setNote}
         items={items}
@@ -521,6 +526,7 @@ function ExportListPageApi({ initialProjectCode, openVoucherCode }: ExportListPa
         onCreate={handleCreate}
         onSave={handleUpdate}
         editVoucher={editing ? { code: editing.voucherCode } : null}
+        originalItems={editing && editing.project === projectCode ? editing.items : undefined}
         materialUnit={materialUnit}
       />
 

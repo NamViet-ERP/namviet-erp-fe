@@ -14,6 +14,7 @@ export interface VoucherPrintLine {
   unitPrice?: number;
   lineTotal?: number;
   extra?: string;
+  reason?: string;
 }
 
 export interface VoucherPrintPayload {
@@ -63,6 +64,8 @@ function buildLineCells(line: VoucherPrintLine, columns: string[]): string {
       cells.push(`<td class="num">${escapeHtml(String(line.extra ?? '—'))}</td>`);
     } else if (col === 'Chênh lệch') {
       cells.push(`<td class="num">${escapeHtml(String(line.lineTotal ?? '—'))}</td>`);
+    } else if (col === 'Lý do') {
+      cells.push(`<td>${escapeHtml(line.reason || '—')}</td>`);
     } else {
       cells.push(`<td>${escapeHtml(line.extra ?? '')}</td>`);
     }

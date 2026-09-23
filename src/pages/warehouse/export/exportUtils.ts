@@ -35,10 +35,16 @@ export function availableExportQty(
   materialCode: string,
   items: MaterialQtyLine[],
   lineIdx: number,
+  originalItems?: Export['items'],
 ) {
   const row = inventoryRow(inventory, materialCode);
   if (!row) return 0;
-  const base = projectInventoryAvailable(row);
+  const originalQty = originalItems
+    ? originalItems
+        .filter(it => (it.sku || it.productId) === materialCode)
+        .reduce((sum, it) => sum + (Number(it.qty) || 0), 0)
+    : 0;
+  const base = projectInventoryAvailable(row) + originalQty;
   const usedInForm = items.reduce((sum, it, i) => {
     if (i === lineIdx || it.materialCode !== materialCode) return sum;
     return sum + (Number(it.qty) || 0);

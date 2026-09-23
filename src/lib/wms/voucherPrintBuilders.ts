@@ -132,13 +132,14 @@ export function buildStocktakePrintPayload(stocktake: Stocktake): VoucherPrintPa
       { label: 'Ngày chứng từ', value: stocktake.date || '—' },
       { label: 'Ghi chú', value: stocktake.note || '—' },
     ],
-    columns: ['Vật tư', 'Hệ thống', 'Thực tế', 'Chênh lệch'],
+    columns: ['Vật tư', 'Hệ thống', 'Thực tế', 'Chênh lệch', 'Lý do'],
     lines: stocktake.items.map(it => ({
       name: it.name,
       code: it.sku || it.productId,
       qty: it.systemQty,
       extra: String(it.actualQty),
       lineTotal: it.diff,
+      reason: it.reason,
     })),
   };
 }

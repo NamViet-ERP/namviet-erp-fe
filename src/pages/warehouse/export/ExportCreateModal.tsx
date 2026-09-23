@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
-import type { Material } from '../../../types';
+import type { Export, Material } from '../../../types';
 import type { WarehouseProjectApiDto, WarehouseProjectInventoryApiDto } from '../../../types/wms';
 import Modal from '../../../components/ui/Modal';
 import FormField from '../../../components/ui/FormField';
@@ -23,8 +24,6 @@ interface ExportCreateModalProps {
   projectInventory: WarehouseProjectInventoryApiDto[];
   projectCode: string;
   onProjectCodeChange: (code: string) => void;
-  referenceCode: string;
-  onReferenceCodeChange: (code: string) => void;
   note: string;
   onNoteChange: (note: string) => void;
   items: MaterialQtyLine[];
@@ -35,6 +34,7 @@ interface ExportCreateModalProps {
   onCreate: (status: 'draft' | 'pending') => void;
   onSave?: () => void;
   editVoucher?: { code: string } | null;
+  originalItems?: Export['items'];
   materialUnit: (code: string) => string;
 }
 
@@ -47,8 +47,6 @@ export default function ExportCreateModal({
   projectInventory,
   projectCode,
   onProjectCodeChange,
-  referenceCode,
-  onReferenceCodeChange,
   note,
   onNoteChange,
   items,
@@ -59,10 +57,43 @@ export default function ExportCreateModal({
   onCreate,
   onSave,
   editVoucher,
+  originalItems,
   materialUnit,
 }: ExportCreateModalProps) {
-  const resetItems = () => onItemsChange([{ materialCode: '', qty: '' }]);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+
+  if (prevIsOpen !== isOpen) {
+    setPrevIsOpen(isOpen);
+    if (!isOpen && actionError !== null) {
+      setActionError(null);
+    }
+  }
+
+  const resetItems = () => {
+    setActionError(null);
+    onItemsChange([{ materialCode: '', qty: '' }]);
+  };
   const submitBlocked = isProjectFrozen(frozenByProjectCode, projectCode);
+
+  const handleAddItem = () => {
+    if (!projectCode) return;
+    const chosenCodes = new Set(items.map(it => it.materialCode).filter(Boolean));
+    if (stockMaterials.length === 0) {
+      setActionError('Kho dự án hiện không có mặt hàng khả dụng để xuất');
+      return;
+    }
+    if (chosenCodes.size >= stockMaterials.length) {
+      setActionError('Đã lấy toàn bộ mặt hàng trong kho');
+      return;
+    }
+    if (items.some(it => !it.materialCode)) {
+      setActionError('Vui lòng chọn vật tư cho dòng trống trước khi thêm dòng mới');
+      return;
+    }
+    setActionError(null);
+    onItemsChange([...items, { ...emptyQtyLine }]);
+  };
 
   return (
     <Modal
@@ -104,9 +135,6 @@ export default function ExportCreateModal({
             }}
           />
         </FormField>
-        <FormField label="Mã đơn hàng">
-          <input className="form-input" value={referenceCode} onChange={e => onReferenceCodeChange(e.target.value)} />
-        </FormField>
         <FormField label="Ghi chú">
           <textarea className="form-input" rows={2} value={note} onChange={e => onNoteChange(e.target.value)} />
         </FormField>
@@ -117,14 +145,14 @@ export default function ExportCreateModal({
             <button
               type="button"
               className="btn btn-outline btn-sm text-xs"
-              onClick={() => onItemsChange([...items, { ...emptyQtyLine }])}
+              onClick={handleAddItem}
               disabled={!projectCode}
             >
               <Plus size={12} /> Thêm vật tư
             </button>
           </div>
-          {errors?.items && (
-            <p className="text-xs text-[var(--md-error)]" role="alert">{errors.items}</p>
+          {(errors?.items || actionError) && (
+            <p className="text-xs text-[var(--md-error)]" role="alert">{errors?.items || actionError}</p>
           )}
           {!projectCode ? (
             <p className="text-[11px] text-[var(--md-on-surface-variant)]">Chọn kho dự án trước khi thêm vật tư.</p>
@@ -143,7 +171,7 @@ export default function ExportCreateModal({
                 <tbody>
                   {items.map((it, idx) => {
                     const maxQty = it.materialCode
-                      ? availableExportQty(projectInventory, it.materialCode, items, idx)
+                      ? availableExportQty(projectInventory, it.materialCode, items, idx, originalItems)
                       : undefined;
                     const lineErr = errors?.lineErrors?.[idx];
                     return (
@@ -160,6 +188,7 @@ export default function ExportCreateModal({
                                   return;
                                 }
                               }
+                              setActionError(null);
                               const next = [...items];
                               next[idx] = { ...next[idx], materialCode: code };
                               onItemsChange(next);
@@ -180,6 +209,7 @@ export default function ExportCreateModal({
                               max={maxQty}
                               className="qty-stepper--compact"
                               onChange={qtyVal => {
+                                setActionError(null);
                                 const next = [...items];
                                 next[idx] = { ...next[idx], qty: qtyVal };
                                 onItemsChange(next);
@@ -204,7 +234,10 @@ export default function ExportCreateModal({
                                 type="button"
                                 className="p-1 text-[var(--md-error)] opacity-80 hover:opacity-100"
                                 aria-label="Xóa dòng"
-                                onClick={() => onItemsChange(items.filter((_, i) => i !== idx))}
+                                onClick={() => {
+                                  setActionError(null);
+                                  onItemsChange(items.filter((_, i) => i !== idx));
+                                }}
                               >
                                 <Trash2 size={14} />
                               </button>

@@ -332,6 +332,7 @@ export interface StocktakeItem {
   systemQty: number;
   actualQty: number;
   diff: number;
+  reason?: string;
   [key: string]: unknown;
 }
 
