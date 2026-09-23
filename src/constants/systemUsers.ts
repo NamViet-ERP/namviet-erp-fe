@@ -31,6 +31,22 @@ export function getSessionPermissions(): string[] {
   return user?.permissions ? [...user.permissions] : [];
 }
 
+/** Check if session user has admin role (case-insensitive and tolerant to role / username / roleLabel). */
+export function isSessionAdmin(user?: SystemUser | null): boolean {
+  if (!user) return false;
+  const role = (user.role ?? '').trim().toLowerCase();
+  const username = (user.username ?? '').trim().toLowerCase();
+  const roleLabel = (user.roleLabel ?? '').trim().toLowerCase();
+  return (
+    role === 'admin' ||
+    role === 'administrator' ||
+    username === 'admin' ||
+    roleLabel === 'admin' ||
+    roleLabel === 'quản trị viên' ||
+    roleLabel.includes('admin')
+  );
+}
+
 function notifyAuthChanged(): void {
   window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
 }

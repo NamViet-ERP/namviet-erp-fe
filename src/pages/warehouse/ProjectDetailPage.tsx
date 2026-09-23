@@ -44,7 +44,8 @@ import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
 import type { WarehouseProjectApiDto, ProjectWarehouseKeeperDto, UpdateWarehouseProjectRequest } from '../../types/wms';
 import WarehouseKeeperMultiSelect from '../../components/warehouse/WarehouseKeeperMultiSelect';
 import { useCanViewWmsPrices } from '../../lib/wms/priceVisibility';
-import { getSessionUser } from '../../constants/systemUsers';
+import { getSessionUser, isSessionAdmin } from '../../constants/systemUsers';
+import { useSession } from '../../auth/AuthProvider';
 
 type DetailTab = 'stock' | 'history' | 'info';
 
@@ -133,8 +134,9 @@ export default function ProjectDetailPage() {
   const minStockMutation = useUpdateProjectInventoryMinStock();
   const deleteMutation = useDeleteProject();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const sessionUser = getSessionUser();
-  const isAdmin = sessionUser?.role === 'Admin';
+  const { user: authUser } = useSession();
+  const sessionUser = authUser ?? getSessionUser();
+  const isAdmin = isSessionAdmin(sessionUser);
 
   const goBack = () => navigate('/warehouse/projects');
 
@@ -382,7 +384,7 @@ export default function ProjectDetailPage() {
             ) : (
               <Badge status="completed" />
             )}
-            {isAdmin && stockWithQty.length === 0 && actualStockLines.length === 0 && (
+            {isAdmin && (project.stockMaterialCount ?? 0) === 0 && actualStockLines.length === 0 && stockWithQty.length === 0 && (
               <button
                 type="button"
                 className="hrm-header-btn text-[var(--md-error)] hover:bg-[color-mix(in_srgb,var(--md-error)_12%,transparent)]"

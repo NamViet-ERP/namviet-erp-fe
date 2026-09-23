@@ -27,7 +27,8 @@ import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
 import type { WarehouseProjectApiDto, ProjectWarehouseKeeperDto } from '../../types/wms';
 import WarehouseKeeperMultiSelect from '../../components/warehouse/WarehouseKeeperMultiSelect';
 import EntityCodeLink from '../../components/ui/EntityCodeLink';
-import { getSessionUser } from '../../constants/systemUsers';
+import { getSessionUser, isSessionAdmin } from '../../constants/systemUsers';
+import { useSession } from '../../auth/AuthProvider';
 
 const EMPTY_PM_ID = '00000000-0000-0000-0000-000000000000';
 
@@ -120,8 +121,9 @@ export default function ProjectsPage() {
   const createMutation = useCreateProject();
   const deleteMutation = useDeleteProject();
   const [deletingProject, setDeletingProject] = useState<WarehouseProjectApiDto | null>(null);
-  const sessionUser = getSessionUser();
-  const isAdmin = sessionUser?.role === 'Admin';
+  const { user: authUser } = useSession();
+  const sessionUser = authUser ?? getSessionUser();
+  const isAdmin = isSessionAdmin(sessionUser);
 
   const items = data?.items ?? [];
   const totalCount = data?.totalCount ?? 0;
