@@ -15,6 +15,7 @@ interface ConfirmDialogProps {
   cancelLabel?: string;
   variant?: 'danger' | 'default';
   isLoading?: boolean;
+  confirmDisabled?: boolean;
   icon?: ReactNode;
 }
 
@@ -28,6 +29,7 @@ export default function ConfirmDialog({
   cancelLabel = 'Hủy',
   variant = 'danger',
   isLoading = false,
+  confirmDisabled = false,
   icon,
 }: ConfirmDialogProps) {
   useBodyScrollLock(isOpen);
@@ -60,7 +62,7 @@ export default function ConfirmDialog({
             variant={variant === 'danger' ? 'danger' : 'filled'}
             className="flex-1"
             onClick={onConfirm}
-            disabled={isLoading}
+            disabled={isLoading || confirmDisabled}
           >
             {isLoading ? 'Đang xử lý...' : confirmLabel}
           </Button>

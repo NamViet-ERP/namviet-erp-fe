@@ -5,6 +5,7 @@ import type { ImportAttachment } from '../../types';
 import { defectsService } from '../../services/defectsService';
 import { importsService } from '../../services/importsService';
 import { exportReturnsService } from '../../services/exportReturnsService';
+import { ApiError } from '../../lib/apiClient';
 
 function formatBytes(size: number): string {
   if (size < 1024) return `${size} B`;
@@ -289,7 +290,7 @@ export function SavedImportPhotoGrid({
   );
   const photoKey = photos.map(p => p.id).join(',');
   const [urls, setUrls] = useState<Record<string, string>>({});
-  const [failed, setFailed] = useState<Record<string, boolean>>({});
+  const [failed, setFailed] = useState<Record<string, 'missing' | 'error'>>({});
   const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
@@ -302,7 +303,7 @@ export function SavedImportPhotoGrid({
     }
     void (async () => {
       const next: Record<string, string> = {};
-      const nextFailed: Record<string, boolean> = {};
+      const nextFailed: Record<string, 'missing' | 'error'> = {};
       await Promise.all(
         photos.map(async att => {
           try {
@@ -311,8 +312,8 @@ export function SavedImportPhotoGrid({
             const url = URL.createObjectURL(blob);
             created.push(url);
             next[att.id] = url;
-          } catch {
-            nextFailed[att.id] = true;
+          } catch (err) {
+            nextFailed[att.id] = err instanceof ApiError && err.status === 404 ? 'missing' : 'error';
           }
         }),
       );
@@ -351,9 +352,9 @@ export function SavedImportPhotoGrid({
               type="button"
               className="pending-evidence__photo-img pending-evidence__photo-img--failed"
               onClick={() => setReloadToken(t => t + 1)}
-              title="Thử tải lại ảnh"
+              title={failed[att.id] === 'missing' ? 'Ảnh không còn trên máy chủ (mã 404). Bấm để thử lại.' : 'Thử tải lại ảnh'}
             >
-              Không tải được — bấm thử lại
+              {failed[att.id] === 'missing' ? 'Ảnh không còn trên máy chủ' : 'Không tải được — bấm thử lại'}
             </button>
           ) : (
             <div className="pending-evidence__photo-img pending-evidence__photo-img--loading">
@@ -401,7 +402,7 @@ export function SavedExportReturnPhotoGrid({
   );
   const photoKey = photos.map(p => p.id).join(',');
   const [urls, setUrls] = useState<Record<string, string>>({});
-  const [failed, setFailed] = useState<Record<string, boolean>>({});
+  const [failed, setFailed] = useState<Record<string, 'missing' | 'error'>>({});
   const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
@@ -414,7 +415,7 @@ export function SavedExportReturnPhotoGrid({
     }
     void (async () => {
       const next: Record<string, string> = {};
-      const nextFailed: Record<string, boolean> = {};
+      const nextFailed: Record<string, 'missing' | 'error'> = {};
       await Promise.all(
         photos.map(async att => {
           try {
@@ -423,8 +424,8 @@ export function SavedExportReturnPhotoGrid({
             const url = URL.createObjectURL(blob);
             created.push(url);
             next[att.id] = url;
-          } catch {
-            nextFailed[att.id] = true;
+          } catch (err) {
+            nextFailed[att.id] = err instanceof ApiError && err.status === 404 ? 'missing' : 'error';
           }
         }),
       );
@@ -463,9 +464,9 @@ export function SavedExportReturnPhotoGrid({
               type="button"
               className="pending-evidence__photo-img pending-evidence__photo-img--failed"
               onClick={() => setReloadToken(t => t + 1)}
-              title="Thử tải lại ảnh"
+              title={failed[att.id] === 'missing' ? 'Ảnh không còn trên máy chủ (mã 404). Bấm để thử lại.' : 'Thử tải lại ảnh'}
             >
-              Không tải được — bấm thử lại
+              {failed[att.id] === 'missing' ? 'Ảnh không còn trên máy chủ' : 'Không tải được — bấm thử lại'}
             </button>
           ) : (
             <div className="pending-evidence__photo-img pending-evidence__photo-img--loading">

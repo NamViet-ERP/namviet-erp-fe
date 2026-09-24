@@ -226,6 +226,15 @@ export default function ProjectDetailPage() {
     () => inventory.filter(r => r.actualInventoryQty > 0),
     [inventory],
   );
+  const pendingLedgerEntries = useMemo(
+    () => ledger.filter(r => r.status === 'draft' || r.status === 'pending'),
+    [ledger],
+  );
+  const pendingStockLines = useMemo(
+    () => inventory.filter(r => (r.plannedExportQty ?? 0) > 0 || (r.pendingDefectQty ?? 0) > 0),
+    [inventory],
+  );
+  const hasPendingItems = pendingLedgerEntries.length > 0 || pendingStockLines.length > 0;
   const totalActualQty = actualStockLines.reduce((s, r) => s + r.actualInventoryQty, 0);
   const approvedImportValue = (() => {
     if (project?.approvedImportValue != null) return project.approvedImportValue;
@@ -636,26 +645,76 @@ export default function ProjectDetailPage() {
         onClose={() => setShowCloseConfirm(false)}
         onConfirm={handleConfirmClose}
         title="Đóng kho dự án?"
-        confirmLabel="Đóng kho"
-        cancelLabel="Hủy"
-        variant="danger"
+        confirmLabel={hasPendingItems ? 'Không thể đóng kho' : 'Đóng kho'}
+        confirmDisabled={hasPendingItems}
+        cancelLabel={hasPendingItems ? 'Đóng thông báo' : 'Hủy'}
+        variant={hasPendingItems ? 'default' : 'danger'}
         isLoading={closeMutation.isPending}
         message={
-          <div className="space-y-2 text-left">
+          <div className="space-y-3 text-left text-sm">
             <p>
-              Bạn sắp đóng kho <strong>{project.projectName}</strong> ({project.projectCode}).
+              Bạn đang yêu cầu đóng kho dự án <strong>{project.projectName}</strong> ({project.projectCode}).
             </p>
-            {actualStockLines.length > 0 ? (
-              <p>
-                <strong>{actualStockLines.length}</strong> mặt hàng (tổng{' '}
-                <strong>{totalActualQty}</strong> đơn vị) sẽ được hoàn về <strong>{GENERAL_WAREHOUSE_LABEL_LOWER}</strong>.
-              </p>
+
+            {hasPendingItems ? (
+              <div className="p-3 rounded-lg border border-[var(--md-error)] bg-[color-mix(in_srgb,var(--md-error)_8%,transparent)] text-[var(--md-on-surface)] space-y-2">
+                <div className="flex items-center gap-2 font-semibold text-[var(--md-error)]">
+                  <AlertTriangle size={18} />
+                  <span>Chưa thể đóng kho: Còn chứng từ hoặc vật tư chưa xử lý!</span>
+                </div>
+                {pendingLedgerEntries.length > 0 && (
+                  <div>
+                    <p className="font-medium text-xs text-[var(--md-on-surface-variant)] mb-1">
+                      Chứng từ chưa duyệt ({pendingLedgerEntries.length} phiếu):
+                    </p>
+                    <ul className="list-disc list-inside space-y-0.5 text-xs font-mono">
+                      {pendingLedgerEntries.map(e => (
+                        <li key={e.id}>
+                          <strong>{e.voucherCode}</strong> ({e.kind === 'import' ? 'Nhập kho' : e.kind === 'export' ? 'Xuất kho' : 'Chuyển kho'} - {e.status === 'draft' ? 'Bản nháp' : 'Chờ duyệt'})
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {pendingStockLines.length > 0 && (
+                  <div>
+                    <p className="font-medium text-xs text-[var(--md-on-surface-variant)] mb-1">
+                      Vật tư đang chờ xuất / chờ bảo hành:
+                    </p>
+                    <ul className="list-disc list-inside space-y-0.5 text-xs">
+                      {pendingStockLines.map(r => (
+                        <li key={r.materialCode}>
+                          <strong>{r.materialName}</strong> ({r.materialCode}):{' '}
+                          {r.plannedExportQty > 0 ? `Chờ xuất ${r.plannedExportQty} ${r.unit}` : ''}
+                          {r.pendingDefectQty > 0 ? `Chờ bảo hành ${r.pendingDefectQty} ${r.unit}` : ''}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <div className="text-xs pt-1 border-t border-[color-mix(in_srgb,var(--md-error)_20%,transparent)] leading-relaxed">
+                  💡 <strong>Hướng dẫn xử lý:</strong>
+                  <ul className="list-disc list-inside mt-1 space-y-1">
+                    <li>Nếu vật tư <strong>đã xuất đi sử dụng tại công trình</strong>: Thủ kho cần vào duyệt phiếu xuất trước (vật tư đã xuất dùng sẽ ghi nhận vào công trình, <strong>không</strong> hoàn về kho tổng).</li>
+                    <li>Nếu không dùng nữa hoặc tạo nhầm: Vui lòng <strong>Hủy phiếu</strong> treo.</li>
+                  </ul>
+                </div>
+              </div>
             ) : (
-              <p>Kho không còn tồn thực tế — chỉ khóa thao tác nhập/xuất.</p>
+              <>
+                {actualStockLines.length > 0 ? (
+                  <p>
+                    <strong>{actualStockLines.length}</strong> mặt hàng (tổng{' '}
+                    <strong>{totalActualQty}</strong> đơn vị tồn thực tế còn lại) sẽ được tự động hoàn về <strong>{GENERAL_WAREHOUSE_LABEL_LOWER}</strong>.
+                  </p>
+                ) : (
+                  <p>Kho không còn tồn thực tế — chỉ khóa thao tác nhập/xuất.</p>
+                )}
+                <p className="text-[var(--md-on-surface-variant)] text-xs">
+                  Sau khi đóng, không thể nhập hoặc xuất thêm cho kho dự án này.
+                </p>
+              </>
             )}
-            <p className="text-[var(--md-on-surface-variant)]">
-              Sau khi đóng, không thể nhập hoặc xuất thêm cho kho dự án này.
-            </p>
           </div>
         }
       />
