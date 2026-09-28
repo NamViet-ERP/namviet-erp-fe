@@ -4,6 +4,7 @@ import { NAMVIET_GROUP_LOGO_URL } from '../../constants/branding';
 import {
   Settings, BarChart3, Bell, ChevronDown,
   User, LogOut, X, PackagePlus, PackageMinus, ArrowLeftRight, ClipboardCheck, FileSpreadsheet,
+  Menu,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -169,9 +170,16 @@ function MenuBtn({ icon: Icon, label, onClick, danger }: MenuBtnProps) {
 interface HeaderProps {
   currentModule: Module;
   onModuleSwitch: (module: Module) => void;
+  onToggleSidebar?: () => void;
+  isSidebarOpen?: boolean;
 }
 
-export default function Header({ currentModule: _currentModule, onModuleSwitch: _onModuleSwitch }: HeaderProps) {
+export default function Header({
+  currentModule: _currentModule,
+  onModuleSwitch: _onModuleSwitch,
+  onToggleSidebar,
+  isSidebarOpen,
+}: HeaderProps) {
   const navigate = useNavigate();
   const { user: sessionUser } = useSession();
   const currentUser = sessionUser ?? { name: 'User', initials: 'U', roleLabel: '', email: '' };
@@ -292,6 +300,18 @@ export default function Header({ currentModule: _currentModule, onModuleSwitch: 
   return (
     <header className="nv-header">
       <div className="nv-header__inner">
+        {onToggleSidebar && (
+          <button
+            type="button"
+            className="nv-header-menu-btn"
+            onClick={onToggleSidebar}
+            aria-label={isSidebarOpen ? 'Đóng menu điều hướng' : 'Mở menu điều hướng'}
+            title={isSidebarOpen ? 'Đóng menu điều hướng' : 'Mở menu điều hướng'}
+          >
+            <Menu size={22} aria-hidden />
+          </button>
+        )}
+
         <button
           type="button"
           className="nv-header__brand"

@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useSyncExternalStore } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
-import { ChevronDown, ChevronsLeft, ChevronLeft, Warehouse as WarehouseIcon, ClipboardCheck, Users, UserCheck, ShieldCheck, Settings, Wrench, Headphones, ShoppingCart, Building2, Activity, LayoutDashboard } from 'lucide-react';
+import { ChevronDown, ChevronsLeft, ChevronLeft, X, Warehouse as WarehouseIcon, ClipboardCheck, Users, UserCheck, ShieldCheck, Settings, Wrench, Headphones, ShoppingCart, Building2, Activity, LayoutDashboard } from 'lucide-react';
 import type { SidebarMenuItem } from '../../types';
 import type { LucideIcon } from 'lucide-react';
 import type { PermissionKey } from '../../lib/permissions';
@@ -41,6 +41,8 @@ const moduleLabels: Record<Module, string> = {
 interface SidebarProps {
   collapsed: boolean;
   onToggle: () => void;
+  mobileOpen?: boolean;
+  onCloseMobile?: () => void;
   menuItems: SidebarMenuItem[];
   permissions: readonly PermissionKey[];
   currentModule: Module;
@@ -49,7 +51,35 @@ interface SidebarProps {
   onBack?: () => void;
 }
 
-export default function Sidebar({ collapsed, onToggle, menuItems, permissions, currentModule, contextLabel, contextIcon, onBack }: SidebarProps) {
+function subscribeMobileMedia(callback: () => void) {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return () => {};
+  const mq = window.matchMedia('(max-width: 1023px)');
+  mq.addEventListener('change', callback);
+  return () => mq.removeEventListener('change', callback);
+}
+
+function getMobileSnapshot() {
+  return typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+    ? window.matchMedia('(max-width: 1023px)').matches
+    : false;
+}
+
+function getMobileServerSnapshot() {
+  return false;
+}
+
+export default function Sidebar({
+  collapsed,
+  onToggle,
+  mobileOpen,
+  onCloseMobile,
+  menuItems,
+  permissions,
+  currentModule,
+  contextLabel,
+  contextIcon,
+  onBack,
+}: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
@@ -60,6 +90,10 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
   const [tipStyle, setTipStyle] = useState<React.CSSProperties>({});
   const hoverTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const itemRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  const isMobile = useSyncExternalStore(subscribeMobileMedia, getMobileSnapshot, getMobileServerSnapshot);
+
+  const isEffectiveCollapsed = collapsed && !isMobile;
 
   /** Sidebar thống nhất: luôn hiện nhãn hệ thống; contextLabel (vd. Thiết lập) vẫn ưu tiên. */
   const isUnifiedNav = menuItems.some(item => (item.children?.length ?? 0) > 0);
@@ -85,6 +119,9 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
 
   const navigateMenuItem = (item: PermissionNavItem) => {
     handlePermissionNavClick(permissions, item, navigate);
+    if (onCloseMobile) {
+      onCloseMobile();
+    }
   };
 
   useEffect(() => {
@@ -103,7 +140,7 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
   }, [location.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (collapsed) {
+    if (isEffectiveCollapsed) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setExpandedItems({});
       setUserCollapsed(new Set());
@@ -118,17 +155,17 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
       setUserCollapsed(new Set());
       setActivePopover(null);
     }
-  }, [collapsed]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isEffectiveCollapsed]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (collapsed && !(e.target as Element).closest?.('.sidebar-item-container')) {
+      if (isEffectiveCollapsed && !(e.target as Element).closest?.('.sidebar-item-container')) {
         setActivePopover(null);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [collapsed]);
+  }, [isEffectiveCollapsed]);
 
   const toggleExpand = (id: string) => {
     const wasExpanded = expandedItems[id];
@@ -141,7 +178,7 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
   };
 
   const handleItemMouseEnter = (item: SidebarMenuItem) => {
-    if (!collapsed) return;
+    if (!isEffectiveCollapsed) return;
     if (hoverTimeout.current) clearTimeout(hoverTimeout.current);
     setHoveredItem(item.id);
     if (activePopover && activePopover !== item.id) setActivePopover(null);
@@ -157,7 +194,7 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
     }
   };
   const handleItemMouseLeave = () => {
-    if (!collapsed) return;
+    if (!isEffectiveCollapsed) return;
     hoverTimeout.current = setTimeout(() => setHoveredItem(null), 120);
   };
   const handlePopoverEnter = () => {
@@ -172,10 +209,10 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
   }, []);
 
   const popoverItemId = activePopover || hoveredItem;
-  const popoverItemRaw = collapsed && popoverItemId ? menuItems.find(i => i.id === popoverItemId) : null;
+  const popoverItemRaw = isEffectiveCollapsed && popoverItemId ? menuItems.find(i => i.id === popoverItemId) : null;
   const popoverItem = (popoverItemRaw?.children?.length ?? 0) > 0 ? popoverItemRaw : null;
   const tipItem =
-    collapsed && hoveredItem && !activePopover && !popoverItem
+    isEffectiveCollapsed && hoveredItem && !activePopover && !popoverItem
       ? menuItems.find(i => i.id === hoveredItem && !(i.children?.length)) ?? null
       : null;
 
@@ -234,10 +271,10 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
 
   return (
     <aside
-      className={`app-sidebar${collapsed ? ' app-sidebar--collapsed' : ''}${isModuleAlt ? ' app-sidebar--module-alt' : ''}`}
+      className={`app-sidebar${isEffectiveCollapsed ? ' app-sidebar--collapsed' : ''}${mobileOpen ? ' app-sidebar--mobile-open' : ''}${isModuleAlt ? ' app-sidebar--module-alt' : ''}`}
     >
       <div className="sidebar-header">
-        {collapsed ? (
+        {isEffectiveCollapsed ? (
           <button
             type="button"
             onClick={onToggle}
@@ -269,10 +306,21 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
               type="button"
               onClick={onToggle}
               title="Thu gọn"
-              className="sidebar-module-btn sidebar-module-btn--collapse"
+              className="sidebar-module-btn sidebar-module-btn--collapse desktop-only-flex"
             >
               <ChevronsLeft size={16} />
             </button>
+            {onCloseMobile && (
+              <button
+                type="button"
+                onClick={onCloseMobile}
+                title="Đóng menu"
+                aria-label="Đóng menu"
+                className="sidebar-module-btn sidebar-module-btn--close mobile-only-flex"
+              >
+                <X size={18} />
+              </button>
+            )}
           </>
         )}
       </div>
@@ -282,7 +330,7 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
           const Icon = item.icon;
           const hasChildren = (item.children?.length ?? 0) > 0;
           const isExpanded = !!expandedItems[item.id];
-          const isPopoverOpen = collapsed && hasChildren && (activePopover === item.id || hoveredItem === item.id);
+          const isPopoverOpen = isEffectiveCollapsed && hasChildren && (activePopover === item.id || hoveredItem === item.id);
           const active = isParentActive(item) || isPopoverOpen || (!hasChildren && isActive(item.path));
           const locked = hasChildren
             ? !item.children!.some(c => isNavItemAccessible(permissions, c))
@@ -299,7 +347,7 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
               <button
                 type="button"
                 onClick={() => {
-                  if (collapsed) {
+                  if (isEffectiveCollapsed) {
                     if (!hasChildren) navigateMenuItem(item);
                     else setActivePopover(p => p === item.id ? null : item.id);
                   } else if (hasChildren) {
@@ -313,14 +361,14 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
                   }
                 }}
                 className={`sidebar-item${active ? ' active' : ''}${locked ? ' sidebar-item--locked' : ''}`}
-                aria-label={collapsed ? item.label : undefined}
+                aria-label={isEffectiveCollapsed ? item.label : undefined}
                 aria-expanded={hasChildren ? isExpanded : undefined}
               >
                 <Icon size={18} className="sidebar-item__icon" />
-                <span className={`sidebar-item__label sidebar-label flex-1 text-left${collapsed ? ' collapsed' : ''}`}>
+                <span className={`sidebar-item__label sidebar-label flex-1 text-left${isEffectiveCollapsed ? ' collapsed' : ''}`}>
                   {item.label}
                 </span>
-                {hasChildren && !collapsed && (
+                {hasChildren && !isEffectiveCollapsed && (
                   <ChevronDown
                     size={12}
                     className={`sidebar-item__chevron${isExpanded ? ' sidebar-item__chevron--open' : ''}`}
@@ -328,7 +376,7 @@ export default function Sidebar({ collapsed, onToggle, menuItems, permissions, c
                 )}
               </button>
 
-              {hasChildren && !collapsed && (
+              {hasChildren && !isEffectiveCollapsed && (
                 <div className={`submenu-wrapper ${isExpanded ? 'expanded' : ''}`}>
                   <div className="submenu-content">
                     <div className="sidebar-subnav">

@@ -17,20 +17,42 @@ import { hasAnyPermission } from '../../lib/permissions';
 import { UI_PERMISSION_DENIED } from '../../lib/uiMessages';
 import PageLoader from '../ui/PageLoader';
 import Button from '../ui/Button';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import { useEscapeToClose } from '../../hooks/useEscapeToClose';
 import type { SessionCheckResult } from '../../services/authService';
 
 type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin' | 'technical' | 'cskh' | 'purchasing' | 'suppliers' | 'operations';
 
 export default function AppLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [sessionState, setSessionState] = useState<SessionCheckResult | 'checking'>('checking');
   const navigate = useNavigate();
   const location = useLocation();
   const deniedToastShown = useRef<string | null>(null);
 
+  const [prevPathname, setPrevPathname] = useState(location.pathname);
+  if (prevPathname !== location.pathname) {
+    setPrevPathname(location.pathname);
+    setMobileSidebarOpen(false);
+  }
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const handler = (e: MediaQueryListEvent) => {
+      if (e.matches) setMobileSidebarOpen(false);
+    };
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  useBodyScrollLock(mobileSidebarOpen);
+  useEscapeToClose(mobileSidebarOpen, () => setMobileSidebarOpen(false));
 
   const checkSession = useCallback(() => {
     let cancelled = false;
@@ -147,19 +169,35 @@ export default function AppLayout() {
     : cskhProjectCode ?? undefined;
 
   return (
-    <div className={`app-shell ${shellModuleClass}${hideSidebar ? ' app-shell--no-sidebar' : sidebarCollapsed ? ' app-shell--sidebar-collapsed' : ''}`}>
-      <Header currentModule={currentModule} onModuleSwitch={() => {}} />
+    <div className={`app-shell ${shellModuleClass}${hideSidebar ? ' app-shell--no-sidebar' : sidebarCollapsed ? ' app-shell--sidebar-collapsed' : ''}${mobileSidebarOpen ? ' app-shell--mobile-open' : ''}`}>
+      <Header
+        currentModule={currentModule}
+        onModuleSwitch={() => {}}
+        onToggleSidebar={() => setMobileSidebarOpen(p => !p)}
+        isSidebarOpen={mobileSidebarOpen}
+      />
       {!hideSidebar && (
-        <Sidebar
-          collapsed={sidebarCollapsed}
-          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-          menuItems={sidebarMenuItems}
-          permissions={permissions}
-          currentModule={currentModule}
-          contextLabel={sidebarContextLabel}
-          contextIcon={isCskhProject ? FolderKanban : undefined}
-          onBack={sidebarBack}
-        />
+        <>
+          {mobileSidebarOpen && (
+            <div
+              className="app-sidebar-scrim"
+              onClick={() => setMobileSidebarOpen(false)}
+              aria-hidden="true"
+            />
+          )}
+          <Sidebar
+            collapsed={sidebarCollapsed}
+            onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+            mobileOpen={mobileSidebarOpen}
+            onCloseMobile={() => setMobileSidebarOpen(false)}
+            menuItems={sidebarMenuItems}
+            permissions={permissions}
+            currentModule={currentModule}
+            contextLabel={sidebarContextLabel}
+            contextIcon={isCskhProject ? FolderKanban : undefined}
+            onBack={sidebarBack}
+          />
+        </>
       )}
       <main className={mainClass}>
         <div className="app-main__inner">
