@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import EmptyState from '../../../components/ui/EmptyState';
 import TableSkeletonRows from '../../../components/ui/TableSkeletonRows';
 import { formatCurrency } from '../../../utils/formatCurrency';
@@ -129,7 +130,33 @@ export function CreatePoLinePicker({
                     <td>{line.productName}</td>
                     <td>{line.spec || '-'}</td>
                     <td>{line.unit || '-'}</td>
-                    <td className="pur-erp__td-num">{line.remainingOrderableQty}</td>
+                    <td className="pur-erp__td-num">
+                      <div>{line.remainingOrderableQty}</div>
+                      {line.pos && line.pos.length > 0 ? (
+                        <div
+                          className="text-xs opacity-75"
+                          title={`Đã lên đơn: ${line.pos.map(p => `${p.poCode} (${p.orderedQty})`).join(', ')}`}
+                        >
+                          <span style={{ fontSize: '0.7rem' }}>Đã có: </span>
+                          {line.pos.map((p, idx) => (
+                            <span key={p.poCode}>
+                              {idx > 0 ? ', ' : ''}
+                              <Link
+                                to={`/purchasing/orders/${encodeURIComponent(p.poCode)}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="pur-pay-plan__po-link"
+                                style={{ fontSize: '0.7rem' }}
+                                onClick={e => e.stopPropagation()}
+                              >
+                                {p.poCode}
+                              </Link>
+                              <span style={{ fontSize: '0.7rem' }}> ({p.orderedQty})</span>
+                            </span>
+                          ))}
+                        </div>
+                      ) : null}
+                    </td>
                     <td className="pur-erp__td-num pur-create-po-lines__col-qty">
                       <input
                         className="form-input form-input-sm pur-create-po-lines__input-num"

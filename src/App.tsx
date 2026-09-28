@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AppLayout from './components/layout/AppLayout';
 import PageLoader from './components/ui/PageLoader';
 import ErrorBoundary from './components/ErrorBoundary';
-import { Agentation } from 'agentation';
 import { CSKH_MODULE_ENABLED } from './constants/cskh';
 import { WMS_REPORTS_ENABLED } from './constants/sidebarMenus';
 import { getDefaultRoute } from './utils/getDefaultRoute';
@@ -12,6 +11,9 @@ import * as Pages from './routes/lazyPages';
 
 const SuppliersModuleRoutes = lazy(() => import('./routes/SuppliersModuleRoutes'));
 const CskhModuleRoutes = lazy(() => import('./routes/CskhModuleRoutes'));
+const DevAgentation = import.meta.env.DEV
+  ? lazy(() => import('agentation').then(m => ({ default: m.Agentation })))
+  : () => null;
 
 export default function App() {
   const role = getActiveRole();
@@ -133,7 +135,9 @@ export default function App() {
       </Suspense>
       {import.meta.env.DEV && (
         <ErrorBoundary fallback={null}>
-          <Agentation />
+          <Suspense fallback={null}>
+            <DevAgentation />
+          </Suspense>
         </ErrorBoundary>
       )}
     </BrowserRouter>

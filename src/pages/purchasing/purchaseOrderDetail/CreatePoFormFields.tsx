@@ -1,9 +1,11 @@
 import FormField from '../../../components/ui/FormField';
 import { Link } from 'react-router-dom';
+import { ExternalLink, Info } from 'lucide-react';
 import PlanAutocomplete from '../../../components/purchasing/PlanAutocomplete';
 import { formatDateCell } from '../../../lib/hrm/formatters';
 import { getApiErrorMessage } from '../../../lib/apiClient';
 import { formatCurrencyFull } from '../../../utils/formatCurrency';
+import { poApprovalStatus, poPlacementStatus, PoStatusPill } from '../../../lib/purchasing/purchaseOrderStatus';
 import type { PurchasePlanDetailApiDto, PurchasePlanApiDto, SupplierPayableSnapshotApiDto } from '../../../types/api/purchasingApi';
 import type { SupplierApiDto } from '../../../types/wms';
 
@@ -113,6 +115,48 @@ export function CreatePoFormFields({
           />
         </FormField>
       </div>
+      {planCode && !planLoading && !planError && plan?.relatedOrders && plan.relatedOrders.length > 0 ? (
+        <div className="alert-banner alert-banner--info mt-3" role="status">
+          <Info size={18} className="alert-banner__icon" aria-hidden />
+          <div className="w-full">
+            <p className="alert-banner__title">
+              {sourceLabel} <strong>{plan.code}</strong> hiện đã có {plan.relatedOrders.length} đơn PO liên kết:
+            </p>
+            <div className="alert-banner__list flex flex-wrap gap-2 mt-1">
+              {plan.relatedOrders.map(order => {
+                const approval = poApprovalStatus(order.approvalStatus);
+                const placement = poPlacementStatus(order.orderPlacementStatus);
+                return (
+                  <span
+                    key={order.code}
+                    className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs"
+                    style={{
+                      background: 'var(--md-surface)',
+                      border: '1px solid var(--md-outline-variant02)',
+                    }}
+                  >
+                    <Link
+                      to={`/purchasing/orders/${encodeURIComponent(order.code)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="pur-pay-plan__po-link inline-flex items-center gap-0.5"
+                      title="Mở đơn mua hàng trong tab mới"
+                    >
+                      {order.code}
+                      <ExternalLink size={10} aria-hidden />
+                    </Link>
+                    <span>·</span>
+                    <span>{order.supplierName || 'Chưa gắn NCC'}</span>
+                    <span>·</span>
+                    <PoStatusPill label={approval.label} tone={approval.tone} />
+                    <PoStatusPill label={placement.label} tone={placement.tone} />
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      ) : null}
       {planError ? (
         <p role="alert" className="pur-detail__alert">
           {getApiErrorMessage(planErr, `Không tải được chi tiết ${sourceLabel}.`)}

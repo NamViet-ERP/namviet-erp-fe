@@ -108,6 +108,8 @@ export function translateErrorMessage(message: string): string {
     return 'Email đã được sử dụng';
   }
 
+  if (lower === 'not found') return 'Không tìm thấy dữ liệu hoặc tệp tin yêu cầu.';
+
   if (
     lower === 'internal server error'
     || lower.includes('an error occurred while processing')

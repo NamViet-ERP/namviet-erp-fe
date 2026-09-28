@@ -275,7 +275,7 @@ export default function PurchaseContractsPage() {
     try {
       await purchaseContractsService.download(row.id, row.fileName);
     } catch (err) {
-      showToast('error', getApiErrorMessage(err, 'Không tải được tệp.'));
+      showToast('error', getApiErrorMessage(err, 'Không tải được tệp hợp đồng.'));
     }
   };
 

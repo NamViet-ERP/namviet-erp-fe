@@ -5644,54 +5644,49 @@
     padding-right: 6px;
   }
 
-  /* Tồn kho — column widths & compact responsive layout */
+  /* Tồn kho — column widths & full horizontal expansion (never wrap column headers) */
   .stock-matrix-table {
     table-layout: auto;
     width: 100%;
-    min-width: 70rem;
+    min-width: max-content;
   }
   .stock-matrix-table thead .table-header-cell {
-    padding: 7px 5px;
-    font-size: var(--fs-micro);
-    line-height: 1.22;
-    white-space: normal !important;
+    padding: 8px 10px;
+    font-size: var(--fs-xs);
+    line-height: 1.25;
+    white-space: nowrap !important;
     vertical-align: middle;
-    word-break: keep-all;
-    letter-spacing: 0.01em;
+    letter-spacing: 0.02em;
   }
   .stock-matrix-table .table-cell {
-    padding: 7px 5px;
+    padding: 7px 10px;
     font-size: var(--fs-xs);
+    vertical-align: middle;
   }
   .stock-col-code {
-    width: 13.5rem;
-    min-width: 12.5rem;
-    max-width: 15rem;
+    min-width: 13.5rem;
+    max-width: 18rem;
     overflow: hidden;
   }
   .stock-col-name {
-    min-width: 10.5rem;
-    max-width: 15rem;
+    min-width: 12rem;
+    max-width: 22rem;
     overflow: hidden;
   }
   .stock-col-unit {
-    width: 3.25rem;
-    min-width: 3rem;
+    min-width: 3.75rem;
     white-space: nowrap;
   }
   .stock-col-qty {
-    width: 4.75rem;
-    min-width: 4.25rem;
+    min-width: 6.5rem;
     white-space: nowrap;
   }
   .stock-col-price {
-    width: 7.25rem;
-    min-width: 6.75rem;
+    min-width: 9.5rem;
     white-space: nowrap;
   }
   .stock-col-projects {
-    width: 3.25rem;
-    min-width: 3rem;
+    min-width: 4rem;
     white-space: nowrap;
   }
   .stock-cell-truncate {
