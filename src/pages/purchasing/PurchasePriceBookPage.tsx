@@ -298,7 +298,7 @@ export default function PurchasePriceBookPage() {
       search={search}
       onSearchChange={setSearch}
       searchPlaceholder="Tìm theo mã/tên hàng…"
-      hasFilters={tab === 'items' && Boolean(categoryId || periodType !== 'all')}
+      hasFilters={tab === 'items' && Boolean(search.trim() || categoryId || periodType !== 'all')}
       filters={tab === 'items' ? (
         <>
           <HrmSelect

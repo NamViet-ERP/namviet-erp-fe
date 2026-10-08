@@ -34,17 +34,31 @@ export interface CskhBottleneck {
   departmentId?: string;
   source?: 'manual' | 'gantt' | 'meeting';
   history: CskhHistoryNote[];
+  ganttTask?: string;
+  pic?: string;
+  resolution?: string;
+}
+
+export interface CskhMeetingAttachment {
+  name: string;
+  size?: string;
+  url?: string;
+  uploadedAt?: string;
 }
 
 export interface CskhInternalRequest {
   id: string;
+  code?: string;
   name: string;
+  requestType?: string;
   body?: string;
   fromDept: string;
   toDept: string;
   dueDate: string;
+  priority?: CskhSeverity;
   status: CskhRequestStatus;
   createdAt: string;
+  attachments?: CskhMeetingAttachment[];
 }
 
 export interface CskhGanttItem {
@@ -54,7 +68,14 @@ export interface CskhGanttItem {
   startDate: string;
   endDate: string;
   actualPct: number;
+  department?: string;
+  statusLabel?: string;
+  statusTone?: 'ok' | 'danger' | 'warn' | 'muted' | 'info';
   notes?: string;
+  wbs?: string;
+  level?: number;
+  parentId?: string;
+  isGroup?: boolean;
 }
 
 export interface CskhSnapshotItem {
@@ -78,6 +99,8 @@ export interface CskhMeetingAction {
   name: string;
   dueDate: string;
   done: boolean;
+  pic?: string;
+  generatedBottleneck?: boolean;
 }
 
 export interface CskhMeeting {
@@ -88,6 +111,7 @@ export interface CskhMeeting {
   agenda?: string;
   minutes?: string;
   actions: CskhMeetingAction[];
+  attachments?: CskhMeetingAttachment[];
 }
 
 export interface CskhProjectOps {
@@ -98,15 +122,334 @@ export interface CskhProjectOps {
   meetings: CskhMeeting[];
 }
 
+export const DEFAULT_SEED_OPS: Record<string, CskhProjectOps> = {
+  'LH-01': {
+    bottlenecks: [
+      {
+        id: 'bn-1',
+        code: 'BN-104',
+        name: 'Cẩu 80 tấn bị hỏng cụm thủy lực tại công trường, tạm dừng cẩu lắp balong trên',
+        severity: 'urgent',
+        status: 'open',
+        startedAt: '2026-09-18',
+        expectedAt: '2026-09-23',
+        reason: 'Hỏng cụm van thủy lực bơm chính xe cẩu chuyên dụng 80T',
+        ganttTask: 'Gantt #3 · Lắp thân lò',
+        departmentId: 'tech',
+        pic: 'Nguyễn Văn Hải (Chỉ huy trưởng)',
+        resolution: 'Thuê cẩu 100T thay thế',
+        source: 'gantt',
+        history: [
+          { id: 'h1', at: '2026-09-18T08:30:00Z', text: 'Phát hiện sự cố rò rỉ dầu thủy lực cẩu' },
+          { id: 'h2', at: '2026-09-19T14:00:00Z', text: 'Đã duyệt phương án thuê cẩu 100T từ Hải Phòng' },
+        ],
+      },
+      {
+        id: 'bn-2',
+        code: 'BN-105',
+        name: 'Thiếu 12 thợ hàn 6G áp lực cao, tổ thợ phụ tự ý nghỉ việc không báo trước',
+        severity: 'urgent',
+        status: 'open',
+        startedAt: '2026-09-19',
+        expectedAt: '2026-09-24',
+        reason: 'Tổ thợ hàn phụ tự ý nghỉ việc',
+        ganttTask: 'Gantt #4 · Hàn ống hơi',
+        departmentId: 'hr',
+        pic: 'Trần Văn C (Phòng Nhân sự)',
+        resolution: 'Điều thợ xưởng ra CT',
+        source: 'meeting',
+        history: [
+          { id: 'h3', at: '2026-09-20T10:00:00Z', text: 'Sinh tự động từ cuộc họp giao ban MT-08 khi việc tăng ca bị trễ hạn' },
+        ],
+      },
+      {
+        id: 'bn-3',
+        code: 'BN-106',
+        name: 'CĐT ngâm duyệt phương án thử áp (HS-301) quá 12 ngày so với cam kết',
+        severity: 'urgent',
+        status: 'open',
+        startedAt: '2026-09-10',
+        expectedAt: '2026-09-24',
+        reason: 'Tư vấn giám sát CĐT chậm ký nháy đệ trình',
+        ganttTask: 'Gantt #5 · Thử áp thủy lực',
+        departmentId: 'ops',
+        pic: 'Phan Văn Nam (Giám đốc Dự án)',
+        resolution: 'Họp khẩn cấp CĐT',
+        source: 'manual',
+        history: [
+          { id: 'h4', at: '2026-09-15T09:00:00Z', text: 'Gửi công văn đôn đốc CĐT lần 1' },
+          { id: 'h5', at: '2026-09-21T15:30:00Z', text: 'Đã liên hệ trực tiếp Tổng giám đốc CĐT An Phát' },
+        ],
+      },
+      {
+        id: 'bn-4',
+        code: 'BN-102',
+        name: 'Đường nước khử khoáng RO của nhà máy chưa kéo kịp tới bồn chứa tạm',
+        severity: 'medium',
+        status: 'open',
+        startedAt: '2026-09-15',
+        expectedAt: '2026-09-26',
+        reason: 'CĐT thi công đường ống cấp nước chậm tiến độ',
+        ganttTask: 'Gantt #5 · Nguồn nước thử áp',
+        departmentId: 'ops',
+        pic: 'Đại diện CĐT An Phát',
+        resolution: 'Đôn đốc CĐT kéo ống',
+        source: 'manual',
+        history: [],
+      },
+    ],
+    requests: [
+      {
+        id: 'rc-1',
+        code: 'RC-12',
+        name: 'Yêu cầu bổ sung 2 máy hàn TIG công suất lớn',
+        requestType: 'Thiết bị thi công',
+        fromDept: 'Chỉ huy trưởng Nguyễn Văn Hải',
+        toDept: 'Phòng Thiết bị Máy',
+        createdAt: '2026-09-22',
+        dueDate: '2026-09-23',
+        priority: 'urgent',
+        status: 'open',
+        body: 'Phục vụ tăng ca ca đêm tổ hàn ống hơi bức xạ thân lò',
+      },
+      {
+        id: 'rc-2',
+        code: 'RC-11',
+        name: 'Bổ sung 50 bao vữa chịu lửa chịu mài mòn cho buồng đốt',
+        requestType: 'Vật tư phát sinh',
+        fromDept: 'Kỹ sư giám sát Tuấn',
+        toDept: 'Phòng Cung ứng',
+        createdAt: '2026-09-19',
+        dueDate: '2026-09-25',
+        priority: 'medium',
+        status: 'processing',
+        body: 'Do thiết kế điều chỉnh kích thước phễu tro đáy lò',
+      },
+      {
+        id: 'rc-3',
+        code: 'RC-09',
+        name: 'Yêu cầu làm rõ bản vẽ tuyến ống xả đáy balong dưới',
+        requestType: 'Làm rõ thiết kế',
+        fromDept: 'Đội lắp kết cấu',
+        toDept: 'Phòng Kỹ thuật',
+        createdAt: '2026-09-12',
+        dueDate: '2026-09-14',
+        priority: 'low',
+        status: 'closed',
+        body: 'Bản vẽ bị vướng cột dầm kết cấu trục C3',
+      },
+    ],
+    ganttItems: [
+      {
+        id: 'g-1',
+        name: '1. Khảo sát & Đệ trình bản vẽ',
+        department: 'Phòng Kỹ thuật',
+        days: 15,
+        startDate: '2026-06-01',
+        endDate: '2026-06-15',
+        actualPct: 100,
+        statusLabel: 'Hoàn thành',
+        statusTone: 'ok',
+        notes: 'Hoàn thành 100% hồ sơ thiết kế kỹ thuật',
+      },
+      {
+        id: 'g-2',
+        name: '2. Cuốn Balong & Hàn màng ống',
+        department: 'Xưởng Cơ khí',
+        days: 45,
+        startDate: '2026-06-15',
+        endDate: '2026-07-30',
+        actualPct: 100,
+        statusLabel: 'Đã nghiệm thu',
+        statusTone: 'ok',
+        notes: 'Balong D1400 đã nghiệm thu xưởng, ống hơi đạt 100%',
+      },
+      {
+        id: 'g-3',
+        name: '3. Lắp đặt khung thép & Thân lò',
+        department: 'Đội Lắp 1 (CT)',
+        days: 40,
+        startDate: '2026-07-20',
+        endDate: '2026-08-30',
+        actualPct: 65,
+        statusLabel: 'Nghẽn BN-104',
+        statusTone: 'danger',
+        notes: 'Đang vướng sự cố cẩu 80T (BN-104)',
+      },
+      {
+        id: 'g-4',
+        name: '4. Lắp đặt ống hơi & Van áp lực',
+        department: 'Đội Hàn 6G (CT)',
+        days: 25,
+        startDate: '2026-08-15',
+        endDate: '2026-09-10',
+        actualPct: 45,
+        statusLabel: 'Nghẽn BN-105',
+        statusTone: 'danger',
+        notes: 'Tiến độ chậm do thiếu 12 thợ hàn 6G áp lực (BN-105)',
+      },
+      {
+        id: 'g-5',
+        name: '5. Thử áp lực nước (Hydrostatic)',
+        department: 'Đội Kiểm định',
+        days: 5,
+        startDate: '2026-09-15',
+        endDate: '2026-09-20',
+        actualPct: 0,
+        statusLabel: 'Chờ xong mục 4',
+        statusTone: 'warn',
+        notes: 'Đang chờ CĐT phê duyệt phương án thử áp HS-301 (BN-106)',
+      },
+      {
+        id: 'g-6',
+        name: '6. Đốt lò sấy & Hiệu chỉnh COD',
+        department: 'Chuyên gia Vận hành',
+        days: 15,
+        startDate: '2026-10-01',
+        endDate: '2026-10-15',
+        actualPct: 0,
+        statusLabel: 'Chưa bắt đầu',
+        statusTone: 'muted',
+        notes: 'Mốc về đích phát điện thương mại theo hợp đồng',
+      },
+    ],
+    snapshots: [
+      {
+        id: 'snap-w36',
+        at: '2026-09-15T09:00:00.000Z',
+        planPct: 90,
+        actualPct: 58,
+        itemCount: 6,
+        items: [
+          { id: 'g-1', name: 'Thiết kế cơ sở & Bóc tách xưởng', planPct: 100, actualPct: 100 },
+          { id: 'g-2', name: 'Gia công chế tạo Balong & Thân lò tại xưởng', planPct: 100, actualPct: 100 },
+          { id: 'g-3', name: 'Lắp đặt kết cấu thép & Đặt Balong lên khung móng', planPct: 100, actualPct: 65 },
+          { id: 'g-4', name: 'Hàn thân lò, ống sinh hơi & đường ống áp lực', planPct: 70, actualPct: 45 },
+          { id: 'g-5', name: 'Thử áp lực thủy lực (Hydrostatic test 1.5x)', planPct: 0, actualPct: 0 },
+          { id: 'g-6', name: 'Sấy lò, kiểm định an toàn & Bàn giao COD', planPct: 0, actualPct: 0 },
+        ],
+      },
+      {
+        id: 'snap-w35',
+        at: '2026-09-08T09:00:00.000Z',
+        planPct: 75,
+        actualPct: 50,
+        itemCount: 6,
+        items: [
+          { id: 'g-1', name: 'Thiết kế cơ sở & Bóc tách xưởng', planPct: 100, actualPct: 100 },
+          { id: 'g-2', name: 'Gia công chế tạo Balong & Thân lò tại xưởng', planPct: 100, actualPct: 90 },
+          { id: 'g-3', name: 'Lắp đặt kết cấu thép & Đặt Balong lên khung móng', planPct: 80, actualPct: 50 },
+          { id: 'g-4', name: 'Hàn thân lò, ống sinh hơi & đường ống áp lực', planPct: 30, actualPct: 10 },
+          { id: 'g-5', name: 'Thử áp lực thủy lực (Hydrostatic test 1.5x)', planPct: 0, actualPct: 0 },
+          { id: 'g-6', name: 'Sấy lò, kiểm định an toàn & Bàn giao COD', planPct: 0, actualPct: 0 },
+        ],
+      },
+    ],
+    meetings: [
+      {
+        id: 'mt-1',
+        name: 'MT-08 · Giao ban tiến độ tuần 37',
+        date: '2026-09-20',
+        attendees: 'Ban QLDA Tổng thầu Nam Việt & Đại diện CĐT An Phát, TVGS An Phát, Các tổ trưởng',
+        agenda: 'Kiểm điểm tiến độ thân lò, kế hoạch thử áp hydrostatic và giải tỏa các vướng mắc hiện trường',
+        minutes: 'Đã thống nhất: CĐT cam kết ký duyệt phương án thử áp trước 24/09; Nam Việt bố trí thêm thợ hàn tăng ca đêm để bù 3 ngày chậm trễ.',
+        actions: [
+          {
+            id: 'act-1',
+            name: 'Tăng ca ca đêm tổ hàn ống hơi balong',
+            dueDate: '2026-09-21',
+            done: false,
+            pic: 'Chỉ huy trưởng Nguyễn Văn Hải',
+            generatedBottleneck: true,
+          },
+          {
+            id: 'act-2',
+            name: 'Bàn giao mặt bằng khu vực xử lý nước cấp RO',
+            dueDate: '2026-09-24',
+            done: false,
+            pic: 'Trưởng BQL CĐT An Phát',
+            generatedBottleneck: false,
+          },
+          {
+            id: 'act-3',
+            name: 'Phê duyệt phương án thử áp thủy lực (HS-301)',
+            dueDate: '2026-09-24',
+            done: false,
+            pic: 'TVGS An Phát',
+            generatedBottleneck: false,
+          },
+        ],
+        attachments: [
+          {
+            name: 'BB_GiaoBan_Tuan37_AnPhat_Signed.pdf',
+            size: '2.8 MB',
+            url: '#',
+            uploadedAt: '2026-09-20',
+          },
+          {
+            name: 'Hinh_Anh_Hien_Truong_Balong_Tuan37.zip',
+            size: '14.5 MB',
+            url: '#',
+            uploadedAt: '2026-09-20',
+          },
+        ],
+      },
+      {
+        id: 'mt-2',
+        name: 'MT-07 · Giao ban tiến độ tuần 36',
+        date: '2026-09-13',
+        attendees: 'Nam Việt & CĐT An Phát',
+        agenda: 'Rà soát mốc lắp móng lò và gia công balong tại xưởng',
+        minutes: 'Nghiệm thu đạt 100% balong Đình Vũ; móng lò cơ bản hoàn thành.',
+        actions: [],
+        attachments: [
+          {
+            name: 'Bien_Ban_Hop_Tuan_36_Full.pdf',
+            size: '1.9 MB',
+            url: '#',
+            uploadedAt: '2026-09-13',
+          },
+        ],
+      },
+      {
+        id: 'mt-3',
+        name: 'MT-06 · Họp giải quyết sự cố mặt bằng móng lò',
+        date: '2026-09-06',
+        attendees: 'Nam Việt, CĐT, Nhà thầu phụ móng',
+        agenda: 'Xử lý lún đầu cọc trục A2',
+        minutes: 'Đã gia cố ép thêm 2 cọc phụ, nghiệm thu tải trọng đạt yêu cầu.',
+        actions: [],
+        attachments: [
+          {
+            name: 'BB_Xu_Ly_Su_Co_Coc_A2_Signed.pdf',
+            size: '3.1 MB',
+            url: '#',
+            uploadedAt: '2026-09-06',
+          },
+        ],
+      },
+    ],
+  },
+};
+
 export interface CskhOpsStore {
   byProject: Record<string, CskhProjectOps>;
 }
 
-const EMPTY_STORE: CskhOpsStore = { byProject: {} };
 const DAY_MS = 24 * 60 * 60 * 1000;
 const MAX_SNAPSHOTS = 50;
 
-export function emptyProjectOps(): CskhProjectOps {
+export function emptyProjectOps(projectCode?: string): CskhProjectOps {
+  const seed = projectCode && DEFAULT_SEED_OPS[projectCode] ? DEFAULT_SEED_OPS[projectCode] : null;
+  if (seed) {
+    return {
+      bottlenecks: [...seed.bottlenecks],
+      requests: [...seed.requests],
+      ganttItems: [...seed.ganttItems],
+      snapshots: [...seed.snapshots],
+      meetings: [...seed.meetings],
+    };
+  }
   return {
     bottlenecks: [],
     requests: [],
@@ -119,11 +462,25 @@ export function emptyProjectOps(): CskhProjectOps {
 export function loadOpsStore(): CskhOpsStore {
   try {
     const raw = localStorage.getItem(CSKH_OPS_STORAGE_KEY);
-    if (!raw) return EMPTY_STORE;
+    if (!raw) {
+      return {
+        byProject: {
+          'LH-01': emptyProjectOps('LH-01'),
+        },
+      };
+    }
     const parsed = JSON.parse(raw) as CskhOpsStore;
-    return { byProject: parsed.byProject ?? {} };
+    const byProject = parsed.byProject ?? {};
+    if (!byProject['LH-01'] || !byProject['LH-01'].bottlenecks || byProject['LH-01'].bottlenecks.length === 0 || !byProject['LH-01'].ganttItems[0]?.department) {
+      byProject['LH-01'] = emptyProjectOps('LH-01');
+    }
+    return { byProject };
   } catch {
-    return EMPTY_STORE;
+    return {
+      byProject: {
+        'LH-01': emptyProjectOps('LH-01'),
+      },
+    };
   }
 }
 
@@ -132,7 +489,7 @@ export function saveOpsStore(store: CskhOpsStore): void {
 }
 
 export function projectOps(store: CskhOpsStore, code: string): CskhProjectOps {
-  return store.byProject[code] ?? emptyProjectOps();
+  return store.byProject[code] ?? emptyProjectOps(code);
 }
 
 export function patchProjectOps(store: CskhOpsStore, code: string, next: CskhProjectOps): CskhOpsStore {
@@ -285,25 +642,27 @@ export function ganttItemStatus(item: CskhGanttItem, now = Date.now()): CskhProg
 }
 
 export function ganttKpis(items: CskhGanttItem[], now = Date.now()) {
-  const completed = items.filter(row => row.actualPct >= 100).length;
-  const delayed = items.filter(row => {
+  const hasGroups = items.some(row => row.isGroup);
+  const targetItems = hasGroups ? items.filter(row => !row.isGroup) : items;
+  const completed = targetItems.filter(row => row.actualPct >= 100).length;
+  const delayed = targetItems.filter(row => {
     const status = ganttItemStatus(row, now);
     return status === 'slight_delay' || status === 'blocked';
   }).length;
-  const weight = items.map(row => Math.max(1, row.days));
+  const weight = targetItems.map(row => Math.max(1, row.days));
   const totalW = weight.reduce((sum, value) => sum + value, 0);
   const planPct = totalW
-    ? clampPct(items.reduce((sum, row, i) => sum + ganttItemPlanPct(row, now) * (weight[i] ?? 1), 0) / totalW)
+    ? clampPct(targetItems.reduce((sum, row, i) => sum + ganttItemPlanPct(row, now) * (weight[i] ?? 1), 0) / totalW)
     : 0;
   const actualPct = totalW
-    ? clampPct(items.reduce((sum, row, i) => sum + row.actualPct * (weight[i] ?? 1), 0) / totalW)
+    ? clampPct(targetItems.reduce((sum, row, i) => sum + row.actualPct * (weight[i] ?? 1), 0) / totalW)
     : 0;
   const lastEnd = items.reduce((max, row) => {
     const end = Date.parse(row.endDate);
     return Number.isFinite(end) && end > max ? end : max;
   }, 0);
   return {
-    total: items.length,
+    total: targetItems.length,
     completed,
     delayed,
     planPct,

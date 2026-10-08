@@ -1,3 +1,4 @@
+import type React from 'react';
 import { Package, DollarSign, Warehouse, TrendingUp, ArrowUpRight, Activity, AlertTriangle, RefreshCw, ChevronDown } from 'lucide-react';
 import type { CSSProperties } from 'react';
 import type { XAxisTickContentProps } from 'recharts';

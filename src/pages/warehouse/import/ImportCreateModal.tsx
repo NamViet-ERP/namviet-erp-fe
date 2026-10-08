@@ -1,3 +1,4 @@
+import type React from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Modal from '../../../components/ui/Modal';
 import { formatCurrency } from '../../../utils/formatCurrency';

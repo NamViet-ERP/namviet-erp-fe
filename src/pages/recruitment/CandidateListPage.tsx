@@ -1,8 +1,9 @@
+import type React from 'react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RotateCcw, FileText, Download, Users, Bell, Briefcase, Calendar, Gift, UserX, Plus } from 'lucide-react';
 import HrmDatePicker from '../../components/hr/HrmDatePicker';
-import { toIsoDate, isoToDisplay } from '../../lib/dates';
+import { toIsoDate } from '../../lib/dates';
 import PageHeader from '../../components/ui/PageHeader';
 import SearchBar from '../../components/ui/SearchBar';
 import Pagination from '../../components/ui/Pagination';
@@ -57,8 +58,8 @@ export default function CandidateListPage() {
     source: selectedSource || undefined,
     hrResponsible: selectedHr || undefined,
     status: newCvOnly ? 'New' : (selectedStatus || undefined),
-    dateFrom: dateFrom ? isoToDisplay(dateFrom) : undefined,
-    dateTo: dateTo ? isoToDisplay(dateTo) : undefined,
+    dateFrom: dateFrom || undefined,
+    dateTo: dateTo || undefined,
   });
 
   const candidates = data?.items ?? [];

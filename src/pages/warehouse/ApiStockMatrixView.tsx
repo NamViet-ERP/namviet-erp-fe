@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import SearchBar from '../../components/ui/SearchBar';
 import Pagination from '../../components/ui/Pagination';
 import EmptyState from '../../components/ui/EmptyState';
@@ -36,7 +36,17 @@ export default function ApiStockMatrixView() {
   const [pageSize, setPageSize] = useState(15);
   const [selectedRow, setSelectedRow] = useState<StockMatrixRowApiDto | null>(null);
 
-  const projects = rows[0]?.projects ?? [];
+  const projects = useMemo(() => {
+    const map = new Map<string, { projectCode: string; projectName: string }>();
+    for (const row of rows) {
+      for (const p of row.projects) {
+        if (!map.has(p.projectCode)) {
+          map.set(p.projectCode, { projectCode: p.projectCode, projectName: p.projectName });
+        }
+      }
+    }
+    return Array.from(map.values());
+  }, [rows]);
 
   const filtered = rows.filter(row => {
     const q = search.toLowerCase();

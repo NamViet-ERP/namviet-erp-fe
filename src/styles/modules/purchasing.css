@@ -1402,26 +1402,8 @@
     font-variant-numeric: tabular-nums;
   }
   .pur-erp--plan .hrm-stat-grid {
-    gap: 1px;
-    margin: 0;
-    border: 1px solid var(--nv-epc-border);
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    background: var(--nv-epc-border);
     grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-  .pur-erp--plan .hrm-stat-grid .hrm-stat-card {
-    border: none;
-    border-radius: 0;
-    padding: 14px 16px;
-    animation: none;
-    box-shadow: none;
-  }
-  .pur-erp--plan .hrm-stat-grid .hrm-stat-card::before {
-    border-radius: 0;
-  }
-  .pur-erp--plan .hrm-stat-grid > * {
-    animation: none;
+    margin-bottom: 1rem;
   }
   @media (max-width: 899px) {
     .pur-erp--plan .hrm-stat-grid {
@@ -1448,10 +1430,10 @@
       var(--md-surface-container);
   }
   .pur-erp--plan .pur-erp__workspace > .pur-erp__filter-card:not(.pur-erp__filter-card--plan) {
-    padding: 0.75rem 1rem;
-    background: var(--md-warning-container);
-    border-bottom: 1px solid color-mix(in srgb, var(--nv-amber) 40%, var(--nv-epc-border));
-    box-shadow: inset 4px 0 0 var(--nv-amber);
+    padding: 0.85rem 1rem;
+    background: var(--md-surface-container);
+    border-bottom: 1px solid var(--nv-epc-border);
+    box-shadow: none;
   }
   .pur-erp--plan .pur-erp__filter-card--plan {
     gap: 0;
@@ -5770,7 +5752,7 @@
     overflow: visible;
   }
 
-  body * {
+  body:has(.pur-dntt__preview-sheet, .po-voucher-print-sheet) * {
     visibility: hidden;
   }
   .pur-dntt__preview-sheet,

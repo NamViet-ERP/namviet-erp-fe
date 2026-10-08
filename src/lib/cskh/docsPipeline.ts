@@ -77,37 +77,299 @@ export interface CskhFeedbackItem {
   done: boolean;
 }
 
+export type CskhUnifiedStage = 'draft_review' | 'handover_signed' | 'feedback_pending' | 'approved' | 'archived';
+export type CskhUnifiedStatus = 'drafting' | 'pending_handover' | 'overdue' | 'awaiting_client' | 'approved';
+
+export interface CskhUnifiedDoc {
+  id: string;
+  code: string;
+  name: string;
+  docType: string;
+  stage: CskhUnifiedStage;
+  author?: string;
+  internalApproved: boolean;
+  handoverSigned: boolean;
+  handoverDate?: string | null;
+  handoverRecipient?: string | null;
+  slaDueDate?: string;
+  overdueDays: number;
+  status: CskhUnifiedStatus;
+  statusLabel: string;
+  category?: string;
+  fileSize?: string;
+  fileName?: string;
+  downloadUrl?: string | null;
+}
+
+export const DEFAULT_SEED_DOCUMENTS: Record<string, CskhUnifiedDoc[]> = {
+  'LH-01': [
+    {
+      id: 'doc-1',
+      code: 'HS-301',
+      name: 'Phương án Thử áp lực thủy lực & Kiểm định balong',
+      docType: 'Đệ trình thi công',
+      stage: 'feedback_pending',
+      author: 'KS Lê Minh Tuấn · Gắn với Gantt #5 Thử áp',
+      internalApproved: true,
+      handoverSigned: true,
+      handoverDate: '2026-09-05',
+      handoverRecipient: 'Nguyễn Văn B (CĐT)',
+      slaDueDate: '2026-09-10',
+      overdueDays: 12,
+      status: 'overdue',
+      statusLabel: 'Quá hạn SLA 12 ngày',
+      category: 'Đệ trình kỹ thuật',
+      fileSize: '5.4 MB',
+      fileName: 'PA-Thu-Ap-Balong-LH01.pdf',
+    },
+    {
+      id: 'doc-2',
+      code: 'HS-304',
+      name: 'Hồ sơ chứng chỉ CO/CQ lô van hơi áp lực Kitz Nhật Bản',
+      docType: 'Hồ sơ vật tư',
+      stage: 'feedback_pending',
+      author: 'Phòng Cung ứng · Đệ trình lần 1',
+      internalApproved: true,
+      handoverSigned: true,
+      handoverDate: '2026-09-08',
+      handoverRecipient: 'TVGS An Phát tiếp nhận',
+      slaDueDate: '2026-09-13',
+      overdueDays: 9,
+      status: 'overdue',
+      statusLabel: 'TVGS giữ lại quá hạn',
+      category: 'CO/CQ & Xuất xưởng',
+      fileSize: '8.2 MB',
+      fileName: 'CO-CQ-Van-Kitz-Japan.pdf',
+    },
+    {
+      id: 'doc-3',
+      code: 'HS-308',
+      name: 'Đệ trình vật tư quạt thổi cao áp FD Fan 55kW',
+      docType: 'Đệ trình thiết bị',
+      stage: 'draft_review',
+      author: 'Kỹ sư Nguyễn Văn Hải',
+      internalApproved: false,
+      handoverSigned: false,
+      slaDueDate: '2026-09-24',
+      overdueDays: 0,
+      status: 'drafting',
+      statusLabel: 'Chờ duyệt nội bộ',
+      category: 'Đệ trình kỹ thuật',
+      fileSize: '3.1 MB',
+      fileName: 'De-Trinh-Quat-FD-55kW.pdf',
+    },
+    {
+      id: 'doc-4',
+      code: 'HS-298',
+      name: 'Biên bản nghiệm thu lắp đặt kết cấu móng & giá đỡ thân lò',
+      docType: 'Nghiệm thu giai đoạn',
+      stage: 'approved',
+      author: 'Biên bản nghiệm thu 3 bên CĐT - Tổng thầu - TVGS',
+      internalApproved: true,
+      handoverSigned: true,
+      handoverDate: '2026-08-20',
+      handoverRecipient: 'Đã ký đóng dấu đỏ đủ 3 bên',
+      slaDueDate: '2026-08-20',
+      overdueDays: 0,
+      status: 'approved',
+      statusLabel: 'Đã chấp thuận chính thức',
+      category: 'Nghiệm thu lắp đặt',
+      fileSize: '4.8 MB',
+      fileName: 'BB-NT-M01-signed.pdf',
+    },
+    {
+      id: 'arc-1',
+      code: 'ARC-01',
+      name: 'Biên bản nghiệm thu tĩnh kết cấu thép đỡ balong',
+      docType: 'Biên bản nghiệm thu',
+      stage: 'archived',
+      author: 'Ban chỉ huy công trường Nam Việt',
+      internalApproved: true,
+      handoverSigned: true,
+      handoverDate: '2026-08-15',
+      handoverRecipient: 'CĐT An Phát',
+      slaDueDate: '2026-08-15',
+      overdueDays: 0,
+      status: 'approved',
+      statusLabel: 'Lưu trữ chính thức',
+      category: 'Nghiệm thu lắp đặt',
+      fileSize: '4.8 MB',
+      fileName: 'BB-NT-M01-signed.pdf',
+    },
+    {
+      id: 'arc-2',
+      code: 'ARC-02',
+      name: 'Chứng chỉ xuất xưởng & kiểm tra siêu âm mối hàn balong',
+      docType: 'CO/CQ Xuất xưởng',
+      stage: 'archived',
+      author: 'Xưởng Chế tạo Cơ khí Nam Việt',
+      internalApproved: true,
+      handoverSigned: true,
+      handoverDate: '2026-07-10',
+      handoverRecipient: 'TVGS An Phát',
+      slaDueDate: '2026-07-10',
+      overdueDays: 0,
+      status: 'approved',
+      statusLabel: 'Lưu trữ chính thức',
+      category: 'CO/CQ & Xuất xưởng',
+      fileSize: '12.5 MB',
+      fileName: 'CO-CQ-Balong-D1400.pdf',
+    },
+    {
+      id: 'arc-3',
+      code: 'ARC-03',
+      name: 'Bản vẽ hoàn công As-built hệ thống đường ống hơi chính',
+      docType: 'Bản vẽ As-built',
+      stage: 'archived',
+      author: 'Phòng Kỹ thuật Thiết kế Nam Việt',
+      internalApproved: true,
+      handoverSigned: true,
+      handoverDate: '2026-09-01',
+      handoverRecipient: 'CĐT An Phát',
+      slaDueDate: '2026-09-01',
+      overdueDays: 0,
+      status: 'approved',
+      statusLabel: 'Lưu trữ chính thức',
+      category: 'Bản vẽ As-built',
+      fileSize: '18.2 MB',
+      fileName: 'Asbuilt-Steam-Pipe-Rev2.dwg',
+    },
+    {
+      id: 'arc-4',
+      code: 'ARC-04',
+      name: 'Quy trình vận hành an toàn lò hơi & Lịch bảo dưỡng 48T',
+      docType: 'Tài liệu vận hành',
+      stage: 'archived',
+      author: 'Chuyên gia Vận hành Nam Việt',
+      internalApproved: true,
+      handoverSigned: true,
+      handoverDate: '2026-09-20',
+      handoverRecipient: 'CĐT An Phát',
+      slaDueDate: '2026-09-20',
+      overdueDays: 0,
+      status: 'approved',
+      statusLabel: 'Lưu trữ chính thức',
+      category: 'Tài liệu vận hành',
+      fileSize: '3.1 MB',
+      fileName: 'QTVH-Boiler-30T-NamViet.pdf',
+    },
+  ],
+};
+
+DEFAULT_SEED_DOCUMENTS['LH 01'] = DEFAULT_SEED_DOCUMENTS['LH-01'];
+
+/**
+ * Chuẩn hóa và tự động tính toán thời hạn SLA / số ngày trễ hạn theo thời gian thực (Production Rule)
+ */
+export function applyDynamicSla(doc: CskhUnifiedDoc, now = Date.now()): CskhUnifiedDoc {
+  // 1. Hồ sơ đã duyệt hoặc đã lưu trữ hoàn công: Không bao giờ tính trễ
+  if (doc.stage === 'approved' || doc.stage === 'archived' || doc.status === 'approved') {
+    return {
+      ...doc,
+      overdueDays: 0,
+      status: 'approved',
+      statusLabel: doc.statusLabel || 'Đã chấp thuận chính thức',
+    };
+  }
+
+  // 2. Nếu không thiết lập ngày SLA
+  if (!doc.slaDueDate) {
+    return {
+      ...doc,
+      overdueDays: 0,
+    };
+  }
+
+  // 3. Tính toán chênh lệch ngày giữa hôm nay và SlaDueDate (Zero-out giờ/phút/giây để tính đúng số ngày lịch)
+  const dueDate = new Date(doc.slaDueDate);
+  dueDate.setHours(0, 0, 0, 0);
+  const nowDate = new Date(now);
+  nowDate.setHours(0, 0, 0, 0);
+
+  const diffMs = nowDate.getTime() - dueDate.getTime();
+  const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+
+  if (diffDays > 0) {
+    // Đã quá hạn
+    const isGenericOrOverdue = !doc.statusLabel 
+      || doc.statusLabel.startsWith('Quá hạn SLA') 
+      || doc.statusLabel.includes('Chờ') 
+      || doc.status === 'drafting';
+
+    return {
+      ...doc,
+      overdueDays: diffDays,
+      status: 'overdue',
+      statusLabel: isGenericOrOverdue ? `Quá hạn SLA ${diffDays} ngày` : doc.statusLabel,
+    };
+  }
+
+  // 4. Chưa quá hạn
+  return {
+    ...doc,
+    overdueDays: 0,
+    status: doc.status === 'overdue' ? 'awaiting_client' : doc.status,
+  };
+}
+
+export function getSeedDocuments(projectCode?: string): CskhUnifiedDoc[] {
+  if (!projectCode) return [];
+  const clean = projectCode.trim();
+  const alt = clean.includes(' ') ? clean.replace(/\s+/g, '-') : clean.replace(/-/g, ' ');
+  const raw = DEFAULT_SEED_DOCUMENTS[clean] ?? DEFAULT_SEED_DOCUMENTS[alt] ?? [];
+  return raw.map(d => applyDynamicSla(d));
+}
+
 export interface CskhProjectDocs {
   processes: CskhDocProcess[];
   drafts: CskhDraftDoc[];
   handovers: CskhHandover[];
   feedback: CskhFeedbackItem[];
+  unifiedDocs: CskhUnifiedDoc[];
 }
 
 export interface CskhDocsStore {
   byProject: Record<string, CskhProjectDocs>;
 }
 
-const EMPTY_STORE: CskhDocsStore = { byProject: {} };
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export function emptyProjectDocs(): CskhProjectDocs {
+export function emptyProjectDocs(projectCode?: string): CskhProjectDocs {
+  const seed = getSeedDocuments(projectCode);
   return {
     processes: [],
     drafts: [],
     handovers: [],
     feedback: [],
+    unifiedDocs: [...seed],
   };
 }
 
 export function loadDocsStore(): CskhDocsStore {
   try {
     const raw = localStorage.getItem(CSKH_DOCS_STORAGE_KEY);
-    if (!raw) return EMPTY_STORE;
+    if (!raw) {
+      return {
+        byProject: {
+          'LH-01': emptyProjectDocs('LH-01'),
+        },
+      };
+    }
     const parsed = JSON.parse(raw) as CskhDocsStore;
-    return { byProject: parsed.byProject ?? {} };
+    const byProject = parsed.byProject ?? {};
+    if (!byProject['LH-01'] || !byProject['LH-01'].unifiedDocs || byProject['LH-01'].unifiedDocs.length === 0) {
+      byProject['LH-01'] = {
+        ...(byProject['LH-01'] ?? emptyProjectDocs()),
+        unifiedDocs: [...(DEFAULT_SEED_DOCUMENTS['LH-01'] ?? [])],
+      };
+    }
+    return { byProject };
   } catch {
-    return EMPTY_STORE;
+    return {
+      byProject: {
+        'LH-01': emptyProjectDocs('LH-01'),
+      },
+    };
   }
 }
 
@@ -116,7 +378,14 @@ export function saveDocsStore(store: CskhDocsStore): void {
 }
 
 export function projectDocs(store: CskhDocsStore, code: string): CskhProjectDocs {
-  return store.byProject[code] ?? emptyProjectDocs();
+  if (!store.byProject[code]) {
+    return emptyProjectDocs(code);
+  }
+  const curr = store.byProject[code];
+  if (!curr.unifiedDocs && DEFAULT_SEED_DOCUMENTS[code]) {
+    return { ...curr, unifiedDocs: [...DEFAULT_SEED_DOCUMENTS[code]] };
+  }
+  return { ...curr, unifiedDocs: curr.unifiedDocs ?? [] };
 }
 
 export function patchProjectDocs(
@@ -291,3 +560,94 @@ export function archiveKpis(drafts: CskhDraftDoc[], now = Date.now()) {
     expiring: drafts.filter(row => row.stage !== 'archive' && isDeadlineOverdue(row.confirmDeadline, now)).length,
   };
 }
+
+export function unifiedDocsKpis(docs: CskhUnifiedDoc[] = []) {
+  const normalizedDocs = docs.map(d => applyDynamicSla(d));
+  const activeDocs = normalizedDocs.filter(d => d.stage !== 'archived');
+  const internalReview = activeDocs.filter(d => d.stage === 'draft_review').length;
+  const handoverSigned = activeDocs.filter(d => d.handoverSigned || d.stage === 'handover_signed').length;
+  const slaOverdue = activeDocs.filter(d => d.status === 'overdue' || (d.overdueDays != null && d.overdueDays > 0)).length;
+  const approved = activeDocs.filter(d => d.stage === 'approved').length;
+
+  return {
+    total: activeDocs.length,
+    internalReview,
+    handoverSigned,
+    slaOverdue,
+    approved,
+  };
+}
+
+export type CskhUnifiedDocFilter = 'all' | 'draft' | 'handover' | 'feedback' | 'overdue' | 'approved';
+
+export function filterUnifiedDocs(docs: CskhUnifiedDoc[] = [], filter: CskhUnifiedDocFilter = 'all'): CskhUnifiedDoc[] {
+  const normalizedDocs = docs.map(d => applyDynamicSla(d));
+  const nonArchived = normalizedDocs.filter(d => d.stage !== 'archived');
+  return nonArchived.filter(d => {
+    if (filter === 'draft') return d.stage === 'draft_review';
+    if (filter === 'handover') return d.stage === 'handover_signed';
+    if (filter === 'feedback') return d.stage === 'feedback_pending';
+    if (filter === 'overdue') return d.status === 'overdue' || (d.overdueDays != null && d.overdueDays > 0);
+    if (filter === 'approved') return d.stage === 'approved';
+    return true;
+  });
+}
+
+export function upsertUnifiedDoc(docs: CskhProjectDocs, item: CskhUnifiedDoc): CskhProjectDocs {
+  const existing = docs.unifiedDocs ?? [];
+  return {
+    ...docs,
+    unifiedDocs: upsertById(existing, item),
+  };
+}
+
+export function removeUnifiedDoc(docs: CskhProjectDocs, id: string): CskhProjectDocs {
+  return {
+    ...docs,
+    unifiedDocs: removeById(docs.unifiedDocs ?? [], id),
+  };
+}
+
+export type CskhArchiveCategoryFilter = 'all' | 'acceptance' | 'cocq' | 'asbuilt' | 'warranty';
+
+export function archiveOverviewKpis(docs: CskhUnifiedDoc[] = []) {
+  const archiveDocs = docs.filter(d => d.stage === 'archived' || d.stage === 'approved');
+  const asbuiltAndCocq = archiveDocs.filter(
+    d => d.category?.includes('As-built') || d.category?.includes('CO/CQ') || d.docType?.includes('As-built') || d.docType?.includes('CO/CQ')
+  ).length;
+
+  return {
+    totalArchived: archiveDocs.length,
+    asbuiltAndCocq,
+    warrantyMonthsRemaining: 42, // Countdown 42/48 months
+  };
+}
+
+export function filterArchiveDocs(docs: CskhUnifiedDoc[] = [], filter: CskhArchiveCategoryFilter = 'all'): CskhUnifiedDoc[] {
+  const archiveDocs = docs.filter(d => d.stage === 'archived' || d.stage === 'approved');
+  return archiveDocs.filter(d => {
+    const cat = (d.category || '').toLowerCase();
+    const dt = (d.docType || '').toLowerCase();
+    if (filter === 'acceptance') return cat.includes('nghiệm thu') || dt.includes('nghiệm thu');
+    if (filter === 'cocq') return cat.includes('co/cq') || dt.includes('co/cq') || cat.includes('xuất xưởng') || dt.includes('xuất xưởng');
+    if (filter === 'asbuilt') return cat.includes('as-built') || dt.includes('as-built') || cat.includes('hoàn công') || dt.includes('hoàn công');
+    if (filter === 'warranty') return cat.includes('vận hành') || dt.includes('vận hành') || cat.includes('bảo dưỡng') || dt.includes('bảo dưỡng') || cat.includes('48t');
+    return true;
+  });
+}
+
+/**
+ * Phân định class màu sắc ngữ nghĩa cho loại / danh mục hồ sơ đệ trình & hoàn công
+ */
+export function getDocTypeTagClass(typeOrCategory?: string): string {
+  const text = (typeOrCategory || '').toLowerCase();
+  if (text.includes('nghiệm thu')) return 'cskh-tag--inspection';
+  if (text.includes('vật tư')) return 'cskh-tag--material';
+  if (text.includes('thiết bị')) return 'cskh-tag--equipment';
+  if (text.includes('thi công') || text.includes('phương án') || text.includes('kỹ thuật')) return 'cskh-tag--submission';
+  if (text.includes('co/cq') || text.includes('xuất xưởng')) return 'cskh-tag--cocq';
+  if (text.includes('as-built') || text.includes('hoàn công') || text.includes('bản vẽ')) return 'cskh-tag--asbuilt';
+  if (text.includes('vận hành') || text.includes('bảo dưỡng') || text.includes('48t')) return 'cskh-tag--operation';
+  return 'cskh-tag--default';
+}
+

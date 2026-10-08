@@ -8,9 +8,7 @@ import {
   isCskhProjectTab,
 } from '../../constants/cskhProject';
 import CskhProjectMissing from './CskhProjectMissing';
-import CskhDocsDraftPage from './CskhDocsDraftPage';
-import CskhDocsHandoverPage from './CskhDocsHandoverPage';
-import CskhDocsFeedbackPage from './CskhDocsFeedbackPage';
+import CskhDocsPipelinePage from './CskhDocsPipelinePage';
 import CskhDocsArchivePage from './CskhDocsArchivePage';
 import CskhBottlenecksPage from './CskhBottlenecksPage';
 import CskhRequestsPage from './CskhRequestsPage';
@@ -28,9 +26,9 @@ export default function CskhProjectSectionPage() {
 
   if (!project) return <CskhProjectMissing loading={isLoading} />;
 
-  if (tab === 'docs-draft') return <CskhDocsDraftPage project={project} />;
-  if (tab === 'docs-handover') return <CskhDocsHandoverPage project={project} />;
-  if (tab === 'docs-feedback') return <CskhDocsFeedbackPage project={project} />;
+  if (tab === 'docs') {
+    return <CskhDocsPipelinePage project={project} />;
+  }
   if (tab === 'docs-archive') return <CskhDocsArchivePage project={project} />;
   if (tab === 'bottlenecks') return <CskhBottlenecksPage project={project} />;
   if (tab === 'requests') return <CskhRequestsPage project={project} />;

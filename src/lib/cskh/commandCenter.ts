@@ -50,6 +50,9 @@ export interface CskhCommandProject {
   pmName?: string;
   clientName?: string | null;
   source: 'wms' | 'local';
+  boilerType?: string;
+  capacity?: string;
+  targetCodDate?: string;
 }
 
 export interface CskhProjectDraft {
@@ -76,10 +79,12 @@ export interface CskhProjectDraft {
   warrantyMonths?: number;
   phaseMode?: CskhPhaseMode;
   notes?: string;
+  targetCodDate?: string;
 }
 
 export interface CskhProjectRecord extends CskhCommandProject {
   startDate?: string;
+  contractSignedDate?: string;
   advanceDate?: string;
   acceptanceDate?: string;
   warrantyMonths?: number;
@@ -90,6 +95,7 @@ export interface CskhProjectRecord extends CskhCommandProject {
   capacity?: string;
   priority?: string;
   notes?: string;
+  targetCodDate?: string;
 }
 
 export interface CskhProjectPatch {
@@ -100,6 +106,19 @@ export interface CskhProjectPatch {
   bottleneckCount?: number;
   planPct?: number;
   actualPct?: number;
+  name?: string;
+  clientName?: string | null;
+  pmName?: string;
+  salesName?: string;
+  startDate?: string | null;
+  contractSignedDate?: string | null;
+  advanceDate?: string | null;
+  boilerType?: string | null;
+  industry?: string | null;
+  capacity?: string | null;
+  priority?: string | null;
+  targetCodDate?: string | null;
+  notes?: string | null;
 }
 
 interface CskhOverlay {
@@ -113,16 +132,28 @@ interface CskhOverlay {
   acceptanceDate?: string;
   warrantyMonths?: number;
   phaseMode?: CskhPhaseMode;
+  name?: string;
+  clientName?: string | null;
+  pmName?: string;
+  salesName?: string;
+  startDate?: string;
+  contractSignedDate?: string;
+  advanceDate?: string;
+  boilerType?: string;
+  industry?: string;
+  capacity?: string;
+  priority?: string;
+  targetCodDate?: string;
+  notes?: string;
 }
 
 interface CskhCommandStore {
   overlays: Record<string, CskhOverlay>;
   localProjects: CskhProjectDraft[];
+  deletedCodes?: string[];
 }
 
 const STORAGE_KEY = 'nv-cskh-command-center';
-
-const EMPTY_STORE: CskhCommandStore = { overlays: {}, localProjects: [] };
 
 export function clampPct(value: number): number {
   if (!Number.isFinite(value)) return 0;
@@ -202,17 +233,101 @@ export function progressGridCopy(status: CskhProgressStatus): { badge: string; s
   return { badge: 'Đúng tiến độ', summary: 'Đúng / vượt tiến độ' };
 }
 
+export const DEFAULT_SEED_PROJECTS: CskhProjectDraft[] = [
+  {
+    code: 'LH-01',
+    name: 'Lò Hơi Biomass Tầng Sôi 30T - Chain Yarn',
+    year: 2026,
+    phaseId: 'mech',
+    planPct: 100,
+    actualPct: 58,
+    bottleneckCount: 5,
+    pendingDocs: 3,
+    warrantyWatch: true,
+    clientName: 'Công ty TNHH Chain Yarn Việt Nam',
+    pmName: 'Phan Văn Nam',
+    salesName: 'Trần Văn A',
+    startDate: '2026-05-15',
+    boilerType: 'Biomass Tầng sôi',
+    capacity: '30 Tấn/h',
+    industry: 'Giấy',
+    priority: 'high',
+    acceptanceDate: undefined,
+    warrantyMonths: 48,
+    phaseMode: 'auto',
+    notes: 'Dự án EPC trọng điểm lò hơi Biomass 30 Tấn/h cho Chain Yarn',
+    targetCodDate: '2026-10-15',
+  },
+  {
+    code: 'LH-02',
+    name: 'Phenikaa LPG Boiler',
+    year: 2026,
+    phaseId: 'commission',
+    planPct: 75,
+    actualPct: 72,
+    bottleneckCount: 0,
+    pendingDocs: 1,
+    warrantyWatch: false,
+    clientName: 'Tập đoàn Phenikaa',
+    pmName: 'Lê Minh Tuấn',
+    startDate: '2026-06-01',
+    boilerType: 'LPG Gas',
+    capacity: '15 Tấn/h',
+    industry: 'Công nghiệp',
+    priority: 'normal',
+    acceptanceDate: undefined,
+    warrantyMonths: 24,
+    phaseMode: 'auto',
+    notes: 'Chuẩn bị nghiệm thu bàn giao mốc COD.',
+    targetCodDate: '2026-11-20',
+  },
+  {
+    code: 'LH-03',
+    name: 'Dệt May Vĩnh Long',
+    year: 2026,
+    phaseId: 'survey',
+    planPct: 24,
+    actualPct: 16,
+    bottleneckCount: 0,
+    pendingDocs: 0,
+    warrantyWatch: false,
+    clientName: 'Dệt May Vĩnh Long',
+    pmName: 'Trần Văn C',
+    startDate: '2026-08-10',
+    boilerType: 'Ghi xích',
+    capacity: '10 Tấn/h',
+    industry: 'Dệt nhuộm',
+    priority: 'low',
+    acceptanceDate: undefined,
+    warrantyMonths: 12,
+    phaseMode: 'manual',
+    notes: 'Đang khảo sát mặt bằng.',
+    targetCodDate: '2026-12-30',
+  },
+];
+
 export function loadCommandStore(): CskhCommandStore {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return EMPTY_STORE;
+    if (!raw) {
+      return {
+        overlays: {},
+        localProjects: DEFAULT_SEED_PROJECTS,
+      };
+    }
     const parsed = JSON.parse(raw) as CskhCommandStore;
+    const local = Array.isArray(parsed.localProjects) ? parsed.localProjects : [];
+    const hasLh01 = local.some(p => p.code === 'LH-01');
     return {
       overlays: parsed.overlays ?? {},
-      localProjects: Array.isArray(parsed.localProjects) ? parsed.localProjects : [],
+      localProjects: hasLh01 ? local : [...DEFAULT_SEED_PROJECTS, ...local],
+      deletedCodes: Array.isArray(parsed.deletedCodes) ? parsed.deletedCodes : [],
     };
   } catch {
-    return EMPTY_STORE;
+    return {
+      overlays: {},
+      localProjects: DEFAULT_SEED_PROJECTS,
+    };
   }
 }
 
@@ -224,28 +339,34 @@ export function mergeCommandProjects(
   warehouseProjects: WarehouseProjectApiDto[],
   store: CskhCommandStore,
 ): CskhCommandProject[] {
+  const deleted = new Set(store.deletedCodes ?? []);
   const wmsCodes = new Set(warehouseProjects.map(p => p.projectCode));
-  const fromWms = warehouseProjects.map(row => {
-    const overlay = store.overlays[row.projectCode] ?? {};
-    const year = overlay.year ?? (row.startDate ? new Date(row.startDate).getFullYear() : new Date().getFullYear());
-    return {
-      code: row.projectCode,
-      name: row.projectName,
-      year,
-      phaseId: overlay.phaseId ?? 'survey',
-      planPct: overlay.planPct ?? planPctFromDates(row.startDate, row.endDate),
-      actualPct: overlay.actualPct ?? actualPctFromStock(row.stockActualQty, row.stockPlannedQty),
-      bottleneckCount: overlay.bottleneckCount ?? 0,
-      pendingDocs: overlay.pendingDocs ?? 0,
-      warrantyWatch: overlay.warrantyWatch ?? false,
-      pmName: row.pmName,
-      clientName: row.clientName,
-      source: 'wms' as const,
-    };
-  });
+  const fromWms = warehouseProjects
+    .filter(row => !deleted.has(row.projectCode))
+    .map(row => {
+      const overlay = store.overlays[row.projectCode] ?? {};
+      const year = overlay.year ?? (row.startDate ? new Date(row.startDate).getFullYear() : new Date().getFullYear());
+      return {
+        code: row.projectCode,
+        name: overlay.name ?? row.projectName,
+        year,
+        phaseId: overlay.phaseId ?? 'survey',
+        planPct: overlay.planPct ?? planPctFromDates(row.startDate, row.endDate),
+        actualPct: overlay.actualPct ?? actualPctFromStock(row.stockActualQty, row.stockPlannedQty),
+        bottleneckCount: overlay.bottleneckCount ?? 0,
+        pendingDocs: overlay.pendingDocs ?? 0,
+        warrantyWatch: overlay.warrantyWatch ?? false,
+        pmName: overlay.pmName ?? row.pmName,
+        clientName: overlay.clientName !== undefined ? overlay.clientName : row.clientName,
+        source: 'wms' as const,
+        boilerType: overlay.boilerType,
+        capacity: overlay.capacity,
+        targetCodDate: overlay.targetCodDate,
+      };
+    });
 
   const localOnly = store.localProjects
-    .filter(row => !wmsCodes.has(row.code))
+    .filter(row => !wmsCodes.has(row.code) && !deleted.has(row.code))
     .map(row => ({ ...row, source: 'local' as const }));
 
   return [...fromWms, ...localOnly];
@@ -289,6 +410,19 @@ function applyOverlayPatch(prev: CskhOverlay, patch: CskhProjectPatch): CskhOver
   if (patch.bottleneckCount !== undefined) next.bottleneckCount = patch.bottleneckCount;
   if (patch.planPct !== undefined) next.planPct = clampPct(patch.planPct);
   if (patch.actualPct !== undefined) next.actualPct = clampPct(patch.actualPct);
+  if (patch.name !== undefined) next.name = patch.name;
+  if (patch.clientName !== undefined) next.clientName = patch.clientName;
+  if (patch.pmName !== undefined) next.pmName = patch.pmName;
+  if (patch.salesName !== undefined) next.salesName = patch.salesName;
+  if (patch.startDate !== undefined) next.startDate = patch.startDate || undefined;
+  if (patch.contractSignedDate !== undefined) next.contractSignedDate = patch.contractSignedDate || undefined;
+  if (patch.advanceDate !== undefined) next.advanceDate = patch.advanceDate || undefined;
+  if (patch.boilerType !== undefined) next.boilerType = patch.boilerType || undefined;
+  if (patch.industry !== undefined) next.industry = patch.industry || undefined;
+  if (patch.capacity !== undefined) next.capacity = patch.capacity || undefined;
+  if (patch.priority !== undefined) next.priority = patch.priority || undefined;
+  if (patch.targetCodDate !== undefined) next.targetCodDate = patch.targetCodDate || undefined;
+  if (patch.notes !== undefined) next.notes = patch.notes || undefined;
   return next;
 }
 
@@ -301,6 +435,19 @@ function applyDraftPatch(draft: CskhProjectDraft, patch: CskhProjectPatch): Cskh
   if (patch.bottleneckCount !== undefined) next.bottleneckCount = patch.bottleneckCount;
   if (patch.planPct !== undefined) next.planPct = clampPct(patch.planPct);
   if (patch.actualPct !== undefined) next.actualPct = clampPct(patch.actualPct);
+  if (patch.name !== undefined) next.name = patch.name;
+  if (patch.clientName !== undefined) next.clientName = patch.clientName;
+  if (patch.pmName !== undefined) next.pmName = patch.pmName;
+  if (patch.salesName !== undefined) next.salesName = patch.salesName;
+  if (patch.startDate !== undefined) next.startDate = patch.startDate || undefined;
+  if (patch.contractSignedDate !== undefined) next.contractSignedDate = patch.contractSignedDate || undefined;
+  if (patch.advanceDate !== undefined) next.advanceDate = patch.advanceDate || undefined;
+  if (patch.boilerType !== undefined) next.boilerType = patch.boilerType || undefined;
+  if (patch.industry !== undefined) next.industry = patch.industry || undefined;
+  if (patch.capacity !== undefined) next.capacity = patch.capacity || undefined;
+  if (patch.priority !== undefined) next.priority = patch.priority || undefined;
+  if (patch.targetCodDate !== undefined) next.targetCodDate = patch.targetCodDate || undefined;
+  if (patch.notes !== undefined) next.notes = patch.notes || undefined;
   return next;
 }
 
@@ -316,17 +463,22 @@ export function getProjectRecord(
   const wms = warehouseProjects.find(row => row.projectCode === code);
   return {
     ...base,
-    startDate: local?.startDate || wms?.startDate || undefined,
-    advanceDate: local?.advanceDate,
+    name: overlay.name ?? local?.name ?? base.name,
+    clientName: overlay.clientName !== undefined ? overlay.clientName : (local?.clientName ?? base.clientName),
+    pmName: overlay.pmName ?? local?.pmName ?? base.pmName,
+    startDate: overlay.startDate ?? local?.startDate ?? wms?.startDate ?? undefined,
+    contractSignedDate: overlay.contractSignedDate ?? local?.contractSignedDate,
+    advanceDate: overlay.advanceDate ?? local?.advanceDate,
     acceptanceDate: overlay.acceptanceDate ?? local?.acceptanceDate,
     warrantyMonths: overlay.warrantyMonths ?? local?.warrantyMonths,
     phaseMode: overlay.phaseMode ?? local?.phaseMode ?? 'auto',
-    salesName: local?.salesName,
-    boilerType: local?.boilerType,
-    industry: local?.industry,
-    capacity: local?.capacity,
-    priority: local?.priority,
-    notes: local?.notes,
+    salesName: overlay.salesName ?? local?.salesName,
+    boilerType: overlay.boilerType ?? local?.boilerType ?? base.boilerType,
+    industry: overlay.industry ?? local?.industry,
+    capacity: overlay.capacity ?? local?.capacity ?? base.capacity,
+    priority: overlay.priority ?? local?.priority,
+    notes: overlay.notes ?? local?.notes,
+    targetCodDate: overlay.targetCodDate ?? local?.targetCodDate ?? base.targetCodDate,
   };
 }
 
@@ -342,15 +494,39 @@ export function patchProjectRecord(
   const localProjects = store.localProjects.some(row => row.code === code)
     ? store.localProjects.map(row => (row.code === code ? applyDraftPatch(row, patch) : row))
     : store.localProjects;
-  return { overlays, localProjects };
+  return { ...store, overlays, localProjects };
+}
+
+export function deleteProjectRecord(store: CskhCommandStore, code: string): CskhCommandStore {
+  const localProjects = store.localProjects.filter(p => p.code !== code);
+  const overlays = { ...store.overlays };
+  delete overlays[code];
+  const deletedCodes = Array.from(new Set([...(store.deletedCodes ?? []), code]));
+  return { ...store, localProjects, overlays, deletedCodes };
 }
 
 export function addLocalProject(store: CskhCommandStore, draft: CskhProjectDraft): CskhCommandStore {
   const exists = store.localProjects.some(p => p.code === draft.code);
+  const nextDeleted = (store.deletedCodes ?? []).filter(c => c !== draft.code);
   return {
+    ...store,
+    deletedCodes: nextDeleted,
     overlays: {
       ...store.overlays,
       [draft.code]: {
+        name: draft.name,
+        clientName: draft.clientName,
+        pmName: draft.pmName,
+        salesName: draft.salesName,
+        startDate: draft.startDate,
+        contractSignedDate: draft.contractSignedDate,
+        advanceDate: draft.advanceDate,
+        boilerType: draft.boilerType,
+        industry: draft.industry,
+        capacity: draft.capacity,
+        priority: draft.priority,
+        targetCodDate: draft.targetCodDate,
+        notes: draft.notes,
         phaseId: draft.phaseId,
         planPct: draft.planPct,
         actualPct: draft.actualPct,

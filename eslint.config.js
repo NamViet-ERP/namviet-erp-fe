@@ -6,7 +6,7 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 import tseslint from 'typescript-eslint'
 
 export default defineConfig([
-  globalIgnores(['dist', '.agents', '.tmp*', '**/.tmp*', '**/*.tmp.*']),
+  globalIgnores(['dist', '.agents', '.tmp*', '**/.tmp*', '**/*.tmp.*', 'scripts/**', 'recovered_*.tsx']),
 
   /* ── JavaScript files ── */
   {

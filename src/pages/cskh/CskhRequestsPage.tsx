@@ -30,6 +30,7 @@ import {
 import CskhFilterTabs, { type CskhFilterOption } from './CskhFilterTabs';
 import CskhPickList from './CskhPickList';
 import type { CskhProjectRecord } from '../../lib/cskh/commandCenter';
+import CskhPipelineSteps from './CskhPipelineSteps';
 
 interface CskhRequestsPageProps {
   project: CskhProjectRecord;
@@ -155,6 +156,7 @@ export default function CskhRequestsPage({ project }: CskhRequestsPageProps) {
           </>
         )}
       />
+      <CskhPipelineSteps code={project.code} current="requests" />
 
       <div className="dashboard-kpi-grid cskh-project__kpi cskh-project__kpi--3" role="list" aria-label="Chỉ số yêu cầu">
         <Card className="cskh-desk__kpi-card" title="Tổng yêu cầu" value={kpis.total} subtitle={`${kpis.open} đang mở`} accent="info" />

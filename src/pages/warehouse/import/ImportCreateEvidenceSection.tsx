@@ -1,3 +1,4 @@
+import type React from 'react';
 import { FileText, Upload } from 'lucide-react';
 import type { ImportAttachment } from '../../../types';
 import FormField from '../../../components/ui/FormField';

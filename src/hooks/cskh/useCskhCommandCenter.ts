@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { useProjects } from '../useProjects';
 import {
   addLocalProject,
+  deleteProjectRecord,
   getProjectRecord,
   listFilterYears,
   loadCommandStore,
@@ -52,5 +53,9 @@ export function useCskhCommandCenter() {
     persist(patchProjectRecord(store, code, patch));
   }, [persist, store]);
 
-  return { projects, kpis, years, isLoading, moveProject, addProject, getProject, patchProject };
+  const deleteProject = useCallback((code: string) => {
+    persist(deleteProjectRecord(store, code));
+  }, [persist, store]);
+
+  return { projects, kpis, years, isLoading, moveProject, addProject, getProject, patchProject, deleteProject };
 }

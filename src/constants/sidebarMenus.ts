@@ -1,5 +1,5 @@
 import type { SidebarChildItem, SidebarMenuItem } from '../types';
-import { CSKH_MODULE_ENABLED, CSKH_VIEW_PERMISSION } from './cskh';
+import { CSKH_MODULE_ENABLED, CSKH_MODULE_LOCKED, CSKH_VIEW_PERMISSION } from './cskh';
 import {
   LayoutDashboard, Package,
   PackagePlus, PackageMinus, Settings,
@@ -445,7 +445,8 @@ export const unifiedSidebarMenu: SidebarMenuItem[] = [
         label: 'CSKH',
         icon: Headphones,
         path: '/cskh',
-        children: toSidebarChildren(cskhMenu),
+        badge: CSKH_MODULE_LOCKED ? 'Nâng cấp' : undefined,
+        children: CSKH_MODULE_LOCKED ? undefined : toSidebarChildren(cskhMenu),
       } satisfies SidebarMenuItem]
     : []),
   {

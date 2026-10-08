@@ -40,7 +40,7 @@ export default function ConfirmDialog({
     <div className="md-dialog-overlay">
       <div className="md-dialog-scrim" onClick={onClose} aria-hidden />
       <div
-        className="md-dialog md-dialog--confirm animate-scale-in"
+        className="md-dialog md-dialog--confirm animate-scale-in rounded-2xl shadow-2xl"
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="confirm-dialog-title"
@@ -54,13 +54,13 @@ export default function ConfirmDialog({
           <div id="confirm-dialog-message" className="md-confirm__message">{message}</div>
         </div>
         <div className="md-confirm__actions">
-          <Button type="button" variant="outlined" className="flex-1" onClick={onClose} disabled={isLoading}>
+          <Button type="button" variant="outlined" className="flex-1 rounded-lg" onClick={onClose} disabled={isLoading}>
             {cancelLabel}
           </Button>
           <Button
             type="button"
             variant={variant === 'danger' ? 'danger' : 'filled'}
-            className="flex-1"
+            className="flex-1 rounded-lg"
             onClick={onConfirm}
             disabled={isLoading || confirmDisabled}
           >

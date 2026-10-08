@@ -713,7 +713,8 @@
   .hrm-stat-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 12px;
+    gap: 14px;
+    margin-bottom: 16px;
   }
   .hrm-stat-card {
     --hrm-stat-accent: var(--nv-action);
@@ -722,25 +723,22 @@
     flex-direction: column;
     gap: 8px;
     min-width: 0;
-    padding: 14px 16px 14px 18px;
+    padding: 14px 16px;
     border-radius: var(--radius-md);
-    border: 1px solid color-mix(in srgb, var(--hrm-stat-accent) 24%, var(--nv-epc-border));
-    background: color-mix(in srgb, var(--hrm-stat-accent) 10%, var(--md-surface));
+    border: 1px solid var(--md-outline-variant02, #E2E8F0);
+    border-top: 3px solid var(--hrm-stat-accent, var(--nv-navy));
+    background: #FFFFFF;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
   }
   .hrm-stat-card::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-    border-radius: var(--radius-md) 0 0 var(--radius-md);
-    background: var(--hrm-stat-accent);
-    pointer-events: none;
+    display: none;
   }
   .hrm-stat-card:hover {
-    background: color-mix(in srgb, var(--hrm-stat-accent) 16%, var(--md-surface));
-    border-color: color-mix(in srgb, var(--hrm-stat-accent) 42%, var(--nv-epc-border));
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+    background: #FFFFFF;
+    border-color: color-mix(in srgb, var(--hrm-stat-accent) 30%, var(--md-outline-variant02));
   }
   .hrm-stat-card__head {
     display: flex;

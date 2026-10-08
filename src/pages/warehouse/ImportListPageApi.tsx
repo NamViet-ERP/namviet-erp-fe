@@ -110,12 +110,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
 
   const [search, setSearch] = useState('');
 
-  const [dateFrom, setDateFrom] = useState(() => {
-    const now = new Date();
-    const y = now.getFullYear();
-    const m = String(now.getMonth() + 1).padStart(2, '0');
-    return `${y}-${m}-01`;
-  });
+  const [dateFrom, setDateFrom] = useState('');
 
   const [dateTo, setDateTo] = useState('');
 

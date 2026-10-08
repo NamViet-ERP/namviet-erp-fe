@@ -1,5 +1,6 @@
+import type React from 'react';
 import { useMemo, useState } from 'react';
-import { Plus, Target, Trash2, Pencil } from 'lucide-react';
+import { Plus, Target, Trash2, Pencil, RotateCcw } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import HrmPanel from '../../components/hr/HrmPanel';
 import HrmStatCard from '../../components/hr/HrmStatCard';
@@ -39,6 +40,14 @@ export default function RecruitmentPlansPage() {
   const [filterPeriod, setFilterPeriod] = useState('');
   const [filterOpenMonth, setFilterOpenMonth] = useState('');
   const monthOptions = useMemo(() => buildRecentMonthFilterOptions(), []);
+  const hasFilters = Boolean(filterDepartmentId || filterStatus || filterPeriod.trim() || filterOpenMonth);
+
+  const resetFilters = () => {
+    setFilterDepartmentId('');
+    setFilterStatus('');
+    setFilterPeriod('');
+    setFilterOpenMonth('');
+  };
 
   const { data: plans = [], isLoading, isError, error, refetch } = useRecruitmentPlans({
     departmentId: filterDepartmentId ? Number(filterDepartmentId) : undefined,
@@ -202,6 +211,12 @@ export default function RecruitmentPlansPage() {
                   ))}
                 </select>
               </div>
+              {hasFilters && (
+                <button type="button" onClick={resetFilters} className="hrm-filter-reset">
+                  <RotateCcw size={14} aria-hidden />
+                  Xóa lọc
+                </button>
+              )}
             </div>
           </div>
         </div>

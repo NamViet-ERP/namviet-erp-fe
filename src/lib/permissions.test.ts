@@ -12,7 +12,6 @@ import {
   groupPermissionCatalog,
 } from './permissions/groupPermissionCatalog';
 import { getRequiredPermissionsForPath } from './routePermissions';
-import { departments } from '../constants/departments';
 
 describe('permissions', () => {
   const hrPermissions = [
@@ -41,7 +40,17 @@ describe('permissions', () => {
     );
     expect(items.map(i => i.id)).toEqual(['a']);
 
-    const visible = filterDepartments(departments, hrPermissions);
+    const mockDepartments = [
+      {
+        title: 'HRM',
+        items: [{ permission: 'hrm.candidates.view:all' }],
+      },
+      {
+        title: 'ADMIN',
+        items: [{ permission: 'admin.users.view:all' }],
+      },
+    ];
+    const visible = filterDepartments(mockDepartments, hrPermissions);
     expect(visible.some(d => d.title === 'HRM')).toBe(true);
     expect(visible.some(d => d.title === 'ADMIN')).toBe(false);
   });

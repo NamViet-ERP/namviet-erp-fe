@@ -1,3 +1,4 @@
+import type React from 'react';
 import { Download, Plus, Upload } from 'lucide-react';
 import type { ImportParseErrorApiDto } from '../../../types/api/importParseApi';
 

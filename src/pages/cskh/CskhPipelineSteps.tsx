@@ -5,17 +5,22 @@ import {
   type CskhProjectTabId,
 } from '../../constants/cskhProject';
 
-const STEPS = CSKH_PROJECT_TABS.filter(tab => tab.group === 'ops');
-
 interface CskhPipelineStepsProps {
   code: string;
   current: CskhProjectTabId;
 }
 
 export default function CskhPipelineSteps({ code, current }: CskhPipelineStepsProps) {
+  const currentMeta = CSKH_PROJECT_TABS.find((t) => t.id === current);
+  if (!currentMeta) return null;
+
+  const steps = CSKH_PROJECT_TABS.filter((tab) => tab.group === currentMeta.group);
+
+  if (steps.length <= 1) return null;
+
   return (
-    <nav className="cskh-pipe" aria-label="Pipeline hồ sơ - 4 bước">
-      {STEPS.map((tab, index) => (
+    <nav className="cskh-pipe" aria-label={`Pipeline - ${steps.length} bước`}>
+      {steps.map((tab, index) => (
         <NavLink
           key={tab.id}
           to={cskhProjectPath(code, tab.id)}

@@ -1,5 +1,5 @@
 import type { PermissionKey } from './permissions';
-import { CSKH_MODULE_ENABLED } from '../constants/cskh';
+import { CSKH_MODULE_ENABLED, CSKH_MODULE_LOCKED } from '../constants/cskh';
 
 export interface RoutePermissionRule {
   match: (pathname: string) => boolean;
@@ -91,7 +91,9 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
     permissions: SUPPLIERS,
   },
   ...(CSKH_MODULE_ENABLED
-    ? [{ match: (p: string) => p === '/cskh' || p.startsWith('/cskh/'), permissions: CSKH }]
+    ? (CSKH_MODULE_LOCKED
+        ? [{ match: (p: string) => p === '/cskh' || p.startsWith('/cskh/') }]
+        : [{ match: (p: string) => p === '/cskh' || p.startsWith('/cskh/'), permissions: CSKH }])
     : [{ match: (p: string) => p === '/cskh' || p.startsWith('/cskh/') }]),
   { match: p => p === '/technical' || p.startsWith('/technical/') },
 
@@ -142,7 +144,7 @@ export function getRequiredPermissionsForPath(pathname: string): PermissionKey[]
 
 export function getFallbackRoute(permissions: readonly PermissionKey[]): string {
   if (permissions.includes('wms.projects.view:all')) return '/operations/dashboard';
-  if (CSKH_MODULE_ENABLED && permissions.includes('cskh.dashboard.view')) return '/cskh';
+  if (CSKH_MODULE_ENABLED && !CSKH_MODULE_LOCKED && permissions.includes('cskh.dashboard.view')) return '/cskh';
   if (permissions.includes('wms.dashboard.view')) return '/warehouse/dashboard-warehouse';
   if (permissions.includes('purchasing.dashboard.view')) return '/purchasing/dashboard';
   if (permissions.includes('core.profile.view')) return '/profile';

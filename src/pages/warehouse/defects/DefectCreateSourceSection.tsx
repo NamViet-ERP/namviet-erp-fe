@@ -165,7 +165,7 @@ export default function DefectCreateSourceSection({
           <p className="text-xs">Đang tải dòng PO…</p>
         ) : poPreviewErrorState ? (
           <p className="text-xs text-[var(--md-error)]">
-            {getApiErrorMessage(poPreviewError, 'Không tải được dòng hàng từ PO. Kiểm tra API/migration.')}
+            {getApiErrorMessage(poPreviewError, 'Không tải được danh sách dòng hàng từ đơn mua (PO). Vui lòng thử lại hoặc liên hệ quản trị viên.')}
           </p>
         ) : (
           <DefectCreatePoLinesTable

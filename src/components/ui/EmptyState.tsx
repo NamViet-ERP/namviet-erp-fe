@@ -1,3 +1,4 @@
+import type React from 'react';
 import { PackageSearch } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 

@@ -1,3 +1,4 @@
+import type React from 'react';
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';

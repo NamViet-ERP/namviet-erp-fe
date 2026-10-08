@@ -1,3 +1,4 @@
+import type React from 'react';
 import { useMemo, useState } from 'react';
 import { Package, Plus, Trash2, RotateCcw } from 'lucide-react';
 import HrmPanel from '../../components/hr/HrmPanel';

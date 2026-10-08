@@ -1,3 +1,4 @@
+import type React from 'react';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Shield, Plus, Trash2, UserCog, Pencil, KeyRound } from 'lucide-react';

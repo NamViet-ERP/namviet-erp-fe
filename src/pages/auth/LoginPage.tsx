@@ -1,3 +1,4 @@
+import type React from 'react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Eye, EyeOff, ShieldAlert, FileText, Loader2 } from 'lucide-react';

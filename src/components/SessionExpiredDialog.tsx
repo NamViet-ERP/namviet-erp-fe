@@ -1,3 +1,4 @@
+import type React from 'react';
 import { useState, useSyncExternalStore } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Eye, EyeOff, ShieldAlert } from 'lucide-react';

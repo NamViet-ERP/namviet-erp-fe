@@ -173,16 +173,18 @@
     min-height: 0;
     height: auto;
     padding: 14px 16px;
-    border: 1px solid color-mix(in srgb, var(--kpi-accent) 22%, var(--md-outline-variant02));
+    border: 1px solid var(--md-outline-variant02);
+    border-top: 3px solid var(--kpi-accent, var(--nv-navy));
     border-radius: var(--radius-md);
-    box-shadow: none;
-    background: var(--nv-steel-light);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    background: #FFFFFF;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
   }
   .kpi-card.card-md:hover,
   .kpi-card.card-md:active {
-    box-shadow: none;
-    transform: none;
-    filter: brightness(0.97);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+    filter: none;
   }
   .kpi-card {
     --kpi-accent: var(--nv-steel);
@@ -366,40 +368,31 @@
   .kpi-card.card-md.kpi-card--accent-teal,
   .kpi-card.card-md.kpi-card--accent-info {
     --kpi-accent: var(--md-info);
-    background: var(--md-info-container);
   }
   .kpi-card.card-md.kpi-card--accent-amber {
     --kpi-accent: var(--nv-action);
-    background: color-mix(in srgb, var(--nv-action) 22%, var(--md-surface-container-high));
   }
   .kpi-card.card-md.kpi-card--accent-primary {
-    --kpi-accent: color-mix(in srgb, var(--nv-action) 55%, var(--md-success));
-    background: color-mix(in srgb, var(--md-success) 28%, var(--md-info-container));
+    --kpi-accent: var(--nv-action);
   }
   .kpi-card.card-md.kpi-card--accent-blue,
   .kpi-card.card-md.kpi-card--accent-success {
     --kpi-accent: var(--md-success);
-    background: var(--md-success-container);
   }
   .kpi-card.card-md.kpi-card--accent-purple {
     --kpi-accent: var(--nv-amber-dark);
-    background: color-mix(in srgb, var(--nv-amber) 32%, var(--md-surface-container-high));
   }
   .kpi-card.card-md.kpi-card--accent-warning {
     --kpi-accent: var(--md-warning);
-    background: var(--md-warning-container);
   }
   .kpi-card.card-md.kpi-card--accent-danger {
     --kpi-accent: var(--md-error);
-    background: var(--md-error-container);
   }
   .kpi-card.card-md.kpi-card--accent-neutral {
     --kpi-accent: var(--nv-navy);
-    background: color-mix(in srgb, var(--nv-navy) 22%, var(--md-surface-container-high));
   }
   .kpi-card.card-md.kpi-card--accent-stone {
     --kpi-accent: var(--nv-amber-dark);
-    background: color-mix(in srgb, var(--nv-amber) 26%, var(--md-surface-container-high));
   }
 
   /* ── Dropdown (MD3 menu) ── */
@@ -5547,30 +5540,7 @@
     box-shadow: none;
   }
   .app-shell--wms .hrm-stat-grid:not(.project-detail-stat-grid) {
-    gap: 1px;
-    margin: 0;
-    border: 1px solid var(--nv-epc-border);
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    background: var(--nv-epc-border);
-    grid-template-columns: repeat(auto-fit, minmax(11.5rem, 1fr));
-  }
-  .app-shell--wms .hrm-stat-grid:not(.project-detail-stat-grid) .hrm-stat-card {
-    border: none;
-    border-radius: 0;
-    padding: 14px 16px;
-    animation: none;
-    box-shadow: none;
-  }
-  .app-shell--wms .hrm-stat-grid:not(.project-detail-stat-grid) .hrm-stat-card::before {
-    border-radius: 0;
-  }
-  .app-shell--wms .hrm-stat-card:hover {
-    transform: none;
-    box-shadow: none;
-  }
-  .app-shell--wms .hrm-stat-grid > * {
-    animation: none;
+    margin-bottom: 16px;
   }
   .app-shell--wms .hrm-panel {
     border-radius: var(--radius-md);
@@ -6029,7 +5999,7 @@
     min-width: 78rem;
   }
   .project-detail-page .project-detail-stat-grid {
-    gap: 0.5rem;
+    gap: 12px;
   }
   .app-shell--wms .project-detail-page .project-detail-stat-grid .hrm-stat-card {
     padding: 11px 14px;

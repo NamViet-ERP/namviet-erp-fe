@@ -27,9 +27,36 @@ export type WarehouseProjectInventoryApiDto = Schemas['ProjectInventoryDto'] & {
 export type WarehouseProjectLedgerEntryApiDto = Schemas['ProjectLedgerEntryDto'];
 
 export type ProjectConstructionTaskStatus = 'planned' | 'in_progress' | 'completed' | 'late';
-export type ProjectConstructionTaskApiDto = Schemas['ProjectConstructionTaskDto'];
-export type CreateProjectConstructionTaskRequest = Schemas['CreateProjectConstructionTaskRequest'];
-export type UpdateProjectConstructionTaskRequest = Schemas['UpdateProjectConstructionTaskRequest'];
+export type ProjectConstructionTaskApiDto = Schemas['ProjectConstructionTaskDto'] & {
+  wbsCode?: string;
+  level?: number;
+  parentId?: string | null;
+  isGroup?: boolean;
+  department?: string | null;
+  statusLabel?: string | null;
+  statusTone?: string | null;
+  notes?: string | null;
+};
+export type CreateProjectConstructionTaskRequest = Schemas['CreateProjectConstructionTaskRequest'] & {
+  wbsCode?: string;
+  level?: number;
+  parentId?: string | null;
+  isGroup?: boolean;
+  department?: string | null;
+  statusLabel?: string | null;
+  statusTone?: string | null;
+  notes?: string | null;
+};
+export type UpdateProjectConstructionTaskRequest = Schemas['UpdateProjectConstructionTaskRequest'] & {
+  wbsCode?: string;
+  level?: number;
+  parentId?: string | null;
+  isGroup?: boolean;
+  department?: string | null;
+  statusLabel?: string | null;
+  statusTone?: string | null;
+  notes?: string | null;
+};
 
 export type ProjectPurchasingProgressLineApiDto = Schemas['ProjectPurchasingProgressLineDto'];
 export type ProjectPurchasingProgressReceiptLineApiDto = Schemas['ProjectPurchasingProgressReceiptLineDto'];

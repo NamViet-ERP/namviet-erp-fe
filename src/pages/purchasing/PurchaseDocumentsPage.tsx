@@ -44,6 +44,14 @@ export default function PurchaseDocumentsPage() {
     }),
     [page, pageSize, search, projectCode, poCode, docType],
   );
+  const hasFilters = Boolean(search.trim() || projectCode.trim() || poCode.trim() || docType);
+  const handleResetFilters = () => {
+    setSearch('');
+    setProjectCode('');
+    setPoCode('');
+    setDocType('');
+    setPage(1);
+  };
 
   const { data, isLoading, isError, error } = usePurchaseDocuments(listParams);
   const items = data?.items ?? [];
@@ -71,6 +79,8 @@ export default function PurchaseDocumentsPage() {
         setPage(1);
       }}
       searchPlaceholder="Tìm theo tên file, PO, NCC…"
+      hasFilters={hasFilters}
+      onResetFilters={handleResetFilters}
       filters={(
         <>
           <ProjectAutocomplete

@@ -7,6 +7,7 @@ import { FolderKanban } from 'lucide-react';
 import { unifiedSidebarMenu, hrmSettingsMenu } from '../../constants/sidebarMenus';
 import { cskhProjectCodeFromPath, cskhProjectMenu } from '../../constants/cskhProject';
 import { cskhSettingsMenu } from '../../constants/cskhSettings';
+import { CSKH_MODULE_LOCKED } from '../../constants/cskh';
 import { useSession } from '../../auth/AuthProvider';
 import { authService } from '../../services/authService';
 import {
@@ -137,9 +138,9 @@ export default function AppLayout() {
     location.pathname.startsWith('/purchasing') ? 'purchasing' : 'warehouse';
 
   const hideSidebar = location.pathname === '/profile';
-  const isCskhSettings = location.pathname.startsWith('/cskh/settings');
+  const isCskhSettings = !CSKH_MODULE_LOCKED && location.pathname.startsWith('/cskh/settings');
   const isHrmSettings = location.pathname.startsWith('/members/settings');
-  const cskhProjectCode = isCskhSettings ? null : cskhProjectCodeFromPath(location.pathname);
+  const cskhProjectCode = isCskhSettings || CSKH_MODULE_LOCKED ? null : cskhProjectCodeFromPath(location.pathname);
   const isCskhProject = Boolean(cskhProjectCode);
   const isWmsModule =
     currentModule === 'warehouse'

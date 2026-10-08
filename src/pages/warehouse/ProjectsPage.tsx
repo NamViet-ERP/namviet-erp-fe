@@ -1,3 +1,4 @@
+import type React from 'react';
 import { useState, type Dispatch, type SetStateAction } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, FolderKanban, CheckCircle2, Archive, X, Warehouse, Trash2 } from 'lucide-react';

@@ -1,3 +1,4 @@
+import type React from 'react';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Ruler, Plus, Trash2, Package, Pencil } from 'lucide-react';

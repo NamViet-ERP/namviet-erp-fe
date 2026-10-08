@@ -1,3 +1,4 @@
+import type React from 'react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Briefcase, Plus, Trash2, Link2, Copy, Check, ExternalLink, Users } from 'lucide-react';

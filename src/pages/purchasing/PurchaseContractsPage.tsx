@@ -181,6 +181,13 @@ export default function PurchaseContractsPage() {
     }),
     [page, pageSize, search, projectCode, status],
   );
+  const hasFilters = Boolean(search.trim() || projectCode.trim() || status);
+  const handleResetFilters = () => {
+    setSearch('');
+    setProjectCode('');
+    setStatus('');
+    setPage(1);
+  };
 
   const { data, isLoading, isError, error } = usePurchaseContracts(listParams);
   const detailQuery = usePurchaseContract(selectedId ?? undefined);
@@ -309,6 +316,8 @@ export default function PurchaseContractsPage() {
           setPage(1);
         }}
         searchPlaceholder="Tìm số HĐ, tiêu đề, PO, NCC…"
+        hasFilters={hasFilters}
+        onResetFilters={handleResetFilters}
         actions={(
           <div className="flex flex-wrap gap-2">
             {canCreate ? (

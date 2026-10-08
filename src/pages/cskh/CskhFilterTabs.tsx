@@ -2,7 +2,7 @@ export type CskhFilterTone = 'navy' | 'info' | 'danger' | 'warn' | 'ok' | 'muted
 
 export interface CskhFilterOption<T extends string> {
   id: T;
-  label: string;
+  label?: string;
   tone?: CskhFilterTone;
 }
 
@@ -10,7 +10,7 @@ interface CskhFilterTabsProps<T extends string> {
   value: T;
   options: CskhFilterOption<T>[];
   onChange: (id: T) => void;
-  label: string;
+  label?: string;
 }
 
 export default function CskhFilterTabs<T extends string>({

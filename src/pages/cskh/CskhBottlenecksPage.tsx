@@ -36,6 +36,7 @@ import {
 import CskhFilterTabs, { type CskhFilterOption } from './CskhFilterTabs';
 import CskhPickList from './CskhPickList';
 import type { CskhProjectRecord } from '../../lib/cskh/commandCenter';
+import CskhPipelineSteps from './CskhPipelineSteps';
 
 interface CskhBottlenecksPageProps {
   project: CskhProjectRecord;
@@ -159,6 +160,7 @@ export default function CskhBottlenecksPage({ project }: CskhBottlenecksPageProp
           <Button type="button" leftIcon={Plus} onClick={openCreate}>Tạo điểm nghẽn</Button>
         )}
       />
+      <CskhPipelineSteps code={project.code} current="bottlenecks" />
 
       <div className="dashboard-kpi-grid cskh-project__kpi" role="list" aria-label="Chỉ số điểm nghẽn">
         <Card className="cskh-desk__kpi-card" title="Điểm nghẽn đang mở" value={kpis.open} subtitle={`${ops.bottlenecks.length} tổng cộng`} accent="danger" />

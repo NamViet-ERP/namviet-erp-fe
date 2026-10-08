@@ -8,6 +8,8 @@ import {
   filterHandovers,
   handoverKpis,
   nextProcessOrder,
+  applyDynamicSla,
+  getDocTypeTagClass,
 } from './docsPipeline';
 
 describe('cskh docs pipeline', () => {
@@ -58,5 +60,58 @@ describe('cskh docs pipeline', () => {
     expect(archiveKpis(drafts).valid).toBe(1);
     expect(filterArchive(drafts, 'pending')).toHaveLength(1);
     expect(nextProcessOrder([{ id: '1', name: 'X', departmentId: 'tech', active: true, order: 5 }])).toBe(6);
+  });
+
+  it('calculates dynamic SLA overdue days accurately based on target date', () => {
+    const fixedNow = Date.parse('2026-10-05T12:00:00');
+
+    // 1. Hồ sơ quá hạn: Hạn 2026-09-10 vs Hôm nay 2026-10-05 => 25 ngày
+    const docOverdue = {
+      id: 'doc-1',
+      code: 'HS-301',
+      name: 'Phương án Thử áp lực',
+      docType: 'Đệ trình thi công',
+      stage: 'feedback_pending' as const,
+      internalApproved: true,
+      handoverSigned: true,
+      slaDueDate: '2026-09-10',
+      overdueDays: 0,
+      status: 'pending_handover' as const,
+      statusLabel: 'Chờ phản hồi',
+    };
+    const resOverdue = applyDynamicSla(docOverdue, fixedNow);
+    expect(resOverdue.overdueDays).toBe(25);
+    expect(resOverdue.status).toBe('overdue');
+    expect(resOverdue.statusLabel).toBe('Quá hạn SLA 25 ngày');
+
+    // 2. Hồ sơ đã chấp thuận: Không bao giờ trễ
+    const docApproved = {
+      ...docOverdue,
+      stage: 'approved' as const,
+      status: 'approved' as const,
+    };
+    const resApproved = applyDynamicSla(docApproved, fixedNow);
+    expect(resApproved.overdueDays).toBe(0);
+    expect(resApproved.status).toBe('approved');
+
+    // 3. Hồ sơ còn hạn trong tương lai
+    const docFuture = {
+      ...docOverdue,
+      slaDueDate: '2026-10-15',
+    };
+    const resFuture = applyDynamicSla(docFuture, fixedNow);
+    expect(resFuture.overdueDays).toBe(0);
+    expect(resFuture.status).toBe('pending_handover');
+  });
+
+  it('returns semantic color tag classes for document types', () => {
+    expect(getDocTypeTagClass('Nghiệm thu giai đoạn')).toBe('cskh-tag--inspection');
+    expect(getDocTypeTagClass('Hồ sơ vật tư')).toBe('cskh-tag--material');
+    expect(getDocTypeTagClass('Đệ trình thiết bị quạt')).toBe('cskh-tag--equipment');
+    expect(getDocTypeTagClass('Đệ trình thi công')).toBe('cskh-tag--submission');
+    expect(getDocTypeTagClass('CO/CQ xuất xưởng')).toBe('cskh-tag--cocq');
+    expect(getDocTypeTagClass('Bản vẽ As-built')).toBe('cskh-tag--asbuilt');
+    expect(getDocTypeTagClass('Vận hành & Bảo dưỡng 48T')).toBe('cskh-tag--operation');
+    expect(getDocTypeTagClass('Khác')).toBe('cskh-tag--default');
   });
 });

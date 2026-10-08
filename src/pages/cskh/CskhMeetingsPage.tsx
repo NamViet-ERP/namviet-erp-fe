@@ -28,6 +28,7 @@ import {
 } from '../../lib/cskh/opsWorkspace';
 import CskhPickList from './CskhPickList';
 import type { CskhProjectRecord } from '../../lib/cskh/commandCenter';
+import CskhPipelineSteps from './CskhPipelineSteps';
 
 interface CskhMeetingsPageProps {
   project: CskhProjectRecord;
@@ -143,6 +144,7 @@ export default function CskhMeetingsPage({ project }: CskhMeetingsPageProps) {
           <Button type="button" leftIcon={Plus} onClick={openCreate}>Tạo cuộc họp</Button>
         )}
       />
+      <CskhPipelineSteps code={project.code} current="meetings" />
 
       <div className="dashboard-kpi-grid cskh-project__kpi cskh-project__kpi--3" role="list" aria-label="Chỉ số cuộc họp">
         <Card className="cskh-desk__kpi-card" title="Cuộc họp" value={kpis.total} subtitle="Đã ghi nhận" accent="info" />

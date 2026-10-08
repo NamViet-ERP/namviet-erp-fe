@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Download, Plus } from 'lucide-react';
+import { Download, Kanban, LayoutGrid, Plus, Search, Table } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
@@ -11,24 +11,47 @@ import { useCskhProject } from '../../hooks/cskh/useCskhProject';
 import { cskhProjectPath } from '../../constants/cskhProject';
 import { toCsv } from '../../lib/cskh/commandCenter';
 import CskhAddProjectModal from './CskhAddProjectModal';
+import CskhEditProjectModal from './CskhEditProjectModal';
 import CskhProjectKanban from './CskhProjectKanban';
 import CskhProjectGrid from './CskhProjectGrid';
 import CskhProgressTable from './CskhProgressTable';
 
-type BoardView = 'kanban' | 'grid';
+type BoardView = 'table' | 'grid' | 'kanban';
 
 export default function CskhDashboardPage() {
   const navigate = useNavigate();
   const { setProjectCode } = useCskhProject();
-  const { projects, kpis, years, isLoading, moveProject, addProject } = useCskhCommandCenter();
-  const [view, setView] = useState<BoardView>('grid');
+  const {
+    projects,
+    kpis,
+    years,
+    isLoading,
+    moveProject,
+    addProject,
+    getProject,
+    patchProject,
+    deleteProject,
+  } = useCskhCommandCenter();
+  const [view, setView] = useState<BoardView>('table');
   const [year, setYear] = useState<'all' | number>('all');
+  const [searchTerm, setSearchTerm] = useState('');
   const [addOpen, setAddOpen] = useState(false);
+  const [editingProjectCode, setEditingProjectCode] = useState<string | null>(null);
 
-  const visible = useMemo(
-    () => (year === 'all' ? projects : projects.filter(p => p.year === year)),
-    [projects, year],
-  );
+  const editingProject = editingProjectCode ? getProject(editingProjectCode) : null;
+
+  const filtered = useMemo(() => {
+    let list = year === 'all' ? projects : projects.filter(p => p.year === year);
+    if (searchTerm.trim()) {
+      const q = searchTerm.trim().toLowerCase();
+      list = list.filter(p =>
+        p.code.toLowerCase().includes(q) ||
+        p.name.toLowerCase().includes(q) ||
+        (p.clientName && p.clientName.toLowerCase().includes(q))
+      );
+    }
+    return list;
+  }, [projects, year, searchTerm]);
 
   const clientOptions = useMemo(() => {
     const names = new Set<string>();
@@ -53,7 +76,7 @@ export default function CskhDashboardPage() {
   };
 
   const exportCsv = () => {
-    const blob = new Blob([toCsv(visible)], { type: 'text/csv;charset=utf-8' });
+    const blob = new Blob([toCsv(filtered)], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -66,7 +89,7 @@ export default function CskhDashboardPage() {
     <div className="page-stack cskh-desk">
       <PageHeader
         title="Trung tâm điều hành"
-        subtitle="Bấm dự án để mở chi tiết CSKH. % kế hoạch theo ngày dự án, % thực tế theo tồn kho khi có số."
+        subtitle="Giám sát tiến độ kế hoạch vs thực tế và điều hành các dự án CSKH toàn hệ thống."
       />
 
       <div className="dashboard-kpi-grid cskh-desk__kpi" role="list" aria-label="Chỉ số CSKH">
@@ -77,37 +100,65 @@ export default function CskhDashboardPage() {
           subtitle={`${kpis.onTrack} đúng/vượt · ${kpis.slight} chậm nhẹ · ${kpis.blocked} nghẽn`}
           accent="info"
         />
-        <Card className="cskh-desk__kpi-card" title="Điểm nghẽn đang mở" value={kpis.bottleneckOpen} subtitle="Trên toàn bộ dự án" accent="danger" />
-        <Card className="cskh-desk__kpi-card" title="Hồ sơ đang chờ" value={kpis.pendingDocs} subtitle="Cần theo dõi và xử lý" accent="warning" />
-        <Card className="cskh-desk__kpi-card" title="% Kế hoạch" value={`${kpis.planAvg}%`} subtitle="Mức kế hoạch cần đạt tới hôm nay" accent="primary" />
-        <Card className="cskh-desk__kpi-card" title="% Thực tế" value={`${kpis.actualAvg}%`} subtitle="Mức thực tế từ tồn kho khi có số" accent="success" />
-        <Card className="cskh-desk__kpi-card" title="Bảo hành cần chú ý" value={kpis.warrantyWatch} subtitle="Sắp hết hoặc đã hết bảo hành" accent="amber" />
+        <Card
+          className="cskh-desk__kpi-card"
+          title="Điểm nghẽn đang mở"
+          value={kpis.bottleneckOpen}
+          subtitle="Trên toàn bộ dự án"
+          accent="danger"
+        />
+        <Card
+          className="cskh-desk__kpi-card"
+          title="Hồ sơ đang chờ"
+          value={kpis.pendingDocs}
+          subtitle="Cần theo dõi và xử lý"
+          accent="warning"
+        />
+        <Card
+          className="cskh-desk__kpi-card"
+          title="% Kế hoạch"
+          value={`${kpis.planAvg}%`}
+          subtitle="Mức kế hoạch cần đạt tới hôm nay"
+          accent="primary"
+        />
+        <Card
+          className="cskh-desk__kpi-card"
+          title="% Thực tế"
+          value={`${kpis.actualAvg}%`}
+          subtitle="Mức thực tế từ tồn kho khi có số"
+          accent="success"
+        />
+        <Card
+          className="cskh-desk__kpi-card"
+          title="Bảo hành cần chú ý"
+          value={kpis.warrantyWatch}
+          subtitle="Sắp hết hoặc đã hết bảo hành"
+          accent="amber"
+        />
       </div>
 
       <HrmPanel className="cskh-desk__panel">
         <div className="cskh-desk__section-head">
           <div>
-            <h2 className="section-heading__title m-0">Tiến độ dự án - kế hoạch vs thực tế</h2>
+            <h2 className="section-heading__title m-0">Danh sách dự án</h2>
             <p className="section-heading__sub mb-0">
-              % Kế hoạch theo tiến độ cần đạt hôm nay. % Thực tế theo tồn kho dự án. Dự án chậm hiện lệch âm, không lấy % kế hoạch làm % thực tế.
+              % Kế hoạch theo tiến độ cần đạt hôm nay. % Thực tế đối soát từ tồn kho vật tư.
             </p>
-            <span className="cskh-desk__count">{visible.length} dự án</span>
+            <span className="cskh-desk__count">{filtered.length} dự án</span>
           </div>
-        </div>
-        <CskhProgressTable projects={visible} loading={isLoading} onOpen={openProject} />
-      </HrmPanel>
 
-      <HrmPanel className="cskh-desk__panel">
-        <div className="cskh-desk__section-head">
-          <div>
-            <h2 className="section-heading__title m-0">
-              {view === 'grid' ? 'Danh sách dự án - bấm để vào chi tiết' : 'Dự án theo giai đoạn'}
-            </h2>
-            <p className="section-heading__sub mb-0">
-              {view === 'grid' ? 'Thẻ tô theo đúng tiến độ, chậm nhẹ hoặc nghẽn nặng.' : 'Kéo thả thẻ giữa các cột.'}
-            </p>
-          </div>
           <div className="cskh-desk__board-tools">
+            <div className="cskh-desk__search">
+              <Search size={14} className="cskh-desk__search-icon" aria-hidden />
+              <input
+                type="text"
+                className="cskh-desk__search-input"
+                placeholder="Tìm mã, tên dự án, CĐT..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+              />
+            </div>
+
             <label className="cskh-desk__year">
               <span className="form-label">Năm</span>
               <HrmSelect
@@ -118,25 +169,38 @@ export default function CskhDashboardPage() {
                 onChange={value => setYear(value === 'all' ? 'all' : Number(value))}
               />
             </label>
+
             <div className="cskh-desk__view" role="group" aria-label="Kiểu xem">
               <button
                 type="button"
-                className={`btn cskh-desk__tab ${view === 'kanban' ? 'btn-filled' : 'btn-outlined'}`}
-                aria-pressed={view === 'kanban'}
-                onClick={() => setView('kanban')}
+                className={`cskh-desk__tab inline-flex items-center gap-1.5 ${view === 'table' ? 'is-active' : ''}`}
+                aria-pressed={view === 'table'}
+                onClick={() => setView('table')}
               >
-                Theo giai đoạn
+                <Table size={14} aria-hidden />
+                Bảng
               </button>
               <button
                 type="button"
-                className={`btn cskh-desk__tab ${view === 'grid' ? 'btn-filled' : 'btn-outlined'}`}
+                className={`cskh-desk__tab inline-flex items-center gap-1.5 ${view === 'grid' ? 'is-active' : ''}`}
                 aria-pressed={view === 'grid'}
                 onClick={() => setView('grid')}
               >
+                <LayoutGrid size={14} aria-hidden />
                 Lưới
               </button>
+              <button
+                type="button"
+                className={`cskh-desk__tab inline-flex items-center gap-1.5 ${view === 'kanban' ? 'is-active' : ''}`}
+                aria-pressed={view === 'kanban'}
+                onClick={() => setView('kanban')}
+              >
+                <Kanban size={14} aria-hidden />
+                Giai đoạn
+              </button>
             </div>
-            <Button type="button" variant="outlined" className="cskh-desk__tab" leftIcon={Download} onClick={exportCsv}>
+
+            <Button type="button" variant="outlined" leftIcon={Download} onClick={exportCsv}>
               Xuất Excel
             </Button>
             <Button type="button" variant="filled" leftIcon={Plus} onClick={() => setAddOpen(true)}>
@@ -144,10 +208,18 @@ export default function CskhDashboardPage() {
             </Button>
           </div>
         </div>
-        {view === 'kanban' ? (
-          <CskhProjectKanban projects={visible} onMove={moveProject} onOpen={openProject} />
+
+        {view === 'table' ? (
+          <CskhProgressTable
+            projects={filtered}
+            loading={isLoading}
+            onOpen={openProject}
+            onEdit={code => setEditingProjectCode(code)}
+          />
+        ) : view === 'grid' ? (
+          <CskhProjectGrid projects={filtered} loading={isLoading} onOpen={openProject} />
         ) : (
-          <CskhProjectGrid projects={visible} loading={isLoading} onOpen={openProject} />
+          <CskhProjectKanban projects={filtered} onMove={moveProject} onOpen={openProject} />
         )}
       </HrmPanel>
 
@@ -158,6 +230,22 @@ export default function CskhDashboardPage() {
         onClose={() => setAddOpen(false)}
         onSave={addProject}
       />
+
+      {editingProject && (
+        <CskhEditProjectModal
+          open={Boolean(editingProject)}
+          project={editingProject}
+          clientOptions={clientOptions}
+          onClose={() => setEditingProjectCode(null)}
+          onSave={patch => {
+            if (editingProjectCode) patchProject(editingProjectCode, patch);
+          }}
+          onDelete={code => {
+            deleteProject(code);
+            setEditingProjectCode(null);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import type React from 'react';
 import { useState, useRef, type CSSProperties } from 'react';
 import { useForm, useWatch, Controller, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';

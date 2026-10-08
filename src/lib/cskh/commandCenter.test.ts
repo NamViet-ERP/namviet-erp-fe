@@ -7,6 +7,7 @@ import {
   mergeCommandProjects,
   nextProjectCode,
   patchProjectRecord,
+  deleteProjectRecord,
   phaseLabel,
   planPctFromDates,
   listFilterYears,
@@ -196,5 +197,60 @@ describe('cskh command center', () => {
   it('resolves phase labels from catalog then fallback list', () => {
     expect(phaseLabel('fabricate')).toBe('Chế tạo thiết bị tại xưởng');
     expect(phaseLabel('gd-1', [{ id: 'gd-1', name: 'Khảo sát hiện trường' }])).toBe('Khảo sát hiện trường');
+  });
+
+  it('patches all banner fields including targetCodDate, boilerType, pmName, clientName', () => {
+    const base = {
+      overlays: {},
+      localProjects: [{
+        code: 'LH-01',
+        name: 'Lò Hơi 30T',
+        year: 2026,
+        phaseId: 'survey',
+        planPct: 10,
+        actualPct: 0,
+        bottleneckCount: 0,
+        pendingDocs: 0,
+        warrantyWatch: false,
+      }],
+    };
+    const store = patchProjectRecord(base, 'LH-01', {
+      name: 'Lò Hơi Cải Tiến 35T',
+      clientName: 'Tập đoàn An Phát',
+      pmName: 'Chỉ huy trưởng Nguyễn Văn A',
+      boilerType: 'Lò Hơi CFB Tuần Hoàn',
+      capacity: '35 T/h',
+      targetCodDate: '2026-12-15',
+      notes: 'Đang đẩy nhanh tiến độ COD',
+    });
+    const record = getProjectRecord([], store, 'LH-01');
+    expect(record?.name).toBe('Lò Hơi Cải Tiến 35T');
+    expect(record?.clientName).toBe('Tập đoàn An Phát');
+    expect(record?.pmName).toBe('Chỉ huy trưởng Nguyễn Văn A');
+    expect(record?.boilerType).toBe('Lò Hơi CFB Tuần Hoàn');
+    expect(record?.capacity).toBe('35 T/h');
+    expect(record?.targetCodDate).toBe('2026-12-15');
+    expect(record?.notes).toBe('Đang đẩy nhanh tiến độ COD');
+  });
+
+  it('deletes a project record and excludes it from mergeCommandProjects', () => {
+    const base = {
+      overlays: {},
+      localProjects: [{
+        code: 'LH-DEL',
+        name: 'Dự án tạm',
+        year: 2026,
+        phaseId: 'survey',
+        planPct: 0,
+        actualPct: 0,
+        bottleneckCount: 0,
+        pendingDocs: 0,
+        warrantyWatch: false,
+      }],
+    };
+    const deletedStore = deleteProjectRecord(base, 'LH-DEL');
+    expect(deletedStore.localProjects.find(p => p.code === 'LH-DEL')).toBeUndefined();
+    const rows = mergeCommandProjects([], deletedStore);
+    expect(rows.find(p => p.code === 'LH-DEL')).toBeUndefined();
   });
 });

@@ -1,3 +1,4 @@
+import type React from 'react';
 import { useEffect, useId, useMemo, useRef, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { X, UserPlus } from 'lucide-react';

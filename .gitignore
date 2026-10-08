@@ -72,3 +72,5 @@ scripts/*
 !scripts/check-openapi-generated.mjs
 .vercel
 .env*
+*.py
+recovered_*.tsx

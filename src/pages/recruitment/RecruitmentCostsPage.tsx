@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, Wallet, Calculator } from 'lucide-react';
+import { Plus, Pencil, Trash2, Wallet, Calculator, RotateCcw } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import HrmPanel from '../../components/hr/HrmPanel';
 import Modal from '../../components/ui/Modal';
@@ -85,6 +85,14 @@ export default function RecruitmentCostsPage() {
   const allocated = budget?.totalAllocated ?? 0;
   const used = budget?.totalUsed ?? summary.reduce((s, r) => s + r.totalAmount, 0);
   const remaining = budget?.remaining ?? Math.max(0, allocated - used);
+  const hasFilters = Boolean(filterSource || filterPosition || (filterYear !== '' && filterYear !== CURRENT_YEAR) || filterMonth !== '');
+
+  const resetFilters = () => {
+    setFilterSource('');
+    setFilterPosition('');
+    setFilterYear(CURRENT_YEAR);
+    setFilterMonth('');
+  };
 
   const openCreate = () => {
     setEditing(null);
@@ -202,7 +210,7 @@ export default function RecruitmentCostsPage() {
                 <Plus size={16} /> Thêm chi phí
               </button>
             </PermissionGate>
-            <button type="button" className="btn btn-secondary" onClick={() => window.location.reload()}>
+            <button type="button" className="btn btn-secondary" onClick={() => { void refetch(); }}>
               <Calculator size={16} /> Tính toán lại
             </button>
             <button type="button" className="btn btn-secondary" onClick={exportCsv}>
@@ -254,6 +262,12 @@ export default function RecruitmentCostsPage() {
                   ))}
                 </select>
               </div>
+              {hasFilters && (
+                <button type="button" onClick={resetFilters} className="hrm-filter-reset">
+                  <RotateCcw size={14} aria-hidden />
+                  Xóa lọc
+                </button>
+              )}
             </div>
           </div>
         </div>

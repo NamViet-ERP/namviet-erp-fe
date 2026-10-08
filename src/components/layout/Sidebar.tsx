@@ -1,3 +1,4 @@
+import type React from 'react';
 import { useState, useRef, useEffect, useCallback, useSyncExternalStore } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
@@ -365,8 +366,16 @@ export default function Sidebar({
                 aria-expanded={hasChildren ? isExpanded : undefined}
               >
                 <Icon size={18} className="sidebar-item__icon" />
-                <span className={`sidebar-item__label sidebar-label flex-1 text-left${isEffectiveCollapsed ? ' collapsed' : ''}`}>
-                  {item.label}
+                <span
+                  className={`sidebar-item__label sidebar-label flex-1 text-left${isEffectiveCollapsed ? ' collapsed' : ''}`}
+                  title={item.label}
+                >
+                  <span>{item.label}</span>
+                  {item.badge && !isEffectiveCollapsed && (
+                    <span className="sidebar-item__badge ml-auto text-[10px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200/80 dark:border-amber-800/60 leading-none">
+                      {item.badge}
+                    </span>
+                  )}
                 </span>
                 {hasChildren && !isEffectiveCollapsed && (
                   <ChevronDown

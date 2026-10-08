@@ -3,13 +3,11 @@ import {
   AlertTriangle,
   Archive,
   BarChart3,
-  Bell,
   CalendarDays,
   FileCheck,
   FolderKanban,
   LayoutDashboard,
   Lightbulb,
-  Send,
 } from 'lucide-react';
 import { CSKH_VIEW_PERMISSION } from './cskh';
 import type { SidebarChildItem, SidebarMenuItem } from '../types';
@@ -17,82 +15,65 @@ import type { SidebarChildItem, SidebarMenuItem } from '../types';
 export const CSKH_PROJECT_TABS = [
   {
     id: 'dashboard',
-    label: 'Dashboard',
+    label: 'Dashboard Điều Hành',
     group: 'overview',
-    title: 'Dashboard dự án',
-    subtitle: 'Tổng quan tiến độ, điểm nghẽn và hồ sơ của dự án đang chọn.',
+    title: 'Bảng Điều Hành Tiến Độ Dự Án',
+    subtitle: 'Tổng quan tiến độ mốc EPC, điểm nghẽn và tiến trình dự án.',
     empty: '',
     icon: LayoutDashboard,
   },
   {
-    id: 'docs-draft',
-    label: 'Soạn & duyệt nội bộ',
+    id: 'docs',
+    label: 'Hồ sơ & Phản hồi CĐT',
     group: 'ops',
-    title: 'Soạn và duyệt nội bộ',
-    subtitle: 'Bước 1/4 của pipeline hồ sơ: soạn thảo, xác nhận, trình ký, sẵn sàng gửi.',
-    empty: 'Chưa có hồ sơ soạn thảo hoặc duyệt nội bộ trên dự án này.',
+    title: 'Hồ Sơ & Phản Hồi CĐT',
+    subtitle: 'Gộp 3 khâu: Soạn duyệt nội bộ ➔ Giao nhận hiện trường ➔ Theo dõi phản hồi SLA CĐT.',
+    empty: 'Chưa có hồ sơ đệ trình trên dự án này.',
     icon: FileCheck,
-  },
-  {
-    id: 'docs-handover',
-    label: 'Giao nhận hồ sơ',
-    group: 'ops',
-    title: 'Giao nhận hồ sơ',
-    subtitle: 'Bước 2/4 của pipeline hồ sơ. Nhật ký đi/về, luôn có bằng chứng đã ký.',
-    empty: 'Chưa có hồ sơ giao nhận trên dự án này.',
-    icon: Send,
-  },
-  {
-    id: 'docs-feedback',
-    label: 'Theo dõi phản hồi',
-    group: 'ops',
-    title: 'Theo dõi phản hồi',
-    subtitle: 'Bước 3/4 của pipeline hồ sơ. Hồ sơ đã gửi, đang chờ phản hồi. Escalate nếu quá hạn.',
-    empty: 'Chưa có hồ sơ đang theo dõi phản hồi.',
-    icon: Bell,
+    tag: 'GỘP',
   },
   {
     id: 'docs-archive',
     label: 'Lưu trữ chính thức',
     group: 'ops',
-    title: 'Lưu trữ chính thức',
-    subtitle: 'Bước 4/4 của pipeline hồ sơ. Hợp đồng, phụ lục và mốc thanh toán.',
+    title: 'Lưu Trữ Chính Thức & Hoàn Công',
+    subtitle: 'Hồ sơ nghiệm thu, chứng chỉ CO/CQ, bản vẽ As-built & bảo hành 48 tháng.',
     empty: 'Chưa có hồ sơ lưu trữ chính thức.',
     icon: Archive,
   },
   {
     id: 'bottlenecks',
-    label: 'Điểm nghẽn và tiến độ',
+    label: 'Điểm nghẽn & Tiến độ',
     group: 'other',
-    title: 'Điểm nghẽn và tiến độ',
-    subtitle: 'Theo dõi lệch kế hoạch, giao việc và đóng khi đã xử lý xong.',
+    title: 'Điểm Nghẽn & Tiến Độ',
+    subtitle: 'Ma trận rủi ro gắn mã Gantt, điều phối người chịu trách nhiệm và giải tỏa đường găng.',
     empty: 'Chưa có điểm nghẽn trên dự án này.',
     icon: AlertTriangle,
   },
   {
-    id: 'requests',
-    label: 'Yêu cầu',
-    group: 'other',
-    title: 'Yêu cầu',
-    subtitle: 'Trung tâm yêu cầu nội bộ, điều phối giữa các phòng ban.',
-    empty: 'Chưa có yêu cầu trên dự án này.',
-    icon: Lightbulb,
-  },
-  {
     id: 'gantt',
-    label: 'Gantt và báo cáo',
+    label: '2 Gantt Chart Tiến độ',
     group: 'other',
-    title: 'Gantt và báo cáo tiến độ',
-    subtitle: 'WBS, mốc, đường găng, snapshot và báo cáo CĐT.',
+    title: '2 Gantt Chart Tiến Độ',
+    subtitle: 'Dual Gantt: Hợp đồng CĐT (mốc thanh toán) & Kick-off nội bộ (170 ngày chi tiết).',
     empty: 'Chưa lập Gantt cho dự án này.',
     icon: BarChart3,
   },
   {
-    id: 'meetings',
-    label: 'Cuộc họp',
+    id: 'requests',
+    label: 'Trung tâm Yêu cầu',
     group: 'other',
-    title: 'Cuộc họp',
-    subtitle: 'Agenda, biên bản và hành động sau họp.',
+    title: 'Trung Tâm Yêu Cầu (Request Center)',
+    subtitle: 'Xử lý phát sinh kỹ thuật, nhân lực thợ hàn 6G, máy móc cẩu từ công trường.',
+    empty: 'Chưa có yêu cầu trên dự án này.',
+    icon: Lightbulb,
+  },
+  {
+    id: 'meetings',
+    label: 'Cuộc họp công trường',
+    group: 'other',
+    title: 'Cuộc Họp Công Trường & Giao Ban',
+    subtitle: 'Biên bản giao ban tuần, danh sách việc cần làm sau họp & tự động sinh điểm nghẽn.',
     empty: 'Chưa có cuộc họp trên dự án này.',
     icon: CalendarDays,
   },
@@ -104,6 +85,7 @@ export const CSKH_PROJECT_TABS = [
   subtitle: string;
   empty: string;
   icon: LucideIcon;
+  tag?: string;
 }[];
 
 export type CskhProjectTabId = (typeof CSKH_PROJECT_TABS)[number]['id'];
@@ -111,17 +93,32 @@ export type CskhProjectTabId = (typeof CSKH_PROJECT_TABS)[number]['id'];
 export const CSKH_PROJECT_DEFAULT_TAB: CskhProjectTabId = 'dashboard';
 
 const TAB_IDS = new Set<string>(CSKH_PROJECT_TABS.map(tab => tab.id));
+const LEGACY_ALIASES: Record<string, CskhProjectTabId> = {
+  'docs-draft': 'docs',
+  'docs-handover': 'docs',
+  'docs-feedback': 'docs',
+};
 
 export function isCskhProjectTab(tab: string | undefined): tab is CskhProjectTabId {
-  return Boolean(tab && TAB_IDS.has(tab));
+  if (!tab) return false;
+  return TAB_IDS.has(tab) || tab in LEGACY_ALIASES;
+}
+
+export function normalizeCskhProjectTab(tab: string | undefined): CskhProjectTabId {
+  if (!tab) return CSKH_PROJECT_DEFAULT_TAB;
+  if (tab in LEGACY_ALIASES) return LEGACY_ALIASES[tab];
+  if (TAB_IDS.has(tab)) return tab as CskhProjectTabId;
+  return CSKH_PROJECT_DEFAULT_TAB;
 }
 
 export function cskhProjectTabMeta(tab: CskhProjectTabId) {
-  return CSKH_PROJECT_TABS.find(item => item.id === tab) ?? CSKH_PROJECT_TABS[0];
+  const norm = normalizeCskhProjectTab(tab);
+  return CSKH_PROJECT_TABS.find(item => item.id === norm) ?? CSKH_PROJECT_TABS[0];
 }
 
-export function cskhProjectPath(code: string, tab: CskhProjectTabId = CSKH_PROJECT_DEFAULT_TAB): string {
-  return `/cskh/projects/${encodeURIComponent(code)}/${tab}`;
+export function cskhProjectPath(code: string, tab: CskhProjectTabId | string = CSKH_PROJECT_DEFAULT_TAB): string {
+  const norm = normalizeCskhProjectTab(tab);
+  return `/cskh/projects/${encodeURIComponent(code)}/${norm}`;
 }
 
 export function cskhProjectCodeFromPath(pathname: string): string | null {
@@ -159,15 +156,15 @@ export function cskhProjectMenu(code: string): SidebarMenuItem[] {
     },
     {
       id: 'cskh-proj-ops',
-      label: 'Vận hành',
+      label: 'Hồ sơ & Vận hành',
       icon: FileCheck,
-      path: cskhProjectPath(code, 'docs-draft'),
+      path: cskhProjectPath(code, 'docs'),
       permission: CSKH_VIEW_PERMISSION,
       children: ops.map(tab => leaf(tab, code)),
     },
     {
       id: 'cskh-proj-other',
-      label: 'Khác',
+      label: 'Điều phối & Rủi ro',
       icon: FolderKanban,
       path: cskhProjectPath(code, 'bottlenecks'),
       permission: CSKH_VIEW_PERMISSION,

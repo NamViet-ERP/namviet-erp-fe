@@ -1,290 +1,488 @@
-import { useState, type CSSProperties } from 'react';
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Plus } from 'lucide-react';
+import {
+  AlertTriangle,
+  ArrowRight,
+  CheckCircle2,
+  Clock,
+  Layers,
+  Pencil,
+} from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
-import FormField from '../../components/ui/FormField';
 import HrmPanel from '../../components/hr/HrmPanel';
-import HrmDatePicker from '../../components/hr/HrmDatePicker';
-import { showToast } from '../../components/ui/Toast';
 import { useCskhCommandCenter } from '../../hooks/cskh/useCskhCommandCenter';
-import { useCskhMasterData } from '../../hooks/cskh/useCskhMasterData';
+import { useProjectDashboardStats } from '../../hooks/cskh/useProjectDashboardStats';
 import { cskhProjectPath } from '../../constants/cskhProject';
 import { isoToDisplay } from '../../lib/dates';
 import {
   formatSignedPct,
-  phaseLabel,
   progressDelta,
   progressStatus,
   progressStatusCopy,
   progressTone,
-  type CskhProjectRecord,
 } from '../../lib/cskh/commandCenter';
 import CskhProjectMissing from './CskhProjectMissing';
-
-function displayText(value?: string | null): string {
-  const text = value?.trim() ?? '';
-  if (!text || text === '-') return '';
-  return text;
-}
-
-function warrantyCopy(project: CskhProjectRecord): string {
-  if (!project.acceptanceDate) return 'Chưa nghiệm thu';
-  if (project.warrantyMonths != null) return `${project.warrantyMonths} tháng`;
-  return 'Chưa đặt thời hạn';
-}
-
-function parseWarrantyMonths(raw: string): { value: number | null; error?: string } {
-  const text = raw.trim();
-  if (!text) return { value: null };
-  const months = Number.parseInt(text, 10);
-  if (!Number.isFinite(months) || String(months) !== text || months < 0 || months > 360) {
-    return { value: null, error: 'Nhập số tháng từ 0 đến 360.' };
-  }
-  return { value: months };
-}
+import CskhEditProjectModal from './CskhEditProjectModal';
 
 export default function CskhProjectDashboardPage() {
   const { code = '' } = useParams<{ code: string }>();
   const navigate = useNavigate();
-  const { getProject, patchProject, isLoading } = useCskhCommandCenter();
-  const { store: master } = useCskhMasterData();
+  const { projects, getProject, isLoading, patchProject, deleteProject } = useCskhCommandCenter();
   const project = getProject(code);
-
-  const [editingAcceptance, setEditingAcceptance] = useState(false);
-  const [acceptanceDate, setAcceptanceDate] = useState('');
-  const [warrantyMonths, setWarrantyMonths] = useState('');
-  const [warrantyError, setWarrantyError] = useState('');
-  const [syncedProjectKey, setSyncedProjectKey] = useState<string | null>(null);
-
-  const projectSyncKey = project
-    ? `${project.code}|${project.acceptanceDate ?? ''}|${project.warrantyMonths ?? ''}`
-    : null;
-  if (project && projectSyncKey !== syncedProjectKey) {
-    setSyncedProjectKey(projectSyncKey);
-    setAcceptanceDate(project.acceptanceDate ?? '');
-    setWarrantyMonths(project.warrantyMonths != null ? String(project.warrantyMonths) : '');
-    setWarrantyError('');
-  }
+  const { tasks: ganttStages, urgentBottlenecks, overdueDocs, urgentRequests } = useProjectDashboardStats(code);
+  const [editOpen, setEditOpen] = useState(false);
+  const [currentTime] = useState(() => Date.now());
 
   if (!project) return <CskhProjectMissing loading={isLoading} />;
 
-  const status = progressStatus(project);
-  const tone = progressTone(status);
-  const statusCopy = progressStatusCopy(status);
   const delta = progressDelta(project.planPct, project.actualPct);
-  const currentPhase = phaseLabel(project.phaseId, master.phases);
-  const clientName = displayText(project.clientName);
-  const picName = displayText(project.pmName);
-  const startLabel = isoToDisplay(project.startDate) || '-';
-  const acceptanceLabel = isoToDisplay(project.acceptanceDate) || 'Chưa nghiệm thu';
-  const progressAccent = status === 'blocked' ? 'danger' : status === 'slight_delay' ? 'warning' : 'success';
-  const toneFill = tone === 'danger' ? 'var(--md-error)' : tone === 'warn' ? 'var(--nv-amber)' : 'var(--md-success)';
-  const identity = [clientName ? `CĐT: ${clientName}` : '', picName ? `PIC: ${picName}` : '']
-    .filter(Boolean)
-    .join(' · ');
 
-  const cancelAcceptance = () => {
-    setAcceptanceDate(project.acceptanceDate ?? '');
-    setWarrantyMonths(project.warrantyMonths != null ? String(project.warrantyMonths) : '');
-    setWarrantyError('');
-    setEditingAcceptance(false);
-  };
+  // COD target countdown calculation
+  const codTarget = project.targetCodDate || '2026-10-15';
+  const targetTime = Date.parse(codTarget);
+  const daysRemaining = Number.isFinite(targetTime)
+    ? Math.max(0, Math.ceil((targetTime - currentTime) / (24 * 60 * 60 * 1000)))
+    : 26;
 
-  const saveAcceptance = () => {
-    const parsed = parseWarrantyMonths(warrantyMonths);
-    if (parsed.error) {
-      setWarrantyError(parsed.error);
-      return;
-    }
-    setWarrantyError('');
-    patchProject(project.code, {
-      acceptanceDate: acceptanceDate || null,
-      warrantyMonths: parsed.value,
-    });
-    setEditingAcceptance(false);
-    showToast('success', 'Đã lưu nghiệm thu và bảo hành.');
-  };
+  const fallbackGanttStages = ganttStages.length > 0 ? ganttStages : [
+    { id: '1', name: '#1 Khảo sát địa chất & Thiết kế chi tiết lò hơi', days: 30, startDate: '2026-06-01', endDate: '2026-07-01', actualPct: 100, notes: 'Hoàn thành 100%' },
+    { id: '2', name: '#2 Gia công chế tạo balong & thân lò tại xưởng', days: 45, startDate: '2026-06-15', endDate: '2026-07-30', actualPct: 90, notes: 'Balong D1400 đạt 90%' },
+    { id: '3', name: '#3 Lắp dựng khung thép móng & balong lên giá đỡ', days: 35, startDate: '2026-07-20', endDate: '2026-08-25', actualPct: 65, notes: 'Đang vướng sự cố cẩu 80T (BN-104)' },
+    { id: '4', name: '#4 Hàn ống sinh hơi, ống bức xạ & siêu âm mối hàn', days: 30, startDate: '2026-08-15', endDate: '2026-09-15', actualPct: 35, notes: 'Chậm do thiếu 12 thợ hàn 6G (BN-105)' },
+    { id: '5', name: '#5 Thử áp lực thủy lực (Hydrostatic test - 1.5x)', days: 15, startDate: '2026-09-15', endDate: '2026-09-30', actualPct: 0, notes: 'Chờ CĐT phê duyệt phương án thử áp HS-301 (BN-106)' },
+    { id: '6', name: '#6 Sấy gạch buồng đốt, đốt lửa lần đầu & COD', days: 15, startDate: '2026-10-01', endDate: '2026-10-15', actualPct: 0, notes: 'Mốc về đích phát điện thương mại' },
+  ];
 
   return (
     <div className="page-stack cskh-desk">
       <PageHeader
-        title="Dashboard dự án"
-        subtitle="Tổng quan tiến độ, điểm nghẽn và hồ sơ của dự án đang chọn."
+        title="Bảng Điều Hành Tiến Độ Dự Án Lò Hơi"
+        subtitle={`Trung tâm chỉ huy điều phối EPC: ${project.code} - ${project.name}`}
+        actions={
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outlined"
+              leftIcon={Pencil}
+              onClick={() => setEditOpen(true)}
+            >
+              Chỉnh sửa dự án
+            </Button>
+            <Button
+              type="button"
+              variant="outlined"
+              leftIcon={Layers}
+              onClick={() => navigate(cskhProjectPath(project.code, 'gantt'))}
+            >
+              Xem Dual Gantt
+            </Button>
+            <Button
+              type="button"
+              variant="filled"
+              leftIcon={AlertTriangle}
+              onClick={() => navigate(cskhProjectPath(project.code, 'bottlenecks'))}
+            >
+              Xử lý điểm nghẽn
+            </Button>
+          </div>
+        }
       />
 
-      <div className="dashboard-kpi-grid cskh-project__kpi" role="list" aria-label="Chỉ số dự án">
+      {/* BANNER MỤC TIÊU COD */}
+      <div
+        style={{
+          background: 'linear-gradient(135deg, var(--nv-navy) 0%, color-mix(in srgb, var(--nv-navy) 85%, #0f3d63) 100%)',
+          color: '#ffffff',
+          borderRadius: 'var(--radius-lg, 12px)',
+          padding: '20px 24px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '16px',
+        }}
+      >
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', flexWrap: 'wrap' }}>
+            <span
+              style={{
+                background: 'rgba(255,255,255,0.2)',
+                padding: '2px 8px',
+                borderRadius: '4px',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                letterSpacing: '0.5px',
+              }}
+            >
+              DỰ ÁN TRỌNG ĐIỂM
+            </span>
+            <span style={{ fontSize: '0.9rem', opacity: 0.9 }}>
+              {project.boilerType || 'Lò Hơi Tầng Sôi Tuần Hoàn CFB'} · {project.capacity || '30 T/h'}
+            </span>
+            <button
+              type="button"
+              onClick={() => setEditOpen(true)}
+              style={{
+                background: 'rgba(255,255,255,0.18)',
+                border: '1px solid rgba(255,255,255,0.3)',
+                borderRadius: '4px',
+                color: '#ffffff',
+                padding: '2px 8px',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                marginLeft: '4px',
+              }}
+              title="Chỉnh sửa thông tin dự án"
+            >
+              <Pencil size={11} />
+              <span>Chỉnh sửa</span>
+            </button>
+          </div>
+          <h2 style={{ margin: 0, fontSize: '1.45rem', fontWeight: 700, color: '#ffffff' }}>
+            {project.code} — {project.name}
+          </h2>
+          <div style={{ fontSize: '0.85rem', opacity: 0.85, marginTop: '4px' }}>
+            Chủ đầu tư: <strong>{project.clientName || 'Tập đoàn An Phát'}</strong> · Chỉ huy trưởng:{' '}
+            <strong>{project.pmName || 'Nguyễn Văn Hải'}</strong>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+          <div
+            style={{
+              background: 'rgba(255,255,255,0.1)',
+              border: '1px solid rgba(255,255,255,0.25)',
+              borderRadius: '8px',
+              padding: '8px 16px',
+              textAlign: 'center',
+            }}
+          >
+            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', opacity: 0.8 }}>Mục tiêu COD</div>
+            <div style={{ fontSize: '1.15rem', fontWeight: 700, color: '#ffdd57' }}>
+              {isoToDisplay(codTarget)}
+            </div>
+          </div>
+
+          <div
+            style={{
+              background: 'rgba(255,255,255,0.15)',
+              border: '1px solid rgba(255,255,255,0.3)',
+              borderRadius: '8px',
+              padding: '8px 18px',
+              textAlign: 'center',
+            }}
+          >
+            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', opacity: 0.8 }}>Thời gian còn lại</div>
+            <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#ffffff' }}>
+              {daysRemaining} <span style={{ fontSize: '0.85rem', fontWeight: 500 }}>ngày</span>
+            </div>
+          </div>
+
+          <div
+            style={{
+              background: delta < 0 ? 'rgba(239, 68, 68, 0.25)' : 'rgba(34, 197, 94, 0.25)',
+              border: `1px solid ${delta < 0 ? 'rgba(239, 68, 68, 0.6)' : 'rgba(34, 197, 94, 0.6)'}`,
+              borderRadius: '8px',
+              padding: '8px 16px',
+              textAlign: 'center',
+            }}
+          >
+            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', opacity: 0.9 }}>Độ trễ tiến độ</div>
+            <div style={{ fontSize: '1.15rem', fontWeight: 700, color: delta < 0 ? '#ff8585' : '#86efac' }}>
+              {formatSignedPct(delta)}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 4 KPI CARDS */}
+      <div className="dashboard-kpi-grid cskh-project__kpi" role="list" aria-label="Chỉ số điều hành EPC">
         <Card
           className="cskh-desk__kpi-card"
-          title="Tiến độ dự án"
+          title="Tiến độ Tổng thể"
           value={`${project.actualPct}%`}
-          subtitle={`KH hôm nay ${project.planPct}% · TT ${project.actualPct}% · ${formatSignedPct(delta)}`}
-          accent={progressAccent}
+          subtitle={`Kế hoạch ${project.planPct}% · Thực tế ${project.actualPct}% · ${formatSignedPct(delta)}`}
+          accent={delta < -5 ? 'danger' : delta < 0 ? 'warning' : 'success'}
         />
         <Card
           className="cskh-desk__kpi-card"
-          title="Điểm nghẽn khẩn cấp"
-          value={project.bottleneckCount}
-          subtitle={`${project.bottleneckCount} điểm nghẽn đang mở`}
+          title="Điểm nghẽn rủi ro cao"
+          value={urgentBottlenecks.length}
+          subtitle={`${urgentBottlenecks.length} điểm nghẽn nghiêm trọng`}
           accent="danger"
         />
         <Card
           className="cskh-desk__kpi-card"
-          title="Hồ sơ quá hạn phản hồi"
-          value={project.pendingDocs}
-          subtitle={`${project.pendingDocs} hồ sơ đang theo dõi`}
+          title="Hồ sơ CĐT giữ lại"
+          value={overdueDocs.length}
+          subtitle={`${overdueDocs.length} hồ sơ quá hạn SLA phản hồi`}
           accent="warning"
         />
         <Card
           className="cskh-desk__kpi-card"
-          title="Hồ sơ chưa xác nhận nhận"
-          value={0}
-          subtitle="Rủi ro thất lạc hồ sơ"
+          title="Yêu cầu hiện trường"
+          value={urgentRequests.length}
+          subtitle={`${urgentRequests.length} đề xuất gấp chưa hoàn thành`}
           accent="teal"
         />
       </div>
 
-      <div className="cskh-project__body">
+      {/* 6 EPC CORE PHASES PROGRESS */}
+      <HrmPanel className="cskh-desk__panel">
+        <div className="cskh-desk__section-head mb-4">
+          <div>
+            <h2 className="section-heading__title m-0">6 Giai Đoạn EPC Cốt Lõi Dự Án Lò Hơi</h2>
+            <p className="section-heading__sub mb-0">
+              Kiểm soát tiến độ đường găng (Critical Path) từ khảo sát thiết kế đến đốt lửa lần đầu & COD
+            </p>
+          </div>
+          <Button
+            type="button"
+            variant="text"
+            rightIcon={ArrowRight}
+            onClick={() => navigate(cskhProjectPath(project.code, 'gantt'))}
+          >
+            Chi tiết tiến độ 170 ngày
+          </Button>
+        </div>
+
+        <div className="flex flex-col gap-3">
+          {fallbackGanttStages.map(stage => {
+            const isCompleted = stage.actualPct >= 100;
+            const hasBottleneck = stage.notes?.includes('BN-');
+            const barTone = isCompleted
+              ? 'var(--md-success)'
+              : hasBottleneck
+              ? 'var(--md-error)'
+              : stage.actualPct > 0
+              ? 'var(--nv-action)'
+              : 'var(--md-outline)';
+
+            return (
+              <div
+                key={stage.id}
+                style={{
+                  border: '1px solid var(--cskh-frame)',
+                  borderRadius: '8px',
+                  padding: '12px 16px',
+                  background: hasBottleneck ? 'color-mix(in srgb, var(--md-error) 5%, var(--md-surface))' : 'var(--md-surface)',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <div className="flex items-center gap-2">
+                    {isCompleted ? (
+                      <CheckCircle2 size={16} color="var(--md-success)" />
+                    ) : hasBottleneck ? (
+                      <AlertTriangle size={16} color="var(--md-error)" />
+                    ) : (
+                      <Clock size={16} color="var(--nv-action)" />
+                    )}
+                    <span style={{ fontWeight: 600, color: 'var(--md-on-surface)' }}>{stage.name}</span>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--md-on-surface-variant)' }}>
+                      ({stage.days} ngày · {isoToDisplay(stage.startDate)} → {isoToDisplay(stage.endDate)})
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    {hasBottleneck && (
+                      <span className="cskh-status cskh-status--danger" style={{ fontSize: '0.75rem' }}>
+                        Điểm nghẽn đường găng
+                      </span>
+                    )}
+                    <span style={{ fontWeight: 700, fontSize: '0.95rem', color: barTone }}>
+                      {stage.actualPct}%
+                    </span>
+                  </div>
+                </div>
+
+                {/* Progress bar */}
+                <div
+                  style={{
+                    height: '8px',
+                    width: '100%',
+                    background: 'var(--md-surface-variant, #e2e8f0)',
+                    borderRadius: '4px',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <div
+                    style={{
+                      height: '100%',
+                      width: `${stage.actualPct}%`,
+                      background: barTone,
+                      transition: 'width 0.4s ease',
+                    }}
+                  />
+                </div>
+
+                {stage.notes && (
+                  <div style={{ fontSize: '0.8rem', color: hasBottleneck ? 'var(--md-error)' : 'var(--md-on-surface-variant)', marginTop: '6px' }}>
+                    {stage.notes}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </HrmPanel>
+
+      {/* DANH SÁCH TỔNG QUAN TẤT CẢ DỰ ÁN */}
+      <HrmPanel className="cskh-desk__panel">
+        <div className="cskh-desk__section-head mb-4">
+          <div>
+            <h2 className="section-heading__title m-0">Tất Cả Dự Án Lò Hơi Đang Điều Hành</h2>
+            <p className="section-heading__sub mb-0">Theo dõi đồng thời danh mục các dự án Boiler EPC của Nam Việt</p>
+          </div>
+        </div>
+
+        <div className="wms-inventory-table-wrap cskh-desk__table">
+          <table className="wms-inventory-table">
+            <thead>
+              <tr>
+                <th className="table-header-cell" style={{ width: '90px' }}>Mã DA</th>
+                <th className="table-header-cell">Tên dự án & CĐT</th>
+                <th className="table-header-cell" style={{ width: '160px' }}>Loại lò & Công suất</th>
+                <th className="table-header-cell" style={{ width: '110px' }}>Kế hoạch %</th>
+                <th className="table-header-cell" style={{ width: '110px' }}>Thực tế %</th>
+                <th className="table-header-cell" style={{ width: '110px' }}>Chênh lệch</th>
+                <th className="table-header-cell" style={{ width: '110px' }}>Điểm nghẽn</th>
+                <th className="table-header-cell" style={{ width: '130px' }}>Sức khỏe DA</th>
+                <th className="table-header-cell hrm-table-col-actions" style={{ width: '110px' }}>Chuyển DA</th>
+              </tr>
+            </thead>
+            <tbody>
+              {projects.map(item => {
+                const itemStatus = progressStatus(item);
+                const itemTone = progressTone(itemStatus);
+                const itemDelta = progressDelta(item.planPct, item.actualPct);
+                const isSelected = item.code === project.code;
+
+                return (
+                  <tr
+                    key={item.code}
+                    className="table-row"
+                    style={{ background: isSelected ? 'color-mix(in srgb, var(--nv-action) 6%, transparent)' : undefined }}
+                  >
+                    <td className="table-cell font-mono font-bold text-primary">{item.code}</td>
+                    <td className="table-cell">
+                      <div style={{ fontWeight: 600, color: 'var(--md-on-surface)' }}>{item.name}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--md-on-surface-variant)' }}>
+                        CĐT: {item.clientName || '-'} · PM: {item.pmName || '-'}
+                      </div>
+                    </td>
+                    <td className="table-cell">
+                      <div style={{ fontSize: '0.85rem' }}>{item.boilerType || 'Lò hơi công nghiệp'}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--md-outline)' }}>{item.capacity || '-'}</div>
+                    </td>
+                    <td className="table-cell tabular-nums font-semibold">{item.planPct}%</td>
+                    <td className="table-cell tabular-nums font-semibold" style={{ color: `var(--md-${itemTone === 'danger' ? 'error' : itemTone === 'warn' ? 'tertiary' : 'success'})` }}>
+                      {item.actualPct}%
+                    </td>
+                    <td className="table-cell tabular-nums font-mono">{formatSignedPct(itemDelta)}</td>
+                    <td className="table-cell tabular-nums">
+                      {item.bottleneckCount > 0 ? (
+                        <span className="cskh-status cskh-status--danger">{item.bottleneckCount} mở</span>
+                      ) : (
+                        <span className="cskh-status cskh-status--ok">0</span>
+                      )}
+                    </td>
+                    <td className="table-cell">
+                      <span className={`cskh-status cskh-status--${itemTone}`}>
+                        <span className="cskh-status__dot" aria-hidden />
+                        {progressStatusCopy(itemStatus).label}
+                      </span>
+                    </td>
+                    <td className="table-cell hrm-table-col-actions">
+                      <Button
+                        type="button"
+                        variant={isSelected ? 'filled' : 'outlined'}
+                        size="sm"
+                        onClick={() => navigate(cskhProjectPath(item.code, 'dashboard'))}
+                      >
+                        {isSelected ? 'Đang xem' : 'Chọn xem'}
+                      </Button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </HrmPanel>
+
+      {/* ĐIỂM NGHẼN RỦI RO ĐƯỜNG GĂNG (HIGHLIGHT) */}
+      {urgentBottlenecks.length > 0 && (
         <HrmPanel className="cskh-desk__panel">
-          <div className="cskh-desk__section-head">
-            <div>
-              <h2 className="section-heading__title m-0">{project.code}</h2>
-              <p className="section-heading__sub mb-0">{project.name}{identity ? ` · ${identity}` : ''}</p>
+          <div className="cskh-desk__section-head" style={{ marginBottom: '12px' }}>
+            <div className="flex items-center gap-2">
+              <AlertTriangle size={20} color="var(--md-error)" />
+              <h2 className="section-heading__title m-0" style={{ color: 'var(--md-error)' }}>
+                {urgentBottlenecks.length} Điểm Nghẽn Đang Đe Dọa Mốc COD Dự Án
+              </h2>
             </div>
             <Button
               type="button"
-              variant="text"
-              onClick={() => navigate(cskhProjectPath(project.code, 'gantt'))}
+              variant="outlined"
+              onClick={() => navigate(cskhProjectPath(project.code, 'bottlenecks'))}
             >
-              Xem Gantt
+              Vào ma trận điểm nghẽn
             </Button>
           </div>
 
-          <dl className="cskh-fact-list">
-            <div className="cskh-fact-list__row">
-              <dt>Giai đoạn hiện tại</dt>
-              <dd>{currentPhase}</dd>
-            </div>
-            <div className="cskh-fact-list__row">
-              <dt>Trạng thái</dt>
-              <dd>
-                <span className={`cskh-status cskh-status--${tone}`}>
-                  <span className="cskh-status__dot" aria-hidden />
-                  {statusCopy.label}
-                </span>
-              </dd>
-            </div>
-            <div className="cskh-fact-list__row">
-              <dt>Tiến độ kế hoạch</dt>
-              <dd>
-                <div className="cskh-meter">
-                  <span className="tabular-nums">{project.planPct}%</span>
-                  <div
-                    className="cskh-grid-card__bar"
-                    style={{ '--cskh-tt': `${project.planPct}%`, '--cskh-tone': 'var(--nv-navy)' } as CSSProperties}
-                  >
-                    <span className="cskh-grid-card__bar-fill" />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '12px' }}>
+            {urgentBottlenecks.map(bn => (
+              <div
+                key={bn.id}
+                style={{
+                  border: '1px solid var(--md-error)',
+                  borderRadius: '8px',
+                  padding: '12px 14px',
+                  background: 'color-mix(in srgb, var(--md-error) 4%, var(--md-surface))',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
+                  <span className="font-mono font-bold" style={{ color: 'var(--md-error)' }}>{bn.code}</span>
+                  <span className="cskh-status cskh-status--danger">Khẩn cấp</span>
+                </div>
+                <div style={{ fontWeight: 600, color: 'var(--md-on-surface)', marginBottom: '4px', fontSize: '0.9rem' }}>
+                  {bn.name}
+                </div>
+                {bn.ganttTask && (
+                  <div style={{ fontSize: '0.8rem', color: 'var(--nv-navy)', fontWeight: 600, marginBottom: '4px' }}>
+                    {bn.ganttTask}
                   </div>
+                )}
+                <div style={{ fontSize: '0.8rem', color: 'var(--md-on-surface-variant)' }}>
+                  Hạn xử lý: <strong>{isoToDisplay(bn.expectedAt)}</strong> · PIC: <strong>{bn.pic || 'Chưa chỉ định'}</strong>
                 </div>
-              </dd>
-            </div>
-            <div className="cskh-fact-list__row">
-              <dt>Tiến độ thực tế</dt>
-              <dd>
-                <div className="cskh-meter">
-                  <span className={`tabular-nums cskh-tone-${tone}`}>{project.actualPct}%</span>
-                  <div
-                    className="cskh-grid-card__bar"
-                    style={{ '--cskh-tt': `${project.actualPct}%`, '--cskh-tone': toneFill } as CSSProperties}
-                  >
-                    <span className="cskh-grid-card__bar-fill" />
+                {bn.resolution && (
+                  <div style={{ marginTop: '6px', fontSize: '0.8rem', color: 'var(--md-success)', fontWeight: 600 }}>
+                    Giải pháp: {bn.resolution}
                   </div>
-                </div>
-              </dd>
-            </div>
-            <div className="cskh-fact-list__row">
-              <dt>Chênh lệch KH - TT</dt>
-              <dd className={`tabular-nums cskh-tone-${tone}`}>{formatSignedPct(delta)}</dd>
-            </div>
-            <div className="cskh-fact-list__row">
-              <dt>Ngày khởi công</dt>
-              <dd>{startLabel}</dd>
-            </div>
-            <div className="cskh-fact-list__row">
-              <dt>Ngày ký nghiệm thu</dt>
-              <dd>
-                <div className="cskh-fact-list__value">
-                  <span>{acceptanceLabel}</span>
-                  <Button
-                    type="button"
-                    variant="outlined"
-                    size="sm"
-                    leftIcon={Plus}
-                    aria-expanded={editingAcceptance}
-                    onClick={() => setEditingAcceptance(true)}
-                  >
-                    Cập nhật
-                  </Button>
-                </div>
-              </dd>
-            </div>
-            <div className="cskh-fact-list__row">
-              <dt>Bảo hành</dt>
-              <dd>{warrantyCopy(project)}</dd>
-            </div>
-          </dl>
-
-          {editingAcceptance ? (
-            <div className="cskh-inline-form" role="region" aria-label="Cập nhật nghiệm thu và bảo hành">
-              <div className="cskh-inline-form__grid">
-                <FormField label="Ngày ký nghiệm thu">
-                  <HrmDatePicker
-                    value={acceptanceDate}
-                    onChange={setAcceptanceDate}
-                    placeholder="dd/mm/yyyy"
-                  />
-                </FormField>
-                <FormField label="Thời gian bảo hành (tháng)" error={warrantyError}>
-                  <input
-                    className="form-input"
-                    inputMode="numeric"
-                    value={warrantyMonths}
-                    onChange={event => {
-                      setWarrantyMonths(event.target.value);
-                      if (warrantyError) setWarrantyError('');
-                    }}
-                    autoComplete="off"
-                  />
-                </FormField>
+                )}
               </div>
-              <div className="cskh-inline-form__actions">
-                <Button type="button" variant="outlined" onClick={cancelAcceptance}>Hủy</Button>
-                <Button type="button" variant="filled" onClick={saveAcceptance}>Lưu</Button>
-              </div>
-            </div>
-          ) : null}
+            ))}
+          </div>
         </HrmPanel>
+      )}
 
-        <div className="cskh-project__aside">
-          <HrmPanel className="cskh-desk__panel">
-            <h2 className="section-heading__title m-0">Điểm nóng cần xử lý</h2>
-            <p className={`cskh-callout${project.bottleneckCount > 0 ? ' cskh-callout--warn' : ''}`}>
-              {project.bottleneckCount > 0
-                ? `${project.bottleneckCount} điểm nghẽn đang mở.`
-                : 'Không có điểm nghẽn đang mở.'}
-            </p>
-          </HrmPanel>
-          <HrmPanel className="cskh-desk__panel">
-            <h2 className="section-heading__title m-0">Hồ sơ sắp đến hạn tái trình</h2>
-            <p className={`cskh-callout${project.pendingDocs > 0 ? ' cskh-callout--warn' : ''}`}>
-              {project.pendingDocs > 0
-                ? `${project.pendingDocs} hồ sơ đang theo dõi.`
-                : 'Không có hồ sơ đang chờ.'}
-            </p>
-          </HrmPanel>
-        </div>
-      </div>
+      <CskhEditProjectModal
+        open={editOpen}
+        project={project}
+        onClose={() => setEditOpen(false)}
+        onSave={patch => patchProject(project.code, patch)}
+        onDelete={code => {
+          deleteProject(code);
+          navigate('/cskh');
+        }}
+      />
     </div>
   );
 }

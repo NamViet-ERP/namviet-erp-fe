@@ -36,11 +36,11 @@
   --table-cell-py:   8px;
   --table-cell-px:   12px;
 
-  /* ── Shape — keycap radii, not MD3 pills ── */
-  --radius-xs: 4px;   /* input, chip, badge */
-  --radius-sm: 6px;   /* button */
-  --radius-md: 8px;   /* card, panel, table wrapper */
-  --radius-lg: 12px;  /* modal */
+  /* ── Shape — Modern ERP rounded radii ── */
+  --radius-xs: 6px;   /* input, chip, badge */
+  --radius-sm: 8px;   /* button */
+  --radius-md: 12px;  /* card, panel, table wrapper */
+  --radius-lg: 16px;  /* modal */
 
   /* ── Brand knobs ──
      Đổi accent: --nv-action (+ hover). Navy / giấy / chữ / cảnh báo tách riêng.
@@ -251,3 +251,4 @@
 }
 
 /* ── Dark knobs — chỉ đổi action / navy / surface ở đây ── */
+
