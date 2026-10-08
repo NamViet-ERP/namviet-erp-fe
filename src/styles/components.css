@@ -2987,6 +2987,15 @@
     font-weight: var(--fw-semibold);
     color: inherit;
   }
+  .sidebar-item__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-left: auto;
+    white-space: nowrap;
+    pointer-events: none;
+  }
   .sidebar-item__chevron {
     color: var(--nv-sidebar-on-muted);
     transition: transform 280ms var(--md-easing), opacity 280ms var(--md-easing), color 200ms var(--md-easing);

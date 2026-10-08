@@ -367,16 +367,16 @@ export default function Sidebar({
               >
                 <Icon size={18} className="sidebar-item__icon" />
                 <span
-                  className={`sidebar-item__label sidebar-label flex-1 text-left${isEffectiveCollapsed ? ' collapsed' : ''}`}
+                  className={`sidebar-item__label sidebar-label flex-1 min-w-0 text-left${isEffectiveCollapsed ? ' collapsed' : ''}`}
                   title={item.label}
                 >
-                  <span>{item.label}</span>
-                  {item.badge && !isEffectiveCollapsed && (
-                    <span className="sidebar-item__badge ml-auto text-[10px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200/80 dark:border-amber-800/60 leading-none">
-                      {item.badge}
-                    </span>
-                  )}
+                  {item.label}
                 </span>
+                {item.badge && !isEffectiveCollapsed && (
+                  <span className="sidebar-item__badge ml-auto shrink-0 text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200/80 dark:border-amber-800/60 leading-none whitespace-nowrap pointer-events-none">
+                    {item.badge}
+                  </span>
+                )}
                 {hasChildren && !isEffectiveCollapsed && (
                   <ChevronDown
                     size={12}
@@ -463,9 +463,14 @@ export default function Sidebar({
         <div
           role="tooltip"
           style={tipStyle}
-          className="sidebar-collapsed-tip"
+          className="sidebar-collapsed-tip flex items-center gap-1.5"
         >
-          {tipItem.label}
+          <span>{tipItem.label}</span>
+          {tipItem.badge && (
+            <span className="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200/80 dark:border-amber-800/60 leading-none">
+              {tipItem.badge}
+            </span>
+          )}
         </div>,
         document.body
       )}
