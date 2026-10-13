@@ -3,7 +3,7 @@ import FormField from '../ui/FormField';
 import { useMaterialUnits } from '../../hooks/useMaterialUnits';
 
 interface MaterialUnitSelectProps {
-  value: string;
+  value?: string | null;
   onChange: (value: string) => void;
   error?: string;
   required?: boolean;
@@ -25,8 +25,9 @@ export default function MaterialUnitSelect({
   variant = 'form',
 }: MaterialUnitSelectProps) {
   const { data: units = [], isLoading } = useMaterialUnits(true);
+  const safeValue = (value ?? '').trim();
   const showLegacy =
-    preserveUnknownValue && value.trim() !== '' && !units.some(u => u.name === value);
+    preserveUnknownValue && safeValue !== '' && !units.some(u => u.name === safeValue);
 
   const resolvedSelectClass =
     selectClassName ??
@@ -37,7 +38,7 @@ export default function MaterialUnitSelect({
   const select = (
     <select
       className={resolvedSelectClass}
-      value={value}
+      value={value ?? ''}
       disabled={isLoading}
       onChange={e => onChange(e.target.value)}
     >
@@ -45,7 +46,7 @@ export default function MaterialUnitSelect({
       {units.map(u => (
         <option key={u.id} value={u.name}>{u.name}</option>
       ))}
-      {showLegacy && <option value={value}>{value}</option>}
+      {showLegacy && <option value={safeValue}>{safeValue}</option>}
     </select>
   );
 

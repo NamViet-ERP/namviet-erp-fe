@@ -56,6 +56,7 @@ export default function App() {
             <Route path="/warehouse/settings" element={<Navigate to="/operations/settings/material-categories" replace />} />
             <Route path="/warehouse/settings/material-categories" element={<Navigate to="/operations/settings/material-categories" replace />} />
             <Route path="/warehouse/settings/material-units" element={<Navigate to="/operations/settings/material-units" replace />} />
+            <Route path="/warehouse/settings/material-origins" element={<Navigate to="/operations/settings/material-origins" replace />} />
             <Route path="/warehouse/settings/suppliers" element={<Navigate to="/suppliers/list" replace />} />
 
             <Route path="/operations" element={<Navigate to="/operations/dashboard" replace />} />
@@ -65,6 +66,7 @@ export default function App() {
             <Route path="/operations/settings" element={<Navigate to="/operations/settings/material-categories" replace />} />
             <Route path="/operations/settings/material-categories" element={<Pages.SettingsPage />} />
             <Route path="/operations/settings/material-units" element={<Pages.SettingsPage />} />
+            <Route path="/operations/settings/material-origins" element={<Pages.SettingsPage />} />
 
             <Route path="/stocktake/list" element={<Pages.StocktakeListPage />} />
             <Route path="/stocktake/settings" element={<Navigate to="/stocktake/list" replace />} />

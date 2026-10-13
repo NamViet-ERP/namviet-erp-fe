@@ -8,11 +8,28 @@ type Schemas = components['schemas'];
 
 export type MaterialCategoryApiDto = Schemas['MaterialCategoryDto'];
 export type MaterialCategoryPathApiDto = Schemas['MaterialCategoryPathDto'];
-export type MaterialApiDto = Schemas['MaterialDto'];
+export type MaterialApiDto = Schemas['MaterialDto'] & {
+  origin?: string | null;
+  imageUrl?: string | null;
+};
 export type MaterialUnitApiDto = Schemas['MaterialUnitDto'];
-export type UpsertMaterialRequest = Schemas['UpsertMaterialRequest'];
+export type MaterialOriginApiDto = {
+  id: number;
+  name: string;
+  sortOrder: number;
+  isActive: boolean;
+};
+export type UpsertMaterialRequest = Schemas['UpsertMaterialRequest'] & {
+  origin?: string | null;
+  imageUrl?: string | null;
+};
 export type UpsertMaterialCategoryRequest = Schemas['UpsertMaterialCategoryRequest'];
 export type UpsertMaterialUnitRequest = Schemas['UpsertMaterialUnitRequest'];
+export type UpsertMaterialOriginRequest = {
+  name: string;
+  sortOrder?: number;
+  isActive?: boolean;
+};
 
 export type ProjectWarehouseKeeperDto = Schemas['ProjectWarehouseKeeperDto'];
 /** FE name kept for existing imports; wire schema is ProjectDto. */

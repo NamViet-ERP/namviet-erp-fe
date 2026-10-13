@@ -641,9 +641,10 @@ export function ganttItemStatus(item: CskhGanttItem, now = Date.now()): CskhProg
   });
 }
 
-export function ganttKpis(items: CskhGanttItem[], now = Date.now()) {
-  const hasGroups = items.some(row => row.isGroup);
-  const targetItems = hasGroups ? items.filter(row => !row.isGroup) : items;
+export function ganttKpis(items: CskhGanttItem[] = [], now = Date.now()) {
+  const safeItems = Array.isArray(items) ? items : [];
+  const hasGroups = safeItems.some(row => row.isGroup);
+  const targetItems = hasGroups ? safeItems.filter(row => !row.isGroup) : safeItems;
   const completed = targetItems.filter(row => row.actualPct >= 100).length;
   const delayed = targetItems.filter(row => {
     const status = ganttItemStatus(row, now);
@@ -657,7 +658,7 @@ export function ganttKpis(items: CskhGanttItem[], now = Date.now()) {
   const actualPct = totalW
     ? clampPct(targetItems.reduce((sum, row, i) => sum + row.actualPct * (weight[i] ?? 1), 0) / totalW)
     : 0;
-  const lastEnd = items.reduce((max, row) => {
+  const lastEnd = safeItems.reduce((max, row) => {
     const end = Date.parse(row.endDate);
     return Number.isFinite(end) && end > max ? end : max;
   }, 0);

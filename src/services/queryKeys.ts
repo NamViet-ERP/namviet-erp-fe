@@ -98,6 +98,9 @@ export const queryKeys = {
   materialUnits: {
     all: ['materialUnits'] as const,
   },
+  materialOrigins: {
+    all: ['materialOrigins'] as const,
+  },
   projects: {
     all: ['projects'] as const,
     detail: (code: string) => ['projects', code] as const,
@@ -238,5 +241,12 @@ export const queryKeys = {
   },
   warehouseSuppliers: {
     poCreate: ['warehouse-suppliers', 'po-create'] as const,
+  },
+  cskh: {
+    all: ['cskh'] as const,
+    bottlenecks: (projectCode: string) => ['cskh', projectCode, 'bottlenecks'] as const,
+    requests: (projectCode: string) => ['cskh', projectCode, 'requests'] as const,
+    meetings: (projectCode: string) => ['cskh', projectCode, 'meetings'] as const,
+    documents: (projectCode: string) => ['cskh', projectCode, 'documents'] as const,
   },
 } as const;

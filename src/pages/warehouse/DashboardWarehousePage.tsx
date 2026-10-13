@@ -99,7 +99,7 @@ function WarehouseBarLegend({ data }: { data: CategoryDataPoint[] }) {
       </p>
       <ul className="warehouse-bar-legend" aria-label="Danh sách kho dự án">
         {data.map((item, index) => (
-          <li key={item.name} className="warehouse-bar-legend__row">
+          <li key={`${item.name}-${index}`} className="warehouse-bar-legend__row">
             <span className="warehouse-bar-legend__index" aria-hidden>{index + 1}</span>
             <span className="warehouse-bar-legend__dot" style={{ background: item.color }} aria-hidden />
             <span className="warehouse-bar-legend__name">{item.name}</span>
@@ -481,10 +481,10 @@ function CategoryBreakdownList({ data }: { data: CategoryDataPoint[] }) {
 
   return (
     <div className="chart-breakdown__list" aria-label="Chi tiết cơ cấu tồn kho">
-      {data.map(item => {
+      {data.map((item, index) => {
         const pct = Math.round((item.value / total) * 100);
         return (
-          <div key={item.name} className="chart-breakdown__row">
+          <div key={`${item.name}-${index}`} className="chart-breakdown__row">
             <div className="chart-breakdown__row-top">
               <span className="chart-breakdown__dot" style={{ background: item.color }} />
               <span className="chart-breakdown__name" title={item.name}>{item.name}</span>
@@ -530,8 +530,8 @@ function CategoryPieChart({ data }: { data: CategoryDataPoint[] }) {
               strokeWidth={2}
               stroke="var(--md-surface-container)"
             >
-              {data.map((entry) => (
-                <Cell key={entry.name} fill={entry.color} />
+              {data.map((entry, index) => (
+                <Cell key={`${entry.name}-${index}`} fill={entry.color} />
               ))}
             </Pie>
             <Tooltip {...dashboardChartTooltipProps} />
@@ -614,8 +614,8 @@ function WarehouseBarChart({ data }: { data: CategoryDataPoint[] }) {
                     )}
                   />
                   <Bar dataKey="value" name={WAREHOUSE_BAR_Y_AXIS.title} radius={[6, 6, 0, 0]} maxBarSize={48}>
-                    {data.map(entry => (
-                      <Cell key={entry.name} fill={entry.color} />
+                    {data.map((entry, index) => (
+                      <Cell key={`${entry.name}-${index}`} fill={entry.color} />
                     ))}
                     <LabelList
                       dataKey="value"

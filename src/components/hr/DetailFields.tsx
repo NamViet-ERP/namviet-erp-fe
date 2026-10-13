@@ -45,9 +45,9 @@ export function MaskedFieldView({ label, value }: { label: string; value?: strin
 import HrmSelect from './HrmSelect';
 import { sanitizePhoneField, trimFieldValue } from '../../lib/hrm/sanitizeInput';
 
-export function FieldInput({ label, value, onChange, type = 'text', error, phone, trimOnBlur = true, placeholder, hint }: {
+export function FieldInput({ label, value, onChange, type = 'text', error, phone, trimOnBlur = true, placeholder, hint, className = '' }: {
   label: string; value: string; onChange: (v: string) => void; type?: string; error?: string;
-  phone?: boolean; trimOnBlur?: boolean; placeholder?: string; hint?: string;
+  phone?: boolean; trimOnBlur?: boolean; placeholder?: string; hint?: string; className?: string;
 }) {
   const handleBlur = () => {
     if (type === 'date') return;
@@ -58,7 +58,7 @@ export function FieldInput({ label, value, onChange, type = 'text', error, phone
   };
 
   return (
-    <div className="hrm-field">
+    <div className={`hrm-field ${className}`.trim()}>
       <label className="hrm-field__label">{label}</label>
       {hint && (
         <p className="text-[10px] text-[var(--md-on-surface-variant)] -mt-0.5 mb-1 leading-snug">{hint}</p>

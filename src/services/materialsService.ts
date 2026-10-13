@@ -64,6 +64,13 @@ export const materialsService = {
     return normalizeMaterial(await apiClient.post<MaterialApiDto>(ENDPOINT, body));
   },
 
+  async uploadImage(file: File, materialCode?: string): Promise<{ imageUrl: string; storageKey: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (materialCode) formData.append('materialCode', materialCode);
+    return apiClient.postForm<{ imageUrl: string; storageKey: string }>(`${ENDPOINT}/upload-image`, formData);
+  },
+
   async update(code: string, body: UpsertMaterialRequest): Promise<void> {
     await apiClient.put(`${ENDPOINT}/${encodeURIComponent(code)}`, body);
   },

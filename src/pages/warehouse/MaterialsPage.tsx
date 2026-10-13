@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Plus, RotateCcw } from 'lucide-react';
+import { Plus, RotateCcw, Image as ImageIcon, Trash2, Upload, Package } from 'lucide-react';
 import SearchBar from '../../components/ui/SearchBar';
 import Pagination from '../../components/ui/Pagination';
 import EmptyState from '../../components/ui/EmptyState';
@@ -11,11 +11,14 @@ import PermissionGate from '../../components/auth/PermissionGate';
 import Modal from '../../components/ui/Modal';
 import FormField from '../../components/ui/FormField';
 import MaterialUnitSelect from '../../components/warehouse/MaterialUnitSelect';
+import MaterialOriginSelect from '../../components/warehouse/MaterialOriginSelect';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { WMS_EMPTY, WMS_ERROR } from '../../lib/wms/messages';
 import { useMaterials, useCreateMaterial } from '../../hooks/useMaterials';
 import { useCategoryCascade } from '../../hooks/useCategories';
+import { materialsService } from '../../services/materialsService';
+import { resolveMediaUrl } from '../../lib/hrm/employeeApiMapper';
 import MaterialDetailView from './MaterialDetailView';
 import {
   MATERIAL_CATEGORY_LEVELS,
@@ -73,11 +76,16 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
     materialCode: '',
     materialName: '',
     unit: '',
+    origin: '',
     technicalSpec: '',
     generalTechnicalSpec: '',
     qualityStandard: '',
     ceilingPrice: '',
+    imageUrl: '',
   });
+  const [createImageFile, setCreateImageFile] = useState<File | null>(null);
+  const [createImagePreview, setCreateImagePreview] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [createErrors, setCreateErrors] = useState<Record<string, string>>({});
 
   const { optionsByLevel: filterOptions, isLoading: categoriesLoading } =
@@ -124,12 +132,36 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
       materialCode: '',
       materialName: '',
       unit: '',
+      origin: '',
       technicalSpec: '',
       generalTechnicalSpec: '',
       qualityStandard: '',
       ceilingPrice: '',
+      imageUrl: '',
     });
+    setCreateImageFile(null);
+    if (createImagePreview) URL.revokeObjectURL(createImagePreview);
+    setCreateImagePreview(null);
     setCreateErrors({});
+  };
+
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      showToast('warning', 'Kích thước ảnh tối đa là 10MB');
+      return;
+    }
+    setCreateImageFile(file);
+    if (createImagePreview) URL.revokeObjectURL(createImagePreview);
+    setCreateImagePreview(URL.createObjectURL(file));
+  };
+
+  const handleRemoveImage = () => {
+    setCreateImageFile(null);
+    if (createImagePreview) URL.revokeObjectURL(createImagePreview);
+    setCreateImagePreview(null);
+    setCreateForm(f => ({ ...f, imageUrl: '' }));
   };
 
   const setCreateLevel = (levelIndex: number, value: number | '') => {
@@ -168,11 +200,27 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
     if (!categoryId) return;
 
     try {
+      let finalImageUrl = createForm.imageUrl.trim() || null;
+      if (createImageFile) {
+        setIsUploadingImage(true);
+        try {
+          const res = await materialsService.uploadImage(createImageFile, createForm.materialCode.trim());
+          finalImageUrl = res.imageUrl;
+        } catch (uploadErr) {
+          showToast('error', getApiErrorMessage(uploadErr, 'Không thể tải ảnh lên'));
+          setIsUploadingImage(false);
+          return;
+        }
+        setIsUploadingImage(false);
+      }
+
       await createMutation.mutateAsync({
         materialCode: createForm.materialCode.trim(),
         materialName: createForm.materialName.trim(),
         categoryId,
         unit: createForm.unit.trim(),
+        origin: createForm.origin.trim() || null,
+        imageUrl: finalImageUrl,
         technicalSpec: createForm.technicalSpec.trim() || null,
         generalTechnicalSpec: createForm.generalTechnicalSpec.trim() || null,
         qualityStandard: createForm.qualityStandard.trim() || null,
@@ -322,6 +370,27 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
                     className="table-row cursor-pointer"
                     onClick={() => setDetailCode(m.materialCode)}
                   >
+                    <td className="table-cell text-center" style={{ width: '48px', minWidth: '48px' }}>
+                      {m.imageUrl?.trim() ? (
+                        <img
+                          src={resolveMediaUrl(m.imageUrl.trim())}
+                          alt={m.materialName}
+                          className="w-9 h-9 object-cover rounded-lg border border-[var(--md-outline-variant)] bg-[var(--md-surface-container)] inline-block shadow-sm"
+                          onError={e => {
+                            const img = e.currentTarget;
+                            img.style.display = 'none';
+                            const sibling = img.nextElementSibling as HTMLElement | null;
+                            if (sibling) sibling.style.display = 'flex';
+                          }}
+                        />
+                      ) : null}
+                      <div
+                        className="w-9 h-9 rounded-lg bg-[var(--md-surface-container-high)] text-[var(--md-on-surface-variant)] flex items-center justify-center mx-auto text-xs font-medium"
+                        style={{ display: m.imageUrl?.trim() ? 'none' : 'flex' }}
+                      >
+                        <Package size={16} className="opacity-40" />
+                      </div>
+                    </td>
                     <td className="table-cell">
                       <div className="mat-code-cell">
                         <span className="mat-code-cell__badge">{m.materialCode}</span>
@@ -347,6 +416,15 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
                         <span className="mat-name-cell__title">{m.materialName}</span>
                         {nameSub ? <span className="mat-name-cell__sub">{nameSub}</span> : null}
                       </div>
+                    </td>
+                    <td className="table-cell whitespace-nowrap">
+                      {m.origin ? (
+                        <span className="inline-flex items-center text-xs px-2.5 py-0.5 rounded-full bg-[var(--md-surface-container-high)] text-[var(--md-on-surface)] font-medium">
+                          {m.origin}
+                        </span>
+                      ) : (
+                        '-'
+                      )}
                     </td>
                     <td className="table-cell">{pathCell(m, 'danhMuc')}</td>
                     <td className="table-cell">{pathCell(m, 'nhomVatTu')}</td>
@@ -400,10 +478,10 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
             <button
               type="button"
               className="btn btn-primary"
-              disabled={createMutation.isPending}
+              disabled={createMutation.isPending || isUploadingImage}
               onClick={() => void handleCreate()}
             >
-              {createMutation.isPending ? 'Đang lưu...' : 'Tạo mới'}
+              {isUploadingImage ? 'Đang tải ảnh...' : createMutation.isPending ? 'Đang lưu...' : 'Tạo mới'}
             </button>
           </>
         }
@@ -465,6 +543,10 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
               required
               error={createErrors.unit}
             />
+            <MaterialOriginSelect
+              value={createForm.origin}
+              onChange={origin => setCreateForm(f => ({ ...f, origin }))}
+            />
             <FormField label="Quy cách">
               <input
                 className="form-input w-full"
@@ -473,13 +555,11 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
                 placeholder={MATERIAL_FIELD_PLACEHOLDERS.technicalSpec}
               />
             </FormField>
-            <FormField label="Thông số kỹ thuật chung" className="sm:col-span-2">
-              <textarea
-                className="form-input w-full"
-                rows={4}
-                value={createForm.generalTechnicalSpec}
-                onChange={e => setCreateForm(f => ({ ...f, generalTechnicalSpec: e.target.value }))}
-                placeholder={MATERIAL_FIELD_PLACEHOLDERS.generalTechnicalSpec}
+            <FormField label="Giá trần tham chiếu">
+              <CurrencyInput
+                value={createForm.ceilingPrice}
+                onChange={ceilingPrice => setCreateForm(f => ({ ...f, ceilingPrice }))}
+                placeholder="Dùng cảnh báo khi mua vượt giá"
               />
             </FormField>
             <FormField label="Tiêu chuẩn chất lượng" className="sm:col-span-2">
@@ -490,13 +570,70 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
                 placeholder={MATERIAL_FIELD_PLACEHOLDERS.qualityStandard}
               />
             </FormField>
-            <FormField label="Giá trần tham chiếu">
-              <CurrencyInput
-                value={createForm.ceilingPrice}
-                onChange={ceilingPrice => setCreateForm(f => ({ ...f, ceilingPrice }))}
-                placeholder="Dùng cảnh báo khi mua vượt giá"
+            <FormField label="Thông số kỹ thuật chung" className="sm:col-span-2">
+              <textarea
+                className="form-input w-full"
+                rows={3}
+                value={createForm.generalTechnicalSpec}
+                onChange={e => setCreateForm(f => ({ ...f, generalTechnicalSpec: e.target.value }))}
+                placeholder={MATERIAL_FIELD_PLACEHOLDERS.generalTechnicalSpec}
               />
             </FormField>
+            <div className="sm:col-span-2 border-t border-[var(--color-border)] pt-3">
+              <label className="hrm-label block mb-1.5 font-medium">Hình ảnh vật tư</label>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-3 rounded-lg border border-dashed border-[var(--color-border)] bg-[var(--color-surface-hover)]/30">
+                {createImagePreview ? (
+                  <div className="relative group w-24 h-24 rounded-lg overflow-hidden border border-[var(--color-border)] bg-[var(--color-surface)] flex-shrink-0 shadow-xs">
+                    <img
+                      src={createImagePreview}
+                      alt="Xem trước ảnh vật tư"
+                      className="w-full h-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="absolute inset-0 bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 text-xs font-medium cursor-pointer"
+                      title="Xóa ảnh"
+                    >
+                      <Trash2 size={16} />
+                      Xóa
+                    </button>
+                  </div>
+                ) : (
+                  <div className="w-24 h-24 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] flex flex-col items-center justify-center text-[var(--color-text-muted)] flex-shrink-0">
+                    <ImageIcon size={28} className="opacity-40 mb-1" />
+                    <span className="text-[11px]">Chưa có ảnh</span>
+                  </div>
+                )}
+                <div className="flex-1 space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <label className="btn btn-sm btn-outline cursor-pointer inline-flex items-center gap-1.5">
+                      <Upload size={14} />
+                      <span>{createImagePreview ? 'Đổi ảnh khác' : 'Chọn ảnh tải lên'}</span>
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp,image/gif"
+                        className="hidden"
+                        onChange={handleImageFileChange}
+                      />
+                    </label>
+                    {createImagePreview && (
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className="btn btn-sm btn-ghost text-red-600 hover:bg-red-50"
+                      >
+                        <Trash2 size={14} className="mr-1 inline" />
+                        Gỡ ảnh
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-xs text-[var(--color-text-muted)]">
+                    Hỗ trợ định dạng JPG, PNG, WEBP, GIF. Kích thước tối đa 10MB. Ảnh tải lên sẽ được lưu và gắn vào danh mục vật tư.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </Modal>

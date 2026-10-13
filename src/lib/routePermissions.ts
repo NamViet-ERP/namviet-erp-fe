@@ -16,6 +16,7 @@ const WMS_PROJECTS: PermissionKey[] = ['wms.projects.view:all'];
 const WMS_MATERIALS: PermissionKey[] = ['wms.materials.view:all'];
 const WMS_CATEGORIES: PermissionKey[] = ['wms.categories.view:all'];
 const WMS_UNITS: PermissionKey[] = ['wms.material_units.view:all'];
+const WMS_ORIGINS: PermissionKey[] = ['wms.material_origins.view:all', 'wms.material_units.view:all', 'wms.categories.view:all'];
 const SUPPLIERS: PermissionKey[] = ['purchasing.suppliers.view', 'wms.suppliers.view:all'];
 const CSKH: PermissionKey[] = ['cskh.dashboard.view', 'wms.projects.view:all'];
 const PUR_DASH: PermissionKey[] = ['purchasing.dashboard.view'];
@@ -45,6 +46,10 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
   {
     match: p => p === '/operations/settings/material-units' || p === '/warehouse/settings/material-units',
     permissions: WMS_UNITS,
+  },
+  {
+    match: p => p === '/operations/settings/material-origins' || p === '/warehouse/settings/material-origins',
+    permissions: WMS_ORIGINS,
   },
   { match: p => p === '/warehouse/import', permissions: ['wms.imports.view:all'] },
   { match: p => p === '/warehouse/export', permissions: ['wms.exports.view:all'] },

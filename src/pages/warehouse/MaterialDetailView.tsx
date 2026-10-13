@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Ban, RotateCcw } from 'lucide-react';
+import { Ban, RotateCcw, Image as ImageIcon, Trash2, Upload } from 'lucide-react';
 import DetailSection from '../../components/hr/DetailSection';
 import DetailFieldGrid from '../../components/hr/DetailFieldGrid';
 import { FieldInput, FieldTextarea, FieldView } from '../../components/hr/DetailFields';
@@ -12,6 +12,9 @@ import { getApiErrorMessage } from '../../lib/apiClient';
 import { useMaterial, useUpdateMaterial, useDiscontinueMaterial, useReactivateMaterial } from '../../hooks/useMaterials';
 import { useCategoryCascade, useCategoryTree } from '../../hooks/useCategories';
 import MaterialUnitSelect from '../../components/warehouse/MaterialUnitSelect';
+import MaterialOriginSelect from '../../components/warehouse/MaterialOriginSelect';
+import { materialsService } from '../../services/materialsService';
+import { resolveMediaUrl } from '../../lib/hrm/employeeApiMapper';
 import {
   MATERIAL_CATEGORY_LEVELS,
   MATERIAL_CREATE_REQUIRED_LEVELS,
@@ -57,11 +60,16 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
   const [editForm, setEditForm] = useState({
     materialName: '',
     unit: '',
+    origin: '',
+    imageUrl: '',
     technicalSpec: '',
     generalTechnicalSpec: '',
     qualityStandard: '',
     ceilingPrice: '',
   });
+  const [editImageFile, setEditImageFile] = useState<File | null>(null);
+  const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [editErrors, setEditErrors] = useState<Record<string, string>>({});
 
   const { optionsByLevel: editOptions, isLoading: editCategoriesLoading } =
@@ -87,16 +95,40 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
     });
   };
 
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      showToast('warning', 'Kích thước ảnh tối đa là 10MB');
+      return;
+    }
+    setEditImageFile(file);
+    if (editImagePreview) URL.revokeObjectURL(editImagePreview);
+    setEditImagePreview(URL.createObjectURL(file));
+  };
+
+  const handleRemoveImage = () => {
+    setEditImageFile(null);
+    if (editImagePreview) URL.revokeObjectURL(editImagePreview);
+    setEditImagePreview(null);
+    setEditForm(f => ({ ...f, imageUrl: '' }));
+  };
+
   const startEdit = () => {
     setEditSelection(selectionFromCategoryId(categories, material.categoryId));
     setEditForm({
       materialName: material.materialName,
       unit: material.unit,
+      origin: material.origin ?? '',
+      imageUrl: material.imageUrl ?? '',
       technicalSpec: material.technicalSpec ?? '',
       generalTechnicalSpec: material.generalTechnicalSpec ?? '',
       qualityStandard: material.qualityStandard ?? '',
       ceilingPrice: material.ceilingPrice != null ? String(material.ceilingPrice) : '',
     });
+    setEditImageFile(null);
+    if (editImagePreview) URL.revokeObjectURL(editImagePreview);
+    setEditImagePreview(null);
     setEditErrors({});
     setIsEditing(true);
   };
@@ -106,11 +138,16 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
     setEditForm({
       materialName: material.materialName,
       unit: material.unit,
+      origin: material.origin ?? '',
+      imageUrl: material.imageUrl ?? '',
       technicalSpec: material.technicalSpec ?? '',
       generalTechnicalSpec: material.generalTechnicalSpec ?? '',
       qualityStandard: material.qualityStandard ?? '',
       ceilingPrice: material.ceilingPrice != null ? String(material.ceilingPrice) : '',
     });
+    setEditImageFile(null);
+    if (editImagePreview) URL.revokeObjectURL(editImagePreview);
+    setEditImagePreview(null);
     setEditErrors({});
     setIsEditing(false);
   };
@@ -140,6 +177,20 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
     if (!categoryId) return;
 
     try {
+      let finalImageUrl = editForm.imageUrl.trim() || null;
+      if (editImageFile) {
+        setIsUploadingImage(true);
+        try {
+          const res = await materialsService.uploadImage(editImageFile, material.materialCode);
+          finalImageUrl = res.imageUrl;
+        } catch (uploadErr) {
+          showToast('error', getApiErrorMessage(uploadErr, 'Không thể tải ảnh lên'));
+          setIsUploadingImage(false);
+          return;
+        }
+        setIsUploadingImage(false);
+      }
+
       await updateMutation.mutateAsync({
         code: material.materialCode,
         body: {
@@ -147,6 +198,8 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
           materialName: editForm.materialName.trim(),
           categoryId,
           unit: editForm.unit.trim(),
+          origin: editForm.origin.trim() || null,
+          imageUrl: finalImageUrl,
           technicalSpec: editForm.technicalSpec.trim() || null,
           generalTechnicalSpec: editForm.generalTechnicalSpec.trim() || null,
           qualityStandard: editForm.qualityStandard.trim() || null,
@@ -184,6 +237,8 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
   };
 
   const isActive = material.isActive !== false;
+  const currentPreview =
+    editImagePreview || (editForm.imageUrl ? resolveMediaUrl(editForm.imageUrl) : null);
 
   return (
     <div className="hrm-page w-full">
@@ -194,7 +249,7 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
         actions={
           <HrmEditActions
             isEditing={isEditing}
-            isSaving={updateMutation.isPending}
+            isSaving={updateMutation.isPending || isUploadingImage}
             onEdit={startEdit}
             onCancel={cancelEdit}
             onSave={() => void handleSave()}
@@ -263,24 +318,17 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
               preserveUnknownValue
               variant="hrm"
             />
+            <MaterialOriginSelect
+              value={editForm.origin}
+              onChange={origin => setEditForm(f => ({ ...f, origin }))}
+              preserveUnknownValue
+              variant="hrm"
+            />
             <FieldInput
               label="Quy cách"
               value={editForm.technicalSpec}
               onChange={v => setEditForm(f => ({ ...f, technicalSpec: v }))}
               placeholder={MATERIAL_FIELD_PLACEHOLDERS.technicalSpec}
-            />
-            <FieldTextarea
-              className="col-span-full"
-              label="Thông số kỹ thuật chung"
-              value={editForm.generalTechnicalSpec}
-              onChange={v => setEditForm(f => ({ ...f, generalTechnicalSpec: v }))}
-              placeholder={MATERIAL_FIELD_PLACEHOLDERS.generalTechnicalSpec}
-            />
-            <FieldInput
-              label="Tiêu chuẩn chất lượng"
-              value={editForm.qualityStandard}
-              onChange={v => setEditForm(f => ({ ...f, qualityStandard: v }))}
-              placeholder={MATERIAL_FIELD_PLACEHOLDERS.qualityStandard}
             />
             <div className="hrm-field">
               <span className="hrm-field__label">Giá trần tham chiếu</span>
@@ -290,24 +338,123 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
                 placeholder="Cảnh báo khi mua vượt giá"
               />
             </div>
+            <FieldInput
+              className="col-span-full"
+              label="Tiêu chuẩn chất lượng"
+              value={editForm.qualityStandard}
+              onChange={v => setEditForm(f => ({ ...f, qualityStandard: v }))}
+              placeholder={MATERIAL_FIELD_PLACEHOLDERS.qualityStandard}
+            />
+            <FieldTextarea
+              className="col-span-full"
+              label="Thông số kỹ thuật chung"
+              value={editForm.generalTechnicalSpec}
+              onChange={v => setEditForm(f => ({ ...f, generalTechnicalSpec: v }))}
+              placeholder={MATERIAL_FIELD_PLACEHOLDERS.generalTechnicalSpec}
+            />
+            <div className="col-span-full border-t border-[var(--color-border)] pt-3">
+              <label className="hrm-field__label block mb-1.5 font-medium">Hình ảnh vật tư</label>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-3 rounded-lg border border-dashed border-[var(--color-border)] bg-[var(--color-surface-hover)]/30">
+                {currentPreview ? (
+                  <div className="relative group w-24 h-24 rounded-lg overflow-hidden border border-[var(--color-border)] bg-[var(--color-surface)] flex-shrink-0 shadow-xs">
+                    <img
+                      src={currentPreview}
+                      alt="Xem trước ảnh vật tư"
+                      className="w-full h-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="absolute inset-0 bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 text-xs font-medium cursor-pointer"
+                      title="Xóa ảnh"
+                    >
+                      <Trash2 size={16} />
+                      Xóa
+                    </button>
+                  </div>
+                ) : (
+                  <div className="w-24 h-24 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] flex flex-col items-center justify-center text-[var(--color-text-muted)] flex-shrink-0">
+                    <ImageIcon size={28} className="opacity-40 mb-1" />
+                    <span className="text-[11px]">Chưa có ảnh</span>
+                  </div>
+                )}
+                <div className="flex-1 space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <label className="btn btn-sm btn-outline cursor-pointer inline-flex items-center gap-1.5">
+                      <Upload size={14} />
+                      <span>{currentPreview ? 'Đổi ảnh khác' : 'Chọn ảnh tải lên'}</span>
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp,image/gif"
+                        className="hidden"
+                        onChange={handleImageFileChange}
+                      />
+                    </label>
+                    {currentPreview && (
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className="btn btn-sm btn-ghost text-red-600 hover:bg-red-50"
+                      >
+                        <Trash2 size={14} className="mr-1 inline" />
+                        Gỡ ảnh
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-xs text-[var(--color-text-muted)]">
+                    Hỗ trợ định dạng JPG, PNG, WEBP, GIF. Kích thước tối đa 10MB.
+                  </p>
+                </div>
+              </div>
+            </div>
           </DetailFieldGrid>
         ) : (
           <DetailFieldGrid layout="responsive">
             <FieldView label="Mã vật tư" value={material.materialCode} />
             <FieldView label="Tên" value={material.materialName} />
             <FieldView label="Đơn vị tính" value={material.unit} />
+            <FieldView label="Xuất xứ" value={material.origin ?? undefined} />
             <FieldView label="Quy cách" value={material.technicalSpec ?? undefined} />
+            <FieldView
+              label="Giá trần tham chiếu"
+              value={material.ceilingPrice != null ? formatCurrencyFull(material.ceilingPrice) : undefined}
+            />
+            <FieldView label="Tiêu chuẩn chất lượng" value={material.qualityStandard ?? undefined} />
             <FieldView
               className="col-span-full"
               label="Thông số kỹ thuật chung"
               value={material.generalTechnicalSpec ?? undefined}
               multiline
             />
-            <FieldView label="Tiêu chuẩn chất lượng" value={material.qualityStandard ?? undefined} />
-            <FieldView
-              label="Giá trần tham chiếu"
-              value={material.ceilingPrice != null ? formatCurrencyFull(material.ceilingPrice) : undefined}
-            />
+            <div className="col-span-full pt-2">
+              <span className="hrm-field__label block mb-2 font-medium">Hình ảnh vật tư</span>
+              {material.imageUrl?.trim() ? (
+                <div className="flex items-start gap-4">
+                  <a
+                    href={resolveMediaUrl(material.imageUrl.trim())}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block rounded-lg overflow-hidden border border-[var(--color-border)] shadow-xs hover:opacity-90 transition-opacity"
+                    title="Bấm để mở ảnh kích thước gốc"
+                  >
+                    <img
+                      src={resolveMediaUrl(material.imageUrl.trim())}
+                      alt={material.materialName}
+                      className="w-32 h-32 object-cover bg-[var(--color-surface)]"
+                      onError={e => {
+                        (e.target as HTMLElement).style.display = 'none';
+                      }}
+                    />
+                  </a>
+                  <div className="text-xs text-[var(--color-text-muted)] pt-1 space-y-1">
+                    <p className="font-medium text-[var(--color-text)]">Đã tải lên ảnh đại diện vật tư</p>
+                    <p>Bấm vào ảnh để xem kích thước gốc trong tab mới.</p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-[var(--color-text-muted)] italic">Chưa có hình ảnh</p>
+              )}
+            </div>
           </DetailFieldGrid>
         )}
       </DetailSection>

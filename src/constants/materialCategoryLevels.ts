@@ -11,8 +11,10 @@ export const MATERIAL_CATEGORY_LEVELS = [
 export const MATERIAL_CREATE_REQUIRED_LEVELS = [1, 2] as const;
 
 export const MATERIAL_TABLE_COLUMNS = [
+  { key: 'image', label: 'Ảnh' },
   { key: 'materialCode', label: 'Mã vật tư' },
   { key: 'materialName', label: 'Tên' },
+  { key: 'origin', label: 'Xuất xứ' },
   { key: 'danhMuc', label: 'Danh mục' },
   { key: 'nhomVatTu', label: 'Nhóm vật tư' },
   { key: 'loaiVatTu', label: 'Loại vật tư' },

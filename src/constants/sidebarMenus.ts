@@ -430,6 +430,7 @@ export const operationsMenu: SidebarMenuItem[] = [
     permission: [
       'wms.categories.view:all',
       'wms.material_units.view:all',
+      'wms.material_origins.view:all',
     ],
   },
 ];
