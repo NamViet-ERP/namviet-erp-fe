@@ -39,7 +39,7 @@ export default function DefectsTable({
             <th className="table-header-cell text-center">Mã đơn hàng</th>
             <th className="table-header-cell text-center">KHMH</th>
             <th className="table-header-cell text-center">Dự án</th>
-            <th className="table-header-cell text-center">NCC</th>
+            <th className="table-header-cell text-left">NCC</th>
             <th className="table-header-cell text-center">Trạng thái</th>
             {showActionsCol ? (
               <th className="table-header-cell text-center">Tác vụ</th>
@@ -97,7 +97,7 @@ export default function DefectsTable({
                   <td className="table-cell text-center">
                     {row.projectCode ? <span className="entity-code">{row.projectCode}</span> : '—'}
                   </td>
-                  <td className="table-cell text-center">{row.supplierName || '—'}</td>
+                  <td className="table-cell text-left">{row.supplierName || '—'}</td>
                   <td className="table-cell text-center">
                     <DefectStatusCell row={row} />
                   </td>

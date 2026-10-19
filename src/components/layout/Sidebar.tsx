@@ -27,16 +27,16 @@ const moduleIcons: Record<Module, LucideIcon> = {
   operations: Activity,
 };
 const moduleLabels: Record<Module, string> = {
-  warehouse: 'KHO HÀNG',
+  warehouse: 'KHO VẬN',
   stocktake: 'KIỂM KÊ',
   members: 'NHÂN VIÊN',
   recruitment: 'TUYỂN DỤNG',
-  admin: 'ADMIN',
+  admin: 'QUẢN TRỊ HỆ THỐNG',
   technical: 'KỸ THUẬT',
-  cskh: 'CSKH',
-  purchasing: 'MUA HÀNG',
+  cskh: 'DỊCH VỤ KHÁCH HÀNG',
+  purchasing: 'MUA SẮM & ĐƠN HÀNG',
   suppliers: 'NHÀ CUNG CẤP',
-  operations: 'SLC',
+  operations: 'DỰ ÁN EPC',
 };
 
 interface SidebarProps {

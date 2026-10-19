@@ -40,13 +40,13 @@ export default function CskhProjectDashboardPage() {
   const delta = progressDelta(project.planPct, project.actualPct);
 
   // COD target countdown calculation
-  const codTarget = project.targetCodDate || '2026-10-15';
-  const targetTime = Date.parse(codTarget);
+  const codTarget = project.targetCodDate;
+  const targetTime = codTarget ? Date.parse(codTarget) : NaN;
   const daysRemaining = Number.isFinite(targetTime)
     ? Math.max(0, Math.ceil((targetTime - currentTime) / (24 * 60 * 60 * 1000)))
-    : 26;
+    : null;
 
-  const fallbackGanttStages = ganttStages.length > 0 ? ganttStages : [
+  const fallbackGanttStages = [
     { id: '1', name: '#1 Khảo sát địa chất & Thiết kế chi tiết lò hơi', days: 30, startDate: '2026-06-01', endDate: '2026-07-01', actualPct: 100, notes: 'Hoàn thành 100%' },
     { id: '2', name: '#2 Gia công chế tạo balong & thân lò tại xưởng', days: 45, startDate: '2026-06-15', endDate: '2026-07-30', actualPct: 90, notes: 'Balong D1400 đạt 90%' },
     { id: '3', name: '#3 Lắp dựng khung thép móng & balong lên giá đỡ', days: 35, startDate: '2026-07-20', endDate: '2026-08-25', actualPct: 65, notes: 'Đang vướng sự cố cẩu 80T (BN-104)' },
@@ -54,6 +54,10 @@ export default function CskhProjectDashboardPage() {
     { id: '5', name: '#5 Thử áp lực thủy lực (Hydrostatic test - 1.5x)', days: 15, startDate: '2026-09-15', endDate: '2026-09-30', actualPct: 0, notes: 'Chờ CĐT phê duyệt phương án thử áp HS-301 (BN-106)' },
     { id: '6', name: '#6 Sấy gạch buồng đốt, đốt lửa lần đầu & COD', days: 15, startDate: '2026-10-01', endDate: '2026-10-15', actualPct: 0, notes: 'Mốc về đích phát điện thương mại' },
   ];
+
+  const displayGanttStages = ganttStages.length > 0
+    ? ganttStages
+    : (project.code === 'LH-01' ? fallbackGanttStages : []);
 
   return (
     <div className="page-stack cskh-desk">
@@ -120,7 +124,7 @@ export default function CskhProjectDashboardPage() {
               DỰ ÁN TRỌNG ĐIỂM
             </span>
             <span style={{ fontSize: '0.9rem', opacity: 0.9 }}>
-              {project.boilerType || 'Lò Hơi Tầng Sôi Tuần Hoàn CFB'} · {project.capacity || '30 T/h'}
+              {project.boilerType || 'Chưa phân loại'}{project.capacity ? ` · ${project.capacity}` : ''}
             </span>
             <button
               type="button"
@@ -149,8 +153,8 @@ export default function CskhProjectDashboardPage() {
             {project.code} — {project.name}
           </h2>
           <div style={{ fontSize: '0.85rem', opacity: 0.85, marginTop: '4px' }}>
-            Chủ đầu tư: <strong>{project.clientName || 'Tập đoàn An Phát'}</strong> · Chỉ huy trưởng:{' '}
-            <strong>{project.pmName || 'Nguyễn Văn Hải'}</strong>
+            Chủ đầu tư: <strong>{project.clientName || 'Chưa cập nhật'}</strong> · Chỉ huy trưởng:{' '}
+            <strong>{project.pmName || 'Chưa chỉ định'}</strong>
           </div>
         </div>
 
@@ -166,7 +170,7 @@ export default function CskhProjectDashboardPage() {
           >
             <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', opacity: 0.8 }}>Mục tiêu COD</div>
             <div style={{ fontSize: '1.15rem', fontWeight: 700, color: '#ffdd57' }}>
-              {isoToDisplay(codTarget)}
+              {codTarget ? isoToDisplay(codTarget) : 'Chưa thiết lập'}
             </div>
           </div>
 
@@ -181,7 +185,11 @@ export default function CskhProjectDashboardPage() {
           >
             <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', opacity: 0.8 }}>Thời gian còn lại</div>
             <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#ffffff' }}>
-              {daysRemaining} <span style={{ fontSize: '0.85rem', fontWeight: 500 }}>ngày</span>
+              {daysRemaining !== null ? (
+                <>{daysRemaining} <span style={{ fontSize: '0.85rem', fontWeight: 500 }}>ngày</span></>
+              ) : (
+                <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>Chưa có mốc</span>
+              )}
             </div>
           </div>
 
@@ -253,84 +261,98 @@ export default function CskhProjectDashboardPage() {
           </Button>
         </div>
 
-        <div className="flex flex-col gap-3">
-          {fallbackGanttStages.map(stage => {
-            const isCompleted = stage.actualPct >= 100;
-            const hasBottleneck = stage.notes?.includes('BN-');
-            const barTone = isCompleted
-              ? 'var(--md-success)'
-              : hasBottleneck
-              ? 'var(--md-error)'
-              : stage.actualPct > 0
-              ? 'var(--nv-action)'
-              : 'var(--md-outline)';
+        {displayGanttStages.length === 0 ? (
+          <div style={{
+            textAlign: 'center',
+            padding: '32px 20px',
+            borderRadius: '8px',
+            backgroundColor: 'var(--md-surface, #ffffff)',
+            border: '1px solid var(--cskh-frame, #e2e8f0)',
+            color: 'var(--md-on-surface-variant, #64748b)',
+            fontSize: '13px',
+          }}>
+            Chưa có hạng mục đường găng nào được ghi nhận cho dự án này. Bấm <strong>Chi tiết tiến độ 170 ngày</strong> để đồng bộ tiến độ WBS.
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {displayGanttStages.map(stage => {
+              const isCompleted = stage.actualPct >= 100;
+              const hasBottleneck = stage.notes?.includes('BN-');
+              const barTone = isCompleted
+                ? 'var(--md-success)'
+                : hasBottleneck
+                ? 'var(--md-error)'
+                : stage.actualPct > 0
+                ? 'var(--nv-action)'
+                : 'var(--md-outline)';
 
-            return (
-              <div
-                key={stage.id}
-                style={{
-                  border: '1px solid var(--cskh-frame)',
-                  borderRadius: '8px',
-                  padding: '12px 16px',
-                  background: hasBottleneck ? 'color-mix(in srgb, var(--md-error) 5%, var(--md-surface))' : 'var(--md-surface)',
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <div className="flex items-center gap-2">
-                    {isCompleted ? (
-                      <CheckCircle2 size={16} color="var(--md-success)" />
-                    ) : hasBottleneck ? (
-                      <AlertTriangle size={16} color="var(--md-error)" />
-                    ) : (
-                      <Clock size={16} color="var(--nv-action)" />
-                    )}
-                    <span style={{ fontWeight: 600, color: 'var(--md-on-surface)' }}>{stage.name}</span>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--md-on-surface-variant)' }}>
-                      ({stage.days} ngày · {isoToDisplay(stage.startDate)} → {isoToDisplay(stage.endDate)})
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    {hasBottleneck && (
-                      <span className="cskh-status cskh-status--danger" style={{ fontSize: '0.75rem' }}>
-                        Điểm nghẽn đường găng
-                      </span>
-                    )}
-                    <span style={{ fontWeight: 700, fontSize: '0.95rem', color: barTone }}>
-                      {stage.actualPct}%
-                    </span>
-                  </div>
-                </div>
-
-                {/* Progress bar */}
+              return (
                 <div
+                  key={stage.id}
                   style={{
-                    height: '8px',
-                    width: '100%',
-                    background: 'var(--md-surface-variant, #e2e8f0)',
-                    borderRadius: '4px',
-                    overflow: 'hidden',
+                    border: '1px solid var(--cskh-frame)',
+                    borderRadius: '8px',
+                    padding: '12px 16px',
+                    background: hasBottleneck ? 'color-mix(in srgb, var(--md-error) 5%, var(--md-surface))' : 'var(--md-surface)',
                   }}
                 >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <div className="flex items-center gap-2">
+                      {isCompleted ? (
+                        <CheckCircle2 size={16} color="var(--md-success)" />
+                      ) : hasBottleneck ? (
+                        <AlertTriangle size={16} color="var(--md-error)" />
+                      ) : (
+                        <Clock size={16} color="var(--nv-action)" />
+                      )}
+                      <span style={{ fontWeight: 600, color: 'var(--md-on-surface)' }}>{stage.name}</span>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--md-on-surface-variant)' }}>
+                        ({stage.days} ngày · {isoToDisplay(stage.startDate)} → {isoToDisplay(stage.endDate)})
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      {hasBottleneck && (
+                        <span className="cskh-status cskh-status--danger" style={{ fontSize: '0.75rem' }}>
+                          Điểm nghẽn đường găng
+                        </span>
+                      )}
+                      <span style={{ fontWeight: 700, fontSize: '0.95rem', color: barTone }}>
+                        {stage.actualPct}%
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Progress bar */}
                   <div
                     style={{
-                      height: '100%',
-                      width: `${stage.actualPct}%`,
-                      background: barTone,
-                      transition: 'width 0.4s ease',
+                      height: '8px',
+                      width: '100%',
+                      background: 'var(--md-surface-variant, #e2e8f0)',
+                      borderRadius: '4px',
+                      overflow: 'hidden',
                     }}
-                  />
-                </div>
-
-                {stage.notes && (
-                  <div style={{ fontSize: '0.8rem', color: hasBottleneck ? 'var(--md-error)' : 'var(--md-on-surface-variant)', marginTop: '6px' }}>
-                    {stage.notes}
+                  >
+                    <div
+                      style={{
+                        height: '100%',
+                        width: `${stage.actualPct}%`,
+                        background: barTone,
+                        transition: 'width 0.4s ease',
+                      }}
+                    />
                   </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+
+                  {stage.notes && (
+                    <div style={{ fontSize: '0.8rem', color: hasBottleneck ? 'var(--md-error)' : 'var(--md-on-surface-variant)', marginTop: '6px' }}>
+                      {stage.notes}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </HrmPanel>
 
       {/* DANH SÁCH TỔNG QUAN TẤT CẢ DỰ ÁN */}

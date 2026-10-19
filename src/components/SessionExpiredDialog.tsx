@@ -31,18 +31,18 @@ export default function SessionExpiredDialog() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [hydratedUsername, setHydratedUsername] = useState(false);
 
-  // Prefill tài khoản hiện tại khi dialog mở (điều chỉnh state trong render).
-  if (expired && !hydratedUsername) {
-    const sessionUsername = getSessionUser()?.username ?? '';
-    if (sessionUsername) setUsername(sessionUsername);
-    setHydratedUsername(true);
-  }
-  if (!expired && hydratedUsername) {
-    setHydratedUsername(false);
-    setPassword('');
-    setError('');
+  const [prevExpired, setPrevExpired] = useState(expired);
+  if (prevExpired !== expired) {
+    setPrevExpired(expired);
+    if (expired) {
+      const sessionUsername = getSessionUser()?.username ?? '';
+      if (sessionUsername) setUsername(sessionUsername);
+      setError('');
+    } else {
+      setPassword('');
+      setError('');
+    }
   }
 
   const handleRelogin = async (event: React.FormEvent) => {
@@ -53,10 +53,13 @@ export default function SessionExpiredDialog() {
     }
     setSubmitting(true);
     try {
-      await authService.login(username.trim(), password);
+      // Đăng nhập lại với rememberMe = true để phiên giữ dài hạn
+      await authService.login(username.trim(), password, true);
+      setPassword('');
+      setError('');
       resolveSessionExpired();
-      // Query đang lỗi vì 401 sẽ được refetch với phiên mới.
-      await queryClient.invalidateQueries();
+      // Query đang lỗi vì 401 sẽ được refetch ngầm với phiên mới mà không chặn đóng dialog
+      void queryClient.invalidateQueries();
     } catch (err) {
       setError(getApiErrorMessage(err, UI_ERROR.loginFailed));
     } finally {

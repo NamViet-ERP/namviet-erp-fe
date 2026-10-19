@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import Panel from '../ui/Panel';
 
 interface HrmPanelProps {
   children: ReactNode;
@@ -8,23 +9,9 @@ interface HrmPanelProps {
   subtitle?: string;
 }
 
-/** Elevated card surface for HRM lists, filters, and tables. */
-export default function HrmPanel({
-  children,
-  className = '',
-  noPadding = false,
-  title,
-  subtitle,
-}: HrmPanelProps) {
-  return (
-    <div className={`hrm-panel ${noPadding ? 'hrm-panel-flush' : ''} ${className}`}>
-      {(title || subtitle) && (
-        <div className="mb-3">
-          {title && <h2 className="text-base font-semibold">{title}</h2>}
-          {subtitle && <p className="text-sm text-[var(--md-on-surface-variant)]">{subtitle}</p>}
-        </div>
-      )}
-      {children}
-    </div>
-  );
+/**
+ * Legacy wrapper: forwards to unified Panel in src/components/ui/Panel.
+ */
+export default function HrmPanel(props: HrmPanelProps) {
+  return <Panel {...props} />;
 }

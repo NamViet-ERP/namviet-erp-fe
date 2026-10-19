@@ -36,12 +36,12 @@ export default function ImportTable({
         <thead>
           <tr>
             <th className="table-header-cell text-center whitespace-nowrap">Mã chứng từ</th>
-            <th className="table-header-cell text-center">Kho dự án</th>
+            <th className="table-header-cell text-left">Kho dự án</th>
             <th className="table-header-cell text-center">Mã đơn hàng</th>
-            <th className="table-header-cell text-center">Nhà cung cấp</th>
+            <th className="table-header-cell text-left">Nhà cung cấp</th>
             <th className="table-header-cell text-center">Mã KHMH</th>
             {showPrices ? (
-              <th className="table-header-cell text-center">Tổng giá trị</th>
+              <th className="table-header-cell text-right whitespace-nowrap">Tổng giá trị (VNĐ)</th>
             ) : null}
             <th className="table-header-cell text-center">Trạng thái</th>
           </tr>
@@ -75,7 +75,7 @@ export default function ImportTable({
                     onCodeClick={() => onOpenDetail(imp)}
                   />
                 </td>
-                <td className="table-cell text-center max-w-[200px]">
+                <td className="table-cell text-left max-w-[200px]">
                   <span className="line-clamp-1" title={projectName(imp.project)}>
                     {imp.project ? projectName(imp.project) : '-'}
                   </span>
@@ -83,12 +83,12 @@ export default function ImportTable({
                 <td className="table-cell text-center">
                   {imp.referenceCode ? <span className="entity-code">{imp.referenceCode}</span> : '-'}
                 </td>
-                <td className="table-cell text-center">{imp.supplier || '-'}</td>
+                <td className="table-cell text-left">{imp.supplier || '-'}</td>
                 <td className="table-cell text-center">
                   {imp.planCode?.trim() ? <span className="entity-code">{imp.planCode.trim()}</span> : '-'}
                 </td>
                 {showPrices ? (
-                  <td className="table-cell text-center tabular-nums">
+                  <td className="table-cell text-right tabular-nums font-mono">
                     {isIssueFromGeneralWarehouse(imp) ? '—' : formatCurrency(imp.totalValue)}
                   </td>
                 ) : null}

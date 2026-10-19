@@ -3,6 +3,8 @@
  * Access JWT is too large for cookies when packed with permission claims.
  */
 
+import { resolveSessionExpired } from './sessionExpiry';
+
 export const REMEMBER_KEY = 'nv-remember-me';
 /** @deprecated Legacy prefill key — cleared on logout; never store credentials. */
 export const SAVED_USER_KEY = 'nv-saved-user';
@@ -61,6 +63,7 @@ function getAuthChannel(): BroadcastChannel | null {
           if (data.token && data.token !== memoryAccessToken) {
             setAccessTokenInternal(data.token, false);
           }
+          resolveSessionExpired();
         } else if (data.type === 'LOGOUT') {
           clearAuthSessionInternal(false);
         }

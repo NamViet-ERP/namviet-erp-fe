@@ -101,6 +101,12 @@ export const queryKeys = {
   materialOrigins: {
     all: ['materialOrigins'] as const,
   },
+  materialRegions: {
+    all: ['materialRegions'] as const,
+  },
+  materialBrands: {
+    all: ['materialBrands'] as const,
+  },
   projects: {
     all: ['projects'] as const,
     detail: (code: string) => ['projects', code] as const,
@@ -248,5 +254,8 @@ export const queryKeys = {
     requests: (projectCode: string) => ['cskh', projectCode, 'requests'] as const,
     meetings: (projectCode: string) => ['cskh', projectCode, 'meetings'] as const,
     documents: (projectCode: string) => ['cskh', projectCode, 'documents'] as const,
+    snapshots: (projectCode: string) => ['cskh', projectCode, 'snapshots'] as const,
+    masterData: ['cskh', 'masterData'] as const,
+    profiles: ['cskh', 'profiles'] as const,
   },
 } as const;

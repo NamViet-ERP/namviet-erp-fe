@@ -31,8 +31,10 @@ import {
   captureSnapshot,
   ganttItemPlanPct,
   ganttKpis,
+  isoWeekNumber,
   newOpsId,
   removeGanttItem,
+  snapshotCompare,
   upsertGanttItem,
   type CskhGanttItem,
 } from '../../lib/cskh/opsWorkspace';
@@ -66,22 +68,87 @@ function addDaysIso(iso: string, days: number): string {
   return toIsoDate(date);
 }
 
-const CONTRACT_MILESTONES = [
-  { id: 'cm-1', name: 'Mốc 1: Tạm ứng 20% & Bàn giao mặt bằng móng lò', date: '2026-06-01', paymentPct: '20%', status: 'done', statusLabel: 'Đã thanh toán', notes: 'CĐT đã thanh toán 20% đợt 1' },
-  { id: 'cm-2', name: 'Mốc 2: Nghiệm thu balong xưởng & kết cấu thép móng (30%)', date: '2026-07-30', paymentPct: '30%', status: 'on_track', statusLabel: 'Đã hoàn tất nghiệm thu', notes: 'Biên bản nghiệm thu ARC-01' },
-  { id: 'cm-3', name: 'Mốc 3: Lắp balong lên khung & hàn ống sinh hơi (20%)', date: '2026-08-25', paymentPct: '20%', status: 'delayed', statusLabel: 'Chậm do cẩu 80T & thợ 6G', notes: 'Đang giải tỏa BN-104 & BN-105' },
-  { id: 'cm-4', name: 'Mốc 4: Thử áp lực thủy lực hydrostatic 1.5x (15%)', date: '2026-09-30', paymentPct: '15%', status: 'delayed', statusLabel: 'Chờ duyệt HS-301', notes: 'CĐT An Phát ngâm duyệt HS-301' },
-  { id: 'cm-5', name: 'Mốc 5: Bàn giao phát điện thương mại COD (10%)', date: '2026-10-15', paymentPct: '10%', status: 'target', statusLabel: 'Mục tiêu COD', notes: 'Mốc về đích hợp đồng' },
-  { id: 'cm-6', name: 'Mốc 6: Hoàn tất thời gian bảo hành 48 tháng (5%)', date: '2030-10-15', paymentPct: '5%', status: 'warranty', statusLabel: 'Bảo hành 48 tháng', notes: 'Giải tỏa bảo lãnh thực hiện HĐ' },
-];
+function getProjectContractMilestones(project: CskhProjectRecord) {
+  const d0 = project.advanceDate || project.startDate || toIsoDate(new Date());
+  const targetCod = project.targetCodDate || addDaysIso(d0, 135);
+  const m2Date = addDaysIso(d0, 60);
+  const m3Date = addDaysIso(d0, 85);
+  const m4Date = addDaysIso(d0, 120);
+  const warrantyEnd = addDaysIso(targetCod, (project.warrantyMonths || 48) * 30);
 
-const MILESTONE_PINS = [
-  { id: 'm-1', label: 'M1: Tạm ứng 20%', date: '2026-06-01', color: '#0284c7', tier: 'top' as const },
-  { id: 'm-2', label: 'M2: Balong xưởng (30%)', date: '2026-07-30', color: '#16a34a', tier: 'top' as const },
-  { id: 'm-3', label: 'M3: Lắp thân lò (20%)', date: '2026-08-25', color: '#dc2626', tier: 'top' as const },
-  { id: 'm-4', label: 'M4: Thử áp 15%', date: '2026-09-30', color: '#d97706', tier: 'top' as const },
-  { id: 'm-5', label: 'M5: COD Thương mại (10%)', date: '2026-10-15', color: '#0284c7', tier: 'bottom' as const },
-];
+  return [
+    {
+      id: 'cm-1',
+      name: 'Mốc 1: Tạm ứng 20% & Bàn giao mặt bằng móng lò',
+      date: d0,
+      paymentPct: '20%',
+      status: 'done',
+      statusLabel: 'Đã hoàn tất',
+      notes: project.advanceDate ? `CĐT đã thanh toán đợt 1 ngày ${isoToDisplay(project.advanceDate)}` : 'Đã nhận tạm ứng hợp đồng',
+    },
+    {
+      id: 'cm-2',
+      name: 'Mốc 2: Nghiệm thu balong xưởng & kết cấu thép móng (30%)',
+      date: m2Date,
+      paymentPct: '30%',
+      status: 'on_track',
+      statusLabel: 'Nghiệm thu chế tạo',
+      notes: 'Biên bản nghiệm thu xưởng và bàn giao mặt bằng',
+    },
+    {
+      id: 'cm-3',
+      name: 'Mốc 3: Lắp balong lên khung & hàn ống sinh hơi (20%)',
+      date: m3Date,
+      paymentPct: '20%',
+      status: 'delayed',
+      statusLabel: 'Lắp đặt thân lò',
+      notes: 'Lắp đặt kết cấu và hàn cụm balong ống áp lực',
+    },
+    {
+      id: 'cm-4',
+      name: 'Mốc 4: Thử áp lực thủy lực hydrostatic 1.5x (15%)',
+      date: m4Date,
+      paymentPct: '15%',
+      status: 'delayed',
+      statusLabel: 'Kiểm định thử áp',
+      notes: 'Thử áp lực nước và thẩm định hồ sơ kỹ thuật',
+    },
+    {
+      id: 'cm-5',
+      name: 'Mốc 5: Bàn giao phát điện thương mại COD (10%)',
+      date: targetCod,
+      paymentPct: '10%',
+      status: 'target',
+      statusLabel: 'Mục tiêu COD',
+      notes: 'Mốc về đích phát điện/cung cấp nhiệt thương mại',
+    },
+    {
+      id: 'cm-6',
+      name: 'Mốc 6: Hoàn tất thời gian bảo hành hợp đồng (5%)',
+      date: warrantyEnd,
+      paymentPct: '5%',
+      status: 'warranty',
+      statusLabel: `Bảo hành ${project.warrantyMonths || 48} tháng`,
+      notes: 'Giải tỏa bảo lãnh thực hiện hợp đồng sau thời hạn bảo hành',
+    },
+  ];
+}
+
+function getProjectMilestonePins(project: CskhProjectRecord) {
+  const d0 = project.advanceDate || project.startDate || toIsoDate(new Date());
+  const targetCod = project.targetCodDate || addDaysIso(d0, 135);
+  const m2Date = addDaysIso(d0, 60);
+  const m3Date = addDaysIso(d0, 85);
+  const m4Date = addDaysIso(d0, 120);
+
+  return [
+    { id: 'm-1', label: 'M1: Tạm ứng 20%', date: d0, color: '#0284c7', tier: 'top' as const },
+    { id: 'm-2', label: 'M2: Balong xưởng (30%)', date: m2Date, color: '#16a34a', tier: 'top' as const },
+    { id: 'm-3', label: 'M3: Lắp thân lò (20%)', date: m3Date, color: '#dc2626', tier: 'top' as const },
+    { id: 'm-4', label: 'M4: Thử áp 15%', date: m4Date, color: '#d97706', tier: 'top' as const },
+    { id: 'm-5', label: 'M5: COD Thương mại (10%)', date: targetCod, color: '#0284c7', tier: 'bottom' as const },
+  ];
+}
 
 interface TimelineSubdivision {
   key: string;
@@ -103,9 +170,18 @@ interface TimelineMonth {
   subdivisions: TimelineSubdivision[];
 }
 
-function buildTimelineStructure(items: CskhGanttItem[], scaleMode: TimeScaleMode = 'decade', todayStr = '2026-09-22') {
-  let minDate = new Date(2026, 5, 1); // 2026-06-01
-  let maxDate = new Date(2026, 9, 31); // 2026-10-31
+function buildTimelineStructure(
+  items: CskhGanttItem[],
+  scaleMode: TimeScaleMode = 'decade',
+  todayStr?: string,
+  defaultStartIso?: string,
+  defaultEndIso?: string,
+) {
+  const baseStart = parseIsoDate(defaultStartIso) ?? new Date();
+  const baseEnd = parseIsoDate(defaultEndIso) ?? new Date(baseStart.getFullYear(), baseStart.getMonth() + 5, 0);
+
+  let minDate = new Date(baseStart.getFullYear(), baseStart.getMonth(), 1);
+  let maxDate = new Date(baseEnd.getFullYear(), baseEnd.getMonth() + 1, 0);
 
   for (const item of items) {
     const s = parseIsoDate(item.startDate);
@@ -114,7 +190,7 @@ function buildTimelineStructure(items: CskhGanttItem[], scaleMode: TimeScaleMode
     if (e && e > maxDate) maxDate = new Date(e.getFullYear(), e.getMonth() + 1, 0);
   }
 
-  const today = parseIsoDate(todayStr) ?? new Date();
+  const today = parseIsoDate(todayStr ?? toIsoDate(new Date())) ?? new Date();
   const startTime = minDate.getTime();
   const endTime = new Date(maxDate.getFullYear(), maxDate.getMonth() + 1, 0, 23, 59, 59).getTime();
   const msPerDay = 1000 * 60 * 60 * 24;
@@ -218,6 +294,11 @@ export default function CskhGanttPage({ project }: CskhGanttPageProps) {
   const { patchProject } = useCskhCommandCenter();
   const { store: master } = useCskhMasterData();
   const kpis = ganttKpis(ops.ganttItems);
+  const comparison = useMemo(() => snapshotCompare(ops.snapshots), [ops.snapshots]);
+  const openBottlenecksCount = useMemo(
+    () => ops.bottlenecks.filter(b => b.status === 'open').length,
+    [ops.bottlenecks],
+  );
 
   const [viewMode, setViewMode] = useState<GanttViewMode>('kickoff');
   const [displayMode, setDisplayMode] = useState<GanttDisplayMode>('both');
@@ -234,6 +315,9 @@ export default function CskhGanttPage({ project }: CskhGanttPageProps) {
     : undefined;
   const band = combo ? findCapacityBand(combo, parseCapacityTons(project.capacity)) : undefined;
   const day0 = project.advanceDate || project.startDate || toIsoDate(new Date());
+
+  const contractMilestones = useMemo(() => getProjectContractMilestones(project), [project]);
+  const milestonePins = useMemo(() => getProjectMilestonePins(project), [project]);
 
   const syncRollup = (items: CskhGanttItem[]) => {
     if (items.length === 0) return;
@@ -393,7 +477,7 @@ export default function CskhGanttPage({ project }: CskhGanttPageProps) {
         </button>
       </div>
 
-      {/* SO SÁNH W37 VS W36 PANEL (KHI BẬT) */}
+      {/* SO SÁNH SNAPSHOTS PANEL (KHI BẬT) */}
       {showCompare && (
         <div style={{
           backgroundColor: '#ffffff',
@@ -405,7 +489,7 @@ export default function CskhGanttPage({ project }: CskhGanttPageProps) {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
             <h3 style={{ margin: 0, fontSize: '13px', fontWeight: 800, color: '#0369a1', textTransform: 'uppercase' }}>
-              📊 ĐỐI SOÁT TIẾN ĐỘ TUẦN 37 (W37) VS TUẦN 36 (W36)
+              📊 ĐỐI SOÁT TIẾN ĐỘ THỰC TẾ GIỮA CÁC TUẦN SNAPSHOT ({comparison.count} MỐC ĐÃ LƯU)
             </h3>
             <button
               type="button"
@@ -415,28 +499,48 @@ export default function CskhGanttPage({ project }: CskhGanttPageProps) {
               ✕ Đóng
             </button>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
-            <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}>
-              <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Tuần 36 (W36)</div>
-              <div style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a' }}>58%</div>
-              <div style={{ fontSize: '12px', color: '#64748b' }}>Kế hoạch: 90%</div>
+          {comparison.current && comparison.previous ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+              <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>
+                  Tuần {isoWeekNumber(new Date(comparison.previous.at))} (W{isoWeekNumber(new Date(comparison.previous.at))}) · Mốc trước
+                </div>
+                <div style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a' }}>{comparison.previous.actualPct}%</div>
+                <div style={{ fontSize: '12px', color: '#64748b' }}>Kế hoạch: {comparison.previous.planPct}%</div>
+              </div>
+              <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+                <div style={{ fontSize: '11px', color: '#15803d', textTransform: 'uppercase', fontWeight: 600 }}>
+                  Tuần {isoWeekNumber(new Date(comparison.current.at))} (W{isoWeekNumber(new Date(comparison.current.at))}) · Mốc mới nhất
+                </div>
+                <div style={{ fontSize: '18px', fontWeight: 800, color: '#15803d' }}>{comparison.current.actualPct}%</div>
+                <div style={{ fontSize: '12px', color: '#15803d' }}>Kế hoạch: {comparison.current.planPct}%</div>
+              </div>
+              <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: comparison.delta < 0 ? '#fef2f2' : '#f0fdf4', border: comparison.delta < 0 ? '1px solid #fecaca' : '1px solid #bbf7d0' }}>
+                <div style={{ fontSize: '11px', color: comparison.delta < 0 ? '#b91c1c' : '#15803d', textTransform: 'uppercase', fontWeight: 600 }}>Biến động thực tế</div>
+                <div style={{ fontSize: '18px', fontWeight: 800, color: comparison.delta < 0 ? '#dc2626' : '#15803d' }}>
+                  {formatSignedPct(comparison.delta)}
+                </div>
+                <div style={{ fontSize: '12px', color: comparison.delta < 0 ? '#b91c1c' : '#15803d' }}>
+                  {comparison.delta > 0 ? 'Tiến độ tăng trưởng' : comparison.delta === 0 ? 'Tiến độ chững lại' : 'Tiến độ bị thụt lùi'}
+                </div>
+              </div>
+              <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: '#fffbeb', border: '1px solid #fde68a' }}>
+                <div style={{ fontSize: '11px', color: '#b45309', textTransform: 'uppercase', fontWeight: 600 }}>Điểm nghẽn đang mở</div>
+                <div style={{ fontSize: '18px', fontWeight: 800, color: '#b45309' }}>{openBottlenecksCount} điểm</div>
+                <div style={{ fontSize: '12px', color: '#b45309' }}>
+                  {openBottlenecksCount > 0 ? 'Cần giải tỏa kịp thời' : 'Không có điểm nghẽn'}
+                </div>
+              </div>
             </div>
-            <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0' }}>
-              <div style={{ fontSize: '11px', color: '#15803d', textTransform: 'uppercase', fontWeight: 600 }}>Tuần 37 (W37)</div>
-              <div style={{ fontSize: '18px', fontWeight: 800, color: '#15803d' }}>58%</div>
-              <div style={{ fontSize: '12px', color: '#15803d' }}>Kế hoạch: 100%</div>
+          ) : comparison.current ? (
+            <div style={{ padding: '16px', borderRadius: '8px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', fontSize: '13px', color: '#475569' }}>
+              ℹ️ Đã có 1 snapshot (Tuần {isoWeekNumber(new Date(comparison.current.at))} - {comparison.current.actualPct}% thực tế). Cần thêm ít nhất 1 snapshot nữa sau giao ban để hệ thống tự động đối soát chênh lệch giữa hai tuần.
             </div>
-            <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: '#fef2f2', border: '1px solid #fecaca' }}>
-              <div style={{ fontSize: '11px', color: '#b91c1c', textTransform: 'uppercase', fontWeight: 600 }}>Biến động chênh lệch</div>
-              <div style={{ fontSize: '18px', fontWeight: 800, color: '#dc2626' }}>-10%</div>
-              <div style={{ fontSize: '12px', color: '#b91c1c' }}>Tiến độ chững lại do nghẽn</div>
+          ) : (
+            <div style={{ padding: '16px', borderRadius: '8px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', fontSize: '13px', color: '#475569' }}>
+              ℹ️ Chưa có snapshot nào. Bấm <strong>Chụp snapshot</strong> ở góc phải để lưu mốc tiến độ đầu tiên vào cơ sở dữ liệu.
             </div>
-            <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: '#fffbeb', border: '1px solid #fde68a' }}>
-              <div style={{ fontSize: '11px', color: '#b45309', textTransform: 'uppercase', fontWeight: 600 }}>Điểm nghẽn nghiêm trọng</div>
-              <div style={{ fontSize: '18px', fontWeight: 800, color: '#b45309' }}>2 điểm</div>
-              <div style={{ fontSize: '12px', color: '#b45309' }}>BN-104 & BN-105</div>
-            </div>
-          </div>
+          )}
         </div>
       )}
 
@@ -601,7 +705,8 @@ export default function CskhGanttPage({ project }: CskhGanttPageProps) {
               items={ops.ganttItems}
               onSelectRow={openEdit}
               scaleMode={scaleMode}
-              todayStr="2026-09-22"
+              todayStr={toIsoDate(new Date())}
+              milestonePins={milestonePins}
             />
           )}
 
@@ -635,7 +740,7 @@ export default function CskhGanttPage({ project }: CskhGanttPageProps) {
                   CHI TIẾT TIẾN ĐỘ CÁC ĐỘI THI CÔNG (% KH HÔM NAY VS % TT THỰC TẾ)
                 </h2>
                 <div style={{ fontSize: '13px', color: '#64748b' }}>
-                  Hôm nay: <span style={{ fontWeight: 600 }}>22/09</span> · Tiến độ đạt: <strong style={{ color: '#dc2626' }}>58%</strong> (Kế hoạch: 100%)
+                  Hôm nay: <span style={{ fontWeight: 600 }}>{isoToDisplay(toIsoDate(new Date()))}</span> · Tiến độ đạt: <strong style={{ color: kpis.actualPct >= kpis.planPct ? '#16a34a' : '#dc2626' }}>{kpis.actualPct}%</strong> (Kế hoạch: {kpis.planPct}%)
                 </div>
               </div>
 
@@ -853,7 +958,7 @@ export default function CskhGanttPage({ project }: CskhGanttPageProps) {
                 </tr>
               </thead>
               <tbody>
-                {CONTRACT_MILESTONES.map(cm => {
+                {contractMilestones.map(cm => {
                   const isDelay = cm.status === 'delayed';
                   const isDone = cm.status === 'done' || cm.status === 'on_track';
                   return (
@@ -975,18 +1080,21 @@ function CskhGanttTimelineChart({
   items,
   onSelectRow,
   scaleMode = 'decade',
-  todayStr = '2026-09-22',
+  todayStr,
+  milestonePins = [],
 }: {
   items: CskhGanttItem[];
   onSelectRow?: (item: CskhGanttItem) => void;
   scaleMode?: TimeScaleMode;
   todayStr?: string;
+  milestonePins?: Array<{ id: string; label: string; date: string; color: string; tier: 'top' | 'bottom' }>;
 }) {
+  const currentTodayStr = todayStr || toIsoDate(new Date());
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   const timeline = useMemo(() => {
-    return buildTimelineStructure(items, scaleMode, todayStr);
-  }, [items, scaleMode, todayStr]);
+    return buildTimelineStructure(items, scaleMode, currentTodayStr);
+  }, [items, scaleMode, currentTodayStr]);
 
   const activeHoverItem = useMemo(() => {
     return items.find(it => it.id === hoveredId) ?? null;
@@ -1019,10 +1127,10 @@ function CskhGanttTimelineChart({
             letterSpacing: '0.4px',
             margin: 0,
           }}>
-            BIỂU ĐỒ GANTT TIMELINE TIẾN ĐỘ THỜI GIAN (T6 - T10/2026)
+            BIỂU ĐỒ GANTT TIMELINE TIẾN ĐỘ THỜI GIAN
           </h2>
           <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#64748b' }}>
-            Trục thời gian 170 ngày từ ngày nhận tạm ứng (01/06) đến hoàn thành thương mại COD (15/10)
+            Trục thời gian tiến độ thi công dự án và các mốc nghiệm thu thanh toán EPC
           </p>
         </div>
 
@@ -1046,7 +1154,7 @@ function CskhGanttTimelineChart({
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ width: '14px', height: '3px', backgroundColor: '#ef4444' }} />
-            <span style={{ color: '#ef4444', fontWeight: 700 }}>Đường Hôm nay (22/09)</span>
+            <span style={{ color: '#ef4444', fontWeight: 700 }}>Đường Hôm nay ({isoToDisplay(currentTodayStr)})</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span>🚩</span>
@@ -1057,7 +1165,7 @@ function CskhGanttTimelineChart({
 
       {/* TIMELINE CANVAS CONTAINER (SCROLLABLE, STICKY LEFT COLUMN) */}
       <div style={{ overflowX: 'auto', backgroundColor: '#ffffff' }}>
-        <div style={{ minWidth: '1360px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ minWidth: `${Math.max(1600, 320 + timeline.months.length * 240)}px`, display: 'flex', flexDirection: 'column' }}>
           
           {/* HEADER ROW 1: MONTHS & TIME SUBDIVISIONS */}
           <div style={{ display: 'flex', backgroundColor: '#f8fafc', borderBottom: '1px solid #cbd5e1' }}>
@@ -1098,8 +1206,11 @@ function CskhGanttTimelineChart({
                       fontWeight: 700,
                       color: '#1e293b',
                       borderRight: '1px solid #cbd5e1',
-                      padding: '4px 0',
+                      padding: '4px 4px',
                       letterSpacing: '0.2px',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
                     }}
                   >
                     {m.label} <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 500 }}>({m.daysCount} ngày)</span>
@@ -1123,13 +1234,19 @@ function CskhGanttTimelineChart({
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          gap: '4px',
+                          gap: '3px',
+                          padding: '0 2px',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
                         }}
                         title={`${sub.label}: ${sub.sublabel}`}
                       >
-                        <span style={{ fontWeight: 700 }}>{sub.label}</span>
+                        <span style={{ fontWeight: 700, flexShrink: 0 }}>{sub.label}</span>
                         {scaleMode === 'decade' && (
-                          <span style={{ fontSize: '9px', opacity: 0.65 }}>({sub.sublabel})</span>
+                          <span style={{ fontSize: '9px', opacity: 0.65, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            ({sub.sublabel})
+                          </span>
                         )}
                       </div>
                     ))}
@@ -1159,7 +1276,7 @@ function CskhGanttTimelineChart({
                   title="Mốc thời gian đối chiếu hiện tại"
                 >
                   <span>📍</span>
-                  <span>Hôm nay (22/09)</span>
+                  <span>Hôm nay ({isoToDisplay(currentTodayStr)})</span>
                 </div>
               </div>
             </div>
@@ -1217,7 +1334,7 @@ function CskhGanttTimelineChart({
               }} />
 
               {/* Milestone Pins (Staggered top/bottom so M4 & M5 NEVER collide) */}
-              {MILESTONE_PINS.map(pin => {
+              {milestonePins.map(pin => {
                 const s = parseIsoDate(pin.date);
                 if (!s) return null;
                 const offset = (s.getTime() - timeline.startTime) / (1000 * 60 * 60 * 24);

@@ -10,9 +10,9 @@ export default function SettingsPage() {
   const isOrigins = pathname.includes('/settings/material-origins');
   const isUnits = pathname.includes('/settings/material-units');
 
-  const title = isOrigins ? 'Xuất xứ' : isUnits ? 'Đơn vị tính' : 'Cây vật tư';
+  const title = isOrigins ? 'Xuất xứ & Nhãn hiệu' : isUnits ? 'Đơn vị tính' : 'Cây vật tư';
   const subtitle = isOrigins
-    ? 'Danh sách xuất xứ dùng khi tạo mã vật tư.'
+    ? 'Quản lý hãng sản xuất, quốc gia xuất xứ và nhóm nước dùng khi tạo mã vật tư.'
     : isUnits
       ? 'Danh sách đơn vị tính dùng khi tạo mã vật tư.'
       : 'Cấu trúc phân loại vật tư dùng chung trong kho.';
@@ -58,7 +58,7 @@ export default function SettingsPage() {
           }
         >
           <Globe size={16} />
-          Xuất xứ
+          Xuất xứ & Nhãn hiệu
         </NavLink>
       </div>
       {isOrigins ? (

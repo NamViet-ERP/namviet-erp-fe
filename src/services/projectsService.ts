@@ -55,6 +55,10 @@ export const projectsService = {
     await apiClient.put<void>(`${ENDPOINT}/${encodeURIComponent(code)}`, body);
   },
 
+  async updateStage(code: string, stage: string): Promise<void> {
+    await apiClient.patch<void>(`${ENDPOINT}/${encodeURIComponent(code)}/stage`, { stage });
+  },
+
   async getLedger(code: string): Promise<WarehouseProjectLedgerEntryApiDto[]> {
     return apiClient.get<WarehouseProjectLedgerEntryApiDto[]>(
       `${ENDPOINT}/${encodeURIComponent(code)}/ledger`,

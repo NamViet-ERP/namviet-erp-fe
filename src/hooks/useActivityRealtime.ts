@@ -25,12 +25,14 @@ function suppressBellToastIfOwnImport(payload: ActivityEventCreatedPayload) {
  * On event: invalidates purchasing dashboard caches (summary/chart/feed).
  * Returns whether the hub is currently connected (used to pause polling).
  */
+const isSignalREnabled = import.meta.env.VITE_ENABLE_SIGNALR === 'true';
+
 export function useActivityRealtime(module: string, enabled = true): { connected: boolean } {
   const queryClient = useQueryClient();
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    if (!enabled || !module.trim()) return;
+    if (!isSignalREnabled || !enabled || !module.trim()) return;
 
     const connection = createActivityHubConnection();
     let cancelled = false;

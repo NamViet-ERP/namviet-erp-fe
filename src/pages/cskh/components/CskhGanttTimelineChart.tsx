@@ -55,7 +55,7 @@ export function CskhGanttTimelineChart({
   }, [timeline]);
 
   const containerMinWidth = useMemo(() => {
-    return Math.max(1400, timeline.months.length * 210) + 'px';
+    return Math.max(1600, 360 + timeline.months.length * 280) + 'px';
   }, [timeline.months.length]);
 
   return (
@@ -199,8 +199,11 @@ export function CskhGanttTimelineChart({
                       fontWeight: 700,
                       color: '#1e293b',
                       borderRight: '1px solid #cbd5e1',
-                      padding: '4px 0',
+                      padding: '4px 6px',
                       letterSpacing: '0.2px',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
                     }}
                   >
                     {m.label} <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 500 }}>({m.daysCount} ngày)</span>
@@ -225,15 +228,18 @@ export function CskhGanttTimelineChart({
                           flexDirection: 'column',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          padding: '2px 0',
+                          padding: '2px 4px',
                           lineHeight: 1.2,
                           transition: 'background-color 0.2s ease',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
                         }}
-                        title={`${sub.label}: ${sub.sublabel}${sub.isCurrent ? ' (Khoảng thời gian chứa Hôm nay 22/09)' : ''}`}
+                        title={`${sub.label}: ${sub.sublabel}${sub.isCurrent ? ' (Khoảng thời gian chứa Hôm nay)' : ''}`}
                       >
-                        <span style={{ fontSize: '10.5px', fontWeight: sub.isCurrent ? 800 : 700 }}>{sub.label}</span>
+                        <span style={{ fontSize: '10.5px', fontWeight: sub.isCurrent ? 800 : 700, whiteSpace: 'nowrap' }}>{sub.label}</span>
                         {scaleMode === 'decade' && (
-                          <span style={{ fontSize: '9px', opacity: sub.isCurrent ? 0.95 : 0.65, fontWeight: sub.isCurrent ? 700 : 400 }}>
+                          <span style={{ fontSize: '9px', opacity: sub.isCurrent ? 0.95 : 0.65, fontWeight: sub.isCurrent ? 700 : 400, whiteSpace: 'nowrap' }}>
                             {sub.sublabel}
                           </span>
                         )}

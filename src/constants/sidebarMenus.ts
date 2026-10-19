@@ -443,7 +443,7 @@ export const unifiedSidebarMenu: SidebarMenuItem[] = [
   ...(CSKH_MODULE_ENABLED
     ? [{
         id: 'mod-cskh',
-        label: 'CSKH',
+        label: 'Dịch vụ Khách hàng',
         icon: Headphones,
         path: '/cskh',
         badge: CSKH_MODULE_LOCKED ? 'Nâng cấp' : undefined,
@@ -452,7 +452,7 @@ export const unifiedSidebarMenu: SidebarMenuItem[] = [
     : []),
   {
     id: 'mod-operations',
-    label: 'SLC',
+    label: 'Dự án EPC',
     icon: Activity,
     path: '/operations/dashboard',
     children: toSidebarChildren(operationsMenu),
@@ -466,28 +466,28 @@ export const unifiedSidebarMenu: SidebarMenuItem[] = [
   },
   {
     id: 'mod-purchasing',
-    label: 'Mua hàng',
+    label: 'Mua sắm & Đơn hàng',
     icon: ShoppingCart,
     path: '/purchasing/dashboard',
     children: toSidebarChildren(purchasingMenu),
   },
   {
     id: 'mod-warehouse',
-    label: 'Kho hàng',
+    label: 'Kho vận & Tồn kho',
     icon: Warehouse,
     path: '/warehouse/dashboard-warehouse',
     children: toSidebarChildren([...warehouseMenu, ...stocktakeMenu]),
   },
   {
     id: 'mod-hrm',
-    label: 'HRM',
+    label: 'Quản trị Nhân sự',
     icon: Users,
     path: '/recruitment/dashboard',
     children: toSidebarChildren(hrmMenu),
   },
   {
     id: 'mod-admin',
-    label: 'Admin',
+    label: 'Quản trị Hệ thống',
     icon: ShieldCheck,
     path: '/admin/users',
     children: toSidebarChildren(adminMenu),

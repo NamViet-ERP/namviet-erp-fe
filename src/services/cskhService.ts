@@ -183,11 +183,69 @@ export interface UpdateProjectDocumentStatusRequest {
   statusLabel?: string | null;
 }
 
+export interface ProjectGanttSnapshotItemDto {
+  id: string;
+  taskId: string;
+  taskName: string;
+  planPct: number;
+  actualPct: number;
+}
+
+export interface ProjectGanttSnapshotDto {
+  id: string;
+  projectCode: string;
+  createdAt: string;
+  planPct: number;
+  actualPct: number;
+  itemCount: number;
+  items: ProjectGanttSnapshotItemDto[];
+}
+
+export interface CreateProjectGanttSnapshotItemRequest {
+  taskId: string;
+  taskName: string;
+  planPct: number;
+  actualPct: number;
+}
+
+export interface CreateProjectGanttSnapshotRequest {
+  planPct: number;
+  actualPct: number;
+  items: CreateProjectGanttSnapshotItemRequest[];
+}
+
 // ── Service Definition ───────────────────────────────────────────────────────
 
 const BASE_PROJECTS = '/api/warehouse/projects';
+const BASE_CSKH = '/api/cskh';
 
 export const cskhService = {
+  // Gantt Snapshots
+  getGanttSnapshots(projectCode: string): Promise<ProjectGanttSnapshotDto[]> {
+    return apiClient.get<ProjectGanttSnapshotDto[]>(`${BASE_PROJECTS}/${encodeURIComponent(projectCode)}/gantt/snapshots`);
+  },
+
+  createGanttSnapshot(projectCode: string, request: CreateProjectGanttSnapshotRequest): Promise<ProjectGanttSnapshotDto> {
+    return apiClient.post<ProjectGanttSnapshotDto>(`${BASE_PROJECTS}/${encodeURIComponent(projectCode)}/gantt/snapshots`, request);
+  },
+
+  // Master Data & Profiles
+  getMasterData<T = any>(): Promise<T> {
+    return apiClient.get<T>(`${BASE_CSKH}/master-data`);
+  },
+
+  saveMasterData<T = any>(store: T): Promise<void> {
+    return apiClient.put<void>(`${BASE_CSKH}/master-data`, store);
+  },
+
+  getProjectProfiles<T = any>(): Promise<T> {
+    return apiClient.get<T>(`${BASE_CSKH}/master-data/profiles`);
+  },
+
+  saveProjectProfiles<T = any>(profiles: T): Promise<void> {
+    return apiClient.put<void>(`${BASE_CSKH}/master-data/profiles`, profiles);
+  },
+
   // Bottlenecks
   listBottlenecks(projectCode: string): Promise<ProjectBottleneckDto[]> {
     return apiClient.get<ProjectBottleneckDto[]>(`${BASE_PROJECTS}/${encodeURIComponent(projectCode)}/bottlenecks`);

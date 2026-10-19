@@ -16,26 +16,59 @@ export type MaterialUnitApiDto = Schemas['MaterialUnitDto'];
 export type MaterialOriginApiDto = {
   id: number;
   name: string;
+  region?: string | null;
   sortOrder: number;
   isActive: boolean;
 };
+export type UpsertMaterialOriginRequest = {
+  name: string;
+  region?: string | null;
+  sortOrder?: number;
+  isActive?: boolean;
+};
+
+export type MaterialRegionApiDto = {
+  id: number;
+  name: string;
+  description?: string | null;
+  sortOrder: number;
+  isActive: boolean;
+};
+export type UpsertMaterialRegionRequest = {
+  name: string;
+  description?: string | null;
+  sortOrder?: number;
+  isActive?: boolean;
+};
+
+export type MaterialBrandApiDto = {
+  id: number;
+  name: string;
+  country?: string | null;
+  description?: string | null;
+  sortOrder: number;
+  isActive: boolean;
+};
+export type UpsertMaterialBrandRequest = {
+  name: string;
+  country?: string | null;
+  description?: string | null;
+  sortOrder?: number;
+  isActive?: boolean;
+};
+
 export type UpsertMaterialRequest = Schemas['UpsertMaterialRequest'] & {
   origin?: string | null;
   imageUrl?: string | null;
 };
 export type UpsertMaterialCategoryRequest = Schemas['UpsertMaterialCategoryRequest'];
 export type UpsertMaterialUnitRequest = Schemas['UpsertMaterialUnitRequest'];
-export type UpsertMaterialOriginRequest = {
-  name: string;
-  sortOrder?: number;
-  isActive?: boolean;
-};
 
 export type ProjectWarehouseKeeperDto = Schemas['ProjectWarehouseKeeperDto'];
 /** FE name kept for existing imports; wire schema is ProjectDto. */
-export type WarehouseProjectApiDto = Schemas['ProjectDto'];
-export type CreateWarehouseProjectRequest = Schemas['CreateProjectRequest'];
-export type UpdateWarehouseProjectRequest = Schemas['UpdateProjectRequest'];
+export type WarehouseProjectApiDto = Schemas['ProjectDto'] & { stage?: string | null };
+export type CreateWarehouseProjectRequest = Schemas['CreateProjectRequest'] & { stage?: string | null };
+export type UpdateWarehouseProjectRequest = Schemas['UpdateProjectRequest'] & { stage?: string | null };
 /** Wire + SL cấp công trường (BE `ProjectInventoryDto`; live swagger may omit until API restart). */
 export type WarehouseProjectInventoryApiDto = Schemas['ProjectInventoryDto'] & {
   issuedFromPoQty?: number;

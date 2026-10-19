@@ -61,16 +61,11 @@ export default function CskhDocsArchivePage({ project }: CskhDocsArchivePageProp
   const loadData = useCallback(async () => {
     try {
       const data = await projectsService.listDocuments(project.code);
-      if (Array.isArray(data) && data.length > 0) {
+      if (Array.isArray(data)) {
         setDocsList(data.map(d => applyDynamicSla(d)));
-      } else {
-        const fallback = getSeedDocuments(project.code);
-        if (fallback.length > 0) setDocsList(fallback);
       }
     } catch (err) {
       console.warn('[CSKH Docs Archive] Could not load from API, keeping fallback data:', err);
-      const fallback = getSeedDocuments(project.code);
-      if (fallback.length > 0) setDocsList(fallback);
     }
   }, [project.code]);
 
@@ -78,7 +73,7 @@ export default function CskhDocsArchivePage({ project }: CskhDocsArchivePageProp
     let ignore = false;
     projectsService.listDocuments(project.code)
       .then(data => {
-        if (!ignore && Array.isArray(data) && data.length > 0) {
+        if (!ignore && Array.isArray(data)) {
           setDocsList(data.map(d => applyDynamicSla(d)));
         }
       })

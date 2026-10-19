@@ -1,8 +1,6 @@
 import { newMasterId, upsertById, removeById } from './masterData';
 import { clampPct, progressDelta, progressStatus, type CskhProgressStatus } from './commandCenter';
 
-export const CSKH_OPS_STORAGE_KEY = 'nv-cskh-ops-workspace';
-
 export const CSKH_SEVERITIES = [
   { id: 'urgent', label: 'Khẩn cấp' },
   { id: 'medium', label: 'Trung bình' },
@@ -105,6 +103,8 @@ export interface CskhMeetingAction {
 
 export interface CskhMeeting {
   id: string;
+  code?: string;
+  projectCode?: string;
   name: string;
   date: string;
   attendees?: string;
@@ -457,43 +457,6 @@ export function emptyProjectOps(projectCode?: string): CskhProjectOps {
     snapshots: [],
     meetings: [],
   };
-}
-
-export function loadOpsStore(): CskhOpsStore {
-  try {
-    const raw = localStorage.getItem(CSKH_OPS_STORAGE_KEY);
-    if (!raw) {
-      return {
-        byProject: {
-          'LH-01': emptyProjectOps('LH-01'),
-        },
-      };
-    }
-    const parsed = JSON.parse(raw) as CskhOpsStore;
-    const byProject = parsed.byProject ?? {};
-    if (!byProject['LH-01'] || !byProject['LH-01'].bottlenecks || byProject['LH-01'].bottlenecks.length === 0 || !byProject['LH-01'].ganttItems[0]?.department) {
-      byProject['LH-01'] = emptyProjectOps('LH-01');
-    }
-    return { byProject };
-  } catch {
-    return {
-      byProject: {
-        'LH-01': emptyProjectOps('LH-01'),
-      },
-    };
-  }
-}
-
-export function saveOpsStore(store: CskhOpsStore): void {
-  localStorage.setItem(CSKH_OPS_STORAGE_KEY, JSON.stringify(store));
-}
-
-export function projectOps(store: CskhOpsStore, code: string): CskhProjectOps {
-  return store.byProject[code] ?? emptyProjectOps(code);
-}
-
-export function patchProjectOps(store: CskhOpsStore, code: string, next: CskhProjectOps): CskhOpsStore {
-  return { byProject: { ...store.byProject, [code]: next } };
 }
 
 export function newOpsId(): string {

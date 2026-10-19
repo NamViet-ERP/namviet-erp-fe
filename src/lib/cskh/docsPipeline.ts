@@ -1,7 +1,5 @@
 import { newMasterId, upsertById, removeById } from './masterData';
 
-export const CSKH_DOCS_STORAGE_KEY = 'nv-cskh-docs-pipeline';
-
 export const CSKH_DEPARTMENTS = [
   { id: 'tech', label: 'Phòng Kỹ thuật' },
   { id: 'acc', label: 'Phòng Kế toán' },
@@ -342,62 +340,6 @@ export function emptyProjectDocs(projectCode?: string): CskhProjectDocs {
     handovers: [],
     feedback: [],
     unifiedDocs: [...seed],
-  };
-}
-
-export function loadDocsStore(): CskhDocsStore {
-  try {
-    const raw = localStorage.getItem(CSKH_DOCS_STORAGE_KEY);
-    if (!raw) {
-      return {
-        byProject: {
-          'LH-01': emptyProjectDocs('LH-01'),
-        },
-      };
-    }
-    const parsed = JSON.parse(raw) as CskhDocsStore;
-    const byProject = parsed.byProject ?? {};
-    if (!byProject['LH-01'] || !byProject['LH-01'].unifiedDocs || byProject['LH-01'].unifiedDocs.length === 0) {
-      byProject['LH-01'] = {
-        ...(byProject['LH-01'] ?? emptyProjectDocs()),
-        unifiedDocs: [...(DEFAULT_SEED_DOCUMENTS['LH-01'] ?? [])],
-      };
-    }
-    return { byProject };
-  } catch {
-    return {
-      byProject: {
-        'LH-01': emptyProjectDocs('LH-01'),
-      },
-    };
-  }
-}
-
-export function saveDocsStore(store: CskhDocsStore): void {
-  localStorage.setItem(CSKH_DOCS_STORAGE_KEY, JSON.stringify(store));
-}
-
-export function projectDocs(store: CskhDocsStore, code: string): CskhProjectDocs {
-  if (!store.byProject[code]) {
-    return emptyProjectDocs(code);
-  }
-  const curr = store.byProject[code];
-  if (!curr.unifiedDocs && DEFAULT_SEED_DOCUMENTS[code]) {
-    return { ...curr, unifiedDocs: [...DEFAULT_SEED_DOCUMENTS[code]] };
-  }
-  return { ...curr, unifiedDocs: curr.unifiedDocs ?? [] };
-}
-
-export function patchProjectDocs(
-  store: CskhDocsStore,
-  code: string,
-  next: CskhProjectDocs,
-): CskhDocsStore {
-  return {
-    byProject: {
-      ...store.byProject,
-      [code]: next,
-    },
   };
 }
 

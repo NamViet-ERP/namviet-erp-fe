@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Ban, RotateCcw, Image as ImageIcon, Trash2, Upload } from 'lucide-react';
 import DetailSection from '../../components/hr/DetailSection';
 import DetailFieldGrid from '../../components/hr/DetailFieldGrid';
@@ -12,7 +12,9 @@ import { getApiErrorMessage } from '../../lib/apiClient';
 import { useMaterial, useUpdateMaterial, useDiscontinueMaterial, useReactivateMaterial } from '../../hooks/useMaterials';
 import { useCategoryCascade, useCategoryTree } from '../../hooks/useCategories';
 import MaterialUnitSelect from '../../components/warehouse/MaterialUnitSelect';
-import MaterialOriginSelect from '../../components/warehouse/MaterialOriginSelect';
+import MaterialCountrySelect from '../../components/warehouse/MaterialCountrySelect';
+import MaterialBrandSelect from '../../components/warehouse/MaterialBrandSelect';
+import { useMaterialRegions } from '../../hooks/useMaterialRegions';
 import { materialsService } from '../../services/materialsService';
 import { resolveMediaUrl } from '../../lib/hrm/employeeApiMapper';
 import {
@@ -20,8 +22,11 @@ import {
   MATERIAL_CREATE_REQUIRED_LEVELS,
   MATERIAL_FIELD_PLACEHOLDERS,
   MATERIAL_SELECT_PLACEHOLDER,
+  REGION_OPTIONS,
+  formatOriginString,
   materialInputError,
   materialSelectError,
+  parseOriginParts,
 } from '../../constants/materialCategoryLevels';
 import {
   categoryLevel,
@@ -60,13 +65,15 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
   const [editForm, setEditForm] = useState({
     materialName: '',
     unit: '',
-    origin: '',
     imageUrl: '',
     technicalSpec: '',
     generalTechnicalSpec: '',
     qualityStandard: '',
     ceilingPrice: '',
   });
+  const [originBrand, setOriginBrand] = useState('');
+  const [originCountry, setOriginCountry] = useState('');
+  const [originRegion, setOriginRegion] = useState('');
   const [editImageFile, setEditImageFile] = useState<File | null>(null);
   const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -74,6 +81,24 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
 
   const { optionsByLevel: editOptions, isLoading: editCategoriesLoading } =
     useCategoryCascade(editSelection);
+
+  const { data: dbRegions = [] } = useMaterialRegions(true);
+  const regionOptions = useMemo(() => {
+    const list: string[] = [];
+    const seen = new Set<string>();
+    const add = (name?: string | null) => {
+      const t = name?.trim();
+      if (!t) return;
+      const k = t.toLowerCase();
+      if (!seen.has(k)) {
+        seen.add(k);
+        list.push(t);
+      }
+    };
+    dbRegions.forEach(r => add(r.name));
+    REGION_OPTIONS.forEach(r => add(r));
+    return list;
+  }, [dbRegions]);
 
   if (isLoading) return <HrmLoadingState />;
   if (isError || !material) {
@@ -119,13 +144,16 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
     setEditForm({
       materialName: material.materialName,
       unit: material.unit,
-      origin: material.origin ?? '',
       imageUrl: material.imageUrl ?? '',
       technicalSpec: material.technicalSpec ?? '',
       generalTechnicalSpec: material.generalTechnicalSpec ?? '',
       qualityStandard: material.qualityStandard ?? '',
       ceilingPrice: material.ceilingPrice != null ? String(material.ceilingPrice) : '',
     });
+    const parsed = parseOriginParts(material.origin);
+    setOriginBrand(parsed.brand);
+    setOriginCountry(parsed.country);
+    setOriginRegion(parsed.region);
     setEditImageFile(null);
     if (editImagePreview) URL.revokeObjectURL(editImagePreview);
     setEditImagePreview(null);
@@ -138,13 +166,16 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
     setEditForm({
       materialName: material.materialName,
       unit: material.unit,
-      origin: material.origin ?? '',
       imageUrl: material.imageUrl ?? '',
       technicalSpec: material.technicalSpec ?? '',
       generalTechnicalSpec: material.generalTechnicalSpec ?? '',
       qualityStandard: material.qualityStandard ?? '',
       ceilingPrice: material.ceilingPrice != null ? String(material.ceilingPrice) : '',
     });
+    const parsed = parseOriginParts(material.origin);
+    setOriginBrand(parsed.brand);
+    setOriginCountry(parsed.country);
+    setOriginRegion(parsed.region);
     setEditImageFile(null);
     if (editImagePreview) URL.revokeObjectURL(editImagePreview);
     setEditImagePreview(null);
@@ -191,6 +222,8 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
         setIsUploadingImage(false);
       }
 
+      const finalOrigin = formatOriginString(originBrand, originCountry, originRegion);
+
       await updateMutation.mutateAsync({
         code: material.materialCode,
         body: {
@@ -198,7 +231,7 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
           materialName: editForm.materialName.trim(),
           categoryId,
           unit: editForm.unit.trim(),
-          origin: editForm.origin.trim() || null,
+          origin: finalOrigin.trim() || null,
           imageUrl: finalImageUrl,
           technicalSpec: editForm.technicalSpec.trim() || null,
           generalTechnicalSpec: editForm.generalTechnicalSpec.trim() || null,
@@ -318,12 +351,6 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
               preserveUnknownValue
               variant="hrm"
             />
-            <MaterialOriginSelect
-              value={editForm.origin}
-              onChange={origin => setEditForm(f => ({ ...f, origin }))}
-              preserveUnknownValue
-              variant="hrm"
-            />
             <FieldInput
               label="Quy cách"
               value={editForm.technicalSpec}
@@ -337,6 +364,43 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
                 onChange={ceilingPrice => setEditForm(f => ({ ...f, ceilingPrice }))}
                 placeholder="Cảnh báo khi mua vượt giá"
               />
+            </div>
+            <div className="col-span-full border-t border-[var(--color-border)] pt-3 pb-1">
+              <label className="hrm-field__label block mb-1.5 font-semibold text-slate-800">
+                Xuất xứ (3 thành phần: Nhãn hiệu, Nước sản xuất, Nhóm nước)
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <MaterialBrandSelect
+                  value={originBrand}
+                  onChange={setOriginBrand}
+                  variant="hrm"
+                />
+                <MaterialCountrySelect
+                  value={originCountry}
+                  onChange={(country, defaultRegion) => {
+                    setOriginCountry(country);
+                    if (defaultRegion && !originRegion) {
+                      setOriginRegion(defaultRegion);
+                    }
+                  }}
+                  variant="hrm"
+                />
+                <div className="hrm-field">
+                  <label className="hrm-field__label">Nhóm nước</label>
+                  <select
+                    className="hrm-field-select"
+                    value={originRegion}
+                    onChange={e => setOriginRegion(e.target.value)}
+                  >
+                    <option value="">-- Chọn nhóm nước --</option>
+                    {regionOptions.map((r: string) => (
+                      <option key={r} value={r}>
+                        {r}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
             </div>
             <FieldInput
               className="col-span-full"
@@ -413,7 +477,28 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
             <FieldView label="Mã vật tư" value={material.materialCode} />
             <FieldView label="Tên" value={material.materialName} />
             <FieldView label="Đơn vị tính" value={material.unit} />
-            <FieldView label="Xuất xứ" value={material.origin ?? undefined} />
+            {(() => {
+              const parsed = parseOriginParts(material.origin);
+              if (parsed.brand || parsed.country || parsed.region) {
+                return (
+                  <>
+                    <FieldView label="Hãng / Nhãn hiệu" value={parsed.brand || undefined} />
+                    <FieldView
+                      label="Nước sản xuất"
+                      value={
+                        parsed.country
+                          ? `${parsed.country}${parsed.region ? ` (${parsed.region})` : ''}`
+                          : undefined
+                      }
+                    />
+                    {parsed.region && !parsed.country ? (
+                      <FieldView label="Nhóm nước" value={parsed.region} />
+                    ) : null}
+                  </>
+                );
+              }
+              return <FieldView label="Xuất xứ" value={material.origin ?? undefined} />;
+            })()}
             <FieldView label="Quy cách" value={material.technicalSpec ?? undefined} />
             <FieldView
               label="Giá trần tham chiếu"

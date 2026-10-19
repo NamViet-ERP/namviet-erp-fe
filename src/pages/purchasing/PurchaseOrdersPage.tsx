@@ -17,6 +17,7 @@ import {
 } from '../../hooks/usePurchaseOrders';
 import { usePermission } from '../../hooks/usePermission';
 import { useProjects } from '../../hooks/useProjects';
+import { useDebounce } from '../../hooks/useDebounce';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { formatDateTimeVi } from '../../lib/hrm/formatters';
 import {
@@ -156,18 +157,21 @@ export default function PurchaseOrdersPage() {
   const { data: projectsPage } = useProjects({ page: 1, pageSize: 200, status: 'Active' });
   const projects = projectsPage?.items ?? [];
 
+  const debouncedSupplierName = useDebounce(supplierName, 350);
+  const debouncedPlanCode = useDebounce(planCode, 350);
+
   const listParams = useMemo(() => ({
     page,
     pageSize,
-    search: supplierName.trim() || undefined,
-    planCode: planCode.trim() || undefined,
+    search: debouncedSupplierName.trim() || undefined,
+    planCode: debouncedPlanCode.trim() || undefined,
     projectCode: projectCode.trim() || undefined,
     orderPlacementStatus: orderPlacementStatus || undefined,
     deliveryStatus: deliveryStatus || undefined,
     paymentStatus: paymentStatus || undefined,
     paymentWarning: paymentWarning === '' ? undefined : paymentWarning === 'true',
   }), [
-    page, pageSize, supplierName, planCode, projectCode,
+    page, pageSize, debouncedSupplierName, debouncedPlanCode, projectCode,
     orderPlacementStatus, deliveryStatus, paymentStatus, paymentWarning,
   ]);
 
@@ -248,7 +252,7 @@ export default function PurchaseOrdersPage() {
       <th>KHMH</th>
       <th>Dự án</th>
       <th>Nhà cung cấp</th>
-      <th className="pur-erp__th-num">Tổng tiền</th>
+      <th className="pur-erp__th-num">Tổng tiền (VNĐ)</th>
       <th className="pur-erp__th-status">Trạng thái</th>
       <th className="pur-erp__th-status">Trạng thái đặt</th>
       <th className="pur-erp__th-status">Trạng thái giao</th>
@@ -434,7 +438,7 @@ export default function PurchaseOrdersPage() {
                             : (row.projectCode || '—')}
                         </td>
                         <td>{row.supplierName || '—'}</td>
-                        <td className="pur-erp__td-num">{formatCurrency(row.totalAmount)} (VNĐ)</td>
+                        <td className="pur-erp__td-num tabular-nums font-mono">{formatCurrency(row.totalAmount)}</td>
                           <td className="pur-erp__td-status" onClick={e => e.stopPropagation()}>
                             <PoApprovalStatusCell
                               row={row}

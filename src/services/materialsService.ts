@@ -1,5 +1,10 @@
-import { apiClient } from '../lib/apiClient';
+import { apiClient, saveBlob } from '../lib/apiClient';
 import type { MaterialApiDto, PagedApiResult, UpsertMaterialRequest } from '../types/wms';
+import type {
+  MaterialImportBatchRequest,
+  MaterialImportParseResultDto,
+  MaterialImportResultDto,
+} from '../types/api/materialImportApi';
 
 const ENDPOINT = '/api/warehouse/materials';
 
@@ -85,6 +90,21 @@ export const materialsService = {
 
   async reactivate(code: string): Promise<void> {
     await apiClient.post(`${ENDPOINT}/${encodeURIComponent(code)}/reactivate`);
+  },
+
+  async downloadImportTemplate(): Promise<boolean> {
+    const blob = await apiClient.getBlob(`${ENDPOINT}/import-template`);
+    return await saveBlob(blob, 'mau-import-danh-muc-vat-tu.xlsx');
+  },
+
+  async parseImportFile(file: File): Promise<MaterialImportParseResultDto> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return apiClient.postForm<MaterialImportParseResultDto>(`${ENDPOINT}/parse-import-file`, formData);
+  },
+
+  async importBatch(request: MaterialImportBatchRequest): Promise<MaterialImportResultDto> {
+    return apiClient.post<MaterialImportResultDto>(`${ENDPOINT}/import-batch`, request);
   },
 };
 

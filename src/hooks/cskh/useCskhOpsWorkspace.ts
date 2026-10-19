@@ -106,31 +106,72 @@ export function useCskhOpsWorkspace(projectCode: string) {
     enabled: Boolean(projectCode),
   });
 
+  // 4. Fetch Gantt Snapshots from DB
+  const snapshotsQuery = useQuery({
+    queryKey: queryKeys.cskh.snapshots(projectCode),
+    queryFn: () => cskhService.getGanttSnapshots(projectCode),
+    enabled: Boolean(projectCode),
+  });
+
   // Assemble unified CskhProjectOps from queries
   const ops: CskhProjectOps = useMemo(() => {
     const bottlenecks = (bottlenecksQuery.data || []).map(mapBottleneckDto);
     const requests = (requestsQuery.data || []).map(mapRequestDto);
     const meetings = (meetingsQuery.data || []).map(m => mapMeetingDto(m, projectCode));
 
+    const dbSnapshots = (snapshotsQuery.data || []).map(s => ({
+      id: s.id,
+      at: s.createdAt,
+      planPct: Number(s.planPct),
+      actualPct: Number(s.actualPct),
+      itemCount: s.itemCount,
+      items: (s.items || []).map(i => ({
+        id: i.taskId || i.id,
+        name: i.taskName,
+        planPct: Number(i.planPct),
+        actualPct: Number(i.actualPct),
+      })),
+    }));
+
     const seed = DEFAULT_SEED_OPS[projectCode];
     const ganttItems = seed?.ganttItems ?? [];
+    const snapshots = dbSnapshots;
 
     return {
       bottlenecks,
       requests,
       ganttItems,
-      snapshots: seed?.snapshots ?? [],
+      snapshots,
       meetings,
       handovers: [],
       weeklyReports: [],
       monthlyReports: [],
     };
-  }, [bottlenecksQuery.data, requestsQuery.data, meetingsQuery.data, projectCode]);
+  }, [bottlenecksQuery.data, requestsQuery.data, meetingsQuery.data, snapshotsQuery.data, projectCode]);
 
   // Update handler: performs mutation against backend REST API and invalidates cache
   const update = useCallback(
     async (fn: (current: CskhProjectOps) => CskhProjectOps) => {
       const next = fn(ops);
+
+      // --- Diff Snapshots ---
+      const oldSnapIds = new Set(ops.snapshots.map(s => s.id));
+      for (const snap of next.snapshots) {
+        if (!oldSnapIds.has(snap.id) || snap.id.startsWith('ops-')) {
+          cskhService.createGanttSnapshot(projectCode, {
+            planPct: snap.planPct,
+            actualPct: snap.actualPct,
+            items: snap.items.map(it => ({
+              taskId: it.id,
+              taskName: it.name,
+              planPct: it.planPct,
+              actualPct: it.actualPct,
+            })),
+          }).then(() => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.cskh.snapshots(projectCode) });
+          });
+        }
+      }
 
       // --- Diff Bottlenecks ---
       const oldB = ops.bottlenecks;
@@ -281,6 +322,6 @@ export function useCskhOpsWorkspace(projectCode: string) {
   return {
     ops,
     update,
-    isLoading: bottlenecksQuery.isLoading || requestsQuery.isLoading || meetingsQuery.isLoading,
+    isLoading: bottlenecksQuery.isLoading || requestsQuery.isLoading || meetingsQuery.isLoading || snapshotsQuery.isLoading,
   };
 }

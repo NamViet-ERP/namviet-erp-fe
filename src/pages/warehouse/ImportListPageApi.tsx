@@ -10,7 +10,7 @@ import SearchBar from '../../components/ui/SearchBar';
 import Pagination from '../../components/ui/Pagination';
 import PageHeader from '../../components/ui/PageHeader';
 import { usePermission } from '../../hooks/usePermission';
-import HrmPanel from '../../components/hr/HrmPanel';
+import Panel from '../../components/ui/Panel';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage, saveBlob } from '../../lib/apiClient';
 import { parseImportBudgetExceeded } from '../../lib/wms/projectBudget';
@@ -117,8 +117,10 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
     try {
       await approveMutation.mutateAsync({
         id: imp.id,
-        bypassBudgetWarning: bypassBudget,
-        settlement: settlement ?? undefined,
+        confirmOverBudget: bypassBudget,
+        lines: settlement?.lines,
+        shortageReport: settlement?.shortageReport,
+        defectReason: settlement?.defectReason,
       });
       showToast('success', `Đã duyệt phiếu ${imp.voucherCode}.`);
       setBudgetConfirmImport(null);
@@ -138,9 +140,9 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
   };
 
   const handleApprove = async (imp: Import, settlement: ImportApproveSettlementPayload) => {
-    const text = (settlement.receiptEvaluation ?? imp.receiptEvaluation ?? '').trim();
-    const hasPhoto = (imp.attachments ?? []).some(a => a.fileType === 'photo' || a.fileType === 'defect_photo');
-    const hasDoc = (imp.attachments ?? []).some(a => a.fileType === 'document');
+    const text = (settlement.evaluation ?? imp.receiptEvaluation ?? '').trim();
+    const hasPhoto = (imp.attachments ?? []).some(a => a.kind === 'photo' || a.kind === 'defect_photo');
+    const hasDoc = (imp.attachments ?? []).some(a => a.kind === 'document');
 
     if (!text || !hasPhoto || !hasDoc) {
       showToast(
@@ -171,11 +173,14 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
   const handleExportExcel = async () => {
     setIsExporting(true);
     try {
-      const blob = await downloadVoucherExport('/api/imports', {
-        dateFrom: dateFrom || undefined,
-        dateTo: dateTo || undefined,
-      });
-      await saveBlob(blob, `PhieuNhapKho_${new Date().toISOString().slice(0, 10)}.xlsx`);
+      await downloadVoucherExport(
+        '/api/imports/export',
+        `PhieuNhapKho_${new Date().toISOString().slice(0, 10)}.xlsx`,
+        {
+          dateFrom: dateFrom || undefined,
+          dateTo: dateTo || undefined,
+        },
+      );
       showToast('success', 'Đã xuất file Excel.');
     } catch (err) {
       showToast('error', getApiErrorMessage(err, 'Không thể xuất file Excel'));
@@ -259,7 +264,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
         }
       />
 
-      <HrmPanel noPadding>
+      <Panel noPadding>
         <div className="px-4 pt-3 pb-1 border-b border-[var(--md-outline-variant02)]">
           <TabFilter tabs={tabs} activeTab={activeTab} onChange={id => { setActiveTab(id); setPage(1); }} />
         </div>
@@ -299,7 +304,7 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
             totalItems={filtered.length}
           />
         )}
-      </HrmPanel>
+      </Panel>
 
       <ImportDetailModal
         isOpen={showDetail}
@@ -339,15 +344,15 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
             <div className="bg-[var(--md-surface-variant)] p-3 rounded text-sm space-y-1 mb-2">
               <div className="flex justify-between">
                 <span>Ngân sách kế hoạch:</span>
-                <span className="font-semibold">{formatCurrencyFull(budgetExceeded.plannedBudget)}</span>
+                <span className="font-semibold">{formatCurrencyFull(budgetExceeded.materialBudget)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Đã thực hiện (gồm phiếu này):</span>
-                <span className="font-semibold text-amber-600">{formatCurrencyFull(budgetExceeded.actualCost)}</span>
+                <span className="font-semibold text-amber-600">{formatCurrencyFull(budgetExceeded.approvedImportValue + budgetExceeded.importValue)}</span>
               </div>
               <div className="flex justify-between border-t border-[var(--md-outline-variant)] pt-1 text-red-600 font-semibold">
                 <span>Vượt ngân sách:</span>
-                <span>+{formatCurrencyFull(budgetExceeded.exceededAmount)}</span>
+                <span>+{formatCurrencyFull(budgetExceeded.overflowAmount)}</span>
               </div>
             </div>
             <p className="text-xs text-[var(--md-on-surface-variant)]">

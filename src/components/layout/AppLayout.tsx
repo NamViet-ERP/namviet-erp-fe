@@ -18,6 +18,7 @@ import { hasAnyPermission } from '../../lib/permissions';
 import { UI_PERMISSION_DENIED } from '../../lib/uiMessages';
 import PageLoader from '../ui/PageLoader';
 import Button from '../ui/Button';
+import ErrorBoundary from '../ErrorBoundary';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import { useEscapeToClose } from '../../hooks/useEscapeToClose';
 import type { SessionCheckResult } from '../../services/authService';
@@ -203,7 +204,9 @@ export default function AppLayout() {
       <main className={mainClass}>
         <div className="app-main__inner">
           <div className="page-route-enter">
-            <Outlet />
+            <ErrorBoundary key={location.pathname}>
+              <Outlet />
+            </ErrorBoundary>
           </div>
         </div>
       </main>

@@ -8,6 +8,8 @@
  */
 
 let expired = false;
+let lastResolvedAt = 0;
+const RESOLVE_COOLDOWN_MS = 4_000;
 const listeners = new Set<() => void>();
 
 function emit(): void {
@@ -17,12 +19,15 @@ function emit(): void {
 /** apiClient gọi khi refresh token thất bại hẳn — mở dialog (idempotent). */
 export function notifySessionExpired(): void {
   if (expired) return;
+  // Bỏ qua các request 401 trễ đang bay dở ngay sau khi vừa đăng nhập lại thành công
+  if (Date.now() - lastResolvedAt < RESOLVE_COOLDOWN_MS) return;
   expired = true;
   emit();
 }
 
 /** Đăng nhập lại thành công (hoặc user chủ động đóng) — đóng dialog. */
 export function resolveSessionExpired(): void {
+  lastResolvedAt = Date.now();
   if (!expired) return;
   expired = false;
   emit();

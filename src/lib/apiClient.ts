@@ -363,51 +363,16 @@ export const apiClient = {
 };
 
 export async function saveBlob(blob: Blob, fileName: string): Promise<boolean> {
-  // Chromium: tải blob sau await hay bị mất user-gesture → "Needs permission to download".
-  // Ưu tiên hộp thoại Save As (File System Access) khi có.
-  const picker = (window as Window & {
-    showSaveFilePicker?: (options?: {
-      suggestedName?: string;
-      types?: Array<{ description?: string; accept: Record<string, string[]> }>;
-    }) => Promise<{ createWritable: () => Promise<{ write: (data: Blob) => Promise<void>; close: () => Promise<void> }> }>;
-  }).showSaveFilePicker;
-
-  if (typeof picker === 'function') {
-    try {
-      const handle = await picker({
-        suggestedName: fileName,
-        types: [
-          {
-            description: 'Excel',
-            accept: {
-              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
-              'application/vnd.ms-excel': ['.xls'],
-            },
-          },
-        ],
-      });
-      const writable = await handle.createWritable();
-      await writable.write(blob);
-      await writable.close();
-      return true;
-    } catch (err) {
-      // User cancelled save dialog.
-      if (err instanceof DOMException && err.name === 'AbortError') return false;
-      // Unsupported / denied → fallback below.
-    }
-  }
-
   const objectUrl = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
   anchor.href = objectUrl;
   anchor.download = fileName;
-  anchor.rel = 'noopener';
-  anchor.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+  anchor.style.display = 'none';
   document.body.appendChild(anchor);
-  anchor.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
+  anchor.click();
   window.setTimeout(() => {
     anchor.remove();
     URL.revokeObjectURL(objectUrl);
-  }, 1500);
+  }, 1000);
   return true;
 }

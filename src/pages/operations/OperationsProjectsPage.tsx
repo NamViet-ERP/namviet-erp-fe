@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Pencil, FolderKanban, CheckCircle2, Archive, RotateCcw } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
-import HrmPanel from '../../components/hr/HrmPanel';
+import Panel from '../../components/ui/Panel';
 import Card from '../../components/ui/Card';
 import EmptyState from '../../components/ui/EmptyState';
 import Modal from '../../components/ui/Modal';
@@ -28,6 +28,7 @@ import {
   useUpdateProject,
   useProjectPurchasingProgress,
 } from '../../hooks/useProjects';
+import { useDebounce } from '../../hooks/useDebounce';
 import { projectsService } from '../../services/projectsService';
 import { nextProjectCode } from '../../lib/cskh/commandCenter';
 import type { WarehouseProjectApiDto } from '../../types/wms';
@@ -95,10 +96,12 @@ export default function OperationsProjectsPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [progressProjectFilter, setProgressProjectFilter] = useState('');
 
+  const debouncedSearch = useDebounce(search, 350);
+
   const { data, isLoading } = useProjects({
     page,
     pageSize,
-    search: search || undefined,
+    search: debouncedSearch.trim() || undefined,
     status: statusFilter === 'all' ? undefined : statusFilter,
   });
   const { data: statsAll } = useProjects({ page: 1, pageSize: 1 });
@@ -243,7 +246,7 @@ export default function OperationsProjectsPage() {
   return (
     <div className="page-shell operations-dashboard ops-projects">
       <PageHeader
-        eyebrow="SLC"
+        eyebrow="Dự án EPC"
         title="Dự án"
         subtitle="Theo dõi KHMH/MHPS - PO - nhập kho theo từng dự án."
         actions={(
@@ -272,7 +275,7 @@ export default function OperationsProjectsPage() {
         />
       </div>
 
-      <HrmPanel noPadding className="ops-projects-board">
+      <Panel noPadding className="ops-projects-board">
         <div className="ops-projects-board__head">
           <h2 className="ops-projects-board__title">Gantt tiến độ mua hàng</h2>
           <p className="ops-projects-board__desc">
@@ -314,9 +317,9 @@ export default function OperationsProjectsPage() {
             <ProjectPurchasingGantt groups={progressGroups} />
           )}
         </div>
-      </HrmPanel>
+      </Panel>
 
-      <HrmPanel noPadding className="ops-projects-board">
+      <Panel noPadding className="ops-projects-board">
         <div className="ops-projects-board__head">
           <h2 className="ops-projects-board__title">Bảng tiến độ theo đơn đặt hàng</h2>
           <p className="ops-projects-board__desc">Theo dự án đang lọc trên Gantt.</p>
@@ -391,9 +394,9 @@ export default function OperationsProjectsPage() {
             </tbody>
           </table>
         </div>
-      </HrmPanel>
+      </Panel>
 
-      <HrmPanel noPadding className="ops-projects-board">
+      <Panel noPadding className="ops-projects-board">
         <div className="ops-projects-board__head">
           <h2 className="ops-projects-board__title">Danh sách dự án</h2>
           <p className="ops-projects-board__desc">
@@ -530,7 +533,7 @@ export default function OperationsProjectsPage() {
             totalItems={totalCount}
           />
         ) : null}
-      </HrmPanel>
+      </Panel>
 
       <Modal
         isOpen={showForm}

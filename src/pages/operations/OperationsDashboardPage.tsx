@@ -260,8 +260,8 @@ export default function OperationsDashboardPage() {
   return (
     <div className="page-shell operations-dashboard">
       <PageHeader
-        eyebrow="SLC"
-        title="Tổng quan SLC"
+        eyebrow="Dự án EPC"
+        title="Tổng quan Vận hành Dự án"
         subtitle="Chỉ số dự án, mua hàng, tồn kho - bấm thẻ để đi tới màn chi tiết."
         actions={(
           <p className="page-header__updated">

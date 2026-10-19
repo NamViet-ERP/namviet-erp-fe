@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { Plus, RotateCcw, Image as ImageIcon, Trash2, Upload, Package } from 'lucide-react';
 import SearchBar from '../../components/ui/SearchBar';
 import Pagination from '../../components/ui/Pagination';
@@ -11,46 +12,37 @@ import PermissionGate from '../../components/auth/PermissionGate';
 import Modal from '../../components/ui/Modal';
 import FormField from '../../components/ui/FormField';
 import MaterialUnitSelect from '../../components/warehouse/MaterialUnitSelect';
-import MaterialOriginSelect from '../../components/warehouse/MaterialOriginSelect';
+import MaterialCountrySelect from '../../components/warehouse/MaterialCountrySelect';
+import MaterialBrandSelect from '../../components/warehouse/MaterialBrandSelect';
+import { useMaterialRegions } from '../../hooks/useMaterialRegions';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { WMS_EMPTY, WMS_ERROR } from '../../lib/wms/messages';
 import { useMaterials, useCreateMaterial } from '../../hooks/useMaterials';
 import { useCategoryCascade } from '../../hooks/useCategories';
 import { materialsService } from '../../services/materialsService';
+import { queryKeys } from '../../services/queryKeys';
 import { resolveMediaUrl } from '../../lib/hrm/employeeApiMapper';
 import MaterialDetailView from './MaterialDetailView';
+import MaterialImportModal from './MaterialImportModal';
 import {
   MATERIAL_CATEGORY_LEVELS,
   MATERIAL_CREATE_REQUIRED_LEVELS,
   MATERIAL_FIELD_PLACEHOLDERS,
   MATERIAL_SELECT_PLACEHOLDER,
   MATERIAL_TABLE_COLUMNS,
+  REGION_OPTIONS,
+  formatOriginString,
+  isEquipmentCategory,
+  isSteelCategory,
   materialInputError,
   materialSelectError,
+  parseOriginParts,
 } from '../../constants/materialCategoryLevels';
 import { categoryLevel, resolveLeafCategoryId } from '../../lib/wms/materialCategoryTree';
 import CurrencyInput from '../../components/ui/CurrencyInput';
-import { formatCurrencyFull } from '../../utils/formatCurrency';
-import type { MaterialApiDto } from '../../types/wms';
 
 const emptySelection: Array<number | ''> = ['', '', '', '', ''];
-
-function pathCell(m: MaterialApiDto, key: keyof MaterialApiDto['categoryPath']) {
-  return m.categoryPath?.[key]?.trim() || '-';
-}
-
-/** Tách mã theo dấu `-` để hiển thị chip phân đoạn (prototype SCM-EPC). */
-function materialCodeParts(code: string): string[] {
-  return code.split('-').map(p => p.trim()).filter(Boolean);
-}
-
-function materialNameSubline(m: MaterialApiDto): string {
-  return [m.qualityStandard, m.technicalSpec]
-    .map(s => s?.trim())
-    .filter(Boolean)
-    .join(', ');
-}
 
 function isRequiredOnCreate(level: number) {
   return (MATERIAL_CREATE_REQUIRED_LEVELS as readonly number[]).includes(level);
@@ -63,12 +55,14 @@ export default function MaterialsPageRoute() {
 }
 
 function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
+  const qc = useQueryClient();
   const [search, setSearch] = useState(initialHighlight ?? '');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(15);
   const [filterSelection, setFilterSelection] = useState<Array<number | ''>>([...emptySelection]);
   const [detailCode, setDetailCode] = useState<string | null>(initialHighlight ?? null);
   const [showCreate, setShowCreate] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [showInactive, setShowInactive] = useState(false);
 
   const [createSelection, setCreateSelection] = useState<Array<number | ''>>([...emptySelection]);
@@ -83,6 +77,24 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
     ceilingPrice: '',
     imageUrl: '',
   });
+  // 3-part Origin state
+  const [originBrand, setOriginBrand] = useState('');
+  const [originCountry, setOriginCountry] = useState('');
+  const [originRegion, setOriginRegion] = useState('');
+
+  // Dynamic Steel geometry state
+  const [steelDimension, setSteelDimension] = useState('');
+  const [steelThickness, setSteelThickness] = useState('');
+  const [steelLength, setSteelLength] = useState('');
+  const [steelGrade, setSteelGrade] = useState('');
+
+  // Dynamic Equipment / Pump / Fan specs state
+  const [pumpPower, setPumpPower] = useState('');
+  const [pumpFlow, setPumpFlow] = useState('');
+  const [pumpPressure, setPumpPressure] = useState('');
+  const [pumpVoltage, setPumpVoltage] = useState('');
+  const [pumpDrive, setPumpDrive] = useState('');
+
   const [createImageFile, setCreateImageFile] = useState<File | null>(null);
   const [createImagePreview, setCreateImagePreview] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -93,6 +105,68 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
   const { categories, optionsByLevel: createOptions, isLoading: createCategoriesLoading } =
     useCategoryCascade(createSelection);
   const createMutation = useCreateMaterial();
+
+  const selectedL1Cat = categories.find(c => c.id === createSelection[0]);
+  const isSteel = isSteelCategory(selectedL1Cat?.name);
+  const isEquipment = isEquipmentCategory(selectedL1Cat?.name);
+
+  const { data: dbRegions = [] } = useMaterialRegions(true);
+  const regionOptions = useMemo(() => {
+    const list: string[] = [];
+    const seen = new Set<string>();
+    const add = (name?: string | null) => {
+      const t = name?.trim();
+      if (!t) return;
+      const k = t.toLowerCase();
+      if (!seen.has(k)) {
+        seen.add(k);
+        list.push(t);
+      }
+    };
+    dbRegions.forEach(r => add(r.name));
+    REGION_OPTIONS.forEach(r => add(r));
+    return list;
+  }, [dbRegions]);
+
+  const updateOrigin = (brand: string, country: string, region: string) => {
+    setOriginBrand(brand);
+    setOriginCountry(country);
+    setOriginRegion(region);
+    setCreateForm(f => ({ ...f, origin: formatOriginString(brand, country, region) }));
+  };
+
+  const updateSteel = (dim: string, thick: string, len: string, grade: string) => {
+    setSteelDimension(dim);
+    setSteelThickness(thick);
+    setSteelLength(len);
+    setSteelGrade(grade);
+    const dims = [dim.trim(), thick.trim(), len.trim()].filter(Boolean);
+    const spec = dims.length > 0 ? dims.join('x') + (dims.some(d => d.endsWith('mm')) ? '' : 'mm') : '';
+    setCreateForm(f => ({
+      ...f,
+      technicalSpec: spec,
+      qualityStandard: grade.trim() || f.qualityStandard,
+    }));
+  };
+
+  const updatePump = (power: string, flow: string, pressure: string, voltage: string, drive: string) => {
+    setPumpPower(power);
+    setPumpFlow(flow);
+    setPumpPressure(pressure);
+    setPumpVoltage(voltage);
+    setPumpDrive(drive);
+    const parts = [
+      power.trim() && (power.toLowerCase().endsWith('kw') ? power.trim() : `${power.trim()}kW`),
+      flow.trim() && (flow.toLowerCase().includes('m3') ? flow.trim() : `${flow.trim()} m³/h`),
+      pressure.trim() && (pressure.toLowerCase().includes('pa') || pressure.toLowerCase().includes('h2o') ? pressure.trim() : `${pressure.trim()} Pa`),
+      voltage.trim() && `Điện áp ${voltage.trim()}`,
+      drive.trim(),
+    ].filter(Boolean);
+    setCreateForm(f => ({
+      ...f,
+      generalTechnicalSpec: parts.join(' | '),
+    }));
+  };
 
   const filterCategoryId = resolveLeafCategoryId(filterSelection);
 
@@ -139,6 +213,18 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
       ceilingPrice: '',
       imageUrl: '',
     });
+    setOriginBrand('');
+    setOriginCountry('');
+    setOriginRegion('');
+    setSteelDimension('');
+    setSteelThickness('');
+    setSteelLength('');
+    setSteelGrade('');
+    setPumpPower('');
+    setPumpFlow('');
+    setPumpPressure('');
+    setPumpVoltage('');
+    setPumpDrive('');
     setCreateImageFile(null);
     if (createImagePreview) URL.revokeObjectURL(createImagePreview);
     setCreateImagePreview(null);
@@ -249,20 +335,32 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
   return (
     <div className="page-shell mat-catalog">
       <PageHeader
-        eyebrow="SLC"
+        eyebrow="Danh mục Vật tư"
         title="Danh mục vật tư"
         subtitle="Lọc theo cây 5 cấp, bấm dòng để mở chi tiết."
         actions={
-          <PermissionGate permission="wms.materials.create">
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => { resetCreateForm(); setShowCreate(true); }}
-            >
-              <Plus size={16} aria-hidden />
-              Tạo mã vật tư
-            </button>
-          </PermissionGate>
+          <div className="flex items-center gap-2">
+            <PermissionGate permission="wms.materials.create">
+              <button
+                type="button"
+                className="btn btn-outline flex items-center gap-1.5"
+                onClick={() => setShowImport(true)}
+              >
+                <Upload size={16} aria-hidden />
+                Nhập Excel
+              </button>
+            </PermissionGate>
+            <PermissionGate permission="wms.materials.create">
+              <button
+                type="button"
+                className="btn btn-primary flex items-center gap-1.5"
+                onClick={() => { resetCreateForm(); setShowCreate(true); }}
+              >
+                <Plus size={16} aria-hidden />
+                Tạo mã vật tư
+              </button>
+            </PermissionGate>
+          </div>
         }
       />
 
@@ -338,7 +436,7 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
                 {MATERIAL_TABLE_COLUMNS.map(col => (
                   <th
                     key={col.key}
-                    className={`table-header-cell text-left whitespace-nowrap${col.key === 'ceilingPrice' ? ' mat-col-ceiling' : ''}${col.key === 'generalTechnicalSpec' ? ' mat-col-general-spec' : ''}`}
+                    className={`table-header-cell text-left whitespace-nowrap${col.key === 'unit' ? ' text-center w-24' : ''}${col.key === 'image' ? ' text-center w-12' : ''}`}
                   >
                     {col.label}
                   </th>
@@ -362,86 +460,129 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
                 </tr>
               ) : (
                 items.map(m => {
-                  const codeParts = materialCodeParts(m.materialCode);
-                  const nameSub = materialNameSubline(m);
+                  const parsedOrigin = parseOriginParts(m.origin);
+                  const categoryBreadcrumb = [
+                    m.categoryPath?.danhMuc,
+                    m.categoryPath?.nhomVatTu,
+                    m.categoryPath?.loaiVatTu,
+                  ]
+                    .filter(Boolean)
+                    .join(' › ');
+
                   return (
-                  <tr
-                    key={m.materialCode}
-                    className="table-row cursor-pointer"
-                    onClick={() => setDetailCode(m.materialCode)}
-                  >
-                    <td className="table-cell text-center" style={{ width: '48px', minWidth: '48px' }}>
-                      {m.imageUrl?.trim() ? (
-                        <img
-                          src={resolveMediaUrl(m.imageUrl.trim())}
-                          alt={m.materialName}
-                          className="w-9 h-9 object-cover rounded-lg border border-[var(--md-outline-variant)] bg-[var(--md-surface-container)] inline-block shadow-sm"
-                          onError={e => {
-                            const img = e.currentTarget;
-                            img.style.display = 'none';
-                            const sibling = img.nextElementSibling as HTMLElement | null;
-                            if (sibling) sibling.style.display = 'flex';
-                          }}
-                        />
-                      ) : null}
-                      <div
-                        className="w-9 h-9 rounded-lg bg-[var(--md-surface-container-high)] text-[var(--md-on-surface-variant)] flex items-center justify-center mx-auto text-xs font-medium"
-                        style={{ display: m.imageUrl?.trim() ? 'none' : 'flex' }}
-                      >
-                        <Package size={16} className="opacity-40" />
-                      </div>
-                    </td>
-                    <td className="table-cell">
-                      <div className="mat-code-cell">
-                        <span className="mat-code-cell__badge">{m.materialCode}</span>
-                        {codeParts.length > 1 && (
-                          <div className="mat-code-cell__parts" aria-hidden>
-                            {codeParts.map((part, i) => (
-                              <span
-                                key={`${m.materialCode}-${i}`}
-                                className={`mat-code-cell__part mat-code-cell__part--${(i % 4) + 1}`}
-                              >
-                                {part}
-                              </span>
-                            ))}
+                    <tr
+                      key={m.materialCode}
+                      className="table-row cursor-pointer hover:bg-slate-50 transition-colors"
+                      onClick={() => setDetailCode(m.materialCode)}
+                    >
+                      {/* 1. Ảnh */}
+                      <td className="table-cell text-center" style={{ width: '48px', minWidth: '48px' }}>
+                        {m.imageUrl?.trim() ? (
+                          <img
+                            src={resolveMediaUrl(m.imageUrl.trim())}
+                            alt={m.materialName}
+                            className="w-9 h-9 object-cover rounded-lg border border-[var(--md-outline-variant)] bg-[var(--md-surface-container)] inline-block shadow-2xs"
+                            onError={e => {
+                              const img = e.currentTarget;
+                              img.style.display = 'none';
+                              const sibling = img.nextElementSibling as HTMLElement | null;
+                              if (sibling) sibling.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <div
+                          className="w-9 h-9 rounded-lg bg-[var(--md-surface-container-high)] text-[var(--md-on-surface-variant)] flex items-center justify-center mx-auto text-xs font-medium"
+                          style={{ display: m.imageUrl?.trim() ? 'none' : 'flex' }}
+                        >
+                          <Package size={16} className="opacity-40" />
+                        </div>
+                      </td>
+
+                      {/* 2. Mã & Tên vật tư */}
+                      <td className="table-cell">
+                        <div className="flex flex-col gap-1 py-0.5">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-mono font-bold text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-800 border border-slate-200 shadow-2xs">
+                              {m.materialCode}
+                            </span>
+                            {m.isActive === false && (
+                              <span className="badge badge-warning text-[10px] py-0 px-1.5">Ngừng SD</span>
+                            )}
                           </div>
-                        )}
-                        {m.isActive === false && (
-                          <span className="badge badge-warning">Ngừng SD</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="table-cell">
-                      <div className="mat-name-cell">
-                        <span className="mat-name-cell__title">{m.materialName}</span>
-                        {nameSub ? <span className="mat-name-cell__sub">{nameSub}</span> : null}
-                      </div>
-                    </td>
-                    <td className="table-cell whitespace-nowrap">
-                      {m.origin ? (
-                        <span className="inline-flex items-center text-xs px-2.5 py-0.5 rounded-full bg-[var(--md-surface-container-high)] text-[var(--md-on-surface)] font-medium">
-                          {m.origin}
+                          <span className="font-semibold text-sm text-slate-900 leading-snug">
+                            {m.materialName}
+                          </span>
+                          {m.qualityStandard && (
+                            <span className="text-[11px] text-slate-500 font-normal">
+                              Tiêu chuẩn: <span className="text-slate-700 font-medium">{m.qualityStandard}</span>
+                            </span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* 3. Phân cấp danh mục (Breadcrumb gộp 5 cấp) */}
+                      <td className="table-cell">
+                        <div className="flex flex-col gap-0.5 py-0.5">
+                          <span className="text-xs font-semibold text-slate-800">
+                            {categoryBreadcrumb || '-'}
+                          </span>
+                          {(m.categoryPath?.phanLoai || m.categoryPath?.kieu) && (
+                            <span className="text-[11px] text-slate-400">
+                              {[m.categoryPath?.phanLoai, m.categoryPath?.kieu].filter(Boolean).join(' › ')}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* 4. ĐVT */}
+                      <td className="table-cell text-center whitespace-nowrap">
+                        <span className="inline-block px-2.5 py-1 rounded bg-slate-100/80 text-slate-700 text-xs font-semibold border border-slate-200/60 shadow-2xs">
+                          {m.unit || '-'}
                         </span>
-                      ) : (
-                        '-'
-                      )}
-                    </td>
-                    <td className="table-cell">{pathCell(m, 'danhMuc')}</td>
-                    <td className="table-cell">{pathCell(m, 'nhomVatTu')}</td>
-                    <td className="table-cell">{pathCell(m, 'loaiVatTu')}</td>
-                    <td className="table-cell">{pathCell(m, 'phanLoai')}</td>
-                    <td className="table-cell">{pathCell(m, 'kieu')}</td>
-                    <td className="table-cell">{m.technicalSpec ?? '-'}</td>
-                    <td className="table-cell mat-col-general-spec">
-                      <div className="mat-spec-cell" title={m.generalTechnicalSpec ?? undefined}>
-                        {m.generalTechnicalSpec?.trim() || '-'}
-                      </div>
-                    </td>
-                    <td className="table-cell">{m.qualityStandard ?? '-'}</td>
-                    <td className="table-cell table-cell--money mat-col-ceiling">
-                      {m.ceilingPrice != null ? formatCurrencyFull(m.ceilingPrice) : '-'}
-                    </td>
-                  </tr>
+                      </td>
+
+                      {/* 5. Quy cách / Thông số chính */}
+                      <td className="table-cell">
+                        <div className="flex flex-col gap-0.5 py-0.5 max-w-sm">
+                          {m.technicalSpec ? (
+                            <span className="text-xs font-bold text-slate-800">
+                              {m.technicalSpec}
+                            </span>
+                          ) : null}
+                          {m.generalTechnicalSpec ? (
+                            <span className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed" title={m.generalTechnicalSpec}>
+                              {m.generalTechnicalSpec}
+                            </span>
+                          ) : null}
+                          {!m.technicalSpec && !m.generalTechnicalSpec && (
+                            <span className="text-slate-400 text-xs">-</span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* 6. Hãng & Xuất xứ (Gộp 3 cấp) */}
+                      <td className="table-cell whitespace-nowrap">
+                        <div className="flex flex-col gap-0.5 py-0.5">
+                          {parsedOrigin.brand ? (
+                            <span className="text-xs font-bold text-slate-900">
+                              {parsedOrigin.brand}
+                            </span>
+                          ) : null}
+                          {parsedOrigin.country ? (
+                            <span className="text-[11px] text-slate-600 font-medium">
+                              {parsedOrigin.country}
+                              {parsedOrigin.region ? (
+                                <span className="ml-1 inline-block px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 font-semibold text-[10px] border border-blue-200">
+                                  {parsedOrigin.region}
+                                </span>
+                              ) : null}
+                            </span>
+                          ) : !parsedOrigin.brand ? (
+                            <span className="text-xs text-slate-600">{m.origin || '-'}</span>
+                          ) : null}
+                        </div>
+                      </td>
+                    </tr>
                   );
                 })
               )}
@@ -543,11 +684,154 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
               required
               error={createErrors.unit}
             />
-            <MaterialOriginSelect
-              value={createForm.origin}
-              onChange={origin => setCreateForm(f => ({ ...f, origin }))}
-            />
-            <FormField label="Quy cách">
+            {/* Cụm Xuất xứ 3 cấp: Nhãn hiệu / Nước sản xuất / Nhóm nước */}
+            <div className="sm:col-span-2 p-3 rounded-lg border border-slate-200 bg-slate-50/50 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-800 uppercase tracking-wide">
+                  Xuất xứ & Nhãn hiệu
+                </span>
+                {createForm.origin && (
+                  <span className="text-[11px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                    Chuỗi: {createForm.origin}
+                  </span>
+                )}
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <MaterialBrandSelect
+                  value={originBrand}
+                  onChange={brand => updateOrigin(brand, originCountry, originRegion)}
+                />
+                <MaterialCountrySelect
+                  value={originCountry}
+                  onChange={(country, defaultRegion) => {
+                    const nextRegion = defaultRegion || originRegion;
+                    updateOrigin(originBrand, country, nextRegion);
+                  }}
+                />
+                <FormField label="Nhóm nước">
+                  <select
+                    className="form-input w-full"
+                    value={originRegion}
+                    onChange={e => updateOrigin(originBrand, originCountry, e.target.value)}
+                  >
+                    <option value="">-- Chọn nhóm nước --</option>
+                    {regionOptions.map((r: string) => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                  </select>
+                </FormField>
+              </div>
+            </div>
+
+            {isSteel ? (
+              /* Cụm thông số hình học cho Thép / Kim khí */
+              <div className="sm:col-span-2 p-3 rounded-lg border border-blue-200 bg-blue-50/30 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-blue-900 uppercase tracking-wide flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-blue-600 inline-block" />
+                    Thông số hình học (Thép & Nguyên vật liệu)
+                  </span>
+                  {createForm.technicalSpec && (
+                    <span className="text-[11px] font-bold text-slate-800 bg-white px-2 py-0.5 rounded border border-blue-200 shadow-2xs">
+                      Quy cách: {createForm.technicalSpec}
+                    </span>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  <FormField label="Phi / Rộng (mm)">
+                    <input
+                      className="form-input w-full"
+                      value={steelDimension}
+                      onChange={e => updateSteel(e.target.value, steelThickness, steelLength, steelGrade)}
+                      placeholder="VD: Ø355 hoặc 1500"
+                    />
+                  </FormField>
+                  <FormField label="Độ dày (mm)">
+                    <input
+                      className="form-input w-full"
+                      value={steelThickness}
+                      onChange={e => updateSteel(steelDimension, e.target.value, steelLength, steelGrade)}
+                      placeholder="VD: 9 hoặc 4"
+                    />
+                  </FormField>
+                  <FormField label="Chiều dài (mm)">
+                    <input
+                      className="form-input w-full"
+                      value={steelLength}
+                      onChange={e => updateSteel(steelDimension, steelThickness, e.target.value, steelGrade)}
+                      placeholder="VD: 6000"
+                    />
+                  </FormField>
+                  <FormField label="Mác thép / Tiêu chuẩn">
+                    <input
+                      className="form-input w-full"
+                      value={steelGrade}
+                      onChange={e => updateSteel(steelDimension, steelThickness, steelLength, e.target.value)}
+                      placeholder="VD: SS400, SA516"
+                    />
+                  </FormField>
+                </div>
+              </div>
+            ) : isEquipment ? (
+              /* Cụm thông số kỹ thuật cho Động cơ / Bơm / Quạt */
+              <div className="sm:col-span-2 p-3 rounded-lg border border-amber-200 bg-amber-50/30 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-amber-900 uppercase tracking-wide flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-amber-600 inline-block" />
+                    Thông số cơ điện (Động cơ / Bơm / Quạt)
+                  </span>
+                  {createForm.generalTechnicalSpec && (
+                    <span className="text-[11px] font-bold text-slate-800 bg-white px-2 py-0.5 rounded border border-amber-200 shadow-2xs max-w-xs truncate">
+                      {createForm.generalTechnicalSpec}
+                    </span>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                  <FormField label="Công suất (kW)">
+                    <input
+                      className="form-input w-full"
+                      value={pumpPower}
+                      onChange={e => updatePump(e.target.value, pumpFlow, pumpPressure, pumpVoltage, pumpDrive)}
+                      placeholder="VD: 160kW hoặc 5.5kW"
+                    />
+                  </FormField>
+                  <FormField label="Lưu lượng (m³/h)">
+                    <input
+                      className="form-input w-full"
+                      value={pumpFlow}
+                      onChange={e => updatePump(pumpPower, e.target.value, pumpPressure, pumpVoltage, pumpDrive)}
+                      placeholder="VD: 71500 m³/h"
+                    />
+                  </FormField>
+                  <FormField label="Cột áp (Pa / mH2O)">
+                    <input
+                      className="form-input w-full"
+                      value={pumpPressure}
+                      onChange={e => updatePump(pumpPower, pumpFlow, e.target.value, pumpVoltage, pumpDrive)}
+                      placeholder="VD: 5600Pa hoặc 24-42 mH2O"
+                    />
+                  </FormField>
+                  <FormField label="Điện áp">
+                    <input
+                      className="form-input w-full"
+                      value={pumpVoltage}
+                      onChange={e => updatePump(pumpPower, pumpFlow, pumpPressure, e.target.value, pumpDrive)}
+                      placeholder="VD: 3phase/380V/50Hz"
+                    />
+                  </FormField>
+                  <FormField label="Kiểu truyền động" className="sm:col-span-2">
+                    <input
+                      className="form-input w-full"
+                      value={pumpDrive}
+                      onChange={e => updatePump(pumpPower, pumpFlow, pumpPressure, pumpVoltage, e.target.value)}
+                      placeholder="VD: Truyền động trực tiếp / Gián tiếp qua dây đai"
+                    />
+                  </FormField>
+                </div>
+              </div>
+            ) : null}
+
+            <FormField label="Quy cách chi tiết">
               <input
                 className="form-input w-full"
                 value={createForm.technicalSpec}
@@ -570,7 +854,7 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
                 placeholder={MATERIAL_FIELD_PLACEHOLDERS.qualityStandard}
               />
             </FormField>
-            <FormField label="Thông số kỹ thuật chung" className="sm:col-span-2">
+            <FormField label="Thông số kỹ thuật chung / Diễn giải" className="sm:col-span-2">
               <textarea
                 className="form-input w-full"
                 rows={3}
@@ -637,6 +921,17 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
           </div>
         </div>
       </Modal>
+
+      <MaterialImportModal
+        isOpen={showImport}
+        onClose={() => setShowImport(false)}
+        onSuccess={() => {
+          qc.invalidateQueries({ queryKey: queryKeys.materials.all });
+          qc.invalidateQueries({ queryKey: queryKeys.categories.tree });
+          qc.invalidateQueries({ queryKey: queryKeys.materialUnits.all });
+          qc.invalidateQueries({ queryKey: queryKeys.materialOrigins.all });
+        }}
+      />
     </div>
   );
 }
