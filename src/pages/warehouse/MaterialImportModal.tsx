@@ -42,6 +42,7 @@ export default function MaterialImportModal({
   const [filterTab, setFilterTab] = useState<FilterTab>('all');
   const [search, setSearch] = useState('');
   const [isImporting, setIsImporting] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const resetState = () => {
@@ -60,13 +61,16 @@ export default function MaterialImportModal({
     onClose();
   };
 
-  const handleDownloadTemplate = () => {
-    const link = document.createElement('a');
-    link.href = `${import.meta.env.VITE_API_BASE_URL ?? ''}/api/warehouse/materials/import-template`;
-    link.download = 'mau-import-danh-muc-vat-tu.xlsx';
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+  const handleDownloadTemplate = async () => {
+    if (isDownloading) return;
+    setIsDownloading(true);
+    try {
+      await materialsService.downloadImportTemplate();
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không thể tải file mẫu. Vui lòng thử lại.'));
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const handleProcessFile = async (selectedFile: File) => {
@@ -234,9 +238,19 @@ export default function MaterialImportModal({
               type="button"
               className="btn btn-outline btn-sm text-xs flex items-center gap-1.5 cursor-pointer text-[var(--md-primary)] hover:bg-[var(--md-primary)]/10"
               onClick={handleDownloadTemplate}
+              disabled={isDownloading}
             >
-              <Download size={13} />
-              Tải file mẫu Excel (.xlsx)
+              {isDownloading ? (
+                <>
+                  <RefreshCw size={13} className="animate-spin" />
+                  Đang tải file mẫu...
+                </>
+              ) : (
+                <>
+                  <Download size={13} />
+                  Tải file mẫu Excel (.xlsx)
+                </>
+              )}
             </button>
             <span className="text-[11px] text-[var(--md-on-surface-variant)]">
               (Bao gồm sheet hướng dẫn, ĐVT, Xuất xứ & Cây danh mục tham chiếu)
