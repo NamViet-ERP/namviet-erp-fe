@@ -241,7 +241,7 @@ export function printCskhGanttReport(
       <div class="sig-title">BAN CHỈ HUY CÔNG TRƯỜNG</div>
       <div class="sig-sub">(Ký & ghi rõ họ tên)</div>
       <div class="sig-space"></div>
-      <div class="sig-name">Chỉ huy trưởng Nguyễn Văn Hải</div>
+      <div class="sig-name">Chỉ huy trưởng công trình</div>
     </div>
     <div>
       <div class="sig-title">TƯ VẤN GIÁM SÁT CHỦ ĐẦU TƯ</div>

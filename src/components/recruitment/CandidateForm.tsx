@@ -3,7 +3,7 @@ import { useState, useRef, type CSSProperties } from 'react';
 import { useForm, useWatch, Controller, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Upload, FileText, Trash2, CheckCircle2, ChevronRight } from 'lucide-react';
+import { Upload, FileText, Trash2, CheckCircle2, ChevronRight, AlertCircle } from 'lucide-react';
 import { showToast } from '../ui/Toast';
 import { candidatesService } from '../../services/candidatesService';
 import { filesService } from '../../services/filesService';
@@ -76,7 +76,8 @@ export default function CandidateForm() {
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
-  const { data: positions = [] } = useActivePositions();
+  const { data: positions = [], isLoading: loadingPositions } = useActivePositions();
+  const noPositionsAvailable = !loadingPositions && positions.length === 0;
   const hrStaffOptions = useHrStaffSelectOptions();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cvSectionRef = useRef<HTMLDivElement>(null);
@@ -254,7 +255,7 @@ export default function CandidateForm() {
         <div className="hrm-success-state__icon"><CheckCircle2 size={72} /></div>
         <h3 className="hrm-success-state__title">Nộp Hồ Sơ Thành Công!</h3>
         <p className="hrm-success-state__desc">
-          Cảm ơn bạn đã ứng tuyển vào hệ thống của chúng tôi. Bộ phận Tuyển dụng (Vinh Việt HR) sẽ xem xét hồ sơ và liên hệ sớm nhất với bạn qua số điện thoại hoặc email đã đăng ký.
+          Cảm ơn bạn đã ứng tuyển vào hệ thống của chúng tôi. Bộ phận Tuyển dụng (Mayzer HR) sẽ xem xét hồ sơ và liên hệ sớm nhất với bạn qua số điện thoại hoặc email đã đăng ký.
         </p>
         <button onClick={handleResetForm} className="btn btn-primary rounded-full px-8 font-bold">
           Nộp thêm hồ sơ khác
@@ -265,12 +266,31 @@ export default function CandidateForm() {
 
   return (
     <form onSubmit={e => { void handleSubmit(onSubmit, onInvalid)(e); }} noValidate className="candidate-apply-form space-y-1">
+      {noPositionsAvailable && (
+        <div
+          role="status"
+          className="p-4 rounded-xl border border-[var(--md-outline-variant)] bg-[var(--md-surface-container-low,#f8fafc)] text-[var(--md-on-surface)] flex items-start gap-3 mb-6"
+        >
+          <AlertCircle className="w-5 h-5 text-[var(--md-primary)] shrink-0 mt-0.5" aria-hidden />
+          <div className="text-sm leading-relaxed">
+            <p className="font-semibold text-[var(--md-on-surface)] mb-1">Thông báo đợt tuyển dụng</p>
+            <p className="text-[var(--md-on-surface-variant)] m-0">
+              Hiện tại hệ thống chưa có đợt tuyển dụng công khai nào đang mở vị trí. Quý ứng viên vui lòng quay lại sau hoặc liên hệ Phòng Nhân sự qua email{' '}
+              <a href="mailto:tuyendung@mayzer.vn" className="font-semibold text-[var(--md-primary)] underline">
+                tuyendung@mayzer.vn
+              </a>.
+            </p>
+          </div>
+        </div>
+      )}
+
       <FormSectionHeader step={1} title="Thông tin ứng viên" />
 
       <div className="hrm-form-grid">
         <div data-form-field="fullName">
-          <HrmFieldLabel required>Họ và tên</HrmFieldLabel>
+          <HrmFieldLabel htmlFor="candidate-full-name" required>Họ và tên</HrmFieldLabel>
           <input
+            id="candidate-full-name"
             type="text"
             className={hrmFieldClass(Boolean(errors.fullName))}
             placeholder="Nhập họ tên"
@@ -279,8 +299,9 @@ export default function CandidateForm() {
           {errors.fullName && <p className="hrm-field__error">{errors.fullName.message}</p>}
         </div>
         <div data-form-field="birthDate">
-          <HrmFieldLabel required>Năm sinh</HrmFieldLabel>
+          <HrmFieldLabel htmlFor="candidate-birth-date" required>Năm sinh</HrmFieldLabel>
           <HrmDatePicker
+            id="candidate-birth-date"
             value={birthDate}
             onChange={v => setValue('birthDate', v, { shouldValidate: true })}
             error={Boolean(errors.birthDate)}
@@ -293,8 +314,9 @@ export default function CandidateForm() {
 
       <div className="hrm-form-grid">
         <div data-form-field="phone">
-          <HrmFieldLabel required>Số điện thoại</HrmFieldLabel>
+          <HrmFieldLabel htmlFor="candidate-phone" required>Số điện thoại</HrmFieldLabel>
           <input
+            id="candidate-phone"
             type="tel"
             className={hrmFieldClass(Boolean(errors.phone))}
             placeholder="10 hoặc 11 số, bắt đầu bằng 0"
@@ -303,8 +325,9 @@ export default function CandidateForm() {
           {errors.phone && <p className="hrm-field__error">{errors.phone.message}</p>}
         </div>
         <div data-form-field="email">
-          <HrmFieldLabel required>Email</HrmFieldLabel>
+          <HrmFieldLabel htmlFor="candidate-email" required>Email</HrmFieldLabel>
           <input
+            id="candidate-email"
             type="text"
             inputMode="email"
             autoComplete="email"
@@ -318,8 +341,9 @@ export default function CandidateForm() {
           <HrmFieldLabel required>Giới tính</HrmFieldLabel>
           <div className="hrm-radio-row">
             {(['Nam', 'Nữ'] as const).map(g => (
-              <label key={g}>
+              <label key={g} htmlFor={`candidate-gender-${g}`}>
                 <input
+                  id={`candidate-gender-${g}`}
                   type="radio"
                   checked={selectedGender === g}
                   onChange={() => setValue('gender', g, { shouldValidate: true })}
@@ -331,8 +355,9 @@ export default function CandidateForm() {
           {errors.gender && <p className="hrm-field__error">{errors.gender.message}</p>}
         </div>
         <div data-form-field="address">
-          <HrmFieldLabel required>Địa chỉ hiện tại</HrmFieldLabel>
+          <HrmFieldLabel htmlFor="candidate-address" required>Địa chỉ hiện tại</HrmFieldLabel>
           <input
+            id="candidate-address"
             type="text"
             className={hrmFieldClass(Boolean(errors.address))}
             placeholder="Xã/Phường, Quận/Huyện, Tỉnh/Thành..."
@@ -349,8 +374,9 @@ export default function CandidateForm() {
           <HrmFieldLabel required>Trình độ học vấn</HrmFieldLabel>
           <div className="hrm-radio-row">
             {EDUCATION_LEVELS.map(edu => (
-              <label key={edu}>
+              <label key={edu} htmlFor={`candidate-edu-${edu}`}>
                 <input
+                  id={`candidate-edu-${edu}`}
                   type="radio"
                   checked={selectedEducation === edu}
                   onChange={() => setValue('education', edu, { shouldValidate: true })}
@@ -362,19 +388,22 @@ export default function CandidateForm() {
           {errors.education && <p className="hrm-field__error">{errors.education.message}</p>}
         </div>
         <div data-form-field="position">
-          <HrmFieldLabel required>Vị trí ứng tuyển</HrmFieldLabel>
+          <HrmFieldLabel htmlFor="candidate-position" required>Vị trí ứng tuyển</HrmFieldLabel>
           <Controller
             name="position"
             control={control}
             render={({ field }) => (
               <HrmSelect
+                id="candidate-position"
+                name="position"
                 className="h-11"
                 value={field.value ?? ''}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
                 options={positions}
-                placeholder="-- Chọn vị trí ứng tuyển --"
+                placeholder={noPositionsAvailable ? '-- Hiện không có vị trí nào đang mở --' : '-- Chọn vị trí ứng tuyển --'}
                 error={Boolean(errors.position)}
+                disabled={noPositionsAvailable}
               />
             )}
           />
@@ -384,8 +413,9 @@ export default function CandidateForm() {
 
       <div className="hrm-form-grid">
         <div data-form-field="school">
-          <HrmFieldLabel required>Trường đào tạo</HrmFieldLabel>
+          <HrmFieldLabel htmlFor="candidate-school" required>Trường đào tạo</HrmFieldLabel>
           <input
+            id="candidate-school"
             type="text"
             className={hrmFieldClass(Boolean(errors.school))}
             placeholder="Nhập tên trường"
@@ -394,8 +424,9 @@ export default function CandidateForm() {
           {errors.school && <p className="hrm-field__error">{errors.school.message}</p>}
         </div>
         <div data-form-field="major">
-          <HrmFieldLabel required>Chuyên ngành</HrmFieldLabel>
+          <HrmFieldLabel htmlFor="candidate-major" required>Chuyên ngành</HrmFieldLabel>
           <input
+            id="candidate-major"
             type="text"
             className={hrmFieldClass(Boolean(errors.major))}
             placeholder="Nhập chuyên ngành"
@@ -406,8 +437,9 @@ export default function CandidateForm() {
       </div>
 
       <div>
-        <HrmFieldLabel required>Số năm kinh nghiệm</HrmFieldLabel>
+        <HrmFieldLabel htmlFor="candidate-experience" required>Số năm kinh nghiệm</HrmFieldLabel>
         <input
+          id="candidate-experience"
           type="text"
           className="hrm-field-input"
           placeholder="Ví dụ: Chưa có, 2 năm, 5 năm..."
@@ -419,8 +451,9 @@ export default function CandidateForm() {
         <HrmFieldLabel required>Nguồn ứng tuyển</HrmFieldLabel>
         <div className="hrm-radio-row">
           {RECRUITMENT_SOURCES.map(src => (
-            <label key={src}>
+            <label key={src} htmlFor={`candidate-source-${src}`}>
               <input
+                id={`candidate-source-${src}`}
                 type="radio"
                 checked={selectedSource === src}
                 onChange={() => setValue('source', src, { shouldValidate: true })}
@@ -433,12 +466,14 @@ export default function CandidateForm() {
       </div>
 
       <div data-form-field="hrResponsible">
-        <HrmFieldLabel required>HR phụ trách</HrmFieldLabel>
+        <HrmFieldLabel htmlFor="candidate-hr-responsible" required>HR phụ trách</HrmFieldLabel>
         <Controller
           name="hrResponsible"
           control={control}
           render={({ field }) => (
             <HrmSelect
+              id="candidate-hr-responsible"
+              name="hrResponsible"
               className="h-11"
               value={field.value ?? ''}
               onChange={field.onChange}
@@ -455,7 +490,7 @@ export default function CandidateForm() {
         <FormSectionHeader step={3} title="Tải lên CV" />
       </div>
       <div ref={cvSectionRef}>
-        <HrmFieldLabel required>File CV</HrmFieldLabel>
+        <HrmFieldLabel htmlFor="candidate-cv-file" required>File CV</HrmFieldLabel>
 
         {!cvFile ? (
           <div
@@ -467,6 +502,7 @@ export default function CandidateForm() {
             onClick={() => fileInputRef.current?.click()}
           >
             <input
+              id="candidate-cv-file"
               type="file"
               ref={fileInputRef}
               onChange={handleFileChange}
@@ -517,7 +553,7 @@ export default function CandidateForm() {
         <button
           type="submit"
           className="btn btn-primary w-full h-12 rounded-full font-bold flex items-center justify-center gap-2"
-          disabled={isSubmitting || isUploading}
+          disabled={isSubmitting || isUploading || noPositionsAvailable}
         >
           <span>{isSubmitting ? 'ĐANG GỬI HỒ SƠ...' : 'GỬI HỒ SƠ ỨNG TUYỂN'}</span>
           <ChevronRight size={18} />

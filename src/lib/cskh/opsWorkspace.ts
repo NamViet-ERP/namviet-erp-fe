@@ -136,7 +136,7 @@ export const DEFAULT_SEED_OPS: Record<string, CskhProjectOps> = {
         reason: 'Hỏng cụm van thủy lực bơm chính xe cẩu chuyên dụng 80T',
         ganttTask: 'Gantt #3 · Lắp thân lò',
         departmentId: 'tech',
-        pic: 'Nguyễn Văn Hải (Chỉ huy trưởng)',
+        pic: 'Chỉ huy trưởng công trình',
         resolution: 'Thuê cẩu 100T thay thế',
         source: 'gantt',
         history: [
@@ -204,7 +204,7 @@ export const DEFAULT_SEED_OPS: Record<string, CskhProjectOps> = {
         code: 'RC-12',
         name: 'Yêu cầu bổ sung 2 máy hàn TIG công suất lớn',
         requestType: 'Thiết bị thi công',
-        fromDept: 'Chỉ huy trưởng Nguyễn Văn Hải',
+        fromDept: 'Chỉ huy trưởng công trình',
         toDept: 'Phòng Thiết bị Máy',
         createdAt: '2026-09-22',
         dueDate: '2026-09-23',
@@ -359,7 +359,7 @@ export const DEFAULT_SEED_OPS: Record<string, CskhProjectOps> = {
             name: 'Tăng ca ca đêm tổ hàn ống hơi balong',
             dueDate: '2026-09-21',
             done: false,
-            pic: 'Chỉ huy trưởng Nguyễn Văn Hải',
+            pic: 'Chỉ huy trưởng công trình',
             generatedBottleneck: true,
           },
           {
@@ -439,17 +439,7 @@ export interface CskhOpsStore {
 const DAY_MS = 24 * 60 * 60 * 1000;
 const MAX_SNAPSHOTS = 50;
 
-export function emptyProjectOps(projectCode?: string): CskhProjectOps {
-  const seed = projectCode && DEFAULT_SEED_OPS[projectCode] ? DEFAULT_SEED_OPS[projectCode] : null;
-  if (seed) {
-    return {
-      bottlenecks: [...seed.bottlenecks],
-      requests: [...seed.requests],
-      ganttItems: [...seed.ganttItems],
-      snapshots: [...seed.snapshots],
-      meetings: [...seed.meetings],
-    };
-  }
+export function emptyProjectOps(_projectCode?: string): CskhProjectOps {
   return {
     bottlenecks: [],
     requests: [],

@@ -145,7 +145,7 @@ export const DEFAULT_SEED_DOCUMENTS: Record<string, CskhUnifiedDoc[]> = {
       name: 'Đệ trình vật tư quạt thổi cao áp FD Fan 55kW',
       docType: 'Đệ trình thiết bị',
       stage: 'draft_review',
-      author: 'Kỹ sư Nguyễn Văn Hải',
+      author: '-',
       internalApproved: false,
       handoverSigned: false,
       slaDueDate: '2026-09-24',

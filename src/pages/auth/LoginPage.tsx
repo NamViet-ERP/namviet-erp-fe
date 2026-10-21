@@ -108,9 +108,11 @@ export default function LoginPage() {
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="hrm-field__label">Email</label>
+              <label className="hrm-field__label" htmlFor="login-email">Email</label>
               <div className="relative">
                 <input
+                  id="login-email"
+                  name="username"
                   type="text"
                   className="form-input w-full h-11 rounded-lg"
                   value={username}
@@ -122,9 +124,11 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="hrm-field__label">Mật khẩu</label>
+              <label className="hrm-field__label" htmlFor="login-password">Mật khẩu</label>
               <div className="relative">
                 <input
+                  id="login-password"
+                  name="password"
                   type={showPassword ? 'text' : 'password'}
                   className="form-input w-full h-11 pr-10 rounded-lg"
                   value={password}
@@ -189,7 +193,7 @@ export default function LoginPage() {
           </div>
 
           <p className="text-center mt-5 text-xs text-[var(--md-on-surface-variant)]">
-            Phiên bản thử nghiệm Mayzer WMS v1.2.0
+            © 2026 Mayzer ERP. Nền tảng Quản trị Doanh nghiệp Toàn diện.
           </p>
         </div>
       </div>

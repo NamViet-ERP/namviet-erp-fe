@@ -19,6 +19,7 @@ const MONTHS_VI = [
 ];
 
 interface HrmDatePickerProps {
+  id?: string;
   value?: string;
   onChange: (iso: string) => void;
   onBlur?: () => void;
@@ -99,6 +100,7 @@ function computePopoverLayout(trigger: HTMLElement, popover: HTMLElement): Popov
 }
 
 export default function HrmDatePicker({
+  id,
   value = '',
   onChange,
   onBlur,
@@ -247,6 +249,7 @@ export default function HrmDatePicker({
       <button
         type="button"
         disabled={disabled}
+        id={id}
         className={`hrm-date-picker__trigger hrm-field-input ${error ? 'hrm-field-input--error' : ''} ${open ? 'hrm-date-picker__trigger--open' : ''}`}
         onClick={handleToggleOpen}
         aria-haspopup="dialog"
