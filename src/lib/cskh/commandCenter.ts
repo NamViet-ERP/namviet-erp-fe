@@ -147,7 +147,7 @@ interface CskhOverlay {
   notes?: string;
 }
 
-interface CskhCommandStore {
+export interface CskhCommandStore {
   overlays: Record<string, CskhOverlay>;
   localProjects: CskhProjectDraft[];
   deletedCodes?: string[];
@@ -233,100 +233,26 @@ export function progressGridCopy(status: CskhProgressStatus): { badge: string; s
   return { badge: 'Đúng tiến độ', summary: 'Đúng / vượt tiến độ' };
 }
 
-export const DEFAULT_SEED_PROJECTS: CskhProjectDraft[] = [
-  {
-    code: 'LH-01',
-    name: 'Lò Hơi Biomass Tầng Sôi 30T - Chain Yarn',
-    year: 2026,
-    phaseId: 'mech',
-    planPct: 100,
-    actualPct: 58,
-    bottleneckCount: 5,
-    pendingDocs: 3,
-    warrantyWatch: true,
-    clientName: 'Công ty TNHH Chain Yarn Việt Nam',
-    pmName: 'Phan Văn Nam',
-    salesName: 'Trần Văn A',
-    startDate: '2026-05-15',
-    boilerType: 'Biomass Tầng sôi',
-    capacity: '30 Tấn/h',
-    industry: 'Giấy',
-    priority: 'high',
-    acceptanceDate: undefined,
-    warrantyMonths: 48,
-    phaseMode: 'auto',
-    notes: 'Dự án EPC trọng điểm lò hơi Biomass 30 Tấn/h cho Chain Yarn',
-    targetCodDate: '2026-10-15',
-  },
-  {
-    code: 'LH-02',
-    name: 'Phenikaa LPG Boiler',
-    year: 2026,
-    phaseId: 'commission',
-    planPct: 75,
-    actualPct: 72,
-    bottleneckCount: 0,
-    pendingDocs: 1,
-    warrantyWatch: false,
-    clientName: 'Tập đoàn Phenikaa',
-    pmName: 'Lê Minh Tuấn',
-    startDate: '2026-06-01',
-    boilerType: 'LPG Gas',
-    capacity: '15 Tấn/h',
-    industry: 'Công nghiệp',
-    priority: 'normal',
-    acceptanceDate: undefined,
-    warrantyMonths: 24,
-    phaseMode: 'auto',
-    notes: 'Chuẩn bị nghiệm thu bàn giao mốc COD.',
-    targetCodDate: '2026-11-20',
-  },
-  {
-    code: 'LH-03',
-    name: 'Dệt May Vĩnh Long',
-    year: 2026,
-    phaseId: 'survey',
-    planPct: 24,
-    actualPct: 16,
-    bottleneckCount: 0,
-    pendingDocs: 0,
-    warrantyWatch: false,
-    clientName: 'Dệt May Vĩnh Long',
-    pmName: 'Trần Văn C',
-    startDate: '2026-08-10',
-    boilerType: 'Ghi xích',
-    capacity: '10 Tấn/h',
-    industry: 'Dệt nhuộm',
-    priority: 'low',
-    acceptanceDate: undefined,
-    warrantyMonths: 12,
-    phaseMode: 'manual',
-    notes: 'Đang khảo sát mặt bằng.',
-    targetCodDate: '2026-12-30',
-  },
-];
-
 export function loadCommandStore(): CskhCommandStore {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
       return {
         overlays: {},
-        localProjects: DEFAULT_SEED_PROJECTS,
+        localProjects: [],
       };
     }
     const parsed = JSON.parse(raw) as CskhCommandStore;
     const local = Array.isArray(parsed.localProjects) ? parsed.localProjects : [];
-    const hasLh01 = local.some(p => p.code === 'LH-01');
     return {
       overlays: parsed.overlays ?? {},
-      localProjects: hasLh01 ? local : [...DEFAULT_SEED_PROJECTS, ...local],
+      localProjects: local,
       deletedCodes: Array.isArray(parsed.deletedCodes) ? parsed.deletedCodes : [],
     };
   } catch {
     return {
       overlays: {},
-      localProjects: DEFAULT_SEED_PROJECTS,
+      localProjects: [],
     };
   }
 }
@@ -348,16 +274,16 @@ export function mergeCommandProjects(
       const year = overlay.year ?? (row.startDate ? new Date(row.startDate).getFullYear() : new Date().getFullYear());
       return {
         code: row.projectCode,
-        name: overlay.name ?? row.projectName,
+        name: row.projectName,
         year,
-        phaseId: overlay.phaseId ?? 'survey',
+        phaseId: row.stage ?? 'survey',
         planPct: overlay.planPct ?? planPctFromDates(row.startDate, row.endDate),
         actualPct: overlay.actualPct ?? actualPctFromStock(row.stockActualQty, row.stockPlannedQty),
         bottleneckCount: overlay.bottleneckCount ?? 0,
         pendingDocs: overlay.pendingDocs ?? 0,
         warrantyWatch: overlay.warrantyWatch ?? false,
-        pmName: overlay.pmName ?? row.pmName,
-        clientName: overlay.clientName !== undefined ? overlay.clientName : row.clientName,
+        pmName: row.pmName,
+        clientName: row.clientName,
         source: 'wms' as const,
         boilerType: overlay.boilerType,
         capacity: overlay.capacity,
@@ -463,10 +389,10 @@ export function getProjectRecord(
   const wms = warehouseProjects.find(row => row.projectCode === code);
   return {
     ...base,
-    name: overlay.name ?? local?.name ?? base.name,
-    clientName: overlay.clientName !== undefined ? overlay.clientName : (local?.clientName ?? base.clientName),
-    pmName: overlay.pmName ?? local?.pmName ?? base.pmName,
-    startDate: overlay.startDate ?? local?.startDate ?? wms?.startDate ?? undefined,
+    name: wms?.projectName ?? overlay.name ?? local?.name ?? base.name,
+    clientName: wms ? wms.clientName : (overlay.clientName !== undefined ? overlay.clientName : (local?.clientName ?? base.clientName)),
+    pmName: wms?.pmName ?? overlay.pmName ?? local?.pmName ?? base.pmName,
+    startDate: wms?.startDate ?? overlay.startDate ?? local?.startDate ?? undefined,
     contractSignedDate: overlay.contractSignedDate ?? local?.contractSignedDate,
     advanceDate: overlay.advanceDate ?? local?.advanceDate,
     acceptanceDate: overlay.acceptanceDate ?? local?.acceptanceDate,

@@ -1,5 +1,6 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { projectsService } from '../../services/projectsService';
 import { queryKeys } from '../../services/queryKeys';
 import {
   cskhService,
@@ -13,7 +14,7 @@ import {
   type CskhInternalRequest,
   type CskhMeeting,
   type CskhSeverity,
-  DEFAULT_SEED_OPS,
+  type CskhGanttItem,
 } from '../../lib/cskh/opsWorkspace';
 
 function mapBottleneckDto(dto: ProjectBottleneckDto): CskhBottleneck {
@@ -113,6 +114,14 @@ export function useCskhOpsWorkspace(projectCode: string) {
     enabled: Boolean(projectCode),
   });
 
+  const tasksQuery = useQuery({
+    queryKey: queryKeys.projects.constructionTasks(projectCode),
+    queryFn: () => projectsService.listConstructionTasks(projectCode),
+    enabled: Boolean(projectCode),
+  });
+  const saving = useRef(false);
+  const [isSaving, setIsSaving] = useState(false);
+
   // Assemble unified CskhProjectOps from queries
   const ops: CskhProjectOps = useMemo(() => {
     const bottlenecks = (bottlenecksQuery.data || []).map(mapBottleneckDto);
@@ -133,8 +142,15 @@ export function useCskhOpsWorkspace(projectCode: string) {
       })),
     }));
 
-    const seed = DEFAULT_SEED_OPS[projectCode];
-    const ganttItems = seed?.ganttItems ?? [];
+    const ganttItems: CskhGanttItem[] = (tasksQuery.data ?? []).map(task => ({
+      id: task.id, name: task.name,
+      startDate: task.plannedStart.slice(0, 10), endDate: task.plannedEnd.slice(0, 10),
+      days: Math.max(1, Math.round((Date.parse(task.plannedEnd) - Date.parse(task.plannedStart)) / 86400000) + 1),
+      actualPct: task.percentComplete, department: task.department ?? undefined,
+      notes: task.notes ?? undefined, wbs: task.wbsCode ?? undefined,
+      level: task.level, parentId: task.parentId ?? undefined, isGroup: task.isGroup,
+      statusLabel: task.statusLabel ?? undefined, statusTone: task.statusTone as CskhGanttItem['statusTone'],
+    }));
     const snapshots = dbSnapshots;
 
     return {
@@ -147,181 +163,103 @@ export function useCskhOpsWorkspace(projectCode: string) {
       weeklyReports: [],
       monthlyReports: [],
     };
-  }, [bottlenecksQuery.data, requestsQuery.data, meetingsQuery.data, snapshotsQuery.data, projectCode]);
+  }, [bottlenecksQuery.data, requestsQuery.data, meetingsQuery.data, snapshotsQuery.data, tasksQuery.data, projectCode]);
 
-  // Update handler: performs mutation against backend REST API and invalidates cache
-  const update = useCallback(
-    async (fn: (current: CskhProjectOps) => CskhProjectOps) => {
+  // A mutation is complete only after the server writes and caches are reconciled.
+  const update = useCallback(async (fn: (current: CskhProjectOps) => CskhProjectOps) => {
+    if (saving.current) throw new Error('Đang lưu thay đổi. Vui lòng chờ.');
+    if (!projectCode) throw new Error('Chưa chọn dự án.');
+    saving.current = true;
+    setIsSaving(true);
+    const changed = (a: unknown, b: unknown) => JSON.stringify(a) !== JSON.stringify(b);
+    try {
       const next = fn(ops);
-
-      // --- Diff Snapshots ---
-      const oldSnapIds = new Set(ops.snapshots.map(s => s.id));
-      for (const snap of next.snapshots) {
-        if (!oldSnapIds.has(snap.id) || snap.id.startsWith('ops-')) {
-          cskhService.createGanttSnapshot(projectCode, {
-            planPct: snap.planPct,
-            actualPct: snap.actualPct,
-            items: snap.items.map(it => ({
-              taskId: it.id,
-              taskName: it.name,
-              planPct: it.planPct,
-              actualPct: it.actualPct,
-            })),
-          }).then(() => {
-            queryClient.invalidateQueries({ queryKey: queryKeys.cskh.snapshots(projectCode) });
-          });
-        }
+      for (const snap of next.snapshots.filter(s => !ops.snapshots.some(old => old.id === s.id))) {
+        await cskhService.createGanttSnapshot(projectCode, {
+          planPct: snap.planPct, actualPct: snap.actualPct,
+          items: snap.items.map(item => ({ taskId: item.id, taskName: item.name, planPct: item.planPct, actualPct: item.actualPct })),
+        });
       }
-
-      // --- Diff Bottlenecks ---
-      const oldB = ops.bottlenecks;
-      const nextB = next.bottlenecks;
-      const oldBIds = new Set(oldB.map(b => b.id));
-      const nextBIds = new Set(nextB.map(b => b.id));
-
-      // Deleted bottlenecks
-      for (const b of oldB) {
-        if (!nextBIds.has(b.id)) {
-          cskhService.deleteBottleneck(projectCode, b.id).then(() => {
-            queryClient.invalidateQueries({ queryKey: queryKeys.cskh.bottlenecks(projectCode) });
-          });
-        }
+      for (const old of ops.bottlenecks.filter(b => !next.bottlenecks.some(row => row.id === b.id))) {
+        await cskhService.deleteBottleneck(projectCode, old.id);
       }
-
-      // Added or modified bottlenecks
-      for (const b of nextB) {
-        if (!oldBIds.has(b.id) || b.id.startsWith('ops-')) {
-          cskhService.createBottleneck(projectCode, {
-            name: b.name,
-            severity: b.severity,
-            startedAt: b.startedAt,
-            expectedAt: b.expectedAt,
-            reason: b.reason,
-            departmentId: b.departmentId ?? null,
-            pic: b.pic ?? null,
-            resolution: b.resolution ?? null,
-            source: b.source || 'manual',
-          }).then(() => {
-            queryClient.invalidateQueries({ queryKey: queryKeys.cskh.bottlenecks(projectCode) });
-          });
-        } else {
-          const prev = oldB.find(x => x.id === b.id);
-          if (prev && JSON.stringify(prev) !== JSON.stringify(b)) {
-            const noteText = b.history.length > prev.history.length
-              ? b.history[b.history.length - 1]?.text
-              : null;
-            cskhService.updateBottleneck(projectCode, b.id, {
-              name: b.name,
-              severity: b.severity,
-              status: b.status,
-              expectedAt: b.expectedAt,
-              reason: b.reason,
-              departmentId: b.departmentId ?? null,
-              pic: b.pic ?? null,
-              resolution: b.resolution ?? null,
-              noteText,
-            }).then(() => {
-              queryClient.invalidateQueries({ queryKey: queryKeys.cskh.bottlenecks(projectCode) });
-            });
+      for (const row of next.bottlenecks) {
+        const old = ops.bottlenecks.find(b => b.id === row.id);
+        const body = { name: row.name, severity: row.severity, startedAt: row.startedAt,
+          expectedAt: row.expectedAt, reason: row.reason, departmentId: row.departmentId ?? null,
+          ganttTask: row.ganttTask ?? null, pic: row.pic ?? null, resolution: row.resolution ?? null };
+        if (!old) await cskhService.createBottleneck(projectCode, { ...body, source: row.source || 'manual' });
+        else if (changed(old, row)) await cskhService.updateBottleneck(projectCode, row.id, {
+          ...body, status: row.status,
+          noteText: row.history.length > old.history.length ? row.history[row.history.length - 1]?.text : null,
+        });
+      }
+      for (const old of ops.requests.filter(r => !next.requests.some(row => row.id === r.id))) {
+        await cskhService.deleteRequest(projectCode, old.id);
+      }
+      for (const row of next.requests) {
+        const old = ops.requests.find(r => r.id === row.id);
+        const body = { name: row.name, requestType: row.requestType || 'general', fromParty: row.fromDept,
+          toDept: row.toDept, dueDate: row.dueDate, priority: row.priority || 'medium', body: row.body ?? '' };
+        if (!old) await cskhService.createRequest(projectCode, body);
+        else if (changed(old, row)) await cskhService.updateRequest(projectCode, row.id, { ...body, status: row.status });
+      }
+      for (const old of ops.meetings.filter(m => !next.meetings.some(row => row.id === m.id))) {
+        await cskhService.deleteMeeting(projectCode, old.id);
+      }
+      for (const row of next.meetings) {
+        const old = ops.meetings.find(m => m.id === row.id);
+        const body = { name: row.name, date: row.date, attendees: row.attendees, agenda: row.agenda,
+          minutes: row.minutes ?? '', attachments: row.attachments,
+          actions: row.actions.map(action => ({ ...action, id: old?.actions.some(previous => previous.id === action.id) ? action.id : undefined })) };
+        if (!old) await cskhService.createMeeting(projectCode, body);
+        else if (changed(old, row)) {
+          // Dedicated endpoints preserve the identity and other fields of existing actions.
+          const withoutMinutesAndDone = (meeting: CskhMeeting) => ({ ...meeting, minutes: undefined,
+            actions: meeting.actions.map(action => ({ ...action, done: undefined })) });
+          if (changed(withoutMinutesAndDone(old), withoutMinutesAndDone(row))) {
+            await cskhService.updateMeeting(projectCode, row.id, body);
+          } else {
+            if (old.minutes !== row.minutes) await cskhService.updateMeetingMinutes(projectCode, row.id, { minutes: row.minutes ?? '' });
+            for (const action of row.actions) {
+              if (old.actions.find(a => a.id === action.id)?.done !== action.done) {
+                await cskhService.toggleMeetingAction(projectCode, row.id, action.id, action.done);
+              }
+            }
           }
         }
       }
-
-      // --- Diff Requests ---
-      const oldR = ops.requests;
-      const nextR = next.requests;
-      const oldRIds = new Set(oldR.map(r => r.id));
-      const nextRIds = new Set(nextR.map(r => r.id));
-
-      for (const r of oldR) {
-        if (!nextRIds.has(r.id)) {
-          cskhService.deleteRequest(projectCode, r.id).then(() => {
-            queryClient.invalidateQueries({ queryKey: queryKeys.cskh.requests(projectCode) });
-          });
-        }
+      if (changed(ops.ganttItems, next.ganttItems)) {
+        await projectsService.syncConstructionTasks(projectCode, next.ganttItems.map((task, index) => ({
+          id: ops.ganttItems.some(previous => previous.id === task.id) ? task.id : undefined,
+          name: task.name, plannedStart: task.startDate, plannedEnd: task.endDate,
+          percentComplete: task.actualPct, sortOrder: index, wbsCode: task.wbs,
+          level: task.level, parentId: task.parentId, isGroup: task.isGroup,
+          department: task.department, statusLabel: task.statusLabel, statusTone: task.statusTone, notes: task.notes,
+        })));
       }
-
-      for (const r of nextR) {
-        if (!oldRIds.has(r.id) || r.id.startsWith('ops-')) {
-          cskhService.createRequest(projectCode, {
-            name: r.name,
-            requestType: r.requestType || 'general',
-            fromParty: r.fromDept,
-            toDept: r.toDept,
-            dueDate: r.dueDate,
-            priority: r.priority || 'medium',
-            body: r.body,
-          }).then(() => {
-            queryClient.invalidateQueries({ queryKey: queryKeys.cskh.requests(projectCode) });
-          });
-        } else {
-          const prev = oldR.find(x => x.id === r.id);
-          if (prev && JSON.stringify(prev) !== JSON.stringify(r)) {
-            cskhService.updateRequest(projectCode, r.id, {
-              status: r.status,
-              notes: r.body,
-            }).then(() => {
-              queryClient.invalidateQueries({ queryKey: queryKeys.cskh.requests(projectCode) });
-            });
-          }
-        }
+    } finally {
+      // A multi-resource operation may partially succeed: always reload the authoritative state.
+      try { await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.cskh.bottlenecks(projectCode) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.cskh.requests(projectCode) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.cskh.meetings(projectCode) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.cskh.snapshots(projectCode) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.projects.constructionTasks(projectCode) }),
+      ]); } finally {
+        saving.current = false;
+        setIsSaving(false);
       }
+    }
+  }, [ops, projectCode, queryClient]);
 
-      // --- Diff Meetings ---
-      const oldM = ops.meetings;
-      const nextM = next.meetings;
-      const oldMIds = new Set(oldM.map(m => m.id));
-      const nextMIds = new Set(nextM.map(m => m.id));
-
-      for (const m of oldM) {
-        if (!nextMIds.has(m.id)) {
-          cskhService.deleteMeeting(projectCode, m.id).then(() => {
-            queryClient.invalidateQueries({ queryKey: queryKeys.cskh.meetings(projectCode) });
-          });
-        }
-      }
-
-      for (const m of nextM) {
-        if (!oldMIds.has(m.id) || m.id.startsWith('ops-')) {
-          cskhService.createMeeting(projectCode, {
-            name: m.name,
-            date: m.date,
-            attendees: m.attendees,
-            agenda: m.agenda,
-            actions: (m.actions || []).map(a => ({
-              name: a.name,
-              dueDate: a.dueDate,
-              pic: a.pic,
-            })),
-          }).then(() => {
-            queryClient.invalidateQueries({ queryKey: queryKeys.cskh.meetings(projectCode) });
-          });
-        } else {
-          const prev = oldM.find(x => x.id === m.id);
-          if (prev && JSON.stringify(prev) !== JSON.stringify(m)) {
-            cskhService.updateMeeting(projectCode, m.id, {
-              name: m.name,
-              date: m.date,
-              attendees: m.attendees,
-              agenda: m.agenda,
-              actions: (m.actions || []).map(a => ({
-                name: a.name,
-                dueDate: a.dueDate,
-                pic: a.pic,
-              })),
-            }).then(() => {
-              queryClient.invalidateQueries({ queryKey: queryKeys.cskh.meetings(projectCode) });
-            });
-          }
-        }
-      }
-    },
-    [ops, projectCode, queryClient]
-  );
-
+  const queries = [bottlenecksQuery, requestsQuery, meetingsQuery, snapshotsQuery, tasksQuery];
   return {
-    ops,
-    update,
-    isLoading: bottlenecksQuery.isLoading || requestsQuery.isLoading || meetingsQuery.isLoading || snapshotsQuery.isLoading,
+    ops, update, isSaving,
+    isLoading: queries.some(query => query.isLoading),
+    isError: queries.some(query => query.isError),
+    error: queries.find(query => query.isError)?.error,
+    refetch: () => Promise.all(queries.map(query => query.refetch())),
+    bottlenecksQuery,
   };
 }

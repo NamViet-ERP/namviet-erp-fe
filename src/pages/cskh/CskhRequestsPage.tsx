@@ -1,3 +1,4 @@
+import { useCskhAction } from '../../hooks/cskh/useCskhAction';
 import { useMemo, useState } from 'react';
 import { Download, Lightbulb, Plus } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
@@ -62,7 +63,13 @@ const EMPTY_FORM = {
 
 export default function CskhRequestsPage({ project }: CskhRequestsPageProps) {
   const meta = cskhProjectTabMeta('requests');
-  const { ops, update } = useCskhOpsWorkspace(project.code);
+  const workspace = useCskhOpsWorkspace(project.code);
+  const { ops, update: updateOps } = workspace;
+  const { run, isPending, error: actionError } = useCskhAction();
+  const update = (fn: Parameters<typeof updateOps>[0]) => run(async () => {
+    const next = fn(ops);
+    await updateOps(() => next);
+  });
   const kpis = requestKpis(ops.requests);
   const [filter, setFilter] = useState<CskhRequestFilter>('all');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -100,7 +107,7 @@ export default function CskhRequestsPage({ project }: CskhRequestsPageProps) {
     setOpen(true);
   };
 
-  const save = () => {
+  const save = async () => {
     const name = form.name.trim();
     const next: Record<string, string> = {};
     if (!name) next.name = 'Nhập nội dung yêu cầu.';
@@ -112,6 +119,7 @@ export default function CskhRequestsPage({ project }: CskhRequestsPageProps) {
       return;
     }
     const row: CskhInternalRequest = {
+      ...editing,
       id: editing?.id ?? newOpsId(),
       name,
       body: form.body.trim() || undefined,
@@ -121,15 +129,15 @@ export default function CskhRequestsPage({ project }: CskhRequestsPageProps) {
       status: editing?.status ?? 'open',
       createdAt: editing?.createdAt ?? toIsoDate(new Date()),
     };
-    update(current => upsertRequest(current, row));
+    if (!await update(current => upsertRequest(current, row))) return;
     setOpen(false);
     setSelectedId(row.id);
     showToast('success', editing ? 'Đã cập nhật yêu cầu.' : 'Đã tạo yêu cầu.');
   };
 
-  const setStatus = (status: CskhRequestStatus) => {
+  const setStatus = async (status: CskhRequestStatus) => {
     if (!selected) return;
-    update(current => upsertRequest(current, { ...selected, status }));
+    if (!await update(current => upsertRequest(current, { ...selected, status }))) return;
     showToast('success', status === 'closed' ? 'Đã đóng yêu cầu.' : 'Đã chuyển đang xử lý.');
   };
 
@@ -144,7 +152,10 @@ export default function CskhRequestsPage({ project }: CskhRequestsPageProps) {
   };
 
   return (
-    <div className="page-stack cskh-desk">
+    <div className="page-stack cskh-desk" aria-busy={isPending || workspace.isLoading}>
+      {workspace.isLoading && <p role="status">Đang tải dữ liệu…</p>}
+      {workspace.isError && <p role="alert">Không tải được dữ liệu. <button type="button" onClick={() => void workspace.refetch()}>Thử lại</button></p>}
+      {actionError && <p role="alert">{actionError}</p>}
       <PageHeader
         eyebrow={project.code}
         title={meta.title}
@@ -248,7 +259,7 @@ export default function CskhRequestsPage({ project }: CskhRequestsPageProps) {
         footer={(
           <>
             <Button type="button" variant="outlined" onClick={() => setOpen(false)}>Hủy</Button>
-            <Button type="button" onClick={save}>Lưu</Button>
+            <Button type="button" disabled={isPending} onClick={save}>Lưu</Button>
           </>
         )}
       >
@@ -270,11 +281,12 @@ export default function CskhRequestsPage({ project }: CskhRequestsPageProps) {
       </Modal>
 
       <ConfirmDialog
+        isLoading={isPending}
         isOpen={Boolean(deleteTarget)}
         onClose={() => setDeleteTarget(null)}
-        onConfirm={() => {
+        onConfirm={async () => {
           if (!deleteTarget) return;
-          update(current => removeRequest(current, deleteTarget.id));
+          if (!await update(current => removeRequest(current, deleteTarget.id))) return;
           setDeleteTarget(null);
           showToast('success', `Đã xóa ${deleteTarget.name}.`);
         }}

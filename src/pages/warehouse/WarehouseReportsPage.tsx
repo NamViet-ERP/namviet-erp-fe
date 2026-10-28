@@ -150,6 +150,7 @@ export default function WarehouseReportsPage() {
         <div className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <select
+              aria-label="Dự án báo cáo tồn kho"
               className="form-select w-64"
               value={projectCode}
               onChange={e => setProjectCode(e.target.value)}

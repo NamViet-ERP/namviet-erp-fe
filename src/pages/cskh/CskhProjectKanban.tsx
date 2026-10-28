@@ -1,3 +1,4 @@
+import { useCskhAction } from '../../hooks/cskh/useCskhAction';
 import { useState } from 'react';
 import {
   CSKH_PHASES,
@@ -7,11 +8,12 @@ import {
 
 interface CskhProjectKanbanProps {
   projects: CskhCommandProject[];
-  onMove: (code: string, phaseId: CskhPhaseId) => void;
+  onMove: (code: string, phaseId: CskhPhaseId) => Promise<void>;
   onOpen: (code: string) => void;
 }
 
 export default function CskhProjectKanban({ projects, onMove, onOpen }: CskhProjectKanbanProps) {
+  const { run, isPending } = useCskhAction();
   const [dragging, setDragging] = useState<string | null>(null);
   const [overPhase, setOverPhase] = useState<CskhPhaseId | null>(null);
 
@@ -36,7 +38,7 @@ export default function CskhProjectKanban({ projects, onMove, onOpen }: CskhProj
               const code = e.dataTransfer.getData('text/plain');
               setOverPhase(null);
               setDragging(null);
-              if (code) onMove(code, phase.id);
+              if (code) void run(() => onMove(code, phase.id));
             }}
           >
             <header className="cskh-kanban__head">
@@ -51,7 +53,7 @@ export default function CskhProjectKanban({ projects, onMove, onOpen }: CskhProj
                   <article
                     key={card.code}
                     className={`cskh-kanban__card${dragging === card.code ? ' is-dragging' : ''}`}
-                    draggable
+                    draggable={!isPending}
                     onDragStart={e => {
                       e.dataTransfer.setData('text/plain', card.code);
                       e.dataTransfer.effectAllowed = 'move';

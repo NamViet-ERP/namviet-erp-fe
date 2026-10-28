@@ -66,9 +66,9 @@ describe('cskh command center', () => {
     expect(formatSignedPct(0)).toBe('+0%');
   });
 
-  it('merges warehouse rows with overlay phase', () => {
-    const rows = mergeCommandProjects([sampleWms()], {
-      overlays: { 'DA-01': { phaseId: 'mech', bottleneckCount: 2 } },
+  it('uses canonical stage while merging CSKH metrics', () => {
+    const rows = mergeCommandProjects([sampleWms({ stage: 'mech' })], {
+      overlays: { 'DA-01': { phaseId: 'survey', bottleneckCount: 2 } },
       localProjects: [],
     });
     expect(rows).toHaveLength(1);

@@ -99,166 +99,6 @@ export interface CskhUnifiedDoc {
   downloadUrl?: string | null;
 }
 
-export const DEFAULT_SEED_DOCUMENTS: Record<string, CskhUnifiedDoc[]> = {
-  'LH-01': [
-    {
-      id: 'doc-1',
-      code: 'HS-301',
-      name: 'Phương án Thử áp lực thủy lực & Kiểm định balong',
-      docType: 'Đệ trình thi công',
-      stage: 'feedback_pending',
-      author: 'KS Lê Minh Tuấn · Gắn với Gantt #5 Thử áp',
-      internalApproved: true,
-      handoverSigned: true,
-      handoverDate: '2026-09-05',
-      handoverRecipient: 'Nguyễn Văn B (CĐT)',
-      slaDueDate: '2026-09-10',
-      overdueDays: 12,
-      status: 'overdue',
-      statusLabel: 'Quá hạn SLA 12 ngày',
-      category: 'Đệ trình kỹ thuật',
-      fileSize: '5.4 MB',
-      fileName: 'PA-Thu-Ap-Balong-LH01.pdf',
-    },
-    {
-      id: 'doc-2',
-      code: 'HS-304',
-      name: 'Hồ sơ chứng chỉ CO/CQ lô van hơi áp lực Kitz Nhật Bản',
-      docType: 'Hồ sơ vật tư',
-      stage: 'feedback_pending',
-      author: 'Phòng Cung ứng · Đệ trình lần 1',
-      internalApproved: true,
-      handoverSigned: true,
-      handoverDate: '2026-09-08',
-      handoverRecipient: 'TVGS An Phát tiếp nhận',
-      slaDueDate: '2026-09-13',
-      overdueDays: 9,
-      status: 'overdue',
-      statusLabel: 'TVGS giữ lại quá hạn',
-      category: 'CO/CQ & Xuất xưởng',
-      fileSize: '8.2 MB',
-      fileName: 'CO-CQ-Van-Kitz-Japan.pdf',
-    },
-    {
-      id: 'doc-3',
-      code: 'HS-308',
-      name: 'Đệ trình vật tư quạt thổi cao áp FD Fan 55kW',
-      docType: 'Đệ trình thiết bị',
-      stage: 'draft_review',
-      author: '-',
-      internalApproved: false,
-      handoverSigned: false,
-      slaDueDate: '2026-09-24',
-      overdueDays: 0,
-      status: 'drafting',
-      statusLabel: 'Chờ duyệt nội bộ',
-      category: 'Đệ trình kỹ thuật',
-      fileSize: '3.1 MB',
-      fileName: 'De-Trinh-Quat-FD-55kW.pdf',
-    },
-    {
-      id: 'doc-4',
-      code: 'HS-298',
-      name: 'Biên bản nghiệm thu lắp đặt kết cấu móng & giá đỡ thân lò',
-      docType: 'Nghiệm thu giai đoạn',
-      stage: 'approved',
-      author: 'Biên bản nghiệm thu 3 bên CĐT - Tổng thầu - TVGS',
-      internalApproved: true,
-      handoverSigned: true,
-      handoverDate: '2026-08-20',
-      handoverRecipient: 'Đã ký đóng dấu đỏ đủ 3 bên',
-      slaDueDate: '2026-08-20',
-      overdueDays: 0,
-      status: 'approved',
-      statusLabel: 'Đã chấp thuận chính thức',
-      category: 'Nghiệm thu lắp đặt',
-      fileSize: '4.8 MB',
-      fileName: 'BB-NT-M01-signed.pdf',
-    },
-    {
-      id: 'arc-1',
-      code: 'ARC-01',
-      name: 'Biên bản nghiệm thu tĩnh kết cấu thép đỡ balong',
-      docType: 'Biên bản nghiệm thu',
-      stage: 'archived',
-      author: 'Ban chỉ huy công trường Nam Việt',
-      internalApproved: true,
-      handoverSigned: true,
-      handoverDate: '2026-08-15',
-      handoverRecipient: 'CĐT An Phát',
-      slaDueDate: '2026-08-15',
-      overdueDays: 0,
-      status: 'approved',
-      statusLabel: 'Lưu trữ chính thức',
-      category: 'Nghiệm thu lắp đặt',
-      fileSize: '4.8 MB',
-      fileName: 'BB-NT-M01-signed.pdf',
-    },
-    {
-      id: 'arc-2',
-      code: 'ARC-02',
-      name: 'Chứng chỉ xuất xưởng & kiểm tra siêu âm mối hàn balong',
-      docType: 'CO/CQ Xuất xưởng',
-      stage: 'archived',
-      author: 'Xưởng Chế tạo Cơ khí Nam Việt',
-      internalApproved: true,
-      handoverSigned: true,
-      handoverDate: '2026-07-10',
-      handoverRecipient: 'TVGS An Phát',
-      slaDueDate: '2026-07-10',
-      overdueDays: 0,
-      status: 'approved',
-      statusLabel: 'Lưu trữ chính thức',
-      category: 'CO/CQ & Xuất xưởng',
-      fileSize: '12.5 MB',
-      fileName: 'CO-CQ-Balong-D1400.pdf',
-    },
-    {
-      id: 'arc-3',
-      code: 'ARC-03',
-      name: 'Bản vẽ hoàn công As-built hệ thống đường ống hơi chính',
-      docType: 'Bản vẽ As-built',
-      stage: 'archived',
-      author: 'Phòng Kỹ thuật Thiết kế Nam Việt',
-      internalApproved: true,
-      handoverSigned: true,
-      handoverDate: '2026-09-01',
-      handoverRecipient: 'CĐT An Phát',
-      slaDueDate: '2026-09-01',
-      overdueDays: 0,
-      status: 'approved',
-      statusLabel: 'Lưu trữ chính thức',
-      category: 'Bản vẽ As-built',
-      fileSize: '18.2 MB',
-      fileName: 'Asbuilt-Steam-Pipe-Rev2.dwg',
-    },
-    {
-      id: 'arc-4',
-      code: 'ARC-04',
-      name: 'Quy trình vận hành an toàn lò hơi & Lịch bảo dưỡng 48T',
-      docType: 'Tài liệu vận hành',
-      stage: 'archived',
-      author: 'Chuyên gia Vận hành Nam Việt',
-      internalApproved: true,
-      handoverSigned: true,
-      handoverDate: '2026-09-20',
-      handoverRecipient: 'CĐT An Phát',
-      slaDueDate: '2026-09-20',
-      overdueDays: 0,
-      status: 'approved',
-      statusLabel: 'Lưu trữ chính thức',
-      category: 'Tài liệu vận hành',
-      fileSize: '3.1 MB',
-      fileName: 'QTVH-Boiler-30T-NamViet.pdf',
-    },
-  ],
-};
-
-DEFAULT_SEED_DOCUMENTS['LH 01'] = DEFAULT_SEED_DOCUMENTS['LH-01'];
-
-/**
- * Chuẩn hóa và tự động tính toán thời hạn SLA / số ngày trễ hạn theo thời gian thực (Production Rule)
- */
 export function applyDynamicSla(doc: CskhUnifiedDoc, now = Date.now()): CskhUnifiedDoc {
   // 1. Hồ sơ đã duyệt hoặc đã lưu trữ hoàn công: Không bao giờ tính trễ
   if (doc.stage === 'approved' || doc.stage === 'archived' || doc.status === 'approved') {
@@ -310,14 +150,6 @@ export function applyDynamicSla(doc: CskhUnifiedDoc, now = Date.now()): CskhUnif
   };
 }
 
-export function getSeedDocuments(projectCode?: string): CskhUnifiedDoc[] {
-  if (!projectCode) return [];
-  const clean = projectCode.trim();
-  const alt = clean.includes(' ') ? clean.replace(/\s+/g, '-') : clean.replace(/-/g, ' ');
-  const raw = DEFAULT_SEED_DOCUMENTS[clean] ?? DEFAULT_SEED_DOCUMENTS[alt] ?? [];
-  return raw.map(d => applyDynamicSla(d));
-}
-
 export interface CskhProjectDocs {
   processes: CskhDocProcess[];
   drafts: CskhDraftDoc[];
@@ -332,14 +164,13 @@ export interface CskhDocsStore {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export function emptyProjectDocs(projectCode?: string): CskhProjectDocs {
-  const seed = getSeedDocuments(projectCode);
+export function emptyProjectDocs(_projectCode?: string): CskhProjectDocs {
   return {
     processes: [],
     drafts: [],
     handovers: [],
     feedback: [],
-    unifiedDocs: [...seed],
+    unifiedDocs: [],
   };
 }
 

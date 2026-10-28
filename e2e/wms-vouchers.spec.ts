@@ -1,137 +1,70 @@
 import { test, expect } from '@playwright/test';
-import {
-  deleteExport,
-  deleteImport,
-  deleteTransfer,
-  findProjectWithStock,
-  findVoucherIdByCode,
-  listImports,
-  loginToken,
-} from './helpers/api';
-import {
-  bumpQtyStepper,
-  clickVoucherRow,
-  expectSnackbar,
-  extractVoucherCode,
-  fillImportDraftForm,
-  pickFirstAutocomplete,
-} from './helpers/ui';
+import { deleteExport, deleteImport, deleteTransfer, loginToken, type VoucherApiDto } from './helpers/api';
+import { expectSnackbar } from './helpers/ui';
+import { createPlacedPoFixture, createPoImportFixture, createStockFixture, fillStockVoucherForm, fixtureRequest, getFixtureStock, openPoImportForm } from './helpers/purchasingFixtures';
 
 test.describe('WMS voucher create (draft)', () => {
-  test('import draft creates NK voucher', async ({ page }) => {
+  test('import draft creates NK voucher from its placed PO', async ({ page }) => {
     const token = await loginToken();
-    const tag = `E2E-NK-${Date.now()}`;
-    let voucherCode: string | undefined;
-    let voucherId: string | undefined;
-
+    const fixture = await createPlacedPoFixture(token);
+    let voucher: VoucherApiDto | undefined;
     try {
-      await page.goto('/warehouse/import');
-      await page.getByRole('button', { name: 'Tạo phiếu nhập' }).click();
+      const dialog = await openPoImportForm(page, fixture);
+      const saved = page.waitForResponse(r => r.request().method() === 'POST' && r.url().endsWith(`/api/imports/from-po/${fixture.orderCode}`));
+      await dialog.getByRole('button', { name: 'Lưu nháp' }).click();
+      const response = await saved;
+      expect(response.ok(), await response.text()).toBeTruthy();
+      voucher = await response.json() as VoucherApiDto;
+      await expectSnackbar(page, `Phiếu nháp ${voucher.voucherCode}`);
+      await expect(dialog).toBeHidden();
+      await expect(page.getByRole('region', { name: 'Phiếu nhập kho', exact: true }).getByText(voucher.voucherCode, { exact: true })).toBeVisible();
+      expect((await fixtureRequest<VoucherApiDto>(token, 'GET', `/api/imports/${voucher.id}`)).status).toBe('draft');
+      expect(await getFixtureStock(token, fixture)).toBe(0);
+    } finally {
+      if (voucher) await deleteImport(voucher.id, token);
+    }
+  });
 
-      const dialog = page.getByRole('dialog', { name: 'Tạo phiếu nhập kho dự án' });
-      await expect(dialog).toBeVisible();
-      const poOptions = dialog.locator('select.form-input').first().locator('option');
-      test.skip((await poOptions.count()) <= 1, 'No placed PO available for import E2E');
-
+  for (const kind of ['export', 'transfer'] as const) {
+    test(`${kind} draft creates a voucher from isolated project stock`, async ({ page }) => {
+      const token = await loginToken();
+      const fixture = await createStockFixture(token);
+      const title = kind === 'export' ? 'Tạo phiếu xuất' : 'Tạo phiếu chuyển';
+      const route = kind === 'export' ? 'exports' : 'transfers';
+      let voucher: VoucherApiDto | undefined;
       try {
-        await fillImportDraftForm(page, dialog, tag);
-      } catch {
-        test.skip(true, 'No unlocked placed PO available for import E2E');
-        return;
+        await page.goto(`/warehouse/${kind}`);
+        await page.getByRole('button', { name: title, exact: true }).click();
+        const dialog = page.getByRole('dialog', { name: `${title} kho dự án` });
+        await fillStockVoucherForm(page, dialog, fixture);
+        const saved = page.waitForResponse(r => r.request().method() === 'POST' && r.url().endsWith(`/api/${route}`));
+        await dialog.getByRole('button', { name: 'Lưu nháp' }).click();
+        const response = await saved;
+        expect(response.ok(), await response.text()).toBeTruthy();
+        voucher = await response.json() as VoucherApiDto;
+        await expectSnackbar(page, `Phiếu nháp ${voucher.voucherCode}`);
+        await expect(dialog).toBeHidden();
+        expect(voucher.status).toBe('draft');
+        expect(await getFixtureStock(token, fixture)).toBe(10);
+      } finally {
+        if (voucher) await (kind === 'export' ? deleteExport : deleteTransfer)(voucher.id, token);
       }
-
-      await dialog.getByRole('button', { name: 'Lưu nháp' }).click();
-      const toast = await expectSnackbar(page, /Phiếu nháp .* — chưa chốt dự kiến/);
-      voucherCode = extractVoucherCode(await toast.textContent(), 'NK');
-      expect(voucherCode).toBeTruthy();
-
-      await expect(page.getByRole('cell', { name: voucherCode! })).toBeVisible();
-
-      voucherId = await findVoucherIdByCode(token, 'imports', voucherCode!);
-      expect(voucherId).toBeTruthy();
-    } finally {
-      if (voucherId) {
-        await deleteImport(voucherId, token).catch(() => undefined);
-      }
-    }
-  });
-
-  test('export draft creates XK voucher when project has stock', async ({ page }) => {
-    const token = await loginToken();
-    const stock = await findProjectWithStock(token);
-    test.skip(!stock, 'No unfrozen project stock available for export E2E');
-
-    let voucherCode: string | undefined;
-    let voucherId: string | undefined;
-
-    try {
-      await page.goto('/warehouse/export');
-      await page.getByRole('button', { name: 'Tạo phiếu xuất' }).click();
-
-      const dialog = page.getByRole('dialog', { name: 'Tạo phiếu xuất kho dự án' });
-      await dialog.locator('select.form-select').first().selectOption(stock!.projectCode);
-      await pickFirstAutocomplete(page, dialog.locator('.search-autocomplete__input').first());
-      await bumpQtyStepper(dialog.locator('.qty-stepper').first(), 1);
-
-      await dialog.getByRole('button', { name: 'Lưu nháp' }).click();
-      const toast = await expectSnackbar(page, /Phiếu nháp .* — chưa chốt dự kiến/);
-      voucherCode = extractVoucherCode(await toast.textContent(), 'XK');
-      expect(voucherCode).toBeTruthy();
-
-      voucherId = await findVoucherIdByCode(token, 'exports', voucherCode!);
-      expect(voucherId).toBeTruthy();
-    } finally {
-      if (voucherId) {
-        await deleteExport(voucherId, token).catch(() => undefined);
-      }
-    }
-  });
-
-  test('transfer draft creates KC voucher when project has stock', async ({ page }) => {
-    const token = await loginToken();
-    const stock = await findProjectWithStock(token);
-    test.skip(!stock, 'No unfrozen project stock available for transfer E2E');
-
-    let voucherCode: string | undefined;
-    let voucherId: string | undefined;
-
-    try {
-      await page.goto('/warehouse/transfer');
-      await page.getByRole('button', { name: 'Tạo phiếu chuyển' }).click();
-
-      const dialog = page.getByRole('dialog', { name: 'Tạo phiếu chuyển kho dự án' });
-      await dialog.locator('select.form-select').first().selectOption(stock!.projectCode);
-      await pickFirstAutocomplete(page, dialog.locator('.search-autocomplete__input').first());
-      await bumpQtyStepper(dialog.locator('.qty-stepper').first(), 1);
-
-      await dialog.getByRole('button', { name: 'Lưu nháp' }).click();
-      const toast = await expectSnackbar(page, /Phiếu nháp .* — chưa chốt dự kiến/);
-      voucherCode = extractVoucherCode(await toast.textContent(), 'KC');
-      expect(voucherCode).toBeTruthy();
-
-      voucherId = await findVoucherIdByCode(token, 'transfers', voucherCode!);
-      expect(voucherId).toBeTruthy();
-    } finally {
-      if (voucherId) {
-        await deleteTransfer(voucherId, token).catch(() => undefined);
-      }
-    }
-  });
+    });
+  }
 });
 
-test.describe('WMS voucher detail modal', () => {
-  test('import draft opens detail modal from row click', async ({ page }) => {
-    const token = await loginToken();
-    const imports = await listImports(token);
-    const draft = imports.find(item => item.status === 'draft');
-    test.skip(!draft, 'No import draft in DB to open detail');
-
-    await page.goto('/warehouse/import');
-    await clickVoucherRow(page, draft!.voucherCode);
-
+test('import draft opens detail in its PO', async ({ page }) => {
+  const token = await loginToken();
+  const fixture = await createPlacedPoFixture(token);
+  const voucher = await createPoImportFixture(token, fixture);
+  try {
+    await page.goto(`/purchasing/orders/${encodeURIComponent(fixture.orderCode)}`);
+    await page.getByRole('region', { name: 'Phiếu nhập kho', exact: true }).getByText(voucher.voucherCode, { exact: true }).click();
     const dialog = page.getByRole('dialog');
-    await expect(dialog.getByRole('heading', { name: draft!.voucherCode })).toBeVisible();
-    await expect(dialog.getByRole('button', { name: /Sửa phiếu/ })).toBeVisible();
+    await expect(dialog.getByRole('heading', { name: voucher.voucherCode })).toBeVisible();
+    await expect(dialog.getByRole('button', { name: 'Sửa phiếu', exact: true })).toBeVisible();
     await dialog.getByRole('button', { name: 'Đóng', exact: true }).click();
-  });
+  } finally {
+    await deleteImport(voucher.id, token);
+  }
 });

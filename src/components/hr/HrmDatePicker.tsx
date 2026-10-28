@@ -31,6 +31,7 @@ interface HrmDatePickerProps {
   disabled?: boolean;
   error?: boolean;
   className?: string;
+  'aria-describedby'?: string;
 }
 
 function buildMonthGrid(viewMonth: Date): (Date | null)[] {
@@ -112,6 +113,7 @@ export default function HrmDatePicker({
   disabled,
   error,
   className = '',
+  'aria-describedby': ariaDescribedBy,
 }: HrmDatePickerProps) {
   const listId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -178,6 +180,19 @@ export default function HrmDatePicker({
     setPopoverLayout(null);
   }, []);
 
+  const onPopoverKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'Escape' && open) {
+      event.preventDefault();
+      event.stopPropagation();
+      closePopover();
+      rootRef.current?.querySelector('button')?.focus();
+    }
+  };
+
+  useEffect(() => {
+    if (open) popoverRef.current?.querySelector('input')?.focus();
+  }, [open]);
+
   const handleToggleOpen = useCallback(() => {
     if (disabled) return;
     if (open) {
@@ -204,6 +219,7 @@ export default function HrmDatePicker({
     onChange(toIsoDate(date));
     closePopover();
     onBlur?.();
+    rootRef.current?.querySelector('button')?.focus();
   };
 
   const clear = (e: React.MouseEvent) => {
@@ -252,7 +268,10 @@ export default function HrmDatePicker({
         id={id}
         className={`hrm-date-picker__trigger hrm-field-input ${error ? 'hrm-field-input--error' : ''} ${open ? 'hrm-date-picker__trigger--open' : ''}`}
         onClick={handleToggleOpen}
+        onKeyDown={onPopoverKeyDown}
         aria-haspopup="dialog"
+        aria-invalid={error || undefined}
+        aria-describedby={ariaDescribedBy}
         aria-expanded={open}
         aria-controls={listId}
       >
@@ -269,6 +288,7 @@ export default function HrmDatePicker({
           className="hrm-date-picker__popover hrm-date-picker__popover--floating"
           role="dialog"
           aria-label="Chọn ngày"
+          onKeyDown={onPopoverKeyDown}
           style={
             popoverLayout
               ? {

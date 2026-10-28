@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Download, Kanban, LayoutGrid, Plus, Search, Table } from 'lucide-react';
+import { Download, Kanban, LayoutGrid, Search, Table } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
@@ -10,7 +10,6 @@ import { useCskhCommandCenter } from '../../hooks/cskh/useCskhCommandCenter';
 import { useCskhProject } from '../../hooks/cskh/useCskhProject';
 import { cskhProjectPath } from '../../constants/cskhProject';
 import { toCsv } from '../../lib/cskh/commandCenter';
-import CskhAddProjectModal from './CskhAddProjectModal';
 import CskhEditProjectModal from './CskhEditProjectModal';
 import CskhProjectKanban from './CskhProjectKanban';
 import CskhProjectGrid from './CskhProjectGrid';
@@ -25,9 +24,8 @@ export default function CskhDashboardPage() {
     projects,
     kpis,
     years,
-    isLoading,
+    isLoading, isError, refetch,
     moveProject,
-    addProject,
     getProject,
     patchProject,
     deleteProject,
@@ -35,7 +33,6 @@ export default function CskhDashboardPage() {
   const [view, setView] = useState<BoardView>('table');
   const [year, setYear] = useState<'all' | number>('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [addOpen, setAddOpen] = useState(false);
   const [editingProjectCode, setEditingProjectCode] = useState<string | null>(null);
 
   const editingProject = editingProjectCode ? getProject(editingProjectCode) : null;
@@ -87,9 +84,10 @@ export default function CskhDashboardPage() {
 
   return (
     <div className="page-stack cskh-desk">
+      {isError && <p role="alert">Không tải được hồ sơ dự án. <button type="button" onClick={() => void refetch()}>Thử lại</button></p>}
       <PageHeader
         title="Trung tâm điều hành"
-        subtitle="Giám sát tiến độ kế hoạch vs thực tế và điều hành các dự án CSKH toàn hệ thống."
+        subtitle="Giám sát tiến độ kế hoạch vs thực tế và điều hành các dự án CSKH toàn hệ thống. Dự án được khởi tạo và phân công từ phân hệ Dự án EPC."
       />
 
       <div className="dashboard-kpi-grid cskh-desk__kpi" role="list" aria-label="Chỉ số CSKH">
@@ -203,9 +201,6 @@ export default function CskhDashboardPage() {
             <Button type="button" variant="outlined" leftIcon={Download} onClick={exportCsv}>
               Xuất Excel
             </Button>
-            <Button type="button" variant="filled" leftIcon={Plus} onClick={() => setAddOpen(true)}>
-              Thêm dự án
-            </Button>
           </div>
         </div>
 
@@ -223,25 +218,17 @@ export default function CskhDashboardPage() {
         )}
       </HrmPanel>
 
-      <CskhAddProjectModal
-        open={addOpen}
-        existingCodes={projects.map(p => p.code)}
-        clientOptions={clientOptions}
-        onClose={() => setAddOpen(false)}
-        onSave={addProject}
-      />
-
       {editingProject && (
         <CskhEditProjectModal
           open={Boolean(editingProject)}
           project={editingProject}
           clientOptions={clientOptions}
           onClose={() => setEditingProjectCode(null)}
-          onSave={patch => {
-            if (editingProjectCode) patchProject(editingProjectCode, patch);
+          onSave={async patch => {
+            if (editingProjectCode) await patchProject(editingProjectCode, patch);
           }}
-          onDelete={code => {
-            deleteProject(code);
+          onDelete={async code => {
+            await deleteProject(code);
             setEditingProjectCode(null);
           }}
         />

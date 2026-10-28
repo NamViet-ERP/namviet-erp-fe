@@ -14,7 +14,7 @@ import { hrmFieldClass } from '../hr/hrmFieldClass';
 import HrmSelect from '../hr/HrmSelect';
 import { RECRUITMENT_SOURCES, EDUCATION_LEVELS } from '../../constants/recruitment';
 import { useActivePositions } from '../../hooks/usePositions';
-import { useHrStaffSelectOptions } from '../../hooks/useHrStaff';
+import { useHrStaff } from '../../hooks/useHrStaff';
 import { validateFullName } from '../../lib/hrm/validateFullName';
 import { zPhoneField, zTrimmedString } from '../../lib/hrm/sanitizeInput';
 import { registerHrmPhone, registerHrmText } from '../../lib/hrm/registerHrmField';
@@ -76,9 +76,15 @@ export default function CandidateForm() {
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
-  const { data: positions = [], isLoading: loadingPositions } = useActivePositions();
-  const noPositionsAvailable = !loadingPositions && positions.length === 0;
-  const hrStaffOptions = useHrStaffSelectOptions();
+  const positionsQuery = useActivePositions();
+  const { data: positions = [], isLoading: loadingPositions } = positionsQuery;
+  const staffQuery = useHrStaff();
+  const hrStaffOptions = (staffQuery.data ?? []).map(staff => staff.name);
+  const loadingOptions = loadingPositions || staffQuery.isLoading;
+  const optionsFailed = positionsQuery.isError || staffQuery.isError;
+  const noPositionsAvailable = positionsQuery.isSuccess && positions.length === 0;
+  const noStaffAvailable = staffQuery.isSuccess && hrStaffOptions.length === 0;
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cvSectionRef = useRef<HTMLDivElement>(null);
   const uploadSessionId = useRef(crypto.randomUUID()).current;
@@ -99,6 +105,10 @@ export default function CandidateForm() {
       address: '',
       birthDate: '',
       experience: '',
+      school: '',
+      major: '',
+      position: '',
+      hrResponsible: '',
     }
   });
 
@@ -106,6 +116,11 @@ export default function CandidateForm() {
   const selectedEducation = useWatch({ control, name: 'education' });
   const selectedSource = useWatch({ control, name: 'source' });
   const birthDate = useWatch({ control, name: 'birthDate' }) ?? '';
+  const fieldA11y = (name: keyof CandidateFormValues) => ({
+    'aria-invalid': Boolean(errors[name]) || undefined,
+    'aria-describedby': errors[name] ? `candidate-${name}-error` : undefined,
+    'aria-required': name !== 'experience',
+  });
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -205,6 +220,7 @@ export default function CandidateForm() {
   };
 
   const onSubmit = async (data: CandidateFormValues) => {
+    setSubmitError(null);
     if (!cvFile || !cvFileUrl) {
       const message = 'Vui lòng tải lên file CV của bạn';
       setFileError(message);
@@ -231,6 +247,7 @@ export default function CandidateForm() {
         position: data.position,
         experience: data.experience || 'Chưa cập nhật',
         source: data.source,
+        hrResponsible: data.hrResponsible,
         cvFileName: cvFile.name,
         cvFileSize: cvFileSize || (cvFile.size / (1024 * 1024)).toFixed(2) + ' MB',
         cvFileUrl,
@@ -238,8 +255,10 @@ export default function CandidateForm() {
 
       setIsSubmitted(true);
       showToast('success', 'Hồ sơ của bạn đã được tiếp nhận!', 'Nộp hồ sơ thành công');
-    } catch {
-      showToast('error', 'Có lỗi xảy ra khi gửi hồ sơ. Vui lòng thử lại!');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Có lỗi xảy ra khi gửi hồ sơ. Vui lòng thử lại!';
+      setSubmitError(message);
+      showToast('error', message);
     }
   };
 
@@ -247,6 +266,7 @@ export default function CandidateForm() {
     reset();
     handleRemoveFile();
     setIsSubmitted(false);
+    setSubmitError(null);
   };
 
   if (isSubmitted) {
@@ -266,6 +286,18 @@ export default function CandidateForm() {
 
   return (
     <form onSubmit={e => { void handleSubmit(onSubmit, onInvalid)(e); }} noValidate className="candidate-apply-form space-y-1">
+      {loadingOptions && <p role="status">Đang tải thông tin tuyển dụng...</p>}
+      {optionsFailed && (
+        <div role="alert" className="hrm-field__error">
+          <p>Không thể tải thông tin tuyển dụng. Vui lòng thử lại.</p>
+          <button type="button" className="btn btn-secondary" onClick={() => {
+            void positionsQuery.refetch();
+            void staffQuery.refetch();
+          }}>Thử lại</button>
+        </div>
+      )}
+      {noStaffAvailable && <p role="status">Chưa có nhân sự phụ trách để tiếp nhận hồ sơ. Vui lòng liên hệ Phòng Nhân sự hoặc quay lại sau.</p>}
+      {submitError && <p role="alert" className="hrm-field__error">{submitError}</p>}
       {noPositionsAvailable && (
         <div
           role="status"
@@ -291,24 +323,26 @@ export default function CandidateForm() {
           <HrmFieldLabel htmlFor="candidate-full-name" required>Họ và tên</HrmFieldLabel>
           <input
             id="candidate-full-name"
+            {...fieldA11y('fullName')}
             type="text"
             className={hrmFieldClass(Boolean(errors.fullName))}
             placeholder="Nhập họ tên"
             {...registerHrmText(register, setValue, 'fullName')}
           />
-          {errors.fullName && <p className="hrm-field__error">{errors.fullName.message}</p>}
+          {errors.fullName && <p id="candidate-fullName-error" className="hrm-field__error">{errors.fullName.message}</p>}
         </div>
         <div data-form-field="birthDate">
           <HrmFieldLabel htmlFor="candidate-birth-date" required>Năm sinh</HrmFieldLabel>
           <HrmDatePicker
             id="candidate-birth-date"
+            aria-describedby={fieldA11y('birthDate')['aria-describedby']}
             value={birthDate}
             onChange={v => setValue('birthDate', v, { shouldValidate: true })}
             error={Boolean(errors.birthDate)}
             max={new Date().toISOString().slice(0, 10)}
             yearFrom={1940}
           />
-          {errors.birthDate && <p className="hrm-field__error">{errors.birthDate.message}</p>}
+          {errors.birthDate && <p id="candidate-birthDate-error" className="hrm-field__error">{errors.birthDate.message}</p>}
         </div>
       </div>
 
@@ -317,17 +351,19 @@ export default function CandidateForm() {
           <HrmFieldLabel htmlFor="candidate-phone" required>Số điện thoại</HrmFieldLabel>
           <input
             id="candidate-phone"
+            {...fieldA11y('phone')}
             type="tel"
             className={hrmFieldClass(Boolean(errors.phone))}
             placeholder="10 hoặc 11 số, bắt đầu bằng 0"
             {...registerHrmPhone(register, setValue, 'phone')}
           />
-          {errors.phone && <p className="hrm-field__error">{errors.phone.message}</p>}
+          {errors.phone && <p id="candidate-phone-error" className="hrm-field__error">{errors.phone.message}</p>}
         </div>
         <div data-form-field="email">
           <HrmFieldLabel htmlFor="candidate-email" required>Email</HrmFieldLabel>
           <input
             id="candidate-email"
+            {...fieldA11y('email')}
             type="text"
             inputMode="email"
             autoComplete="email"
@@ -335,7 +371,7 @@ export default function CandidateForm() {
             placeholder="Nhập email"
             {...registerHrmText(register, setValue, 'email')}
           />
-          {errors.email && <p className="hrm-field__error">{errors.email.message}</p>}
+          {errors.email && <p id="candidate-email-error" className="hrm-field__error">{errors.email.message}</p>}
         </div>
         <div data-form-field="gender">
           <HrmFieldLabel required>Giới tính</HrmFieldLabel>
@@ -344,6 +380,8 @@ export default function CandidateForm() {
               <label key={g} htmlFor={`candidate-gender-${g}`}>
                 <input
                   id={`candidate-gender-${g}`}
+                  name="gender"
+                  {...fieldA11y('gender')}
                   type="radio"
                   checked={selectedGender === g}
                   onChange={() => setValue('gender', g, { shouldValidate: true })}
@@ -352,18 +390,19 @@ export default function CandidateForm() {
               </label>
             ))}
           </div>
-          {errors.gender && <p className="hrm-field__error">{errors.gender.message}</p>}
+          {errors.gender && <p id="candidate-gender-error" className="hrm-field__error">{errors.gender.message}</p>}
         </div>
         <div data-form-field="address">
           <HrmFieldLabel htmlFor="candidate-address" required>Địa chỉ hiện tại</HrmFieldLabel>
           <input
             id="candidate-address"
+            {...fieldA11y('address')}
             type="text"
             className={hrmFieldClass(Boolean(errors.address))}
             placeholder="Xã/Phường, Quận/Huyện, Tỉnh/Thành..."
             {...registerHrmText(register, setValue, 'address')}
           />
-          {errors.address && <p className="hrm-field__error">{errors.address.message}</p>}
+          {errors.address && <p id="candidate-address-error" className="hrm-field__error">{errors.address.message}</p>}
         </div>
       </div>
 
@@ -377,6 +416,8 @@ export default function CandidateForm() {
               <label key={edu} htmlFor={`candidate-edu-${edu}`}>
                 <input
                   id={`candidate-edu-${edu}`}
+                  name="education"
+                  {...fieldA11y('education')}
                   type="radio"
                   checked={selectedEducation === edu}
                   onChange={() => setValue('education', edu, { shouldValidate: true })}
@@ -385,7 +426,7 @@ export default function CandidateForm() {
               </label>
             ))}
           </div>
-          {errors.education && <p className="hrm-field__error">{errors.education.message}</p>}
+          {errors.education && <p id="candidate-education-error" className="hrm-field__error">{errors.education.message}</p>}
         </div>
         <div data-form-field="position">
           <HrmFieldLabel htmlFor="candidate-position" required>Vị trí ứng tuyển</HrmFieldLabel>
@@ -395,6 +436,7 @@ export default function CandidateForm() {
             render={({ field }) => (
               <HrmSelect
                 id="candidate-position"
+                {...fieldA11y('position')}
                 name="position"
                 className="h-11"
                 value={field.value ?? ''}
@@ -403,11 +445,11 @@ export default function CandidateForm() {
                 options={positions}
                 placeholder={noPositionsAvailable ? '-- Hiện không có vị trí nào đang mở --' : '-- Chọn vị trí ứng tuyển --'}
                 error={Boolean(errors.position)}
-                disabled={noPositionsAvailable}
+                disabled={loadingPositions || positionsQuery.isError || noPositionsAvailable}
               />
             )}
           />
-          {errors.position && <p className="hrm-field__error">{errors.position.message}</p>}
+          {errors.position && <p id="candidate-position-error" className="hrm-field__error">{errors.position.message}</p>}
         </div>
       </div>
 
@@ -416,28 +458,30 @@ export default function CandidateForm() {
           <HrmFieldLabel htmlFor="candidate-school" required>Trường đào tạo</HrmFieldLabel>
           <input
             id="candidate-school"
+            {...fieldA11y('school')}
             type="text"
             className={hrmFieldClass(Boolean(errors.school))}
             placeholder="Nhập tên trường"
             {...registerHrmText(register, setValue, 'school')}
           />
-          {errors.school && <p className="hrm-field__error">{errors.school.message}</p>}
+          {errors.school && <p id="candidate-school-error" className="hrm-field__error">{errors.school.message}</p>}
         </div>
         <div data-form-field="major">
           <HrmFieldLabel htmlFor="candidate-major" required>Chuyên ngành</HrmFieldLabel>
           <input
             id="candidate-major"
+            {...fieldA11y('major')}
             type="text"
             className={hrmFieldClass(Boolean(errors.major))}
             placeholder="Nhập chuyên ngành"
             {...registerHrmText(register, setValue, 'major')}
           />
-          {errors.major && <p className="hrm-field__error">{errors.major.message}</p>}
+          {errors.major && <p id="candidate-major-error" className="hrm-field__error">{errors.major.message}</p>}
         </div>
       </div>
 
       <div>
-        <HrmFieldLabel htmlFor="candidate-experience" required>Số năm kinh nghiệm</HrmFieldLabel>
+        <HrmFieldLabel htmlFor="candidate-experience">Số năm kinh nghiệm</HrmFieldLabel>
         <input
           id="candidate-experience"
           type="text"
@@ -454,6 +498,8 @@ export default function CandidateForm() {
             <label key={src} htmlFor={`candidate-source-${src}`}>
               <input
                 id={`candidate-source-${src}`}
+                name="source"
+                {...fieldA11y('source')}
                 type="radio"
                 checked={selectedSource === src}
                 onChange={() => setValue('source', src, { shouldValidate: true })}
@@ -462,7 +508,7 @@ export default function CandidateForm() {
             </label>
           ))}
         </div>
-        {errors.source && <p className="hrm-field__error">{errors.source.message}</p>}
+        {errors.source && <p id="candidate-source-error" className="hrm-field__error">{errors.source.message}</p>}
       </div>
 
       <div data-form-field="hrResponsible">
@@ -473,18 +519,20 @@ export default function CandidateForm() {
           render={({ field }) => (
             <HrmSelect
               id="candidate-hr-responsible"
+              {...fieldA11y('hrResponsible')}
               name="hrResponsible"
               className="h-11"
               value={field.value ?? ''}
               onChange={field.onChange}
               onBlur={field.onBlur}
               options={hrStaffOptions}
+              disabled={staffQuery.isLoading || staffQuery.isError || noStaffAvailable}
               placeholder="-- Chọn HR phụ trách --"
               error={Boolean(errors.hrResponsible)}
             />
           )}
         />
-        {errors.hrResponsible && <p className="hrm-field__error">{errors.hrResponsible.message}</p>}
+        {errors.hrResponsible && <p id="candidate-hrResponsible-error" className="hrm-field__error">{errors.hrResponsible.message}</p>}
       </div>
       <div className="candidate-upload-header">
         <FormSectionHeader step={3} title="Tải lên CV" />
@@ -495,6 +543,16 @@ export default function CandidateForm() {
         {!cvFile ? (
           <div
             className={`hrm-upload-zone${dragActive ? ' hrm-upload-zone--active' : ''}`}
+            role="button"
+            tabIndex={0}
+            aria-label="Chọn file CV"
+            aria-describedby={fileError ? 'candidate-cv-error' : undefined}
+            onKeyDown={event => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                fileInputRef.current?.click();
+              }
+            }}
             onDragEnter={handleDrag}
             onDragOver={handleDrag}
             onDragLeave={handleDrag}
@@ -539,6 +597,8 @@ export default function CandidateForm() {
             <button
               type="button"
               onClick={handleRemoveFile}
+              disabled={isUploading}
+              aria-label="Xóa file CV"
               className="text-[var(--md-error)] bg-transparent border-none cursor-pointer p-2 rounded-full hover:bg-[var(--md-error-container)] transition-colors"
             >
               <Trash2 size={18} />
@@ -546,14 +606,14 @@ export default function CandidateForm() {
           </div>
         )}
 
-        {fileError && <p className="hrm-field__error">{fileError}</p>}
+        {fileError && <p id="candidate-cv-error" role="alert" className="hrm-field__error">{fileError}</p>}
       </div>
 
       <div className="pt-4">
         <button
           type="submit"
           className="btn btn-primary w-full h-12 rounded-full font-bold flex items-center justify-center gap-2"
-          disabled={isSubmitting || isUploading || noPositionsAvailable}
+          disabled={isSubmitting || isUploading || loadingOptions || optionsFailed || noPositionsAvailable || noStaffAvailable}
         >
           <span>{isSubmitting ? 'ĐANG GỬI HỒ SƠ...' : 'GỬI HỒ SƠ ỨNG TUYỂN'}</span>
           <ChevronRight size={18} />

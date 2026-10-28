@@ -12,7 +12,9 @@ import {
   listEmployees,
   listHrStaff,
   loginToken,
+  getCandidate,
 } from './helpers/api';
+import { e2eEnv } from './helpers/env';
 import {
   clickFirstInteractiveRow,
   fillHrmDate,
@@ -209,11 +211,14 @@ test.describe('HRM flows', () => {
     }
   });
 
-  test('candidate public apply form fills required fields without submit', async ({ page }) => {
+  test('anonymous candidate application saves the selected HR and uploaded CV', async ({ browser }) => {
     const token = await loginToken();
     const hrStaff = await listHrStaff(token);
     test.skip(hrStaff.length === 0, 'No HR staff options');
     const positionGuard = await ensureActiveRecruitmentPosition(token, `E2E Form VT ${uniqueSuffix()}`);
+    const context = await browser.newContext({ baseURL: e2eEnv.baseUrl, storageState: { cookies: [], origins: [] } });
+    const page = await context.newPage();
+    let createdId: string | undefined;
 
     try {
       const suffix = uniqueSuffix();
@@ -232,7 +237,21 @@ test.describe('HRM flows', () => {
       await checkRadio(page.locator('[data-form-field="source"]'), '24h - ứng tuyển');
       await pickHrmSelect(page, page.locator('[data-form-field="hrResponsible"]'), hrStaff[0].name);
       await expect(page.getByRole('button', { name: 'GỬI HỒ SƠ ỨNG TUYỂN' })).toBeEnabled();
+      await page.locator('#candidate-cv-file').setInputFiles({ name: 'test-cv.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\n% Synthetic CV fixture\n%%EOF') });
+      await expect(page.getByRole('button', { name: 'GỬI HỒ SƠ ỨNG TUYỂN' })).toBeEnabled();
+      const responsePromise = page.waitForResponse(response => response.url().endsWith('/api/candidates/apply') && response.request().method() === 'POST');
+      await page.getByRole('button', { name: 'GỬI HỒ SƠ ỨNG TUYỂN' }).click();
+      const response = await responsePromise;
+      expect(response.ok(), await response.text()).toBe(true);
+      const created = await response.json() as { id: string };
+      createdId = created.id;
+      await expect(page.getByRole('heading', { name: 'Nộp Hồ Sơ Thành Công!' })).toBeVisible();
+      const saved = await getCandidate(token, createdId);
+      expect(saved.hrResponsible).toBe(hrStaff[0].name);
+      expect(saved.cvFileName).toBe('test-cv.pdf');
     } finally {
+      await context.close();
+      if (createdId) await deleteCandidate(token, createdId);
       if (positionGuard.created) {
         await deleteRecruitmentPosition(token, positionGuard.name);
       }

@@ -68,7 +68,10 @@ export type ProjectWarehouseKeeperDto = Schemas['ProjectWarehouseKeeperDto'];
 /** FE name kept for existing imports; wire schema is ProjectDto. */
 export type WarehouseProjectApiDto = Schemas['ProjectDto'] & { stage?: string | null };
 export type CreateWarehouseProjectRequest = Schemas['CreateProjectRequest'] & { stage?: string | null };
-export type UpdateWarehouseProjectRequest = Schemas['UpdateProjectRequest'] & { stage?: string | null };
+export type UpdateWarehouseProjectRequest = Schemas['UpdateProjectRequest'] & {
+  startDate?: string | null;
+  stage?: string | null;
+};
 /** Wire + SL cấp công trường (BE `ProjectInventoryDto`; live swagger may omit until API restart). */
 export type WarehouseProjectInventoryApiDto = Schemas['ProjectInventoryDto'] & {
   issuedFromPoQty?: number;

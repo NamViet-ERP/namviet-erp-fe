@@ -1,125 +1,92 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useProjects } from '../useProjects';
 import { queryKeys } from '../../services/queryKeys';
 import { cskhService } from '../../services/cskhService';
 import { projectsService } from '../../services/projectsService';
+import type { UpdateWarehouseProjectRequest } from '../../types/wms';
 import {
-  addLocalProject,
-  deleteProjectRecord,
-  getProjectRecord,
-  listFilterYears,
-  loadCommandStore,
-  mergeCommandProjects,
-  patchProjectRecord,
-  saveCommandStore,
-  summarizeCommandKpis,
-  upsertOverlay,
-  type CskhProjectDraft,
-  type CskhProjectPatch,
+  deleteProjectRecord, getProjectRecord, listFilterYears, mergeCommandProjects,
+  patchProjectRecord, summarizeCommandKpis,
+  type CskhCommandStore, type CskhProjectPatch,
 } from '../../lib/cskh/commandCenter';
+
+// The project API owns identity and membership. Profiles contain CSKH-only details.
+function profilesOnly(value?: CskhCommandStore): CskhCommandStore {
+  return { overlays: value?.overlays ?? {}, localProjects: [] };
+}
 
 export function useCskhCommandCenter() {
   const queryClient = useQueryClient();
-  const { data, isLoading } = useProjects({ page: 1, pageSize: 200 });
-  const [store, setStore] = useState(loadCommandStore);
-
-  const { data: dbProfiles, isLoading: isProfilesLoading } = useQuery({
+  const projectsQuery = useProjects({ page: 1, pageSize: 200 });
+  const profilesQuery = useQuery({
     queryKey: queryKeys.cskh.profiles,
-    queryFn: () => cskhService.getProjectProfiles(),
+    queryFn: () => cskhService.getProjectProfiles<CskhCommandStore>(),
   });
+  const store = useMemo(() => profilesOnly(profilesQuery.data), [profilesQuery.data]);
+  const projects = useMemo(() => mergeCommandProjects(projectsQuery.data?.items ?? [], store), [projectsQuery.data, store]);
+  const kpis = useMemo(() => summarizeCommandKpis(projects), [projects]);
+  const years = useMemo(() => listFilterYears(projects.map(p => p.year)), [projects]);
 
-  const [prevDbProfiles, setPrevDbProfiles] = useState(dbProfiles);
-  if (dbProfiles && dbProfiles !== prevDbProfiles) {
-    setPrevDbProfiles(dbProfiles);
-    if (typeof dbProfiles === 'object' && (dbProfiles as any).overlays) {
-      setStore(prev => ({
-        ...prev,
-        ...dbProfiles,
-        overlays: { ...prev.overlays, ...(dbProfiles as any).overlays },
-      }));
-    }
-  }
-
-  useEffect(() => {
-    if (dbProfiles && typeof dbProfiles === 'object' && (dbProfiles as any).overlays) {
-      saveCommandStore({ ...store, ...dbProfiles });
-    }
-  }, [dbProfiles, store]);
-
-  const persist = useCallback((next: ReturnType<typeof loadCommandStore>) => {
-    setStore(next);
-    saveCommandStore(next);
-    cskhService.saveProjectProfiles(next).then(() => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.cskh.profiles });
-    }).catch(err => {
-      console.warn('[CSKH Profiles] Failed to persist to backend:', err);
-    });
+  const persist = useCallback(async (transform: (current: CskhCommandStore) => CskhCommandStore) => {
+    const current = queryClient.getQueryData<CskhCommandStore>(queryKeys.cskh.profiles);
+    if (!current) throw new Error('Chưa tải được hồ sơ CSKH. Vui lòng thử lại.');
+    const next = profilesOnly(transform(profilesOnly(current)));
+    await cskhService.saveProjectProfiles(next);
+    queryClient.setQueryData(queryKeys.cskh.profiles, next);
   }, [queryClient]);
 
-  const projects = useMemo(
-    () => mergeCommandProjects(data?.items ?? [], store),
-    [data?.items, store],
-  );
+  const invalidate = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.all }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.stock.matrix }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.cskh.profiles }),
+    ]);
+  }, [queryClient]);
 
-  const kpis = useMemo(() => summarizeCommandKpis(projects), [projects]);
+  const moveProject = useCallback(async (code: string, phaseId: string) => {
+    await projectsService.updateStage(code, phaseId);
+    await invalidate();
+  }, [invalidate]);
 
-  const years = useMemo(
-    () => listFilterYears(projects.map(p => p.year)),
-    [projects],
-  );
+  const patchProject = useCallback(async (code: string, patch: CskhProjectPatch) => {
+    const { name, clientName, pmName, startDate, phaseId, ...profilePatch } = patch;
+    try {
+      if ([name, clientName, pmName, startDate, phaseId].some(value => value !== undefined)) {
+        const current = await projectsService.getByCode(code);
+        const body: UpdateWarehouseProjectRequest = {
+          projectName: name ?? current.projectName,
+          pmId: current.pmId, pmName: pmName ?? current.pmName,
+          startDate: startDate ?? current.startDate, endDate: current.endDate,
+          materialBudget: current.materialBudget,
+          status: current.status as UpdateWarehouseProjectRequest['status'],
+          warehouseKeepers: current.warehouseKeepers, scMembers: current.scMembers,
+          clientName: clientName === undefined ? current.clientName : clientName,
+          stage: phaseId ?? current.stage,
+        };
+        await projectsService.update(code, body);
+      }
+      if (Object.keys(profilePatch).length) await persist(current => patchProjectRecord(current, code, profilePatch));
+    } finally {
+      await invalidate();
+    }
+  }, [persist, invalidate]);
 
-  const moveProject = useCallback((code: string, phaseId: string) => {
-    persist(upsertOverlay(store, code, { phaseId }));
-    projectsService.updateStage(code, phaseId).then(() => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.all });
-    }).catch(err => {
-      console.warn('[CSKH Move Project] updateStage error:', err);
-    });
-  }, [persist, store, queryClient]);
+  const deleteProject = useCallback(async (code: string) => {
+    await projectsService.deleteProject(code);
+    try {
+      await persist(current => deleteProjectRecord(current, code));
+    } finally {
+      await invalidate();
+    }
+  }, [persist, invalidate]);
 
-  const addProject = useCallback((draft: CskhProjectDraft) => {
-    persist(addLocalProject(store, draft));
-    projectsService.create({
-      projectCode: draft.code,
-      projectName: draft.name,
-      projectType: 'Project',
-      pmId: '00000000-0000-0000-0000-000000000000',
-      pmName: draft.pmName || 'Chỉ huy trưởng',
-      startDate: draft.startDate || new Date().toISOString().slice(0, 10),
-      endDate: null,
-      materialBudget: 0,
-      clientName: draft.clientName,
-      stage: draft.phaseId,
-    }).then(() => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.all });
-    }).catch(err => {
-      console.warn('[CSKH Add Project] Could not create project in WMS DB:', err);
-    });
-  }, [persist, store, queryClient]);
-
-  const getProject = useCallback(
-    (code: string) => getProjectRecord(data?.items ?? [], store, code),
-    [data?.items, store],
-  );
-
-  const patchProject = useCallback((code: string, patch: CskhProjectPatch) => {
-    persist(patchProjectRecord(store, code, patch));
-  }, [persist, store]);
-
-  const deleteProject = useCallback((code: string) => {
-    persist(deleteProjectRecord(store, code));
-  }, [persist, store]);
-
+  const getProject = useCallback((code: string) => getProjectRecord(projectsQuery.data?.items ?? [], store, code), [projectsQuery.data, store]);
   return {
-    projects,
-    kpis,
-    years,
-    isLoading: isLoading || isProfilesLoading,
-    moveProject,
-    addProject,
-    getProject,
-    patchProject,
-    deleteProject,
+    projects, kpis, years, moveProject, getProject, patchProject, deleteProject,
+    isLoading: projectsQuery.isLoading || profilesQuery.isLoading,
+    isError: projectsQuery.isError || profilesQuery.isError,
+    error: projectsQuery.error ?? profilesQuery.error,
+    refetch: () => Promise.all([projectsQuery.refetch(), profilesQuery.refetch()]),
   };
 }

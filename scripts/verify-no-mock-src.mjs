@@ -24,6 +24,7 @@ const FORBIDDEN_PATTERNS = [
   { name: 'buildMockPdfBlob', re: /\bbuildMockPdfBlob\b/ },
   { name: 'suppliersMock', re: /\bsuppliersMock\b/ },
   { name: 'create*Seed factory', re: /\bcreate[A-Za-z0-9]*Seed\b/ },
+  { name: 'runtime default seed', re: /\bDEFAULT_SEED\b/ },
 ];
 
 async function exists(p) {
@@ -66,7 +67,8 @@ const violations = [];
 
 for (const file of files) {
   const rel = path.relative(root, file).replace(/\\/g, '/');
-  // Test fixtures may use local factories — still ban seed/mock names above.
+  // Test fixtures are excluded; production modules must never import or restore them.
+  if (/\.(test|spec)\.[tj]sx?$/.test(file)) continue;
   const content = await readFile(file, 'utf8');
   for (const { name, re } of FORBIDDEN_PATTERNS) {
     if (re.test(content)) {

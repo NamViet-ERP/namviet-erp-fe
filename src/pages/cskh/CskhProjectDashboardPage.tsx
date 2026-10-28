@@ -29,13 +29,15 @@ import CskhEditProjectModal from './CskhEditProjectModal';
 export default function CskhProjectDashboardPage() {
   const { code = '' } = useParams<{ code: string }>();
   const navigate = useNavigate();
-  const { projects, getProject, isLoading, patchProject, deleteProject } = useCskhCommandCenter();
+  const { projects, getProject, isLoading, isError, refetch, patchProject, deleteProject } = useCskhCommandCenter();
   const project = getProject(code);
-  const { tasks: ganttStages, urgentBottlenecks, overdueDocs, urgentRequests } = useProjectDashboardStats(code);
+  const stats = useProjectDashboardStats(code);
+  const { tasks: ganttStages, urgentBottlenecks, overdueDocs, urgentRequests } = stats;
   const [editOpen, setEditOpen] = useState(false);
   const [currentTime] = useState(() => Date.now());
 
-  if (!project) return <CskhProjectMissing loading={isLoading} />;
+  if (isError || stats.isError) return <p role="alert">Không tải được dữ liệu dự án. <button type="button" onClick={() => void Promise.all([refetch(), stats.refetch()])}>Thử lại</button></p>;
+  if (isLoading || stats.isLoading || !project) return <CskhProjectMissing loading={isLoading || stats.isLoading} />;
 
   const delta = progressDelta(project.planPct, project.actualPct);
 
@@ -46,18 +48,7 @@ export default function CskhProjectDashboardPage() {
     ? Math.max(0, Math.ceil((targetTime - currentTime) / (24 * 60 * 60 * 1000)))
     : null;
 
-  const fallbackGanttStages = [
-    { id: '1', name: '#1 Khảo sát địa chất & Thiết kế chi tiết lò hơi', days: 30, startDate: '2026-06-01', endDate: '2026-07-01', actualPct: 100, notes: 'Hoàn thành 100%' },
-    { id: '2', name: '#2 Gia công chế tạo balong & thân lò tại xưởng', days: 45, startDate: '2026-06-15', endDate: '2026-07-30', actualPct: 90, notes: 'Balong D1400 đạt 90%' },
-    { id: '3', name: '#3 Lắp dựng khung thép móng & balong lên giá đỡ', days: 35, startDate: '2026-07-20', endDate: '2026-08-25', actualPct: 65, notes: 'Đang vướng sự cố cẩu 80T (BN-104)' },
-    { id: '4', name: '#4 Hàn ống sinh hơi, ống bức xạ & siêu âm mối hàn', days: 30, startDate: '2026-08-15', endDate: '2026-09-15', actualPct: 35, notes: 'Chậm do thiếu 12 thợ hàn 6G (BN-105)' },
-    { id: '5', name: '#5 Thử áp lực thủy lực (Hydrostatic test - 1.5x)', days: 15, startDate: '2026-09-15', endDate: '2026-09-30', actualPct: 0, notes: 'Chờ CĐT phê duyệt phương án thử áp HS-301 (BN-106)' },
-    { id: '6', name: '#6 Sấy gạch buồng đốt, đốt lửa lần đầu & COD', days: 15, startDate: '2026-10-01', endDate: '2026-10-15', actualPct: 0, notes: 'Mốc về đích phát điện thương mại' },
-  ];
-
-  const displayGanttStages = ganttStages.length > 0
-    ? ganttStages
-    : (project.code === 'LH-01' ? fallbackGanttStages : []);
+  const displayGanttStages = ganttStages;
 
   return (
     <div className="page-stack cskh-desk">
@@ -500,8 +491,8 @@ export default function CskhProjectDashboardPage() {
         project={project}
         onClose={() => setEditOpen(false)}
         onSave={patch => patchProject(project.code, patch)}
-        onDelete={code => {
-          deleteProject(code);
+        onDelete={async code => {
+          await deleteProject(code);
           navigate('/cskh');
         }}
       />

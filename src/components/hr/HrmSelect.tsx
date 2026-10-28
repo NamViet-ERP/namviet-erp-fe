@@ -33,6 +33,8 @@ export interface HrmSelectProps {
   /** When false, hide the empty "-- Chọn --" row. Default true. */
   allowEmpty?: boolean;
   'aria-label'?: string;
+  'aria-describedby'?: string;
+  'aria-required'?: boolean;
 }
 
 function toItem(option: HrmSelectOption): { value: string; label: string; tone?: HrmSelectTone } {
@@ -69,6 +71,8 @@ export default function HrmSelect({
   name,
   allowEmpty = true,
   'aria-label': ariaLabel,
+  'aria-describedby': ariaDescribedBy,
+  'aria-required': ariaRequired,
 }: HrmSelectProps) {
   const listId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -93,9 +97,13 @@ export default function HrmSelect({
   const openMenu = useCallback(() => {
     if (disabled) return;
     const currentIndex = items.findIndex(item => item.value === value);
-    setActiveIndex(currentIndex);
+    setActiveIndex(currentIndex < 0 && !allowEmpty ? 0 : currentIndex);
     setOpen(true);
-  }, [disabled, items, value]);
+  }, [disabled, items, value, allowEmpty]);
+
+  useEffect(() => {
+    if (open) document.getElementById(`${listId}-option-${activeIndex}`)?.scrollIntoView({ block: 'nearest' });
+  }, [open, activeIndex, listId]);
 
   useEffect(() => {
     if (!open) return;
@@ -132,24 +140,38 @@ export default function HrmSelect({
   const pick = (next: string) => {
     onChange(next);
     close();
+    triggerRef.current?.focus();
   };
 
   const onTriggerKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
     if (disabled) return;
-    if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
+    if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       if (!open) openMenu();
-      else setActiveIndex(i => (i < items.length - 1 ? i + 1 : 0));
+      else if (activeIndex >= 0 && items[activeIndex]) pick(items[activeIndex].value);
+      else if (allowEmpty) pick('');
+      return;
+    }
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      if (!open) openMenu();
+      else setActiveIndex(i => (i < items.length - 1 ? i + 1 : allowEmpty ? -1 : 0));
       return;
     }
     if (event.key === 'ArrowUp') {
       event.preventDefault();
       if (!open) openMenu();
-      else setActiveIndex(i => (i > 0 ? i - 1 : items.length - 1));
+      else setActiveIndex(i => (i > (allowEmpty ? -1 : 0) ? i - 1 : items.length - 1));
       return;
     }
+    if (open && (event.key === 'Home' || event.key === 'End')) {
+      event.preventDefault();
+      setActiveIndex(event.key === 'Home' ? (allowEmpty ? -1 : 0) : items.length - 1);
+    }
+    if (event.key === 'Tab' && open) close();
     if (event.key === 'Escape' && open) {
       event.preventDefault();
+      event.stopPropagation();
       close();
     }
   };
@@ -175,8 +197,11 @@ export default function HrmSelect({
         <button
           type="button"
           role="option"
+          id={`${listId}-option--1`}
+          tabIndex={-1}
           aria-selected={!value}
-          className={`hrm-select__option${!value ? ' hrm-select__option--active' : ''}`}
+          className={`hrm-select__option${activeIndex === -1 ? ' hrm-select__option--active' : ''}`}
+          onMouseEnter={() => setActiveIndex(-1)}
           onMouseDown={e => e.preventDefault()}
           onClick={() => pick('')}
         >
@@ -188,6 +213,8 @@ export default function HrmSelect({
           key={item.value}
           type="button"
           role="option"
+          id={`${listId}-option-${index}`}
+          tabIndex={-1}
           aria-selected={value === item.value}
           className={[
             'hrm-select__option',
@@ -214,6 +241,11 @@ export default function HrmSelect({
         disabled={disabled}
         className={`hrm-select__trigger ${hrmFieldClass(error, 'hrm-field-select')}${className ? ` ${className}` : ''}${open ? ' hrm-select__trigger--open' : ''}`}
         aria-haspopup="listbox"
+        role="combobox"
+        aria-activedescendant={open && (activeIndex >= 0 || allowEmpty) ? `${listId}-option-${activeIndex}` : undefined}
+        aria-invalid={error || undefined}
+        aria-describedby={ariaDescribedBy}
+        aria-required={ariaRequired}
         aria-expanded={open}
         aria-controls={listId}
         aria-label={ariaLabel}

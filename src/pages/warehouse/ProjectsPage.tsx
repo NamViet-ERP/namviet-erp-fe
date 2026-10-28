@@ -1,75 +1,26 @@
 import type React from 'react';
-import { useState, type Dispatch, type SetStateAction } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Plus, FolderKanban, CheckCircle2, Archive, X, Warehouse, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { FolderKanban, CheckCircle2, Archive, X, Warehouse, Trash2 } from 'lucide-react';
 import SearchBar from '../../components/ui/SearchBar';
 import Pagination from '../../components/ui/Pagination';
 import EmptyState from '../../components/ui/EmptyState';
 import PageHeader from '../../components/ui/PageHeader';
-import Modal from '../../components/ui/Modal';
-import FormField from '../../components/ui/FormField';
-import CurrencyInput from '../../components/ui/CurrencyInput';
 import Badge from '../../components/ui/Badge';
 import HrmPanel from '../../components/hr/HrmPanel';
 import Card from '../../components/ui/Card';
-import PermissionGate from '../../components/auth/PermissionGate';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { showToast } from '../../components/ui/Toast';
-import { getApiErrorMessage, getApiFieldErrors } from '../../lib/apiClient';
+import { getApiErrorMessage } from '../../lib/apiClient';
 import { WMS_ERROR } from '../../lib/wms/messages';
 import { formatDateCell } from '../../lib/hrm/formatters';
-import { parseCurrencyInput } from '../../utils/currencyInput';
-import { MAX_MATERIAL_BUDGET, MAX_MATERIAL_BUDGET_LABEL } from '../../constants/wmsLimits';
 import { projectStatusBadge } from '../../lib/wms/projectStatusBadge';
-import { useProjects, useCreateProject, useDeleteProject } from '../../hooks/useProjects';
-import { projectsService } from '../../services/projectsService';
-import { nextProjectCode } from '../../lib/cskh/commandCenter';
+import { useProjects, useDeleteProject } from '../../hooks/useProjects';
 import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
-import type { WarehouseProjectApiDto, ProjectWarehouseKeeperDto } from '../../types/wms';
-import WarehouseKeeperMultiSelect from '../../components/warehouse/WarehouseKeeperMultiSelect';
+import type { WarehouseProjectApiDto } from '../../types/wms';
 import EntityCodeLink from '../../components/ui/EntityCodeLink';
 import { getSessionUser, isSessionAdmin } from '../../constants/systemUsers';
 import { useSession } from '../../auth/AuthProvider';
-
-const EMPTY_PM_ID = '00000000-0000-0000-0000-000000000000';
-
-function todayIso() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function validateCreateForm(form: {
-  projectCode: string;
-  projectName: string;
-  startDate: string;
-  materialBudget: string;
-  warehouseKeepers: ProjectWarehouseKeeperDto[];
-}): Record<string, string> {
-  const errs: Record<string, string> = {};
-  if (!form.projectCode.trim()) errs.projectCode = 'Vui lòng nhập mã kho dự án';
-  if (!form.projectName.trim()) errs.projectName = 'Vui lòng nhập tên công trình';
-  if (form.warehouseKeepers.length < 1) {
-    errs.warehouseKeepers = 'Chọn ít nhất 1 thủ kho phụ trách';
-  }
-  if (!form.startDate) errs.startDate = 'Vui lòng chọn ngày bắt đầu';
-  if (parseCurrencyInput(form.materialBudget) <= 0) {
-    errs.materialBudget = 'Vui lòng nhập ngân sách vật tư';
-  } else if (parseCurrencyInput(form.materialBudget) > MAX_MATERIAL_BUDGET) {
-    errs.materialBudget = `Ngân sách tối đa ${MAX_MATERIAL_BUDGET_LABEL} đ`;
-  }
-  return errs;
-}
-
-function clearFieldError(
-  setErrors: Dispatch<SetStateAction<Record<string, string>>>,
-  field: string,
-) {
-  setErrors(prev => {
-    if (!prev[field]) return prev;
-    const next = { ...prev };
-    delete next[field];
-    return next;
-  });
-}
 
 function emptyListMessage(search: string, statusFilter: string) {
   if (search.trim()) {
@@ -81,7 +32,7 @@ function emptyListMessage(search: string, statusFilter: string) {
   if (statusFilter === 'Active') {
     return 'Chưa có kho dự án đang hoạt động.';
   }
-  return 'Chưa có kho dự án nào. Nhấn Tạo kho dự án để bắt đầu.';
+  return 'Chưa có kho dự án nào. Kho dự án sẽ tự động kích hoạt khi Ban Giám Đốc/PMO khởi tạo Dự án mới bên phân hệ Dự án EPC.';
 }
 
 function ProjectMaterialCountCell({ project }: { project: WarehouseProjectApiDto }) {
@@ -99,16 +50,6 @@ export default function ProjectsPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_LIST_PAGE_SIZE);
   const [statusFilter, setStatusFilter] = useState('');
-  const [showCreate, setShowCreate] = useState(false);
-  const [form, setForm] = useState({
-    projectCode: '',
-    projectName: '',
-    pmName: '',
-    startDate: todayIso(),
-    materialBudget: '',
-    warehouseKeepers: [] as ProjectWarehouseKeeperDto[],
-  });
-  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const { data, isLoading, isError, error } = useProjects({
     page,
@@ -119,7 +60,6 @@ export default function ProjectsPage() {
   const { data: statsAll } = useProjects({ page: 1, pageSize: 1 });
   const { data: statsActive } = useProjects({ page: 1, pageSize: 1, status: 'Active' });
   const { data: statsClosed } = useProjects({ page: 1, pageSize: 1, status: 'Closed' });
-  const createMutation = useCreateProject();
   const deleteMutation = useDeleteProject();
   const [deletingProject, setDeletingProject] = useState<WarehouseProjectApiDto | null>(null);
   const { user: authUser } = useSession();
@@ -153,84 +93,11 @@ export default function ProjectsPage() {
     setPage(1);
   };
 
-  const openCreate = () => {
-    const today = todayIso();
-    const currentYear = new Date().getFullYear();
-    const fallbackCode = nextProjectCode(items.map(p => p.projectCode), currentYear);
-    const me = getSessionUser();
-    const defaultKeepers: ProjectWarehouseKeeperDto[] = me?.id
-      ? [{ userId: me.id, displayName: me.name || me.username || 'Thủ kho' }]
-      : [];
-    setForm({
-      projectCode: fallbackCode,
-      projectName: '',
-      pmName: '',
-      startDate: today,
-      materialBudget: '',
-      warehouseKeepers: defaultKeepers,
-    });
-    setErrors({});
-    setShowCreate(true);
-
-    void projectsService.getNextCode(currentYear).then(res => {
-      if (res?.projectCode) {
-        setForm(f => ({ ...f, projectCode: res.projectCode }));
-      }
-    }).catch(() => {
-      // Giữ mã fallback nếu mạng hoặc BE chưa phản hồi
-    });
-  };
-
-  const handleCreate = async () => {
-    const clientErrors = validateCreateForm(form);
-    if (Object.keys(clientErrors).length > 0) {
-      setErrors(clientErrors);
-      return;
-    }
-
-    setErrors({});
-    try {
-      const keepers = form.warehouseKeepers;
-      const created = await createMutation.mutateAsync({
-        projectCode: form.projectCode.trim().toUpperCase(),
-        projectName: form.projectName.trim(),
-        projectType: 'Project',
-        pmId: EMPTY_PM_ID,
-        pmName: keepers.map(k => k.displayName).join(', ') || form.pmName.trim() || '—',
-        startDate: form.startDate,
-        materialBudget: parseCurrencyInput(form.materialBudget),
-        warehouseKeepers: keepers,
-      });
-      showToast('success', `Đã tạo kho dự án ${created.projectCode}.`);
-      setShowCreate(false);
-      navigate(`/warehouse/projects/${encodeURIComponent(created.projectCode)}`);
-    } catch (err) {
-      const fieldErrors = getApiFieldErrors(err);
-      if (Object.keys(fieldErrors).length > 0) {
-        setErrors(fieldErrors);
-      } else {
-        showToast('error', getApiErrorMessage(err, 'Không thể tạo kho dự án'));
-      }
-    }
-  };
-
   return (
     <div className="hrm-page">
       <PageHeader
         title="Kho dự án"
-        subtitle="Mỗi công trình là một kho riêng — cấp vật tư qua Nhập kho, tiêu hao qua Xuất kho, hoàn dư qua Chuyển kho."
-        actions={
-          <PermissionGate permission="wms.projects.create">
-            <button
-              type="button"
-              className="btn btn-primary flex items-center gap-2 rounded-full px-5"
-              onClick={openCreate}
-            >
-              <Plus size={16} />
-              Tạo kho dự án
-            </button>
-          </PermissionGate>
-        }
+        subtitle="Quản lý tồn kho vật tư riêng cho từng công trình. Kho dự án tự động kích hoạt theo Master Dự án EPC."
       />
 
       <div className="dashboard-kpi-grid dashboard-kpi-grid--3" role="list" aria-label="Thống kê kho dự án">
@@ -299,25 +166,25 @@ export default function ProjectsPage() {
                 <th className="table-header-cell text-right project-col-count">Mặt hàng</th>
                 <th className="table-header-cell project-col-date whitespace-nowrap">Ngày bắt đầu</th>
                 <th className="table-header-cell text-center project-col-status">Trạng thái</th>
-                {isAdmin && <th className="table-header-cell text-center w-16">Thao tác</th>}
+                <th className="table-header-cell text-right whitespace-nowrap">Thao tác</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="hrm-table-skeleton-row" aria-hidden>
-                    <td colSpan={isAdmin ? 7 : 6}><div className="hrm-table-skeleton" /></td>
+                    <td colSpan={7}><div className="hrm-table-skeleton" /></td>
                   </tr>
                 ))
               ) : isError ? (
                 <tr>
-                  <td colSpan={isAdmin ? 7 : 6}>
+                  <td colSpan={7}>
                     <EmptyState message={getApiErrorMessage(error, WMS_ERROR.loadProjects)} icon={Warehouse} />
                   </td>
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={isAdmin ? 7 : 6}>
+                  <td colSpan={7}>
                     <EmptyState message={emptyListMessage(search, statusFilter)} icon={FolderKanban} />
                   </td>
                 </tr>
@@ -359,28 +226,51 @@ export default function ProjectsPage() {
                     <td className="table-cell text-center project-col-status">
                       <Badge status={projectStatusBadge(p.status)} />
                     </td>
-                    {isAdmin && (
-                      <td className="table-cell text-center" onClick={e => e.stopPropagation()}>
-                        {(p.stockMaterialCount ?? 0) === 0 ? (
-                          <button
-                            type="button"
-                            className="btn btn-ghost btn-sm text-[var(--md-error)] hover:bg-[color-mix(in_srgb,var(--md-error)_12%,transparent)]"
-                            title={`Xóa kho dự án ${p.projectCode}`}
-                            aria-label={`Xóa kho dự án ${p.projectCode}`}
-                            onClick={e => handleDeleteClick(e, p)}
-                          >
-                            <Trash2 size={15} />
-                          </button>
-                        ) : (
-                          <span
-                            className="inline-flex items-center justify-center p-1 text-[var(--md-outline)] opacity-40 cursor-not-allowed"
-                            title="Kho đã có mặt hàng, không thể xóa"
-                          >
-                            <Trash2 size={15} />
-                          </span>
+                    <td className="table-cell text-right" onClick={e => e.stopPropagation()}>
+                      <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
+                        <Link
+                          to={`/warehouse/import?projectCode=${encodeURIComponent(p.projectCode)}`}
+                          className="btn btn-outline btn-sm px-2.5 py-1 text-xs"
+                          onClick={e => e.stopPropagation()}
+                        >
+                          Nhập thực tế
+                        </Link>
+                        <Link
+                          to={`/warehouse/export?projectCode=${encodeURIComponent(p.projectCode)}`}
+                          className="btn btn-outline btn-sm px-2.5 py-1 text-xs"
+                          onClick={e => e.stopPropagation()}
+                        >
+                          Xuất thực tế
+                        </Link>
+                        <Link
+                          to={`/warehouse/projects/${encodeURIComponent(p.projectCode)}`}
+                          className="btn btn-outline btn-sm px-2.5 py-1 text-xs"
+                          onClick={e => e.stopPropagation()}
+                        >
+                          Thẻ kho
+                        </Link>
+                        {isAdmin && (
+                          (p.stockMaterialCount ?? 0) === 0 ? (
+                            <button
+                              type="button"
+                              className="btn btn-ghost btn-sm text-[var(--md-error)] hover:bg-[color-mix(in_srgb,var(--md-error)_12%,transparent)]"
+                              title={`Xóa kho dự án ${p.projectCode}`}
+                              aria-label={`Xóa kho dự án ${p.projectCode}`}
+                              onClick={e => handleDeleteClick(e, p)}
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          ) : (
+                            <span
+                              className="inline-flex items-center justify-center p-1 text-[var(--md-outline)] opacity-40 cursor-not-allowed"
+                              title="Kho đã có mặt hàng, không thể xóa"
+                            >
+                              <Trash2 size={15} />
+                            </span>
+                          )
                         )}
-                      </td>
-                    )}
+                      </div>
+                    </td>
                   </tr>
                 ))
               )}
@@ -401,86 +291,6 @@ export default function ProjectsPage() {
           />
         )}
       </HrmPanel>
-
-      <Modal
-        isOpen={showCreate}
-        onClose={() => setShowCreate(false)}
-        title="Tạo kho dự án"
-        size="xl"
-        footer={
-          <>
-            <button type="button" className="btn btn-outline" onClick={() => setShowCreate(false)}>Hủy</button>
-            <button
-              type="button"
-              className="btn btn-filled"
-              disabled={createMutation.isPending}
-              onClick={handleCreate}
-            >
-              Tạo kho
-            </button>
-          </>
-        }
-      >
-        <div className="space-y-4 modal-form-bordered">
-          <FormField label="Mã kho dự án" required error={errors.projectCode}>
-            <input
-              className="form-input font-mono"
-              value={form.projectCode}
-              onChange={e => {
-                setForm({ ...form, projectCode: e.target.value.toUpperCase() });
-                clearFieldError(setErrors, 'projectCode');
-              }}
-              placeholder="VD: DA-2026-001"
-            />
-          </FormField>
-          <FormField label="Tên công trình" required error={errors.projectName}>
-            <input
-              className="form-input"
-              value={form.projectName}
-              onChange={e => {
-                setForm({ ...form, projectName: e.target.value });
-                clearFieldError(setErrors, 'projectName');
-              }}
-              placeholder="VD: Dự án Nhiệt điện Long Phú 1"
-            />
-          </FormField>
-          <FormField label="Người phụ trách dự án (Thủ kho)" required error={errors.warehouseKeepers}>
-            <WarehouseKeeperMultiSelect
-              value={form.warehouseKeepers}
-              onChange={warehouseKeepers => {
-                setForm({ ...form, warehouseKeepers });
-                clearFieldError(setErrors, 'warehouseKeepers');
-              }}
-              placeholder="Chọn ≥1 thủ kho…"
-            />
-          </FormField>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField label="Ngày bắt đầu" required error={errors.startDate}>
-              <input
-                type="date"
-                className="form-input"
-                value={form.startDate}
-                onChange={e => {
-                  setForm({ ...form, startDate: e.target.value });
-                  clearFieldError(setErrors, 'startDate');
-                }}
-              />
-            </FormField>
-            <FormField label="Ngân sách Vật tư" required error={errors.materialBudget}>
-              <CurrencyInput
-                suffix="(VNĐ)"
-                className="tabular-nums"
-                value={form.materialBudget}
-                onChange={(_raw, numeric) => {
-                  setForm({ ...form, materialBudget: numeric > 0 ? String(numeric) : '' });
-                  clearFieldError(setErrors, 'materialBudget');
-                }}
-                placeholder="0"
-              />
-            </FormField>
-          </div>
-        </div>
-      </Modal>
 
       <ConfirmDialog
         isOpen={Boolean(deletingProject)}

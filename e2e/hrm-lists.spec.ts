@@ -5,7 +5,7 @@ test.describe('HRM list filters', () => {
   test('members list search and status filter', async ({ page }) => {
     await page.goto('/members/list');
     await expect(page.getByPlaceholder('Tìm theo tên, mã NV, bộ phận...')).toBeVisible();
-    await expect(page.locator('.hrm-filter-select')).toBeVisible();
+    await expect(page.locator('.tab-filter').getByRole('button', { name: /^Đang làm/ })).toBeVisible();
     await expect(page.locator('.hrm-stat-card__label', { hasText: 'Tổng' })).toBeVisible();
     await expect(page.locator('.hrm-stat-card__label', { hasText: 'Đang làm' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Thêm nhân viên' })).toBeVisible();

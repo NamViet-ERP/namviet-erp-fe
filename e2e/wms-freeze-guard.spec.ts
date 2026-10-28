@@ -1,134 +1,61 @@
 import { test, expect } from '@playwright/test';
-import {
-  cancelStocktake,
-  createFrozenStocktake,
-  findProjectWithStock,
-  getMaterials,
-  loginToken,
-} from './helpers/api';
-import {
-  bumpQtyStepper,
-  expectSnackbar,
-  pickFirstAutocomplete,
-  fillImportDraftForm,
-} from './helpers/ui';
-
-function uniqueFixtureNote(kind: string, workerIndex: number, retry: number): string {
-  return `E2E-FREEZE-${kind}-${workerIndex}-${retry}-${Date.now()}`;
-}
+import { cancelStocktake, createFrozenStocktake, deleteImport, loginToken, type VoucherApiDto } from './helpers/api';
+import { expectSnackbar } from './helpers/ui';
+import { addReceiptEvidence, createPlacedPoFixture, createPoImportFixture, createStockFixture, fillStockVoucherForm, fixtureRequest, getFixtureStock } from './helpers/purchasingFixtures';
 
 test.describe('WMS freeze guard', () => {
-  test('blocks export chốt dự kiến when project is frozen', async ({ page }, testInfo) => {
-    const token = await loginToken();
-    const stock = await findProjectWithStock(token);
-    test.skip(!stock, 'No unfrozen project for freeze guard export test');
-
-    const note = uniqueFixtureNote('EXPORT', testInfo.workerIndex, testInfo.retry);
-    let stocktakeId: string | undefined;
-
-    try {
-      await page.goto('/warehouse/export');
-      await page.getByRole('button', { name: 'Tạo phiếu xuất' }).click();
-
-      const dialog = page.getByRole('dialog', { name: 'Tạo phiếu xuất kho dự án' });
-      await dialog.locator('select.form-select').first().selectOption(stock!.projectCode);
-      await pickFirstAutocomplete(page, dialog.locator('.search-autocomplete__input').first());
-      await bumpQtyStepper(dialog.locator('.qty-stepper').first(), 1);
-
-      const created = await createFrozenStocktake(
-        token,
-        stock!.projectCode,
-        stock!.projectName,
-        stock!.materialCode,
-        stock!.materialName,
-        note,
-      );
-      stocktakeId = created.id;
-
-      await dialog.getByRole('button', { name: 'Chốt dự kiến' }).click();
-      await expectSnackbar(page, /đóng băng kiểm kê/i);
-      await expect(page.getByRole('dialog', { name: 'Tạo phiếu xuất kho dự án' })).toBeVisible();
-    } finally {
-      if (stocktakeId) await cancelStocktake(stocktakeId, token);
-    }
-  });
-
-  test('blocks import chốt dự kiến when project is frozen', async ({ page }, testInfo) => {
-    const token = await loginToken();
-    const note = uniqueFixtureNote('IMPORT', testInfo.workerIndex, testInfo.retry);
-    let stocktakeId: string | undefined;
-
-    try {
-      await page.goto('/warehouse/import');
-      await page.getByRole('button', { name: 'Tạo phiếu nhập' }).click();
-
-      const dialog = page.getByRole('dialog', { name: 'Tạo phiếu nhập kho dự án' });
-      const poSelect = dialog.locator('select.form-input').first();
-      test.skip((await poSelect.locator('option').count()) <= 1, 'No placed PO for import freeze E2E');
-
-      let selectedProject: string;
+  for (const kind of ['export', 'transfer'] as const) {
+    test(`blocks ${kind} submission when the project is frozen after opening the form`, async ({ page }) => {
+      const token = await loginToken();
+      const fixture = await createStockFixture(token);
+      const title = kind === 'export' ? 'Tạo phiếu xuất' : 'Tạo phiếu chuyển';
+      const route = kind === 'export' ? 'exports' : 'transfers';
+      let stocktakeId: string | undefined;
       try {
-        selectedProject = await fillImportDraftForm(page, dialog, `PO-${Date.now()}`);
-      } catch {
-        test.skip(true, 'No unlocked placed PO for import freeze E2E');
-        return;
+        await page.goto(`/warehouse/${kind}`);
+        await page.getByRole('button', { name: title, exact: true }).click();
+        const dialog = page.getByRole('dialog', { name: `${title} kho dự án` });
+        await fillStockVoucherForm(page, dialog, fixture);
+        const stocktake = await createFrozenStocktake(token, fixture.projectCode, fixture.projectName, fixture.materialCode, fixture.materialName, 'E2E freeze after form opened');
+        stocktakeId = stocktake.id;
+
+        const rejected = page.waitForResponse(r => r.request().method() === 'POST' && r.url().endsWith(`/api/${route}`));
+        await dialog.getByRole('button', { name: 'Chốt dự kiến' }).click();
+        expect((await rejected).status()).toBe(409);
+        await expectSnackbar(page, /đóng băng kiểm kê/i);
+        await expect(dialog).toBeVisible();
+        expect(await getFixtureStock(token, fixture)).toBe(10);
+        const vouchers = await fixtureRequest<VoucherApiDto[]>(token, 'GET', `/api/${route}`);
+        expect(vouchers.filter(voucher => voucher.project === fixture.projectCode)).toHaveLength(0);
+      } finally {
+        if (stocktakeId) await cancelStocktake(stocktakeId, token);
       }
-      test.skip(!selectedProject, 'Could not resolve project from selected PO');
+    });
+  }
 
-      const materials = await getMaterials(token);
-      const mat = materials[0];
-      test.skip(!mat, 'No material for freeze stocktake fixture');
-
-      const created = await createFrozenStocktake(
-        token,
-        selectedProject,
-        selectedProject,
-        mat!.materialCode,
-        mat!.materialName,
-        note,
-      );
-      stocktakeId = created.id;
-
-      await dialog.getByRole('button', { name: 'Chốt dự kiến' }).click();
-      await expectSnackbar(page, /đóng băng kiểm kê/i);
-      await expect(page.getByRole('dialog', { name: 'Tạo phiếu nhập kho dự án' })).toBeVisible();
-    } finally {
-      if (stocktakeId) await cancelStocktake(stocktakeId, token);
-    }
-  });
-
-  test('blocks transfer chốt dự kiến when source project is frozen', async ({ page }, testInfo) => {
+  test('blocks warehouse approval of a PO receipt while its project is frozen', async ({ page }) => {
     const token = await loginToken();
-    const stock = await findProjectWithStock(token);
-    test.skip(!stock, 'No unfrozen project stock for freeze guard transfer test');
-
-    const note = uniqueFixtureNote('TRANSFER', testInfo.workerIndex, testInfo.retry);
+    const fixture = await createPlacedPoFixture(token);
+    const receipt = await createPoImportFixture(token, fixture, 'pending');
     let stocktakeId: string | undefined;
-
     try {
-      await page.goto('/warehouse/transfer');
-      await page.getByRole('button', { name: 'Tạo phiếu chuyển' }).click();
-
-      const dialog = page.getByRole('dialog', { name: 'Tạo phiếu chuyển kho dự án' });
-      await dialog.locator('select.form-select').first().selectOption(stock!.projectCode);
-      await pickFirstAutocomplete(page, dialog.locator('.search-autocomplete__input').first());
-      await bumpQtyStepper(dialog.locator('.qty-stepper').first(), 1);
-
-      const created = await createFrozenStocktake(
-        token,
-        stock!.projectCode,
-        stock!.projectName,
-        stock!.materialCode,
-        stock!.materialName,
-        note,
-      );
-      stocktakeId = created.id;
-
-      await dialog.getByRole('button', { name: 'Chốt dự kiến' }).click();
+      await addReceiptEvidence(token, receipt.id);
+      const stocktake = await createFrozenStocktake(token, fixture.projectCode, fixture.projectName, fixture.materialCode, fixture.materialName, 'E2E frozen receipt approval');
+      stocktakeId = stocktake.id;
+      await page.goto('/warehouse/import');
+      await page.getByRole('searchbox').fill(receipt.voucherCode);
+      await page.locator('tr').filter({ hasText: receipt.voucherCode }).click();
+      const dialog = page.getByRole('dialog');
+      const rejected = page.waitForResponse(r => r.request().method() === 'POST' && r.url().endsWith(`/api/imports/${receipt.id}/approve`));
+      await dialog.getByRole('button', { name: 'Duyệt thực tế', exact: true }).click();
+      expect((await rejected).status()).toBe(409);
       await expectSnackbar(page, /đóng băng kiểm kê/i);
-      await expect(page.getByRole('dialog', { name: 'Tạo phiếu chuyển kho dự án' })).toBeVisible();
+      await expect(dialog).toBeVisible();
+      expect((await fixtureRequest<VoucherApiDto>(token, 'GET', `/api/imports/${receipt.id}`)).status).toBe('pending');
+      expect(await getFixtureStock(token, fixture)).toBe(0);
     } finally {
       if (stocktakeId) await cancelStocktake(stocktakeId, token);
+      await deleteImport(receipt.id, token);
     }
   });
 });

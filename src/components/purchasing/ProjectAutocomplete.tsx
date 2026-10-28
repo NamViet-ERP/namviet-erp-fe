@@ -21,7 +21,7 @@ interface ProjectAutocompleteProps {
 }
 
 function projectLabel(p: WarehouseProjectApiDto) {
-  return `${p.projectCode} — ${p.projectName}`;
+  return `[${p.projectCode}] ${p.projectName}`;
 }
 
 /** Combobox chọn dự án theo mã/tên — value = projectCode. */
@@ -58,7 +58,8 @@ export default function ProjectAutocomplete({
     return projects.filter(
       p =>
         p.projectCode.toLowerCase().includes(q)
-        || p.projectName.toLowerCase().includes(q),
+        || p.projectName.toLowerCase().includes(q)
+        || (p.clientName && p.clientName.toLowerCase().includes(q)),
     );
   }, [filterQuery, projects, open]);
 
@@ -196,19 +197,26 @@ export default function ProjectAutocomplete({
           key={p.projectCode}
           role="option"
           aria-selected={i === safeHighlight}
-          className={`search-autocomplete__option${i === safeHighlight ? ' is-active' : ''}`}
+          className={`search-autocomplete__option search-autocomplete__option--stack${i === safeHighlight ? ' is-active' : ''}`}
           onMouseEnter={() => setHighlight(i)}
           onMouseDown={e => {
             e.preventDefault();
             selectProject(p);
           }}
         >
-          <span className="search-autocomplete__name" title={p.projectName}>
-            {p.projectName}
-          </span>
-          <span className="search-autocomplete__code" title={p.projectCode}>
-            {p.projectCode}
-          </span>
+          <div className="flex items-center gap-1.5 w-full">
+            <span className="font-mono text-xs font-semibold px-1.5 py-0.5 rounded bg-[var(--md-surface-container-high)] text-[var(--md-primary)]">
+              [{p.projectCode}]
+            </span>
+          </div>
+          <div className="text-xs text-[var(--md-on-surface)] truncate w-full" title={p.projectName}>
+            <span className="font-medium">{p.projectName}</span>
+            {p.clientName ? (
+              <span className="text-xs text-[var(--md-on-surface-variant)] ml-1.5 font-normal">
+                — {p.clientName}
+              </span>
+            ) : null}
+          </div>
         </li>
       ))}
     </ul>
@@ -235,6 +243,7 @@ export default function ProjectAutocomplete({
           disabled={disabled}
           className="form-input search-autocomplete__input"
           value={inputValue}
+          title={inputValue}
           placeholder={placeholder}
           onChange={e => {
             const next = e.target.value;

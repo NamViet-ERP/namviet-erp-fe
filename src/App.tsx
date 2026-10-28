@@ -61,6 +61,8 @@ export default function App() {
 
             <Route path="/operations" element={<Navigate to="/operations/dashboard" replace />} />
             <Route path="/operations/dashboard" element={<Pages.OperationsDashboardPage />} />
+            <Route path="/operations/executive-360" element={<Pages.Executive360DashboardPage />} />
+            <Route path="/operations/project-list" element={<Pages.OperationsProjectListPage />} />
             <Route path="/operations/projects" element={<Pages.OperationsProjectsPage />} />
             <Route path="/operations/materials" element={<Pages.MaterialsPage />} />
             <Route path="/operations/settings" element={<Navigate to="/operations/settings/material-categories" replace />} />

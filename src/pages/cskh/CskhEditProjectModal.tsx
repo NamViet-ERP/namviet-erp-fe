@@ -1,3 +1,4 @@
+import { useCskhAction } from '../../hooks/cskh/useCskhAction';
 import { useMemo, useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import Modal from '../../components/ui/Modal';
@@ -30,8 +31,8 @@ interface CskhEditProjectModalProps {
   project: CskhProjectRecord;
   clientOptions?: string[];
   onClose: () => void;
-  onSave: (patch: CskhProjectPatch) => void;
-  onDelete?: (code: string) => void;
+  onSave: (patch: CskhProjectPatch) => Promise<void>;
+  onDelete?: (code: string) => Promise<void>;
 }
 
 type FieldKey =
@@ -106,6 +107,7 @@ function CskhEditProjectModalInner({
   onDelete,
 }: CskhEditProjectModalProps) {
   const { store: master } = useCskhMasterData();
+  const { run, isPending, error: actionError } = useCskhAction();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [form, setForm] = useState<FormState>(() => getInitialForm(project));
   const [errors, setErrors] = useState<Partial<Record<FieldKey, string>>>({});
@@ -149,7 +151,7 @@ function CskhEditProjectModalInner({
     setErrors({});
   };
 
-  const submit = () => {
+  const submit = async () => {
     const next: Partial<Record<FieldKey, string>> = {};
     const name = form.name.trim();
     const client = form.client.trim();
@@ -176,7 +178,7 @@ function CskhEditProjectModalInner({
       return;
     }
 
-    onSave({
+    if (!await run(() => onSave({
       name,
       clientName: client,
       pmName: form.pm.trim() || undefined,
@@ -197,15 +199,15 @@ function CskhEditProjectModalInner({
       acceptanceDate: form.acceptanceDate || null,
       warrantyMonths: Number.isFinite(months) ? months : null,
       notes: form.notes.trim() || null,
-    });
+    }))) return;
 
     showToast('success', `Đã cập nhật dự án ${project.code} thành công`);
     onClose();
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (onDelete) {
-      onDelete(project.code);
+      if (!await run(() => onDelete(project.code))) return;
       showToast('info', `Đã xóa dự án ${project.code}`);
       setConfirmDelete(false);
       onClose();
@@ -238,7 +240,7 @@ function CskhEditProjectModalInner({
               <Button type="button" variant="outlined" className="rounded-lg" onClick={onClose}>
                 Hủy
               </Button>
-              <Button type="button" variant="filled" className="rounded-lg" onClick={submit}>
+              <Button type="button" variant="filled" className="rounded-lg" disabled={isPending} onClick={submit}>
                 Lưu thay đổi
               </Button>
             </div>
@@ -246,6 +248,7 @@ function CskhEditProjectModalInner({
         )}
       >
         <div className="space-y-4">
+          {actionError && <p role="alert">{actionError}</p>}
           <CskhProjectBasicSection
             name={form.name}
             code={project.code}
@@ -310,7 +313,7 @@ function CskhEditProjectModalInner({
         </div>
       </Modal>
 
-      <ConfirmDialog
+      <ConfirmDialog isLoading={isPending}
         isOpen={confirmDelete}
         onClose={() => setConfirmDelete(false)}
         onConfirm={handleDelete}

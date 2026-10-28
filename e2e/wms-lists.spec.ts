@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 const voucherLists = [
   {
     path: '/warehouse/import',
-    tabs: ['Tất cả', 'Nháp', 'Nhập dự kiến', 'Nhập thực tế'],
+    tabs: ['Tất cả', 'Nhập dự kiến', 'Nhập thực tế'],
     searchPlaceholder: 'Tìm mã chứng từ, NCC, kho dự án...',
   },
   {
@@ -28,7 +28,8 @@ test.describe('WMS list filters', () => {
     test(`${list.path} status tabs are visible`, async ({ page }) => {
       await page.goto(list.path);
       for (const tab of list.tabs) {
-        await expect(page.getByRole('button', { name: new RegExp(`^${tab}`) })).toBeVisible();
+        const statusGroup = page.locator('.tab-filter').filter({ has: page.getByRole('button', { name: new RegExp(`^${list.tabs[1]}`) }) });
+        await expect(statusGroup.getByRole('button', { name: new RegExp(`^${tab}`) })).toBeVisible();
       }
     });
 
@@ -49,9 +50,11 @@ test.describe('WMS list filters', () => {
     await expect(page.getByRole('columnheader', { name: 'Đóng băng' })).toBeVisible();
   });
 
-  test('import tab Nháp filters table', async ({ page }) => {
+  test('import tab Nhập dự kiến filters table', async ({ page }) => {
     await page.goto('/warehouse/import');
-    await page.getByRole('button', { name: /^Nháp/ }).click();
+    const pending = page.getByRole('button', { name: /^Nhập dự kiến/ });
+    await pending.click();
+    await expect(pending).toHaveClass(/tab-filter__tab--active/);
     await expect(page.locator('table')).toBeVisible();
   });
 

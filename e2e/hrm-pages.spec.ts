@@ -3,7 +3,7 @@ import { getEmployee, loginToken } from './helpers/api';
 import { e2eEnv } from './helpers/env';
 
 const hrmPages: Array<{ path: string; title: string | RegExp }> = [
-  { path: '/dashboard', title: /Xin chào/ },
+  { path: '/dashboard', title: 'Tổng quan Vận hành Dự án' },
   { path: '/members/list', title: 'Danh sách nhân viên' },
   { path: '/members/new', title: 'Thêm nhân viên' },
   { path: '/members/settings', title: 'Phòng ban' },
@@ -20,11 +20,11 @@ test.describe('HRM pages', () => {
     });
   }
 
-  test('dashboard shows department modules', async ({ page }) => {
+  test('dashboard redirects to operations and exposes project drilldown', async ({ page }) => {
     await page.goto('/dashboard');
-    await expect(page.getByText('Chọn phân hệ để bắt đầu')).toBeVisible();
-    await expect(page.getByText('HRM')).toBeVisible();
-    await expect(page.getByRole('heading', { level: 3, name: /^Kho hàng$/i })).toBeVisible();
+    await expect(page).toHaveURL(/\/operations\/dashboard$/);
+    await expect(page.getByRole('heading', { level: 1, name: 'Tổng quan Vận hành Dự án' })).toBeVisible();
+    await expect(page.getByRole('listitem', { name: /^Dự án:/ })).toHaveAttribute('href', '/operations/projects');
   });
 
   test('members settings shows one-time onboarding invites', async ({ page }) => {

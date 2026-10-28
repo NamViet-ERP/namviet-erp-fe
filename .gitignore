@@ -74,3 +74,5 @@ scripts/*
 .env*
 *.py
 recovered_*.tsx
+
+artifacts/

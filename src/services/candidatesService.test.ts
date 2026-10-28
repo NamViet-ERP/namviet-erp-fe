@@ -78,8 +78,7 @@ describe('candidate create contracts', () => {
   });
 
   it('uses the public apply endpoint without privileged workflow fields', async () => {
-    const { hrResponsible: _hrResponsible, status: _status, ...publicInput } = candidateInput;
-    void _hrResponsible;
+    const { status: _status, ...publicInput } = candidateInput;
     void _status;
 
     await candidatesService.applyPublic(publicInput);
@@ -92,7 +91,7 @@ describe('candidate create contracts', () => {
       }),
     );
     const payload = post.mock.calls[0]?.[1] as Record<string, unknown>;
-    expect(payload).not.toHaveProperty('hrResponsible');
+    expect(payload).toHaveProperty('hrResponsible', 'HR A');
     expect(payload).not.toHaveProperty('status');
     expect(payload).not.toHaveProperty('recruitmentPlanId');
   });

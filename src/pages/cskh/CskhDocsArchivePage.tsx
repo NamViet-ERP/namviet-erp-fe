@@ -1,4 +1,8 @@
-import { useMemo, useState, useEffect, useCallback, useRef, type ChangeEvent } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { queryKeys } from '../../services/queryKeys';
+import { useCskhAction } from '../../hooks/cskh/useCskhAction';
+import { apiClient, saveBlob } from '../../lib/apiClient';
+import { useMemo, useState, useRef, type ChangeEvent } from 'react';
 import { Archive, Plus, ShieldCheck, Download, Trash2, Pencil, Upload, FileText, HardDrive } from 'lucide-react';
 import Pagination from '../../components/ui/Pagination';
 import PageHeader from '../../components/ui/PageHeader';
@@ -17,7 +21,6 @@ import { cskhProjectTabMeta } from '../../constants/cskhProject';
 import { ICON_SIZE } from '../../constants/icons';
 import {
   filterArchiveDocs,
-  getSeedDocuments,
   getDocTypeTagClass,
   applyDynamicSla,
   type CskhArchiveCategoryFilter,
@@ -53,43 +56,19 @@ const FILTERS: CskhFilterOption<CskhArchiveCategoryFilter>[] = [
 export default function CskhDocsArchivePage({ project }: CskhDocsArchivePageProps) {
   const meta = cskhProjectTabMeta('docs-archive');
   
-  // Initialize with seed documents to avoid any empty flash or broken state
-  const [docsList, setDocsList] = useState<CskhUnifiedDoc[]>(() => {
-    return getSeedDocuments(project.code);
+  const documentsQuery = useQuery({
+    queryKey: queryKeys.cskh.documents(project.code),
+    queryFn: async (): Promise<CskhUnifiedDoc[]> => (await projectsService.listDocuments(project.code)).map(doc => applyDynamicSla(doc)),
   });
-
-  const loadData = useCallback(async () => {
-    try {
-      const data = await projectsService.listDocuments(project.code);
-      if (Array.isArray(data)) {
-        setDocsList(data.map(d => applyDynamicSla(d)));
-      }
-    } catch (err) {
-      console.warn('[CSKH Docs Archive] Could not load from API, keeping fallback data:', err);
-    }
-  }, [project.code]);
-
-  useEffect(() => {
-    let ignore = false;
-    projectsService.listDocuments(project.code)
-      .then(data => {
-        if (!ignore && Array.isArray(data)) {
-          setDocsList(data.map(d => applyDynamicSla(d)));
-        }
-      })
-      .catch(err => {
-        console.warn('[CSKH Docs Archive] Could not load from API, keeping fallback data:', err);
-      });
-    return () => {
-      ignore = true;
-    };
-  }, [project.code]);
+  const docsList = documentsQuery.data ?? [];
+  const loadData = () => documentsQuery.refetch();
+  const { run, isPending, error: actionError } = useCskhAction();
 
   const archiveDocs = docsList.filter(d => d.stage === 'archived' || d.stage === 'approved');
   const kpis = {
     total: archiveDocs.length,
     signed: archiveDocs.filter(d => d.handoverSigned).length,
-    sizeStr: '1.2 GB',
+    sizeStr: String(archiveDocs.filter(doc => doc.downloadUrl).length),
   };
 
   const [filter, setFilter] = useState<CskhArchiveCategoryFilter>('all');
@@ -151,7 +130,7 @@ export default function CskhDocsArchivePage({ project }: CskhDocsArchivePageProp
       showToast('error', 'Vui lòng nhập mã và tên hồ sơ');
       return;
     }
-    try {
+    await run(async () => {
       let savedDoc;
       if (editingDoc) {
         savedDoc = await projectsService.updateDocument(project.code, editingDoc.id, {
@@ -160,11 +139,11 @@ export default function CskhDocsArchivePage({ project }: CskhDocsArchivePageProp
           docType: form.docType,
           category: form.category,
           author: form.author,
-          handoverDate: form.handoverDate,
+          handoverDate: form.handoverDate || null,
           fileName: form.fileName,
           fileSize: form.fileSize,
         });
-        showToast('success', 'Đã cập nhật hồ sơ');
+
       } else {
         savedDoc = await projectsService.createDocument(project.code, {
           code: form.code.trim(),
@@ -172,53 +151,59 @@ export default function CskhDocsArchivePage({ project }: CskhDocsArchivePageProp
           docType: form.docType,
           category: form.category,
           author: form.author,
-          handoverDate: form.handoverDate,
-          fileName: form.fileName || `${form.code}.pdf`,
-          fileSize: form.fileSize || '1.0 MB',
+          handoverDate: form.handoverDate || null,
+          fileName: form.fileName,
+          fileSize: form.fileSize,
           stage: 'archived',
           status: 'approved',
           statusLabel: 'Lưu trữ chính thức',
           internalApproved: true,
           handoverSigned: true,
         });
-        showToast('success', 'Đã nhập kho hồ sơ thành công');
+
       }
 
-      if (savedDoc && fileToUpload && projectsService.uploadDocumentFile) {
+      // Retain the newly created record so retrying a failed upload updates it.
+      setEditingDoc(savedDoc);
+      if (savedDoc && fileToUpload) {
         await projectsService.uploadDocumentFile(project.code, savedDoc.id, fileToUpload);
-        showToast('success', 'Đã tải lên tệp đính kèm');
+
       }
 
       setOpenModal(false);
-      loadData();
-    } catch (err) {
-      console.error(err);
-      showToast('error', 'Lỗi khi lưu dữ liệu');
-    }
+      showToast('success', 'Đã lưu hồ sơ và tệp đính kèm.');
+      await loadData();
+    });
   };
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    try {
+    await run(async () => {
       await projectsService.deleteDocument(project.code, deleteTarget.id);
-      showToast('success', 'Đã xóa tài liệu');
+
       setDeleteTarget(null);
-      loadData();
-    } catch {
-      showToast('error', 'Lỗi khi xóa tài liệu');
-    }
+      await loadData();
+    });
   };
 
-  const downloadFile = (doc: CskhUnifiedDoc) => {
-    if (doc.downloadUrl) {
-      window.open(doc.downloadUrl, '_blank');
-    } else {
-      showToast('info', `Tải tệp mô phỏng: ${doc.fileName || doc.code + '.pdf'}`);
+  const downloadFile = async (doc: CskhUnifiedDoc) => {
+    if (!doc.downloadUrl) {
+      showToast('warning', 'Hồ sơ chưa có tệp đính kèm.');
+      return;
+    }
+    try {
+      const endpoint = `/api/warehouse/projects/${encodeURIComponent(project.code)}/documents/${encodeURIComponent(doc.id)}/download`;
+      await saveBlob(await apiClient.getBlob(endpoint), doc.fileName || `${doc.code}.pdf`);
+    } catch (error) {
+      showToast('error', error instanceof Error ? error.message : 'Không tải được tệp. Vui lòng thử lại.');
     }
   };
 
   return (
     <div className="page-stack cskh-desk space-y-4">
+      {documentsQuery.isLoading && <p role="status">Đang tải hồ sơ…</p>}
+      {documentsQuery.isError && <p role="alert">Không tải được hồ sơ. <button type="button" onClick={() => void loadData()}>Thử lại</button></p>}
+      {actionError && <p role="alert">{actionError}</p>}
       <PageHeader 
         title={meta.title} 
         subtitle={`${project.code} - ${meta.subtitle}`} 
@@ -241,9 +226,9 @@ export default function CskhDocsArchivePage({ project }: CskhDocsArchivePageProp
           icon={Archive}
         />
         <Card
-          title="Dung lượng Cloud S3"
+          title="Tệp đính kèm"
           value={kpis.sizeStr}
-          subtitle="Đồng bộ AWS S3 & NAS nội bộ"
+          subtitle="Hồ sơ có tệp đã tải lên"
           accent="purple"
           icon={HardDrive}
         />
@@ -495,14 +480,14 @@ export default function CskhDocsArchivePage({ project }: CskhDocsArchivePageProp
 
           <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
             <Button variant="outlined" onClick={() => setOpenModal(false)}>Hủy</Button>
-            <Button variant="filled" onClick={handleSave}>
+            <Button variant="filled" disabled={isPending} onClick={handleSave}>
               {editingDoc ? 'Lưu thay đổi' : 'Nhập kho & Tải lên'}
             </Button>
           </div>
         </div>
       </Modal>
 
-      <ConfirmDialog 
+      <ConfirmDialog isLoading={isPending} 
         isOpen={Boolean(deleteTarget)} 
         title="Xóa hồ sơ lưu trữ" 
         message={`Bạn có chắc chắn muốn xóa hồ sơ ${deleteTarget?.code} - ${deleteTarget?.name}?`} 

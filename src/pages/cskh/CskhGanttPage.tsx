@@ -1,3 +1,4 @@
+import { useCskhAction } from '../../hooks/cskh/useCskhAction';
 import { useMemo, useState } from 'react';
 import {
   BarChart2,
@@ -290,7 +291,17 @@ function calculateItemBar(item: CskhGanttItem, startTime: number, totalDays: num
 
 export default function CskhGanttPage({ project }: CskhGanttPageProps) {
   const meta = cskhProjectTabMeta('gantt');
-  const { ops, update } = useCskhOpsWorkspace(project.code);
+  const workspace = useCskhOpsWorkspace(project.code);
+  const { ops, update: updateOps } = workspace;
+  const { run, isPending, error: actionError } = useCskhAction();
+  const update = (fn: Parameters<typeof updateOps>[0]) => run(async () => {
+    const next = fn(ops);
+    await updateOps(() => next);
+    if (JSON.stringify(next.ganttItems) !== JSON.stringify(ops.ganttItems)) {
+      const summary = ganttKpis(next.ganttItems);
+      await patchProject(project.code, { planPct: summary.planPct, actualPct: summary.actualPct });
+    }
+  });
   const { patchProject } = useCskhCommandCenter();
   const { store: master } = useCskhMasterData();
   const kpis = ganttKpis(ops.ganttItems);
@@ -319,11 +330,6 @@ export default function CskhGanttPage({ project }: CskhGanttPageProps) {
   const contractMilestones = useMemo(() => getProjectContractMilestones(project), [project]);
   const milestonePins = useMemo(() => getProjectMilestonePins(project), [project]);
 
-  const syncRollup = (items: CskhGanttItem[]) => {
-    if (items.length === 0) return;
-    const next = ganttKpis(items);
-    patchProject(project.code, { planPct: next.planPct, actualPct: next.actualPct });
-  };
 
   const openCreate = () => {
     setEditing(null);
@@ -347,7 +353,7 @@ export default function CskhGanttPage({ project }: CskhGanttPageProps) {
     setOpen(true);
   };
 
-  const saveItem = () => {
+  const saveItem = async () => {
     const name = form.name.trim();
     const days = Number.parseInt(form.days, 10);
     const actualPct = Number.parseInt(form.actualPct, 10);
@@ -355,6 +361,7 @@ export default function CskhGanttPage({ project }: CskhGanttPageProps) {
     if (!name) next.name = 'Nhập hạng mục.';
     if (!Number.isFinite(days) || days < 0) next.days = 'Nhập số ngày từ 0.';
     if (!form.startDate) next.startDate = 'Chọn ngày bắt đầu.';
+    if (form.startDate && form.endDate && form.endDate < form.startDate) next.endDate = 'Ngày kết thúc phải từ ngày bắt đầu.';
     if (!form.endDate) next.endDate = 'Chọn ngày kết thúc.';
     if (!Number.isFinite(actualPct) || actualPct < 0 || actualPct > 100) next.actualPct = 'Nhập % thực tế 0-100.';
     if (Object.keys(next).length > 0) {
@@ -362,6 +369,7 @@ export default function CskhGanttPage({ project }: CskhGanttPageProps) {
       return;
     }
     const row: CskhGanttItem = {
+      ...editing,
       id: editing?.id ?? newOpsId(),
       name,
       department: form.department.trim() || undefined,
@@ -371,16 +379,16 @@ export default function CskhGanttPage({ project }: CskhGanttPageProps) {
       actualPct,
       notes: form.notes.trim() || undefined,
     };
-    update(current => {
+    if (!await update(current => {
       const nextOps = upsertGanttItem(current, row);
-      syncRollup(nextOps.ganttItems);
+
       return nextOps;
-    });
+    })) return;
     setOpen(false);
     showToast('success', editing ? 'Đã cập nhật hạng mục.' : 'Đã thêm hạng mục.');
   };
 
-  const applyTemplate = () => {
+  const applyTemplate = async () => {
     if (!band || band.rows.length === 0) {
       showToast('warning', 'Chưa có bảng tiến độ chuẩn cho loại lò / ưu tiên / công suất này.');
       return;
@@ -404,20 +412,20 @@ export default function CskhGanttPage({ project }: CskhGanttPageProps) {
         actualPct: 0,
       };
     });
-    update(current => {
+    if (!await update(current => {
       const nextOps = { ...current, ganttItems: items };
-      syncRollup(nextOps.ganttItems);
+
       return nextOps;
-    });
+    })) return;
     showToast('success', `Đã áp dụng ${items.length} hạng mục chuẩn. Ngày 0 là ngày nhận tạm ứng.`);
   };
 
-  const saveSnapshot = () => {
+  const saveSnapshot = async () => {
     if (ops.ganttItems.length === 0) {
       showToast('warning', 'Thêm hạng mục trước khi lưu snapshot.');
       return;
     }
-    update(current => captureSnapshot(current));
+    if (!await update(current => captureSnapshot(current))) return;
     showToast('success', 'Đã chụp và lưu snapshot tiến độ tuần thành công.');
   };
 
@@ -426,7 +434,10 @@ export default function CskhGanttPage({ project }: CskhGanttPageProps) {
   };
 
   return (
-    <div className="page-stack cskh-desk">
+    <div className="page-stack cskh-desk" aria-busy={isPending || workspace.isLoading}>
+      {workspace.isLoading && <p role="status">Đang tải dữ liệu…</p>}
+      {workspace.isError && <p role="alert">Không tải được dữ liệu. <button type="button" onClick={() => void workspace.refetch()}>Thử lại</button></p>}
+      {actionError && <p role="alert">{actionError}</p>}
       <PageHeader
         eyebrow={project.code}
         title={meta.title}
@@ -1013,13 +1024,13 @@ export default function CskhGanttPage({ project }: CskhGanttPageProps) {
         footer={(
           <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
             {editing ? (
-              <Button type="button" variant="text" style={{ color: '#dc2626' }} onClick={() => { setOpen(false); setDeleteTarget(editing); }}>
+              <Button type="button" variant="text" style={{ color: '#dc2626' }} onClick={async () => { setOpen(false); setDeleteTarget(editing); }}>
                 Xóa hạng mục
               </Button>
             ) : <span />}
             <div style={{ display: 'flex', gap: '8px' }}>
               <Button type="button" variant="outlined" onClick={() => setOpen(false)}>Hủy</Button>
-              <Button type="button" onClick={saveItem}>Lưu</Button>
+              <Button type="button" disabled={isPending} onClick={saveItem}>Lưu</Button>
             </div>
           </div>
         )}
@@ -1049,15 +1060,16 @@ export default function CskhGanttPage({ project }: CskhGanttPageProps) {
 
       {/* CONFIRM DELETE DIALOG */}
       <ConfirmDialog
+        isLoading={isPending}
         isOpen={Boolean(deleteTarget)}
         onClose={() => setDeleteTarget(null)}
-        onConfirm={() => {
+        onConfirm={async () => {
           if (!deleteTarget) return;
-          update(current => {
+          if (!await update(current => {
             const nextOps = removeGanttItem(current, deleteTarget.id);
-            syncRollup(nextOps.ganttItems);
+
             return nextOps;
-          });
+          })) return;
           setDeleteTarget(null);
           showToast('success', `Đã xóa ${deleteTarget.name}.`);
         }}

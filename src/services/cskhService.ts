@@ -40,6 +40,7 @@ export interface CreateProjectBottleneckRequest {
 }
 
 export interface UpdateProjectBottleneckRequest {
+  startedAt?: string | null;
   name?: string | null;
   severity?: string | null;
   status?: string | null;
@@ -78,6 +79,13 @@ export interface CreateProjectRequestCenterRequest {
 }
 
 export interface UpdateProjectRequestCenterRequest {
+  name?: string;
+  requestType?: string;
+  fromParty?: string;
+  toDept?: string | null;
+  dueDate?: string | null;
+  priority?: string;
+  body?: string | null;
   status: string;
   notes?: string | null;
 }
@@ -113,12 +121,17 @@ export interface ProjectMeetingDto {
 }
 
 export interface CreateProjectMeetingActionRequest {
+  id?: string;
+  done?: boolean;
+  generatedBottleneck?: boolean;
   name: string;
   dueDate: string;
   pic?: string | null;
 }
 
 export interface CreateProjectMeetingRequest {
+  minutes?: string;
+  attachments?: ProjectMeetingAttachmentDto[];
   name: string;
   date: string;
   attendees?: string | null;
@@ -158,6 +171,8 @@ export interface ProjectDocumentDto {
 }
 
 export interface CreateProjectDocumentRequest {
+  internalApproved?: boolean;
+  handoverSigned?: boolean;
   code: string;
   name: string;
   docType: string;

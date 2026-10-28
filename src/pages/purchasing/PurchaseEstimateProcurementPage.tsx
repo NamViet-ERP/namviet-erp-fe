@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
+  AlertTriangle,
   CheckCircle2,
   Eye,
   FilePlus2,
@@ -41,7 +42,7 @@ import {
   estimateStatusBadge,
   estimateStatusLabel,
 } from '../../lib/purchaseEstimateStatus';
-import { formatCurrencyVnd } from '../../utils/formatCurrency';
+import { formatCurrencyVnd, formatCurrencyFull } from '../../utils/formatCurrency';
 import RfqQuotesPanel, { type RfqQuotesPanelHandle } from './RfqQuotesPanel';
 import type { DropdownItem, TabItem } from '../../types';
 import type { PurchaseEstimateListItemApiDto } from '../../types/api/purchasingApi';
@@ -175,6 +176,17 @@ export default function PurchaseEstimateProcurementPage() {
   };
 
   const createProjectName = projects.find(p => p.projectCode === createProject)?.projectName ?? '';
+  const selectedCreateProject = useMemo(
+    () => projects.find(p => p.projectCode === createProject),
+    [projects, createProject],
+  );
+  const toolbarSelectedProject = useMemo(
+    () => projects.find(p => p.projectCode === projectCode),
+    [projects, projectCode],
+  );
+  const createProjectBudgetRemaining = selectedCreateProject
+    ? (selectedCreateProject.materialBudgetRemaining ?? (selectedCreateProject.materialBudget - (selectedCreateProject.approvedImportValue ?? 0)))
+    : 0;
   const createTotal = useMemo(
     () => createLines.reduce((sum, line) => {
       const qty = Number(String(line.qty).replace(/[^\d.-]/g, '')) || 0;
@@ -182,6 +194,11 @@ export default function PurchaseEstimateProcurementPage() {
       return sum + qty * price;
     }, 0),
     [createLines],
+  );
+  const isCreateEstimateOverBudget = Boolean(
+    selectedCreateProject
+    && selectedCreateProject.materialBudget > 0
+    && createTotal > createProjectBudgetRemaining,
   );
   const filledLineCount = createLines.filter(l => l.materialCode).length;
 
@@ -296,6 +313,18 @@ export default function PurchaseEstimateProcurementPage() {
                   placeholder="Lọc dự án"
                 />
               </div>
+              {toolbarSelectedProject ? (
+                <div className="hrm-list-toolbar__filter-row">
+                  <div className="flex items-center gap-1.5 text-xs text-[var(--md-on-surface-variant)] bg-[var(--md-surface-container-low)] px-2.5 py-1.5 rounded-md border border-[var(--md-outline-variant02)]">
+                    <span className="font-semibold text-[var(--md-primary)]">Ngân sách VT:</span>
+                    <span className="font-mono tabular-nums">{formatCurrencyFull(toolbarSelectedProject.materialBudget)}</span>
+                    <span>· Còn lại:</span>
+                    <span className={`font-mono tabular-nums font-semibold ${(toolbarSelectedProject.materialBudgetRemaining ?? 0) < 0 ? 'text-[var(--md-error)]' : ''}`}>
+                      {formatCurrencyFull(toolbarSelectedProject.materialBudgetRemaining ?? (toolbarSelectedProject.materialBudget - (toolbarSelectedProject.approvedImportValue ?? 0)))}
+                    </span>
+                  </div>
+                </div>
+              ) : null}
               {projectCode ? (
                 <div className="hrm-list-toolbar__filter-row">
                   <button
@@ -423,6 +452,43 @@ export default function PurchaseEstimateProcurementPage() {
               />
             </FormField>
           </div>
+
+          {selectedCreateProject ? (
+            <div
+              className={`p-3 rounded-lg border text-xs my-3 ${
+                isCreateEstimateOverBudget
+                  ? 'border-[var(--md-error)] bg-[color-mix(in_srgb,var(--md-error)_8%,transparent)] text-[var(--md-on-surface)]'
+                  : 'border-[var(--md-outline-variant02)] bg-[var(--md-surface-container-low)] text-[var(--md-on-surface)]'
+              }`}
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-[var(--md-primary)]">
+                    Ngân sách dự toán vật tư:
+                  </span>
+                  <span className="font-mono tabular-nums font-semibold">
+                    {formatCurrencyFull(selectedCreateProject.materialBudget)}
+                  </span>
+                  <span className="text-[var(--md-on-surface-variant)]">
+                    · Còn lại:{' '}
+                    <strong
+                      className={`font-mono ${createProjectBudgetRemaining < 0 ? 'text-[var(--md-error)]' : ''}`}
+                    >
+                      {formatCurrencyFull(createProjectBudgetRemaining)}
+                    </strong>
+                  </span>
+                </div>
+                {isCreateEstimateOverBudget ? (
+                  <div className="flex items-center gap-1 font-semibold text-[var(--md-error)]">
+                    <AlertTriangle size={14} aria-hidden />
+                    <span>
+                      Cảnh báo: Giá trị mua sắm ({formatCurrencyFull(createTotal)}) vượt quá ngân sách còn lại!
+                    </span>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
 
           <section className="pur-create-plan__section" aria-label="Dòng vật tư dự toán">
             <div className="pur-create-plan__section-head">

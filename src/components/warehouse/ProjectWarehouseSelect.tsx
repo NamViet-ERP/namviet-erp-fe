@@ -45,8 +45,7 @@ export default function ProjectWarehouseSelect({
         const suffix = info ? ` (đang kiểm kê ${info.voucherCode})` : '';
         return (
           <option key={project.projectCode} value={project.projectCode} disabled={frozen}>
-            {project.projectCode} — {project.projectName}
-            {suffix}
+            {`[${project.projectCode}] ${project.projectName}${project.clientName ? ` — ${project.clientName}` : ''}${suffix}`}
           </option>
         );
       })}

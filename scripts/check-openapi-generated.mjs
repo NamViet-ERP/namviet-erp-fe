@@ -34,6 +34,21 @@ if (!existsSync(swaggerFile)) {
 }
 
 const before = readFileSync(outFile, 'utf8');
+if (process.argv.includes('--live')) {
+  const base = (process.env.SWAGGER_URL || process.env.VITE_DEV_PROXY_TARGET || 'http://127.0.0.1:8080').replace(/\/$/, '');
+  const response = await fetch(`${base}/swagger/v1/swagger.json`);
+  if (!response.ok) throw new Error(`Live OpenAPI request failed: HTTP ${response.status}`);
+  const canonical = value => Array.isArray(value) ? value.map(canonical)
+    : value !== null && typeof value === 'object'
+      ? Object.fromEntries(Object.keys(value).sort().map(key => [key, canonical(value[key])])) : value;
+  const live = canonical(await response.json());
+  const snapshot = canonical(JSON.parse(readFileSync(swaggerFile, 'utf8')));
+  if (JSON.stringify(live) !== JSON.stringify(snapshot)) {
+    console.error('Live API differs from openapi/swagger.json. Run npm run api:sync against this API.');
+    process.exit(1);
+  }
+  console.log('OK: live API matches the OpenAPI snapshot.');
+}
 const tempDir = mkdtempSync(join(tmpdir(), 'nv-openapi-check-'));
 const tempOut = join(tempDir, 'openapi.ts');
 

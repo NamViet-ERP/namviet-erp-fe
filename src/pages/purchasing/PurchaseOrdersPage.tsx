@@ -27,7 +27,7 @@ import {
   poPaymentWarningStatus,
   poPlacementStatus,
 } from '../../lib/purchasing/purchaseOrderStatus';
-import { formatCurrency } from '../../utils/formatCurrency';
+import { formatCurrency, formatCurrencyFull } from '../../utils/formatCurrency';
 import type { DropdownItem } from '../../types';
 import type { PurchaseOrderApiDto } from '../../types/api/purchasingApi';
 
@@ -156,6 +156,13 @@ export default function PurchaseOrdersPage() {
   const canPlace = has('purchasing.orders.place');
   const { data: projectsPage } = useProjects({ page: 1, pageSize: 200, status: 'Active' });
   const projects = projectsPage?.items ?? [];
+  const selectedProject = useMemo(
+    () => projects.find(p => p.projectCode === projectCode),
+    [projects, projectCode],
+  );
+  const projectBudgetRemaining = selectedProject
+    ? (selectedProject.materialBudgetRemaining ?? (selectedProject.materialBudget - (selectedProject.approvedImportValue ?? 0)))
+    : 0;
 
   const debouncedSupplierName = useDebounce(supplierName, 350);
   const debouncedPlanCode = useDebounce(planCode, 350);
@@ -315,6 +322,14 @@ export default function PurchaseOrdersPage() {
                   placeholder="Mã / tên dự án"
                   compact
                 />
+                {selectedProject ? (
+                  <span
+                    className="text-[11px] text-[var(--md-on-surface-variant)] mt-1 whitespace-nowrap block"
+                    title={`Ngân sách VT: ${formatCurrencyFull(selectedProject.materialBudget)} | Còn lại: ${formatCurrencyFull(projectBudgetRemaining)}`}
+                  >
+                    Ngân sách: <strong className="font-mono text-[var(--md-primary)]">{formatCurrencyFull(selectedProject.materialBudget)}</strong> (còn <strong className={`font-mono ${projectBudgetRemaining < 0 ? 'text-[var(--md-error)]' : ''}`}>{formatCurrencyFull(projectBudgetRemaining)}</strong>)
+                  </span>
+                ) : null}
               </label>
               <label className="pur-erp__field">
                 <span>Trạng thái đặt</span>

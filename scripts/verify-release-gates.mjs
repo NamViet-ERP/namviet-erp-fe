@@ -1,5 +1,5 @@
 /**
- * Phase 7 release gates: no-mock + OpenAPI check + typecheck.
+ * Release gates for source contracts, types, lint and unit regression tests.
  * Usage: node scripts/verify-release-gates.mjs
  */
 import { spawnSync } from 'node:child_process';
@@ -24,5 +24,9 @@ function run(label, command, args) {
 run('verify:no-mock', 'npm', ['run', 'verify:no-mock']);
 run('api:check', 'npm', ['run', 'api:check']);
 run('tsc --noEmit', 'npx', ['tsc', '--noEmit', '-p', 'tsconfig.json']);
+run('E2E typecheck', 'npm', ['run', 'typecheck:e2e']);
+run('lint', 'npm', ['run', 'lint']);
+run('unit tests', 'npm', ['run', 'test:run']);
+if (process.argv.includes('--live')) run('live API contract', 'npm', ['run', 'api:check:live']);
 
-console.log('\nOK: release gates passed (no-mock + api:check + tsc).');
+console.log('\nOK: release gates passed (no-mock, OpenAPI, app/E2E types, lint, unit tests).');

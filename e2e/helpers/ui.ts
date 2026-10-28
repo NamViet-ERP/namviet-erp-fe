@@ -5,7 +5,7 @@ export function fieldInput(scope: Locator, label: string): Locator {
 }
 
 export async function expectSnackbar(page: Page, pattern: string | RegExp): Promise<Locator> {
-  const message = page.locator('.nv-snackbar__message');
+  const message = page.locator('.nv-snackbar__message').filter({ hasText: pattern });
   await expect(message).toBeVisible();
   await expect(message).toContainText(pattern);
   return message;
@@ -19,7 +19,7 @@ export async function pickFirstAutocomplete(page: Page, input: Locator): Promise
 }
 
 export async function fillImportDraftForm(
-  page: Page,
+  _page: Page,
   dialog: Locator,
   _referenceCode: string,
   projectCode?: string,
@@ -38,7 +38,8 @@ export async function fillImportDraftForm(
     const value = (await opt.getAttribute('value'))?.trim() ?? '';
     if (!value) continue;
     const text = (await opt.textContent()) ?? '';
-    const projectFromOption = text.split('·').map(s => s.trim()).at(-1) ?? '';
+    const optionParts = text.split('·').map(s => s.trim());
+    const projectFromOption = optionParts[optionParts.length - 1] ?? '';
     candidates.push({ value, projectCode: projectFromOption });
   }
 

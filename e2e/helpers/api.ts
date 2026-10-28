@@ -377,6 +377,10 @@ export interface CandidateApiDto {
   id: string;
   fullName: string;
   email?: string;
+  hrResponsible?: string;
+  cvFileName?: string;
+  position?: string;
+  status?: string;
 }
 
 interface CandidatePagedApiDto {
@@ -496,6 +500,10 @@ export async function deleteEmployee(token: string, id: string): Promise<void> {
 
 export async function deleteCandidate(token: string, id: string): Promise<void> {
   await apiRequest('DELETE', `/api/candidates/${id}`, token);
+}
+
+export async function getCandidate(token: string, id: string): Promise<CandidateApiDto> {
+  return apiRequest<CandidateApiDto>('GET', `/api/candidates/${id}`, token);
 }
 
 export async function findEmployeeByName(

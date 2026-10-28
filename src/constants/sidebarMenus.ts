@@ -21,7 +21,7 @@ function toSidebarChildren(items: SidebarMenuItem[]): SidebarChildItem[] {
 }
 
 /** Tắt tab / nút Báo cáo kho. Bật `true` khi dùng lại phân hệ. */
-export const WMS_REPORTS_ENABLED = false;
+export const WMS_REPORTS_ENABLED = true;
 
 /** Thứ tự theo luồng nghiệp vụ: kho dự án → tồn → nhập/xuất/chuyển → danh mục */
 export const warehouseMenu: SidebarMenuItem[] = [
@@ -271,7 +271,7 @@ export const purchasingMenu: SidebarMenuItem[] = [
   },
   {
     id: 'pur-estimate-procurement',
-    label: 'Mua hàng dự toán',
+    label: 'Mua theo dự toán',
     icon: Calculator,
     path: '/purchasing/estimate-procurement',
     permission: ['purchasing.estimates.view', 'purchasing.rfq.view'],
@@ -409,8 +409,22 @@ export const operationsMenu: SidebarMenuItem[] = [
     permission: 'wms.projects.view:all',
   },
   {
+    id: 'ops-executive-360',
+    label: 'Điều hành 360°',
+    icon: Activity,
+    path: '/operations/executive-360',
+    permission: 'wms.projects.view:all',
+  },
+  {
+    id: 'ops-project-list',
+    label: 'Danh sách dự án',
+    icon: FolderKanban,
+    path: '/operations/project-list',
+    permission: 'wms.projects.view:all',
+  },
+  {
     id: 'ops-projects',
-    label: 'Dự án',
+    label: 'Tiến độ cung ứng',
     icon: FolderKanban,
     path: '/operations/projects',
     permission: 'wms.projects.view:all',

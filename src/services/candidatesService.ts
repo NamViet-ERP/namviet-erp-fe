@@ -63,6 +63,7 @@ export type PublicCandidateApplication = Pick<
   | 'position'
   | 'experience'
   | 'source'
+  | 'hrResponsible'
   | 'cvFileName'
   | 'cvFileSize'
   | 'cvFileUrl'
@@ -117,6 +118,7 @@ export const candidatesService = {
       position: dto.position,
       experience: dto.experience,
       source: dto.source,
+      hrResponsible: dto.hrResponsible,
       cvFileName: dto.cvFileName,
       cvFileSize: dto.cvFileSize,
       cvFileUrl: dto.cvFileUrl,

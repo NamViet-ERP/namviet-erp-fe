@@ -1,4 +1,8 @@
-import { useMemo, useState, useEffect, useCallback, useRef, type ChangeEvent } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { queryKeys } from '../../services/queryKeys';
+import { useCskhAction } from '../../hooks/cskh/useCskhAction';
+import { apiClient, saveBlob } from '../../lib/apiClient';
+import { useMemo, useState, useRef, type ChangeEvent } from 'react';
 import { Plus, Download, Trash2, Pencil, Upload, FileCheck, Clock, AlertTriangle, FileText } from 'lucide-react';
 import Pagination from '../../components/ui/Pagination';
 import PageHeader from '../../components/ui/PageHeader';
@@ -18,7 +22,6 @@ import { ICON_SIZE } from '../../constants/icons';
 import {
   filterUnifiedDocs,
   unifiedDocsKpis,
-  getSeedDocuments,
   getDocTypeTagClass,
   applyDynamicSla,
   type CskhUnifiedDoc,
@@ -58,37 +61,13 @@ const FILTERS: CskhFilterOption<CskhUnifiedDocFilter>[] = [
 export default function CskhDocsPipelinePage({ project }: CskhDocsPipelinePageProps) {
   const meta = cskhProjectTabMeta('docs');
   
-  // Initialize with seed documents to avoid empty flash
-  const [docsList, setDocsList] = useState<CskhUnifiedDoc[]>(() => {
-    return getSeedDocuments(project.code);
+  const documentsQuery = useQuery({
+    queryKey: queryKeys.cskh.documents(project.code),
+    queryFn: async (): Promise<CskhUnifiedDoc[]> => (await projectsService.listDocuments(project.code)).map(doc => applyDynamicSla(doc)),
   });
-
-  const loadData = useCallback(async () => {
-    try {
-      const data = await projectsService.listDocuments(project.code);
-      if (Array.isArray(data)) {
-        setDocsList(data.map(d => applyDynamicSla(d)));
-      }
-    } catch (err) {
-      console.warn('[CSKH Docs Pipeline] Could not load from API, keeping fallback data:', err);
-    }
-  }, [project.code]);
-
-  useEffect(() => {
-    let ignore = false;
-    projectsService.listDocuments(project.code)
-      .then(data => {
-        if (!ignore && Array.isArray(data)) {
-          setDocsList(data.map(d => applyDynamicSla(d)));
-        }
-      })
-      .catch(err => {
-        console.warn('[CSKH Docs Pipeline] Could not load from API, keeping fallback data:', err);
-      });
-    return () => {
-      ignore = true;
-    };
-  }, [project.code]);
+  const docsList = documentsQuery.data ?? [];
+  const loadData = () => documentsQuery.refetch();
+  const { run, isPending, error: actionError } = useCskhAction();
 
   const kpis = unifiedDocsKpis(docsList);
   const [filter, setFilter] = useState<CskhUnifiedDocFilter>('all');
@@ -152,54 +131,59 @@ export default function CskhDocsPipelinePage({ project }: CskhDocsPipelinePagePr
       showToast('error', 'Vui lòng nhập mã và tên hồ sơ');
       return;
     }
-    try {
+    await run(async () => {
       let savedDoc;
       if (editingDoc) {
         savedDoc = await projectsService.updateDocument(project.code, editingDoc.id, {
           ...form,
+          slaDueDate: form.slaDueDate || null,
           stage: editingDoc.stage,
         });
-        showToast('success', 'Đã cập nhật hồ sơ');
+
       } else {
         savedDoc = await projectsService.createDocument(project.code, {
           ...form,
+          slaDueDate: form.slaDueDate || null,
           stage: 'draft_review',
           internalApproved: false,
           handoverSigned: false,
         });
-        showToast('success', 'Đã tạo hồ sơ mới thành công');
+
       }
 
-      if (savedDoc && fileToUpload && projectsService.uploadDocumentFile) {
+      // Retain the newly created record so retrying a failed upload updates it.
+      setEditingDoc(savedDoc);
+      if (savedDoc && fileToUpload) {
         await projectsService.uploadDocumentFile(project.code, savedDoc.id, fileToUpload);
-        showToast('success', 'Đã tải lên tệp đính kèm');
+
       }
 
       setOpenModal(false);
-      loadData();
-    } catch (err) {
-      console.error(err);
-      showToast('error', 'Lỗi khi lưu dữ liệu');
-    }
+      showToast('success', 'Đã lưu hồ sơ và tệp đính kèm.');
+      await loadData();
+    });
   };
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    try {
+    await run(async () => {
       await projectsService.deleteDocument(project.code, deleteTarget.id);
-      showToast('success', 'Đã xóa hồ sơ');
+
       setDeleteTarget(null);
-      loadData();
-    } catch {
-      showToast('error', 'Lỗi khi xóa hồ sơ');
-    }
+      await loadData();
+    });
   };
 
-  const downloadFile = (doc: CskhUnifiedDoc) => {
-    if (doc.downloadUrl) {
-      window.open(doc.downloadUrl, '_blank');
-    } else {
-      showToast('info', `Tải tệp mô phỏng: ${doc.fileName || doc.code + '.pdf'}`);
+  const downloadFile = async (doc: CskhUnifiedDoc) => {
+    if (!doc.downloadUrl) {
+      showToast('warning', 'Hồ sơ chưa có tệp đính kèm.');
+      return;
+    }
+    try {
+      const endpoint = `/api/warehouse/projects/${encodeURIComponent(project.code)}/documents/${encodeURIComponent(doc.id)}/download`;
+      await saveBlob(await apiClient.getBlob(endpoint), doc.fileName || `${doc.code}.pdf`);
+    } catch (error) {
+      showToast('error', error instanceof Error ? error.message : 'Không tải được tệp. Vui lòng thử lại.');
     }
   };
 
@@ -245,6 +229,9 @@ export default function CskhDocsPipelinePage({ project }: CskhDocsPipelinePagePr
 
   return (
     <div className="page-stack cskh-desk space-y-4">
+      {documentsQuery.isLoading && <p role="status">Đang tải hồ sơ…</p>}
+      {documentsQuery.isError && <p role="alert">Không tải được hồ sơ. <button type="button" onClick={() => void loadData()}>Thử lại</button></p>}
+      {actionError && <p role="alert">{actionError}</p>}
       <PageHeader 
         title={meta.title} 
         subtitle={`${project.code} - ${meta.subtitle}`} 
@@ -537,14 +524,14 @@ export default function CskhDocsPipelinePage({ project }: CskhDocsPipelinePagePr
 
           <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
             <Button variant="outlined" onClick={() => setOpenModal(false)}>Hủy</Button>
-            <Button variant="filled" onClick={handleSave}>
+            <Button variant="filled" disabled={isPending} onClick={handleSave}>
               {editingDoc ? 'Lưu thay đổi' : 'Tạo hồ sơ & Tải lên'}
             </Button>
           </div>
         </div>
       </Modal>
 
-      <ConfirmDialog 
+      <ConfirmDialog isLoading={isPending} 
         isOpen={Boolean(deleteTarget)} 
         title="Xác nhận xóa hồ sơ" 
         message={`Bạn có chắc chắn muốn xóa hồ sơ ${deleteTarget?.code} - ${deleteTarget?.name}?`} 

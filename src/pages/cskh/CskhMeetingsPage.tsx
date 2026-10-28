@@ -1,3 +1,4 @@
+import { useCskhAction } from '../../hooks/cskh/useCskhAction';
 import { useState } from 'react';
 import { CalendarDays, Plus } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
@@ -47,7 +48,16 @@ function overdueActionCount(row: CskhMeeting): number {
 
 export default function CskhMeetingsPage({ project }: CskhMeetingsPageProps) {
   const meta = cskhProjectTabMeta('meetings');
-  const { ops, update } = useCskhOpsWorkspace(project.code);
+  const workspace = useCskhOpsWorkspace(project.code);
+  const { ops, update: updateOps } = workspace;
+  const { run, isPending, error: actionError } = useCskhAction();
+  const update = (fn: Parameters<typeof updateOps>[0]) => run(async () => {
+    const next = fn(ops);
+    await updateOps(() => next);
+    if (openBottleneckCount(next.bottlenecks) !== openBottleneckCount(ops.bottlenecks)) {
+      await patchProject(project.code, { bottleneckCount: openBottleneckCount(next.bottlenecks) });
+    }
+  });
   const { patchProject } = useCskhCommandCenter();
   const kpis = meetingKpis(ops.meetings);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -93,7 +103,7 @@ export default function CskhMeetingsPage({ project }: CskhMeetingsPageProps) {
     setOpen(true);
   };
 
-  const save = () => {
+  const save = async () => {
     const name = form.name.trim();
     const next: Record<string, string> = {};
     if (!name) next.name = 'Nhập tên cuộc họp.';
@@ -103,6 +113,7 @@ export default function CskhMeetingsPage({ project }: CskhMeetingsPageProps) {
       return;
     }
     const row: CskhMeeting = {
+      ...editing,
       id: editing?.id ?? newOpsId(),
       name,
       date: form.date,
@@ -111,31 +122,34 @@ export default function CskhMeetingsPage({ project }: CskhMeetingsPageProps) {
       minutes: editing?.minutes,
       actions: editing?.actions ?? [],
     };
-    update(current => upsertMeeting(current, row));
+    if (!await update(current => upsertMeeting(current, row))) return;
     setOpen(false);
     setSelectedId(row.id);
     showToast('success', editing ? 'Đã cập nhật cuộc họp.' : 'Đã tạo cuộc họp.');
   };
 
-  const patchSelected = (patch: Partial<CskhMeeting>) => {
-    if (!selected) return;
-    update(current => upsertMeeting(current, { ...selected, ...patch }));
+  const patchSelected = async (patch: Partial<CskhMeeting>) => {
+    if (!selected) return false;
+    return update(current => upsertMeeting(current, { ...selected, ...patch }));
   };
 
-  const addAction = () => {
+  const addAction = async () => {
     const name = actionName.trim();
     if (!selected || !name || !actionDue) {
       showToast('warning', 'Nhập hành động và hạn xử lý.');
       return;
     }
     const action: CskhMeetingAction = { id: newOpsId(), name, dueDate: actionDue, done: false };
-    patchSelected({ actions: [...selected.actions, action] });
+    if (!await patchSelected({ actions: [...selected.actions, action] })) return;
     setActionName('');
     setActionDue('');
   };
 
   return (
-    <div className="page-stack cskh-desk">
+    <div className="page-stack cskh-desk" aria-busy={isPending || workspace.isLoading}>
+      {workspace.isLoading && <p role="status">Đang tải dữ liệu…</p>}
+      {workspace.isError && <p role="alert">Không tải được dữ liệu. <button type="button" onClick={() => void workspace.refetch()}>Thử lại</button></p>}
+      {actionError && <p role="alert">{actionError}</p>}
       <PageHeader
         eyebrow={project.code}
         title={meta.title}
@@ -212,8 +226,8 @@ export default function CskhMeetingsPage({ project }: CskhMeetingsPageProps) {
                     <Button
                       type="button"
                       variant="outlined"
-                      onClick={() => {
-                        patchSelected({ minutes: minutes.trim() || undefined });
+                      onClick={async () => {
+                        if (!await patchSelected({ minutes: minutes.trim() || undefined })) return;
                         showToast('success', 'Đã lưu biên bản.');
                       }}
                     >
@@ -247,6 +261,7 @@ export default function CskhMeetingsPage({ project }: CskhMeetingsPageProps) {
                                       type="checkbox"
                                       className="form-checkbox"
                                       checked={action.done}
+                                      disabled={isPending}
                                       aria-label={`Hoàn thành ${action.name}`}
                                       onChange={event => patchSelected({
                                         actions: selected.actions.map(item => (item.id === action.id ? { ...item, done: event.target.checked } : item)),
@@ -264,13 +279,13 @@ export default function CskhMeetingsPage({ project }: CskhMeetingsPageProps) {
                                     </span>
                                   </td>
                                   <td className="table-cell hrm-table-col-actions">
-                                    {overdue ? (
+                                    {overdue && !action.generatedBottleneck ? (
                                       <Button
                                         type="button"
                                         variant="text"
-                                        onClick={() => {
+                                        onClick={async () => {
                                           const at = new Date().toISOString();
-                                          update(current => {
+                                          if (!await update(current => {
                                             const nextOps = upsertBottleneck(current, {
                                               id: newOpsId(),
                                               code: nextOpsCode('NG', current.bottlenecks.map(item => item.code)),
@@ -283,9 +298,11 @@ export default function CskhMeetingsPage({ project }: CskhMeetingsPageProps) {
                                               source: 'meeting',
                                               history: [{ id: newOpsId(), at, text: `Tạo từ cuộc họp ${selected.name}.` }],
                                             });
-                                            patchProject(project.code, { bottleneckCount: openBottleneckCount(nextOps.bottlenecks) });
-                                            return nextOps;
-                                          });
+
+                                            return upsertMeeting(nextOps, { ...selected,
+                                              actions: selected.actions.map(item => item.id === action.id ? { ...item, generatedBottleneck: true } : item),
+                                            });
+                                          })) return;
                                           showToast('success', 'Đã tạo điểm nghẽn từ hành động quá hạn.');
                                         }}
                                       >
@@ -309,7 +326,7 @@ export default function CskhMeetingsPage({ project }: CskhMeetingsPageProps) {
                           <HrmDatePicker value={actionDue} onChange={setActionDue} placeholder="dd/mm/yyyy" />
                         </FormField>
                       </div>
-                      <Button type="button" leftIcon={Plus} onClick={addAction}>Thêm hành động</Button>
+                      <Button type="button" leftIcon={Plus} disabled={isPending} onClick={addAction}>Thêm hành động</Button>
                     </div>
                   </div>
                 </>
@@ -327,7 +344,7 @@ export default function CskhMeetingsPage({ project }: CskhMeetingsPageProps) {
         footer={(
           <>
             <Button type="button" variant="outlined" onClick={() => setOpen(false)}>Hủy</Button>
-            <Button type="button" onClick={save}>Lưu</Button>
+            <Button type="button" disabled={isPending} onClick={save}>Lưu</Button>
           </>
         )}
       >
@@ -346,11 +363,12 @@ export default function CskhMeetingsPage({ project }: CskhMeetingsPageProps) {
       </Modal>
 
       <ConfirmDialog
+        isLoading={isPending}
         isOpen={Boolean(deleteTarget)}
         onClose={() => setDeleteTarget(null)}
-        onConfirm={() => {
+        onConfirm={async () => {
           if (!deleteTarget) return;
-          update(current => removeMeeting(current, deleteTarget.id));
+          if (!await update(current => removeMeeting(current, deleteTarget.id))) return;
           setDeleteTarget(null);
           showToast('success', `Đã xóa ${deleteTarget.name}.`);
         }}

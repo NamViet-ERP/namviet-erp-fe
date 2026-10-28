@@ -13,6 +13,7 @@
                     "verify:release-gates":  "node scripts/verify-release-gates.mjs",
                     "build:prod":  "node scripts/build-prod.mjs",
                     "typecheck":  "tsc --noEmit",
+                    "typecheck:e2e": "tsc --noEmit -p tsconfig.e2e.json",
                     "lint":  "eslint .",
                     "preview":  "vite preview",
                     "test":  "vitest",
@@ -24,6 +25,7 @@
                     "api:gen":  "node scripts/gen-openapi.mjs",
                     "api:sync":  "npm run api:fetch \u0026\u0026 npm run api:gen",
                     "api:check":  "node scripts/check-openapi-generated.mjs",
+                    "api:check:live": "node scripts/check-openapi-generated.mjs --live",
                     "lint:strict":  "eslint src --ext .ts,.tsx --rule \"no-undef: error\"",
                     "verify:all":  "npm run typecheck \u0026\u0026 npm run lint:strict"
                 },

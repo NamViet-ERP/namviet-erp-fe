@@ -17,8 +17,10 @@ import CskhMeetingsPage from './CskhMeetingsPage';
 
 export default function CskhProjectSectionPage() {
   const { code = '', tab } = useParams<{ code: string; tab: string }>();
-  const { getProject, isLoading } = useCskhCommandCenter();
+  const { getProject, isLoading, isError, refetch } = useCskhCommandCenter();
   const project = getProject(code);
+
+  if (isError) return <p role="alert">Không tải được hồ sơ dự án. <button type="button" onClick={() => void refetch()}>Thử lại</button></p>;
 
   if (!isCskhProjectTab(tab) || tab === 'dashboard') {
     return <CskhProjectMissing loading={false} />;

@@ -1,3 +1,4 @@
+import { useCskhAction } from '../../hooks/cskh/useCskhAction';
 import { useMemo, useState } from 'react';
 import { AlertTriangle, Plus } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
@@ -67,7 +68,16 @@ function severityTone(id: CskhSeverity): 'danger' | 'warn' | 'ok' {
 
 export default function CskhBottlenecksPage({ project }: CskhBottlenecksPageProps) {
   const meta = cskhProjectTabMeta('bottlenecks');
-  const { ops, update } = useCskhOpsWorkspace(project.code);
+  const workspace = useCskhOpsWorkspace(project.code);
+  const { ops, update: updateOps } = workspace;
+  const { run, isPending, error: actionError } = useCskhAction();
+  const update = (fn: Parameters<typeof updateOps>[0]) => run(async () => {
+    const next = fn(ops);
+    await updateOps(() => next);
+    if (openBottleneckCount(next.bottlenecks) !== openBottleneckCount(ops.bottlenecks)) {
+      await patchProject(project.code, { bottleneckCount: openBottleneckCount(next.bottlenecks) });
+    }
+  });
   const { patchProject } = useCskhCommandCenter();
   const kpis = bottleneckKpis(ops.bottlenecks);
   const [filter, setFilter] = useState<CskhBottleneckFilter>('all');
@@ -86,12 +96,6 @@ export default function CskhBottlenecksPage({ project }: CskhBottlenecksPageProp
   }
   const selected = rows.find(row => row.id === nextSelectedId) ?? null;
 
-  const syncCount = (bottlenecks: CskhBottleneck[]) => {
-    const openCount = openBottleneckCount(bottlenecks);
-    if (openCount !== project.bottleneckCount) {
-      patchProject(project.code, { bottleneckCount: openCount });
-    }
-  };
 
   const openCreate = () => {
     setEditing(null);
@@ -114,7 +118,7 @@ export default function CskhBottlenecksPage({ project }: CskhBottlenecksPageProp
     setOpen(true);
   };
 
-  const save = () => {
+  const save = async () => {
     const name = form.name.trim();
     const reason = form.reason.trim();
     const next: Record<string, string> = {};
@@ -128,6 +132,7 @@ export default function CskhBottlenecksPage({ project }: CskhBottlenecksPageProp
     }
     const at = new Date().toISOString();
     const row: CskhBottleneck = {
+      ...editing,
       id: editing?.id ?? newOpsId(),
       code: editing?.code ?? nextOpsCode('NG', ops.bottlenecks.map(item => item.code)),
       name,
@@ -140,18 +145,21 @@ export default function CskhBottlenecksPage({ project }: CskhBottlenecksPageProp
       source: editing?.source ?? 'manual',
       history: editing?.history ?? [{ id: newOpsId(), at, text: 'Tạo điểm nghẽn.' }],
     };
-    update(current => {
+    if (!await update(current => {
       const nextOps = upsertBottleneck(current, row);
-      syncCount(nextOps.bottlenecks);
+
       return nextOps;
-    });
+    })) return;
     setOpen(false);
     setSelectedId(row.id);
     showToast('success', editing ? 'Đã cập nhật điểm nghẽn.' : 'Đã tạo điểm nghẽn.');
   };
 
   return (
-    <div className="page-stack cskh-desk">
+    <div className="page-stack cskh-desk" aria-busy={isPending || workspace.isLoading}>
+      {workspace.isLoading && <p role="status">Đang tải dữ liệu…</p>}
+      {workspace.isError && <p role="alert">Không tải được dữ liệu. <button type="button" onClick={() => void workspace.refetch()}>Thử lại</button></p>}
+      {actionError && <p role="alert">{actionError}</p>}
       <PageHeader
         eyebrow={project.code}
         title={meta.title}
@@ -249,9 +257,9 @@ export default function CskhBottlenecksPage({ project }: CskhBottlenecksPageProp
                       type="button"
                       variant="outlined"
                       disabled={selected.status === 'closed'}
-                      onClick={() => {
+                      onClick={async () => {
                         const dept = selected.departmentId ? departmentLabel(selected.departmentId) : 'phòng ban phụ trách';
-                        update(current => appendBottleneckNote(current, selected.id, `Đã nhắc ${dept}.`));
+                        if (!await update(current => appendBottleneckNote(current, selected.id, `Đã nhắc ${dept}.`))) return;
                         showToast('success', `Đã ghi nhận nhắc ${dept}.`);
                       }}
                     >
@@ -260,12 +268,12 @@ export default function CskhBottlenecksPage({ project }: CskhBottlenecksPageProp
                     <Button
                       type="button"
                       disabled={selected.status === 'closed'}
-                      onClick={() => {
-                        update(current => {
+                      onClick={async () => {
+                        if (!await update(current => {
                           const nextOps = closeBottleneck(current, selected.id);
-                          syncCount(nextOps.bottlenecks);
+
                           return nextOps;
-                        });
+                        })) return;
                         showToast('success', 'Đã đóng điểm nghẽn.');
                       }}
                     >
@@ -289,7 +297,7 @@ export default function CskhBottlenecksPage({ project }: CskhBottlenecksPageProp
         footer={(
           <>
             <Button type="button" variant="outlined" onClick={() => setOpen(false)}>Hủy</Button>
-            <Button type="button" onClick={save}>Lưu</Button>
+            <Button type="button" disabled={isPending} onClick={save}>Lưu</Button>
           </>
         )}
       >
@@ -314,15 +322,16 @@ export default function CskhBottlenecksPage({ project }: CskhBottlenecksPageProp
       </Modal>
 
       <ConfirmDialog
+        isLoading={isPending}
         isOpen={Boolean(deleteTarget)}
         onClose={() => setDeleteTarget(null)}
-        onConfirm={() => {
+        onConfirm={async () => {
           if (!deleteTarget) return;
-          update(current => {
+          if (!await update(current => {
             const nextOps = removeBottleneck(current, deleteTarget.id);
-            syncCount(nextOps.bottlenecks);
+
             return nextOps;
-          });
+          })) return;
           setDeleteTarget(null);
           showToast('success', `Đã xóa ${deleteTarget.name}.`);
         }}

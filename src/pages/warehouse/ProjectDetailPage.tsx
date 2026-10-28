@@ -15,6 +15,7 @@ import Modal from '../../components/ui/Modal';
 import FormField from '../../components/ui/FormField';
 import CurrencyInput from '../../components/ui/CurrencyInput';
 import ProjectWarehouseHistoryTab from '../../components/warehouse/ProjectWarehouseHistoryTab';
+import ProjectBudgetTab from '../../components/warehouse/ProjectBudgetTab';
 import HrmNotFound from '../../components/hr/HrmNotFound';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import { showToast } from '../../components/ui/Toast';
@@ -47,7 +48,7 @@ import { useCanViewWmsPrices } from '../../lib/wms/priceVisibility';
 import { getSessionUser, isSessionAdmin } from '../../constants/systemUsers';
 import { useSession } from '../../auth/AuthProvider';
 
-type DetailTab = 'stock' | 'history' | 'info';
+type DetailTab = 'stock' | 'budget' | 'history' | 'info';
 
 const EMPTY_PM_ID = '00000000-0000-0000-0000-000000000000';
 const MAX_MIN_STOCK_QTY = 1_000_000_000;
@@ -55,6 +56,7 @@ const MIN_STOCK_INVALID_MSG = 'Tồn tối thiểu không hợp lệ';
 
 const tabs = [
   { id: 'stock', label: 'Tồn kho' },
+  { id: 'budget', label: 'Dự toán' },
   { id: 'history', label: 'Lịch sử phiếu' },
   { id: 'info', label: 'Thông tin' },
 ];
@@ -604,6 +606,14 @@ export default function ProjectDetailPage() {
               />
             </>
           )
+        )}
+
+        {activeTab === 'budget' && (
+          <ProjectBudgetTab
+            project={project}
+            ledger={ledger}
+            onOpenEditBudget={openEdit}
+          />
         )}
 
         {activeTab === 'history' && code && <ProjectWarehouseHistoryTab projectCode={code} />}

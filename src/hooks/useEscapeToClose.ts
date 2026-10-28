@@ -4,7 +4,7 @@ const closers: Array<() => void> = [];
 let attached = false;
 
 function onDocumentKeyDown(event: KeyboardEvent) {
-  if (event.key !== 'Escape') return;
+  if (event.key !== 'Escape' || event.defaultPrevented) return;
   const top = closers[closers.length - 1];
   if (!top) return;
   event.preventDefault();

@@ -54,3 +54,5 @@ export const PurchasePriceBookPage = lazy(() => import('../pages/purchasing/Purc
 
 export const OperationsDashboardPage = lazy(() => import('../pages/operations/OperationsDashboardPage'));
 export const OperationsProjectsPage = lazy(() => import('../pages/operations/OperationsProjectsPage'));
+export const OperationsProjectListPage = lazy(() => import('../pages/operations/OperationsProjectListPage'));
+export const Executive360DashboardPage = lazy(() => import('../pages/operations/Executive360DashboardPage'));
