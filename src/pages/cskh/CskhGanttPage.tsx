@@ -32,6 +32,7 @@ import {
   captureSnapshot,
   ganttItemPlanPct,
   ganttKpis,
+  ganttSubtreeIds,
   isoWeekNumber,
   newOpsId,
   removeGanttItem,
@@ -294,6 +295,7 @@ export default function CskhGanttPage({ project }: CskhGanttPageProps) {
   const workspace = useCskhOpsWorkspace(project.code);
   const { ops, update: updateOps } = workspace;
   const { run, isPending, error: actionError } = useCskhAction();
+  const wbsWriteDisabled = isPending || workspace.isSaving || !workspace.canEditGantt;
   const update = (fn: Parameters<typeof updateOps>[0]) => run(async () => {
     const next = fn(ops);
     await updateOps(() => next);
@@ -320,6 +322,7 @@ export default function CskhGanttPage({ project }: CskhGanttPageProps) {
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [deleteTarget, setDeleteTarget] = useState<CskhGanttItem | null>(null);
+  const deleteCount = deleteTarget ? ganttSubtreeIds(ops.ganttItems, deleteTarget.id).size : 0;
 
   const combo = project.boilerType && project.priority
     ? findScheduleCombo(master, project.boilerType, project.priority)
@@ -332,6 +335,7 @@ export default function CskhGanttPage({ project }: CskhGanttPageProps) {
 
 
   const openCreate = () => {
+    if (wbsWriteDisabled) return;
     setEditing(null);
     setForm({ ...EMPTY_FORM, startDate: day0, endDate: addDaysIso(day0, 7) });
     setErrors({});
@@ -339,6 +343,7 @@ export default function CskhGanttPage({ project }: CskhGanttPageProps) {
   };
 
   const openEdit = (row: CskhGanttItem) => {
+    if (wbsWriteDisabled) return;
     setEditing(row);
     setForm({
       name: row.name,
@@ -436,7 +441,13 @@ export default function CskhGanttPage({ project }: CskhGanttPageProps) {
   return (
     <div className="page-stack cskh-desk" aria-busy={isPending || workspace.isLoading}>
       {workspace.isLoading && <p role="status">Đang tải dữ liệu…</p>}
-      {workspace.isError && <p role="alert">Không tải được dữ liệu. <button type="button" onClick={() => void workspace.refetch()}>Thử lại</button></p>}
+      {workspace.isError && <p role="alert">
+        {workspace.tasksQuery.isError
+          ? 'Không tải được WBS. Đã khóa thay đổi tiến độ để bảo vệ các hạng mục hiện có. Hãy tải lại thành công trước khi chỉnh sửa.'
+          : 'Không tải được dữ liệu.'}{' '}
+        <button type="button" onClick={() => void workspace.refetch()}>Thử lại</button>
+      </p>}
+      {!workspace.canEditGantt && !workspace.tasksQuery.isError && <p role="status">Đang tải WBS. Có thể chỉnh sửa tiến độ sau khi tải thành công.</p>}
       {actionError && <p role="alert">{actionError}</p>}
       <PageHeader
         eyebrow={project.code}
@@ -444,7 +455,7 @@ export default function CskhGanttPage({ project }: CskhGanttPageProps) {
         subtitle={meta.subtitle}
         actions={(
           <>
-            <Button type="button" leftIcon={Camera} onClick={saveSnapshot}>Snapshot Tuần</Button>
+            <Button type="button" leftIcon={Camera} disabled={wbsWriteDisabled} onClick={saveSnapshot}>Snapshot Tuần</Button>
             <Button
               type="button"
               variant={showCompare ? 'filled' : 'outlined'}
@@ -714,7 +725,7 @@ export default function CskhGanttPage({ project }: CskhGanttPageProps) {
           {(displayMode === 'both' || displayMode === 'chart') && (
             <CskhGanttTimelineChart
               items={ops.ganttItems}
-              onSelectRow={openEdit}
+              onSelectRow={wbsWriteDisabled ? undefined : openEdit}
               scaleMode={scaleMode}
               todayStr={toIsoDate(new Date())}
               milestonePins={milestonePins}
@@ -814,11 +825,12 @@ export default function CskhGanttPage({ project }: CskhGanttPageProps) {
                       return (
                         <tr
                           key={row.id}
-                          onClick={() => openEdit(row)}
+                          onClick={wbsWriteDisabled ? undefined : () => openEdit(row)}
+                          aria-disabled={wbsWriteDisabled}
                           style={{
                             backgroundColor: isBottleneck ? 'rgba(254, 242, 242, 0.7)' : '#ffffff',
                             borderBottom: '1px solid #f1f5f9',
-                            cursor: 'pointer',
+                            cursor: wbsWriteDisabled ? 'default' : 'pointer',
                             transition: 'background-color 0.15s ease',
                           }}
                           title="Nhấn để chỉnh sửa hoặc cập nhật tiến độ"
@@ -903,9 +915,9 @@ export default function CskhGanttPage({ project }: CskhGanttPageProps) {
                 </span>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   {ops.ganttItems.length === 0 ? (
-                    <Button type="button" variant="outlined" onClick={applyTemplate}>Áp dụng bảng chuẩn</Button>
+                    <Button type="button" variant="outlined" disabled={wbsWriteDisabled} onClick={applyTemplate}>Áp dụng bảng chuẩn</Button>
                   ) : null}
-                  <Button type="button" size="sm" leftIcon={Plus} onClick={openCreate}>Thêm hạng mục</Button>
+                  <Button type="button" size="sm" leftIcon={Plus} disabled={wbsWriteDisabled} onClick={openCreate}>Thêm hạng mục</Button>
                 </div>
               </div>
             </div>
@@ -1024,13 +1036,13 @@ export default function CskhGanttPage({ project }: CskhGanttPageProps) {
         footer={(
           <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
             {editing ? (
-              <Button type="button" variant="text" style={{ color: '#dc2626' }} onClick={async () => { setOpen(false); setDeleteTarget(editing); }}>
+              <Button type="button" variant="text" disabled={wbsWriteDisabled} style={{ color: '#dc2626' }} onClick={async () => { setOpen(false); setDeleteTarget(editing); }}>
                 Xóa hạng mục
               </Button>
             ) : <span />}
             <div style={{ display: 'flex', gap: '8px' }}>
               <Button type="button" variant="outlined" onClick={() => setOpen(false)}>Hủy</Button>
-              <Button type="button" disabled={isPending} onClick={saveItem}>Lưu</Button>
+              <Button type="button" disabled={wbsWriteDisabled} onClick={saveItem}>Lưu</Button>
             </div>
           </div>
         )}
@@ -1061,6 +1073,7 @@ export default function CskhGanttPage({ project }: CskhGanttPageProps) {
       {/* CONFIRM DELETE DIALOG */}
       <ConfirmDialog
         isLoading={isPending}
+        confirmDisabled={wbsWriteDisabled}
         isOpen={Boolean(deleteTarget)}
         onClose={() => setDeleteTarget(null)}
         onConfirm={async () => {
@@ -1071,11 +1084,13 @@ export default function CskhGanttPage({ project }: CskhGanttPageProps) {
             return nextOps;
           })) return;
           setDeleteTarget(null);
-          showToast('success', `Đã xóa ${deleteTarget.name}.`);
+          showToast('success', deleteCount > 1 ? `Đã xóa ${deleteTarget.name} và ${deleteCount - 1} hạng mục con.` : `Đã xóa ${deleteTarget.name}.`);
         }}
-        title="Xóa hạng mục"
-        message={`Xóa hạng mục "${deleteTarget?.name ?? ''}"?`}
-        confirmLabel="Xóa"
+        title={deleteCount > 1 ? 'Xóa nhóm hạng mục' : 'Xóa hạng mục'}
+        message={deleteCount > 1
+          ? `Xóa nhóm "${deleteTarget?.name ?? ''}" cùng toàn bộ ${deleteCount - 1} hạng mục con (tổng ${deleteCount} hạng mục)?`
+          : `Xóa hạng mục "${deleteTarget?.name ?? ''}"?`}
+        confirmLabel={deleteCount > 1 ? `Xóa ${deleteCount} hạng mục` : 'Xóa'}
       />
     </div>
   );

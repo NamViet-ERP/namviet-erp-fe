@@ -10,5 +10,4 @@ export type DashboardKpiApiDto = Schemas['DashboardKpiDto'];
 export type DashboardTrendApiDto = Schemas['DashboardTrendDto'];
 export type DashboardCategoryApiDto = Schemas['DashboardCategoryDto'];
 export type DashboardActivityApiDto = Schemas['DashboardActivityDto'];
-export type BirthdayApiDto = Schemas['BirthdayDto'];
 export type TopProductApiDto = Schemas['TopProductDto'];

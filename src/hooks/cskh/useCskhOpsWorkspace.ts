@@ -121,6 +121,7 @@ export function useCskhOpsWorkspace(projectCode: string) {
   });
   const saving = useRef(false);
   const [isSaving, setIsSaving] = useState(false);
+  const canEditGantt = Boolean(projectCode) && tasksQuery.isSuccess && !tasksQuery.isFetching;
 
   // Assemble unified CskhProjectOps from queries
   const ops: CskhProjectOps = useMemo(() => {
@@ -169,12 +170,19 @@ export function useCskhOpsWorkspace(projectCode: string) {
   const update = useCallback(async (fn: (current: CskhProjectOps) => CskhProjectOps) => {
     if (saving.current) throw new Error('Đang lưu thay đổi. Vui lòng chờ.');
     if (!projectCode) throw new Error('Chưa chọn dự án.');
+    const changed = (a: unknown, b: unknown) => JSON.stringify(a) !== JSON.stringify(b);
+    const next = fn(ops);
+    const ganttChanged = changed(ops.ganttItems, next.ganttItems);
+    const newSnapshots = next.snapshots.filter(s => !ops.snapshots.some(old => old.id === s.id));
+    // WBS sync replaces the entire tree. Never derive a write from an unread or failed fallback.
+    // Validate before any API call so a mixed update cannot be partially written first.
+    if ((ganttChanged || newSnapshots.length > 0) && !canEditGantt) {
+      throw new Error('Dữ liệu WBS chưa sẵn sàng. Vui lòng tải lại thành công trước khi lưu tiến độ.');
+    }
     saving.current = true;
     setIsSaving(true);
-    const changed = (a: unknown, b: unknown) => JSON.stringify(a) !== JSON.stringify(b);
     try {
-      const next = fn(ops);
-      for (const snap of next.snapshots.filter(s => !ops.snapshots.some(old => old.id === s.id))) {
+      for (const snap of newSnapshots) {
         await cskhService.createGanttSnapshot(projectCode, {
           planPct: snap.planPct, actualPct: snap.actualPct,
           items: snap.items.map(item => ({ taskId: item.id, taskName: item.name, planPct: item.planPct, actualPct: item.actualPct })),
@@ -229,7 +237,7 @@ export function useCskhOpsWorkspace(projectCode: string) {
           }
         }
       }
-      if (changed(ops.ganttItems, next.ganttItems)) {
+      if (ganttChanged) {
         await projectsService.syncConstructionTasks(projectCode, next.ganttItems.map((task, index) => ({
           id: ops.ganttItems.some(previous => previous.id === task.id) ? task.id : undefined,
           name: task.name, plannedStart: task.startDate, plannedEnd: task.endDate,
@@ -251,15 +259,16 @@ export function useCskhOpsWorkspace(projectCode: string) {
         setIsSaving(false);
       }
     }
-  }, [ops, projectCode, queryClient]);
+  }, [ops, projectCode, queryClient, canEditGantt]);
 
   const queries = [bottlenecksQuery, requestsQuery, meetingsQuery, snapshotsQuery, tasksQuery];
   return {
-    ops, update, isSaving,
+    ops, update, isSaving, canEditGantt,
     isLoading: queries.some(query => query.isLoading),
     isError: queries.some(query => query.isError),
     error: queries.find(query => query.isError)?.error,
     refetch: () => Promise.all(queries.map(query => query.refetch())),
     bottlenecksQuery,
+    tasksQuery,
   };
 }

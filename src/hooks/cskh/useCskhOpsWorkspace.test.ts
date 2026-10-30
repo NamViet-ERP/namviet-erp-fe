@@ -7,9 +7,10 @@ import { projectsService } from '../../services/projectsService';
 import { queryKeys } from '../../services/queryKeys';
 import { useCskhOpsWorkspace } from './useCskhOpsWorkspace';
 import type { ProjectConstructionTaskApiDto } from '../../types/wms';
+import { captureSnapshot, removeGanttItem, type CskhGanttItem } from '../../lib/cskh/opsWorkspace';
 
 vi.mock('../../services/cskhService', () => ({ cskhService: {
-  listBottlenecks: vi.fn(), listRequests: vi.fn(), listMeetings: vi.fn(), getGanttSnapshots: vi.fn(),
+  listBottlenecks: vi.fn(), listRequests: vi.fn(), listMeetings: vi.fn(), getGanttSnapshots: vi.fn(), createGanttSnapshot: vi.fn(),
   updateRequest: vi.fn(), createRequest: vi.fn(), updateMeeting: vi.fn(),
   updateMeetingMinutes: vi.fn(), toggleMeetingAction: vi.fn(),
 } }));
@@ -38,6 +39,21 @@ const task: ProjectConstructionTaskApiDto = {
 let client: QueryClient;
 let root: Root;
 let current: ReturnType<typeof useCskhOpsWorkspace>;
+const newTask: CskhGanttItem = {
+  id: 'new-local-id', name: 'New task', days: 2,
+  startDate: '2026-11-01', endDate: '2026-11-02', actualPct: 0,
+};
+
+function Probe({ projectCode }: { projectCode: string }) {
+  // eslint-disable-next-line react-hooks/globals
+  current = useCskhOpsWorkspace(projectCode);
+  return null;
+}
+
+async function renderWorkspace(projectCode = code) {
+  await act(async () => root.render(createElement(QueryClientProvider, { client }, createElement(Probe, { projectCode }))));
+  await act(async () => { await new Promise(resolve => setTimeout(resolve, 0)); });
+}
 
 beforeEach(async () => {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
@@ -53,9 +69,8 @@ beforeEach(async () => {
   client.setQueryData(queryKeys.cskh.meetings(code), [meeting]);
   client.setQueryData(queryKeys.cskh.snapshots(code), []);
   client.setQueryData(queryKeys.projects.constructionTasks(code), [task]);
-  function Probe() { current = useCskhOpsWorkspace(code); return null; }
   root = createRoot(document.createElement('div'));
-  await act(async () => root.render(createElement(QueryClientProvider, { client }, createElement(Probe))));
+  await renderWorkspace();
 });
 afterEach(async () => {
   await act(async () => root.unmount());
@@ -63,6 +78,96 @@ afterEach(async () => {
 });
 
 describe('CSKH workspace persistence', () => {
+  it('rejects replacement after an initial WBS read failure before any part of the update is written', async () => {
+    vi.mocked(projectsService.listConstructionTasks).mockRejectedValue(new Error('Temporary task load failure'));
+    await renderWorkspace('UNREAD');
+    expect(current.isError).toBe(true);
+    expect(current.ops.ganttItems).toEqual([]);
+
+    await act(async () => {
+      await expect(current.update(ops => ({ ...ops, ganttItems: [newTask],
+        requests: ops.requests.map(row => ({ ...row, name: 'Must not write' })),
+      }))).rejects.toThrow('WBS');
+    });
+
+    expect(projectsService.syncConstructionTasks).not.toHaveBeenCalled();
+    expect(cskhService.updateRequest).not.toHaveBeenCalled();
+    expect(current.isSaving).toBe(false);
+  });
+
+  it('rejects replacement while the initial WBS read has not completed', async () => {
+    vi.mocked(projectsService.listConstructionTasks).mockImplementation(() => new Promise(() => {}));
+    await renderWorkspace('PENDING');
+    expect(current.isLoading).toBe(true);
+
+    await act(async () => {
+      await expect(current.update(ops => ({ ...ops, ganttItems: [newTask] }))).rejects.toThrow('WBS');
+    });
+    expect(projectsService.syncConstructionTasks).not.toHaveBeenCalled();
+  });
+
+  it('allows retry after a successful WBS read and includes the recovered server tasks', async () => {
+    vi.mocked(projectsService.listConstructionTasks).mockRejectedValueOnce(new Error('Read failed'));
+    await renderWorkspace('RECOVERED');
+    expect(current.isError).toBe(true);
+    vi.mocked(projectsService.listConstructionTasks).mockResolvedValue([task]);
+    await act(async () => { await current.refetch(); });
+    await renderWorkspace('RECOVERED');
+
+    await act(async () => current.update(ops => ({ ...ops, ganttItems: [...ops.ganttItems, newTask] })));
+    expect(projectsService.syncConstructionTasks).toHaveBeenCalledWith('RECOVERED', [
+      expect.objectContaining({ id: task.id, name: task.name, parentId: task.parentId }),
+      expect.objectContaining({ name: newTask.name }),
+    ]);
+  });
+
+  it('allows creating the first task after an authoritative empty response', async () => {
+    vi.mocked(projectsService.listConstructionTasks).mockResolvedValue([]);
+    await renderWorkspace('EMPTY');
+    await act(async () => current.update(ops => ({ ...ops, ganttItems: [newTask] })));
+    expect(projectsService.syncConstructionTasks).toHaveBeenCalledWith('EMPTY', [expect.objectContaining({ name: newTask.name })]);
+  });
+
+  it('blocks replacement and snapshots after a refetch fails even with cached WBS data', async () => {
+    vi.mocked(projectsService.listConstructionTasks).mockRejectedValue(new Error('Refresh failed'));
+    await act(async () => { await current.refetch(); });
+    await renderWorkspace();
+    expect(current.ops.ganttItems).toHaveLength(1);
+    expect(current.isError).toBe(true);
+
+    await act(async () => {
+      await expect(current.update(ops => ({ ...ops, ganttItems: [] }))).rejects.toThrow('WBS');
+      await expect(current.update(captureSnapshot)).rejects.toThrow('WBS');
+    });
+    expect(projectsService.syncConstructionTasks).not.toHaveBeenCalled();
+    expect(cskhService.createGanttSnapshot).not.toHaveBeenCalled();
+  });
+
+  it('still saves an unrelated request when the WBS read fails', async () => {
+    vi.mocked(projectsService.listConstructionTasks).mockRejectedValue(new Error('Read failed'));
+    await renderWorkspace('REQUEST-ONLY');
+    await act(async () => current.update(ops => ({ ...ops,
+      requests: ops.requests.map(row => ({ ...row, name: 'Safe edit' })),
+    })));
+    expect(cskhService.updateRequest).toHaveBeenCalledWith('REQUEST-ONLY', request.id, expect.objectContaining({ name: 'Safe edit' }));
+    expect(projectsService.syncConstructionTasks).not.toHaveBeenCalled();
+  });
+
+  it('syncs subtree deletion using canonical parent IDs while preserving sibling branches', async () => {
+    const ancestor = { ...task, id: 'ancestor', parentId: undefined, isGroup: true };
+    const group = { ...task, id: 'group', parentId: ancestor.id, isGroup: true };
+    const nested = { ...task, id: 'nested', parentId: group.id, isGroup: true };
+    const leaf = { ...task, id: 'leaf', parentId: nested.id };
+    const sibling = { ...task, id: 'sibling', parentId: ancestor.id };
+    vi.mocked(projectsService.listConstructionTasks).mockResolvedValue([leaf, sibling, nested, group, ancestor]);
+    await renderWorkspace('TREE');
+    await act(async () => current.update(ops => removeGanttItem(ops, group.id)));
+    expect(projectsService.syncConstructionTasks).toHaveBeenCalledWith('TREE', [
+      expect.objectContaining({ id: sibling.id, parentId: ancestor.id }),
+      expect.objectContaining({ id: ancestor.id, parentId: undefined }),
+    ]);
+  });
+
   it('saves minutes without replacing the agenda or existing actions', async () => {
     await act(async () => current.update(ops => ({ ...ops, meetings: ops.meetings.map(row => ({ ...row, minutes: 'Updated minutes' })) })));
     expect(cskhService.updateMeetingMinutes).toHaveBeenCalledWith(code, meeting.id, { minutes: 'Updated minutes' });

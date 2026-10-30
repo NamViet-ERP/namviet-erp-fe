@@ -11,9 +11,39 @@ import {
   nextOpsCode,
   requestRuntimeStatus,
   snapshotCompare,
+  emptyProjectOps,
+  removeGanttItem,
+  type CskhGanttItem,
 } from './opsWorkspace';
 
 describe('cskh ops workspace', () => {
+  const treeItem = (id: string, parentId?: string, isGroup = false): CskhGanttItem => ({
+    id, parentId, isGroup, name: id, days: 1, startDate: '2026-10-01', endDate: '2026-10-01', actualPct: 0,
+  });
+  const tree = [
+    treeItem('deep-leaf', 'nested-group'), treeItem('sibling', 'ancestor'),
+    treeItem('nested-group', 'group', true), treeItem('direct-leaf', 'group'),
+    treeItem('group', 'ancestor', true), treeItem('ancestor', undefined, true), treeItem('unrelated'),
+  ];
+
+  it('deletes the entire subtree regardless of row order and preserves ancestors and siblings', () => {
+    const ops = { ...emptyProjectOps(), ganttItems: tree };
+    const next = removeGanttItem(ops, 'group');
+    expect(next.ganttItems.map(row => row.id)).toEqual(['sibling', 'ancestor', 'unrelated']);
+    expect(ops.ganttItems).toHaveLength(7);
+    expect(next.ganttItems.every(row => !row.parentId || next.ganttItems.some(parent => parent.id === row.parentId))).toBe(true);
+  });
+
+  it('deletes only a leaf when it has no descendants', () => {
+    const next = removeGanttItem({ ...emptyProjectOps(), ganttItems: tree }, 'direct-leaf');
+    expect(next.ganttItems).toEqual(tree.filter(row => row.id !== 'direct-leaf'));
+  });
+
+  it('leaves the tree unchanged when the selected item no longer exists', () => {
+    const next = removeGanttItem({ ...emptyProjectOps(), ganttItems: tree }, 'missing');
+    expect(next.ganttItems).toEqual(tree);
+  });
+
   it('counts open urgent overdue and closed bottlenecks', () => {
     const now = Date.parse('2026-08-27');
     const rows = [

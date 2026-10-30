@@ -4,144 +4,6 @@
  */
 
 export interface paths {
-    "/api/hr/admin-requests": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: {
-                    page?: number;
-                    pageSize?: number;
-                    type?: string;
-                    status?: string;
-                    employeeId?: number;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["CreateAdminRequestRequest"];
-                    "text/json": components["schemas"]["CreateAdminRequestRequest"];
-                    "application/*+json": components["schemas"]["CreateAdminRequestRequest"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/hr/admin-requests/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: number;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/hr/admin-requests/{id}/approve": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: number;
-                };
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["ApproveAdminRequestRequest"];
-                    "text/json": components["schemas"]["ApproveAdminRequestRequest"];
-                    "application/*+json": components["schemas"]["ApproveAdminRequestRequest"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        trace?: never;
-    };
     "/api/admin/roles/permissions/catalog": {
         parameters: {
             query?: never;
@@ -803,129 +665,6 @@ export interface paths {
         };
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/hr/attendance": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: {
-                    employeeId?: number;
-                    fromDate?: string;
-                    toDate?: string;
-                    page?: number;
-                    pageSize?: number;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["UpsertAttendanceRequest"];
-                    "text/json": components["schemas"]["UpsertAttendanceRequest"];
-                    "application/*+json": components["schemas"]["UpsertAttendanceRequest"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/hr/attendance/summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: {
-                    employeeId?: number;
-                    month?: number;
-                    year?: number;
-                    departmentId?: number;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["UpsertAttendanceSummaryRequest"];
-                    "text/json": components["schemas"]["UpsertAttendanceSummaryRequest"];
-                    "application/*+json": components["schemas"]["UpsertAttendanceSummaryRequest"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
         delete?: never;
         options?: never;
         head?: never;
@@ -1747,7 +1486,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/conversions": {
+    "/api/cskh/master-data": {
         parameters: {
             query?: never;
             header?: never;
@@ -1768,16 +1507,11 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "text/plain": components["schemas"]["ConversionDto"][];
-                        "application/json": components["schemas"]["ConversionDto"][];
-                        "text/json": components["schemas"]["ConversionDto"][];
-                    };
+                    content?: never;
                 };
             };
         };
-        put?: never;
-        post: {
+        put: {
             parameters: {
                 query?: never;
                 header?: never;
@@ -1786,9 +1520,9 @@ export interface paths {
             };
             requestBody?: {
                 content: {
-                    "application/json": components["schemas"]["ConversionDto"];
-                    "text/json": components["schemas"]["ConversionDto"];
-                    "application/*+json": components["schemas"]["ConversionDto"];
+                    "application/json": unknown;
+                    "text/json": unknown;
+                    "application/*+json": unknown;
                 };
             };
             responses: {
@@ -1797,14 +1531,67 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "text/plain": components["schemas"]["ConversionDto"];
-                        "application/json": components["schemas"]["ConversionDto"];
-                        "text/json": components["schemas"]["ConversionDto"];
-                    };
+                    content?: never;
                 };
             };
         };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cskh/master-data/profiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": unknown;
+                    "text/json": unknown;
+                    "application/*+json": unknown;
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -4080,306 +3867,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/hr/employees": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: {
-                    page?: number;
-                    pageSize?: number;
-                    search?: string;
-                    departmentId?: number;
-                    status?: string;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["CreateEmployeeRequest"];
-                    "text/json": components["schemas"]["CreateEmployeeRequest"];
-                    "application/*+json": components["schemas"]["CreateEmployeeRequest"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/hr/employees/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: number;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: number;
-                };
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["UpdateEmployeeRequest"];
-                    "text/json": components["schemas"]["UpdateEmployeeRequest"];
-                    "application/*+json": components["schemas"]["UpdateEmployeeRequest"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        post?: never;
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: number;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/hr/employees/{id}/contracts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: number;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: number;
-                };
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["CreateContractRequest"];
-                    "text/json": components["schemas"]["CreateContractRequest"];
-                    "application/*+json": components["schemas"]["CreateContractRequest"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/hr/employees/{id}/appointments": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: number;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: number;
-                };
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["CreateAppointmentRequest"];
-                    "text/json": components["schemas"]["CreateAppointmentRequest"];
-                    "application/*+json": components["schemas"]["CreateAppointmentRequest"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/hr/birthdays": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: {
-                    month?: number;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["BirthdayDto"][];
-                        "application/json": components["schemas"]["BirthdayDto"][];
-                        "text/json": components["schemas"]["BirthdayDto"][];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/hr/files/upload": {
         parameters: {
             query?: never;
@@ -5080,7 +4567,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/hr/insurance/records": {
+    "/api/material-brands": {
         parameters: {
             query?: never;
             header?: never;
@@ -5090,12 +4577,7 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    employeeId?: number;
-                    month?: number;
-                    year?: number;
-                    status?: string;
-                    page?: number;
-                    pageSize?: number;
+                    activeOnly?: boolean;
                 };
                 header?: never;
                 path?: never;
@@ -5108,7 +4590,11 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "text/plain": components["schemas"]["MaterialBrandDto"][];
+                        "application/json": components["schemas"]["MaterialBrandDto"][];
+                        "text/json": components["schemas"]["MaterialBrandDto"][];
+                    };
                 };
             };
         };
@@ -5122,9 +4608,9 @@ export interface paths {
             };
             requestBody?: {
                 content: {
-                    "application/json": components["schemas"]["CreateInsuranceRecordRequest"];
-                    "text/json": components["schemas"]["CreateInsuranceRecordRequest"];
-                    "application/*+json": components["schemas"]["CreateInsuranceRecordRequest"];
+                    "application/json": components["schemas"]["UpsertMaterialBrandRequest"];
+                    "text/json": components["schemas"]["UpsertMaterialBrandRequest"];
+                    "application/*+json": components["schemas"]["UpsertMaterialBrandRequest"];
                 };
             };
             responses: {
@@ -5133,7 +4619,11 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "text/plain": components["schemas"]["MaterialBrandDto"];
+                        "application/json": components["schemas"]["MaterialBrandDto"];
+                        "text/json": components["schemas"]["MaterialBrandDto"];
+                    };
                 };
             };
         };
@@ -5143,7 +4633,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/hr/insurance/records/{id}/status": {
+    "/api/material-brands/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -5151,12 +4641,7 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch: {
+        put: {
             parameters: {
                 query?: never;
                 header?: never;
@@ -5167,9 +4652,9 @@ export interface paths {
             };
             requestBody?: {
                 content: {
-                    "application/json": string;
-                    "text/json": string;
-                    "application/*+json": string;
+                    "application/json": components["schemas"]["UpsertMaterialBrandRequest"];
+                    "text/json": components["schemas"]["UpsertMaterialBrandRequest"];
+                    "application/*+json": components["schemas"]["UpsertMaterialBrandRequest"];
                 };
             };
             responses: {
@@ -5182,177 +4667,6 @@ export interface paths {
                 };
             };
         };
-        trace?: never;
-    };
-    "/api/hr/insurance/tasks": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: {
-                    status?: string;
-                    type?: string;
-                    page?: number;
-                    pageSize?: number;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["CreateInsuranceTaskRequest"];
-                    "text/json": components["schemas"]["CreateInsuranceTaskRequest"];
-                    "application/*+json": components["schemas"]["CreateInsuranceTaskRequest"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/hr/insurance/tasks/{id}/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: number;
-                };
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": string;
-                    "text/json": string;
-                    "application/*+json": string;
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        trace?: never;
-    };
-    "/api/hr/kpi/definitions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: {
-                    group?: string;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["CreateKpiDefinitionRequest"];
-                    "text/json": components["schemas"]["CreateKpiDefinitionRequest"];
-                    "application/*+json": components["schemas"]["CreateKpiDefinitionRequest"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/hr/kpi/definitions/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
         post?: never;
         delete: {
             parameters: {
@@ -5379,7 +4693,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/hr/kpi/records": {
+    "/api/material-origins": {
         parameters: {
             query?: never;
             header?: never;
@@ -5389,11 +4703,7 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    month?: number;
-                    year?: number;
-                    ownerId?: number;
-                    departmentId?: number;
-                    group?: string;
+                    activeOnly?: boolean;
                 };
                 header?: never;
                 path?: never;
@@ -5406,7 +4716,11 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "text/plain": components["schemas"]["MaterialOriginDto"][];
+                        "application/json": components["schemas"]["MaterialOriginDto"][];
+                        "text/json": components["schemas"]["MaterialOriginDto"][];
+                    };
                 };
             };
         };
@@ -5420,9 +4734,53 @@ export interface paths {
             };
             requestBody?: {
                 content: {
-                    "application/json": components["schemas"]["UpsertKpiRecordRequest"];
-                    "text/json": components["schemas"]["UpsertKpiRecordRequest"];
-                    "application/*+json": components["schemas"]["UpsertKpiRecordRequest"];
+                    "application/json": components["schemas"]["UpsertMaterialOriginRequest"];
+                    "text/json": components["schemas"]["UpsertMaterialOriginRequest"];
+                    "application/*+json": components["schemas"]["UpsertMaterialOriginRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["MaterialOriginDto"];
+                        "application/json": components["schemas"]["MaterialOriginDto"];
+                        "text/json": components["schemas"]["MaterialOriginDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/material-origins/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpsertMaterialOriginRequest"];
+                    "text/json": components["schemas"]["UpsertMaterialOriginRequest"];
+                    "application/*+json": components["schemas"]["UpsertMaterialOriginRequest"];
                 };
             };
             responses: {
@@ -5435,21 +4793,6 @@ export interface paths {
                 };
             };
         };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/hr/kpi/records/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
         post?: never;
         delete: {
             parameters: {
@@ -5476,63 +4819,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/hr/leaves/types": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["CreateLeaveTypeRequest"];
-                    "text/json": components["schemas"]["CreateLeaveTypeRequest"];
-                    "application/*+json": components["schemas"]["CreateLeaveTypeRequest"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/hr/leaves": {
+    "/api/material-regions": {
         parameters: {
             query?: never;
             header?: never;
@@ -5542,11 +4829,7 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    page?: number;
-                    pageSize?: number;
-                    employeeId?: number;
-                    status?: string;
-                    year?: number;
+                    activeOnly?: boolean;
                 };
                 header?: never;
                 path?: never;
@@ -5559,7 +4842,11 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "text/plain": components["schemas"]["MaterialRegionDto"][];
+                        "application/json": components["schemas"]["MaterialRegionDto"][];
+                        "text/json": components["schemas"]["MaterialRegionDto"][];
+                    };
                 };
             };
         };
@@ -5573,9 +4860,9 @@ export interface paths {
             };
             requestBody?: {
                 content: {
-                    "application/json": components["schemas"]["CreateLeaveRequest"];
-                    "text/json": components["schemas"]["CreateLeaveRequest"];
-                    "application/*+json": components["schemas"]["CreateLeaveRequest"];
+                    "application/json": components["schemas"]["UpsertMaterialRegionRequest"];
+                    "text/json": components["schemas"]["UpsertMaterialRegionRequest"];
+                    "application/*+json": components["schemas"]["UpsertMaterialRegionRequest"];
                 };
             };
             responses: {
@@ -5584,7 +4871,11 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "text/plain": components["schemas"]["MaterialRegionDto"];
+                        "application/json": components["schemas"]["MaterialRegionDto"];
+                        "text/json": components["schemas"]["MaterialRegionDto"];
+                    };
                 };
             };
         };
@@ -5594,7 +4885,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/hr/leaves/{id}/approve": {
+    "/api/material-regions/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -5602,12 +4893,7 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch: {
+        put: {
             parameters: {
                 query?: never;
                 header?: never;
@@ -5618,9 +4904,9 @@ export interface paths {
             };
             requestBody?: {
                 content: {
-                    "application/json": components["schemas"]["ApproveLeaveRequest"];
-                    "text/json": components["schemas"]["ApproveLeaveRequest"];
-                    "application/*+json": components["schemas"]["ApproveLeaveRequest"];
+                    "application/json": components["schemas"]["UpsertMaterialRegionRequest"];
+                    "text/json": components["schemas"]["UpsertMaterialRegionRequest"];
+                    "application/*+json": components["schemas"]["UpsertMaterialRegionRequest"];
                 };
             };
             responses: {
@@ -5633,247 +4919,13 @@ export interface paths {
                 };
             };
         };
-        trace?: never;
-    };
-    "/api/hr/leaves/balance/{employeeId}/{year}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    employeeId: number;
-                    year: number;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/hr/leaves/balance": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["SetLeaveBalanceRequest"];
-                    "text/json": components["schemas"]["SetLeaveBalanceRequest"];
-                    "application/*+json": components["schemas"]["SetLeaveBalanceRequest"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/lending-logs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["LendingLogDto"][];
-                        "application/json": components["schemas"]["LendingLogDto"][];
-                        "text/json": components["schemas"]["LendingLogDto"][];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["LendingLogDto"];
-                    "text/json": components["schemas"]["LendingLogDto"];
-                    "application/*+json": components["schemas"]["LendingLogDto"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["LendingLogDto"];
-                        "application/json": components["schemas"]["LendingLogDto"];
-                        "text/json": components["schemas"]["LendingLogDto"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/lending-logs/{id}/sign": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": unknown;
-                    "text/json": unknown;
-                    "application/*+json": unknown;
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["LendingLogDto"];
-                        "application/json": components["schemas"]["LendingLogDto"];
-                        "text/json": components["schemas"]["LendingLogDto"];
-                    };
-                };
-            };
-        };
-        trace?: never;
-    };
-    "/api/lending-logs/{id}/return": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["LendingLogDto"];
-                        "application/json": components["schemas"]["LendingLogDto"];
-                        "text/json": components["schemas"]["LendingLogDto"];
-                    };
-                };
-            };
-        };
-        trace?: never;
-    };
-    "/api/lending-logs/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
         post?: never;
         delete: {
             parameters: {
                 query?: never;
                 header?: never;
                 path: {
-                    id: string;
+                    id: number;
                 };
                 cookie?: never;
             };
@@ -5891,143 +4943,6 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
-        trace?: never;
-    };
-    "/api/warehouse/loans": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: {
-                    page?: number;
-                    pageSize?: number;
-                    projectCode?: string;
-                    status?: string;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["CreateLoanRequest"];
-                    "text/json": components["schemas"]["CreateLoanRequest"];
-                    "application/*+json": components["schemas"]["CreateLoanRequest"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/warehouse/loans/{loanCode}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    loanCode: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/warehouse/loans/{loanCode}/return": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    loanCode: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": string;
-                    "text/json": string;
-                    "application/*+json": string;
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
         trace?: never;
     };
     "/api/warehouse/materials": {
@@ -6179,6 +5094,202 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/materials/upload-image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file?: string;
+                        materialCode?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/materials/images/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    key: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/materials/import-template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/materials/parse-import-file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["MaterialImportParseResultDto"];
+                        "application/json": components["schemas"]["MaterialImportParseResultDto"];
+                        "text/json": components["schemas"]["MaterialImportParseResultDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/materials/import-batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["MaterialImportBatchRequest"];
+                    "text/json": components["schemas"]["MaterialImportBatchRequest"];
+                    "application/*+json": components["schemas"]["MaterialImportBatchRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["MaterialImportResultDto"];
+                        "application/json": components["schemas"]["MaterialImportResultDto"];
+                        "text/json": components["schemas"]["MaterialImportResultDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -6498,6 +5609,140 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/warehouse/projects/{code}/bottlenecks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectBottleneckDto"][];
+                        "application/json": components["schemas"]["ProjectBottleneckDto"][];
+                        "text/json": components["schemas"]["ProjectBottleneckDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateProjectBottleneckRequest"];
+                    "text/json": components["schemas"]["CreateProjectBottleneckRequest"];
+                    "application/*+json": components["schemas"]["CreateProjectBottleneckRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectBottleneckDto"];
+                        "application/json": components["schemas"]["ProjectBottleneckDto"];
+                        "text/json": components["schemas"]["ProjectBottleneckDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/projects/{code}/bottlenecks/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateProjectBottleneckRequest"];
+                    "text/json": components["schemas"]["UpdateProjectBottleneckRequest"];
+                    "application/*+json": components["schemas"]["UpdateProjectBottleneckRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectBottleneckDto"];
+                        "application/json": components["schemas"]["ProjectBottleneckDto"];
+                        "text/json": components["schemas"]["ProjectBottleneckDto"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/warehouse/projects/construction-tasks": {
         parameters: {
             query?: never;
@@ -6648,6 +5893,679 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/warehouse/projects/{code}/construction-tasks/sync-wbs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SyncProjectConstructionTasksRequest"];
+                    "text/json": components["schemas"]["SyncProjectConstructionTasksRequest"];
+                    "application/*+json": components["schemas"]["SyncProjectConstructionTasksRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectConstructionTaskDto"][];
+                        "application/json": components["schemas"]["ProjectConstructionTaskDto"][];
+                        "text/json": components["schemas"]["ProjectConstructionTaskDto"][];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/projects/{code}/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectDocumentDto"][];
+                        "application/json": components["schemas"]["ProjectDocumentDto"][];
+                        "text/json": components["schemas"]["ProjectDocumentDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateProjectDocumentRequest"];
+                    "text/json": components["schemas"]["CreateProjectDocumentRequest"];
+                    "application/*+json": components["schemas"]["CreateProjectDocumentRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectDocumentDto"];
+                        "application/json": components["schemas"]["ProjectDocumentDto"];
+                        "text/json": components["schemas"]["ProjectDocumentDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/projects/{code}/documents/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateProjectDocumentRequest"];
+                    "text/json": components["schemas"]["CreateProjectDocumentRequest"];
+                    "application/*+json": components["schemas"]["CreateProjectDocumentRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectDocumentDto"];
+                        "application/json": components["schemas"]["ProjectDocumentDto"];
+                        "text/json": components["schemas"]["ProjectDocumentDto"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/projects/{code}/documents/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateProjectDocumentStatusRequest"];
+                    "text/json": components["schemas"]["UpdateProjectDocumentStatusRequest"];
+                    "application/*+json": components["schemas"]["UpdateProjectDocumentStatusRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectDocumentDto"];
+                        "application/json": components["schemas"]["ProjectDocumentDto"];
+                        "text/json": components["schemas"]["ProjectDocumentDto"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/projects/{code}/documents/{id}/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectDocumentDto"];
+                        "application/json": components["schemas"]["ProjectDocumentDto"];
+                        "text/json": components["schemas"]["ProjectDocumentDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/projects/{code}/documents/{id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    key?: string;
+                };
+                header?: never;
+                path: {
+                    code: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{code}/gantt/snapshots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectGanttSnapshotDto"][];
+                        "application/json": components["schemas"]["ProjectGanttSnapshotDto"][];
+                        "text/json": components["schemas"]["ProjectGanttSnapshotDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateProjectGanttSnapshotRequest"];
+                    "text/json": components["schemas"]["CreateProjectGanttSnapshotRequest"];
+                    "application/*+json": components["schemas"]["CreateProjectGanttSnapshotRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectGanttSnapshotDto"];
+                        "application/json": components["schemas"]["ProjectGanttSnapshotDto"];
+                        "text/json": components["schemas"]["ProjectGanttSnapshotDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/projects/{code}/gantt/snapshots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectGanttSnapshotDto"][];
+                        "application/json": components["schemas"]["ProjectGanttSnapshotDto"][];
+                        "text/json": components["schemas"]["ProjectGanttSnapshotDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateProjectGanttSnapshotRequest"];
+                    "text/json": components["schemas"]["CreateProjectGanttSnapshotRequest"];
+                    "application/*+json": components["schemas"]["CreateProjectGanttSnapshotRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectGanttSnapshotDto"];
+                        "application/json": components["schemas"]["ProjectGanttSnapshotDto"];
+                        "text/json": components["schemas"]["ProjectGanttSnapshotDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/projects/{code}/meetings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectMeetingDto"][];
+                        "application/json": components["schemas"]["ProjectMeetingDto"][];
+                        "text/json": components["schemas"]["ProjectMeetingDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateProjectMeetingRequest"];
+                    "text/json": components["schemas"]["CreateProjectMeetingRequest"];
+                    "application/*+json": components["schemas"]["CreateProjectMeetingRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectMeetingDto"];
+                        "application/json": components["schemas"]["ProjectMeetingDto"];
+                        "text/json": components["schemas"]["ProjectMeetingDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/projects/{code}/meetings/{id}/minutes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateProjectMeetingMinutesRequest"];
+                    "text/json": components["schemas"]["UpdateProjectMeetingMinutesRequest"];
+                    "application/*+json": components["schemas"]["UpdateProjectMeetingMinutesRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectMeetingDto"];
+                        "application/json": components["schemas"]["ProjectMeetingDto"];
+                        "text/json": components["schemas"]["ProjectMeetingDto"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/projects/{code}/meetings/{id}/actions/{actionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                    id: string;
+                    actionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateProjectMeetingActionRequest"];
+                    "text/json": components["schemas"]["UpdateProjectMeetingActionRequest"];
+                    "application/*+json": components["schemas"]["UpdateProjectMeetingActionRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectMeetingDto"];
+                        "application/json": components["schemas"]["ProjectMeetingDto"];
+                        "text/json": components["schemas"]["ProjectMeetingDto"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/projects/{code}/meetings/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateProjectMeetingRequest"];
+                    "text/json": components["schemas"]["CreateProjectMeetingRequest"];
+                    "application/*+json": components["schemas"]["CreateProjectMeetingRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectMeetingDto"];
+                        "application/json": components["schemas"]["ProjectMeetingDto"];
+                        "text/json": components["schemas"]["ProjectMeetingDto"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/warehouse/projects/purchasing-progress": {
         parameters: {
             query?: never;
@@ -6682,6 +6600,140 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/projects/{code}/requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectRequestCenterDto"][];
+                        "application/json": components["schemas"]["ProjectRequestCenterDto"][];
+                        "text/json": components["schemas"]["ProjectRequestCenterDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateProjectRequestCenterRequest"];
+                    "text/json": components["schemas"]["CreateProjectRequestCenterRequest"];
+                    "application/*+json": components["schemas"]["CreateProjectRequestCenterRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectRequestCenterDto"];
+                        "application/json": components["schemas"]["ProjectRequestCenterDto"];
+                        "text/json": components["schemas"]["ProjectRequestCenterDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/projects/{code}/requests/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateProjectRequestCenterRequest"];
+                    "text/json": components["schemas"]["UpdateProjectRequestCenterRequest"];
+                    "application/*+json": components["schemas"]["UpdateProjectRequestCenterRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectRequestCenterDto"];
+                        "application/json": components["schemas"]["ProjectRequestCenterDto"];
+                        "text/json": components["schemas"]["ProjectRequestCenterDto"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -6752,6 +6804,82 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/warehouse/projects/personnel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectPersonnelDto"][];
+                        "application/json": components["schemas"]["ProjectPersonnelDto"][];
+                        "text/json": components["schemas"]["ProjectPersonnelDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/projects/next-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    year?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["NextProjectCodeResponse"];
+                        "application/json": components["schemas"]["NextProjectCodeResponse"];
+                        "text/json": components["schemas"]["NextProjectCodeResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/warehouse/projects/{code}": {
         parameters: {
             query?: never;
@@ -6810,7 +6938,26 @@ export interface paths {
             };
         };
         post?: never;
-        delete?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -6969,6 +7116,72 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/projects/{code}/stage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateProjectStageRequest"];
+                    "text/json": components["schemas"]["UpdateProjectStageRequest"];
+                    "application/*+json": components["schemas"]["UpdateProjectStageRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateProjectStageRequest"];
+                    "text/json": components["schemas"]["UpdateProjectStageRequest"];
+                    "application/*+json": components["schemas"]["UpdateProjectStageRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         trace?: never;
     };
     "/api/public/purchase-estimates/{token}": {
@@ -8583,6 +8796,7 @@ export interface paths {
                     pageSize?: number;
                     search?: string;
                     projectCode?: string;
+                    paymentStatus?: string;
                 };
                 header?: never;
                 path?: never;
@@ -13778,11 +13992,6 @@ export interface components {
             totalPages: number;
             summary: components["schemas"]["AdminUserListSummaryDto"];
         };
-        ApproveAdminRequestRequest: {
-            approve: boolean;
-            /** Format: int32 */
-            approverId?: number | null;
-        };
         ApproveImportLineSettlementRequest: {
             /** Format: int32 */
             lineId: number;
@@ -13800,11 +14009,6 @@ export interface components {
             lines?: components["schemas"]["ApproveImportLineSettlementRequest"][] | null;
             shortageReport?: string | null;
             defectReason?: string | null;
-        };
-        ApproveLeaveRequest: {
-            approve: boolean;
-            /** Format: int32 */
-            approverId?: number | null;
         };
         ApproveTransactionRequest: {
             approve: boolean;
@@ -13865,12 +14069,6 @@ export interface components {
         };
         AssignDepartmentMembersRequest: {
             employeeIds: number[];
-        };
-        BirthdayDto: {
-            name: string;
-            department: string;
-            /** Format: int32 */
-            day: number;
         };
         BlacklistSupplierRequest: {
             reason: string;
@@ -13965,65 +14163,11 @@ export interface components {
             note?: string | null;
             lines: components["schemas"]["PurchasePlanImportLinePreviewDto"][];
         };
-        ConversionDto: {
-            id: string;
-            voucherCode: string;
-            date: string;
-            fromWarehouseId: string;
-            fromWarehouseName: string;
-            fromType: string;
-            toWarehouseId: string;
-            toWarehouseName: string;
-            toType: string;
-            items: components["schemas"]["ConversionItemDto"][];
-            status: string;
-            createdBy: string;
-            approvedBy?: string | null;
-            note: string;
-        };
-        ConversionItemDto: {
-            productId: string;
-            sku: string;
-            name: string;
-            /** Format: double */
-            qty: number;
-            unit: string;
-            reason: string;
-        };
         ConvertPurchaseEstimateResult: {
             planCode: string;
         };
-        CreateAdminRequestRequest: {
-            type: string;
-            /** Format: int32 */
-            employeeId: number;
-            title: string;
-            content?: string | null;
-            /** Format: double */
-            quantity?: number | null;
-        };
         CreateAdminRoleRequest: {
             label: string;
-        };
-        CreateAppointmentRequest: {
-            /** Format: int32 */
-            oldPositionId?: number | null;
-            /** Format: int32 */
-            newPositionId: number;
-            decisionNo?: string | null;
-            effectiveDate: string;
-            note?: string | null;
-        };
-        CreateContractRequest: {
-            contractNo: string;
-            type: string;
-            startDate: string;
-            endDate?: string | null;
-            /** Format: double */
-            salary: number;
-            /** Format: double */
-            allowance: number;
-            fileUrl?: string | null;
         };
         CreateDefectFromPoLineRequest: {
             /** Format: int32 */
@@ -14052,32 +14196,6 @@ export interface components {
         CreateEmployeeOnboardingInviteRequest: {
             /** Format: date-time */
             expiresAt?: string | null;
-        };
-        CreateEmployeeRequest: {
-            code: string;
-            fullName: string;
-            gender: string;
-            birthDate: string;
-            phone?: string | null;
-            email?: string | null;
-            cccd?: string | null;
-            cccdDate?: string | null;
-            cccdPlace?: string | null;
-            addressPermanent?: string | null;
-            addressCurrent?: string | null;
-            /** Format: int32 */
-            departmentId?: number | null;
-            /** Format: int32 */
-            positionId?: number | null;
-            /** Format: int32 */
-            managerId?: number | null;
-            joinDate: string;
-            education: string;
-            bankAccount?: string | null;
-            bankName?: string | null;
-            taxCode?: string | null;
-            siNumber?: string | null;
-            photoUrl?: string | null;
         };
         CreateExportDto: {
             voucherCode: string;
@@ -14132,60 +14250,17 @@ export interface components {
             isDirectProcurement: boolean;
             issueFromGeneralWarehouse: boolean;
         };
-        CreateInsuranceRecordRequest: {
-            /** Format: int32 */
-            employeeId: number;
-            /** Format: int32 */
-            month: number;
-            /** Format: int32 */
-            year: number;
-            /** Format: double */
-            salaryBase: number;
-            /** Format: double */
-            employeeAmount: number;
-            /** Format: double */
-            companyAmount: number;
-        };
-        CreateInsuranceTaskRequest: {
-            type: string;
-            /** Format: int32 */
-            employeeId: number;
-            dueDate?: string | null;
-            /** Format: int32 */
-            assigneeId?: number | null;
-            note?: string | null;
-        };
-        CreateKpiDefinitionRequest: {
+        CreateProjectBottleneckRequest: {
             name: string;
-            group: string;
-            unit?: string | null;
-            /** Format: double */
-            target?: number | null;
-        };
-        CreateLeaveRequest: {
-            /** Format: int32 */
-            employeeId: number;
-            /** Format: int32 */
-            leaveTypeId: number;
-            fromDate: string;
-            toDate: string;
-            /** Format: double */
-            days: number;
-            reason?: string | null;
-        };
-        CreateLeaveTypeRequest: {
-            name: string;
-            isPaid: boolean;
-        };
-        CreateLoanRequest: {
-            borrowingProjectCode: string;
-            lendingProjectCode: string;
-            materialCode: string;
-            /** Format: double */
-            loanQty: number;
-            /** Format: date */
-            dueDate?: string | null;
-            loanReason?: string | null;
+            severity: string;
+            startedAt: string;
+            expectedAt: string;
+            reason: string;
+            ganttTask?: string | null;
+            departmentId?: string | null;
+            pic?: string | null;
+            resolution?: string | null;
+            source: string;
         };
         CreateProjectConstructionTaskRequest: {
             name: string;
@@ -14197,6 +14272,57 @@ export interface components {
             actualEnd?: string | null;
             /** Format: int32 */
             percentComplete: number;
+            wbsCode?: string | null;
+            /** Format: int32 */
+            level: number;
+            /** Format: uuid */
+            parentId?: string | null;
+            isGroup: boolean;
+            department?: string | null;
+            statusLabel?: string | null;
+            statusTone?: string | null;
+            notes?: string | null;
+        };
+        CreateProjectDocumentRequest: {
+            code: string;
+            name: string;
+            docType: string;
+            author?: string | null;
+            slaDueDate?: string | null;
+            category?: string | null;
+            handoverDate?: string | null;
+            fileName?: string | null;
+            fileSize?: string | null;
+            handoverRecipient?: string | null;
+            stage?: string | null;
+            status?: string | null;
+            statusLabel?: string | null;
+            internalApproved?: boolean | null;
+            handoverSigned?: boolean | null;
+        };
+        CreateProjectGanttSnapshotRequest: {
+            /** Format: double */
+            planPct: number;
+            /** Format: double */
+            actualPct: number;
+            items: components["schemas"]["ProjectGanttSnapshotItemDto"][];
+        };
+        CreateProjectMeetingActionRequest: {
+            name: string;
+            dueDate: string;
+            pic?: string | null;
+            id?: string | null;
+            done?: boolean | null;
+            generatedBottleneck?: boolean | null;
+        };
+        CreateProjectMeetingRequest: {
+            name: string;
+            date: string;
+            attendees?: string | null;
+            agenda?: string | null;
+            actions: components["schemas"]["CreateProjectMeetingActionRequest"][];
+            minutes?: string | null;
+            attachments?: components["schemas"]["ProjectMeetingAttachmentDto"][] | null;
         };
         CreateProjectRequest: {
             projectCode: string;
@@ -14214,6 +14340,16 @@ export interface components {
             warehouseKeepers?: components["schemas"]["ProjectWarehouseKeeperDto"][] | null;
             clientName?: string | null;
             scMembers?: string | null;
+            stage?: string | null;
+        };
+        CreateProjectRequestCenterRequest: {
+            name: string;
+            requestType: string;
+            fromParty: string;
+            toDept?: string | null;
+            dueDate?: string | null;
+            priority: string;
+            body?: string | null;
         };
         CreatePurchaseContractRequest: {
             contractNo: string;
@@ -14758,26 +14894,20 @@ export interface components {
             /** Format: int32 */
             skipped: number;
         };
-        LendingLogDto: {
-            id: string;
-            voucherCode: string;
-            date: string;
-            borrowingProjectId: string;
-            lendingProjectId: string;
-            productId: string;
-            /** Format: double */
-            qty: number;
-            status: string;
-            borrowPmSigned: boolean;
-            lendPmSigned: boolean;
-            note: string;
-            createdBy?: string | null;
-            createdTime?: string | null;
-        };
         LoginRequest: {
             username: string;
             password: string;
             rememberMe: boolean;
+        };
+        MaterialBrandDto: {
+            /** Format: int32 */
+            id: number;
+            name: string;
+            country?: string | null;
+            description?: string | null;
+            /** Format: int32 */
+            sortOrder: number;
+            isActive: boolean;
         };
         MaterialCategoryDto: {
             /** Format: int32 */
@@ -14815,6 +14945,8 @@ export interface components {
             abcClass?: string | null;
             isConsumable: boolean;
             isActive: boolean;
+            origin?: string | null;
+            imageUrl?: string | null;
         };
         MaterialDtoPagedResult: {
             items: components["schemas"]["MaterialDto"][];
@@ -14829,6 +14961,83 @@ export interface components {
             readonly hasNextPage: boolean;
             readonly hasPreviousPage: boolean;
         };
+        MaterialImportBatchRequest: {
+            rows: components["schemas"]["MaterialImportRowDto"][];
+            overwriteExisting: boolean;
+        };
+        MaterialImportErrorDto: {
+            /** Format: int32 */
+            rowNumber: number;
+            field: string;
+            message: string;
+        };
+        MaterialImportParseResultDto: {
+            /** Format: int32 */
+            totalRows: number;
+            /** Format: int32 */
+            validRowCount: number;
+            /** Format: int32 */
+            existingRowCount: number;
+            /** Format: int32 */
+            errorRowCount: number;
+            rows: components["schemas"]["MaterialImportRowDto"][];
+            errors: components["schemas"]["MaterialImportErrorDto"][];
+        };
+        MaterialImportResultDto: {
+            /** Format: int32 */
+            createdCount: number;
+            /** Format: int32 */
+            updatedCount: number;
+            /** Format: int32 */
+            skippedCount: number;
+            /** Format: int32 */
+            totalProcessed: number;
+            importedCodes: string[];
+            errors: string[];
+        };
+        MaterialImportRowDto: {
+            /** Format: int32 */
+            rowNumber: number;
+            materialCode: string;
+            materialName: string;
+            unit: string;
+            danhMuc?: string | null;
+            nhomVatTu?: string | null;
+            loaiVatTu?: string | null;
+            phanLoai?: string | null;
+            kieu?: string | null;
+            origin?: string | null;
+            technicalSpec?: string | null;
+            generalTechnicalSpec?: string | null;
+            qualityStandard?: string | null;
+            /** Format: double */
+            ceilingPrice?: number | null;
+            abcClass?: string | null;
+            isConsumable: boolean;
+            isValid: boolean;
+            isExisting: boolean;
+            isNewCategory: boolean;
+            errors: string[];
+            warnings: string[];
+        };
+        MaterialOriginDto: {
+            /** Format: int32 */
+            id: number;
+            name: string;
+            region?: string | null;
+            /** Format: int32 */
+            sortOrder: number;
+            isActive: boolean;
+        };
+        MaterialRegionDto: {
+            /** Format: int32 */
+            id: number;
+            name: string;
+            description?: string | null;
+            /** Format: int32 */
+            sortOrder: number;
+            isActive: boolean;
+        };
         MaterialUnitDto: {
             /** Format: int32 */
             id: number;
@@ -14836,6 +15045,9 @@ export interface components {
             /** Format: int32 */
             sortOrder: number;
             isActive: boolean;
+        };
+        NextProjectCodeResponse: {
+            projectCode: string;
         };
         PermissionCatalogEntryDto: {
             key: string;
@@ -15031,6 +15243,28 @@ export interface components {
             materialName: string;
             cells: components["schemas"]["PriceBookMatrixCellDto"][];
         };
+        ProjectBottleneckDto: {
+            id: string;
+            code: string;
+            projectCode: string;
+            name: string;
+            severity: string;
+            status: string;
+            startedAt: string;
+            expectedAt: string;
+            reason: string;
+            ganttTask?: string | null;
+            departmentId?: string | null;
+            pic?: string | null;
+            resolution?: string | null;
+            source: string;
+            history: components["schemas"]["ProjectBottleneckHistoryNoteDto"][];
+        };
+        ProjectBottleneckHistoryNoteDto: {
+            id: string;
+            at: string;
+            text: string;
+        };
         ProjectConstructionTaskDto: {
             /** Format: uuid */
             id: string;
@@ -15048,6 +15282,38 @@ export interface components {
             /** Format: int32 */
             sortOrder: number;
             status: string;
+            wbsCode?: string | null;
+            /** Format: int32 */
+            level: number;
+            /** Format: uuid */
+            parentId?: string | null;
+            isGroup: boolean;
+            department?: string | null;
+            statusLabel?: string | null;
+            statusTone?: string | null;
+            notes?: string | null;
+        };
+        ProjectDocumentDto: {
+            id: string;
+            code: string;
+            projectCode: string;
+            name: string;
+            docType: string;
+            stage: string;
+            author?: string | null;
+            internalApproved: boolean;
+            handoverSigned: boolean;
+            handoverDate?: string | null;
+            handoverRecipient?: string | null;
+            slaDueDate?: string | null;
+            /** Format: int32 */
+            overdueDays: number;
+            status: string;
+            statusLabel: string;
+            category?: string | null;
+            fileSize?: string | null;
+            fileName?: string | null;
+            downloadUrl?: string | null;
         };
         ProjectDto: {
             projectCode: string;
@@ -15078,6 +15344,7 @@ export interface components {
             /** Format: double */
             materialBudgetRemaining: number;
             warehouseKeepers?: components["schemas"]["ProjectWarehouseKeeperDto"][] | null;
+            stage?: string | null;
         };
         ProjectDtoPagedResult: {
             items: components["schemas"]["ProjectDto"][];
@@ -15091,6 +15358,30 @@ export interface components {
             readonly totalPages: number;
             readonly hasNextPage: boolean;
             readonly hasPreviousPage: boolean;
+        };
+        ProjectGanttSnapshotDto: {
+            /** Format: uuid */
+            id: string;
+            projectCode: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: double */
+            planPct: number;
+            /** Format: double */
+            actualPct: number;
+            /** Format: int32 */
+            itemCount: number;
+            items: components["schemas"]["ProjectGanttSnapshotItemDto"][];
+        };
+        ProjectGanttSnapshotItemDto: {
+            /** Format: uuid */
+            id: string;
+            taskId: string;
+            taskName: string;
+            /** Format: double */
+            planPct: number;
+            /** Format: double */
+            actualPct: number;
         };
         ProjectInventoryDto: {
             projectCode: string;
@@ -15130,6 +15421,41 @@ export interface components {
             itemQty: number;
             /** Format: double */
             totalValue?: number | null;
+        };
+        ProjectMeetingActionDto: {
+            id: string;
+            name: string;
+            dueDate: string;
+            done: boolean;
+            pic?: string | null;
+            generatedBottleneck: boolean;
+        };
+        ProjectMeetingAttachmentDto: {
+            name: string;
+            size?: string | null;
+            url?: string | null;
+            uploadedAt?: string | null;
+        };
+        ProjectMeetingDto: {
+            id: string;
+            code: string;
+            projectCode: string;
+            name: string;
+            date: string;
+            attendees?: string | null;
+            agenda?: string | null;
+            minutes?: string | null;
+            /** Format: int32 */
+            overdueActionCount: number;
+            actions: components["schemas"]["ProjectMeetingActionDto"][];
+            attachments?: components["schemas"]["ProjectMeetingAttachmentDto"][] | null;
+        };
+        ProjectPersonnelDto: {
+            /** Format: uuid */
+            id?: string | null;
+            name: string;
+            employeeCode?: string | null;
+            email?: string | null;
         };
         ProjectPurchasingProgressDto: {
             projectCode: string;
@@ -15220,6 +15546,20 @@ export interface components {
             /** Format: double */
             quantity: number;
         };
+        ProjectRequestCenterDto: {
+            id: string;
+            code: string;
+            projectCode: string;
+            name: string;
+            requestType: string;
+            fromParty: string;
+            toDept?: string | null;
+            createdAt: string;
+            dueDate?: string | null;
+            priority: string;
+            status: string;
+            body?: string | null;
+        };
         /** @enum {string} */
         ProjectStatus: "Active" | "Transferring" | "Transferred" | "Closed";
         /** @enum {string} */
@@ -15250,6 +15590,7 @@ export interface components {
             cvFileName?: string | null;
             cvFileSize?: string | null;
             cvFileUrl?: string | null;
+            hrResponsible?: string | null;
         };
         PublicPurchaseEstimateDto: {
             code: string;
@@ -15818,6 +16159,7 @@ export interface components {
             rejectReason?: string | null;
             remadeFromCode?: string | null;
             remadeToCode?: string | null;
+            relatedOrders?: components["schemas"]["PurchasePlanRelatedPoDto"][] | null;
         };
         PurchasePlanDto: {
             code: string;
@@ -16005,6 +16347,14 @@ export interface components {
             /** Format: double */
             remainingOrderableQty: number;
             quotes: components["schemas"]["PurchasePlanLineQuoteDto"][];
+            pos?: components["schemas"]["PurchasePlanLinePoDto"][] | null;
+        };
+        PurchasePlanLinePoDto: {
+            poCode: string;
+            /** Format: double */
+            orderedQty: number;
+            /** Format: double */
+            receivedQty: number;
         };
         PurchasePlanLineQuoteDto: {
             /** Format: int32 */
@@ -16031,6 +16381,20 @@ export interface components {
             pageSize: number;
             /** Format: int32 */
             totalPages: number;
+        };
+        PurchasePlanRelatedPoDto: {
+            code: string;
+            supplierName?: string | null;
+            /** Format: double */
+            totalAmount: number;
+            approvalStatus: string;
+            orderPlacementStatus: string;
+            deliveryStatus: string;
+            paymentStatus: string;
+            /** Format: int32 */
+            itemCount: number;
+            /** Format: date-time */
+            createdAt: string;
         };
         PurchasePlanVarianceDto: {
             planCode: string;
@@ -16214,6 +16578,7 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
             claims: components["schemas"]["PurchaseWarrantyClaimDto"][];
+            evidence: components["schemas"]["PurchaseWarrantyEvidenceDto"][];
         };
         PurchaseWarrantyDto: {
             /** Format: uuid */
@@ -16247,6 +16612,14 @@ export interface components {
             claimCount: number;
             /** Format: date-time */
             createdAt: string;
+        };
+        PurchaseWarrantyEvidenceDto: {
+            /** Format: uuid */
+            id: string;
+            kind: string;
+            fileName: string;
+            /** Format: date-time */
+            uploadedAt: string;
         };
         PurchasingActivityActorDto: {
             /** Format: uuid */
@@ -16474,14 +16847,6 @@ export interface components {
             roleCode: string;
             permissions: string[];
         };
-        SetLeaveBalanceRequest: {
-            /** Format: int32 */
-            employeeId: number;
-            /** Format: int32 */
-            year: number;
-            /** Format: double */
-            totalDays: number;
-        };
         SetSupplierGroupMembersRequest: {
             supplierIds: number[];
         };
@@ -16556,6 +16921,7 @@ export interface components {
             actualQty: number;
             /** Format: double */
             diff: number;
+            reason?: string | null;
         };
         SubmitPublicPurchaseEstimateRequest: {
             preparerName: string;
@@ -16951,11 +17317,37 @@ export interface components {
             /** Format: date-time */
             generatedAt: string;
         };
+        SyncProjectConstructionTasksRequest: {
+            tasks: components["schemas"]["SyncWbsTaskItem"][];
+        };
         SyncPurchaseWarrantiesResult: {
             /** Format: int32 */
             created: number;
             /** Format: int32 */
             updated: number;
+        };
+        SyncWbsTaskItem: {
+            /** Format: uuid */
+            id?: string | null;
+            name: string;
+            /** Format: date */
+            plannedStart: string;
+            /** Format: date */
+            plannedEnd: string;
+            /** Format: int32 */
+            percentComplete: number;
+            /** Format: int32 */
+            sortOrder: number;
+            wbsCode?: string | null;
+            /** Format: int32 */
+            level: number;
+            /** Format: uuid */
+            parentId?: string | null;
+            isGroup: boolean;
+            department?: string | null;
+            statusLabel?: string | null;
+            statusTone?: string | null;
+            notes?: string | null;
         };
         TopProductDto: {
             sku: string;
@@ -17047,28 +17439,21 @@ export interface components {
         UpdateDefectReasonRequest: {
             reason?: string | null;
         };
-        UpdateEmployeeRequest: {
-            fullName: string;
-            phone?: string | null;
-            email?: string | null;
-            cccd?: string | null;
-            addressPermanent?: string | null;
-            addressCurrent?: string | null;
-            /** Format: int32 */
-            departmentId?: number | null;
-            /** Format: int32 */
-            positionId?: number | null;
-            /** Format: int32 */
-            managerId?: number | null;
-            status: string;
-            bankAccount?: string | null;
-            bankName?: string | null;
-            taxCode?: string | null;
-            siNumber?: string | null;
-            photoUrl?: string | null;
-        };
         UpdateImportReceiptEvaluationRequest: {
             evaluation?: string | null;
+        };
+        UpdateProjectBottleneckRequest: {
+            name?: string | null;
+            severity?: string | null;
+            status?: string | null;
+            expectedAt?: string | null;
+            reason?: string | null;
+            ganttTask?: string | null;
+            departmentId?: string | null;
+            pic?: string | null;
+            resolution?: string | null;
+            noteText?: string | null;
+            startedAt?: string | null;
         };
         UpdateProjectConstructionTaskRequest: {
             name: string;
@@ -17082,10 +17467,36 @@ export interface components {
             percentComplete: number;
             /** Format: int32 */
             sortOrder: number;
+            wbsCode?: string | null;
+            /** Format: int32 */
+            level: number;
+            /** Format: uuid */
+            parentId?: string | null;
+            isGroup: boolean;
+            department?: string | null;
+            statusLabel?: string | null;
+            statusTone?: string | null;
+            notes?: string | null;
+        };
+        UpdateProjectDocumentStatusRequest: {
+            stage: string;
+            internalApproved?: boolean | null;
+            handoverSigned?: boolean | null;
+            handoverDate?: string | null;
+            handoverRecipient?: string | null;
+            status?: string | null;
+            statusLabel?: string | null;
         };
         UpdateProjectInventoryMinStockRequest: {
             /** Format: double */
             minStockQty: number;
+        };
+        UpdateProjectMeetingActionRequest: {
+            actionId: string;
+            done: boolean;
+        };
+        UpdateProjectMeetingMinutesRequest: {
+            minutes: string;
         };
         UpdateProjectRequest: {
             projectName: string;
@@ -17100,6 +17511,23 @@ export interface components {
             warehouseKeepers?: components["schemas"]["ProjectWarehouseKeeperDto"][] | null;
             clientName?: string | null;
             scMembers?: string | null;
+            stage?: string | null;
+            /** Format: date */
+            startDate?: string | null;
+        };
+        UpdateProjectRequestCenterRequest: {
+            status: string;
+            notes?: string | null;
+            name?: string | null;
+            requestType?: string | null;
+            fromParty?: string | null;
+            toDept?: string | null;
+            dueDate?: string | null;
+            priority?: string | null;
+            body?: string | null;
+        };
+        UpdateProjectStageRequest: {
+            stage?: string | null;
         };
         UpdatePurchaseContractRequest: {
             contractNo?: string | null;
@@ -17214,31 +17642,6 @@ export interface components {
             manager?: string | null;
             status?: string | null;
         };
-        UpsertAttendanceRequest: {
-            /** Format: int32 */
-            employeeId: number;
-            date: string;
-            checkIn?: string | null;
-            checkOut?: string | null;
-            /** Format: double */
-            workHours: number;
-            status: string;
-            source?: string | null;
-        };
-        UpsertAttendanceSummaryRequest: {
-            /** Format: int32 */
-            employeeId: number;
-            /** Format: int32 */
-            month: number;
-            /** Format: int32 */
-            year: number;
-            /** Format: double */
-            workDays: number;
-            /** Format: double */
-            leaveDays: number;
-            /** Format: double */
-            otHours: number;
-        };
         UpsertBranchRequest: {
             code: string;
             name: string;
@@ -17250,22 +17653,13 @@ export interface components {
             parentId?: number | null;
             block?: string | null;
         };
-        UpsertKpiRecordRequest: {
+        UpsertMaterialBrandRequest: {
+            name: string;
+            country?: string | null;
+            description?: string | null;
             /** Format: int32 */
-            kpiId: number;
-            /** Format: int32 */
-            month: number;
-            /** Format: int32 */
-            year: number;
-            /** Format: int32 */
-            ownerId?: number | null;
-            /** Format: int32 */
-            departmentId?: number | null;
-            /** Format: double */
-            targetValue: number;
-            /** Format: double */
-            actualValue: number;
-            note?: string | null;
+            sortOrder: number;
+            isActive: boolean;
         };
         UpsertMaterialCategoryRequest: {
             code: string;
@@ -17274,6 +17668,20 @@ export interface components {
             level: number;
             /** Format: int32 */
             parentId?: number | null;
+            /** Format: int32 */
+            sortOrder: number;
+            isActive: boolean;
+        };
+        UpsertMaterialOriginRequest: {
+            name: string;
+            region?: string | null;
+            /** Format: int32 */
+            sortOrder: number;
+            isActive: boolean;
+        };
+        UpsertMaterialRegionRequest: {
+            name: string;
+            description?: string | null;
             /** Format: int32 */
             sortOrder: number;
             isActive: boolean;
@@ -17291,6 +17699,8 @@ export interface components {
             ceilingPrice?: number | null;
             abcClass?: string | null;
             isConsumable: boolean;
+            origin?: string | null;
+            imageUrl?: string | null;
         };
         UpsertMaterialUnitRequest: {
             name: string;

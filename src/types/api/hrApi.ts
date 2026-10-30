@@ -8,9 +8,6 @@ type Schemas = components['schemas'];
 
 /** OpenAPI aliases — Employees (profile wire DTO) */
 export type EmployeeApiDto = Schemas['EmployeeDto'];
-/** Admin-style create/update bodies (Hr module controllers) */
-export type CreateEmployeeRequest = Schemas['CreateEmployeeRequest'];
-export type UpdateEmployeeRequest = Schemas['UpdateEmployeeRequest'];
 
 /** OpenAPI aliases — Departments */
 export type AssignDepartmentMembersRequest = Schemas['AssignDepartmentMembersRequest'];

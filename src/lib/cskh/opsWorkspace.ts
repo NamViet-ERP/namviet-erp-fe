@@ -320,8 +320,25 @@ export function upsertGanttItem(ops: CskhProjectOps, item: CskhGanttItem): CskhP
   return { ...ops, ganttItems: upsertById(ops.ganttItems, item) };
 }
 
+export function ganttSubtreeIds(items: CskhGanttItem[], id: string): Set<string> {
+  const children = new Map<string, string[]>();
+  for (const item of items) {
+    if (item.parentId) children.set(item.parentId, [...(children.get(item.parentId) ?? []), item.id]);
+  }
+  const ids = new Set<string>();
+  const pending = items.some(item => item.id === id) ? [id] : [];
+  while (pending.length > 0) {
+    const current = pending.pop()!;
+    if (ids.has(current)) continue;
+    ids.add(current);
+    pending.push(...(children.get(current) ?? []));
+  }
+  return ids;
+}
+
 export function removeGanttItem(ops: CskhProjectOps, id: string): CskhProjectOps {
-  return { ...ops, ganttItems: removeById(ops.ganttItems, id) };
+  const deleted = ganttSubtreeIds(ops.ganttItems, id);
+  return { ...ops, ganttItems: ops.ganttItems.filter(item => !deleted.has(item.id)) };
 }
 
 export function captureSnapshot(ops: CskhProjectOps, at = new Date().toISOString(), now = Date.now()): CskhProjectOps {

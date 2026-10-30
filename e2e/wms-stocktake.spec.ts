@@ -71,14 +71,14 @@ test.describe('WMS stocktake', () => {
 
       await openRowActions(page, voucherCode!);
       await clickDropdownItem(page, 'Mở băng');
-      await expectSnackbar(page, /đã mở băng/);
+      await expectSnackbar(page, `Vật tư phiếu ${voucherCode} đã mở băng.`);
 
       const row = page.locator('tr', { has: page.getByRole('cell', { name: voucherCode! }) });
       await expect(row.getByText('Mở băng', { exact: true })).toBeVisible();
 
       await openRowActions(page, voucherCode!);
       await clickDropdownItem(page, 'Đóng băng');
-      await expectSnackbar(page, /đã đóng băng/);
+      await expectSnackbar(page, `Vật tư phiếu ${voucherCode} đã đóng băng.`);
       await expect(row.getByText('Đóng băng', { exact: true })).toBeVisible();
     } finally {
       if (createdId) {

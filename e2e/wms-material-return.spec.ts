@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { deleteExportReturn, loginToken, type VoucherApiDto } from './helpers/api';
-import { clickDropdownItem, expectSnackbar, openRowActions } from './helpers/ui';
+import { expectSnackbar } from './helpers/ui';
 import { createApprovedExportFixture, createStockFixture, fixtureItem, fixtureRequest, getFixtureStock } from './helpers/purchasingFixtures';
 
 test.describe('WMS material return', () => {
@@ -44,8 +44,7 @@ test.describe('WMS material return', () => {
     try {
       await page.goto('/warehouse/material-return');
       await page.getByRole('searchbox').fill(voucher.voucherCode);
-      await openRowActions(page, voucher.voucherCode);
-      await clickDropdownItem(page, 'Xem chi tiết');
+      await page.locator('tr').filter({ hasText: voucher.voucherCode }).click();
       const dialog = page.getByRole('dialog');
       await expect(dialog.getByRole('heading', { name: voucher.voucherCode })).toBeVisible();
       await expect(dialog.getByText(fixture.materialCode, { exact: true })).toBeVisible();

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { cancelStocktake, createFrozenStocktake, deleteImport, loginToken, type VoucherApiDto } from './helpers/api';
+import { cancelStocktake, createFrozenStocktake, loginToken, type VoucherApiDto } from './helpers/api';
 import { expectSnackbar } from './helpers/ui';
 import { addReceiptEvidence, createPlacedPoFixture, createPoImportFixture, createStockFixture, fillStockVoucherForm, fixtureRequest, getFixtureStock } from './helpers/purchasingFixtures';
 
@@ -55,7 +55,6 @@ test.describe('WMS freeze guard', () => {
       expect(await getFixtureStock(token, fixture)).toBe(0);
     } finally {
       if (stocktakeId) await cancelStocktake(stocktakeId, token);
-      await deleteImport(receipt.id, token);
     }
   });
 });
