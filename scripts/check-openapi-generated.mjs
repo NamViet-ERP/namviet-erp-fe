@@ -33,7 +33,8 @@ if (!existsSync(swaggerFile)) {
   process.exit(1);
 }
 
-const before = readFileSync(outFile, 'utf8');
+// Git may check out CRLF on Windows while the generator always emits LF.
+const before = readFileSync(outFile, 'utf8').replace(/\r\n/g, '\n');
 if (process.argv.includes('--live')) {
   const base = (process.env.SWAGGER_URL || process.env.VITE_DEV_PROXY_TARGET || 'http://127.0.0.1:8080').replace(/\/$/, '');
   const response = await fetch(`${base}/swagger/v1/swagger.json`);
@@ -67,7 +68,7 @@ if (result.status !== 0) {
   process.exit(result.status ?? 1);
 }
 
-const after = readFileSync(tempOut, 'utf8');
+const after = readFileSync(tempOut, 'utf8').replace(/\r\n/g, '\n');
 try {
   rmSync(tempDir, { recursive: true, force: true });
 } catch {

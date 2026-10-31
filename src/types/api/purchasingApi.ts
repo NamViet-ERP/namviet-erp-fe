@@ -26,10 +26,13 @@ export interface PurchasePlanRelatedPoApiDto {
 }
 
 export type PurchasePlanKind = 'plan' | 'adhoc';
+export type PurchasePlanLineType = 'material' | 'service' | 'expense';
 export type PurchasePlanApiDto = Schemas['PurchasePlanDto'];
 export type PurchasePlanLineQuoteApiDto = Schemas['PurchasePlanLineQuoteDto'];
-export type PurchasePlanLineApiDto = Schemas['PurchasePlanLineDto'] & {
+export type PurchasePlanLineApiDto = Omit<Schemas['PurchasePlanLineDto'], 'materialCode' | 'lineType'> & {
   pos?: PurchasePlanLinePoApiDto[] | null;
+  materialCode?: string | null;
+  lineType?: PurchasePlanLineType;
 };
 export type PurchasePlanDetailApiDto = Omit<Schemas['PurchasePlanDetailDto'], 'lines'> & {
   lines: PurchasePlanLineApiDto[];
@@ -38,15 +41,27 @@ export type PurchasePlanDetailApiDto = Omit<Schemas['PurchasePlanDetailDto'], 'l
 export type PurchasePlanPagedApiDto = Schemas['PurchasePlanPagedResponse'];
 export type PurchasePlanImportColumnMapApiDto = Schemas['PurchasePlanImportColumnMapDto'];
 export type PurchasePlanImportQuotePreviewApiDto = Schemas['PurchasePlanImportQuotePreviewDto'];
-export type PurchasePlanImportLinePreviewApiDto = Schemas['PurchasePlanImportLinePreviewDto'];
+export type PurchasePlanImportLinePreviewApiDto = Omit<Schemas['PurchasePlanImportLinePreviewDto'], 'materialCode' | 'lineType'> & {
+  materialCode?: string | null;
+  lineType?: PurchasePlanLineType;
+};
 export type PurchasePlanImportErrorApiDto = Schemas['PurchasePlanImportErrorDto'];
-export type PurchasePlanImportPreviewApiDto = Schemas['PurchasePlanImportPreviewDto'];
+export type PurchasePlanImportPreviewApiDto = Omit<Schemas['PurchasePlanImportPreviewDto'], 'lines'> & {
+  lines: PurchasePlanImportLinePreviewApiDto[];
+};
 /** BE name: ConfirmPurchasePlanImportRequest */
 export type PurchasePlanImportConfirmRequest = Schemas['ConfirmPurchasePlanImportRequest'];
 export type CreatePurchasePlanLineQuoteRequest = Schemas['CreatePurchasePlanLineQuoteRequest'];
-export type CreatePurchasePlanLineRequest = Schemas['CreatePurchasePlanLineRequest'];
-export type CreatePurchasePlanRequest = Schemas['CreatePurchasePlanRequest'];
-export type UpdatePurchasePlanRequest = Schemas['UpdatePurchasePlanRequest'];
+export type CreatePurchasePlanLineRequest = Omit<Schemas['CreatePurchasePlanLineRequest'], 'materialCode' | 'lineType'> & {
+  materialCode?: string | null;
+  lineType?: PurchasePlanLineType;
+};
+export type CreatePurchasePlanRequest = Omit<Schemas['CreatePurchasePlanRequest'], 'lines'> & {
+  lines?: CreatePurchasePlanLineRequest[] | null;
+};
+export type UpdatePurchasePlanRequest = Omit<Schemas['UpdatePurchasePlanRequest'], 'lines'> & {
+  lines?: CreatePurchasePlanLineRequest[] | null;
+};
 export type RejectPurchasePlanRequest = Schemas['RejectPurchasePlanRequest'];
 
 /** OpenAPI aliases — Purchase Orders */

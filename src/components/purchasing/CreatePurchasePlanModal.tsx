@@ -90,12 +90,16 @@ export default function CreatePurchasePlanModal({
     let purchase = 0;
     let filled = 0;
     for (const line of lines) {
-      if (line.materialCode.trim() && line.unit.trim() && (parseNum(line.quantity) ?? 0) > 0) {
+      const isMaterial = (line.lineType ?? 'material') === 'material';
+      const isFilled = isMaterial
+        ? Boolean(line.materialCode.trim() && line.unit.trim() && (parseNum(line.quantity) ?? 0) > 0)
+        : Boolean(line.productName.trim() && line.unit.trim() && (parseNum(line.quantity) ?? 0) > 0);
+      if (isFilled) {
         filled += 1;
       }
-      budget += lineAmount(line.quantity, line.budgetUnitPrice);
-      proposal += lineAmount(line.quantity, line.proposalUnitPrice);
-      purchase += lineAmount(line.quantity, line.purchaseUnitPrice);
+      budget += lineAmount(line.quantity, line.budgetUnitPrice, isMaterial ? line.kgPerUnit : undefined);
+      proposal += lineAmount(line.quantity, line.proposalUnitPrice, isMaterial ? line.kgPerUnit : undefined);
+      purchase += lineAmount(line.quantity, line.purchaseUnitPrice, isMaterial ? line.kgPerUnit : undefined);
     }
     return { budget, proposal, purchase, filled };
   }, [lines]);
@@ -230,7 +234,7 @@ export default function CreatePurchasePlanModal({
     const apiLines = toApiLines(lines);
     const hasPartial = lines.some(l => l.materialCode.trim() || l.productName.trim() || l.unit.trim());
     if (hasPartial && apiLines.length === 0) {
-      showToast('warning', 'Dòng hàng chưa đủ: cần chọn Tên vật tư, ĐVT và SL > 0.');
+      showToast('warning', 'Dòng hàng chưa đủ: cần chọn Tên vật tư / Dịch vụ, ĐVT và SL > 0.');
       return;
     }
     try {
@@ -392,7 +396,7 @@ export default function CreatePurchasePlanModal({
           linesLocked={linesLocked}
           totals={totals}
           risksByLineKey={risksByLineKey}
-          onAddLine={() => setLines(prev => [...prev, emptyLine()])}
+          onAddLine={(type) => setLines(prev => [...prev, emptyLine(type)])}
           onUpdateLine={updateLine}
           onRemoveLine={removeLine}
           onToggleExpand={toggleExpand}
