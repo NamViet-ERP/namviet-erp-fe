@@ -357,13 +357,6 @@ export const suppliersMenu: SidebarMenuItem[] = [
     permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
   },
   {
-    id: 'sup-price-history',
-    label: 'Lịch sử giá',
-    icon: History,
-    path: '/suppliers/price-history',
-    permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
-  },
-  {
     id: 'sup-spend',
     label: 'Chi tiêu theo NCC',
     icon: PieChart,

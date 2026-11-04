@@ -6,7 +6,6 @@ const SupplierGroupsPage = lazy(() => import('../pages/suppliers/SupplierGroupsP
 const SupplierContactsPage = lazy(() => import('../pages/suppliers/SupplierContactsPage'));
 const SupplierSpendPage = lazy(() => import('../pages/suppliers/SupplierSpendPage'));
 const SupplierPayablesPage = lazy(() => import('../pages/suppliers/SupplierPayablesPage'));
-const SupplierPriceHistoryPage = lazy(() => import('../pages/suppliers/SupplierPriceHistoryPage'));
 const SupplierEvaluationsPage = lazy(() => import('../pages/suppliers/SupplierEvaluationsPage'));
 const SupplierBlacklistPage = lazy(() => import('../pages/suppliers/SupplierBlacklistPage'));
 const SupplierMasterPage = lazy(() => import('../pages/suppliers/SupplierMasterPage'));
@@ -22,7 +21,7 @@ export default function SuppliersModuleRoutes() {
       <Route path="contacts" element={<SupplierContactsPage />} />
       <Route path="spend" element={<SupplierSpendPage />} />
       <Route path="debt" element={<SupplierPayablesPage />} />
-      <Route path="price-history" element={<SupplierPriceHistoryPage />} />
+      <Route path="price-history" element={<Navigate to="/purchasing/price-history" replace />} />
       <Route path="evaluations" element={<SupplierEvaluationsPage />} />
       <Route path="blacklist" element={<SupplierBlacklistPage />} />
       <Route path="settings" element={<Navigate to="/suppliers/dashboard" replace />} />

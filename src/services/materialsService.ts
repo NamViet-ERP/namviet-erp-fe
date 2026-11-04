@@ -61,7 +61,7 @@ export const materialsService = {
 
   async getByCode(code: string): Promise<MaterialApiDto> {
     return normalizeMaterial(
-      await apiClient.get<MaterialApiDto>(`${ENDPOINT}/${encodeURIComponent(code)}`),
+      await apiClient.get<MaterialApiDto>(`${ENDPOINT}/by-code`, { code }),
     );
   },
 
@@ -77,19 +77,19 @@ export const materialsService = {
   },
 
   async update(code: string, body: UpsertMaterialRequest): Promise<void> {
-    await apiClient.put(`${ENDPOINT}/${encodeURIComponent(code)}`, body);
+    await apiClient.put(`${ENDPOINT}/by-code?code=${encodeURIComponent(code)}`, body);
   },
 
   async remove(code: string): Promise<void> {
-    await apiClient.delete(`${ENDPOINT}/${encodeURIComponent(code)}`);
+    await apiClient.delete(`${ENDPOINT}/by-code?code=${encodeURIComponent(code)}`);
   },
 
   async discontinue(code: string): Promise<void> {
-    await apiClient.post(`${ENDPOINT}/${encodeURIComponent(code)}/discontinue`);
+    await apiClient.post(`${ENDPOINT}/actions/discontinue?code=${encodeURIComponent(code)}`);
   },
 
   async reactivate(code: string): Promise<void> {
-    await apiClient.post(`${ENDPOINT}/${encodeURIComponent(code)}/reactivate`);
+    await apiClient.post(`${ENDPOINT}/actions/reactivate?code=${encodeURIComponent(code)}`);
   },
 
   async downloadImportTemplate(): Promise<boolean> {
