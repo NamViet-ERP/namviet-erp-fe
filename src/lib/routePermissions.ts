@@ -112,14 +112,21 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
     permissions: ['purchasing.orders.view'],
   },
   {
-    match: p => p === '/purchasing/estimate-procurement',
+    match: p => p === '/purchasing/estimate-procurement' || p === '/operations/estimate-procurement',
     permissions: ['purchasing.estimates.view', 'purchasing.rfq.view'],
   },
   {
-    match: p => p.startsWith('/purchasing/estimate-procurement/'),
+    match: p => p.startsWith('/purchasing/estimate-procurement/') || p.startsWith('/operations/estimate-procurement/'),
     permissions: ['purchasing.estimates.view'],
   },
-  { match: p => p === '/purchasing/price-book', permissions: ['purchasing.pricebook.view'] },
+  {
+    match: p => p === '/purchasing/price-book' || p === '/operations/price-book',
+    permissions: ['purchasing.pricebook.view'],
+  },
+  {
+    match: p => p === '/purchasing/price-history',
+    permissions: ['purchasing.pricebook.view', 'wms.suppliers.view:all'],
+  },
   { match: p => p === '/purchasing/contracts', permissions: ['purchasing.contracts.view'] },
   { match: p => p === '/purchasing/documents', permissions: ['purchasing.documents.view'] },
   { match: p => p === '/purchasing/warranties', permissions: ['purchasing.warranties.view'] },

@@ -110,11 +110,25 @@ describe('routePermissions', () => {
       'purchasing.estimates.view',
       'purchasing.rfq.view',
     ]);
+    expect(getRequiredPermissionsForPath('/operations/estimate-procurement')).toEqual([
+      'purchasing.estimates.view',
+      'purchasing.rfq.view',
+    ]);
     expect(getRequiredPermissionsForPath('/purchasing/estimate-procurement/abc')).toEqual([
+      'purchasing.estimates.view',
+    ]);
+    expect(getRequiredPermissionsForPath('/operations/estimate-procurement/abc')).toEqual([
       'purchasing.estimates.view',
     ]);
     expect(getRequiredPermissionsForPath('/purchasing/price-book')).toEqual([
       'purchasing.pricebook.view',
+    ]);
+    expect(getRequiredPermissionsForPath('/operations/price-book')).toEqual([
+      'purchasing.pricebook.view',
+    ]);
+    expect(getRequiredPermissionsForPath('/purchasing/price-history')).toEqual([
+      'purchasing.pricebook.view',
+      'wms.suppliers.view:all',
     ]);
     expect(getRequiredPermissionsForPath('/purchasing/payments')).toEqual(['purchasing.payments.view']);
     expect(getRequiredPermissionsForPath('/purchasing/payments/new')).toEqual([
