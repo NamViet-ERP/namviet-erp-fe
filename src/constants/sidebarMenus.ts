@@ -23,7 +23,7 @@ function toSidebarChildren(items: SidebarMenuItem[]): SidebarChildItem[] {
 /** Tắt tab / nút Báo cáo kho. Bật `true` khi dùng lại phân hệ. */
 export const WMS_REPORTS_ENABLED = true;
 
-/** Thứ tự theo luồng nghiệp vụ: kho dự án → tồn → nhập/xuất/chuyển → danh mục */
+/** Thứ tự theo luồng nghiệp vụ: kho dự án → tồn → kế hoạch hàng về → nhập/xuất/chuyển/hoàn trả → kiểm kê → lỗi → báo cáo */
 export const warehouseMenu: SidebarMenuItem[] = [
   {
     id: 'dashboard',
@@ -82,6 +82,13 @@ export const warehouseMenu: SidebarMenuItem[] = [
     permission: 'wms.export_returns.view:all',
   },
   {
+    id: 'stocktake',
+    label: 'Kiểm kê kho',
+    icon: ClipboardCheck,
+    path: '/stocktake/list',
+    permission: 'wms.stocktakes.view:all',
+  },
+  {
     id: 'defects',
     label: 'Hàng lỗi và Bảo hành',
     icon: AlertTriangle,
@@ -108,6 +115,7 @@ export const stocktakeMenu: SidebarMenuItem[] = [
     permission: 'wms.stocktakes.view:all',
   },
 ];
+
 export const recruitmentMenu: SidebarMenuItem[] = [
   {
     id: 'recruitment-dashboard',
@@ -145,20 +153,21 @@ export const recruitmentMenu: SidebarMenuItem[] = [
     permission: 'hrm.recruitment.costs.view',
   },
   {
-    id: 'recruitment-reports',
-    label: 'Báo cáo',
-    icon: BarChart3,
-    path: '/recruitment/reports',
-    permission: 'hrm.recruitment.reports.view',
-  },
-  {
     id: 'recruitment-hr-stats',
     label: 'Thống kê nhân sự',
     icon: UserCog,
     path: '/recruitment/hr-stats',
     permission: 'hrm.candidates.view:all',
   },
+  {
+    id: 'recruitment-reports',
+    label: 'Báo cáo',
+    icon: BarChart3,
+    path: '/recruitment/reports',
+    permission: 'hrm.recruitment.reports.view',
+  },
 ];
+
 export const membersMenu: SidebarMenuItem[] = [
   {
     id: 'members-list',
@@ -207,18 +216,19 @@ function menuItem(items: SidebarMenuItem[], id: string): SidebarMenuItem {
   return item;
 }
 
-/** HRM — tổng quan → hồ sơ/thống kê → luồng tuyển dụng → thiết lập cuối. */
+/** HRM — tổng quan → hồ sơ nhân sự → luồng tuyển dụng liền mạch → thống kê & báo cáo → thiết lập. */
 export const hrmMenu: SidebarMenuItem[] = [
   menuItem(recruitmentMenu, 'recruitment-dashboard'),
   menuItem(membersMenu, 'members-list'),
-  menuItem(recruitmentMenu, 'recruitment-hr-stats'),
   menuItem(recruitmentMenu, 'recruitment-plans'),
   menuItem(recruitmentMenu, 'candidates-list'),
   menuItem(recruitmentMenu, 'recruitment-calendar'),
   menuItem(recruitmentMenu, 'recruitment-costs'),
+  menuItem(recruitmentMenu, 'recruitment-hr-stats'),
   menuItem(recruitmentMenu, 'recruitment-reports'),
   menuItem(membersMenu, 'members-settings'),
 ];
+
 export const adminMenu: SidebarMenuItem[] = [
   {
     id: 'admin-users',
@@ -253,7 +263,8 @@ export const cskhMenu: SidebarMenuItem[] = [
     permission: CSKH_VIEW_PERMISSION,
   },
 ];
-/** Mua hàng — theo luồng: tham chiếu giá → cầu mua → PO → hợp đồng/hồ sơ → thanh toán → BH. */
+
+/** Mua hàng — theo luồng: Dashboard → Kế hoạch → Phát sinh → Đơn hàng → Hợp đồng → Hồ sơ → Kế hoạch thanh toán → Đề nghị thanh toán → Lịch sử giá → Bảo hành. */
 export const purchasingMenu: SidebarMenuItem[] = [
   {
     id: 'pur-dashboard',
@@ -261,13 +272,6 @@ export const purchasingMenu: SidebarMenuItem[] = [
     icon: LayoutDashboard,
     path: '/purchasing/dashboard',
     permission: 'purchasing.dashboard.view',
-  },
-  {
-    id: 'pur-price-history',
-    label: 'Lịch sử giá',
-    icon: History,
-    path: '/purchasing/price-history',
-    permission: ['purchasing.pricebook.view', 'wms.suppliers.view:all'],
   },
   {
     id: 'pur-plan',
@@ -319,6 +323,13 @@ export const purchasingMenu: SidebarMenuItem[] = [
     permission: 'purchasing.payments.view',
   },
   {
+    id: 'pur-price-history',
+    label: 'Lịch sử giá',
+    icon: History,
+    path: '/purchasing/price-history',
+    permission: ['purchasing.pricebook.view', 'wms.suppliers.view:all'],
+  },
+  {
     id: 'pur-warranties',
     label: 'Bảo hành / Khiếu nại',
     icon: ShieldCheck,
@@ -326,20 +337,14 @@ export const purchasingMenu: SidebarMenuItem[] = [
     permission: 'purchasing.warranties.view',
   },
 ];
-/** Nhà cung cấp — master → giá → phân tích/nợ → đánh giá → blacklist. */
+
+/** Nhà cung cấp — theo chu trình SRM: Dashboard → Nhà cung cấp → Nhóm NCC → Liên hệ NCC → Đánh giá → Công nợ → Chi tiêu → Blacklist. */
 export const suppliersMenu: SidebarMenuItem[] = [
   {
     id: 'sup-dashboard',
     label: 'Dashboard',
     icon: LayoutDashboard,
     path: '/suppliers/dashboard',
-    permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
-  },
-  {
-    id: 'sup-groups',
-    label: 'Nhóm nhà cung cấp',
-    icon: Layers,
-    path: '/suppliers/groups',
     permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
   },
   {
@@ -350,24 +355,17 @@ export const suppliersMenu: SidebarMenuItem[] = [
     permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
   },
   {
+    id: 'sup-groups',
+    label: 'Nhóm nhà cung cấp',
+    icon: Layers,
+    path: '/suppliers/groups',
+    permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
+  },
+  {
     id: 'sup-contacts',
     label: 'Liên hệ NCC',
     icon: Users,
     path: '/suppliers/contacts',
-    permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
-  },
-  {
-    id: 'sup-spend',
-    label: 'Chi tiêu theo NCC',
-    icon: PieChart,
-    path: '/suppliers/spend',
-    permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
-  },
-  {
-    id: 'sup-debt',
-    label: 'Công nợ NCC',
-    icon: WalletCards,
-    path: '/suppliers/debt',
     permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
   },
   {
@@ -378,6 +376,20 @@ export const suppliersMenu: SidebarMenuItem[] = [
     permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
   },
   {
+    id: 'sup-debt',
+    label: 'Công nợ NCC',
+    icon: WalletCards,
+    path: '/suppliers/debt',
+    permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
+  },
+  {
+    id: 'sup-spend',
+    label: 'Chi tiêu theo NCC',
+    icon: PieChart,
+    path: '/suppliers/spend',
+    permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
+  },
+  {
     id: 'sup-blacklist',
     label: 'Danh sách blacklist',
     icon: Ban,
@@ -385,6 +397,7 @@ export const suppliersMenu: SidebarMenuItem[] = [
     permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
   },
 ];
+
 /** Trung tâm Điều hành — Điều hành 360°, Sổ giá chào thầu. */
 export const executiveMenu: SidebarMenuItem[] = [
   {
@@ -403,7 +416,7 @@ export const executiveMenu: SidebarMenuItem[] = [
   },
 ];
 
-/** SLC — Tổng quan, Dự án EPC, Danh mục vật tư, Thiết lập cây VT. */
+/** SLC — Tổng quan, Danh sách dự án, Tiến độ cung ứng, Mua theo dự toán, Danh mục vật tư, Thiết lập. */
 export const operationsMenu: SidebarMenuItem[] = [
   {
     id: 'ops-dashboard',
@@ -411,13 +424,6 @@ export const operationsMenu: SidebarMenuItem[] = [
     icon: LayoutDashboard,
     path: '/operations/dashboard',
     permission: 'wms.projects.view:all',
-  },
-  {
-    id: 'ops-estimate-procurement',
-    label: 'Mua theo dự toán',
-    icon: Calculator,
-    path: '/operations/estimate-procurement',
-    permission: ['purchasing.estimates.view', 'purchasing.rfq.view'],
   },
   {
     id: 'ops-project-list',
@@ -432,6 +438,13 @@ export const operationsMenu: SidebarMenuItem[] = [
     icon: FolderKanban,
     path: '/operations/projects',
     permission: 'wms.projects.view:all',
+  },
+  {
+    id: 'ops-estimate-procurement',
+    label: 'Mua theo dự toán',
+    icon: Calculator,
+    path: '/operations/estimate-procurement',
+    permission: ['purchasing.estimates.view', 'purchasing.rfq.view'],
   },
   {
     id: 'ops-materials',
@@ -466,6 +479,34 @@ export const unifiedSidebarMenu: SidebarMenuItem[] = [
     permission: ['admin.users.view:all', 'purchasing.pricebook.view', 'wms.projects.view:all'],
     children: toSidebarChildren(executiveMenu),
   },
+  {
+    id: 'mod-operations',
+    label: 'Dự án EPC',
+    icon: Activity,
+    path: '/operations/dashboard',
+    children: toSidebarChildren(operationsMenu),
+  },
+  {
+    id: 'mod-purchasing',
+    label: 'Mua sắm & Đơn hàng',
+    icon: ShoppingCart,
+    path: '/purchasing/dashboard',
+    children: toSidebarChildren(purchasingMenu),
+  },
+  {
+    id: 'mod-suppliers',
+    label: 'Nhà cung cấp',
+    icon: Building2,
+    path: '/suppliers/dashboard',
+    children: toSidebarChildren(suppliersMenu),
+  },
+  {
+    id: 'mod-warehouse',
+    label: 'Kho vận & Tồn kho',
+    icon: Warehouse,
+    path: '/warehouse/dashboard-warehouse',
+    children: toSidebarChildren(warehouseMenu),
+  },
   ...(CSKH_MODULE_ENABLED
     ? [{
         id: 'mod-cskh',
@@ -476,34 +517,6 @@ export const unifiedSidebarMenu: SidebarMenuItem[] = [
         children: CSKH_MODULE_LOCKED ? undefined : toSidebarChildren(cskhMenu),
       } satisfies SidebarMenuItem]
     : []),
-  {
-    id: 'mod-operations',
-    label: 'Dự án EPC',
-    icon: Activity,
-    path: '/operations/dashboard',
-    children: toSidebarChildren(operationsMenu),
-  },
-  {
-    id: 'mod-suppliers',
-    label: 'Nhà cung cấp',
-    icon: Building2,
-    path: '/suppliers/dashboard',
-    children: toSidebarChildren(suppliersMenu),
-  },
-  {
-    id: 'mod-purchasing',
-    label: 'Mua sắm & Đơn hàng',
-    icon: ShoppingCart,
-    path: '/purchasing/dashboard',
-    children: toSidebarChildren(purchasingMenu),
-  },
-  {
-    id: 'mod-warehouse',
-    label: 'Kho vận & Tồn kho',
-    icon: Warehouse,
-    path: '/warehouse/dashboard-warehouse',
-    children: toSidebarChildren([...warehouseMenu, ...stocktakeMenu]),
-  },
   {
     id: 'mod-hrm',
     label: 'Quản trị Nhân sự',
