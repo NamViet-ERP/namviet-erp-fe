@@ -65,6 +65,9 @@ export default function App() {
             <Route path="/operations/project-list" element={<Pages.OperationsProjectListPage />} />
             <Route path="/operations/projects" element={<Pages.OperationsProjectsPage />} />
             <Route path="/operations/materials" element={<Pages.MaterialsPage />} />
+            <Route path="/operations/price-book" element={<Pages.PurchasePriceBookPage />} />
+            <Route path="/operations/estimate-procurement" element={<Pages.PurchaseEstimateProcurementPage />} />
+            <Route path="/operations/estimate-procurement/:id" element={<Pages.PurchaseEstimateDetailPage />} />
             <Route path="/operations/settings" element={<Navigate to="/operations/settings/material-categories" replace />} />
             <Route path="/operations/settings/material-categories" element={<Pages.SettingsPage />} />
             <Route path="/operations/settings/material-units" element={<Pages.SettingsPage />} />
@@ -118,9 +121,10 @@ export default function App() {
             <Route path="/purchasing/orders" element={<Pages.PurchaseOrdersPage />} />
             <Route path="/purchasing/orders/new" element={<Pages.PurchaseOrderDetailPage />} />
             <Route path="/purchasing/orders/:code" element={<Pages.PurchaseOrderDetailPage />} />
-            <Route path="/purchasing/estimate-procurement" element={<Pages.PurchaseEstimateProcurementPage />} />
-            <Route path="/purchasing/estimate-procurement/:id" element={<Pages.PurchaseEstimateDetailPage />} />
-            <Route path="/purchasing/price-book" element={<Pages.PurchasePriceBookPage />} />
+            <Route path="/purchasing/price-history" element={<Pages.SupplierPriceHistoryPage />} />
+            <Route path="/purchasing/estimate-procurement" element={<Navigate to="/operations/estimate-procurement" replace />} />
+            <Route path="/purchasing/estimate-procurement/:id" element={<Navigate to="/operations/estimate-procurement" replace />} />
+            <Route path="/purchasing/price-book" element={<Navigate to="/operations/price-book" replace />} />
             <Route path="/purchasing/contracts" element={<Pages.PurchaseContractsPage />} />
             <Route path="/purchasing/documents" element={<Pages.PurchaseDocumentsPage />} />
             <Route path="/purchasing/warranties" element={<Pages.PurchaseWarrantiesPage />} />

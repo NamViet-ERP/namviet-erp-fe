@@ -4,6 +4,7 @@ import TabFilter from '../../components/ui/TabFilter';
 import HrmPanel from '../../components/hr/HrmPanel';
 import SupplierOrderEvaluationsPanel from '../../components/suppliers/SupplierOrderEvaluationsPanel';
 import SupplierKpiEvaluationsPanel from '../../components/suppliers/SupplierKpiEvaluationsPanel';
+import SupplierSourcingKpiCards from '../../components/suppliers/SupplierSourcingKpiCards';
 import { useSupplierDeliveryEvaluations } from '../../hooks/useSupplierDirectory';
 import type { TabItem } from '../../types';
 
@@ -30,9 +31,12 @@ export default function SupplierEvaluationsPage() {
     <div className="page-shell">
       <PageHeader
         eyebrow="Nhà cung cấp"
-        title="Đánh giá NCC"
-        subtitle="Đánh giá theo đơn hàng và KPI định kỳ. Blacklist xem mục riêng trên menu."
+        title="Đánh giá & Thăng hạng NCC"
+        subtitle="Chuẩn hóa đánh giá thăng hạng (50-20-20-10), KPI Sourcing và đánh giá theo đơn hàng."
       />
+
+      <SupplierSourcingKpiCards />
+
       <HrmPanel noPadding>
         <div className="px-4 pt-3 border-b border-[var(--md-outline-variant)]">
           <TabFilter

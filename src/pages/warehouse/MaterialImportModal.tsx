@@ -140,7 +140,10 @@ export default function MaterialImportModal({
         const matchName = row.materialName?.toLowerCase().includes(q);
         const matchCategory = `${row.danhMuc ?? ''} ${row.nhomVatTu ?? ''}`.toLowerCase().includes(q);
         const matchSpec = row.technicalSpec?.toLowerCase().includes(q);
-        if (!matchCode && !matchName && !matchCategory && !matchSpec) return false;
+        const matchRow = String(row.rowNumber).includes(q) || `dòng ${row.rowNumber}`.includes(q);
+        const matchErrors = row.errors?.some(e => e.toLowerCase().includes(q));
+        const matchWarnings = row.warnings?.some(w => w.toLowerCase().includes(q));
+        if (!matchCode && !matchName && !matchCategory && !matchSpec && !matchRow && !matchErrors && !matchWarnings) return false;
       }
 
       return true;
@@ -405,7 +408,7 @@ export default function MaterialImportModal({
                   }`}
                   onClick={() => setFilterTab('existing')}
                 >
-                  Trùng mã ({parseResult.existingRowCount})
+                  Mã đã tồn tại ({parseResult.existingRowCount})
                 </button>
                 <button
                   type="button"
@@ -427,7 +430,7 @@ export default function MaterialImportModal({
               <input
                 type="text"
                 className="w-full pl-8 pr-3 py-1.5 text-xs rounded-md border border-[var(--md-outline-variant)] bg-[var(--md-surface)] text-[var(--md-on-surface)] placeholder:text-[var(--md-on-surface-variant)]/60 focus:outline-none focus:ring-1 focus:ring-[var(--md-primary)]"
-                placeholder="Lọc nhanh theo mã vật tư, tên, danh mục, quy cách trong bảng xem trước…"
+                placeholder="Lọc nhanh theo số dòng, mã vật tư, tên, lỗi vi phạm, quy cách…"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
               />

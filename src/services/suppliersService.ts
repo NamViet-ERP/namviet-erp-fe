@@ -5,6 +5,45 @@ export type { SupplierApiDto } from '../types/wms';
 /** @deprecated Prefer UpsertSupplierRequest from types/wms */
 export type UpsertSupplierBody = UpsertSupplierRequest;
 
+export interface SubmitTierEvaluationRequest {
+  priceScore: number;
+  profileScore: number;
+  paymentScore: number;
+  serviceScore: number;
+  targetGrade?: string;
+  reason?: string;
+  detailsJson?: string;
+}
+
+export interface SupplierTierEvaluationDto {
+  id: number;
+  supplierId: number;
+  oldGrade?: string | null;
+  newGrade: string;
+  totalScore: number;
+  priceScore: number;
+  profileScore: number;
+  paymentScore: number;
+  serviceScore: number;
+  evaluationDetailsJson?: string | null;
+  reason?: string | null;
+  evaluatedById?: string | null;
+  evaluatedByName?: string | null;
+  createdAt: string;
+}
+
+export interface SourcingKpiSummaryDto {
+  totalSuppliers: number;
+  totalNewThisMonth: number;
+  totalPromotedThisMonth: number;
+  gradeACount: number;
+  gradeBCount: number;
+  gradeCCount: number;
+  gradeDCount: number;
+  otherGradeCount: number;
+  promotionRatePercent: number;
+}
+
 const ENDPOINT = '/api/warehouse/suppliers';
 
 export function findSupplierByName(suppliers: SupplierApiDto[], name: string) {
@@ -75,5 +114,17 @@ export const suppliersService = {
 
   async reject(id: number) {
     return apiClient.post<SupplierApiDto>(`${ENDPOINT}/${id}/reject`);
+  },
+
+  async submitTierEvaluation(id: number, body: SubmitTierEvaluationRequest) {
+    return apiClient.post<SupplierTierEvaluationDto>(`${ENDPOINT}/${id}/tier-evaluation`, body);
+  },
+
+  async getGradeHistory(id: number) {
+    return apiClient.get<SupplierTierEvaluationDto[]>(`${ENDPOINT}/${id}/grade-history`);
+  },
+
+  async getSourcingKpi() {
+    return apiClient.get<SourcingKpiSummaryDto>(`${ENDPOINT}/sourcing-kpi`);
   },
 };

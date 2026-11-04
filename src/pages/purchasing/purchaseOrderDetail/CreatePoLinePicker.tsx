@@ -49,9 +49,23 @@ export function CreatePoLinePicker({
   return (
     <section className="pur-detail__card">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-        <h2 className="purchasing-section-title mb-0">
-          Mặt hàng {supplierName ? `- ${supplierName}` : ''}
-        </h2>
+        <div className="flex items-center gap-2 flex-wrap">
+          <h2 className="purchasing-section-title mb-0">
+            Mặt hàng & Dịch vụ {supplierName ? `- ${supplierName}` : ''}
+          </h2>
+          {supplierLines.length > 0 && (
+            <div className="flex items-center gap-1.5 text-xs">
+              <span className="px-2 py-0.5 rounded-full bg-[var(--md-surface-variant)] text-[var(--md-on-surface-variant)] font-medium">
+                {supplierLines.length} dòng
+              </span>
+              {supplierLines.some(l => l.lineType === 'service' || l.lineType === 'expense') && (
+                <span className="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-medium">
+                  💼 {supplierLines.filter(l => l.lineType === 'service' || l.lineType === 'expense').length} dịch vụ
+                </span>
+              )}
+            </div>
+          )}
+        </div>
         {supplierLines.length > 0 ? (
           <div className="flex flex-wrap items-center gap-3">
             <input
@@ -127,7 +141,29 @@ export function CreatePoLinePicker({
                     </td>
                     <td>{line.systemName || '-'}</td>
                     <td>{line.category || '-'}</td>
-                    <td>{line.productName}</td>
+                    <td>
+                      <div className="flex flex-col gap-1 py-0.5">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span
+                            className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold border ${
+                              line.lineType === 'service'
+                                ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800'
+                                : line.lineType === 'expense'
+                                  ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-800'
+                                  : 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800'
+                            }`}
+                          >
+                            {line.lineType === 'service' ? '💼 Dịch vụ' : line.lineType === 'expense' ? '🏛️ Chi phí' : '📦 Vật tư'}
+                          </span>
+                          <span className="font-medium text-[var(--md-on-surface)]">{line.productName}</span>
+                        </div>
+                        {line.materialCode && (
+                          <span className="text-[11px] text-[var(--md-on-surface-variant)] font-mono">
+                            Mã: {line.materialCode}
+                          </span>
+                        )}
+                      </div>
+                    </td>
                     <td>{line.spec || '-'}</td>
                     <td>{line.unit || '-'}</td>
                     <td className="pur-erp__td-num">

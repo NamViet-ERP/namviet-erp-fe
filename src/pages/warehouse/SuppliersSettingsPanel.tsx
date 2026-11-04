@@ -2,7 +2,10 @@ import type React from 'react';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
-import { Ban, Check, Plus, Trash2, Pencil, Eye, X } from 'lucide-react';
+import { Ban, Check, Plus, Trash2, Pencil, Eye, X, Award, History } from 'lucide-react';
+import SupplierTierEvaluationModal from '../../components/suppliers/SupplierTierEvaluationModal';
+import SupplierGradeHistoryModal from '../../components/suppliers/SupplierGradeHistoryModal';
+import SupplierSourcingKpiCards from '../../components/suppliers/SupplierSourcingKpiCards';
 import PurchasingListLayout from '../../components/purchasing/PurchasingListLayout';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Pagination from '../../components/ui/Pagination';
@@ -170,6 +173,8 @@ export default function SuppliersSettingsPanel({
   const [openingEdit, setOpeningEdit] = useState(false);
   const [approveTarget, setApproveTarget] = useState<SupplierRow | null>(null);
   const [rejectTarget, setRejectTarget] = useState<SupplierRow | null>(null);
+  const [evaluatingSupplier, setEvaluatingSupplier] = useState<SupplierRow | null>(null);
+  const [historySupplier, setHistorySupplier] = useState<SupplierRow | null>(null);
 
   const groupIdFromUrl = useMemo(() => {
     const raw = searchParams.get('groupId');
@@ -396,6 +401,16 @@ export default function SuppliersSettingsPanel({
   const rowActions = (s: SupplierRow): DropdownItem[] => [
     { label: 'Xem chi tiết', icon: Eye, onClick: () => setViewing(s) },
     { label: 'Sửa', icon: Pencil, onClick: () => void openEdit(s) },
+    {
+      label: 'Đánh giá thăng hạng (50-20-20-10)',
+      icon: Award,
+      onClick: () => setEvaluatingSupplier(s),
+    },
+    {
+      label: 'Lịch sử chuyển hạng',
+      icon: History,
+      onClick: () => setHistorySupplier(s),
+    },
     ...(canApproveSupplier && normalizeSupplierApproval(s.approvalStatus) !== SUPPLIER_APPROVAL.Approved
       ? [
           {
@@ -435,6 +450,7 @@ export default function SuppliersSettingsPanel({
         eyebrow="Nhà cung cấp"
         title="Nhà cung cấp"
         subtitle={subtitle}
+        intro={<SupplierSourcingKpiCards onGradeFilterSelect={(g) => { setRatingFilter(g); setPage(1); }} />}
         search={search}
         onSearchChange={value => {
           setSearch(value);
@@ -966,6 +982,25 @@ export default function SuppliersSettingsPanel({
         variant="danger"
         isLoading={rejectMutation.isPending}
       />
+
+      {evaluatingSupplier && (
+        <SupplierTierEvaluationModal
+          supplier={evaluatingSupplier}
+          isOpen={Boolean(evaluatingSupplier)}
+          onClose={() => setEvaluatingSupplier(null)}
+          onSuccess={() => {
+            void qc.invalidateQueries({ queryKey: queryKeys.suppliers.all });
+          }}
+        />
+      )}
+
+      {historySupplier && (
+        <SupplierGradeHistoryModal
+          supplier={historySupplier}
+          isOpen={Boolean(historySupplier)}
+          onClose={() => setHistorySupplier(null)}
+        />
+      )}
     </>
   );
 }

@@ -9,6 +9,7 @@ import type { MaterialApiDto } from '../../services/materialsService';
 import type { SupplierApiDto } from '../../services/suppliersService';
 import type { SupplierMaterialRiskApiDto } from '../../types/api/purchasingApi';
 import { formatCurrency } from '../../utils/formatCurrency';
+import { useServiceExpenseCategories } from '../../hooks/useServiceExpenseCategories';
 import {
   MAX_BUDGET_UNIT_PRICE,
   lineAmount,
@@ -51,6 +52,7 @@ export default function PurchasePlanCreateLinesTable({
   onToggleExpand,
 }: PurchasePlanCreateLinesTableProps) {
   const [activeTab, setActiveTab] = useState<'all' | 'material' | 'service_expense'>('all');
+  const { categories } = useServiceExpenseCategories();
 
   const totalCount = lines.length;
   const materialCount = lines.filter(l => (l.lineType || 'material') === 'material').length;
@@ -238,17 +240,40 @@ export default function PurchasePlanCreateLinesTable({
                               }}
                             />
                           ) : (
-                            <input
-                              className="form-input form-input-sm w-full"
-                              value={line.productName}
-                              disabled={linesLocked}
-                              placeholder={
-                                line.lineType === 'service'
-                                  ? 'Nhập tên dịch vụ / thầu phụ…'
-                                  : 'Nhập tên chi phí ngoài dự án…'
-                              }
-                              onChange={e => onUpdateLine(line.key, { productName: e.target.value })}
-                            />
+                            <div className="flex flex-col gap-1.5">
+                              <select
+                                className="form-input form-input-sm text-xs font-medium"
+                                value={line.category || ''}
+                                disabled={linesLocked}
+                                aria-label="Nhóm dịch vụ hoặc chi phí"
+                                onChange={e => {
+                                  const catCode = e.target.value;
+                                  const sel = categories.find(c => c.code === catCode);
+                                  onUpdateLine(line.key, {
+                                    category: catCode,
+                                    productName: line.productName.trim() ? line.productName : (sel?.name ?? ''),
+                                  });
+                                }}
+                              >
+                                <option value="">-- Chọn nhóm {line.lineType === 'service' ? 'dịch vụ' : 'chi phí'} --</option>
+                                {categories.map(cat => (
+                                  <option key={cat.code} value={cat.code}>
+                                    {cat.name}
+                                  </option>
+                                ))}
+                              </select>
+                              <input
+                                className="form-input form-input-sm w-full"
+                                value={line.productName}
+                                disabled={linesLocked}
+                                placeholder={
+                                  line.lineType === 'service'
+                                    ? 'Diễn giải chi tiết dịch vụ / thầu phụ…'
+                                    : 'Diễn giải chi tiết chi phí ngoài dự án…'
+                                }
+                                onChange={e => onUpdateLine(line.key, { productName: e.target.value })}
+                              />
+                            </div>
                           )}
                         </div>
                       </td>
@@ -343,8 +368,31 @@ export default function PurchasePlanCreateLinesTable({
                               <FormField label="Hệ" className="pur-create-plan__ff">
                                 <input className="form-input form-input-sm" value={line.systemName} disabled={linesLocked} onChange={e => onUpdateLine(line.key, { systemName: e.target.value })} />
                               </FormField>
-                              <FormField label="Danh mục" className="pur-create-plan__ff">
-                                <input className="form-input form-input-sm" value={line.category} disabled={linesLocked} onChange={e => onUpdateLine(line.key, { category: e.target.value })} />
+                              <FormField label="Danh mục / Nhóm" className="pur-create-plan__ff">
+                                {!isMaterial ? (
+                                  <select
+                                    className="form-input form-input-sm text-xs"
+                                    value={line.category || ''}
+                                    disabled={linesLocked}
+                                    onChange={e => {
+                                      const catCode = e.target.value;
+                                      const sel = categories.find(c => c.code === catCode);
+                                      onUpdateLine(line.key, {
+                                        category: catCode,
+                                        productName: line.productName.trim() ? line.productName : (sel?.name ?? ''),
+                                      });
+                                    }}
+                                  >
+                                    <option value="">-- Chọn nhóm dịch vụ / chi phí --</option>
+                                    {categories.map(cat => (
+                                      <option key={cat.code} value={cat.code}>
+                                        {cat.name}
+                                      </option>
+                                    ))}
+                                  </select>
+                                ) : (
+                                  <input className="form-input form-input-sm" value={line.category} disabled={linesLocked} onChange={e => onUpdateLine(line.key, { category: e.target.value })} />
+                                )}
                               </FormField>
                               <FormField label="Quy cách" className="pur-create-plan__ff">
                                 <input className="form-input form-input-sm" value={line.spec} disabled={linesLocked} onChange={e => onUpdateLine(line.key, { spec: e.target.value })} />

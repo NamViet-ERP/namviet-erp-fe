@@ -76,7 +76,7 @@ export function useCreatePurchaseOrderForm(onCreated: (code: string) => void) {
   const visibleSupplierLines = useMemo(() => {
     const q = productSearch.trim().toLowerCase();
     if (!q) return supplierLines;
-    return supplierLines.filter(l => l.productName.toLowerCase().includes(q));
+    return supplierLines.filter(l => l.productName.toLowerCase().includes(q) || (l.category && l.category.toLowerCase().includes(q)) || (l.materialCode && l.materialCode.toLowerCase().includes(q)));
   }, [supplierLines, productSearch]);
 
   const matchedSupplier = useMemo(

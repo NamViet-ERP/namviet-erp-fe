@@ -14,3 +14,4 @@ export * from '../suppliersService';
 export * from '../supplierDirectoryService';
 export * from '../supplierPayablesService';
 export * from '../supplierPoAnalyticsService';
+export * from '../serviceExpenseCategoriesService';

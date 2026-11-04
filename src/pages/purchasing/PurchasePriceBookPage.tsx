@@ -49,6 +49,11 @@ import {
 import { formatCurrencyFull, formatCurrencyShort } from '../../utils/formatCurrency';
 import type { PriceBookItemApiDto } from '../../types/api/purchasingApi';
 import RfqQuotesPanel from './RfqQuotesPanel';
+import { Zap } from 'lucide-react';
+import { useSession } from '../../auth/AuthProvider';
+import { isSessionAdmin } from '../../constants/systemUsers';
+import { useMarkupSettings } from '../../hooks/useMarkupSettings';
+import AdminMarkupSettingModal from '../../components/purchasing/AdminMarkupSettingModal';
 
 type Tab = 'items' | 'matrix' | 'rfq' | 'groups' | 'estimates' | 'margins';
 type PeriodType = 'all' | 'month' | 'quarter' | 'year';
@@ -162,6 +167,21 @@ function exportMarginsCsv(rows: NonNullable<ReturnType<typeof usePriceBookMargin
 
 export default function PurchasePriceBookPage() {
   const { has } = usePermission();
+  const { user, permissions } = useSession();
+  const isAdmin = isSessionAdmin(user);
+  const roleLower = (user?.role ?? '').toLowerCase();
+  const isBoss = isAdmin ||
+    roleLower.includes('director') ||
+    roleLower.includes('manager') ||
+    roleLower.includes('giam_doc') ||
+    roleLower.includes('truong_phong') ||
+    roleLower.includes('bld') ||
+    permissions.includes('admin.users.view:all') ||
+    permissions.includes('purchasing.pricebook.update');
+
+  const { config: markupConfig, saveConfig: saveMarkupConfig, getMarkupPercent } = useMarkupSettings();
+  const [markupModalOpen, setMarkupModalOpen] = useState(false);
+
   const canWriteRfq = has('purchasing.rfq.create');
   const canUpdateRfq = has('purchasing.rfq.update');
   const canUpdateBook = has('purchasing.pricebook.update');
@@ -292,8 +312,22 @@ export default function PurchasePriceBookPage() {
 
   return (
     <PurchasingListLayout
-      title="Sổ giá & Phân tích"
-      subtitle="Sổ giá theo mặt hàng · Giá chào thầu (RFQ) · Phân tích Mua vào - Bán ra"
+      eyebrow="Dự án EPC / Chào thầu"
+      title="Sổ giá chào thầu & Phân tích"
+      subtitle="Sổ giá chào thầu theo mặt hàng · Giá chào thầu (RFQ) · Phân tích Mua vào - Bán ra"
+      actions={
+        isBoss ? (
+          <button
+            type="button"
+            className="btn btn-primary inline-flex items-center gap-1.5 shadow-sm bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-semibold text-xs py-1.5 px-3"
+            onClick={() => setMarkupModalOpen(true)}
+            title="Cài đặt hệ số đắp giá / chào thầu theo từng nhóm hàng (Dành riêng cho BLĐ & Admin)"
+          >
+            <Zap size={14} className="text-yellow-300 fill-yellow-300 animate-pulse" />
+            <span>⚡ Cài Đặt Markup Quản Trị</span>
+          </button>
+        ) : null
+      }
       hideSearch={tab !== 'items'}
       search={search}
       onSearchChange={setSearch}
@@ -396,6 +430,8 @@ export default function PurchasePriceBookPage() {
               loading={items.isLoading}
               rows={items.data ?? []}
               onOpen={setDetailCode}
+              isBoss={isBoss}
+              getMarkupPercent={getMarkupPercent}
             />
           )}
         </div>
@@ -694,6 +730,15 @@ export default function PurchasePriceBookPage() {
           </div>
         )}
       </Modal>
+
+      {isBoss && (
+        <AdminMarkupSettingModal
+          isOpen={markupModalOpen}
+          onClose={() => setMarkupModalOpen(false)}
+          config={markupConfig}
+          onSave={saveMarkupConfig}
+        />
+      )}
     </PurchasingListLayout>
   );
 }
@@ -702,10 +747,14 @@ function ItemsTable({
   loading,
   rows,
   onOpen,
+  isBoss,
+  getMarkupPercent,
 }: {
   loading: boolean;
   rows: PriceBookItemApiDto[];
   onOpen: (code: string) => void;
+  isBoss: boolean;
+  getMarkupPercent: (key?: string | number | null) => number;
 }) {
   return (
     <div className="wms-inventory-table-wrap">
@@ -715,6 +764,7 @@ function ItemsTable({
             <th className="table-header-cell">Hàng hoá</th>
             <th className="table-header-cell">Giá mua mới nhất</th>
             <th className="table-header-cell">Giá dự toán</th>
+            <th className="table-header-cell text-right">Giá chào thầu EPC</th>
             <th className="table-header-cell">Chênh lệch (Mua - Dự toán)</th>
             <th className="table-header-cell">NCC gần nhất</th>
             <th className="table-header-cell">Khoảng giá</th>
@@ -724,10 +774,10 @@ function ItemsTable({
         </thead>
         <tbody>
           {loading ? (
-            <TableSkeletonRows colSpan={8} />
+            <TableSkeletonRows colSpan={9} />
           ) : rows.length === 0 ? (
             <tr>
-              <td colSpan={8} className="table-cell"><EmptyState message="Chưa có mặt hàng phù hợp." /></td>
+              <td colSpan={9} className="table-cell"><EmptyState message="Chưa có mặt hàng phù hợp." /></td>
             </tr>
           ) : rows.map(row => (
             <tr
@@ -762,6 +812,25 @@ function ItemsTable({
               </td>
               <td className="table-cell text-right tabular-nums">
                 {row.estimatePrice != null ? formatCurrencyFull(row.estimatePrice) : '—'}
+              </td>
+              <td className="table-cell text-right tabular-nums font-semibold text-amber-700 dark:text-amber-400">
+                {(() => {
+                  const basePrice = row.latestPrice ?? row.estimatePrice ?? 0;
+                  const markupPct = getMarkupPercent(row.materialCode);
+                  const biddingPrice = basePrice > 0 ? Math.round(basePrice * (1 + markupPct / 100)) : null;
+                  return biddingPrice != null ? (
+                    <div>
+                      <span>{formatCurrencyFull(biddingPrice)}</span>
+                      {isBoss && (
+                        <span className="block text-[10px] font-normal text-[var(--md-on-surface-variant)]">
+                          (+{markupPct}%)
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    '—'
+                  );
+                })()}
               </td>
               <td className={`table-cell text-right tabular-nums ${row.estimateDiff != null && row.estimateDiff > 0 ? 'text-[var(--md-error)]' : row.estimateDiff != null ? 'text-[var(--md-success)]' : ''}`}>
                 {row.estimateDiff != null
