@@ -1,7 +1,7 @@
 import type React from 'react';
 import { useState, useRef, useEffect, useId, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, AlertTriangle } from 'lucide-react';
 import type { MaterialApiDto } from '../../services/materialsService';
 import {
   collectScrollParents,
@@ -21,6 +21,8 @@ interface MaterialAutocompleteProps {
   displayLabel?: 'code-name' | 'name';
   /** When value is not in materials list (vd. phiếu cũ), vẫn hiện nhãn này. */
   fallbackLabel?: string;
+  hasError?: boolean;
+  errorMessage?: string;
 }
 
 function materialLabel(m: MaterialApiDto, displayLabel: 'code-name' | 'name') {
@@ -36,6 +38,8 @@ export default function MaterialAutocomplete({
   disabled = false,
   displayLabel = 'code-name',
   fallbackLabel,
+  hasError = false,
+  errorMessage,
 }: MaterialAutocompleteProps) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState('');
@@ -225,7 +229,7 @@ export default function MaterialAutocomplete({
 
   return (
     <div className={`search-autocomplete${compact ? ' search-autocomplete--compact' : ''}`}>
-      <div className="search-autocomplete__control">
+      <div className={`search-autocomplete__control${hasError ? ' search-autocomplete__control--error' : ''}`}>
         <input
           ref={inputRef}
           type="text"
@@ -234,9 +238,11 @@ export default function MaterialAutocomplete({
           aria-controls={listId}
           aria-autocomplete="list"
           disabled={disabled}
-          className="form-input search-autocomplete__input"
+          className={`form-input search-autocomplete__input${
+            hasError ? ' !border-red-500 !bg-red-50/50 !text-red-900 ring-1 !ring-red-400' : ''
+          }`}
           value={inputValue}
-          title={!open && inputValue ? inputValue : undefined}
+          title={!open && inputValue ? (hasError ? `${inputValue} (⚠️ Chưa có trong danh mục)` : inputValue) : undefined}
           placeholder={placeholder}
           onChange={e => {
             const next = e.target.value;
@@ -252,6 +258,14 @@ export default function MaterialAutocomplete({
           }}
           onKeyDown={onKeyDown}
         />
+        {hasError && (
+          <span
+            className="flex items-center pr-1 text-red-500 cursor-help"
+            title={errorMessage || `Mã vật tư '${value}' chưa có trong danh mục vật tư hệ thống. Cần tạo mã vật tư trước.`}
+          >
+            <AlertTriangle size={15} />
+          </span>
+        )}
         <button
           type="button"
           tabIndex={-1}
@@ -269,6 +283,14 @@ export default function MaterialAutocomplete({
           <ChevronDown size={14} className={chevronOpenClass} />
         </button>
       </div>
+      {hasError && (
+        <div
+          className="text-[11px] text-red-600 font-medium flex items-center gap-1 mt-0.5 leading-tight"
+          title={errorMessage || `Mã vật tư '${value}' chưa có trong danh mục vật tư hệ thống.`}
+        >
+          <span>⚠️ Chưa có trong danh mục</span>
+        </div>
+      )}
       {panel && createPortal(panel, document.body)}
     </div>
   );

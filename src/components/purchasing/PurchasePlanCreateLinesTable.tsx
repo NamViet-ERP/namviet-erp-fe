@@ -32,6 +32,7 @@ interface PurchasePlanCreateLinesTableProps {
   linesLocked: boolean;
   totals: Totals;
   risksByLineKey: Map<string, SupplierMaterialRiskApiDto[]>;
+  knownMaterialCodes?: Set<string>;
   onAddLine: (type?: PurchasePlanLineType) => void;
   onUpdateLine: (key: string, patch: Partial<DraftLine>) => void;
   onRemoveLine: (key: string) => void;
@@ -46,6 +47,7 @@ export default function PurchasePlanCreateLinesTable({
   linesLocked,
   totals,
   risksByLineKey,
+  knownMaterialCodes,
   onAddLine,
   onUpdateLine,
   onRemoveLine,
@@ -176,11 +178,24 @@ export default function PurchasePlanCreateLinesTable({
                 const lineIndex = lines.findIndex(l => l.key === line.key) + 1;
                 const openDetail = Boolean(expanded[line.key]);
                 const isMaterial = (line.lineType || 'material') === 'material';
+                const trimmedCode = line.materialCode?.trim() ?? '';
+                const hasUnknownMaterial =
+                  isMaterial &&
+                  Boolean(trimmedCode) &&
+                  knownMaterialCodes != null &&
+                  knownMaterialCodes.size > 0 &&
+                  !knownMaterialCodes.has(trimmedCode.toLowerCase());
                 const amount = lineAmount(line.quantity, line.budgetUnitPrice, isMaterial ? line.kgPerUnit : undefined);
                 const unitLocked = isMaterial && Boolean(line.materialCode.trim());
                 return (
                   <Fragment key={line.key}>
-                    <tr className="table-row">
+                    <tr
+                      className={`table-row transition-colors ${
+                        hasUnknownMaterial
+                          ? '!bg-red-50/70 dark:!bg-red-950/40 ring-1 ring-inset ring-red-400 dark:ring-red-700 hover:!bg-red-100/80 dark:hover:!bg-red-900/50'
+                          : ''
+                      }`}
+                    >
                       <td className="table-cell text-center tabular-nums text-[var(--md-on-surface-variant)]">
                         {lineIndex}
                       </td>
@@ -225,6 +240,12 @@ export default function PurchasePlanCreateLinesTable({
                               fallbackLabel={line.productName}
                               materials={materials}
                               disabled={linesLocked}
+                              hasError={hasUnknownMaterial}
+                              errorMessage={
+                                hasUnknownMaterial
+                                  ? `Mã vật tư '${line.materialCode}' chưa có trong danh mục hệ thống. Cần tạo mã vật tư trước.`
+                                  : undefined
+                              }
                               placeholder="Chọn tên vật tư…"
                               onChange={code => {
                                 if (!code.trim()) {

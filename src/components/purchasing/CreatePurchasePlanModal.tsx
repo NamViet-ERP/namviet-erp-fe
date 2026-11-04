@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { AlertTriangle } from 'lucide-react';
 import Modal from '../ui/Modal';
 import FormField from '../ui/FormField';
 import { showToast } from '../ui/Toast';
@@ -59,7 +60,7 @@ export default function CreatePurchasePlanModal({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { data: projectsPage } = useProjects({ page: 1, pageSize: 200, status: 'Active' });
   const { data: suppliersPage } = useSuppliers({ all: true });
-  const { data: materialsPage } = useMaterials({ pageSize: 500 });
+  const { data: materialsPage } = useMaterials({ all: true });
   const { data: editPlan } = usePurchasePlan(open && editCode ? editCode : undefined);
   const createMutation = useCreatePurchasePlan();
   const updateMutation = useUpdatePurchasePlan();
@@ -83,6 +84,21 @@ export default function CreatePurchasePlanModal({
     || previewMutation.isPending
     || templateMutation.isPending;
   const linesLocked = busy;
+
+  const knownMaterialCodes = useMemo(() => {
+    return new Set(materials.map(m => m.materialCode.trim().toLowerCase()));
+  }, [materials]);
+
+  const missingMaterialLines = useMemo(() => {
+    if (!materialsPage || materials.length === 0) return [];
+    return lines
+      .map((line, idx) => ({ line, rowNumber: idx + 1 }))
+      .filter(({ line }) => {
+        const isMaterial = (line.lineType || 'material') === 'material';
+        const code = line.materialCode?.trim().toLowerCase() ?? '';
+        return isMaterial && Boolean(code) && !knownMaterialCodes.has(code);
+      });
+  }, [lines, materialsPage, materials, knownMaterialCodes]);
 
   const totals = useMemo(() => {
     let budget = 0;
@@ -230,6 +246,21 @@ export default function CreatePurchasePlanModal({
         );
         return;
       }
+    }
+    if (missingMaterialLines.length > 0) {
+      const previewDetails = missingMaterialLines
+        .slice(0, 5)
+        .map(m => `Dòng ${m.rowNumber}: mã '${m.line.materialCode}'`)
+        .join('; ');
+      const extra =
+        missingMaterialLines.length > 5
+          ? ` và ${missingMaterialLines.length - 5} dòng khác...`
+          : '.';
+      showToast(
+        'error',
+        `Không thể tạo ${entityLabel} do có ${missingMaterialLines.length} dòng vật tư chưa có trong danh mục: ${previewDetails}${extra} Vui lòng tạo mã vật tư trước hoặc chỉnh sửa lại.`,
+      );
+      return;
     }
     const apiLines = toApiLines(lines);
     const hasPartial = lines.some(l => l.materialCode.trim() || l.productName.trim() || l.unit.trim());
@@ -388,6 +419,30 @@ export default function CreatePurchasePlanModal({
           />
         )}
 
+        {missingMaterialLines.length > 0 && (
+          <div className="mb-3 p-3 rounded-lg border border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-950/40 text-red-800 dark:text-red-200 text-xs flex items-start gap-2.5">
+            <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5 animate-pulse" />
+            <div className="flex-1 space-y-1">
+              <div className="font-semibold text-red-700 dark:text-red-300">
+                Phát hiện {missingMaterialLines.length} dòng vật tư chưa có trong danh mục hệ thống:
+              </div>
+              <div className="text-[11px] leading-relaxed max-h-24 overflow-y-auto pr-1">
+                {missingMaterialLines.map(m => (
+                  <span
+                    key={m.rowNumber}
+                    className="inline-block mr-2 mb-1 px-1.5 py-0.5 bg-red-100 dark:bg-red-900/60 rounded border border-red-200 dark:border-red-800"
+                  >
+                    <strong>Dòng {m.rowNumber}:</strong> {m.line.materialCode} ({m.line.productName || 'Chưa có tên'})
+                  </span>
+                ))}
+              </div>
+              <div className="text-[11px] text-red-600 dark:text-red-400 italic">
+                * Vui lòng khai báo các mã vật tư này trên hệ thống trước, hoặc chọn mã vật tư đã có trong danh mục.
+              </div>
+            </div>
+          </div>
+        )}
+
         <PurchasePlanCreateLinesTable
           lines={lines}
           expanded={expanded}
@@ -396,6 +451,7 @@ export default function CreatePurchasePlanModal({
           linesLocked={linesLocked}
           totals={totals}
           risksByLineKey={risksByLineKey}
+          knownMaterialCodes={knownMaterialCodes}
           onAddLine={(type) => setLines(prev => [...prev, emptyLine(type)])}
           onUpdateLine={updateLine}
           onRemoveLine={removeLine}

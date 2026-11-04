@@ -19,6 +19,7 @@ export interface MaterialListParams {
   kieu?: string;
   categoryId?: number;
   includeInactive?: boolean;
+  all?: boolean;
 }
 
 export type { UpsertMaterialRequest };
@@ -52,6 +53,7 @@ export const materialsService = {
       kieu: params.kieu,
       categoryId: params.categoryId,
       includeInactive: params.includeInactive,
+      all: params.all,
     });
     return {
       ...res,
