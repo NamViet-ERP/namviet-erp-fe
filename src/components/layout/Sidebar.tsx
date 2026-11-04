@@ -38,7 +38,7 @@ const moduleLabels: Record<Module, string> = {
   purchasing: 'MUA SẮM & ĐƠN HÀNG',
   suppliers: 'NHÀ CUNG CẤP',
   operations: 'DỰ ÁN EPC',
-  executive: 'BAN ĐIỀU HÀNH',
+  executive: 'TRUNG TÂM ĐIỀU HÀNH',
 };
 
 interface SidebarProps {

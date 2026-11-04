@@ -385,7 +385,7 @@ export const suppliersMenu: SidebarMenuItem[] = [
     permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
   },
 ];
-/** Ban Điều Hành — Điều hành 360°, Sổ giá chào thầu. */
+/** Trung tâm Điều hành — Điều hành 360°, Sổ giá chào thầu. */
 export const executiveMenu: SidebarMenuItem[] = [
   {
     id: 'exec-360',
@@ -460,7 +460,7 @@ export const operationsMenu: SidebarMenuItem[] = [
 export const unifiedSidebarMenu: SidebarMenuItem[] = [
   {
     id: 'mod-executive',
-    label: 'Ban Điều Hành',
+    label: 'Trung tâm Điều hành',
     icon: Activity,
     path: '/operations/executive-360',
     permission: ['admin.users.view:all', 'purchasing.pricebook.view', 'wms.projects.view:all'],
