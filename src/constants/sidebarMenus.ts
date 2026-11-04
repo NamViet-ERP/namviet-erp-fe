@@ -385,6 +385,24 @@ export const suppliersMenu: SidebarMenuItem[] = [
     permission: ['purchasing.suppliers.view', 'wms.suppliers.view:all'],
   },
 ];
+/** Ban Điều Hành — Điều hành 360°, Sổ giá chào thầu. */
+export const executiveMenu: SidebarMenuItem[] = [
+  {
+    id: 'exec-360',
+    label: 'Điều hành 360°',
+    icon: Activity,
+    path: '/operations/executive-360',
+    permission: 'wms.projects.view:all',
+  },
+  {
+    id: 'exec-price-book',
+    label: 'Sổ giá chào thầu',
+    icon: BookOpen,
+    path: '/operations/price-book',
+    permission: 'purchasing.pricebook.view',
+  },
+];
+
 /** SLC — Tổng quan, Dự án EPC, Danh mục vật tư, Thiết lập cây VT. */
 export const operationsMenu: SidebarMenuItem[] = [
   {
@@ -393,20 +411,6 @@ export const operationsMenu: SidebarMenuItem[] = [
     icon: LayoutDashboard,
     path: '/operations/dashboard',
     permission: 'wms.projects.view:all',
-  },
-  {
-    id: 'ops-executive-360',
-    label: 'Điều hành 360°',
-    icon: Activity,
-    path: '/operations/executive-360',
-    permission: 'wms.projects.view:all',
-  },
-  {
-    id: 'ops-price-book',
-    label: 'Sổ giá chào thầu',
-    icon: BookOpen,
-    path: '/operations/price-book',
-    permission: 'purchasing.pricebook.view',
   },
   {
     id: 'ops-estimate-procurement',
@@ -454,6 +458,14 @@ export const operationsMenu: SidebarMenuItem[] = [
  * Portal card `/dashboard` đã tắt; điều hướng chỉ qua menu này.
  */
 export const unifiedSidebarMenu: SidebarMenuItem[] = [
+  {
+    id: 'mod-executive',
+    label: 'Ban Điều Hành',
+    icon: Activity,
+    path: '/operations/executive-360',
+    permission: ['admin.users.view:all', 'purchasing.pricebook.view', 'wms.projects.view:all'],
+    children: toSidebarChildren(executiveMenu),
+  },
   ...(CSKH_MODULE_ENABLED
     ? [{
         id: 'mod-cskh',

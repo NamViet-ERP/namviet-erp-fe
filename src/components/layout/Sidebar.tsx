@@ -12,7 +12,7 @@ import {
   type PermissionNavItem,
 } from '../../lib/protectedNavigation';
 
-type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin' | 'technical' | 'cskh' | 'purchasing' | 'suppliers' | 'operations';
+type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin' | 'technical' | 'cskh' | 'purchasing' | 'suppliers' | 'operations' | 'executive';
 
 const moduleIcons: Record<Module, LucideIcon> = { 
   warehouse: WarehouseIcon, 
@@ -25,6 +25,7 @@ const moduleIcons: Record<Module, LucideIcon> = {
   purchasing: ShoppingCart,
   suppliers: Building2,
   operations: Activity,
+  executive: Activity,
 };
 const moduleLabels: Record<Module, string> = {
   warehouse: 'KHO VẬN',
@@ -37,6 +38,7 @@ const moduleLabels: Record<Module, string> = {
   purchasing: 'MUA SẮM & ĐƠN HÀNG',
   suppliers: 'NHÀ CUNG CẤP',
   operations: 'DỰ ÁN EPC',
+  executive: 'BAN ĐIỀU HÀNH',
 };
 
 interface SidebarProps {
@@ -268,7 +270,7 @@ export default function Sidebar({
   const isModuleAlt =
     currentModule === 'warehouse' || currentModule === 'stocktake'
     || currentModule === 'members' || currentModule === 'recruitment' || currentModule === 'admin'
-      || currentModule === 'technical' || currentModule === 'cskh' || currentModule === 'purchasing' || currentModule === 'suppliers';
+      || currentModule === 'technical' || currentModule === 'cskh' || currentModule === 'purchasing' || currentModule === 'suppliers' || currentModule === 'executive';
 
   return (
     <aside

@@ -23,7 +23,7 @@ import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import { useEscapeToClose } from '../../hooks/useEscapeToClose';
 import type { SessionCheckResult } from '../../services/authService';
 
-type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin' | 'technical' | 'cskh' | 'purchasing' | 'suppliers' | 'operations';
+type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin' | 'technical' | 'cskh' | 'purchasing' | 'suppliers' | 'operations' | 'executive';
 
 export default function AppLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -128,6 +128,8 @@ export default function AppLayout() {
   }
 
   const currentModule: Module =
+    location.pathname.startsWith('/operations/executive-360') ||
+    location.pathname.startsWith('/operations/price-book') ? 'executive' :
     location.pathname.startsWith('/operations') ? 'operations' :
     location.pathname.startsWith('/stocktake') ? 'stocktake' :
     location.pathname.startsWith('/recruitment') ? 'recruitment' :
@@ -146,7 +148,8 @@ export default function AppLayout() {
   const isWmsModule =
     currentModule === 'warehouse'
     || currentModule === 'stocktake'
-    || currentModule === 'operations';
+    || currentModule === 'operations'
+    || currentModule === 'executive';
   const shellModuleClass = isWmsModule ? 'app-shell--module app-shell--wms' : 'app-shell--module';
 
   const mainClass = [

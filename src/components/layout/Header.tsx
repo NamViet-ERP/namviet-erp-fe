@@ -20,7 +20,7 @@ import { useDarkMode } from '../../hooks/useDarkMode';
 import { isOwnWmsBellToastSuppressed } from '../../lib/wms/ownWmsBellToast';
 import type { WmsNotificationItemApiDto } from '../../services/notificationsService';
 
-type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin' | 'technical' | 'cskh' | 'purchasing' | 'suppliers' | 'operations';
+type Module = 'warehouse' | 'stocktake' | 'members' | 'recruitment' | 'admin' | 'technical' | 'cskh' | 'purchasing' | 'suppliers' | 'operations' | 'executive';
 type NotifType = 'warning' | 'import' | 'export' | 'info' | 'transfer' | 'stocktake' | 'estimate';
 
 const NOTIF_READ_KEY = 'nv-wms-notif-read';
