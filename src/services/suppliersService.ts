@@ -1,5 +1,12 @@
-import { apiClient } from '../lib/apiClient';
-import type { PagedApiResult, SupplierApiDto, SupplierNextCodeApiDto, UpsertSupplierRequest } from '../types/wms';
+import { apiClient, saveBlob } from '../lib/apiClient';
+import type {
+  PagedApiResult,
+  SupplierApiDto,
+  SupplierImportPreviewResponseDto,
+  SupplierImportResultDto,
+  SupplierNextCodeApiDto,
+  UpsertSupplierRequest,
+} from '../types/wms';
 
 export type { SupplierApiDto } from '../types/wms';
 /** @deprecated Prefer UpsertSupplierRequest from types/wms */
@@ -90,6 +97,9 @@ export const suppliersService = {
       paymentTerms: body.paymentTerms ?? null,
       creditLimit: body.creditLimit ?? null,
       taxCode: body.taxCode ?? null,
+      supplierType: body.supplierType ?? null,
+      scope: body.scope ?? null,
+      website: body.website ?? null,
     });
   },
 
@@ -102,8 +112,34 @@ export const suppliersService = {
       paymentTerms: body.paymentTerms ?? null,
       creditLimit: body.creditLimit ?? null,
       taxCode: body.taxCode ?? null,
+      supplierType: body.supplierType ?? null,
+      scope: body.scope ?? null,
+      website: body.website ?? null,
     });
     return apiClient.get<SupplierApiDto>(`${ENDPOINT}/${id}`);
+  },
+
+  async downloadTemplate() {
+    const blob = await apiClient.getBlob(`${ENDPOINT}/template-excel`);
+    return saveBlob(blob, 'Mau_Nhap_NhaCungCap.xlsx');
+  },
+
+  async previewImportExcel(file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return apiClient.postForm<SupplierImportPreviewResponseDto>(
+      `${ENDPOINT}/preview-excel`,
+      formData,
+    );
+  },
+
+  async importExcel(file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return apiClient.postForm<SupplierImportResultDto>(
+      `${ENDPOINT}/import-excel`,
+      formData,
+    );
   },
 
   async remove(id: number) {

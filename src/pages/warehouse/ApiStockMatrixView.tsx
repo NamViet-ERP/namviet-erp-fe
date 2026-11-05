@@ -1,10 +1,14 @@
 import { useMemo, useState } from 'react';
+import { Upload } from 'lucide-react';
 import SearchBar from '../../components/ui/SearchBar';
 import Pagination from '../../components/ui/Pagination';
 import EmptyState from '../../components/ui/EmptyState';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import StockMaterialProjectModal from '../../components/warehouse/StockMaterialProjectModal';
+import AdminOpeningStockModal from '../../components/warehouse/AdminOpeningStockModal';
 import { useStockMatrix } from '../../hooks/useStockMatrix';
+import { useSession } from '../../auth/AuthProvider';
+import { isSessionAdmin } from '../../constants/systemUsers';
 import { useCanViewWmsPrices } from '../../lib/wms/priceVisibility';
 import { fmtPlannedStock, fmtStockQtyOrDash } from '../../lib/wms/stockQtyFormat';
 import {
@@ -26,7 +30,11 @@ import type { StockMatrixRowApiDto } from '../../types/wms';
 import { formatCurrency } from '../../utils/formatCurrency';
 
 export default function ApiStockMatrixView() {
-  const { data: rows = [], isLoading, isError } = useStockMatrix();
+  const { data: rows = [], isLoading, isError, refetch } = useStockMatrix();
+  const { user } = useSession();
+  const isAdmin =
+    isSessionAdmin(user) ||
+    Boolean(user?.role && (user.role.toLowerCase().includes('giam_doc') || user.role.toLowerCase().includes('director')));
   /** Thủ kho không bao giờ thấy giá bình quân (BE PriceVisibility cũng mask). */
   const canViewPrices = useCanViewWmsPrices();
   const colSpan = canViewPrices ? 12 : 11;
@@ -35,6 +43,7 @@ export default function ApiStockMatrixView() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(15);
   const [selectedRow, setSelectedRow] = useState<StockMatrixRowApiDto | null>(null);
+  const [isOpeningStockOpen, setIsOpeningStockOpen] = useState(false);
 
   const projects = useMemo(() => {
     const map = new Map<string, { projectCode: string; projectName: string }>();
@@ -68,22 +77,37 @@ export default function ApiStockMatrixView() {
     <>
       <div className="surface-panel surface-panel--rounded-xl p-4 mb-4 shadow-card">
         <div className="flex flex-col md:flex-row gap-4 items-center justify-between page-filter-bar">
-          <select
-            className="form-select w-full md:w-72 text-sm"
-            value={projectFilter}
-            onChange={e => { setProjectFilter(e.target.value); setPage(1); }}
-          >
-            <option value="all">Tất cả vật tư</option>
-            <option value="general">Chỉ còn tại {GENERAL_WAREHOUSE_LABEL_LOWER}</option>
-            {projects.map(p => (
-              <option key={p.projectCode} value={p.projectCode}>{p.projectName}</option>
-            ))}
-          </select>
-          <SearchBar
-            value={search}
-            onChange={v => { setSearch(v); setPage(1); }}
-            placeholder="Tìm mã vật tư, tên vật tư..."
-          />
+          <div className="flex flex-1 flex-col sm:flex-row gap-3 items-center w-full md:w-auto">
+            <select
+              className="form-select w-full sm:w-72 text-sm"
+              value={projectFilter}
+              onChange={e => { setProjectFilter(e.target.value); setPage(1); }}
+            >
+              <option value="all">Tất cả vật tư</option>
+              <option value="general">Chỉ còn tại {GENERAL_WAREHOUSE_LABEL_LOWER}</option>
+              {projects.map(p => (
+                <option key={p.projectCode} value={p.projectCode}>{p.projectName}</option>
+              ))}
+            </select>
+            <div className="flex-1 w-full sm:w-auto">
+              <SearchBar
+                value={search}
+                onChange={v => { setSearch(v); setPage(1); }}
+                placeholder="Tìm mã vật tư, tên vật tư..."
+              />
+            </div>
+          </div>
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={() => setIsOpeningStockOpen(true)}
+              className="btn btn-primary inline-flex items-center gap-1.5 whitespace-nowrap"
+              title="Nhập số dư tồn kho đầu kỳ từ file Excel (Quyền Quản trị viên / Ban Giám đốc)"
+            >
+              <Upload size={16} aria-hidden />
+              Upload Tồn Kho Đầu Kỳ
+            </button>
+          )}
         </div>
         <p className="text-[11px] text-[var(--md-on-surface-variant)] mt-3 text-pretty">
           Nhấn dòng vật tư để mở chi tiết phân bổ theo dự án. {STOCK_FORMULA_LEGEND}
@@ -231,6 +255,14 @@ export default function ApiStockMatrixView() {
       </div>
 
       <StockMaterialProjectModal row={selectedRow} onClose={() => setSelectedRow(null)} />
+
+      {isAdmin && (
+        <AdminOpeningStockModal
+          isOpen={isOpeningStockOpen}
+          onClose={() => setIsOpeningStockOpen(false)}
+          onSuccess={() => void refetch()}
+        />
+      )}
     </>
   );
 }

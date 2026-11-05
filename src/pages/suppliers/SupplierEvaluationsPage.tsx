@@ -2,16 +2,17 @@ import { useState } from 'react';
 import PageHeader from '../../components/ui/PageHeader';
 import TabFilter from '../../components/ui/TabFilter';
 import HrmPanel from '../../components/hr/HrmPanel';
+import SupplierTierGradingPanel from '../../components/suppliers/SupplierTierGradingPanel';
 import SupplierOrderEvaluationsPanel from '../../components/suppliers/SupplierOrderEvaluationsPanel';
 import SupplierKpiEvaluationsPanel from '../../components/suppliers/SupplierKpiEvaluationsPanel';
 import SupplierSourcingKpiCards from '../../components/suppliers/SupplierSourcingKpiCards';
 import { useSupplierDeliveryEvaluations } from '../../hooks/useSupplierDirectory';
 import type { TabItem } from '../../types';
 
-type EvalTab = 'order' | 'kpi';
+type EvalTab = 'tier' | 'order' | 'kpi';
 
 export default function SupplierEvaluationsPage() {
-  const [tab, setTab] = useState<EvalTab>('order');
+  const [tab, setTab] = useState<EvalTab>('tier');
   const pendingQuery = useSupplierDeliveryEvaluations({
     status: 'pending',
     page: 1,
@@ -19,6 +20,10 @@ export default function SupplierEvaluationsPage() {
   });
 
   const tabs: TabItem[] = [
+    {
+      id: 'tier',
+      label: 'Chấm điểm thăng hạng (50-20-20-10)',
+    },
     {
       id: 'order',
       label: 'Đánh giá theo đơn hàng',
@@ -45,6 +50,7 @@ export default function SupplierEvaluationsPage() {
             onChange={id => setTab(id as EvalTab)}
           />
         </div>
+        {tab === 'tier' ? <SupplierTierGradingPanel /> : null}
         {tab === 'order' ? <SupplierOrderEvaluationsPanel /> : null}
         {tab === 'kpi' ? <SupplierKpiEvaluationsPanel /> : null}
       </HrmPanel>

@@ -121,10 +121,79 @@ export type ProjectPurchasingProgressApiDto = Schemas['ProjectPurchasingProgress
 export type StockMatrixProjectColumnApiDto = Schemas['StockMatrixProjectColumnDto'];
 export type StockMatrixRowApiDto = Schemas['StockMatrixRowDto'];
 
-export type SupplierApiDto = Schemas['SupplierDto'] & { taxCode?: string | null };
+export type SupplierApiDto = Schemas['SupplierDto'] & {
+  taxCode?: string | null;
+  supplierType?: string | null;
+  scope?: string | null;
+  website?: string | null;
+};
 export type SupplierLatestEvaluationApiDto = Schemas['SupplierLatestEvaluationDto'];
-export type UpsertSupplierRequest = Schemas['UpsertSupplierRequest'] & { taxCode?: string | null };
+export type UpsertSupplierRequest = Schemas['UpsertSupplierRequest'] & {
+  taxCode?: string | null;
+  supplierType?: string | null;
+  scope?: string | null;
+  website?: string | null;
+};
 export type SupplierNextCodeApiDto = Schemas['SupplierNextCodeDto'];
+
+export interface OpeningStockItemPreviewDto {
+  materialCode: string;
+  materialName: string;
+  unit: string;
+  qty: number;
+  unitPrice: number;
+  totalAmount: number;
+  note?: string | null;
+  isValid: boolean;
+  error?: string | null;
+}
+
+export interface OpeningStockPreviewResponseDto {
+  totalRows: number;
+  validRows: number;
+  errorRows: number;
+  totalQty: number;
+  totalAmount: number;
+  items: OpeningStockItemPreviewDto[];
+}
+
+export interface OpeningStockImportResultDto {
+  ticketCode: string;
+  totalItems: number;
+  totalQty: number;
+  totalAmount: number;
+  message: string;
+}
+
+export interface SupplierImportRowPreviewDto {
+  supplierCode?: string | null;
+  supplierName: string;
+  taxCode?: string | null;
+  contactPhone?: string | null;
+  website?: string | null;
+  supplierType?: string | null;
+  scope?: string | null;
+  maxDebtDays: number;
+  creditLimit?: number | null;
+  paymentTerms?: string | null;
+  industryGroups?: string | null;
+  isValid: boolean;
+  error?: string | null;
+}
+
+export interface SupplierImportPreviewResponseDto {
+  totalRows: number;
+  validRows: number;
+  errorRows: number;
+  rows: SupplierImportRowPreviewDto[];
+}
+
+export interface SupplierImportResultDto {
+  totalRows: number;
+  importedCount: number;
+  failedCount: number;
+  errors: string[];
+}
 
 export type ProjectLedgerKind = 'import' | 'export' | 'transfer';
 

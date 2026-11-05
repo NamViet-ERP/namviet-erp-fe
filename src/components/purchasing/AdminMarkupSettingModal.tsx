@@ -120,12 +120,20 @@ export default function AdminMarkupSettingModal({
         {/* Bảng chi tiết từng nhóm/hệ hàng */}
         <div className="border border-[var(--md-outline-variant02)] rounded-lg overflow-hidden max-h-[360px] overflow-y-auto">
           <table className="w-full text-left border-collapse text-xs">
-            <thead className="bg-[var(--md-surface-variant)]/40 sticky top-0 z-10 border-b border-[var(--md-outline-variant02)]">
+            <thead>
               <tr>
-                <th className="py-2.5 px-3 font-semibold text-[var(--md-on-surface)]">Nhóm / Hệ Hàng</th>
-                <th className="py-2.5 px-3 font-semibold text-[var(--md-on-surface)]">Định hướng & Ghi chú</th>
-                <th className="py-2.5 px-3 font-semibold text-center text-[var(--md-on-surface)] w-28">Markup (%)</th>
-                <th className="py-2.5 px-3 font-semibold text-right text-[var(--md-on-surface)] w-24">Hệ số</th>
+                <th className="sticky top-0 z-20 bg-[var(--md-surface)] dark:bg-slate-900 border-b border-[var(--md-outline-variant02)] py-2.5 px-3 font-semibold text-[var(--md-on-surface)] shadow-sm">
+                  Nhóm / Hệ Hàng
+                </th>
+                <th className="sticky top-0 z-20 bg-[var(--md-surface)] dark:bg-slate-900 border-b border-[var(--md-outline-variant02)] py-2.5 px-3 font-semibold text-[var(--md-on-surface)] shadow-sm">
+                  Định hướng & Ghi chú
+                </th>
+                <th className="sticky top-0 z-20 bg-[var(--md-surface)] dark:bg-slate-900 border-b border-[var(--md-outline-variant02)] py-2.5 px-3 font-semibold text-center text-[var(--md-on-surface)] w-28 shadow-sm">
+                  Markup (%)
+                </th>
+                <th className="sticky top-0 z-20 bg-[var(--md-surface)] dark:bg-slate-900 border-b border-[var(--md-outline-variant02)] py-2.5 px-3 font-semibold text-right text-[var(--md-on-surface)] w-24 shadow-sm">
+                  Hệ số
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--md-outline-variant02)]/50">

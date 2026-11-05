@@ -2,10 +2,11 @@ import type React from 'react';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
-import { Ban, Check, Plus, Trash2, Pencil, Eye, X, Award, History } from 'lucide-react';
+import { Ban, Check, Plus, Trash2, Pencil, Eye, X, Award, History, Upload } from 'lucide-react';
 import SupplierTierEvaluationModal from '../../components/suppliers/SupplierTierEvaluationModal';
 import SupplierGradeHistoryModal from '../../components/suppliers/SupplierGradeHistoryModal';
 import SupplierSourcingKpiCards from '../../components/suppliers/SupplierSourcingKpiCards';
+import SupplierImportExcelModal from '../../components/suppliers/SupplierImportExcelModal';
 import PurchasingListLayout from '../../components/purchasing/PurchasingListLayout';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Pagination from '../../components/ui/Pagination';
@@ -60,10 +61,16 @@ const emptyForm = {
   supplierName: '',
   taxCode: '',
   contactPhone: '',
+  supplierType: 'Nhà phân phối',
+  scope: 'Trong nước',
+  website: '',
   maxDebtDays: '30',
   creditLimit: '',
   paymentTerms: '',
   groupIds: [] as number[],
+  hasBusinessLicense: true,
+  hasCompanyProfile: true,
+  hasCatalogPriceList: true,
 };
 
 function mapSupplierSaveErrors(err: unknown): FormErrors {
@@ -179,6 +186,7 @@ export default function SuppliersSettingsPanel({
   const [rejectTarget, setRejectTarget] = useState<SupplierRow | null>(null);
   const [evaluatingSupplier, setEvaluatingSupplier] = useState<SupplierRow | null>(null);
   const [historySupplier, setHistorySupplier] = useState<SupplierRow | null>(null);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   const groupIdFromUrl = useMemo(() => {
     const raw = searchParams.get('groupId');
@@ -252,10 +260,16 @@ export default function SuppliersSettingsPanel({
         supplierName: s.supplierName,
         taxCode: s.taxCode ?? '',
         contactPhone: s.contactPhone ?? '',
+        supplierType: s.supplierType ?? 'Nhà phân phối',
+        scope: s.scope ?? 'Trong nước',
+        website: s.website ?? '',
         maxDebtDays: String(s.maxDebtDays),
         creditLimit: s.creditLimit ? formatCurrencyInput(s.creditLimit) : '',
         paymentTerms: s.paymentTerms ?? '',
         groupIds: assigned.map(g => g.id),
+        hasBusinessLicense: Boolean(s.taxCode),
+        hasCompanyProfile: Boolean(s.website || s.contactPhone),
+        hasCatalogPriceList: true,
       });
       setFormErrors({});
       setShowForm(true);
@@ -316,6 +330,9 @@ export default function SuppliersSettingsPanel({
       supplierName,
       taxCode: taxCode || null,
       contactPhone: contactPhone || null,
+      supplierType: form.supplierType || null,
+      scope: form.scope || null,
+      website: form.website.trim() || null,
       maxDebtDays: debt.value,
       creditLimit: limit.value,
       paymentTerms: paymentTerms || null,
@@ -518,10 +535,21 @@ export default function SuppliersSettingsPanel({
         hasFilters={hasActiveFilters}
         onResetFilters={resetFilters}
         actions={(
-          <button type="button" className="btn btn-primary" onClick={() => void openCreate()}>
-            <Plus size={16} aria-hidden />
-            Thêm NCC
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="btn btn-outline inline-flex items-center gap-1.5"
+              onClick={() => setIsImportModalOpen(true)}
+              title="Nhập danh sách nhà cung cấp hàng loạt từ file Excel"
+            >
+              <Upload size={16} aria-hidden />
+              Upload Excel NCC
+            </button>
+            <button type="button" className="btn btn-primary inline-flex items-center gap-1.5" onClick={() => void openCreate()}>
+              <Plus size={16} aria-hidden />
+              Thêm NCC
+            </button>
+          </div>
         )}
       >
         <div className="overflow-x-auto table-scroll hrm-table-wrap">
@@ -717,8 +745,35 @@ export default function SuppliersSettingsPanel({
               <ApprovalStatusBadge status={viewing.approvalStatus} />
             </DetailField>
             <DetailField label="Tên nhà cung cấp" span>{viewing.supplierName}</DetailField>
+            <DetailField label="Loại hình đối tác">{viewing.supplierType || '—'}</DetailField>
+            <DetailField label="Phạm vi">{viewing.scope || '—'}</DetailField>
             <DetailField label="Mã số thuế (MST)">{viewing.taxCode || '—'}</DetailField>
             <DetailField label="Điện thoại">{viewing.contactPhone || '—'}</DetailField>
+            <DetailField label="Website" span>
+              {viewing.website ? (
+                <a
+                  href={viewing.website.startsWith('http') ? viewing.website : `https://${viewing.website}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 dark:text-blue-400 hover:underline font-mono text-xs"
+                >
+                  {viewing.website}
+                </a>
+              ) : (
+                '—'
+              )}
+            </DetailField>
+            <DetailField label="Hồ sơ Onboarding đầu vào" span>
+              {viewing.taxCode ? (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                  <Check size={14} /> Đạt chuẩn Hạng D — Đủ MST & pháp nhân đầu vào
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
+                  ⚠️ Chưa có Mã số thuế — Cần bổ sung để hoàn tất hồ sơ Hạng D
+                </span>
+              )}
+            </DetailField>
             <DetailField label="Hạn công nợ">{viewing.maxDebtDays} ngày</DetailField>
             <DetailField label="Hạn mức công nợ">
               {viewing.creditLimit ? formatCurrencyFull(viewing.creditLimit) : 'Không giới hạn'}
@@ -793,6 +848,33 @@ export default function SuppliersSettingsPanel({
               }}
             />
           </FormField>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <FormField label="Loại hình đối tác">
+              <select
+                className="form-select"
+                value={form.supplierType}
+                onChange={e => setForm(f => ({ ...f, supplierType: e.target.value }))}
+              >
+                <option value="Nhà sản xuất">Nhà sản xuất (Manufacturer)</option>
+                <option value="Nhà phân phối">Nhà phân phối (Distributor)</option>
+                <option value="Đại lý">Đại lý ủy quyền (Agent / Dealer)</option>
+                <option value="Dịch vụ / Gia công">Dịch vụ / Gia công (Service / Fabrication)</option>
+                <option value="Thương mại khác">Thương mại khác</option>
+              </select>
+            </FormField>
+
+            <FormField label="Phạm vi hoạt động">
+              <select
+                className="form-select"
+                value={form.scope}
+                onChange={e => setForm(f => ({ ...f, scope: e.target.value }))}
+              >
+                <option value="Trong nước">Trong nước (Domestic)</option>
+                <option value="Quốc tế">Quốc tế (International)</option>
+              </select>
+            </FormField>
+          </div>
+
           <FormField label="Mã số thuế (MST)" error={formErrors.taxCode}>
             <input
               className="form-input font-mono"
@@ -805,27 +887,82 @@ export default function SuppliersSettingsPanel({
               placeholder="VD: 0315986604 hoặc 0100123456-001"
             />
           </FormField>
-          <FormField label="Điện thoại liên hệ" error={formErrors.contactPhone}>
-            <input
-              className="form-input"
-              value={form.contactPhone}
-              maxLength={10}
-              inputMode="numeric"
-              autoComplete="tel"
-              onChange={e => {
-                const contactPhone = restrictVnPhoneInput(e.target.value);
-                setForm(f => ({ ...f, contactPhone }));
-                setFormErrors(prev => ({ ...prev, contactPhone: undefined }));
-              }}
-              onBlur={() => {
-                setFormErrors(prev => ({
-                  ...prev,
-                  contactPhone: validateOptionalVietnamPhone(form.contactPhone) ?? undefined,
-                }));
-              }}
-              placeholder="0912345678"
-            />
-          </FormField>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <FormField label="Điện thoại liên hệ" error={formErrors.contactPhone}>
+              <input
+                className="form-input"
+                value={form.contactPhone}
+                maxLength={10}
+                inputMode="numeric"
+                autoComplete="tel"
+                onChange={e => {
+                  const contactPhone = restrictVnPhoneInput(e.target.value);
+                  setForm(f => ({ ...f, contactPhone }));
+                  setFormErrors(prev => ({ ...prev, contactPhone: undefined }));
+                }}
+                onBlur={() => {
+                  setFormErrors(prev => ({
+                    ...prev,
+                    contactPhone: validateOptionalVietnamPhone(form.contactPhone) ?? undefined,
+                  }));
+                }}
+                placeholder="0912345678"
+              />
+            </FormField>
+
+            <FormField label="Website">
+              <input
+                className="form-input"
+                value={form.website}
+                maxLength={255}
+                onChange={e => setForm(f => ({ ...f, website: e.target.value }))}
+                placeholder="https://example.com"
+              />
+            </FormField>
+          </div>
+
+          <div className="rounded-xl border border-[var(--md-outline-variant)] p-3.5 bg-[var(--md-surface-variant05)]">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-[var(--md-on-surface)]">
+                Hồ sơ Onboarding đầu vào (Quy chuẩn Hạng D)
+              </span>
+              {form.hasBusinessLicense && form.hasCompanyProfile && form.hasCatalogPriceList ? (
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                  <Check size={12} /> Đạt chuẩn Hạng D — Đủ hồ sơ đầu vào
+                </span>
+              ) : (
+                <span className="text-[11px] text-amber-600 dark:text-amber-400">
+                  Chưa đủ 3 mục hồ sơ
+                </span>
+              )}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+              <label className="inline-flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.hasBusinessLicense}
+                  onChange={e => setForm(f => ({ ...f, hasBusinessLicense: e.target.checked }))}
+                />
+                <span>GPKD / ĐKKD doanh nghiệp</span>
+              </label>
+              <label className="inline-flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.hasCompanyProfile}
+                  onChange={e => setForm(f => ({ ...f, hasCompanyProfile: e.target.checked }))}
+                />
+                <span>Hồ sơ năng lực (Profile)</span>
+              </label>
+              <label className="inline-flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.hasCatalogPriceList}
+                  onChange={e => setForm(f => ({ ...f, hasCatalogPriceList: e.target.checked }))}
+                />
+                <span>Catalog & Bảng giá sản phẩm</span>
+              </label>
+            </div>
+          </div>
           <FormField label="Hạn công nợ (ngày)" required error={formErrors.maxDebtDays}>
             <input
               type="text"
@@ -1028,6 +1165,16 @@ export default function SuppliersSettingsPanel({
           supplier={historySupplier}
           isOpen={Boolean(historySupplier)}
           onClose={() => setHistorySupplier(null)}
+        />
+      )}
+
+      {isImportModalOpen && (
+        <SupplierImportExcelModal
+          isOpen={isImportModalOpen}
+          onClose={() => setIsImportModalOpen(false)}
+          onSuccess={() => {
+            void qc.invalidateQueries({ queryKey: queryKeys.suppliers.all });
+          }}
         />
       )}
     </>

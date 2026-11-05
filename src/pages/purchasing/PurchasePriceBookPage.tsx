@@ -49,7 +49,7 @@ import {
 import { formatCurrencyFull, formatCurrencyShort } from '../../utils/formatCurrency';
 import type { PriceBookItemApiDto } from '../../types/api/purchasingApi';
 import RfqQuotesPanel from './RfqQuotesPanel';
-import { Zap } from 'lucide-react';
+import { Zap, Pencil, Check, X } from 'lucide-react';
 import { useSession } from '../../auth/AuthProvider';
 import { isSessionAdmin } from '../../constants/systemUsers';
 import { useMarkupSettings } from '../../hooks/useMarkupSettings';
@@ -179,7 +179,7 @@ export default function PurchasePriceBookPage() {
     permissions.includes('admin.users.view:all') ||
     permissions.includes('purchasing.pricebook.update');
 
-  const { config: markupConfig, saveConfig: saveMarkupConfig, getMarkupPercent } = useMarkupSettings();
+  const { config: markupConfig, saveConfig: saveMarkupConfig, getMarkupPercent, saveItemMarkup } = useMarkupSettings();
   const [markupModalOpen, setMarkupModalOpen] = useState(false);
 
   const canWriteRfq = has('purchasing.rfq.create');
@@ -432,6 +432,7 @@ export default function PurchasePriceBookPage() {
               onOpen={setDetailCode}
               isBoss={isBoss}
               getMarkupPercent={getMarkupPercent}
+              onSaveItemMarkup={saveItemMarkup}
             />
           )}
         </div>
@@ -749,13 +750,38 @@ function ItemsTable({
   onOpen,
   isBoss,
   getMarkupPercent,
+  onSaveItemMarkup,
 }: {
   loading: boolean;
   rows: PriceBookItemApiDto[];
   onOpen: (code: string) => void;
   isBoss: boolean;
   getMarkupPercent: (key?: string | number | null) => number;
+  onSaveItemMarkup?: (materialCode: string, percent: number) => void;
 }) {
+  const [editingCode, setEditingCode] = useState<string | null>(null);
+  const [tempPercent, setTempPercent] = useState<string>('');
+
+  const handleStartEdit = (code: string, currentPct: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingCode(code);
+    setTempPercent(String(currentPct));
+  };
+
+  const handleSaveMarkup = (code: string, e?: React.MouseEvent | React.KeyboardEvent) => {
+    if (e) e.stopPropagation();
+    const val = Number(tempPercent);
+    if (!isNaN(val) && onSaveItemMarkup) {
+      onSaveItemMarkup(code, val);
+      showToast('success', `Đã lưu Markup (+${Math.max(0, Math.min(100, Math.round(val)))}%) cho mã ${code}`);
+    }
+    setEditingCode(null);
+  };
+
+  const handleCancelEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingCode(null);
+  };
   return (
     <div className="wms-inventory-table-wrap">
       <table className="wms-inventory-table">
@@ -822,9 +848,53 @@ function ItemsTable({
                     <div>
                       <span>{formatCurrencyFull(biddingPrice)}</span>
                       {isBoss && (
-                        <span className="block text-[10px] font-normal text-[var(--md-on-surface-variant)]">
-                          (+{markupPct}%)
-                        </span>
+                        editingCode === row.materialCode ? (
+                          <div
+                            className="inline-flex items-center gap-1 mt-1 justify-end"
+                            onClick={e => e.stopPropagation()}
+                          >
+                            <input
+                              type="number"
+                              min={0}
+                              max={100}
+                              step={1}
+                              autoFocus
+                              className="w-14 px-1 py-0.5 text-center text-xs font-bold rounded border border-amber-500 bg-[var(--md-surface)] text-amber-700 dark:text-amber-300"
+                              value={tempPercent}
+                              onChange={e => setTempPercent(e.target.value)}
+                              onKeyDown={e => {
+                                if (e.key === 'Enter') handleSaveMarkup(row.materialCode, e);
+                                else if (e.key === 'Escape') setEditingCode(null);
+                              }}
+                            />
+                            <button
+                              type="button"
+                              className="p-1 rounded bg-amber-600 hover:bg-amber-700 text-white"
+                              onClick={e => handleSaveMarkup(row.materialCode, e)}
+                              title="Lưu"
+                            >
+                              <Check size={12} />
+                            </button>
+                            <button
+                              type="button"
+                              className="p-1 rounded bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-700 dark:text-slate-300"
+                              onClick={handleCancelEdit}
+                              title="Hủy"
+                            >
+                              <X size={12} />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-700 dark:text-amber-300 hover:text-amber-800 bg-amber-500/15 hover:bg-amber-500/25 px-1.5 py-0.5 rounded border border-amber-500/30 transition-colors cursor-pointer mt-0.5"
+                            onClick={e => handleStartEdit(row.materialCode, markupPct, e)}
+                            title="Bấm để chỉnh sửa nhanh % Markup riêng cho mặt hàng này"
+                          >
+                            <span>(+{markupPct}%)</span>
+                            <Pencil size={10} className="opacity-75" />
+                          </button>
+                        )
                       )}
                     </div>
                   ) : (

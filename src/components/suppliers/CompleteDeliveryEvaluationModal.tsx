@@ -31,6 +31,13 @@ type Props = {
 const FORM_ID = 'supplier-delivery-evaluation-form';
 const CRITERIA_KEYS = Object.keys(ORDER_EVAL_LABELS) as Array<keyof OrderEvalCriteria>;
 
+const RATING_BUTTONS = [
+  { value: 10, label: '🌟 10đ - Xuất sắc' },
+  { value: 8, label: '👍 8đ - Tốt (Mặc định)' },
+  { value: 6, label: '👌 6đ - Đạt chuẩn' },
+  { value: 4, label: '⚠️ 4đ - Cần cải thiện' },
+];
+
 function defaultCriteria(): OrderEvalCriteria {
   return { quality: 8, delivery: 8, price: 8, service: 8, compliance: 8 };
 }
@@ -47,8 +54,8 @@ export default function CompleteDeliveryEvaluationModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Đánh giá nhà cung cấp"
-      size="md"
+      title="Đánh giá chất lượng giao hàng PO"
+      size="lg"
       footer={(
         <>
           <button type="button" className="btn btn-secondary" onClick={onClose} disabled={isSaving}>
@@ -122,40 +129,49 @@ function CompleteForm({
           required
           error={errors[key]}
         >
-          <input
-            type="number"
-            inputMode="numeric"
-            min={ORDER_EVAL_MIN}
-            max={ORDER_EVAL_MAX}
-            step="1"
-            className="form-input tabular-nums"
-            value={criteria[key]}
-            onChange={e => {
-              const n = Number(e.target.value);
-              setCriteria(c => ({ ...c, [key]: Number.isNaN(n) ? 0 : n }));
-              setErrors(prev => {
-                if (!prev[key]) return prev;
-                const copy = { ...prev };
-                delete copy[key];
-                return copy;
-              });
-            }}
-          />
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {RATING_BUTTONS.map(btn => {
+              const isSelected = criteria[key] === btn.value;
+              return (
+                <button
+                  key={btn.value}
+                  type="button"
+                  onClick={() => {
+                    setCriteria(c => ({ ...c, [key]: btn.value }));
+                    setErrors(prev => {
+                      if (!prev[key]) return prev;
+                      const copy = { ...prev };
+                      delete copy[key];
+                      return copy;
+                    });
+                  }}
+                  className={`px-3 py-2 text-xs font-semibold rounded-lg border transition-all text-center flex items-center justify-center ${
+                    isSelected
+                      ? 'bg-[var(--md-primary)] text-white border-[var(--md-primary)] shadow-sm ring-2 ring-[var(--md-primary)] ring-offset-1'
+                      : 'bg-[var(--md-surface)] text-[var(--md-on-surface)] border-[var(--md-outline-variant)] hover:bg-[var(--md-surface-variant05)]'
+                  }`}
+                >
+                  {btn.label}
+                </button>
+              );
+            })}
+          </div>
         </FormField>
       ))}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <FormField label="Điểm tổng (tự tính)">
-          <input className="form-input tabular-nums" value={`${score}/10`} disabled readOnly />
-        </FormField>
-        <FormField label="Xếp hạng (tự tính)">
-          <input
-            className="form-input"
-            value={grade ? orderGradeLabel(grade) : '—'}
-            disabled
-            readOnly
-          />
-        </FormField>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-xl bg-[var(--md-surface-variant05)] border border-[var(--md-outline-variant)]">
+        <div>
+          <span className="text-xs font-medium text-[var(--md-on-surface-variant)]">Điểm tổng (tự tính)</span>
+          <div className="text-xl font-bold tabular-nums text-[var(--md-primary)] mt-0.5">
+            {score} / 10
+          </div>
+        </div>
+        <div>
+          <span className="text-xs font-medium text-[var(--md-on-surface-variant)]">Xếp hạng kết quả</span>
+          <div className="text-xl font-bold text-[var(--md-on-surface)] mt-0.5">
+            {grade ? orderGradeLabel(grade) : '—'}
+          </div>
+        </div>
       </div>
 
       <FormField label="Ngày đánh giá">

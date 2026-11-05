@@ -11,6 +11,7 @@ export interface CategoryMarkupItem {
 export interface MarkupSettingsConfig {
   globalMarkupPercent: number;
   categories: CategoryMarkupItem[];
+  itemOverrides?: Record<string, number>;
   updatedAt?: string;
   updatedBy?: string;
 }
@@ -36,7 +37,10 @@ export function readStoredMarkupConfig(): MarkupSettingsConfig {
     if (raw) {
       const parsed = JSON.parse(raw) as MarkupSettingsConfig;
       if (typeof parsed?.globalMarkupPercent === 'number' && Array.isArray(parsed?.categories)) {
-        return parsed;
+        return {
+          ...parsed,
+          itemOverrides: parsed.itemOverrides || {},
+        };
       }
     }
   } catch {
@@ -45,6 +49,7 @@ export function readStoredMarkupConfig(): MarkupSettingsConfig {
   return {
     globalMarkupPercent: 15,
     categories: DEFAULT_MARKUP_CATEGORIES,
+    itemOverrides: {},
     updatedAt: new Date().toISOString(),
     updatedBy: 'Hệ thống (Mặc định)',
   };
@@ -83,9 +88,16 @@ export function useMarkupSettings() {
   );
 
   const getMarkupPercent = useCallback(
-    (categoryKey?: string | number | null): number => {
-      if (!categoryKey) return config.globalMarkupPercent;
-      const keyStr = String(categoryKey).trim().toUpperCase();
+    (materialCodeOrCategoryKey?: string | number | null, categoryKey?: string | number | null): number => {
+      if (materialCodeOrCategoryKey) {
+        const code = String(materialCodeOrCategoryKey).trim();
+        if (config.itemOverrides && config.itemOverrides[code] !== undefined) {
+          return config.itemOverrides[code];
+        }
+      }
+      const targetCategory = categoryKey !== undefined ? categoryKey : materialCodeOrCategoryKey;
+      if (!targetCategory) return config.globalMarkupPercent;
+      const keyStr = String(targetCategory).trim().toUpperCase();
       const found = config.categories.find(
         c => c.id.toUpperCase() === keyStr || c.name.toUpperCase().includes(keyStr),
       );
@@ -94,10 +106,28 @@ export function useMarkupSettings() {
     [config],
   );
 
+  const saveItemMarkup = useCallback(
+    (materialCode: string, percent: number) => {
+      const trimmed = materialCode.trim();
+      if (!trimmed) return;
+      const clamped = Math.max(0, Math.min(100, Math.round(percent)));
+      const nextOverrides = {
+        ...(config.itemOverrides || {}),
+        [trimmed]: clamped,
+      };
+      saveConfig({
+        ...config,
+        itemOverrides: nextOverrides,
+      });
+    },
+    [config, saveConfig],
+  );
+
   return {
     config,
     saveConfig,
     getMarkupPercent,
+    saveItemMarkup,
     refresh,
   };
 }
