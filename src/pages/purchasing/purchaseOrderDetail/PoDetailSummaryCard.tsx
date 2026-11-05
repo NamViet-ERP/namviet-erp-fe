@@ -46,7 +46,24 @@ export function PoDetailSummaryCard({
           value={order.projectName ? `${order.projectCode} — ${order.projectName}` : (order.projectCode || '—')}
           span={2}
         />
-        <PoDetailMeta label="Nhà cung cấp" value={order.supplierName || '—'} span={2} />
+        <PoDetailMeta
+          label="Nhà cung cấp"
+          value={
+            order.supplierName ? (
+              <span>
+                {order.supplierName}
+                {order.supplierTaxCode && (
+                  <span className="ml-2 font-mono text-xs text-[var(--md-on-surface-variant)]">
+                    (MST: {order.supplierTaxCode})
+                  </span>
+                )}
+              </span>
+            ) : (
+              '—'
+            )
+          }
+          span={2}
+        />
         <PoDetailMeta label="Ngày tạo" value={formatDateTimeVi(order.createdAt) ?? '—'} />
         <PoDetailMeta label="Người tạo" value={order.createdByName || '—'} />
 

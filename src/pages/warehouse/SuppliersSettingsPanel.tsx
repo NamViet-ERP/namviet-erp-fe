@@ -52,12 +52,13 @@ import type { DropdownItem } from '../../types';
 const RATING_OPTIONS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 const GROUPS_VISIBLE_IN_TABLE = 3;
 const COL_COUNT = 13;
-type FormErrors = Partial<Record<'supplierCode' | 'supplierName' | 'contactPhone' | 'maxDebtDays' | 'creditLimit' | 'paymentTerms', string>>;
+type FormErrors = Partial<Record<'supplierCode' | 'supplierName' | 'taxCode' | 'contactPhone' | 'maxDebtDays' | 'creditLimit' | 'paymentTerms', string>>;
 type SupplierRow = SupplierApiDto;
 
 const emptyForm = {
   supplierCode: '',
   supplierName: '',
+  taxCode: '',
   contactPhone: '',
   maxDebtDays: '30',
   creditLimit: '',
@@ -74,6 +75,9 @@ function mapSupplierSaveErrors(err: unknown): FormErrors {
 
   const message = getApiErrorMessage(err, '');
   const lower = message.toLowerCase();
+  if (!next.taxCode && (lower.includes('mã số thuế') || lower.includes('mst') || lower.includes('taxcode'))) {
+    next.taxCode = message;
+  }
   if (!next.contactPhone && (lower.includes('điện thoại') || lower.includes('sđt'))) {
     next.contactPhone = message;
   }
@@ -246,6 +250,7 @@ export default function SuppliersSettingsPanel({
       setForm({
         supplierCode: s.supplierCode,
         supplierName: s.supplierName,
+        taxCode: s.taxCode ?? '',
         contactPhone: s.contactPhone ?? '',
         maxDebtDays: String(s.maxDebtDays),
         creditLimit: s.creditLimit ? formatCurrencyInput(s.creditLimit) : '',
@@ -272,6 +277,7 @@ export default function SuppliersSettingsPanel({
     e.preventDefault();
     const supplierCode = form.supplierCode.trim();
     const supplierName = form.supplierName.trim();
+    const taxCode = form.taxCode.trim();
     const paymentTerms = form.paymentTerms.trim();
     const nextErrors: FormErrors = {};
 
@@ -282,6 +288,10 @@ export default function SuppliersSettingsPanel({
       items.some(s => s.id !== editing?.id && isSameSupplierName(s.supplierName, supplierName))
     ) {
       nextErrors.supplierName = 'Tên nhà cung cấp đã tồn tại.';
+    }
+
+    if (taxCode.length > 50) {
+      nextErrors.taxCode = 'Mã số thuế tối đa 50 ký tự.';
     }
 
     const contactPhone = restrictVnPhoneInput(form.contactPhone);
@@ -304,6 +314,7 @@ export default function SuppliersSettingsPanel({
     const body = {
       supplierCode,
       supplierName,
+      taxCode: taxCode || null,
       contactPhone: contactPhone || null,
       maxDebtDays: debt.value,
       creditLimit: limit.value,
@@ -571,6 +582,11 @@ export default function SuppliersSettingsPanel({
                       >
                         {s.supplierName}
                       </button>
+                      {s.taxCode && (
+                        <div className="text-[11px] text-[var(--md-on-surface-variant)] font-mono">
+                          MST: {s.taxCode}
+                        </div>
+                      )}
                     </td>
                     <td className="table-cell whitespace-nowrap tabular-nums ncc-master-col-phone">
                       {s.contactPhone || '—'}
@@ -701,6 +717,7 @@ export default function SuppliersSettingsPanel({
               <ApprovalStatusBadge status={viewing.approvalStatus} />
             </DetailField>
             <DetailField label="Tên nhà cung cấp" span>{viewing.supplierName}</DetailField>
+            <DetailField label="Mã số thuế (MST)">{viewing.taxCode || '—'}</DetailField>
             <DetailField label="Điện thoại">{viewing.contactPhone || '—'}</DetailField>
             <DetailField label="Hạn công nợ">{viewing.maxDebtDays} ngày</DetailField>
             <DetailField label="Hạn mức công nợ">
@@ -774,6 +791,18 @@ export default function SuppliersSettingsPanel({
                 setForm(f => ({ ...f, supplierName: e.target.value }));
                 setFormErrors(prev => ({ ...prev, supplierName: undefined }));
               }}
+            />
+          </FormField>
+          <FormField label="Mã số thuế (MST)" error={formErrors.taxCode}>
+            <input
+              className="form-input font-mono"
+              value={form.taxCode}
+              maxLength={50}
+              onChange={e => {
+                setForm(f => ({ ...f, taxCode: e.target.value }));
+                setFormErrors(prev => ({ ...prev, taxCode: undefined }));
+              }}
+              placeholder="VD: 0315986604 hoặc 0100123456-001"
             />
           </FormField>
           <FormField label="Điện thoại liên hệ" error={formErrors.contactPhone}>

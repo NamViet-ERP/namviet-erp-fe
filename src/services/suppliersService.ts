@@ -89,6 +89,7 @@ export const suppliersService = {
       maxDebtDays: body.maxDebtDays ?? 30,
       paymentTerms: body.paymentTerms ?? null,
       creditLimit: body.creditLimit ?? null,
+      taxCode: body.taxCode ?? null,
     });
   },
 
@@ -100,6 +101,7 @@ export const suppliersService = {
       maxDebtDays: body.maxDebtDays ?? 30,
       paymentTerms: body.paymentTerms ?? null,
       creditLimit: body.creditLimit ?? null,
+      taxCode: body.taxCode ?? null,
     });
     return apiClient.get<SupplierApiDto>(`${ENDPOINT}/${id}`);
   },

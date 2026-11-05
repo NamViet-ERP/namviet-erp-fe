@@ -70,6 +70,7 @@ export function usePurchaseOrderDetail(code: string) {
     return {
       code: order.code,
       supplierName: order.supplierName || '',
+      supplierTaxOrContact: order.supplierTaxCode || undefined,
       projectLabel: order.projectName ? `${order.projectCode} — ${order.projectName}` : (order.projectCode || undefined),
       planCode: order.planCode,
       orderDateLabel: formatDateCell(order.orderDate) ?? '',

@@ -67,7 +67,7 @@ export type RejectPurchasePlanRequest = Schemas['RejectPurchasePlanRequest'];
 /** OpenAPI aliases — Purchase Orders */
 export type PurchaseOrderApiDto = Schemas['PurchaseOrderDto'];
 export type PurchaseOrderLineApiDto = Schemas['PurchaseOrderLineDto'];
-export type PurchaseOrderDetailApiDto = Schemas['PurchaseOrderDetailDto'];
+export type PurchaseOrderDetailApiDto = Schemas['PurchaseOrderDetailDto'] & { supplierTaxCode?: string | null };
 export type PurchaseOrderPagedApiDto = Schemas['PurchaseOrderPagedResponse'];
 export type CreatePurchaseOrderLineRequest = Schemas['CreatePurchaseOrderLineRequest'];
 export type CreatePurchaseOrderRequest = Schemas['CreatePurchaseOrderRequest'];

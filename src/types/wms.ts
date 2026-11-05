@@ -121,9 +121,9 @@ export type ProjectPurchasingProgressApiDto = Schemas['ProjectPurchasingProgress
 export type StockMatrixProjectColumnApiDto = Schemas['StockMatrixProjectColumnDto'];
 export type StockMatrixRowApiDto = Schemas['StockMatrixRowDto'];
 
-export type SupplierApiDto = Schemas['SupplierDto'];
+export type SupplierApiDto = Schemas['SupplierDto'] & { taxCode?: string | null };
 export type SupplierLatestEvaluationApiDto = Schemas['SupplierLatestEvaluationDto'];
-export type UpsertSupplierRequest = Schemas['UpsertSupplierRequest'];
+export type UpsertSupplierRequest = Schemas['UpsertSupplierRequest'] & { taxCode?: string | null };
 export type SupplierNextCodeApiDto = Schemas['SupplierNextCodeDto'];
 
 export type ProjectLedgerKind = 'import' | 'export' | 'transfer';
