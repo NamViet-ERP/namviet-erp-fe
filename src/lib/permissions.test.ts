@@ -7,6 +7,8 @@ import {
 } from './permissions';
 import {
   filterPermissionGroups,
+  getActionBadgeInfo,
+  getActionType,
   getModuleLabel,
   getResourceLabel,
   groupPermissionCatalog,
@@ -170,4 +172,92 @@ describe('permission catalog labels', () => {
     expect(getResourceLabel('Employees')).toBe('Nhân viên');
     expect(getResourceLabel('UNKNOWN_ALLCAPS')).toBe('Unknown_allcaps');
   });
-});
+
+  it('orders WMS and Purchasing resources by business workflow priority', () => {
+    const wmsCatalog = [
+      { key: 'wms.settings.view', module: 'WMS', resource: 'Settings', label: 'Thiết lập kho' },
+      { key: 'wms.stock.view:all', module: 'WMS', resource: 'Stock', label: 'Xem tồn kho' },
+      { key: 'wms.projects.view:all', module: 'WMS', resource: 'Projects', label: 'Xem dự án' },
+      { key: 'wms.imports.view:all', module: 'WMS', resource: 'Imports', label: 'Xem phiếu nhập' },
+      { key: 'wms.prices.view', module: 'WMS', resource: 'Prices', label: 'Xem đơn giá' },
+    ];
+    const grouped = groupPermissionCatalog(wmsCatalog);
+    const resources = grouped[0]!.resources.map(r => r.resource);
+    expect(resources).toEqual(['Projects', 'Stock', 'Imports', 'Prices', 'Settings']);
+  });
+
+  it('classifies permission action types accurately', () => {
+    expect(getActionType('core.dashboard.view')).toBe('view');
+    expect(getActionType('wms.projects.view:all')).toBe('view');
+    expect(getActionType('hrm.employees.view:own')).toBe('view');
+    expect(getActionType('wms.materials.create')).toBe('create');
+    expect(getActionType('wms.materials.update')).toBe('update');
+    expect(getActionType('wms.materials.delete')).toBe('delete');
+    expect(getActionType('wms.imports.approve')).toBe('approve');
+    expect(getActionType('purchasing.plans.approve_l1')).toBe('approve');
+    expect(getActionType('purchasing.plans.approve_l2')).toBe('approve');
+    expect(getActionType('purchasing.plans.reject')).toBe('approve');
+    expect(getActionType('purchasing.plans.submit')).toBe('approve');
+    expect(getActionType('wms.reports.export')).toBe('export');
+    expect(getActionType('purchasing.plans.import')).toBe('export');
+    expect(getActionType('wms.prices.view')).toBe('price');
+    expect(getActionType('purchasing.pricebook.view')).toBe('price');
+    expect(getActionType('purchasing.pricebook.update')).toBe('price');
+    expect(getActionType('admin.users.lock')).toBe('lock');
+  });
+
+  it('provides action badge info and flags sensitive permissions', () => {
+    const priceBadge = getActionBadgeInfo('wms.prices.view', 'Xem đơn giá');
+    expect(priceBadge.label).toBe('GIÁ');
+    expect(priceBadge.isSensitive).toBe(true);
+
+    const viewBadge = getActionBadgeInfo('wms.stock.view:all', 'Xem tồn kho');
+    expect(viewBadge.label).toBe('XEM');
+    expect(viewBadge.isSensitive).toBe(false);
+
+    const createBadge = getActionBadgeInfo('wms.materials.create', 'Tạo vật tư');
+    expect(createBadge.label).toBe('TẠO');
+
+    const approveBadge = getActionBadgeInfo('wms.imports.approve', 'Duyệt phiếu nhập');
+    expect(approveBadge.label).toBe('DUYỆT');
+  });
+
+  it('filters permissions by status and action type options', () => {
+    const catalog = [
+      { key: 'wms.projects.view:all', module: 'WMS', resource: 'Projects', label: 'Xem dự án' },
+      { key: 'wms.projects.create', module: 'WMS', resource: 'Projects', label: 'Tạo dự án' },
+      { key: 'wms.prices.view', module: 'WMS', resource: 'Prices', label: 'Xem đơn giá' },
+      { key: 'wms.imports.approve', module: 'WMS', resource: 'Imports', label: 'Duyệt nhập' },
+    ];
+    const grouped = groupPermissionCatalog(catalog);
+    const selected = new Set(['wms.projects.view:all']);
+
+    // Filter by granted status
+    const grantedOnly = filterPermissionGroups(grouped, {
+      status: 'granted',
+      selectedKeys: selected,
+    });
+    expect(grantedOnly[0]!.resources[0]!.entries.map(e => e.key)).toEqual(['wms.projects.view:all']);
+
+    // Filter by ungranted status
+    const ungrantedOnly = filterPermissionGroups(grouped, {
+      status: 'ungranted',
+      selectedKeys: selected,
+    });
+    const ungrantedKeys = ungrantedOnly[0]!.resources.flatMap(r => r.entries.map(e => e.key));
+    expect(ungrantedKeys).not.toContain('wms.projects.view:all');
+    expect(ungrantedKeys).toContain('wms.projects.create');
+
+    // Filter by action type: approve
+    const approveOnly = filterPermissionGroups(grouped, {
+      actionFilter: 'approve',
+    });
+    expect(approveOnly[0]!.resources[0]!.entries[0]!.key).toBe('wms.imports.approve');
+
+    // Filter by action type: price_report
+    const priceOnly = filterPermissionGroups(grouped, {
+      actionFilter: 'price_report',
+    });
+    expect(priceOnly[0]!.resources[0]!.entries[0]!.key).toBe('wms.prices.view');
+  });
+  });

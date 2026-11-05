@@ -1164,6 +1164,299 @@
     padding: 12px 16px;
     border-bottom: 1px solid var(--md-outline-variant02);
   }
+  .admin-role-permissions-search-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+  }
+  .admin-role-permissions-search-box {
+    position: relative;
+    flex: 1;
+    min-width: 260px;
+  }
+  .admin-role-permissions-search-input {
+    width: 100%;
+    height: 38px;
+    padding: 6px 36px 6px 36px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--md-outline-variant02);
+    background: var(--md-surface-container-lowest, var(--md-surface));
+    color: var(--md-on-surface);
+    font-size: var(--fs-sm);
+    outline: none;
+    transition: all 0.15s ease;
+  }
+  .admin-role-permissions-search-input:focus {
+    border-color: var(--md-primary);
+    box-shadow: 0 0 0 2px var(--md-primary-container, rgba(2, 132, 199, 0.2));
+  }
+  .admin-role-permissions-search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--md-on-surface-variant);
+    pointer-events: none;
+  }
+  .admin-role-permissions-search-clear {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 4px;
+    border: none;
+    background: transparent;
+    color: var(--md-on-surface-variant);
+    cursor: pointer;
+    border-radius: var(--radius-xs);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .admin-role-permissions-search-clear:hover {
+    color: var(--md-on-surface);
+    background: var(--tint-primary-hover);
+  }
+  .admin-role-permissions-search-cross-module {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--fs-xs);
+    color: var(--md-on-surface-variant);
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    background: var(--md-surface-container-low, var(--md-surface-container));
+    border: 1px solid var(--md-outline-variant02);
+    transition: all 0.15s ease;
+  }
+  .admin-role-permissions-search-cross-module:hover {
+    color: var(--md-on-surface);
+    border-color: var(--md-outline);
+  }
+  .admin-role-permissions-filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 16px;
+  }
+  .admin-role-permissions-status-tabs {
+    display: inline-flex;
+    background: var(--md-surface-container);
+    padding: 3px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--md-outline-variant02);
+    gap: 2px;
+  }
+  .admin-role-permissions-status-tab {
+    padding: 4px 10px;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
+    border-radius: var(--radius-xs);
+    border: none;
+    background: transparent;
+    color: var(--md-on-surface-variant);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+  .admin-role-permissions-status-tab:hover {
+    color: var(--md-on-surface);
+    background: var(--tint-primary-hover);
+  }
+  .admin-role-permissions-status-tab--active {
+    background: var(--md-surface);
+    color: var(--md-primary);
+    font-weight: var(--fw-semibold);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  }
+  .admin-role-permissions-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+  }
+  .admin-role-permissions-chip {
+    padding: 4px 10px;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--md-outline-variant02);
+    background: var(--md-surface);
+    color: var(--md-on-surface-variant);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+  .admin-role-permissions-chip:hover {
+    background: var(--tint-primary-hover);
+    color: var(--md-on-surface);
+    border-color: var(--md-outline);
+  }
+  .admin-role-permissions-chip--active {
+    background: var(--nv-table-header-bg);
+    color: var(--nv-table-header-text);
+    border-color: var(--table-header-lip);
+    font-weight: var(--fw-semibold);
+  }
+  .admin-role-permissions-reset-filter {
+    font-size: var(--fs-xs);
+    color: var(--md-primary);
+    cursor: pointer;
+    background: none;
+    border: none;
+    text-decoration: underline;
+    padding: 2px 6px;
+  }
+  .admin-role-permissions-reset-filter:hover {
+    color: var(--md-primary-hover, #0284c7);
+  }
+  .admin-role-permissions-group-row {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+  .admin-role-permissions-group__content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 8px;
+  }
+  .admin-role-permissions-group__title {
+    color: var(--md-on-surface);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+  .admin-role-permissions-group__count {
+    font-size: 11px;
+    color: var(--md-on-surface-variant);
+    font-weight: var(--fw-medium);
+    background: var(--md-surface-container-high);
+    padding: 2px 8px;
+    border-radius: 9999px;
+  }
+  .admin-perm-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 2px 7px;
+    border-radius: var(--radius-xs);
+    line-height: 1.25;
+    text-transform: uppercase;
+    border: 1px solid transparent;
+    user-select: none;
+  }
+  .admin-perm-badge--view {
+    background: #f0f7ff;
+    color: #0369a1;
+    border-color: #bae6fd;
+  }
+  .admin-perm-badge--create {
+    background: #f0fdf4;
+    color: #15803d;
+    border-color: #bbf7d0;
+  }
+  .admin-perm-badge--update {
+    background: #fffbeb;
+    color: #b45309;
+    border-color: #fde68a;
+  }
+  .admin-perm-badge--delete {
+    background: #fff1f2;
+    color: #be123c;
+    border-color: #fecdd3;
+  }
+  .admin-perm-badge--approve {
+    background: #faf5ff;
+    color: #7e22ce;
+    border-color: #e9d5ff;
+  }
+  .admin-perm-badge--export {
+    background: #f0fdfa;
+    color: #0f766e;
+    border-color: #99f6e4;
+  }
+  .admin-perm-badge--price {
+    background: #fff7ed;
+    color: #c2410c;
+    border-color: #fed7aa;
+    font-weight: 800;
+    box-shadow: 0 1px 2px rgba(194, 65, 12, 0.08);
+  }
+  .admin-perm-badge--lock {
+    background: #f8fafc;
+    color: #475569;
+    border-color: #cbd5e1;
+  }
+  .admin-perm-badge--other {
+    background: #f3f4f6;
+    color: #4b5563;
+    border-color: #e5e7eb;
+  }
+  :root[data-theme='dark'] .admin-perm-badge--view,
+  .dark .admin-perm-badge--view {
+    background: rgba(3, 105, 161, 0.2);
+    color: #7dd3fc;
+    border-color: rgba(56, 189, 248, 0.35);
+  }
+  :root[data-theme='dark'] .admin-perm-badge--create,
+  .dark .admin-perm-badge--create {
+    background: rgba(21, 128, 61, 0.2);
+    color: #86efac;
+    border-color: rgba(74, 222, 128, 0.35);
+  }
+  :root[data-theme='dark'] .admin-perm-badge--update,
+  .dark .admin-perm-badge--update {
+    background: rgba(180, 83, 9, 0.2);
+    color: #fcd34d;
+    border-color: rgba(251, 191, 36, 0.35);
+  }
+  :root[data-theme='dark'] .admin-perm-badge--delete,
+  .dark .admin-perm-badge--delete {
+    background: rgba(190, 18, 60, 0.2);
+    color: #fda4af;
+    border-color: rgba(251, 113, 133, 0.35);
+  }
+  :root[data-theme='dark'] .admin-perm-badge--approve,
+  .dark .admin-perm-badge--approve {
+    background: rgba(126, 34, 206, 0.2);
+    color: #d8b4fe;
+    border-color: rgba(192, 132, 252, 0.35);
+  }
+  :root[data-theme='dark'] .admin-perm-badge--export,
+  .dark .admin-perm-badge--export {
+    background: rgba(15, 118, 110, 0.2);
+    color: #5eead4;
+    border-color: rgba(45, 212, 191, 0.35);
+  }
+  :root[data-theme='dark'] .admin-perm-badge--price,
+  .dark .admin-perm-badge--price {
+    background: rgba(194, 65, 12, 0.25);
+    color: #fdba74;
+    border-color: rgba(251, 146, 60, 0.45);
+  }
+  :root[data-theme='dark'] .admin-perm-badge--lock,
+  .dark .admin-perm-badge--lock {
+    background: rgba(71, 85, 105, 0.25);
+    color: #cbd5e1;
+    border-color: rgba(148, 163, 184, 0.35);
+  }
+  :root[data-theme='dark'] .admin-perm-badge--other,
+  .dark .admin-perm-badge--other {
+    background: rgba(75, 85, 99, 0.25);
+    color: #d1d5db;
+    border-color: rgba(156, 163, 175, 0.35);
+  }
   .admin-role-permissions-toolbar .search-bar {
     max-width: none;
   }
