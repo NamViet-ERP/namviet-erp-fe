@@ -8,6 +8,9 @@ import {
   RefreshCw,
   Search,
   X,
+  Warehouse,
+  Building2,
+  FolderGit2,
 } from 'lucide-react';
 import Modal from '../ui/Modal';
 import { showToast } from '../ui/Toast';
@@ -223,9 +226,71 @@ export default function AdminOpeningStockModal({
       }
     >
       <div className="space-y-4">
-        {/* Top Control Bar: Tải mẫu + Nơi nhận + Upload */}
+        {/* Khối 1: Thanh chọn Nơi tiếp nhận tồn kho (Target Destination Bar) */}
         <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg border border-[var(--md-outline-variant)] bg-[var(--md-surface-container-low)]">
+          <div className="flex items-center gap-2 text-xs font-semibold text-[var(--md-on-surface)]">
+            <Warehouse size={16} className="text-[var(--md-primary)] shrink-0" />
+            <span>Nơi tiếp nhận số dư tồn kho:</span>
+          </div>
+
           <div className="flex flex-wrap items-center gap-2">
+            {/* Segmented Pill Switcher cao cấp */}
+            <div className="inline-flex p-1 rounded-lg bg-[var(--md-surface-container-high)] border border-[var(--md-outline-variant)] text-xs">
+              <button
+                type="button"
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-all ${
+                  targetType === 'general'
+                    ? 'bg-[var(--md-primary)] text-white shadow-sm'
+                    : 'text-[var(--md-on-surface-variant)] hover:text-[var(--md-on-surface)]'
+                }`}
+                onClick={() => {
+                  setTargetType('general');
+                  if (selectedFile) void processFile(selectedFile);
+                }}
+              >
+                <Building2 size={13} />
+                <span className="whitespace-nowrap">Kho Tổng Nam Việt</span>
+              </button>
+
+              <button
+                type="button"
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-all ${
+                  targetType === 'project'
+                    ? 'bg-[var(--md-primary)] text-white shadow-sm'
+                    : 'text-[var(--md-on-surface-variant)] hover:text-[var(--md-on-surface)]'
+                }`}
+                onClick={() => setTargetType('project')}
+              >
+                <FolderGit2 size={13} />
+                <span className="whitespace-nowrap">Kho Dự Án</span>
+              </button>
+            </div>
+
+            {/* Dropdown dự án khi chọn Kho Dự Án */}
+            {targetType === 'project' && (
+              <select
+                className="form-input form-input-sm text-xs min-w-[220px] max-w-[320px] truncate"
+                value={selectedProjectCode}
+                onChange={e => {
+                  setSelectedProjectCode(e.target.value);
+                  if (selectedFile) void processFile(selectedFile);
+                }}
+                disabled={isPreviewing || isImporting}
+              >
+                <option value="">-- Chọn dự án nhận tồn kho --</option>
+                {projects.map(p => (
+                  <option key={p.projectCode} value={p.projectCode}>
+                    {p.projectCode} — {p.projectName}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+        </div>
+
+        {/* Khối 2: Thanh Top Control Bar (Tải mẫu + Nút Chọn file) - Khớp 100% với MaterialImportModal */}
+        <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg border border-[var(--md-outline-variant)] bg-[var(--md-surface-container-low)]">
+          <div className="flex items-center gap-2">
             <button
               type="button"
               className="btn btn-outline btn-sm text-xs flex items-center gap-1.5 cursor-pointer text-[var(--md-primary)] hover:bg-[var(--md-primary)]/10"
@@ -249,51 +314,7 @@ export default function AdminOpeningStockModal({
             </span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Bộ chọn nơi nhận tồn kho (Kho Tổng / Kho Dự Án) */}
-            <div className="flex items-center gap-3 bg-[var(--md-surface-container-highest)] px-2.5 py-1 rounded-md text-xs">
-              <label className="inline-flex items-center gap-1.5 cursor-pointer select-none">
-                <input
-                  type="radio"
-                  name="stockTarget"
-                  className="text-[var(--md-primary)] focus:ring-[var(--md-primary)]"
-                  checked={targetType === 'general'}
-                  onChange={() => {
-                    setTargetType('general');
-                    if (selectedFile) void processFile(selectedFile);
-                  }}
-                />
-                <span className="font-medium text-[var(--md-on-surface)]">Kho Tổng</span>
-              </label>
-              <label className="inline-flex items-center gap-1.5 cursor-pointer select-none">
-                <input
-                  type="radio"
-                  name="stockTarget"
-                  className="text-[var(--md-primary)] focus:ring-[var(--md-primary)]"
-                  checked={targetType === 'project'}
-                  onChange={() => setTargetType('project')}
-                />
-                <span className="font-medium text-[var(--md-on-surface)]">Kho Dự Án</span>
-              </label>
-              {targetType === 'project' && (
-                <select
-                  className="form-input form-input-sm py-0.5 px-2 text-xs"
-                  value={selectedProjectCode}
-                  onChange={e => {
-                    setSelectedProjectCode(e.target.value);
-                    if (selectedFile) void processFile(selectedFile);
-                  }}
-                >
-                  <option value="">-- Chọn dự án --</option>
-                  {projects.map(p => (
-                    <option key={p.projectCode} value={p.projectCode}>
-                      {p.projectCode}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
-
+          <div className="flex items-center gap-2">
             <input
               ref={fileInputRef}
               type="file"
