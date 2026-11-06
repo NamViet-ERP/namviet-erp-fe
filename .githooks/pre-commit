@@ -1,0 +1,21 @@
+#!/bin/sh
+echo "🛡️ [PRE-COMMIT HARNESS] Đang kích hoạt kiểm tra an toàn..."
+
+# 1. Typecheck
+echo "🔍 [1/3] Kiểm tra TypeScript types..."
+npm run typecheck || { echo "❌ Typecheck thất bại!"; exit 1; }
+
+# 2. Living Invariants Tests
+echo "🧪 [2/3] Kiểm tra Living Invariants..."
+npm run test:invariants || { echo "❌ Living Invariants test thất bại!"; exit 1; }
+
+# 3. Quét file cấm
+echo "🔒 [3/3] Quét file nhạy cảm và rác..."
+FORBIDDEN=$(git diff --cached --name-only | grep -E '(\.env|docker-compose.*\.yml|\.sql$|\.py$|docs/|scratch/)')
+if [ -n "$FORBIDDEN" ]; then
+    echo "❌ VI PHẠM BẢO MẬT: Phát hiện file cấm push vào git:\n$FORBIDDEN"
+    exit 1
+fi
+
+echo "✅ [PRE-COMMIT HARNESS] Toàn bộ kiểm thử đạt chuẩn! Cho phép commit."
+exit 0

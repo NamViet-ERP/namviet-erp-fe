@@ -1,6 +1,8 @@
 const SYSTEM_ROLE_PATTERNS: RegExp[] = [
   /^kho\s*h[àa]ng$/i,
   /^khohang$/i,
+  /^kho\s*t[ổo]ng$/i,
+  /^khotong$/i,
   /^th[ủu]\s*kho$/i,
   /^thukho$/i,
   /^warehouse(\s*keeper)?$/i,
@@ -9,8 +11,8 @@ const SYSTEM_ROLE_PATTERNS: RegExp[] = [
   /^cungung$/i,
   /^procurement(\s*(lead|boss))?$/i,
   /^procurement_(lead|boss)$/i,
-  /^k[ếe]\s*to[áa]n$/i,
-  /^ketoan$/i,
+  /^k[ếe]\s*to[áa]n(\s*kho)?$/i,
+  /^ketoan(kho)?$/i,
   /^accountant$/i,
   /^admin(istrator)?$/i,
   /^h[ệe]\s*th[ốo]ng$/i,
@@ -65,6 +67,11 @@ export function formatPmDisplayName(pmName?: string | null): string {
   }
   return pmName!.trim();
 }
+
+/**
+ * Alias cho formatPmDisplayName theo quy chuẩn Living Invariants
+ */
+export const formatPersonnelLabel = formatPmDisplayName;
 
 /**
  * Kiểm tra tính hợp lệ của Chỉ huy trưởng
