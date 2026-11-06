@@ -1,3 +1,4 @@
+import { isSystemRoleAccount } from '../../lib/projectPersonnel';
 import type React from 'react';
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
@@ -214,7 +215,7 @@ export default function ProjectsPage() {
                             </span>
                           );
                         }
-                        return p.pmName && p.pmName !== '—'
+                        return !isSystemRoleAccount(p.pmName)
                           ? p.pmName
                           : <span className="hrm-empty-cell">—</span>;
                       })()}

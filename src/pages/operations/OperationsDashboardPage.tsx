@@ -1,3 +1,4 @@
+import { formatPmDisplayName, hasValidPm } from '../../lib/projectPersonnel';
 import { useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -58,8 +59,6 @@ const PROJECT_FILTERS: { id: ProjectFilter; label: string }[] = [
   { id: 'hasPm', label: 'Có PM' },
 ];
 
-const EMPTY_PM_ID = '00000000-0000-0000-0000-000000000000';
-
 function projectStatusLabel(status: string) {
   if (status === 'Active') return 'Đang triển khai';
   if (status === 'Closed') return 'Đã đóng';
@@ -97,7 +96,7 @@ function paymentStatusLabel(status: string) {
 }
 
 function hasPm(row: { pmName?: string | null; pmId?: string | null }): boolean {
-  return Boolean(row.pmName?.trim()) && row.pmId !== EMPTY_PM_ID;
+  return hasValidPm(row.pmName, row.pmId);
 }
 
 function OpsFilterTabs<T extends string>({
@@ -550,7 +549,7 @@ export default function OperationsDashboardPage() {
                   </td>
                   <td className="table-cell project-col-name">{row.projectName}</td>
                   <td className="table-cell project-col-client">{row.clientName?.trim() || '-'}</td>
-                  <td className="table-cell project-col-pm">{row.pmName || '-'}</td>
+                  <td className="table-cell project-col-pm">{formatPmDisplayName(row.pmName)}</td>
                   <td className="table-cell text-center project-col-status">
                     <Badge status={projectStatusBadge(row.status)} label={projectStatusLabel(row.status)} />
                   </td>

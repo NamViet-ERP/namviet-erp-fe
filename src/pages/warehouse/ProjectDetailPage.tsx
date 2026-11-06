@@ -1,3 +1,4 @@
+import { isSystemRoleAccount } from '../../lib/projectPersonnel';
 import { useState, useMemo } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { PackagePlus, PackageMinus, PackageX, Package, UserRound, ArrowRightLeft, Pencil, CircleDollarSign, Wallet, AlertTriangle, Trash2 } from 'lucide-react';
@@ -439,7 +440,7 @@ export default function ProjectDetailPage() {
           value={
             (project.warehouseKeepers?.length ?? 0) > 0
               ? project.warehouseKeepers!.map(k => k.displayName).join(', ')
-              : project.pmName && project.pmName !== '—'
+              : !isSystemRoleAccount(project.pmName)
                 ? project.pmName
                 : '—'
           }

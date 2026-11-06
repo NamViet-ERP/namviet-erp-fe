@@ -1,3 +1,4 @@
+import { isSystemRoleAccount } from '../lib/projectPersonnel';
 import { apiClient } from '../lib/apiClient';
 import { adminUsersService } from './adminUsersService';
 import { employeesService } from './employeesService';
@@ -15,6 +16,7 @@ function deduplicateAndSort(items: ProjectPersonnelItem[]): ProjectPersonnelItem
   const result: ProjectPersonnelItem[] = [];
 
   for (const item of items) {
+    if (!item.name || isSystemRoleAccount(item.name)) continue;
     const key = item.name.trim().toLowerCase();
     if (!key || seen.has(key)) continue;
     seen.add(key);

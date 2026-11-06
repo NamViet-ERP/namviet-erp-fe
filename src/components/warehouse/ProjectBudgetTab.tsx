@@ -1,3 +1,4 @@
+import { formatPmDisplayName } from '../../lib/projectPersonnel';
 import { Wallet, CircleDollarSign, TrendingUp, ShieldCheck, AlertTriangle, Pencil, HardHat, Truck, Layers } from 'lucide-react';
 import HrmStatCard from '../hr/HrmStatCard';
 import Badge from '../ui/Badge';
@@ -201,7 +202,7 @@ export default function ProjectBudgetTab({
                         Trụ cột 2: Nhân công & Thi công (C<sub>NC</sub>)
                       </div>
                       <div className="text-xs text-[var(--md-on-surface-variant)] mt-0.5">
-                        Chỉ huy trưởng: <strong>{project.pmName || '—'}</strong>
+                        Chỉ huy trưởng: <strong>{formatPmDisplayName(project.pmName)}</strong>
                         {project.scMembers ? (
                           <span> · Ban chỉ huy / SC: <strong>{project.scMembers}</strong></span>
                         ) : null}

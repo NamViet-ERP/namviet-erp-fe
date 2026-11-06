@@ -1,3 +1,4 @@
+import { formatPmDisplayName } from '../../lib/projectPersonnel';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Pencil, FolderKanban, CheckCircle2, Archive, RotateCcw, ArrowRight, ArrowLeftRight, Activity } from 'lucide-react';
@@ -356,7 +357,7 @@ export default function OperationsProjectListPage() {
                       {row.clientName?.trim() || <span className="hrm-empty-cell">-</span>}
                     </td>
                     <td className="table-cell project-col-pm">
-                      {row.pmName || <span className="hrm-empty-cell">-</span>}
+                      {formatPmDisplayName(row.pmName)}
                     </td>
                     <td className="table-cell project-col-sc">
                       <span title={row.scMembers ?? undefined}>

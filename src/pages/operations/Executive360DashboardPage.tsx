@@ -1,3 +1,4 @@
+import { formatPmDisplayName, hasValidPm } from '../../lib/projectPersonnel';
 import { cskhProjectPath } from '../../constants/cskhProject';
 import { useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
@@ -190,8 +191,8 @@ export default function Executive360DashboardPage() {
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs bg-[var(--md-surface-container)] p-3 rounded-lg border border-[var(--md-outline-variant02)]">
                 <div>
                   <span className="text-[var(--md-on-surface-variant)] block">Chỉ huy trưởng:</span>
-                  <strong className="text-[var(--md-on-surface)] font-medium truncate block max-w-[140px]" title={project.pmName}>
-                    {project.pmName || '—'}
+                  <strong className="text-[var(--md-on-surface)] font-medium truncate block max-w-[140px]" title={formatPmDisplayName(project.pmName)}>
+                    {formatPmDisplayName(project.pmName)}
                   </strong>
                 </div>
                 <div>
@@ -225,8 +226,8 @@ export default function Executive360DashboardPage() {
                     </h3>
                   </div>
                   <Badge
-                    status={project.pmName ? 'approved' : 'pending'}
-                    label={project.pmName ? 'Đủ chỉ huy' : 'Thiếu PM'}
+                    status={hasValidPm(project.pmName, project.pmId) ? 'approved' : 'pending'}
+                    label={hasValidPm(project.pmName, project.pmId) ? 'Đủ chỉ huy' : 'Thiếu PM'}
                   />
                 </div>
 
@@ -234,7 +235,7 @@ export default function Executive360DashboardPage() {
                   <div>
                     <span className="text-[var(--md-on-surface-variant)] block mb-0.5">Chỉ huy trưởng (PM / PIC):</span>
                     <strong className="text-sm text-[var(--md-on-surface)] font-semibold">
-                      {project.pmName || '— Chưa phân công'}
+                      {formatPmDisplayName(project.pmName)}
                     </strong>
                   </div>
                   <div>

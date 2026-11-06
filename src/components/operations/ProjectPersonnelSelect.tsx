@@ -1,3 +1,4 @@
+import { isSystemRoleAccount } from '../../lib/projectPersonnel';
 import type React from 'react';
 import { useState, useRef, useEffect, useId, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
@@ -52,6 +53,7 @@ export default function ProjectPersonnelSelect({
   const filtered = useMemo(() => {
     const q = normalizeComboboxQuery(open ? filterQuery : '');
     return personnelList.filter(p => {
+      if (isSystemRoleAccount(p.name)) return false;
       if (excludedSet.has(p.name.trim().toLowerCase())) return false;
       if (!q) return true;
       return (
