@@ -8,8 +8,6 @@ import {
   RefreshCw,
   Search,
   X,
-  Loader2,
-  Trash2,
 } from 'lucide-react';
 import Modal from '../ui/Modal';
 import { showToast } from '../ui/Toast';
@@ -26,12 +24,6 @@ interface AdminOpeningStockModalProps {
 }
 
 type FilterTab = 'all' | 'valid' | 'error';
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-}
 
 export default function AdminOpeningStockModal({
   isOpen,
@@ -183,20 +175,20 @@ export default function AdminOpeningStockModal({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title="⚡ Nạp Số Dư Tồn Kho Đầu Kỳ (Quản Trị Viên)"
-      subtitle="Chuẩn hóa theo mô thức Enterprise: đối soát mã vật tư, đơn giá vốn và tạo bút toán OPENING-STOCK an toàn."
+      title="Nhập số dư tồn kho đầu kỳ từ file Excel (Admin)"
+      subtitle="Hỗ trợ khởi tạo số dư kho tổng hoặc kho dự án, tự động đối soát với danh mục vật tư."
       size="wide"
       footer={
         <div className="flex items-center justify-between w-full">
           <div className="text-xs text-[var(--md-on-surface-variant)]">
             {selectedFile && previewData && previewData.validRows > 0 ? (
               <span>
-                Sẵn sàng nạp <strong>{previewData.validRows}</strong> mặt hàng hợp lệ vào{' '}
+                Sẽ xử lý <strong>{previewData.validRows}</strong> mặt hàng hợp lệ vào{' '}
                 <strong>{targetType === 'project' ? `Kho Dự án ${selectedProjectCode}` : 'Kho Tổng Nam Việt'}</strong>
-                {previewData.errorRows > 0 && ` (tự động bỏ qua ${previewData.errorRows} dòng lỗi)`}.
+                {previewData.errorRows > 0 && ` (bỏ qua ${previewData.errorRows} dòng lỗi)`}.
               </span>
             ) : (
-              <span>Vui lòng chọn file Excel tồn kho đầu kỳ để bắt đầu kiểm tra.</span>
+              <span>Vui lòng chọn file Excel để bắt đầu xem trước.</span>
             )}
           </div>
           <div className="flex items-center gap-2">
@@ -210,19 +202,19 @@ export default function AdminOpeningStockModal({
             </button>
             <button
               type="button"
-              className="btn btn-primary btn-sm inline-flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-semibold shadow-sm"
+              className="btn btn-primary btn-sm flex items-center gap-1.5"
               onClick={handleConfirmImport}
               disabled={!selectedFile || !previewData || previewData.validRows === 0 || isImporting}
             >
               {isImporting ? (
                 <>
-                  <Loader2 className="animate-spin" size={14} />
-                  <span>Đang ghi nhận số dư…</span>
+                  <RefreshCw size={14} className="animate-spin" />
+                  Đang ghi nhận số dư…
                 </>
               ) : (
                 <>
-                  <CheckCircle2 size={14} />
-                  <span>Xác Nhận Nạp ({previewData?.validRows ?? 0} mặt hàng)</span>
+                  <Upload size={14} />
+                  Xác nhận nhập ({previewData?.validRows ?? 0} vật tư)
                 </>
               )}
             </button>
@@ -230,188 +222,135 @@ export default function AdminOpeningStockModal({
         </div>
       }
     >
-      <div className="space-y-4 text-xs">
-        {/* Banner bảo mật & toàn vẹn dữ liệu */}
-        <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-950 dark:text-emerald-200">
-          <div className="font-semibold text-sm mb-1 flex items-center gap-1.5 text-emerald-800 dark:text-emerald-300">
-            <CheckCircle2 size={16} />
-            <span>Nạp số dư khởi tạo kho (Opening Balance)</span>
-          </div>
-          <p className="leading-relaxed">
-            Chức năng dành riêng cho Admin để thiết lập số tồn vật lý ban đầu. Hệ thống sẽ cập nhật số dư kho
-            và tự động tạo phiếu Nhập kho đã duyệt với chứng từ <code>OPENING-STOCK</code> để bảo đảm 100% tính toàn vẹn sổ cái WMS.
-          </p>
-        </div>
-
-        {/* Thiết lập đích nhận & Tải file mẫu */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-lg border border-[var(--md-outline-variant02)] bg-[var(--md-surface-container-low)]">
-          <div>
-            <label className="block font-semibold mb-1 text-[var(--md-on-surface)]">
-              Nơi nhận số dư tồn kho:
-            </label>
-            <div className="flex items-center gap-4 mt-1.5">
-              <label className="inline-flex items-center gap-1.5 cursor-pointer">
-                <input
-                  type="radio"
-                  name="stockTarget"
-                  checked={targetType === 'general'}
-                  onChange={() => {
-                    setTargetType('general');
-                    if (selectedFile) void processFile(selectedFile);
-                  }}
-                />
-                <span className="font-medium text-[var(--md-on-surface)]">Kho Tổng Nam Việt</span>
-              </label>
-              <label className="inline-flex items-center gap-1.5 cursor-pointer">
-                <input
-                  type="radio"
-                  name="stockTarget"
-                  checked={targetType === 'project'}
-                  onChange={() => setTargetType('project')}
-                />
-                <span className="font-medium text-[var(--md-on-surface)]">Kho Dự Án</span>
-              </label>
-            </div>
-
-            {targetType === 'project' && (
-              <div className="mt-2.5">
-                <select
-                  className="form-input form-input-sm w-full"
-                  value={selectedProjectCode}
-                  onChange={e => {
-                    setSelectedProjectCode(e.target.value);
-                    if (selectedFile) void processFile(selectedFile);
-                  }}
-                >
-                  <option value="">-- Chọn dự án nhận tồn kho --</option>
-                  {projects.map(p => (
-                    <option key={p.projectCode} value={p.projectCode}>
-                      {p.projectCode} — {p.projectName}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
-
-          <div className="flex flex-col justify-between items-start sm:items-end border-t sm:border-t-0 sm:border-l border-[var(--md-outline-variant02)] pt-2 sm:pt-0 sm:pl-3">
-            <span className="text-[var(--md-on-surface-variant)] text-[11px] mb-2">
-              File Excel mẫu: Mã VT, Tên VT, ĐVT, Số lượng tồn, Đơn giá vốn, Ghi chú.
-            </span>
+      <div className="space-y-4">
+        {/* Top Control Bar: Tải mẫu + Nơi nhận + Upload */}
+        <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg border border-[var(--md-outline-variant)] bg-[var(--md-surface-container-low)]">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              className="btn btn-secondary btn-sm inline-flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 cursor-pointer"
+              className="btn btn-outline btn-sm text-xs flex items-center gap-1.5 cursor-pointer text-[var(--md-primary)] hover:bg-[var(--md-primary)]/10"
               onClick={handleDownloadTemplate}
               disabled={isDownloading}
             >
               {isDownloading ? (
                 <>
                   <RefreshCw size={13} className="animate-spin" />
-                  <span>Đang tải file mẫu...</span>
+                  Đang tải file mẫu...
                 </>
               ) : (
                 <>
                   <Download size={13} />
-                  <span>Tải File Excel Mẫu Chuẩn</span>
+                  Tải file mẫu Excel (.xlsx)
                 </>
               )}
+            </button>
+            <span className="text-[11px] text-[var(--md-on-surface-variant)]">
+              (Bao gồm mã VT, tên VT, ĐVT, số lượng tồn và đơn giá vốn)
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Bộ chọn nơi nhận tồn kho (Kho Tổng / Kho Dự Án) */}
+            <div className="flex items-center gap-3 bg-[var(--md-surface-container-highest)] px-2.5 py-1 rounded-md text-xs">
+              <label className="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                <input
+                  type="radio"
+                  name="stockTarget"
+                  className="text-[var(--md-primary)] focus:ring-[var(--md-primary)]"
+                  checked={targetType === 'general'}
+                  onChange={() => {
+                    setTargetType('general');
+                    if (selectedFile) void processFile(selectedFile);
+                  }}
+                />
+                <span className="font-medium text-[var(--md-on-surface)]">Kho Tổng</span>
+              </label>
+              <label className="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                <input
+                  type="radio"
+                  name="stockTarget"
+                  className="text-[var(--md-primary)] focus:ring-[var(--md-primary)]"
+                  checked={targetType === 'project'}
+                  onChange={() => setTargetType('project')}
+                />
+                <span className="font-medium text-[var(--md-on-surface)]">Kho Dự Án</span>
+              </label>
+              {targetType === 'project' && (
+                <select
+                  className="form-input form-input-sm py-0.5 px-2 text-xs"
+                  value={selectedProjectCode}
+                  onChange={e => {
+                    setSelectedProjectCode(e.target.value);
+                    if (selectedFile) void processFile(selectedFile);
+                  }}
+                >
+                  <option value="">-- Chọn dự án --</option>
+                  {projects.map(p => (
+                    <option key={p.projectCode} value={p.projectCode}>
+                      {p.projectCode}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".xlsx,.xls"
+              className="hidden"
+              onChange={handleFileChange}
+              disabled={isPreviewing || isImporting}
+            />
+            <button
+              type="button"
+              className="btn btn-primary btn-sm text-xs flex items-center gap-1.5"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isPreviewing || isImporting}
+            >
+              <FileSpreadsheet size={13} />
+              {selectedFile ? 'Chọn file khác' : 'Chọn file Excel tải lên'}
             </button>
           </div>
         </div>
 
-        {/* Hidden file input */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".xlsx, .xls"
-          className="hidden"
-          onChange={handleFileChange}
-          disabled={isPreviewing || isImporting}
-        />
-
-        {/* Card file đã chọn (Khi selectedFile != null) */}
-        {selectedFile && (
-          <div className="flex items-center justify-between p-3 rounded-xl border border-emerald-500/40 bg-emerald-500/5 transition-all">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-emerald-600/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                <FileSpreadsheet size={22} />
-              </div>
-              <div className="space-y-0.5">
-                <div className="font-semibold text-sm text-[var(--md-on-surface)] flex items-center gap-2">
-                  <span className="truncate max-w-[280px] sm:max-w-md">{selectedFile.name}</span>
-                  <span className="text-[11px] text-[var(--md-on-surface-variant)] font-normal font-mono">
-                    ({formatFileSize(selectedFile.size)})
-                  </span>
-                </div>
-                <div className="text-[11px] text-emerald-700 dark:text-emerald-300 flex items-center gap-1">
-                  <CheckCircle2 size={12} />
-                  <span>Đã phân tích xong dữ liệu</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                className="btn btn-outline btn-sm text-xs inline-flex items-center gap-1.5 text-[var(--md-primary)] hover:bg-[var(--md-primary)]/10"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isPreviewing || isImporting}
-              >
-                <FileSpreadsheet size={13} />
-                <span>Đổi file khác</span>
-              </button>
-              <button
-                type="button"
-                className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-                title="Xóa file đã chọn"
-                onClick={handleReset}
-                disabled={isPreviewing || isImporting}
-              >
-                <Trash2 size={16} />
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Khu vực Dropzone nếu chưa có file */}
         {!selectedFile && !isPreviewing && (
           <div
-            onDragOver={handleDragOver}
             onDrop={handleDrop}
+            onDragOver={handleDragOver}
             onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-[var(--md-outline-variant02)] hover:border-emerald-500/60 rounded-xl p-6 text-center transition-colors bg-[var(--md-surface-container-lowest)] cursor-pointer"
+            className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-[var(--md-outline-variant)] hover:border-[var(--md-primary)] rounded-xl bg-[var(--md-surface-container-lowest)] cursor-pointer transition-colors text-center"
           >
-            <div className="flex flex-col items-center justify-center gap-2">
-              <div className="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-1">
-                <Upload size={24} />
-              </div>
-              <p className="font-semibold text-sm text-[var(--md-on-surface)]">
-                Kéo thả file Excel (.xlsx, .xls) tồn kho vào đây
-              </p>
-              <p className="text-[11px] text-[var(--md-on-surface-variant)]">
-                Hệ thống tự động nhận diện: Mã vật tư, Tên, ĐVT, Số lượng tồn, Đơn giá vốn, Ghi chú
-              </p>
-              <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-1">
-                Hoặc bấm vào đây để duyệt file từ máy tính (tối đa 10MB)
-              </p>
+            <div className="w-12 h-12 rounded-full bg-[var(--md-primary-container)] text-[var(--md-primary)] flex items-center justify-center mb-3">
+              <Upload size={24} />
             </div>
+            <p className="text-sm font-semibold text-[var(--md-on-surface)]">
+              Kéo thả file Excel (.xlsx, .xls) tồn kho đầu kỳ vào đây
+            </p>
+            <p className="text-xs text-[var(--md-on-surface-variant)] mt-1">
+              Hệ thống tự động nhận diện cột: Mã vật tư, Tên vật tư, ĐVT, Số lượng tồn, Đơn giá vốn, Ghi chú...
+            </p>
+            <p className="text-[11px] text-[var(--md-primary)] font-medium mt-3">
+              Hoặc bấm vào đây để duyệt file từ máy tính (tối đa 10MB)
+            </p>
           </div>
         )}
 
-        {/* Loading state preview */}
+        {/* Loading khi đang phân tích file */}
         {isPreviewing && (
-          <div className="p-8 text-center text-[var(--md-on-surface-variant)] flex flex-col items-center justify-center gap-2">
-            <Loader2 className="animate-spin text-emerald-600" size={28} />
-            <span className="text-sm font-medium text-[var(--md-on-surface)]">
-              Đang phân tích cấu trúc và kiểm tra mã vật tư từ file Excel...
-            </span>
-            <span className="text-[11px] text-[var(--md-on-surface-variant)]">
-              Đối soát tồn tại trong danh mục vật tư công ty và tính toán tổng vốn kho
-            </span>
+          <div className="flex flex-col items-center justify-center p-8 text-center">
+            <RefreshCw size={28} className="animate-spin text-[var(--md-primary)] mb-2" />
+            <p className="text-sm font-medium text-[var(--md-on-surface)]">
+              Đang phân tích và đối soát số dư tồn kho với CSDL…
+            </p>
+            <p className="text-xs text-[var(--md-on-surface-variant)] mt-1">
+              Kiểm tra mã vật tư đang hoạt động, đơn vị tính và tính toàn vẹn số liệu
+            </p>
           </div>
         )}
 
-        {/* Bảng xem trước dữ liệu (Auto Preview) */}
+        {/* Bảng xem trước dữ liệu khi đã phân tích xong */}
         {previewData && !isPreviewing && (
           <div className="space-y-3">
             {/* Thanh tổng kết số liệu (KPI Quick Stats) */}
@@ -484,7 +423,7 @@ export default function AdminOpeningStockModal({
                 <Search size={14} className="absolute left-3 top-2.5 text-[var(--md-on-surface-variant)]" />
                 <input
                   type="text"
-                  className="w-full pl-8 pr-8 py-1.5 text-xs rounded-md border border-[var(--md-outline-variant)] bg-[var(--md-surface)] text-[var(--md-on-surface)] placeholder:text-[var(--md-on-surface-variant)]/60 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full pl-8 pr-8 py-1.5 text-xs rounded-md border border-[var(--md-outline-variant)] bg-[var(--md-surface)] text-[var(--md-on-surface)] placeholder:text-[var(--md-on-surface-variant)]/60 focus:outline-none focus:ring-1 focus:ring-[var(--md-primary)]"
                   placeholder="Lọc theo STT, mã VT, tên VT, ĐVT, nội dung lỗi..."
                   value={search}
                   onChange={e => setSearch(e.target.value)}
@@ -502,21 +441,21 @@ export default function AdminOpeningStockModal({
             </div>
 
             {/* Bảng danh sách dòng preview */}
-            <div className="border border-[var(--md-outline-variant02)] rounded-lg overflow-hidden max-h-[350px] overflow-y-auto">
-              <table className="w-full text-left border-collapse text-[11px]">
-                <thead className="sticky top-0 z-20 bg-[var(--md-surface-container-high)] text-[var(--md-on-surface)] font-semibold border-b border-[var(--md-outline-variant02)] shadow-sm">
+            <div className="border border-[var(--md-outline-variant)] rounded-lg overflow-hidden max-h-[380px] overflow-y-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead className="sticky top-0 z-20 bg-[var(--md-surface-container-high)] text-[var(--md-on-surface)] font-semibold border-b border-[var(--md-outline-variant)] shadow-sm">
                   <tr>
-                    <th className="py-2.5 px-2.5 w-12 text-center">STT</th>
-                    <th className="py-2.5 px-2.5 w-28 text-center">Trạng thái</th>
-                    <th className="py-2.5 px-2.5 w-36">Mã vật tư</th>
-                    <th className="py-2.5 px-2.5">Tên vật tư</th>
-                    <th className="py-2.5 px-2.5 text-center w-16">ĐVT</th>
-                    <th className="py-2.5 px-2.5 text-right w-24">SL tồn</th>
-                    <th className="py-2.5 px-2.5 text-right w-28">Đơn giá</th>
-                    <th className="py-2.5 px-2.5 text-right w-32">Thành tiền</th>
+                    <th className="py-2 px-2.5 w-12 text-center">STT</th>
+                    <th className="py-2 px-2.5 w-28 text-center">Trạng thái</th>
+                    <th className="py-2 px-2.5 w-36">Mã vật tư</th>
+                    <th className="py-2 px-2.5">Tên vật tư</th>
+                    <th className="py-2 px-2.5 text-center w-16">ĐVT</th>
+                    <th className="py-2 px-2.5 text-right w-24">SL tồn</th>
+                    <th className="py-2 px-2.5 text-right w-28">Đơn giá</th>
+                    <th className="py-2 px-2.5 text-right w-32">Thành tiền</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[var(--md-outline-variant02)]/50 bg-[var(--md-surface)]">
+                <tbody className="divide-y divide-[var(--md-outline-variant)]/50 bg-[var(--md-surface)]">
                   {filteredItems.length === 0 ? (
                     <tr>
                       <td colSpan={8} className="py-8 text-center text-xs text-[var(--md-on-surface-variant)]">

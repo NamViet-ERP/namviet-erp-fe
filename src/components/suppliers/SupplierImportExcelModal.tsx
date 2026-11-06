@@ -9,8 +9,6 @@ import {
   RefreshCw,
   Search,
   X,
-  Loader2,
-  Trash2,
 } from 'lucide-react';
 import Modal from '../ui/Modal';
 import { showToast } from '../ui/Toast';
@@ -25,12 +23,6 @@ interface SupplierImportExcelModalProps {
 }
 
 type FilterTab = 'all' | 'valid' | 'error';
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-}
 
 export default function SupplierImportExcelModal({
   isOpen,
@@ -181,19 +173,19 @@ export default function SupplierImportExcelModal({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title="📥 Nạp Danh Sách Nhà Cung Cấp Hàng Loạt (Excel)"
-      subtitle="Chuẩn hóa Master Data: kiểm tra trùng lặp MST, cấp mã NCC tự động và thiết lập phân hạng D ban đầu."
+      title="Nhập danh sách nhà cung cấp từ file Excel"
+      subtitle="Hỗ trợ kiểm tra trùng lặp MST, cấp mã NCC tự động và thiết lập phân hạng D ban đầu."
       size="wide"
       footer={
         <div className="flex items-center justify-between w-full">
           <div className="text-xs text-[var(--md-on-surface-variant)]">
             {selectedFile && previewData && previewData.validRows > 0 ? (
               <span>
-                Sẵn sàng nạp <strong>{previewData.validRows}</strong> nhà cung cấp hợp lệ vào Master Data
-                {previewData.errorRows > 0 && ` (tự động bỏ qua ${previewData.errorRows} dòng trùng/lỗi)`}.
+                Sẽ xử lý <strong>{previewData.validRows}</strong> nhà cung cấp hợp lệ (
+                bỏ qua {previewData.errorRows} dòng trùng/lỗi).
               </span>
             ) : (
-              <span>Vui lòng chọn file Excel nhà cung cấp để bắt đầu kiểm tra.</span>
+              <span>Vui lòng chọn file Excel để bắt đầu xem trước.</span>
             )}
           </div>
           <div className="flex items-center gap-2">
@@ -207,19 +199,19 @@ export default function SupplierImportExcelModal({
             </button>
             <button
               type="button"
-              className="btn btn-primary btn-sm inline-flex items-center gap-1.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold shadow-sm"
+              className="btn btn-primary btn-sm flex items-center gap-1.5"
               onClick={handleConfirmImport}
               disabled={!selectedFile || !previewData || previewData.validRows === 0 || isImporting}
             >
               {isImporting ? (
                 <>
-                  <Loader2 className="animate-spin" size={14} />
-                  <span>Đang ghi nhận NCC…</span>
+                  <RefreshCw size={14} className="animate-spin" />
+                  Đang nhập dữ liệu…
                 </>
               ) : (
                 <>
-                  <CheckCircle2 size={14} />
-                  <span>Xác Nhận Nạp ({previewData?.validRows ?? 0} NCC)</span>
+                  <Upload size={14} />
+                  Xác nhận nhập ({previewData?.validRows ?? 0} NCC)
                 </>
               )}
             </button>
@@ -227,132 +219,91 @@ export default function SupplierImportExcelModal({
         </div>
       }
     >
-      <div className="space-y-4 text-xs">
-        {/* Banner hướng dẫn chuẩn Master Data */}
-        <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-950 dark:text-blue-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div className="space-y-1">
-            <div className="font-semibold text-sm flex items-center gap-1.5 text-blue-800 dark:text-blue-300">
-              <CheckCircle2 size={16} />
-              <span>Khởi tạo Master Data Nhà Cung Cấp từ Excel</span>
-            </div>
-            <p className="leading-relaxed">
-              File Excel bao gồm: Tên NCC, Mã số thuế, SĐT, Website, Loại hình, Phạm vi, Hạn nợ, Điều khoản và Nhóm ngành hàng.
-              NCC sau khi nạp sẽ ở <strong>Hạng D - Trạng thái Mới (Chờ duyệt)</strong> theo chuẩn Master Data Mayzer ERP.
-            </p>
+      <div className="space-y-4">
+        {/* Top Control Bar: Tải mẫu + Upload */}
+        <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg border border-[var(--md-outline-variant)] bg-[var(--md-surface-container-low)]">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="btn btn-outline btn-sm text-xs flex items-center gap-1.5 cursor-pointer text-[var(--md-primary)] hover:bg-[var(--md-primary)]/10"
+              onClick={handleDownloadTemplate}
+              disabled={isDownloading}
+            >
+              {isDownloading ? (
+                <>
+                  <RefreshCw size={13} className="animate-spin" />
+                  Đang tải file mẫu...
+                </>
+              ) : (
+                <>
+                  <Download size={13} />
+                  Tải file mẫu Excel (.xlsx)
+                </>
+              )}
+            </button>
+            <span className="text-[11px] text-[var(--md-on-surface-variant)]">
+              (Bao gồm sheet hướng dẫn, MST, thông tin liên hệ & phân hạng D)
+            </span>
           </div>
-          <button
-            type="button"
-            className="btn btn-secondary btn-sm shrink-0 inline-flex items-center gap-1.5 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/40 cursor-pointer"
-            onClick={handleDownloadTemplate}
-            disabled={isDownloading}
-          >
-            {isDownloading ? (
-              <>
-                <RefreshCw size={13} className="animate-spin" />
-                <span>Đang tải file mẫu...</span>
-              </>
-            ) : (
-              <>
-                <Download size={13} />
-                <span>Tải File Mẫu NCC (.xlsx)</span>
-              </>
-            )}
-          </button>
+
+          <div className="flex items-center gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".xlsx,.xls"
+              className="hidden"
+              onChange={handleFileChange}
+              disabled={isPreviewing || isImporting}
+            />
+            <button
+              type="button"
+              className="btn btn-primary btn-sm text-xs flex items-center gap-1.5"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isPreviewing || isImporting}
+            >
+              <FileSpreadsheet size={13} />
+              {selectedFile ? 'Chọn file khác' : 'Chọn file Excel tải lên'}
+            </button>
+          </div>
         </div>
-
-        {/* Hidden file input */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".xlsx, .xls"
-          className="hidden"
-          onChange={handleFileChange}
-          disabled={isPreviewing || isImporting}
-        />
-
-        {/* Card file đã chọn (Khi selectedFile != null) */}
-        {selectedFile && (
-          <div className="flex items-center justify-between p-3 rounded-xl border border-blue-500/40 bg-blue-500/5 transition-all">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-blue-600/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-                <FileSpreadsheet size={22} />
-              </div>
-              <div className="space-y-0.5">
-                <div className="font-semibold text-sm text-[var(--md-on-surface)] flex items-center gap-2">
-                  <span className="truncate max-w-[280px] sm:max-w-md">{selectedFile.name}</span>
-                  <span className="text-[11px] text-[var(--md-on-surface-variant)] font-normal font-mono">
-                    ({formatFileSize(selectedFile.size)})
-                  </span>
-                </div>
-                <div className="text-[11px] text-blue-700 dark:text-blue-300 flex items-center gap-1">
-                  <CheckCircle2 size={12} />
-                  <span>Đã phân tích xong dữ liệu danh sách NCC</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                className="btn btn-outline btn-sm text-xs inline-flex items-center gap-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isPreviewing || isImporting}
-              >
-                <FileSpreadsheet size={13} />
-                <span>Đổi file khác</span>
-              </button>
-              <button
-                type="button"
-                className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-                title="Xóa file đã chọn"
-                onClick={handleReset}
-                disabled={isPreviewing || isImporting}
-              >
-                <Trash2 size={16} />
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Khu vực Dropzone nếu chưa có file */}
         {!selectedFile && !isPreviewing && (
           <div
-            onDragOver={handleDragOver}
             onDrop={handleDrop}
+            onDragOver={handleDragOver}
             onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-[var(--md-outline-variant02)] hover:border-blue-500/60 rounded-xl p-6 text-center transition-colors bg-[var(--md-surface-container-lowest)] cursor-pointer"
+            className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-[var(--md-outline-variant)] hover:border-[var(--md-primary)] rounded-xl bg-[var(--md-surface-container-lowest)] cursor-pointer transition-colors text-center"
           >
-            <div className="flex flex-col items-center justify-center gap-2">
-              <div className="w-12 h-12 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-1">
-                <Upload size={24} />
-              </div>
-              <p className="font-semibold text-sm text-[var(--md-on-surface)]">
-                Kéo thả file Excel (.xlsx, .xls) danh sách NCC vào đây
-              </p>
-              <p className="text-[11px] text-[var(--md-on-surface-variant)]">
-                Hệ thống tự động nhận diện: Tên NCC, MST, SĐT, Website, Loại hình, Phạm vi, Hạn nợ, Nhóm ngành hàng
-              </p>
-              <p className="text-[11px] text-blue-600 dark:text-blue-400 font-medium mt-1">
-                Hoặc bấm vào đây để duyệt file từ máy tính (tối đa 10MB)
-              </p>
+            <div className="w-12 h-12 rounded-full bg-[var(--md-primary-container)] text-[var(--md-primary)] flex items-center justify-center mb-3">
+              <Upload size={24} />
             </div>
+            <p className="text-sm font-semibold text-[var(--md-on-surface)]">
+              Kéo thả file Excel (.xlsx, .xls) danh sách NCC vào đây
+            </p>
+            <p className="text-xs text-[var(--md-on-surface-variant)] mt-1">
+              Hệ thống tự động nhận diện cột: Tên NCC, MST, SĐT, Website, Loại hình, Phạm vi, Hạn nợ, Nhóm ngành hàng...
+            </p>
+            <p className="text-[11px] text-[var(--md-primary)] font-medium mt-3">
+              Hoặc bấm vào đây để duyệt file từ máy tính (tối đa 10MB)
+            </p>
           </div>
         )}
 
-        {/* Loading state preview */}
+        {/* Loading khi đang phân tích file */}
         {isPreviewing && (
-          <div className="p-8 text-center text-[var(--md-on-surface-variant)] flex flex-col items-center justify-center gap-2">
-            <Loader2 className="animate-spin text-blue-600" size={28} />
-            <span className="text-sm font-medium text-[var(--md-on-surface)]">
-              Đang kiểm tra tính hợp lệ và quét trùng tên / MST từ hệ thống...
-            </span>
-            <span className="text-[11px] text-[var(--md-on-surface-variant)]">
+          <div className="flex flex-col items-center justify-center p-8 text-center">
+            <RefreshCw size={28} className="animate-spin text-[var(--md-primary)] mb-2" />
+            <p className="text-sm font-medium text-[var(--md-on-surface)]">
+              Đang kiểm tra tính hợp lệ và quét trùng tên / MST từ hệ thống…
+            </p>
+            <p className="text-xs text-[var(--md-on-surface-variant)] mt-1">
               Đối soát trùng lặp với danh bạ nhà cung cấp hiện có
-            </span>
+            </p>
           </div>
         )}
 
-        {/* Bảng xem trước dữ liệu (Auto Preview) */}
+        {/* Bảng xem trước dữ liệu khi đã phân tích xong */}
         {previewData && !isPreviewing && (
           <div className="space-y-3">
             {/* Thanh tổng kết số liệu (KPI Quick Stats) */}
@@ -419,7 +370,7 @@ export default function SupplierImportExcelModal({
                 <Search size={14} className="absolute left-3 top-2.5 text-[var(--md-on-surface-variant)]" />
                 <input
                   type="text"
-                  className="w-full pl-8 pr-8 py-1.5 text-xs rounded-md border border-[var(--md-outline-variant)] bg-[var(--md-surface)] text-[var(--md-on-surface)] placeholder:text-[var(--md-on-surface-variant)]/60 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full pl-8 pr-8 py-1.5 text-xs rounded-md border border-[var(--md-outline-variant)] bg-[var(--md-surface)] text-[var(--md-on-surface)] placeholder:text-[var(--md-on-surface-variant)]/60 focus:outline-none focus:ring-1 focus:ring-[var(--md-primary)]"
                   placeholder="Lọc theo STT, tên NCC, MST, SĐT, loại hình, nhóm..."
                   value={search}
                   onChange={e => setSearch(e.target.value)}
@@ -437,21 +388,21 @@ export default function SupplierImportExcelModal({
             </div>
 
             {/* Bảng danh sách dòng preview */}
-            <div className="border border-[var(--md-outline-variant02)] rounded-lg overflow-hidden max-h-[350px] overflow-y-auto">
-              <table className="w-full text-left border-collapse text-[11px]">
-                <thead className="sticky top-0 z-20 bg-[var(--md-surface-container-high)] text-[var(--md-on-surface)] font-semibold border-b border-[var(--md-outline-variant02)] shadow-sm">
+            <div className="border border-[var(--md-outline-variant)] rounded-lg overflow-hidden max-h-[380px] overflow-y-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead className="sticky top-0 z-20 bg-[var(--md-surface-container-high)] text-[var(--md-on-surface)] font-semibold border-b border-[var(--md-outline-variant)] shadow-sm">
                   <tr>
-                    <th className="py-2.5 px-2.5 w-12 text-center">STT</th>
-                    <th className="py-2.5 px-2.5 w-28 text-center">Trạng thái</th>
-                    <th className="py-2.5 px-2.5 w-32">Mã NCC</th>
-                    <th className="py-2.5 px-2.5">Tên nhà cung cấp</th>
-                    <th className="py-2.5 px-2.5 w-32">Mã số thuế</th>
-                    <th className="py-2.5 px-2.5 w-28">SĐT</th>
-                    <th className="py-2.5 px-2.5 w-36">Loại hình / Phạm vi</th>
-                    <th className="py-2.5 px-2.5">Nhóm ngành hàng</th>
+                    <th className="py-2 px-2.5 w-12 text-center">STT</th>
+                    <th className="py-2 px-2.5 w-28 text-center">Trạng thái</th>
+                    <th className="py-2 px-2.5 w-32">Mã NCC</th>
+                    <th className="py-2 px-2.5">Tên nhà cung cấp</th>
+                    <th className="py-2 px-2.5 w-32">Mã số thuế</th>
+                    <th className="py-2 px-2.5 w-28">SĐT</th>
+                    <th className="py-2 px-2.5 w-36">Loại hình / Phạm vi</th>
+                    <th className="py-2 px-2.5">Nhóm ngành hàng</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[var(--md-outline-variant02)]/50 bg-[var(--md-surface)]">
+                <tbody className="divide-y divide-[var(--md-outline-variant)]/50 bg-[var(--md-surface)]">
                   {filteredItems.length === 0 ? (
                     <tr>
                       <td colSpan={8} className="py-8 text-center text-xs text-[var(--md-on-surface-variant)]">
