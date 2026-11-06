@@ -2,7 +2,7 @@ import type React from 'react';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
-import { Ban, Check, Plus, Trash2, Pencil, Eye, X, Award, History, Upload } from 'lucide-react';
+import { Ban, Check, Plus, Trash2, Pencil, Eye, X, Award, History, Upload, RefreshCw } from 'lucide-react';
 import SupplierTierEvaluationModal from '../../components/suppliers/SupplierTierEvaluationModal';
 import SupplierGradeHistoryModal from '../../components/suppliers/SupplierGradeHistoryModal';
 import SupplierSourcingKpiCards from '../../components/suppliers/SupplierSourcingKpiCards';
@@ -249,6 +249,17 @@ export default function SuppliersSettingsPanel({
     }
   };
 
+  const handleFetchNextCode = async () => {
+    try {
+      const { nextCode } = await suppliersService.nextCode();
+      setForm(f => ({ ...f, supplierCode: nextCode }));
+      setFormErrors(prev => ({ ...prev, supplierCode: undefined }));
+      showToast('info', `Đã lấy mã gợi ý mới nhất: ${nextCode}`);
+    } catch {
+      showToast('error', 'Không thể lấy mã gợi ý tự động.');
+    }
+  };
+
   const openEdit = async (s: SupplierRow) => {
     setOpeningEdit(true);
     try {
@@ -295,6 +306,16 @@ export default function SuppliersSettingsPanel({
     const paymentTerms = form.paymentTerms.trim();
     const nextErrors: FormErrors = {};
 
+    if (supplierCode) {
+      if (supplierCode.length > SUPPLIER_LIMITS.codeMax) {
+        nextErrors.supplierCode = `Mã nhà cung cấp tối đa ${SUPPLIER_LIMITS.codeMax} ký tự.`;
+      } else if (
+        items.some(s => s.id !== editing?.id && s.supplierCode.toLowerCase() === supplierCode.toLowerCase())
+      ) {
+        nextErrors.supplierCode = 'Mã nhà cung cấp đã tồn tại.';
+      }
+    }
+
     if (!supplierName) nextErrors.supplierName = 'Tên nhà cung cấp là bắt buộc.';
     else if (supplierName.length > SUPPLIER_LIMITS.nameMax) {
       nextErrors.supplierName = `Tên nhà cung cấp tối đa ${SUPPLIER_LIMITS.nameMax} ký tự.`;
@@ -326,7 +347,7 @@ export default function SuppliersSettingsPanel({
     if (Object.keys(nextErrors).length > 0 || !debt.ok || !limit.ok) return;
 
     const body = {
-      supplierCode,
+      supplierCode: supplierCode || null,
       supplierName,
       taxCode: taxCode || null,
       contactPhone: contactPhone || null,
@@ -828,14 +849,37 @@ export default function SuppliersSettingsPanel({
       >
         <form id="supplier-settings-form" className="space-y-3 modal-form-bordered" onSubmit={handleSubmit}>
           <FormField label="Mã NCC" error={formErrors.supplierCode}>
-            <input
-              className="form-input font-mono"
-              value={form.supplierCode}
-              disabled
-              readOnly
-              placeholder={editing ? undefined : 'Hệ thống tự cấp khi lưu'}
-              aria-readonly="true"
-            />
+            <div className="flex items-center gap-2">
+              <input
+                className="form-input font-mono flex-1"
+                value={form.supplierCode}
+                maxLength={SUPPLIER_LIMITS.codeMax}
+                disabled={Boolean(editing)}
+                readOnly={Boolean(editing)}
+                onChange={e => {
+                  setForm(f => ({ ...f, supplierCode: e.target.value }));
+                  setFormErrors(prev => ({ ...prev, supplierCode: undefined }));
+                }}
+                placeholder={editing ? undefined : 'Hệ thống tự cấp hoặc nhập mã quy ước'}
+                aria-readonly={Boolean(editing)}
+              />
+              {!editing && (
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm shrink-0 inline-flex items-center gap-1.5 text-xs text-[var(--md-primary)] hover:bg-[var(--md-primary)]/10 cursor-pointer"
+                  onClick={() => void handleFetchNextCode()}
+                  title="Lấy lại mã gợi ý tiếp theo tự động từ hệ thống"
+                >
+                  <RefreshCw size={13} />
+                  <span>Lấy mã gợi ý</span>
+                </button>
+              )}
+            </div>
+            {!editing && (
+              <p className="text-[11px] text-[var(--md-on-surface-variant)] mt-1">
+                Mã gợi ý tự động bởi hệ thống. Bạn có thể sửa đổi theo mã quy ước riêng của công ty (tối đa 50 ký tự).
+              </p>
+            )}
           </FormField>
           <FormField label="Tên nhà cung cấp" required error={formErrors.supplierName}>
             <input
