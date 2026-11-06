@@ -1,17 +1,36 @@
-import { useState, useRef } from 'react';
-import { Download, Upload, CheckCircle, Loader2 } from 'lucide-react';
+import { useState, useRef, useMemo } from 'react';
+import {
+  Download,
+  Upload,
+  FileSpreadsheet,
+  CheckCircle2,
+  XCircle,
+  RefreshCw,
+  Search,
+  X,
+  Loader2,
+  Trash2,
+} from 'lucide-react';
 import Modal from '../ui/Modal';
 import { showToast } from '../ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { useProjects } from '../../hooks/useProjects';
 import { stockService } from '../../services/stockService';
-import type { OpeningStockPreviewResponseDto } from '../../types/wms';
+import type { OpeningStockItemPreviewDto, OpeningStockPreviewResponseDto } from '../../types/wms';
 import { formatCurrencyFull } from '../../utils/formatCurrency';
 
 interface AdminOpeningStockModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+}
+
+type FilterTab = 'all' | 'valid' | 'error';
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 }
 
 export default function AdminOpeningStockModal({
@@ -25,6 +44,9 @@ export default function AdminOpeningStockModal({
   const [previewData, setPreviewData] = useState<OpeningStockPreviewResponseDto | null>(null);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [filterTab, setFilterTab] = useState<FilterTab>('all');
+  const [search, setSearch] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: projectPage } = useProjects();
@@ -35,39 +57,56 @@ export default function AdminOpeningStockModal({
     setPreviewData(null);
     setIsPreviewing(false);
     setIsImporting(false);
+    setFilterTab('all');
+    setSearch('');
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleClose = () => {
+    if (isImporting) return;
     handleReset();
     onClose();
   };
 
   const handleDownloadTemplate = async () => {
+    if (isDownloading) return;
+    setIsDownloading(true);
     try {
       await stockService.downloadOpeningStockTemplate();
       showToast('success', 'Đã tải xuống file Excel mẫu tồn kho đầu kỳ.');
     } catch (err: unknown) {
       showToast('error', getApiErrorMessage(err, 'Không thể tải file mẫu.'));
+    } finally {
+      setIsDownloading(false);
     }
   };
 
   const processFile = async (file: File) => {
-    if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (!['xlsx', 'xls'].includes(ext ?? '')) {
       showToast('warning', 'Vui lòng chọn file Excel định dạng .xlsx hoặc .xls');
       return;
     }
+
+    if (file.size > 10 * 1024 * 1024) {
+      showToast('warning', 'Kích thước file tối đa là 10MB');
+      return;
+    }
+
     setSelectedFile(file);
     setIsPreviewing(true);
     setPreviewData(null);
+    setFilterTab('all');
+    setSearch('');
+
     try {
       const projCode = targetType === 'project' ? selectedProjectCode : undefined;
       const res = await stockService.previewOpeningStock(file, projCode);
       setPreviewData(res);
       if (res.errorRows > 0) {
-        showToast('warning', `Tìm thấy ${res.validRows} dòng hợp lệ và ${res.errorRows} dòng có cảnh báo/lỗi.`);
+        showToast('warning', `Tìm thấy ${res.validRows} dòng hợp lệ và ${res.errorRows} dòng có lỗi/cảnh báo.`);
       } else {
-        showToast('info', `Phân tích thành công: ${res.validRows} dòng dữ liệu hợp lệ.`);
+        showToast('success', `Phân tích thành công: ${res.validRows} dòng dữ liệu hợp lệ.`);
       }
     } catch (err: unknown) {
       showToast('error', getApiErrorMessage(err, 'Không thể đọc nội dung file Excel.'));
@@ -83,9 +122,42 @@ export default function AdminOpeningStockModal({
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     const file = e.dataTransfer.files?.[0];
     if (file) void processFile(file);
   };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  // Filter preview items by Tab & Instant Search
+  const filteredItems = useMemo(() => {
+    if (!previewData) return [];
+    return previewData.items
+      .map((item: OpeningStockItemPreviewDto, index: number) => ({ ...item, originalIndex: index + 1 }))
+      .filter((item: OpeningStockItemPreviewDto & { originalIndex: number }) => {
+        // Tab Filter
+        if (filterTab === 'valid' && !item.isValid) return false;
+        if (filterTab === 'error' && item.isValid) return false;
+
+        // Instant Search Filter
+        if (search.trim()) {
+          const q = search.trim().toLowerCase();
+          const matchCode = item.materialCode?.toLowerCase().includes(q);
+          const matchName = item.materialName?.toLowerCase().includes(q);
+          const matchUnit = item.unit?.toLowerCase().includes(q);
+          const matchError = item.error?.toLowerCase().includes(q);
+          const matchIndex = String(item.originalIndex) === q || `dòng ${item.originalIndex}`.toLowerCase().includes(q);
+          if (!matchCode && !matchName && !matchUnit && !matchError && !matchIndex) {
+            return false;
+          }
+        }
+
+        return true;
+      });
+  }, [previewData, filterTab, search]);
 
   const handleConfirmImport = async () => {
     if (!selectedFile) return;
@@ -112,23 +184,67 @@ export default function AdminOpeningStockModal({
       isOpen={isOpen}
       onClose={handleClose}
       title="⚡ Nạp Số Dư Tồn Kho Đầu Kỳ (Quản Trị Viên)"
+      subtitle="Chuẩn hóa theo mô thức Enterprise: đối soát mã vật tư, đơn giá vốn và tạo bút toán OPENING-STOCK an toàn."
       size="wide"
+      footer={
+        <div className="flex items-center justify-between w-full">
+          <div className="text-xs text-[var(--md-on-surface-variant)]">
+            {selectedFile && previewData && previewData.validRows > 0 ? (
+              <span>
+                Sẵn sàng nạp <strong>{previewData.validRows}</strong> mặt hàng hợp lệ vào{' '}
+                <strong>{targetType === 'project' ? `Kho Dự án ${selectedProjectCode}` : 'Kho Tổng Nam Việt'}</strong>
+                {previewData.errorRows > 0 && ` (tự động bỏ qua ${previewData.errorRows} dòng lỗi)`}.
+              </span>
+            ) : (
+              <span>Vui lòng chọn file Excel tồn kho đầu kỳ để bắt đầu kiểm tra.</span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="btn btn-outline btn-sm"
+              onClick={handleClose}
+              disabled={isImporting}
+            >
+              Hủy
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary btn-sm inline-flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-semibold shadow-sm"
+              onClick={handleConfirmImport}
+              disabled={!selectedFile || !previewData || previewData.validRows === 0 || isImporting}
+            >
+              {isImporting ? (
+                <>
+                  <Loader2 className="animate-spin" size={14} />
+                  <span>Đang ghi nhận số dư…</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 size={14} />
+                  <span>Xác Nhận Nạp ({previewData?.validRows ?? 0} mặt hàng)</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      }
     >
       <div className="space-y-4 text-xs">
-        {/* Banner lưu ý bảo mật */}
+        {/* Banner bảo mật & toàn vẹn dữ liệu */}
         <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-950 dark:text-emerald-200">
           <div className="font-semibold text-sm mb-1 flex items-center gap-1.5 text-emerald-800 dark:text-emerald-300">
-            <CheckCircle size={16} />
+            <CheckCircle2 size={16} />
             <span>Nạp số dư khởi tạo kho (Opening Balance)</span>
           </div>
           <p className="leading-relaxed">
-            Chức năng dành riêng cho Admin để thiết lập số tồn vật lý ban đầu. Hệ thống sẽ tự động cập nhật số dư tồn kho
-            và tạo một phiếu Nhập kho đã duyệt với chứng từ <code>OPENING-STOCK</code> để bảo đảm toàn vẹn lịch sử giao dịch.
+            Chức năng dành riêng cho Admin để thiết lập số tồn vật lý ban đầu. Hệ thống sẽ cập nhật số dư kho
+            và tự động tạo phiếu Nhập kho đã duyệt với chứng từ <code>OPENING-STOCK</code> để bảo đảm 100% tính toàn vẹn sổ cái WMS.
           </p>
         </div>
 
-        {/* Cấu hình Kho nhận & Tải file mẫu */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-lg border border-[var(--md-outline-variant02)] bg-[var(--md-surface-variant)]/20">
+        {/* Thiết lập đích nhận & Tải file mẫu */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-lg border border-[var(--md-outline-variant02)] bg-[var(--md-surface-container-low)]">
           <div>
             <label className="block font-semibold mb-1 text-[var(--md-on-surface)]">
               Nơi nhận số dư tồn kho:
@@ -144,7 +260,7 @@ export default function AdminOpeningStockModal({
                     if (selectedFile) void processFile(selectedFile);
                   }}
                 />
-                <span className="font-medium">Kho Tổng Nam Việt</span>
+                <span className="font-medium text-[var(--md-on-surface)]">Kho Tổng Nam Việt</span>
               </label>
               <label className="inline-flex items-center gap-1.5 cursor-pointer">
                 <input
@@ -153,7 +269,7 @@ export default function AdminOpeningStockModal({
                   checked={targetType === 'project'}
                   onChange={() => setTargetType('project')}
                 />
-                <span className="font-medium">Kho Dự Án</span>
+                <span className="font-medium text-[var(--md-on-surface)]">Kho Dự Án</span>
               </label>
             </div>
 
@@ -180,187 +296,291 @@ export default function AdminOpeningStockModal({
 
           <div className="flex flex-col justify-between items-start sm:items-end border-t sm:border-t-0 sm:border-l border-[var(--md-outline-variant02)] pt-2 sm:pt-0 sm:pl-3">
             <span className="text-[var(--md-on-surface-variant)] text-[11px] mb-2">
-              File Excel gồm: Mã VT, Tên VT, ĐVT, Số lượng tồn, Đơn giá vốn, Ghi chú.
+              File Excel mẫu: Mã VT, Tên VT, ĐVT, Số lượng tồn, Đơn giá vốn, Ghi chú.
             </span>
             <button
               type="button"
-              className="btn btn-secondary btn-sm inline-flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+              className="btn btn-secondary btn-sm inline-flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 cursor-pointer"
               onClick={handleDownloadTemplate}
+              disabled={isDownloading}
             >
-              <Download size={14} />
-              <span>Tải File Excel Mẫu Chuẩn</span>
+              {isDownloading ? (
+                <>
+                  <RefreshCw size={13} className="animate-spin" />
+                  <span>Đang tải file mẫu...</span>
+                </>
+              ) : (
+                <>
+                  <Download size={13} />
+                  <span>Tải File Excel Mẫu Chuẩn</span>
+                </>
+              )}
             </button>
           </div>
         </div>
 
-        {/* Khu vực chọn / kéo thả file */}
-        <div
-          onDragOver={e => e.preventDefault()}
-          onDrop={handleDrop}
-          className="border-2 border-dashed border-[var(--md-outline-variant02)] hover:border-emerald-500/60 rounded-xl p-5 text-center transition-colors bg-[var(--md-surface)] cursor-pointer"
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".xlsx, .xls"
-            className="hidden"
-            onChange={handleFileChange}
-          />
-          <div className="flex flex-col items-center justify-center gap-2">
-            <div className="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-              <Upload size={20} />
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".xlsx, .xls"
+          className="hidden"
+          onChange={handleFileChange}
+          disabled={isPreviewing || isImporting}
+        />
+
+        {/* Card file đã chọn (Khi selectedFile != null) */}
+        {selectedFile && (
+          <div className="flex items-center justify-between p-3 rounded-xl border border-emerald-500/40 bg-emerald-500/5 transition-all">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-emerald-600/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                <FileSpreadsheet size={22} />
+              </div>
+              <div className="space-y-0.5">
+                <div className="font-semibold text-sm text-[var(--md-on-surface)] flex items-center gap-2">
+                  <span className="truncate max-w-[280px] sm:max-w-md">{selectedFile.name}</span>
+                  <span className="text-[11px] text-[var(--md-on-surface-variant)] font-normal font-mono">
+                    ({formatFileSize(selectedFile.size)})
+                  </span>
+                </div>
+                <div className="text-[11px] text-emerald-700 dark:text-emerald-300 flex items-center gap-1">
+                  <CheckCircle2 size={12} />
+                  <span>Đã phân tích xong dữ liệu</span>
+                </div>
+              </div>
             </div>
-            <div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className="btn btn-outline btn-sm text-xs inline-flex items-center gap-1.5 text-[var(--md-primary)] hover:bg-[var(--md-primary)]/10"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isPreviewing || isImporting}
+              >
+                <FileSpreadsheet size={13} />
+                <span>Đổi file khác</span>
+              </button>
+              <button
+                type="button"
+                className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                title="Xóa file đã chọn"
+                onClick={handleReset}
+                disabled={isPreviewing || isImporting}
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Khu vực Dropzone nếu chưa có file */}
+        {!selectedFile && !isPreviewing && (
+          <div
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+            onClick={() => fileInputRef.current?.click()}
+            className="border-2 border-dashed border-[var(--md-outline-variant02)] hover:border-emerald-500/60 rounded-xl p-6 text-center transition-colors bg-[var(--md-surface-container-lowest)] cursor-pointer"
+          >
+            <div className="flex flex-col items-center justify-center gap-2">
+              <div className="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-1">
+                <Upload size={24} />
+              </div>
               <p className="font-semibold text-sm text-[var(--md-on-surface)]">
-                {selectedFile ? selectedFile.name : 'Bấm để chọn hoặc kéo thả file Excel vào đây'}
+                Kéo thả file Excel (.xlsx, .xls) tồn kho vào đây
               </p>
-              <p className="text-[11px] text-[var(--md-on-surface-variant)] mt-0.5">
-                Chỉ hỗ trợ file Excel (.xlsx, .xls), dung lượng tối đa 10MB
+              <p className="text-[11px] text-[var(--md-on-surface-variant)]">
+                Hệ thống tự động nhận diện: Mã vật tư, Tên, ĐVT, Số lượng tồn, Đơn giá vốn, Ghi chú
+              </p>
+              <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-1">
+                Hoặc bấm vào đây để duyệt file từ máy tính (tối đa 10MB)
               </p>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Loading state preview */}
         {isPreviewing && (
-          <div className="p-6 text-center text-[var(--md-on-surface-variant)] flex items-center justify-center gap-2">
-            <Loader2 className="animate-spin text-emerald-600" size={18} />
-            <span>Đang phân tích cấu trúc và kiểm tra mã vật tư từ file Excel...</span>
+          <div className="p-8 text-center text-[var(--md-on-surface-variant)] flex flex-col items-center justify-center gap-2">
+            <Loader2 className="animate-spin text-emerald-600" size={28} />
+            <span className="text-sm font-medium text-[var(--md-on-surface)]">
+              Đang phân tích cấu trúc và kiểm tra mã vật tư từ file Excel...
+            </span>
+            <span className="text-[11px] text-[var(--md-on-surface-variant)]">
+              Đối soát tồn tại trong danh mục vật tư công ty và tính toán tổng vốn kho
+            </span>
           </div>
         )}
 
         {/* Bảng xem trước dữ liệu (Auto Preview) */}
         {previewData && !isPreviewing && (
           <div className="space-y-3">
-            {/* Thanh tổng kết số liệu */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
-              <div className="p-2.5 rounded-lg border border-[var(--md-outline-variant02)] bg-[var(--md-surface-variant)]/20">
-                <span className="block text-[11px] text-[var(--md-on-surface-variant)]">Tổng số dòng</span>
-                <strong className="text-sm font-bold">{previewData.totalRows}</strong>
+            {/* Thanh tổng kết số liệu (KPI Quick Stats) */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <div className="p-2.5 rounded-lg border border-[var(--md-outline-variant)] bg-[var(--md-surface-container-lowest)]">
+                <span className="text-[11px] text-[var(--md-on-surface-variant)]">Tổng số dòng</span>
+                <p className="text-lg font-bold text-[var(--md-on-surface)] mt-0.5">{previewData.totalRows}</p>
               </div>
-              <div className="p-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300">
-                <span className="block text-[11px]">Hợp lệ</span>
-                <strong className="text-sm font-bold">{previewData.validRows}</strong>
+              <div className="p-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10">
+                <span className="text-[11px] text-emerald-800 dark:text-emerald-300 font-medium">Hợp lệ</span>
+                <p className="text-lg font-bold text-emerald-700 dark:text-emerald-400 mt-0.5">
+                  {previewData.validRows}
+                </p>
               </div>
-              <div className="p-2.5 rounded-lg border border-[var(--md-outline-variant02)] bg-[var(--md-surface-variant)]/20">
-                <span className="block text-[11px] text-[var(--md-on-surface-variant)]">Tổng SL tồn</span>
-                <strong className="text-sm font-bold">{previewData.totalQty.toLocaleString('vi-VN')}</strong>
+              <div className="p-2.5 rounded-lg border border-rose-500/30 bg-rose-500/10">
+                <span className="text-[11px] text-rose-800 dark:text-rose-300 font-medium">Dòng có lỗi</span>
+                <p className="text-lg font-bold text-rose-700 dark:text-rose-400 mt-0.5">
+                  {previewData.errorRows}
+                </p>
               </div>
-              <div className="p-2.5 rounded-lg border border-[var(--md-outline-variant02)] bg-[var(--md-surface-variant)]/20">
-                <span className="block text-[11px] text-[var(--md-on-surface-variant)]">Tổng giá trị vốn</span>
-                <strong className="text-sm font-bold text-emerald-700 dark:text-emerald-400">
+              <div className="p-2.5 rounded-lg border border-[var(--md-outline-variant)] bg-[var(--md-surface-container-lowest)]">
+                <span className="text-[11px] text-[var(--md-on-surface-variant)]">Tổng giá trị vốn</span>
+                <p className="text-lg font-bold text-emerald-700 dark:text-emerald-400 mt-0.5">
                   {formatCurrencyFull(previewData.totalAmount)}
-                </strong>
+                </p>
+              </div>
+            </div>
+
+            {/* Thanh điều khiển Preview Bar: Bộ lọc Tab + Search */}
+            <div className="flex flex-wrap items-center justify-between gap-3 p-2.5 rounded-lg border border-[var(--md-outline-variant)] bg-[var(--md-surface-container-low)]">
+              {/* Bộ 3 Tabs lọc */}
+              <div className="flex items-center gap-1 bg-[var(--md-surface-container-highest)] p-1 rounded-md text-xs">
+                <button
+                  type="button"
+                  className={`px-3 py-1 rounded transition-colors ${
+                    filterTab === 'all'
+                      ? 'bg-[var(--md-surface)] text-[var(--md-on-surface)] font-semibold shadow-sm'
+                      : 'text-[var(--md-on-surface-variant)] hover:text-[var(--md-on-surface)]'
+                  }`}
+                  onClick={() => setFilterTab('all')}
+                >
+                  Tất cả ({previewData.totalRows})
+                </button>
+                <button
+                  type="button"
+                  className={`px-3 py-1 rounded transition-colors ${
+                    filterTab === 'valid'
+                      ? 'bg-[var(--md-surface)] text-emerald-700 dark:text-emerald-300 font-semibold shadow-sm'
+                      : 'text-[var(--md-on-surface-variant)] hover:text-emerald-700'
+                  }`}
+                  onClick={() => setFilterTab('valid')}
+                >
+                  Hợp lệ ({previewData.validRows})
+                </button>
+                <button
+                  type="button"
+                  className={`px-3 py-1 rounded transition-colors ${
+                    filterTab === 'error'
+                      ? 'bg-[var(--md-surface)] text-rose-700 dark:text-rose-300 font-semibold shadow-sm'
+                      : 'text-[var(--md-on-surface-variant)] hover:text-rose-700'
+                  }`}
+                  onClick={() => setFilterTab('error')}
+                >
+                  Có lỗi ({previewData.errorRows})
+                </button>
+              </div>
+
+              {/* Ô Instant Search */}
+              <div className="relative flex-1 max-w-sm">
+                <Search size={14} className="absolute left-3 top-2.5 text-[var(--md-on-surface-variant)]" />
+                <input
+                  type="text"
+                  className="w-full pl-8 pr-8 py-1.5 text-xs rounded-md border border-[var(--md-outline-variant)] bg-[var(--md-surface)] text-[var(--md-on-surface)] placeholder:text-[var(--md-on-surface-variant)]/60 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  placeholder="Lọc theo STT, mã VT, tên VT, ĐVT, nội dung lỗi..."
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                />
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => setSearch('')}
+                    className="absolute right-2.5 top-2 text-[var(--md-on-surface-variant)] hover:text-[var(--md-on-surface)]"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
               </div>
             </div>
 
             {/* Bảng danh sách dòng preview */}
-            <div className="border border-[var(--md-outline-variant02)] rounded-lg overflow-hidden max-h-[300px] overflow-y-auto">
+            <div className="border border-[var(--md-outline-variant02)] rounded-lg overflow-hidden max-h-[350px] overflow-y-auto">
               <table className="w-full text-left border-collapse text-[11px]">
-                <thead>
+                <thead className="sticky top-0 z-20 bg-[var(--md-surface-container-high)] text-[var(--md-on-surface)] font-semibold border-b border-[var(--md-outline-variant02)] shadow-sm">
                   <tr>
-                    <th className="sticky top-0 z-20 bg-[var(--md-surface)] dark:bg-slate-900 border-b border-[var(--md-outline-variant02)] py-2 px-2.5 font-semibold text-[var(--md-on-surface)] shadow-sm w-12 text-center">
-                      STT
-                    </th>
-                    <th className="sticky top-0 z-20 bg-[var(--md-surface)] dark:bg-slate-900 border-b border-[var(--md-outline-variant02)] py-2 px-2.5 font-semibold text-[var(--md-on-surface)] shadow-sm">
-                      Mã vật tư
-                    </th>
-                    <th className="sticky top-0 z-20 bg-[var(--md-surface)] dark:bg-slate-900 border-b border-[var(--md-outline-variant02)] py-2 px-2.5 font-semibold text-[var(--md-on-surface)] shadow-sm">
-                      Tên vật tư
-                    </th>
-                    <th className="sticky top-0 z-20 bg-[var(--md-surface)] dark:bg-slate-900 border-b border-[var(--md-outline-variant02)] py-2 px-2.5 font-semibold text-[var(--md-on-surface)] shadow-sm text-center w-16">
-                      ĐVT
-                    </th>
-                    <th className="sticky top-0 z-20 bg-[var(--md-surface)] dark:bg-slate-900 border-b border-[var(--md-outline-variant02)] py-2 px-2.5 font-semibold text-[var(--md-on-surface)] shadow-sm text-right w-24">
-                      SL tồn
-                    </th>
-                    <th className="sticky top-0 z-20 bg-[var(--md-surface)] dark:bg-slate-900 border-b border-[var(--md-outline-variant02)] py-2 px-2.5 font-semibold text-[var(--md-on-surface)] shadow-sm text-right w-28">
-                      Đơn giá
-                    </th>
-                    <th className="sticky top-0 z-20 bg-[var(--md-surface)] dark:bg-slate-900 border-b border-[var(--md-outline-variant02)] py-2 px-2.5 font-semibold text-[var(--md-on-surface)] shadow-sm text-right w-32">
-                      Thành tiền
-                    </th>
-                    <th className="sticky top-0 z-20 bg-[var(--md-surface)] dark:bg-slate-900 border-b border-[var(--md-outline-variant02)] py-2 px-2.5 font-semibold text-[var(--md-on-surface)] shadow-sm text-center w-28">
-                      Trạng thái
-                    </th>
+                    <th className="py-2.5 px-2.5 w-12 text-center">STT</th>
+                    <th className="py-2.5 px-2.5 w-28 text-center">Trạng thái</th>
+                    <th className="py-2.5 px-2.5 w-36">Mã vật tư</th>
+                    <th className="py-2.5 px-2.5">Tên vật tư</th>
+                    <th className="py-2.5 px-2.5 text-center w-16">ĐVT</th>
+                    <th className="py-2.5 px-2.5 text-right w-24">SL tồn</th>
+                    <th className="py-2.5 px-2.5 text-right w-28">Đơn giá</th>
+                    <th className="py-2.5 px-2.5 text-right w-32">Thành tiền</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[var(--md-outline-variant02)]/50">
-                  {previewData.items.map((it, idx) => (
-                    <tr
-                      key={`${it.materialCode}-${idx}`}
-                      className={`hover:bg-[var(--md-surface-variant)]/20 transition-colors ${
-                        !it.isValid ? 'bg-rose-500/5 dark:bg-rose-950/20' : ''
-                      }`}
-                    >
-                      <td className="py-1.5 px-2.5 text-center text-[var(--md-on-surface-variant)]">{idx + 1}</td>
-                      <td className="py-1.5 px-2.5 font-mono font-medium">{it.materialCode}</td>
-                      <td className="py-1.5 px-2.5 truncate max-w-[200px]" title={it.materialName}>
-                        {it.materialName}
-                      </td>
-                      <td className="py-1.5 px-2.5 text-center">{it.unit}</td>
-                      <td className="py-1.5 px-2.5 text-right font-semibold tabular-nums">
-                        {it.qty.toLocaleString('vi-VN')}
-                      </td>
-                      <td className="py-1.5 px-2.5 text-right tabular-nums">
-                        {it.unitPrice > 0 ? formatCurrencyFull(it.unitPrice) : '0 ₫'}
-                      </td>
-                      <td className="py-1.5 px-2.5 text-right font-medium tabular-nums text-emerald-700 dark:text-emerald-400">
-                        {it.totalAmount > 0 ? formatCurrencyFull(it.totalAmount) : '0 ₫'}
-                      </td>
-                      <td className="py-1.5 px-2.5 text-center">
-                        {it.isValid ? (
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">
-                            Hợp lệ
-                          </span>
-                        ) : (
-                          <span
-                            className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-rose-500/15 text-rose-700 dark:text-rose-300 truncate max-w-[120px] inline-block"
-                            title={it.error || 'Lỗi'}
-                          >
-                            {it.error || 'Lỗi'}
-                          </span>
-                        )}
+                <tbody className="divide-y divide-[var(--md-outline-variant02)]/50 bg-[var(--md-surface)]">
+                  {filteredItems.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="py-8 text-center text-xs text-[var(--md-on-surface-variant)]">
+                        Không có dòng dữ liệu nào phù hợp với bộ lọc hiện tại.
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    filteredItems.map(it => (
+                      <tr
+                        key={`${it.materialCode}-${it.originalIndex}`}
+                        className={`hover:bg-[var(--md-surface-container-lowest)] transition-colors ${
+                          !it.isValid ? 'bg-rose-500/5 dark:bg-rose-950/20' : ''
+                        }`}
+                      >
+                        <td className="py-2 px-2.5 text-center text-[var(--md-on-surface-variant)] font-mono">
+                          {it.originalIndex}
+                        </td>
+                        <td className="py-2 px-2.5 text-center">
+                          {it.isValid ? (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-500/15 px-2 py-0.5 rounded-full">
+                              <CheckCircle2 size={12} className="shrink-0" />
+                              <span>Hợp lệ</span>
+                            </span>
+                          ) : (
+                            <span
+                              className="inline-flex items-center gap-1 text-[11px] font-medium text-rose-700 dark:text-rose-300 bg-rose-500/15 px-2 py-0.5 rounded-full cursor-help"
+                              title={it.error || 'Lỗi dữ liệu'}
+                            >
+                              <XCircle size={12} className="shrink-0" />
+                              <span>Lỗi</span>
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-2 px-2.5 font-mono font-medium text-[var(--md-primary)]">
+                          {it.materialCode}
+                        </td>
+                        <td className="py-2 px-2.5">
+                          <span className="font-medium text-[var(--md-on-surface)]" title={it.materialName}>
+                            {it.materialName}
+                          </span>
+                          {!it.isValid && it.error && (
+                            <p className="text-[10px] text-rose-600 dark:text-rose-400 mt-0.5 font-normal">
+                              ⚠ {it.error}
+                            </p>
+                          )}
+                        </td>
+                        <td className="py-2 px-2.5 text-center text-[var(--md-on-surface)]">{it.unit}</td>
+                        <td className="py-2 px-2.5 text-right font-semibold tabular-nums text-[var(--md-on-surface)]">
+                          {it.qty.toLocaleString('vi-VN')}
+                        </td>
+                        <td className="py-2 px-2.5 text-right tabular-nums text-[var(--md-on-surface)]">
+                          {it.unitPrice > 0 ? formatCurrencyFull(it.unitPrice) : '0 ₫'}
+                        </td>
+                        <td className="py-2 px-2.5 text-right font-medium tabular-nums text-emerald-700 dark:text-emerald-400">
+                          {it.totalAmount > 0 ? formatCurrencyFull(it.totalAmount) : '0 ₫'}
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
           </div>
         )}
-
-        {/* Footer Actions */}
-        <div className="flex items-center justify-between pt-3 border-t border-[var(--md-outline-variant02)]">
-          <div className="text-[11px] text-[var(--md-on-surface-variant)]">
-            {selectedFile && previewData && (
-              <span>
-                Sẵn sàng nạp <strong>{previewData.validRows}</strong> mặt hàng vào{' '}
-                <strong>{targetType === 'project' ? `Dự án ${selectedProjectCode}` : 'Kho Tổng'}</strong>
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              className="btn btn-outline btn-sm"
-              onClick={handleClose}
-              disabled={isImporting}
-            >
-              Hủy
-            </button>
-            <button
-              type="button"
-              className="btn btn-primary btn-sm inline-flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-semibold shadow-sm"
-              onClick={handleConfirmImport}
-              disabled={!selectedFile || !previewData || previewData.validRows === 0 || isImporting}
-            >
-              {isImporting ? <Loader2 className="animate-spin" size={14} /> : <CheckCircle size={14} />}
-              <span>Xác Nhận Nạp Số Dư Tồn Kho</span>
-            </button>
-          </div>
-        </div>
       </div>
     </Modal>
   );
