@@ -516,6 +516,33 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
                               ))}
                             </div>
                           )}
+                          {(parsedOrigin.brand || parsedOrigin.country || m.origin) && (
+                            <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                              {parsedOrigin.brand && (
+                                <span
+                                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200/80 shadow-2xs"
+                                  title={`Hãng: ${parsedOrigin.brand}`}
+                                >
+                                  <span className="text-[10px] text-indigo-400 font-normal">Hãng:</span>
+                                  {parsedOrigin.brand}
+                                </span>
+                              )}
+                              {(parsedOrigin.country || m.origin) && (
+                                <span
+                                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200 shadow-2xs"
+                                  title={`Xuất xứ: ${parsedOrigin.country || m.origin}${parsedOrigin.region ? ` (${parsedOrigin.region})` : ''}`}
+                                >
+                                  <span className="text-[10px] text-slate-400 font-normal">XX:</span>
+                                  {parsedOrigin.country || m.origin}
+                                  {parsedOrigin.region && (
+                                    <span className="ml-0.5 px-1 py-0.2 rounded bg-blue-100 text-blue-800 font-bold text-[9px]">
+                                      {parsedOrigin.region}
+                                    </span>
+                                  )}
+                                </span>
+                              )}
+                            </div>
+                          )}
                           {m.isActive === false && (
                             <span className="badge badge-warning text-[10px] py-0 px-1.5">Ngừng SD</span>
                           )}

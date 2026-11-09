@@ -170,7 +170,7 @@ describe('MaterialsPage Table Rendering & Standards', () => {
     expect(headers).not.toContain('Hãng & Xuất xứ');
   });
 
-  it('renders first row with separated materialCode, chips, materialName, brand and origin', async () => {
+  it('renders first row with separated materialCode, chips, brand and origin tags, materialName, brand and origin', async () => {
     await renderPage();
 
     const rows = container.querySelectorAll('tbody tr');
@@ -180,7 +180,7 @@ describe('MaterialsPage Table Rendering & Standards', () => {
     const cells = firstRow.querySelectorAll('td');
     expect(cells.length).toBe(8);
 
-    // Cột 2: Mã vật tư (badge + chips phân đoạn)
+    // Cột 2: Mã vật tư (badge + chips phân đoạn + chips Hãng & Xuất xứ)
     const codeCell = cells[1];
     const badge = codeCell.querySelector('.mat-code-cell__badge');
     expect(badge?.textContent?.trim()).toBe('BH-BHN-HT20-120 tubex3000');
@@ -189,6 +189,13 @@ describe('MaterialsPage Table Rendering & Standards', () => {
       p.textContent?.trim(),
     );
     expect(chips).toEqual(['BH', 'BHN', 'HT20', '120 tubex3000']);
+
+    // Chip Hãng & Xuất xứ hiển thị dưới mã vật tư
+    expect(codeCell.textContent).toContain('Hãng:');
+    expect(codeCell.textContent).toContain('Wilo');
+    expect(codeCell.textContent).toContain('XX:');
+    expect(codeCell.textContent).toContain('Đức');
+    expect(codeCell.textContent).toContain('G7');
 
     // Cột 3: Tên vật tư độc lập
     const nameCell = cells[2];
@@ -205,7 +212,7 @@ describe('MaterialsPage Table Rendering & Standards', () => {
     expect(originCell.textContent).toContain('G7');
   });
 
-  it('renders inactive item (BDB-) with badge Ngừng SD', async () => {
+  it('renders inactive item (BDB-) with badge Ngừng SD and origin chip', async () => {
     await renderPage();
 
     const rows = container.querySelectorAll('tbody tr');
@@ -220,6 +227,10 @@ describe('MaterialsPage Table Rendering & Standards', () => {
     // Phải hiển thị badge Ngừng SD
     const inactiveBadge = codeCell.querySelector('.badge-warning');
     expect(inactiveBadge?.textContent?.trim()).toBe('Ngừng SD');
+
+    // Chip Xuất xứ Việt Nam trong cột Mã vật tư
+    expect(codeCell.textContent).toContain('XX:');
+    expect(codeCell.textContent).toContain('Việt Nam');
 
     // Tên vật tư độc lập
     const nameCell = cells[2];

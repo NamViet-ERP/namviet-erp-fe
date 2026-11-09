@@ -34,7 +34,7 @@ describe('Living Invariant: Material Table Columns & Code Parts Standards', () =
     expect(originCol?.label).toBe('Xuất xứ');
   });
 
-  it('MaterialsPage.tsx imports and uses materialCodeParts to render code chips', () => {
+  it('MaterialsPage.tsx imports and uses materialCodeParts to render code chips, brand and origin tags', () => {
     expect(fs.existsSync(materialsPagePath)).toBe(true);
     const content = fs.readFileSync(materialsPagePath, 'utf-8');
 
@@ -48,6 +48,10 @@ describe('Living Invariant: Material Table Columns & Code Parts Standards', () =
     expect(content).toContain('mat-code-cell__parts');
     expect(content).toContain('mat-code-cell__part');
     expect(content).toMatch(/mat-code-cell__part--\$\{\(i % 4\) \+ 1\}/);
+
+    // Must have brand and origin chips in mat-code-cell
+    expect(content).toContain('parsedOrigin.brand');
+    expect(content).toContain('parsedOrigin.country');
 
     // Must have mat-name-cell for materialName
     expect(content).toContain('mat-name-cell');
