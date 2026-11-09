@@ -35,6 +35,7 @@ import {
   formatOriginString,
   isEquipmentCategory,
   isSteelCategory,
+  materialCodeParts,
   materialInputError,
   materialSelectError,
   parseOriginParts,
@@ -461,6 +462,7 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
               ) : (
                 items.map(m => {
                   const parsedOrigin = parseOriginParts(m.origin);
+                  const codeParts = materialCodeParts(m.materialCode);
                   const categoryBreadcrumb = [
                     m.categoryPath?.danhMuc,
                     m.categoryPath?.nhomVatTu,
@@ -498,18 +500,32 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
                         </div>
                       </td>
 
-                      {/* 2. Mã & Tên vật tư */}
+                      {/* 2. Mã vật tư */}
                       <td className="table-cell">
-                        <div className="flex flex-col gap-1 py-0.5">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="font-mono font-bold text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-800 border border-slate-200 shadow-2xs">
-                              {m.materialCode}
-                            </span>
-                            {m.isActive === false && (
-                              <span className="badge badge-warning text-[10px] py-0 px-1.5">Ngừng SD</span>
-                            )}
-                          </div>
-                          <span className="font-semibold text-sm text-slate-900 leading-snug">
+                        <div className="mat-code-cell">
+                          <span className="mat-code-cell__badge">{m.materialCode}</span>
+                          {codeParts.length > 1 && (
+                            <div className="mat-code-cell__parts" aria-hidden>
+                              {codeParts.map((part, i) => (
+                                <span
+                                  key={`${m.materialCode}-${i}`}
+                                  className={`mat-code-cell__part mat-code-cell__part--${(i % 4) + 1}`}
+                                >
+                                  {part}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                          {m.isActive === false && (
+                            <span className="badge badge-warning text-[10px] py-0 px-1.5">Ngừng SD</span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* 3. Tên vật tư */}
+                      <td className="table-cell">
+                        <div className="mat-name-cell">
+                          <span className="mat-name-cell__title font-semibold text-sm text-slate-900 leading-snug">
                             {m.materialName}
                           </span>
                           {m.qualityStandard && (
@@ -520,7 +536,7 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
                         </div>
                       </td>
 
-                      {/* 3. Phân cấp danh mục (Breadcrumb gộp 5 cấp) */}
+                      {/* 4. Phân cấp danh mục (Breadcrumb gộp 5 cấp) */}
                       <td className="table-cell">
                         <div className="flex flex-col gap-0.5 py-0.5">
                           <span className="text-xs font-semibold text-slate-800">
@@ -534,14 +550,14 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
                         </div>
                       </td>
 
-                      {/* 4. ĐVT */}
+                      {/* 5. ĐVT */}
                       <td className="table-cell text-center whitespace-nowrap">
                         <span className="inline-block px-2.5 py-1 rounded bg-slate-100/80 text-slate-700 text-xs font-semibold border border-slate-200/60 shadow-2xs">
                           {m.unit || '-'}
                         </span>
                       </td>
 
-                      {/* 5. Quy cách / Thông số chính */}
+                      {/* 6. Quy cách / Thông số chính */}
                       <td className="table-cell">
                         <div className="flex flex-col gap-0.5 py-0.5 max-w-sm">
                           {m.technicalSpec ? (
@@ -560,27 +576,33 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
                         </div>
                       </td>
 
-                      {/* 6. Hãng & Xuất xứ (Gộp 3 cấp) */}
+                      {/* 7. Hãng */}
                       <td className="table-cell whitespace-nowrap">
-                        <div className="flex flex-col gap-0.5 py-0.5">
-                          {parsedOrigin.brand ? (
-                            <span className="text-xs font-bold text-slate-900">
-                              {parsedOrigin.brand}
-                            </span>
-                          ) : null}
-                          {parsedOrigin.country ? (
-                            <span className="text-[11px] text-slate-600 font-medium">
-                              {parsedOrigin.country}
-                              {parsedOrigin.region ? (
-                                <span className="ml-1 inline-block px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 font-semibold text-[10px] border border-blue-200">
-                                  {parsedOrigin.region}
-                                </span>
-                              ) : null}
-                            </span>
-                          ) : !parsedOrigin.brand ? (
-                            <span className="text-xs text-slate-600">{m.origin || '-'}</span>
-                          ) : null}
-                        </div>
+                        {parsedOrigin.brand ? (
+                          <span className="text-xs font-bold text-slate-900">
+                            {parsedOrigin.brand}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-slate-400">-</span>
+                        )}
+                      </td>
+
+                      {/* 8. Xuất xứ */}
+                      <td className="table-cell whitespace-nowrap">
+                        {parsedOrigin.country ? (
+                          <span className="text-[11px] text-slate-600 font-medium">
+                            {parsedOrigin.country}
+                            {parsedOrigin.region ? (
+                              <span className="ml-1 inline-block px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 font-semibold text-[10px] border border-blue-200">
+                                {parsedOrigin.region}
+                              </span>
+                            ) : null}
+                          </span>
+                        ) : m.origin ? (
+                          <span className="text-xs text-slate-600">{m.origin}</span>
+                        ) : (
+                          <span className="text-xs text-slate-400">-</span>
+                        )}
                       </td>
                     </tr>
                   );

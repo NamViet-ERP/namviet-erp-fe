@@ -12,12 +12,18 @@ export const MATERIAL_CREATE_REQUIRED_LEVELS = [1, 2] as const;
 
 export const MATERIAL_TABLE_COLUMNS = [
   { key: 'image', label: 'Ảnh' },
-  { key: 'material', label: 'Mã & Tên vật tư' },
+  { key: 'materialCode', label: 'Mã vật tư' },
+  { key: 'materialName', label: 'Tên vật tư' },
   { key: 'categoryPath', label: 'Phân cấp danh mục' },
   { key: 'unit', label: 'ĐVT' },
   { key: 'specs', label: 'Quy cách / Thông số chính' },
-  { key: 'originBrand', label: 'Hãng & Xuất xứ' },
+  { key: 'brand', label: 'Hãng' },
+  { key: 'origin', label: 'Xuất xứ' },
 ] as const;
+
+export function materialCodeParts(code?: string | null): string[] {
+  return (code || '').split('-').map(p => p.trim()).filter(Boolean);
+}
 
 export interface ParsedOrigin {
   brand: string;

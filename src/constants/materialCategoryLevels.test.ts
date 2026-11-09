@@ -4,6 +4,8 @@ import {
   formatOriginString,
   isSteelCategory,
   isEquipmentCategory,
+  MATERIAL_TABLE_COLUMNS,
+  materialCodeParts,
 } from './materialCategoryLevels';
 
 describe('materialCategoryLevels utilities', () => {
@@ -107,6 +109,50 @@ describe('materialCategoryLevels utilities', () => {
       expect(isEquipmentCategory('Thiết bị đo lường')).toBe(true);
       expect(isEquipmentCategory('Thép hình')).toBe(false);
       expect(isEquipmentCategory(null)).toBe(false);
+    });
+  });
+  describe('MATERIAL_TABLE_COLUMNS', () => {
+    it('defines separate columns for materialCode, materialName, brand, and origin', () => {
+      const keys = MATERIAL_TABLE_COLUMNS.map(c => c.key);
+      expect(keys).toContain('materialCode');
+      expect(keys).toContain('materialName');
+      expect(keys).toContain('brand');
+      expect(keys).toContain('origin');
+      expect(keys).not.toContain('material');
+      expect(keys).not.toContain('originBrand');
+    });
+
+    it('has exact 8 columns in spec order', () => {
+      expect(MATERIAL_TABLE_COLUMNS).toEqual([
+        { key: 'image', label: 'Ảnh' },
+        { key: 'materialCode', label: 'Mã vật tư' },
+        { key: 'materialName', label: 'Tên vật tư' },
+        { key: 'categoryPath', label: 'Phân cấp danh mục' },
+        { key: 'unit', label: 'ĐVT' },
+        { key: 'specs', label: 'Quy cách / Thông số chính' },
+        { key: 'brand', label: 'Hãng' },
+        { key: 'origin', label: 'Xuất xứ' },
+      ]);
+    });
+  });
+
+  describe('materialCodeParts', () => {
+    it('splits hyphen-separated code segments and trims whitespace', () => {
+      expect(materialCodeParts('TE-PLT-012-SA516')).toEqual(['TE', 'PLT', '012', 'SA516']);
+    });
+
+    it('returns empty array for empty, null, or undefined code', () => {
+      expect(materialCodeParts('')).toEqual([]);
+      expect(materialCodeParts(null)).toEqual([]);
+      expect(materialCodeParts(undefined)).toEqual([]);
+    });
+
+    it('filters empty parts from consecutive hyphens or trailing hyphens', () => {
+      expect(materialCodeParts('TE--PLT-')).toEqual(['TE', 'PLT']);
+    });
+
+    it('handles single segment code without hyphens', () => {
+      expect(materialCodeParts('SA516')).toEqual(['SA516']);
     });
   });
 });
