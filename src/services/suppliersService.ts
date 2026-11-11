@@ -2,13 +2,14 @@ import { apiClient, saveBlob } from '../lib/apiClient';
 import type {
   PagedApiResult,
   SupplierApiDto,
+  SupplierAttachmentDto,
   SupplierImportPreviewResponseDto,
   SupplierImportResultDto,
   SupplierNextCodeApiDto,
   UpsertSupplierRequest,
 } from '../types/wms';
 
-export type { SupplierApiDto } from '../types/wms';
+export type { SupplierApiDto, SupplierAttachmentDto } from '../types/wms';
 /** @deprecated Prefer UpsertSupplierRequest from types/wms */
 export type UpsertSupplierBody = UpsertSupplierRequest;
 
@@ -91,6 +92,7 @@ export const suppliersService = {
 
   create(body: UpsertSupplierRequest) {
     return apiClient.post<SupplierApiDto>(ENDPOINT, {
+      supplierCode: body.supplierCode ?? null,
       supplierName: body.supplierName,
       contactPhone: body.contactPhone ?? null,
       maxDebtDays: body.maxDebtDays ?? 30,
@@ -100,6 +102,9 @@ export const suppliersService = {
       supplierType: body.supplierType ?? null,
       scope: body.scope ?? null,
       website: body.website ?? null,
+      contactName: body.contactName ?? null,
+      contactEmail: body.contactEmail ?? null,
+      contactPosition: body.contactPosition ?? null,
     });
   },
 
@@ -115,8 +120,38 @@ export const suppliersService = {
       supplierType: body.supplierType ?? null,
       scope: body.scope ?? null,
       website: body.website ?? null,
+      contactName: body.contactName ?? null,
+      contactEmail: body.contactEmail ?? null,
+      contactPosition: body.contactPosition ?? null,
     });
     return apiClient.get<SupplierApiDto>(`${ENDPOINT}/${id}`);
+  },
+
+  async listAttachments(supplierId: number) {
+    return apiClient.get<SupplierAttachmentDto[]>(`${ENDPOINT}/${supplierId}/attachments`);
+  },
+
+  async uploadAttachment(supplierId: number, file: File, docType: string) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('docType', docType);
+    return apiClient.postForm<SupplierAttachmentDto>(
+      `${ENDPOINT}/${supplierId}/attachments`,
+      formData,
+    );
+  },
+
+  async deleteAttachment(supplierId: number, attachmentId: string) {
+    await apiClient.delete(`${ENDPOINT}/${supplierId}/attachments/${attachmentId}`);
+  },
+
+  getAttachmentDownloadUrl(supplierId: number, attachmentId: string) {
+    return `${ENDPOINT}/${supplierId}/attachments/${attachmentId}/download`;
+  },
+
+  async downloadAttachment(supplierId: number, attachmentId: string, fileName: string) {
+    const blob = await apiClient.getBlob(`${ENDPOINT}/${supplierId}/attachments/${attachmentId}/download`);
+    return saveBlob(blob, fileName);
   },
 
   async downloadTemplate() {

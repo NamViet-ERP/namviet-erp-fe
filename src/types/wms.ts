@@ -121,11 +121,36 @@ export type ProjectPurchasingProgressApiDto = Schemas['ProjectPurchasingProgress
 export type StockMatrixProjectColumnApiDto = Schemas['StockMatrixProjectColumnDto'];
 export type StockMatrixRowApiDto = Schemas['StockMatrixRowDto'];
 
+export interface SupplierPrimaryContactDto {
+  id: number;
+  fullName: string;
+  position?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  role: string;
+}
+
+export interface SupplierAttachmentDto {
+  id: string;
+  supplierId: number;
+  docType: string;
+  docTypeLabel: string;
+  fileName: string;
+  fileSizeBytes: number;
+  contentType: string;
+  uploadedAt: string;
+  uploadedByName?: string | null;
+  downloadUrl?: string | null;
+}
+
 export type SupplierApiDto = Schemas['SupplierDto'] & {
   taxCode?: string | null;
   supplierType?: string | null;
   scope?: string | null;
   website?: string | null;
+  primaryContact?: SupplierPrimaryContactDto | null;
+  attachments?: SupplierAttachmentDto[] | null;
+  contactCount?: number;
 };
 export type SupplierLatestEvaluationApiDto = Schemas['SupplierLatestEvaluationDto'];
 export type UpsertSupplierRequest = Schemas['UpsertSupplierRequest'] & {
@@ -133,6 +158,9 @@ export type UpsertSupplierRequest = Schemas['UpsertSupplierRequest'] & {
   supplierType?: string | null;
   scope?: string | null;
   website?: string | null;
+  contactName?: string | null;
+  contactEmail?: string | null;
+  contactPosition?: string | null;
 };
 export type SupplierNextCodeApiDto = Schemas['SupplierNextCodeDto'];
 

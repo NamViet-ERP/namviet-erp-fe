@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { Pencil, Plus, Trash2, X } from 'lucide-react';
 import PurchasingListLayout from '../../components/purchasing/PurchasingListLayout';
 import PurchasingStatusBadge from '../../components/purchasing/PurchasingStatusBadge';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
@@ -27,14 +28,23 @@ import {
 } from '../../lib/suppliers/supplierContactRole';
 
 export default function SupplierContactsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlSupplierId = searchParams.get('supplierId') || '';
   const [search, setSearch] = useState('');
-  const [supplierFilter, setSupplierFilter] = useState('');
+  const [supplierFilter, setSupplierFilter] = useState(urlSupplierId);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_LIST_PAGE_SIZE);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<SupplierContactApiDto | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<SupplierContactApiDto | null>(null);
   const [contactApiErrors, setContactApiErrors] = useState<{ phone?: string; email?: string; fullName?: string }>({});
+
+  useEffect(() => {
+    if (urlSupplierId !== supplierFilter) {
+      setSupplierFilter(urlSupplierId);
+      setPage(1);
+    }
+  }, [urlSupplierId]);
 
   const { data: suppliers } = useSuppliers({ all: true });
   const { data, isLoading, isError } = useSupplierContacts({
@@ -51,6 +61,29 @@ export default function SupplierContactsPage() {
   const totalCount = data?.totalCount ?? 0;
   const totalPages = data?.totalPages ?? 1;
   const hasFilters = Boolean(search || supplierFilter);
+  const activeSupplier = (suppliers?.items ?? []).find(s => String(s.id) === supplierFilter);
+
+  const handleSupplierFilterChange = (val: string) => {
+    setSupplierFilter(val);
+    setPage(1);
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      if (val) next.set('supplierId', val);
+      else next.delete('supplierId');
+      return next;
+    }, { replace: true });
+  };
+
+  const handleResetFilters = () => {
+    setSearch('');
+    setSupplierFilter('');
+    setPage(1);
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.delete('supplierId');
+      return next;
+    }, { replace: true });
+  };
 
   const openCreate = () => {
     setEditing(null);
@@ -112,10 +145,7 @@ export default function SupplierContactsPage() {
             className="hrm-filter-select"
             value={supplierFilter}
             aria-label="Lọc theo nhà cung cấp"
-            onChange={e => {
-              setSupplierFilter(e.target.value);
-              setPage(1);
-            }}
+            onChange={e => handleSupplierFilterChange(e.target.value)}
           >
             <option value="">Tất cả nhà cung cấp</option>
             {(suppliers?.items ?? []).map(s => (
@@ -125,11 +155,7 @@ export default function SupplierContactsPage() {
         </div>
       )}
       hasFilters={hasFilters}
-      onResetFilters={() => {
-        setSearch('');
-        setSupplierFilter('');
-        setPage(1);
-      }}
+      onResetFilters={handleResetFilters}
       actions={(
         <button type="button" className="btn btn-primary" onClick={openCreate}>
           <Plus size={16} aria-hidden />
@@ -137,6 +163,24 @@ export default function SupplierContactsPage() {
         </button>
       )}
     >
+      {supplierFilter ? (
+        <div className="flex items-center justify-between gap-2 px-3.5 py-2 mb-3 rounded-lg bg-[var(--md-primary-container)]/30 border border-[var(--md-outline-variant)] text-xs text-[var(--md-on-surface)]">
+          <div className="flex items-center gap-1.5 font-medium">
+            <span className="text-[var(--md-on-surface-variant)]">Đang lọc theo NCC:</span>
+            <span className="font-semibold text-primary-700 dark:text-primary-300">
+              {activeSupplier ? `${activeSupplier.supplierCode} - ${activeSupplier.supplierName}` : `NCC #${supplierFilter}`}
+            </span>
+          </div>
+          <button
+            type="button"
+            className="inline-flex items-center gap-1 text-xs text-[var(--md-on-surface-variant)] hover:text-[var(--md-error)] font-medium underline"
+            onClick={() => handleSupplierFilterChange('')}
+          >
+            <X size={12} />
+            Bỏ lọc NCC
+          </button>
+        </div>
+      ) : null}
       <div className="overflow-x-auto table-scroll hrm-table-wrap">
         <table className="w-full border-collapse hrm-table table-min-w--950">
           <thead>

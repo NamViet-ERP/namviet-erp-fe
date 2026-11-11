@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import PageHeader from '../../components/ui/PageHeader';
 import TabFilter from '../../components/ui/TabFilter';
 import HrmPanel from '../../components/hr/HrmPanel';
@@ -10,9 +11,39 @@ import { useSupplierDeliveryEvaluations } from '../../hooks/useSupplierDirectory
 import type { TabItem } from '../../types';
 
 type EvalTab = 'tier' | 'order' | 'kpi';
+const VALID_TABS: EvalTab[] = ['tier', 'order', 'kpi'];
 
 export default function SupplierEvaluationsPage() {
-  const [tab, setTab] = useState<EvalTab>('tier');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlSupplierId = searchParams.get('supplierId');
+  const urlTab = searchParams.get('tab') as EvalTab | null;
+
+  const getInitialTab = (): EvalTab => {
+    if (urlTab && VALID_TABS.includes(urlTab)) return urlTab;
+    if (urlSupplierId) return 'order';
+    return 'tier';
+  };
+
+  const [tab, setTab] = useState<EvalTab>(getInitialTab);
+
+  useEffect(() => {
+    if (urlTab && VALID_TABS.includes(urlTab) && urlTab !== tab) {
+      setTab(urlTab);
+    } else if (!urlTab && urlSupplierId && tab === 'tier') {
+      setTab('order');
+    }
+  }, [urlTab, urlSupplierId]);
+
+  const handleTabChange = (newTabId: string) => {
+    const nextTab = newTabId as EvalTab;
+    setTab(nextTab);
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.set('tab', nextTab);
+      return next;
+    }, { replace: true });
+  };
+
   const pendingQuery = useSupplierDeliveryEvaluations({
     status: 'pending',
     page: 1,
@@ -47,7 +78,7 @@ export default function SupplierEvaluationsPage() {
           <TabFilter
             tabs={tabs}
             activeTab={tab}
-            onChange={id => setTab(id as EvalTab)}
+            onChange={handleTabChange}
           />
         </div>
         {tab === 'tier' ? <SupplierTierGradingPanel /> : null}

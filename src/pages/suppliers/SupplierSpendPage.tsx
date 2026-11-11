@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+import { Banknote } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import EmptyState from '../../components/ui/EmptyState';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
@@ -56,11 +58,36 @@ export default function SupplierSpendPage() {
                 rows.map(row => (
                   <tr key={`${row.supplierId ?? 'x'}-${row.supplierCode}`}>
                     <td className="table-cell">
-                      <span className="sup-analytics__code">{row.supplierCode}</span>
-                      {' '}
-                      {row.supplierName}
+                      <div className="flex items-center justify-between gap-3">
+                        <Link
+                          to={`/suppliers/list?search=${encodeURIComponent(row.supplierCode)}`}
+                          className="hover:underline font-medium text-[var(--md-on-surface)] group flex items-center gap-1.5"
+                          title="Xem chi tiết nhà cung cấp"
+                        >
+                          <span className="sup-analytics__code group-hover:text-primary-600">{row.supplierCode}</span>
+                          <span>{row.supplierName}</span>
+                        </Link>
+                        {row.supplierId != null && (
+                          <Link
+                            to={`/suppliers/debt?supplierId=${row.supplierId}`}
+                            className="inline-flex items-center gap-1 text-xs text-primary-600 dark:text-primary-400 hover:underline px-2 py-0.5 rounded bg-[var(--md-surface-variant)]/40 hover:bg-[var(--md-surface-variant)] transition-colors whitespace-nowrap"
+                            title="Xem công nợ nhà cung cấp"
+                          >
+                            <Banknote size={12} />
+                            <span>Công nợ</span>
+                          </Link>
+                        )}
+                      </div>
                     </td>
-                    <td className="table-cell text-right tabular-nums">{row.poCount}</td>
+                    <td className="table-cell text-right tabular-nums">
+                      <Link
+                        to={`/purchasing/orders?search=${encodeURIComponent(row.supplierCode)}`}
+                        className="text-primary-600 dark:text-primary-400 hover:underline font-medium"
+                        title="Xem danh sách đơn mua hàng (PO)"
+                      >
+                        {row.poCount}
+                      </Link>
+                    </td>
                     <td className="table-cell text-right tabular-nums whitespace-nowrap">
                       {formatCurrencyFull(row.totalAmount)}
                     </td>

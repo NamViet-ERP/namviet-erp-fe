@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Check, Plus, RefreshCw, Send, Undo2 } from 'lucide-react';
 import EmptyState from '../../components/ui/EmptyState';
 import EntityCodeLink from '../../components/ui/EntityCodeLink';
@@ -138,9 +138,18 @@ function PoApprovalStatusCell({
 /** Danh sách đơn hàng PO — cột + bộ lọc theo spec. */
 export default function PurchaseOrdersPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const urlSearch = searchParams.get('search') ?? searchParams.get('supplier') ?? '';
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<ListPageSize>(DEFAULT_LIST_PAGE_SIZE);
-  const [supplierName, setSupplierName] = useState('');
+  const [supplierName, setSupplierName] = useState(urlSearch);
+
+  useEffect(() => {
+    if (urlSearch && urlSearch !== supplierName) {
+      setSupplierName(urlSearch);
+      setPage(1);
+    }
+  }, [urlSearch]);
   const [planCode, setPlanCode] = useState('');
   const [projectCode, setProjectCode] = useState('');
   const [orderPlacementStatus, setOrderPlacementStatus] = useState('');

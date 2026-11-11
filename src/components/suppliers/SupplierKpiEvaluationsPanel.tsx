@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { Eye, Pencil, Plus, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { Eye, Pencil, Plus, Trash2, X } from 'lucide-react';
 import PurchasingStatusBadge from '../purchasing/PurchasingStatusBadge';
 import SupplierEvaluationFormModal from './SupplierEvaluationFormModal';
 import SupplierKpiEvaluationDetailModal from './SupplierKpiEvaluationDetailModal';
@@ -36,14 +37,23 @@ function gradeTone(grade: string): 'success' | 'warning' | 'danger' | 'neutral' 
 }
 
 export default function SupplierKpiEvaluationsPanel() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlSupplierId = searchParams.get('supplierId') || '';
   const [search, setSearch] = useState('');
-  const [supplierFilter, setSupplierFilter] = useState('');
+  const [supplierFilter, setSupplierFilter] = useState(urlSupplierId);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_LIST_PAGE_SIZE);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<SupplierEvaluationApiDto | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<SupplierEvaluationApiDto | null>(null);
   const [detailId, setDetailId] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (urlSupplierId !== supplierFilter) {
+      setSupplierFilter(urlSupplierId);
+      setPage(1);
+    }
+  }, [urlSupplierId]);
 
   const { data: suppliers } = useSuppliers({ all: true });
   const { data, isLoading, isError } = useSupplierEvaluations({
@@ -59,6 +69,18 @@ export default function SupplierKpiEvaluationsPanel() {
 
   const items = data?.items ?? [];
   const hasFilters = Boolean(search || supplierFilter);
+  const activeSupplier = (suppliers?.items ?? []).find(s => String(s.id) === supplierFilter);
+
+  const handleSupplierFilterChange = (val: string) => {
+    setSupplierFilter(val);
+    setPage(1);
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      if (val) next.set('supplierId', val);
+      else next.delete('supplierId');
+      return next;
+    }, { replace: true });
+  };
 
   const openCreate = () => {
     setEditing(null);
@@ -137,10 +159,7 @@ export default function SupplierKpiEvaluationsPanel() {
                 className="hrm-filter-select"
                 value={supplierFilter}
                 aria-label="Lọc theo nhà cung cấp"
-                onChange={e => {
-                  setSupplierFilter(e.target.value);
-                  setPage(1);
-                }}
+                onChange={e => handleSupplierFilterChange(e.target.value)}
               >
                 <option value="">Tất cả nhà cung cấp</option>
                 {(suppliers?.items ?? []).map(s => (
@@ -151,6 +170,25 @@ export default function SupplierKpiEvaluationsPanel() {
           </div>
         </div>
       </div>
+
+      {supplierFilter ? (
+        <div className="flex items-center justify-between gap-2 px-3.5 py-2 rounded-lg bg-[var(--md-primary-container)]/30 border border-[var(--md-outline-variant)] text-xs text-[var(--md-on-surface)]">
+          <div className="flex items-center gap-1.5 font-medium">
+            <span className="text-[var(--md-on-surface-variant)]">Đang lọc theo NCC:</span>
+            <span className="font-semibold text-primary-700 dark:text-primary-300">
+              {activeSupplier ? `${activeSupplier.supplierCode} - ${activeSupplier.supplierName}` : `NCC #${supplierFilter}`}
+            </span>
+          </div>
+          <button
+            type="button"
+            className="inline-flex items-center gap-1 text-xs text-[var(--md-on-surface-variant)] hover:text-[var(--md-error)] font-medium underline"
+            onClick={() => handleSupplierFilterChange('')}
+          >
+            <X size={12} />
+            Bỏ lọc NCC
+          </button>
+        </div>
+      ) : null}
 
       <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
         <h2 className="purchasing-section-title text-base m-0">Lịch sử đánh giá định kỳ (KPI)</h2>

@@ -1,12 +1,32 @@
 import type React from 'react';
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useSearchParams } from 'react-router-dom';
-import { Ban, Check, Plus, Trash2, Pencil, Eye, X, Award, History, Upload, RefreshCw } from 'lucide-react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import {
+  Ban,
+  Check,
+  Plus,
+  Trash2,
+  Pencil,
+  Eye,
+  X,
+  Award,
+  History,
+  Upload,
+  RefreshCw,
+  Users,
+  Star,
+  ExternalLink,
+  Banknote,
+  ClipboardList,
+} from 'lucide-react';
+import Button from '../../components/ui/Button';
 import SupplierTierEvaluationModal from '../../components/suppliers/SupplierTierEvaluationModal';
 import SupplierGradeHistoryModal from '../../components/suppliers/SupplierGradeHistoryModal';
 import SupplierSourcingKpiCards from '../../components/suppliers/SupplierSourcingKpiCards';
 import SupplierImportExcelModal from '../../components/suppliers/SupplierImportExcelModal';
+import SupplierAttachmentUploader, { type StagedAttachment } from '../../components/suppliers/SupplierAttachmentUploader';
+import SupplierContactFormModal from '../../components/suppliers/SupplierContactFormModal';
 import PurchasingListLayout from '../../components/purchasing/PurchasingListLayout';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Pagination from '../../components/ui/Pagination';
@@ -44,10 +64,13 @@ import {
 import {
   useAddSupplierToBlacklist,
   useSupplierGroups,
+  useSupplierContacts,
+  useCreateSupplierContact,
 } from '../../hooks/useSupplierDirectory';
 import { supplierGroupsService } from '../../services/supplierDirectoryService';
 import { queryKeys } from '../../services/queryKeys';
 import { suppliersService, type SupplierApiDto } from '../../services/suppliersService';
+import type { UpsertSupplierRequest } from '../../types/wms';
 import type { DropdownItem } from '../../types';
 
 const RATING_OPTIONS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
@@ -61,6 +84,9 @@ const emptyForm = {
   supplierName: '',
   taxCode: '',
   contactPhone: '',
+  contactName: '',
+  contactEmail: '',
+  contactPosition: '',
   supplierType: 'Nhà phân phối',
   scope: 'Trong nước',
   website: '',
@@ -68,9 +94,6 @@ const emptyForm = {
   creditLimit: '',
   paymentTerms: '',
   groupIds: [] as number[],
-  hasBusinessLicense: true,
-  hasCompanyProfile: true,
-  hasCatalogPriceList: true,
 };
 
 function mapSupplierSaveErrors(err: unknown): FormErrors {
@@ -157,6 +180,91 @@ function DetailField({
   );
 }
 
+function SupplierViewingContacts({
+  supplierId,
+  onAddContact,
+}: {
+  supplierId: number;
+  onAddContact: () => void;
+}) {
+  const { data, isLoading } = useSupplierContacts({ supplierId, pageSize: 50 });
+  const contacts = data?.items ?? [];
+
+  return (
+    <div className="space-y-2.5 mt-3 pt-3 border-t border-[var(--md-outline-variant)]">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-bold uppercase tracking-wider text-[var(--md-on-surface)] flex items-center gap-1.5">
+          <Users size={15} className="text-primary-600 dark:text-primary-400" />
+          Danh sách Người liên hệ ({contacts.length})
+        </span>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outlined"
+            size="sm"
+            onClick={onAddContact}
+            className="text-xs"
+          >
+            <Plus size={13} className="mr-1" /> Thêm liên hệ
+          </Button>
+          <Link
+            to={`/suppliers/contacts?supplierId=${supplierId}`}
+            className="text-xs text-primary-600 hover:underline flex items-center gap-1"
+          >
+            Quản lý <ExternalLink size={12} />
+          </Link>
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="text-xs text-[var(--md-on-surface-variant)] py-3 text-center">
+          Đang tải danh sách người liên hệ...
+        </div>
+      ) : contacts.length === 0 ? (
+        <div className="p-3 text-center text-xs text-[var(--md-on-surface-variant)] border border-dashed rounded-lg">
+          Chưa có thông tin người liên hệ nào cho NCC này. Bấm &quot;Thêm liên hệ&quot; để bổ sung trực tiếp.
+        </div>
+      ) : (
+        <div className="overflow-x-auto border rounded-lg border-[var(--md-outline-variant)]">
+          <table className="w-full text-xs text-left">
+            <thead className="bg-[var(--md-surface-variant)]/40 text-[var(--md-on-surface-variant)]">
+              <tr>
+                <th className="py-2 px-3">Họ tên</th>
+                <th className="py-2 px-3">Chức vụ</th>
+                <th className="py-2 px-3">Điện thoại</th>
+                <th className="py-2 px-3">Email</th>
+                <th className="py-2 px-3 text-center">Vai trò</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[var(--md-outline-variant)]">
+              {contacts.map(c => (
+                <tr key={c.id} className="hover:bg-[var(--md-surface-variant)]/20">
+                  <td className="py-2 px-3 font-medium text-[var(--md-on-surface)]">
+                    <div className="flex items-center gap-1.5">
+                      {c.fullName}
+                      {c.role === 'primary' && (
+                        <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-1.5 py-0.2 rounded border border-amber-200 dark:border-amber-800">
+                          <Star size={10} className="fill-amber-500 text-amber-500" /> Chính
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="py-2 px-3 text-[var(--md-on-surface-variant)]">{c.position || '—'}</td>
+                  <td className="py-2 px-3 font-mono text-[var(--md-on-surface)]">{c.phone || '—'}</td>
+                  <td className="py-2 px-3 text-[var(--md-on-surface-variant)]">{c.email || '—'}</td>
+                  <td className="py-2 px-3 text-center text-[var(--md-on-surface-variant)]">
+                    {c.roleLabel || c.role}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 type PanelProps = {
   subtitle?: string;
 };
@@ -167,8 +275,17 @@ export default function SuppliersSettingsPanel({
   const qc = useQueryClient();
   const { has } = usePermission();
   const canApproveSupplier = has('wms.suppliers.approve');
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [search, setSearch] = useState('');
+  const urlSearch = searchParams.get('search') ?? '';
+  const [search, setSearch] = useState(urlSearch);
+
+  useEffect(() => {
+    if (urlSearch && urlSearch !== search) {
+      setSearch(urlSearch);
+      setPage(1);
+    }
+  }, [urlSearch]);
   const [ratingFilter, setRatingFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
@@ -187,6 +304,9 @@ export default function SuppliersSettingsPanel({
   const [evaluatingSupplier, setEvaluatingSupplier] = useState<SupplierRow | null>(null);
   const [historySupplier, setHistorySupplier] = useState<SupplierRow | null>(null);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [stagedFiles, setStagedFiles] = useState<StagedAttachment[]>([]);
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const createContact = useCreateSupplierContact();
 
   const groupIdFromUrl = useMemo(() => {
     const raw = searchParams.get('groupId');
@@ -233,12 +353,16 @@ export default function SuppliersSettingsPanel({
     setRatingFilter('');
     setStatusFilter('');
     setPage(1);
-    if (groupIdFromUrl) clearGroupFilter();
+    const next = new URLSearchParams(searchParams);
+    next.delete('groupId');
+    next.delete('search');
+    setSearchParams(next, { replace: true });
   };
 
   const openCreate = async () => {
     setEditing(null);
     setForm(emptyForm);
+    setStagedFiles([]);
     setFormErrors({});
     setShowForm(true);
     try {
@@ -270,7 +394,10 @@ export default function SuppliersSettingsPanel({
         supplierCode: s.supplierCode,
         supplierName: s.supplierName,
         taxCode: s.taxCode ?? '',
-        contactPhone: s.contactPhone ?? '',
+        contactPhone: s.primaryContact?.phone ?? s.contactPhone ?? '',
+        contactName: s.primaryContact?.fullName ?? '',
+        contactPosition: s.primaryContact?.position ?? '',
+        contactEmail: s.primaryContact?.email ?? '',
         supplierType: s.supplierType ?? 'Nhà phân phối',
         scope: s.scope ?? 'Trong nước',
         website: s.website ?? '',
@@ -278,10 +405,8 @@ export default function SuppliersSettingsPanel({
         creditLimit: s.creditLimit ? formatCurrencyInput(s.creditLimit) : '',
         paymentTerms: s.paymentTerms ?? '',
         groupIds: assigned.map(g => g.id),
-        hasBusinessLicense: Boolean(s.taxCode),
-        hasCompanyProfile: Boolean(s.website || s.contactPhone),
-        hasCatalogPriceList: true,
       });
+      setStagedFiles([]);
       setFormErrors({});
       setShowForm(true);
     } catch (err: unknown) {
@@ -295,6 +420,7 @@ export default function SuppliersSettingsPanel({
     setShowForm(false);
     setEditing(null);
     setForm(emptyForm);
+    setStagedFiles([]);
     setFormErrors({});
   };
 
@@ -346,11 +472,14 @@ export default function SuppliersSettingsPanel({
     setFormErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0 || !debt.ok || !limit.ok) return;
 
-    const body = {
+    const body: UpsertSupplierRequest = {
       supplierCode: supplierCode || null,
       supplierName,
       taxCode: taxCode || null,
       contactPhone: contactPhone || null,
+      contactName: form.contactName.trim() || null,
+      contactPosition: form.contactPosition.trim() || null,
+      contactEmail: form.contactEmail.trim() || null,
       supplierType: form.supplierType || null,
       scope: form.scope || null,
       website: form.website.trim() || null,
@@ -368,6 +497,15 @@ export default function SuppliersSettingsPanel({
       } else {
         const created = await createMutation.mutateAsync(body);
         supplierId = created.id;
+        if (stagedFiles.length > 0) {
+          for (const staged of stagedFiles) {
+            try {
+              await suppliersService.uploadAttachment(created.id, staged.file, staged.docType);
+            } catch (uploadErr) {
+              console.error('Failed to upload staged attachment:', uploadErr);
+            }
+          }
+        }
         showToast('success', 'Đã thêm nhà cung cấp. Hạng D, chờ sếp duyệt mới đặt hàng được.');
       }
       if (supplierId) {
@@ -450,6 +588,21 @@ export default function SuppliersSettingsPanel({
   const rowActions = (s: SupplierRow): DropdownItem[] => [
     { label: 'Xem chi tiết', icon: Eye, onClick: () => setViewing(s) },
     { label: 'Sửa', icon: Pencil, onClick: () => void openEdit(s) },
+    {
+      label: 'Xem công nợ NCC',
+      icon: Banknote,
+      onClick: () => navigate(`/suppliers/debt?supplierId=${s.id}`),
+    },
+    {
+      label: 'Xem người liên hệ',
+      icon: Users,
+      onClick: () => navigate(`/suppliers/contacts?supplierId=${s.id}`),
+    },
+    {
+      label: 'Xem đơn mua hàng (PO)',
+      icon: ClipboardList,
+      onClick: () => navigate(`/purchasing/orders?search=${encodeURIComponent(s.supplierCode)}`),
+    },
     {
       label: 'Đánh giá thăng hạng (50-20-20-10)',
       icon: Award,
@@ -579,7 +732,7 @@ export default function SuppliersSettingsPanel({
               <tr>
                 <th className="table-header-cell ncc-master-col-code">Mã NCC</th>
                 <th className="table-header-cell ncc-master-col-name">Tên nhà cung cấp</th>
-                <th className="table-header-cell ncc-master-col-phone">Điện thoại</th>
+                <th className="table-header-cell ncc-master-col-phone">Người liên hệ</th>
                 <th className="table-header-cell text-right ncc-master-col-debt">Hạn công nợ</th>
                 <th className="table-header-cell text-right ncc-master-col-limit">Hạn mức</th>
                 <th className="table-header-cell ncc-master-col-terms">Điều khoản thanh toán</th>
@@ -637,8 +790,39 @@ export default function SuppliersSettingsPanel({
                         </div>
                       )}
                     </td>
-                    <td className="table-cell whitespace-nowrap tabular-nums ncc-master-col-phone">
-                      {s.contactPhone || '—'}
+                    <td className="table-cell ncc-master-col-phone">
+                      {s.primaryContact ? (
+                        <div className="flex flex-col text-xs">
+                          <span className="font-semibold text-[var(--md-on-surface)] flex items-center gap-1">
+                            <span className="truncate max-w-[140px]" title={s.primaryContact.fullName}>
+                              {s.primaryContact.fullName}
+                            </span>
+                            {s.contactCount && s.contactCount > 1 ? (
+                              <span
+                                className="inline-flex items-center text-[10px] font-normal text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-950 px-1 py-0.2 rounded"
+                                title={`${s.contactCount} liên hệ`}
+                              >
+                                +{s.contactCount - 1}
+                              </span>
+                            ) : null}
+                          </span>
+                          <span className="text-[11px] text-[var(--md-on-surface-variant)] tabular-nums">
+                            {s.primaryContact.phone || s.contactPhone || '—'}
+                          </span>
+                          {s.primaryContact.position && (
+                            <span
+                              className="text-[10px] text-[var(--md-on-surface-variant)]/70 truncate max-w-[140px]"
+                              title={s.primaryContact.position}
+                            >
+                              {s.primaryContact.position}
+                            </span>
+                          )}
+                        </div>
+                      ) : s.contactPhone ? (
+                        <span className="tabular-nums text-xs">{s.contactPhone}</span>
+                      ) : (
+                        <span className="text-zinc-400 italic text-xs">Chưa có liên hệ</span>
+                      )}
                     </td>
                     <td className="table-cell text-right tabular-nums whitespace-nowrap ncc-master-col-debt">
                       {s.maxDebtDays} ngày
@@ -757,73 +941,163 @@ export default function SuppliersSettingsPanel({
         }
       >
         {viewing ? (
-          <div className="ncc-master-detail-grid">
-            <DetailField label="Mã NCC">{viewing.supplierCode}</DetailField>
-            <DetailField label="Hạng">
-              <RatingBadge rating={viewing.rating} />
-            </DetailField>
-            <DetailField label="Trạng thái">
-              <ApprovalStatusBadge status={viewing.approvalStatus} />
-            </DetailField>
-            <DetailField label="Tên nhà cung cấp" span>{viewing.supplierName}</DetailField>
-            <DetailField label="Loại hình đối tác">{viewing.supplierType || '—'}</DetailField>
-            <DetailField label="Phạm vi">{viewing.scope || '—'}</DetailField>
-            <DetailField label="Mã số thuế (MST)">{viewing.taxCode || '—'}</DetailField>
-            <DetailField label="Điện thoại">{viewing.contactPhone || '—'}</DetailField>
-            <DetailField label="Website" span>
-              {viewing.website ? (
-                <a
-                  href={viewing.website.startsWith('http') ? viewing.website : `https://${viewing.website}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 dark:text-blue-400 hover:underline font-mono text-xs"
-                >
-                  {viewing.website}
-                </a>
-              ) : (
-                '—'
-              )}
-            </DetailField>
-            <DetailField label="Hồ sơ Onboarding đầu vào" span>
-              {viewing.taxCode ? (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
-                  <Check size={14} /> Đạt chuẩn Hạng D — Đủ MST & pháp nhân đầu vào
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
-                  ⚠️ Chưa có Mã số thuế — Cần bổ sung để hoàn tất hồ sơ Hạng D
-                </span>
-              )}
-            </DetailField>
-            <DetailField label="Hạn công nợ">{viewing.maxDebtDays} ngày</DetailField>
-            <DetailField label="Hạn mức công nợ">
-              {viewing.creditLimit ? formatCurrencyFull(viewing.creditLimit) : 'Không giới hạn'}
-            </DetailField>
-            <DetailField label="Điều khoản thanh toán" span>
-              {viewing.paymentTerms || '—'}
-            </DetailField>
-            <DetailField label={`Nhóm ngành hàng (${viewing.industryGroups?.length ?? 0})`} span>
-              {(viewing.industryGroups?.length ?? 0) > 0 ? (
-                <div className="ncc-master-groups" style={{ maxWidth: '100%' }}>
-                  {viewing.industryGroups.map(group => (
-                    <span key={group} className="ncc-master-groups__chip">{group}</span>
-                  ))}
+          <div>
+            {/* 360° Action Hub */}
+            <div className="flex flex-wrap items-center gap-2 p-2.5 mb-4 rounded-xl bg-[var(--md-surface-variant05)] border border-[var(--md-outline-variant)]">
+              <span className="text-xs font-semibold text-[var(--md-on-surface-variant)] mr-1">360° Hub:</span>
+              <Link
+                to={`/suppliers/debt?supplierId=${viewing.id}`}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full bg-[var(--md-surface)] border border-[var(--md-outline-variant)] text-[var(--md-on-surface)] hover:bg-[var(--md-primary-container)] hover:text-[var(--md-on-primary-container)] hover:border-[var(--md-primary)] transition-colors"
+              >
+                <Banknote size={14} className="text-emerald-600 dark:text-emerald-400" />
+                Công nợ &amp; DNTT
+              </Link>
+              <Link
+                to={`/purchasing/orders?search=${encodeURIComponent(viewing.supplierCode)}`}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full bg-[var(--md-surface)] border border-[var(--md-outline-variant)] text-[var(--md-on-surface)] hover:bg-[var(--md-primary-container)] hover:text-[var(--md-on-primary-container)] hover:border-[var(--md-primary)] transition-colors"
+              >
+                <ClipboardList size={14} className="text-blue-600 dark:text-blue-400" />
+                Đơn mua hàng PO
+              </Link>
+              <Link
+                to={`/suppliers/evaluations?supplierId=${viewing.id}`}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full bg-[var(--md-surface)] border border-[var(--md-outline-variant)] text-[var(--md-on-surface)] hover:bg-[var(--md-primary-container)] hover:text-[var(--md-on-primary-container)] hover:border-[var(--md-primary)] transition-colors"
+              >
+                <Award size={14} className="text-amber-600 dark:text-amber-400" />
+                Đánh giá &amp; Thăng hạng
+              </Link>
+            </div>
+
+            <div className="ncc-master-detail-grid">
+              <DetailField label="Mã NCC">{viewing.supplierCode}</DetailField>
+              <DetailField label="Hạng">
+                <RatingBadge rating={viewing.rating} />
+              </DetailField>
+              <DetailField label="Trạng thái">
+                <ApprovalStatusBadge status={viewing.approvalStatus} />
+              </DetailField>
+              <DetailField label="Tên nhà cung cấp" span>{viewing.supplierName}</DetailField>
+              <DetailField label="Loại hình đối tác">{viewing.supplierType || '—'}</DetailField>
+              <DetailField label="Phạm vi">{viewing.scope || '—'}</DetailField>
+              <DetailField label="Mã số thuế (MST)">{viewing.taxCode || '—'}</DetailField>
+              <DetailField label="Người liên hệ chính">
+                {viewing.primaryContact ? (
+                  <div>
+                    <div className="font-semibold text-[var(--md-on-surface)] flex items-center gap-1.5">
+                      {viewing.primaryContact.fullName}
+                      <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-1.5 py-0.2 rounded border border-amber-200 dark:border-amber-800">
+                        <Star size={10} className="fill-amber-500 text-amber-500" /> Chính
+                      </span>
+                    </div>
+                    <div className="text-xs text-[var(--md-on-surface-variant)] mt-0.5">
+                      {viewing.primaryContact.position ? `${viewing.primaryContact.position} · ` : ''}
+                      {viewing.primaryContact.phone || viewing.contactPhone || ''}
+                      {viewing.primaryContact.email ? ` · ${viewing.primaryContact.email}` : ''}
+                    </div>
+                  </div>
+                ) : (
+                  viewing.contactPhone || '—'
+                )}
+              </DetailField>
+              <DetailField label="Website" span>
+                {viewing.website ? (
+                  <a
+                    href={viewing.website.startsWith('http') ? viewing.website : `https://${viewing.website}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 dark:text-blue-400 hover:underline font-mono text-xs"
+                  >
+                    {viewing.website}
+                  </a>
+                ) : (
+                  '—'
+                )}
+              </DetailField>
+              <DetailField label="Hạn công nợ">
+                <div className="flex items-center justify-between gap-2">
+                  <span>{viewing.maxDebtDays} ngày</span>
+                  <Link
+                    to={`/suppliers/debt?supplierId=${viewing.id}`}
+                    className="text-xs text-primary-600 dark:text-primary-400 hover:underline inline-flex items-center gap-0.5 whitespace-nowrap"
+                  >
+                    Xem bảng kê công nợ <ExternalLink size={11} />
+                  </Link>
                 </div>
-              ) : (
-                '—'
-              )}
-            </DetailField>
-            <DetailField label="Doanh số đã mua">
-              {formatCurrencyFull(viewing.purchasedRevenue)}
-            </DetailField>
-            <DetailField label="Đánh giá định kỳ gần nhất">
-              {viewing.latestEvaluation
-                ? `${viewing.latestEvaluation.period} · ${viewing.latestEvaluation.gradeLabel || viewing.latestEvaluation.grade} · ${viewing.latestEvaluation.evaluatedAt}`
-                : '—'}
-            </DetailField>
-            <DetailField label="Điểm KPI gần nhất">
-              {viewing.latestEvaluation ? viewing.latestEvaluation.score : '—'}
-            </DetailField>
+              </DetailField>
+              <DetailField label="Hạn mức công nợ">
+                <div className="flex items-center justify-between gap-2">
+                  <span>{viewing.creditLimit ? formatCurrencyFull(viewing.creditLimit) : 'Không giới hạn'}</span>
+                  <Link
+                    to={`/suppliers/debt?supplierId=${viewing.id}`}
+                    className="text-xs text-primary-600 dark:text-primary-400 hover:underline inline-flex items-center gap-0.5 whitespace-nowrap"
+                  >
+                    Xem bảng kê công nợ <ExternalLink size={11} />
+                  </Link>
+                </div>
+              </DetailField>
+              <DetailField label="Điều khoản thanh toán" span>
+                {viewing.paymentTerms || '—'}
+              </DetailField>
+              <DetailField label={`Nhóm ngành hàng (${viewing.industryGroups?.length ?? 0})`} span>
+                {(viewing.industryGroups?.length ?? 0) > 0 ? (
+                  <div className="ncc-master-groups" style={{ maxWidth: '100%' }}>
+                    {viewing.industryGroups.map(group => (
+                      <span key={group} className="ncc-master-groups__chip">{group}</span>
+                    ))}
+                  </div>
+                ) : (
+                  '—'
+                )}
+              </DetailField>
+              <DetailField label="Doanh số đã mua">
+                <div className="flex items-center justify-between gap-2">
+                  <span>{formatCurrencyFull(viewing.purchasedRevenue)}</span>
+                  <Link
+                    to={`/purchasing/orders?search=${encodeURIComponent(viewing.supplierCode)}`}
+                    className="text-xs text-primary-600 dark:text-primary-400 hover:underline inline-flex items-center gap-0.5 whitespace-nowrap"
+                  >
+                    Xem đơn hàng PO <ExternalLink size={11} />
+                  </Link>
+                </div>
+              </DetailField>
+              <DetailField label="Đánh giá định kỳ gần nhất">
+                <div className="flex items-center justify-between gap-2">
+                  <span>
+                    {viewing.latestEvaluation
+                      ? `${viewing.latestEvaluation.period} · ${viewing.latestEvaluation.gradeLabel || viewing.latestEvaluation.grade} · ${viewing.latestEvaluation.evaluatedAt}`
+                      : '—'}
+                  </span>
+                  <Link
+                    to={`/suppliers/evaluations?supplierId=${viewing.id}&tab=kpi`}
+                    className="text-xs text-primary-600 dark:text-primary-400 hover:underline inline-flex items-center gap-0.5 whitespace-nowrap"
+                  >
+                    Lịch sử đánh giá <ExternalLink size={11} />
+                  </Link>
+                </div>
+              </DetailField>
+              <DetailField label="Điểm KPI gần nhất">
+                {viewing.latestEvaluation ? viewing.latestEvaluation.score : '—'}
+              </DetailField>
+
+              {/* Attachments Section */}
+              <div className="ncc-master-detail-span pt-3 mt-2 border-t border-[var(--md-outline-variant)]">
+                <SupplierAttachmentUploader
+                  supplierId={viewing.id}
+                  initialAttachments={viewing.attachments ?? []}
+                  onAttachmentChanged={() => {
+                    void qc.invalidateQueries({ queryKey: queryKeys.suppliers.all });
+                  }}
+                />
+              </div>
+
+              {/* Contacts Section */}
+              <div className="ncc-master-detail-span">
+                <SupplierViewingContacts
+                  supplierId={viewing.id}
+                  onAddContact={() => setIsContactModalOpen(true)}
+                />
+              </div>
+            </div>
           </div>
         ) : null}
       </Modal>
@@ -931,82 +1205,102 @@ export default function SuppliersSettingsPanel({
               placeholder="VD: 0315986604 hoặc 0100123456-001"
             />
           </FormField>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <FormField label="Điện thoại liên hệ" error={formErrors.contactPhone}>
-              <input
-                className="form-input"
-                value={form.contactPhone}
-                maxLength={10}
-                inputMode="numeric"
-                autoComplete="tel"
-                onChange={e => {
-                  const contactPhone = restrictVnPhoneInput(e.target.value);
-                  setForm(f => ({ ...f, contactPhone }));
-                  setFormErrors(prev => ({ ...prev, contactPhone: undefined }));
-                }}
-                onBlur={() => {
-                  setFormErrors(prev => ({
-                    ...prev,
-                    contactPhone: validateOptionalVietnamPhone(form.contactPhone) ?? undefined,
-                  }));
-                }}
-                placeholder="0912345678"
-              />
-            </FormField>
-
-            <FormField label="Website">
-              <input
-                className="form-input"
-                value={form.website}
-                maxLength={255}
-                onChange={e => setForm(f => ({ ...f, website: e.target.value }))}
-                placeholder="https://example.com"
-              />
-            </FormField>
-          </div>
-
-          <div className="rounded-xl border border-[var(--md-outline-variant)] p-3.5 bg-[var(--md-surface-variant05)]">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-[var(--md-on-surface)]">
-                Hồ sơ Onboarding đầu vào (Quy chuẩn Hạng D)
+          {/* Thông tin Người liên hệ chính */}
+          <div className="rounded-xl border border-[var(--md-outline-variant)] p-3.5 bg-[var(--md-surface-variant)]/20 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-[var(--md-on-surface)] flex items-center gap-1.5">
+                <Users size={15} className="text-primary-600 dark:text-primary-400" />
+                Người liên hệ chính (Primary Contact)
               </span>
-              {form.hasBusinessLicense && form.hasCompanyProfile && form.hasCatalogPriceList ? (
-                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
-                  <Check size={12} /> Đạt chuẩn Hạng D — Đủ hồ sơ đầu vào
-                </span>
-              ) : (
-                <span className="text-[11px] text-amber-600 dark:text-amber-400">
-                  Chưa đủ 3 mục hồ sơ
-                </span>
-              )}
+              <span className="text-[11px] text-[var(--md-on-surface-variant)]">
+                Tự động tạo/đồng bộ vào danh mục Liên hệ NCC
+              </span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-              <label className="inline-flex items-center gap-2 cursor-pointer">
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <FormField label="Họ và tên người liên hệ">
                 <input
-                  type="checkbox"
-                  checked={form.hasBusinessLicense}
-                  onChange={e => setForm(f => ({ ...f, hasBusinessLicense: e.target.checked }))}
+                  className="form-input"
+                  value={form.contactName}
+                  maxLength={150}
+                  placeholder="VD: Nguyễn Văn An"
+                  onChange={e => setForm(f => ({ ...f, contactName: e.target.value }))}
                 />
-                <span>GPKD / ĐKKD doanh nghiệp</span>
-              </label>
-              <label className="inline-flex items-center gap-2 cursor-pointer">
+              </FormField>
+
+              <FormField label="Chức vụ">
                 <input
-                  type="checkbox"
-                  checked={form.hasCompanyProfile}
-                  onChange={e => setForm(f => ({ ...f, hasCompanyProfile: e.target.checked }))}
+                  className="form-input"
+                  value={form.contactPosition}
+                  maxLength={150}
+                  placeholder="VD: Trưởng phòng Kinh doanh"
+                  onChange={e => setForm(f => ({ ...f, contactPosition: e.target.value }))}
                 />
-                <span>Hồ sơ năng lực (Profile)</span>
-              </label>
-              <label className="inline-flex items-center gap-2 cursor-pointer">
+              </FormField>
+
+              <FormField label="Điện thoại liên hệ" error={formErrors.contactPhone}>
                 <input
-                  type="checkbox"
-                  checked={form.hasCatalogPriceList}
-                  onChange={e => setForm(f => ({ ...f, hasCatalogPriceList: e.target.checked }))}
+                  className="form-input"
+                  value={form.contactPhone}
+                  maxLength={10}
+                  inputMode="numeric"
+                  autoComplete="tel"
+                  onChange={e => {
+                    const contactPhone = restrictVnPhoneInput(e.target.value);
+                    setForm(f => ({ ...f, contactPhone }));
+                    setFormErrors(prev => ({ ...prev, contactPhone: undefined }));
+                  }}
+                  onBlur={() => {
+                    setFormErrors(prev => ({
+                      ...prev,
+                      contactPhone: validateOptionalVietnamPhone(form.contactPhone) ?? undefined,
+                    }));
+                  }}
+                  placeholder="0912345678"
                 />
-                <span>Catalog & Bảng giá sản phẩm</span>
-              </label>
+              </FormField>
+
+              <FormField label="Email liên hệ">
+                <input
+                  type="email"
+                  className="form-input"
+                  value={form.contactEmail}
+                  maxLength={255}
+                  placeholder="an.nguyen@supplier.com"
+                  onChange={e => setForm(f => ({ ...f, contactEmail: e.target.value }))}
+                />
+              </FormField>
             </div>
           </div>
+
+          <FormField label="Website">
+            <input
+              className="form-input"
+              value={form.website}
+              maxLength={255}
+              onChange={e => setForm(f => ({ ...f, website: e.target.value }))}
+              placeholder="https://example.com"
+            />
+          </FormField>
+
+          {/* Hồ sơ Onboarding đính kèm */}
+          <SupplierAttachmentUploader
+            supplierId={editing?.id}
+            initialAttachments={editing?.attachments ?? []}
+            stagedFiles={stagedFiles}
+            onAddStagedFile={(docType, file) => {
+              setStagedFiles(prev => [
+                ...prev.filter(f => f.docType !== docType),
+                { localId: `${docType}_${Date.now()}`, docType, file },
+              ]);
+            }}
+            onRemoveStagedFile={(localId) => {
+              setStagedFiles(prev => prev.filter(f => f.localId !== localId));
+            }}
+            onAttachmentChanged={() => {
+              void qc.invalidateQueries({ queryKey: queryKeys.suppliers.all });
+            }}
+          />
           <FormField label="Hạn công nợ (ngày)" required error={formErrors.maxDebtDays}>
             <input
               type="text"
@@ -1218,6 +1512,27 @@ export default function SuppliersSettingsPanel({
           onClose={() => setIsImportModalOpen(false)}
           onSuccess={() => {
             void qc.invalidateQueries({ queryKey: queryKeys.suppliers.all });
+          }}
+        />
+      )}
+
+      {viewing && (
+        <SupplierContactFormModal
+          isOpen={isContactModalOpen}
+          editing={null}
+          defaultSupplierId={viewing.id}
+          isSaving={createContact.isPending}
+          onClose={() => setIsContactModalOpen(false)}
+          onSubmit={async (data) => {
+            try {
+              await createContact.mutateAsync(data);
+              showToast('success', 'Thêm người liên hệ thành công');
+              setIsContactModalOpen(false);
+              void qc.invalidateQueries({ queryKey: queryKeys.suppliers.all });
+              void qc.invalidateQueries({ queryKey: queryKeys.supplierContacts.all });
+            } catch (err) {
+              showToast('error', getApiErrorMessage(err, 'Không thể thêm người liên hệ'));
+            }
           }}
         />
       )}

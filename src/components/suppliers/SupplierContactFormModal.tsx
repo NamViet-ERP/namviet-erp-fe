@@ -18,6 +18,7 @@ const POSITION_MAX_LENGTH = 150;
 interface SupplierContactFormModalProps {
   isOpen: boolean;
   editing: SupplierContactApiDto | null;
+  defaultSupplierId?: number;
   isSaving: boolean;
   apiErrors?: { phone?: string; email?: string; fullName?: string };
   onClose: () => void;
@@ -29,6 +30,7 @@ const FORM_ID = 'supplier-contact-form';
 export default function SupplierContactFormModal({
   isOpen,
   editing,
+  defaultSupplierId,
   isSaving,
   apiErrors,
   onClose,
@@ -49,7 +51,7 @@ export default function SupplierContactFormModal({
         </>
       }
     >
-      <ContactForm editing={editing} apiErrors={apiErrors} onSubmit={onSubmit} />
+      <ContactForm editing={editing} defaultSupplierId={defaultSupplierId} apiErrors={apiErrors} onSubmit={onSubmit} />
     </Modal>
   );
 }
@@ -57,11 +59,12 @@ export default function SupplierContactFormModal({
 /** Modal chỉ render khi mở nên state khởi tạo lại mỗi lần mở — không cần đồng bộ qua effect. */
 function ContactForm({
   editing,
+  defaultSupplierId,
   apiErrors,
   onSubmit,
-}: Pick<SupplierContactFormModalProps, 'editing' | 'apiErrors' | 'onSubmit'>) {
+}: Pick<SupplierContactFormModalProps, 'editing' | 'defaultSupplierId' | 'apiErrors' | 'onSubmit'>) {
   const [form, setForm] = useState({
-    supplierId: editing ? String(editing.supplierId) : '',
+    supplierId: editing ? String(editing.supplierId) : (defaultSupplierId ? String(defaultSupplierId) : ''),
     fullName: editing?.fullName ?? '',
     position: editing?.position ?? '',
     phone: restrictVnPhoneInput(editing?.phone ?? ''),
@@ -114,7 +117,7 @@ function ContactForm({
         <select
           className="form-select"
           value={form.supplierId}
-          disabled={Boolean(editing)}
+          disabled={Boolean(editing) || Boolean(defaultSupplierId)}
           onChange={e => setForm(f => ({ ...f, supplierId: e.target.value }))}
         >
           <option value="">- Chọn nhà cung cấp -</option>
