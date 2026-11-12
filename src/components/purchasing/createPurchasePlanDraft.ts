@@ -28,6 +28,7 @@ export interface DraftLine {
   systemName: string;
   category: string;
   spec: string;
+  description: string;
   lineNote: string;
   kgPerUnit: string;
   purchaseStatus: string;
@@ -56,6 +57,7 @@ export function emptyLine(lineType: PurchasePlanLineType = 'material'): DraftLin
     systemName: '',
     category: '',
     spec: '',
+    description: '',
     lineNote: '',
     kgPerUnit: '',
     purchaseStatus: '',
@@ -120,6 +122,7 @@ export function toApiLines(drafts: DraftLine[]): CreatePurchasePlanLineRequest[]
         systemName: d.systemName.trim() || null,
         category: d.category.trim() || null,
         spec: d.spec.trim() || null,
+        description: d.description.trim() || null,
         lineNote: d.lineNote.trim() || null,
         kgPerUnit: isMaterial ? parseNum(d.kgPerUnit) : null,
         purchaseStatus: d.purchaseStatus.trim() || null,
@@ -170,6 +173,7 @@ export function fromPreviewLines(previewLines: PurchasePlanImportLinePreviewApiD
       systemName: l.systemName ?? '',
       category: l.category ?? '',
       spec: l.spec ?? '',
+      description: l.description ?? '',
       lineNote: l.lineNote ?? '',
       kgPerUnit: lineType === 'material' ? numToDraft(l.kgPerUnit) : '',
       purchaseStatus: l.purchaseStatus ?? '',
@@ -210,6 +214,7 @@ export function fromExistingPlanLines(lines?: PurchasePlanLineApiDto[] | null): 
       systemName: l.systemName ?? '',
       category: l.category ?? '',
       spec: l.spec ?? '',
+      description: l.description ?? '',
       lineNote: l.lineNote ?? '',
       kgPerUnit: lineType === 'material' ? numToDraft(l.kgPerUnit) : '',
       purchaseStatus: l.purchaseStatus ?? '',

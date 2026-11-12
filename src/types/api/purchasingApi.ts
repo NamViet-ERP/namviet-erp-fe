@@ -33,6 +33,7 @@ export type PurchasePlanLineApiDto = Omit<Schemas['PurchasePlanLineDto'], 'mater
   pos?: PurchasePlanLinePoApiDto[] | null;
   materialCode?: string | null;
   lineType?: PurchasePlanLineType;
+  description?: string | null;
 };
 export type PurchasePlanDetailApiDto = Omit<Schemas['PurchasePlanDetailDto'], 'lines'> & {
   lines: PurchasePlanLineApiDto[];
@@ -44,6 +45,7 @@ export type PurchasePlanImportQuotePreviewApiDto = Schemas['PurchasePlanImportQu
 export type PurchasePlanImportLinePreviewApiDto = Omit<Schemas['PurchasePlanImportLinePreviewDto'], 'materialCode' | 'lineType'> & {
   materialCode?: string | null;
   lineType?: PurchasePlanLineType;
+  description?: string | null;
 };
 export type PurchasePlanImportErrorApiDto = Schemas['PurchasePlanImportErrorDto'];
 export type PurchasePlanImportPreviewApiDto = Omit<Schemas['PurchasePlanImportPreviewDto'], 'lines'> & {
@@ -55,6 +57,7 @@ export type CreatePurchasePlanLineQuoteRequest = Schemas['CreatePurchasePlanLine
 export type CreatePurchasePlanLineRequest = Omit<Schemas['CreatePurchasePlanLineRequest'], 'materialCode' | 'lineType'> & {
   materialCode?: string | null;
   lineType?: PurchasePlanLineType;
+  description?: string | null;
 };
 export type CreatePurchasePlanRequest = Omit<Schemas['CreatePurchasePlanRequest'], 'lines'> & {
   lines?: CreatePurchasePlanLineRequest[] | null;

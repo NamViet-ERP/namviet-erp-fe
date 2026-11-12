@@ -235,3 +235,5 @@ export interface PagedApiResult<T> {
   hasNextPage?: boolean;
   hasPreviousPage?: boolean;
 }
+
+export type { PurchasePlanLineApiDto } from './api/purchasingApi';

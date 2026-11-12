@@ -418,6 +418,15 @@ export default function PurchasePlanCreateLinesTable({
                               <FormField label="Quy cách" className="pur-create-plan__ff">
                                 <input className="form-input form-input-sm" value={line.spec} disabled={linesLocked} onChange={e => onUpdateLine(line.key, { spec: e.target.value })} />
                               </FormField>
+                              <FormField label="Diễn giải" className="pur-create-plan__ff">
+                                <input
+                                  className="form-input form-input-sm"
+                                  value={line.description}
+                                  disabled={linesLocked}
+                                  onChange={e => onUpdateLine(line.key, { description: e.target.value })}
+                                  placeholder="Diễn giải mục đích sử dụng..."
+                                />
+                              </FormField>
                               <FormField label="KG/ĐVT" className="pur-create-plan__ff">
                                 <input
                                   className="form-input form-input-sm pur-create-plan__input--num"

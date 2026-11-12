@@ -60,6 +60,7 @@ describe('createPurchasePlanDraft', () => {
       const line = emptyLine();
       expect(line.lineType).toBe('material');
       expect(line.materialCode).toBe('');
+      expect(line.description).toBe('');
       expect(line.quantity).toBe('1');
       expect(line.quotes).toEqual([]);
     });
@@ -185,6 +186,7 @@ describe('createPurchasePlanDraft', () => {
           lineNo: 1,
           materialCode: 'VT-999',
           productName: 'Ống thép đúc',
+          description: 'Ống dẫn dầu áp lực cao',
           unit: 'Ống',
           quantity: 5,
           kgPerUnit: 12.5,
@@ -210,6 +212,7 @@ describe('createPurchasePlanDraft', () => {
       expect(drafts[0].key).toBe('line-101');
       expect(drafts[0].materialCode).toBe('VT-999');
       expect(drafts[0].productName).toBe('Ống thép đúc');
+      expect(drafts[0].description).toBe('Ống dẫn dầu áp lực cao');
       expect(drafts[0].kgPerUnit).toBe('12.5');
       expect(drafts[0].budgetUnitPrice).toBe('20001');
       expect(drafts[0].quotes).toHaveLength(1);
@@ -230,6 +233,7 @@ describe('createPurchasePlanDraft', () => {
           ...emptyLine(),
           materialCode: 'VT-THEP',
           productName: 'Thép tấm',
+          description: 'Thép lót sàn tầng lửng',
           unit: 'Tấm',
           quantity: '2',
           kgPerUnit: '1000',
@@ -255,6 +259,7 @@ describe('createPurchasePlanDraft', () => {
 
       // Thép tấm: 2 * 1000 * 25000 = 50.000.000
       expect(apiLines[0].materialCode).toBe('VT-THEP');
+      expect(apiLines[0].description).toBe('Thép lót sàn tầng lửng');
       expect(apiLines[0].quantity).toBe(2);
       expect(apiLines[0].kgPerUnit).toBe(1000);
       expect(apiLines[0].budgetUnitPrice).toBe(25000);

@@ -573,6 +573,7 @@ export default function PurchasePlanDetailPage() {
                   <th className="pur-detail__th pur-detail__th--base">Mã VT</th>
                   <th className="pur-detail__th pur-detail__th--base">Tên sản phẩm</th>
                   <th className="pur-detail__th pur-detail__th--base">Quy cách</th>
+                  <th className="pur-detail__th pur-detail__th--base">Diễn giải</th>
                   <th className="pur-detail__th pur-detail__th--base">ĐVT</th>
                   <th className="pur-erp__th-num pur-detail__th pur-detail__th--base">SL</th>
                   <th className="pur-erp__th-num pur-detail__th pur-detail__th--base">KG/ĐVT</th>
@@ -608,6 +609,9 @@ export default function PurchasePlanDetailPage() {
                     <td>{line.materialCode || '—'}</td>
                     <td>{line.productName}</td>
                     <td>{line.spec || '—'}</td>
+                    <td className="max-w-[200px] truncate" title={line.description || undefined}>
+                      {line.description || '—'}
+                    </td>
                     <td>{line.unit || '—'}</td>
                     <td className="pur-erp__td-num">{qty(line.quantity)}</td>
                     <td className="pur-erp__td-num">{qty(line.kgPerUnit)}</td>
