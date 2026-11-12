@@ -11,6 +11,9 @@ import {
   Warehouse,
   Building2,
   FolderGit2,
+  AlertCircle,
+  Copy,
+  Check,
 } from 'lucide-react';
 import Modal from '../ui/Modal';
 import { showToast } from '../ui/Toast';
@@ -42,6 +45,9 @@ export default function AdminOpeningStockModal({
   const [isDownloading, setIsDownloading] = useState(false);
   const [filterTab, setFilterTab] = useState<FilterTab>('all');
   const [search, setSearch] = useState('');
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorSearch, setErrorSearch] = useState('');
+  const [copied, setCopied] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: projectPage } = useProjects();
@@ -54,6 +60,9 @@ export default function AdminOpeningStockModal({
     setIsImporting(false);
     setFilterTab('all');
     setSearch('');
+    setShowErrorModal(false);
+    setErrorSearch('');
+    setCopied(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -154,6 +163,57 @@ export default function AdminOpeningStockModal({
       });
   }, [previewData, filterTab, search]);
 
+  const errorItems = useMemo(() => {
+    if (!previewData) return [];
+    return previewData.items
+      .map((item, index) => ({ ...item, originalIndex: index + 1 }))
+      .filter(item => !item.isValid);
+  }, [previewData]);
+
+  const filteredErrorItems = useMemo(() => {
+    if (!errorItems.length) return [];
+    const q = errorSearch.trim().toLowerCase();
+    if (!q) return errorItems;
+    return errorItems.filter(it => {
+      const idxStr = String(it.originalIndex);
+      const codeStr = (it.materialCode ?? '').toLowerCase();
+      const nameStr = (it.materialName ?? '').toLowerCase();
+      const errStr = (it.error ?? '').toLowerCase();
+      return (
+        idxStr.includes(q) ||
+        codeStr.includes(q) ||
+        nameStr.includes(q) ||
+        errStr.includes(q) ||
+        `dòng ${idxStr}`.includes(q)
+      );
+    });
+  }, [errorItems, errorSearch]);
+
+  const handleCopyErrors = async () => {
+    if (!errorItems.length) return;
+    const text = errorItems
+      .map(err => `Dòng ${err.originalIndex}: [Mã: ${err.materialCode || 'Trống'}] ${err.error || 'Lỗi không xác định'}`)
+      .join('\n');
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy', err);
+    }
+  };
+
   const handleConfirmImport = async () => {
     if (!selectedFile) return;
     if (targetType === 'project' && !selectedProjectCode) {
@@ -175,7 +235,8 @@ export default function AdminOpeningStockModal({
   };
 
   return (
-    <Modal
+    <>
+      <Modal
       isOpen={isOpen}
       onClose={handleClose}
       title="Nhập số dư tồn kho đầu kỳ từ file Excel (Admin)"
@@ -400,6 +461,43 @@ export default function AdminOpeningStockModal({
               </div>
             </div>
 
+            {/* Hộp báo lỗi đối soát nếu có dòng lỗi (Alert Box chuẩn KHMH) */}
+            {previewData.errorRows > 0 && (
+              <div className="p-3 rounded-lg border border-rose-500/40 bg-rose-500/10 dark:bg-rose-950/30 text-xs">
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-1.5 font-semibold text-rose-700 dark:text-rose-300">
+                    <AlertCircle size={16} className="shrink-0 text-rose-600 dark:text-rose-400" />
+                    <span>Phát hiện {previewData.errorRows} dòng có lỗi đối soát</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-xs text-rose-700 dark:text-rose-300 border-rose-500/40 hover:bg-rose-500/10 inline-flex items-center gap-1 font-medium"
+                    onClick={() => setShowErrorModal(true)}
+                  >
+                    Xem chi tiết &amp; Sao chép danh sách lỗi
+                  </button>
+                </div>
+                <ul className="space-y-1 pl-5 list-disc text-rose-700 dark:text-rose-300 text-[11px] leading-relaxed">
+                  {errorItems.slice(0, 5).map(it => (
+                    <li key={`err-summary-${it.originalIndex}`}>
+                      Dòng Excel {it.originalIndex}: Mã &apos;{it.materialCode || 'Trống'}&apos; — {it.error || 'Lỗi không xác định'}
+                    </li>
+                  ))}
+                  {errorItems.length > 5 && (
+                    <li className="list-none -ml-5 pt-1">
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1 font-medium underline text-rose-700 dark:text-rose-300 hover:opacity-80 transition-opacity"
+                        onClick={() => setShowErrorModal(true)}
+                      >
+                        …và {errorItems.length - 5} lỗi khác (Bấm để xem và sao chép toàn bộ)
+                      </button>
+                    </li>
+                  )}
+                </ul>
+              </div>
+            )}
+
             {/* Thanh điều khiển Preview Bar: Bộ lọc Tab + Search */}
             <div className="flex flex-wrap items-center justify-between gap-3 p-2.5 rounded-lg border border-[var(--md-outline-variant)] bg-[var(--md-surface-container-low)]">
               {/* Bộ 3 Tabs lọc */}
@@ -517,6 +615,11 @@ export default function AdminOpeningStockModal({
                           <span className="font-medium text-[var(--md-on-surface)]" title={it.materialName}>
                             {it.materialName}
                           </span>
+                          {it.isValid && it.note && (
+                            <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-0.5 font-normal">
+                              ℹ {it.note}
+                            </p>
+                          )}
                           {!it.isValid && it.error && (
                             <p className="text-[10px] text-rose-600 dark:text-rose-400 mt-0.5 font-normal">
                               ⚠ {it.error}
@@ -543,5 +646,125 @@ export default function AdminOpeningStockModal({
         )}
       </div>
     </Modal>
+
+    {/* Modal xem chi tiết lỗi đối soát */}
+    {previewData && (
+      <Modal
+        isOpen={showErrorModal}
+        onClose={() => setShowErrorModal(false)}
+        size="lg"
+        title={`Chi tiết lỗi đối soát tồn kho đầu kỳ (${errorItems.length} lỗi trên ${previewData.errorRows} dòng)`}
+        subtitle={
+          <div className="text-xs text-[var(--md-on-surface-variant)] mt-0.5">
+            File: <strong>{selectedFile?.name ?? 'Excel'}</strong> — Nơi nhận:{' '}
+            <strong>{targetType === 'project' ? `Kho Dự Án ${selectedProjectCode}` : 'Kho Tổng Nam Việt'}</strong>
+          </div>
+        }
+        beforeBody={
+          <div className="px-6 py-3 border-b border-[var(--md-outline-variant)] bg-[var(--md-surface-container-low)] flex flex-wrap items-center justify-between gap-3">
+            <div className="relative flex-1 min-w-[220px]">
+              <Search
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--md-on-surface-variant)] pointer-events-none"
+                aria-hidden
+              />
+              <input
+                type="search"
+                value={errorSearch}
+                onChange={e => setErrorSearch(e.target.value)}
+                placeholder="Tìm theo số dòng, mã vật tư hoặc nội dung lỗi…"
+                aria-label="Tìm kiếm lỗi"
+                className="w-full pl-8 pr-3 py-1.5 text-xs rounded-md border border-[var(--md-outline-variant)] bg-[var(--md-surface)] text-[var(--md-on-surface)] placeholder:text-[var(--md-on-surface-variant)]/60 focus:outline-none focus:ring-1 focus:ring-[var(--md-primary)]"
+              />
+            </div>
+            <button
+              type="button"
+              className="btn btn-outline btn-sm inline-flex items-center gap-1.5 text-xs"
+              onClick={handleCopyErrors}
+              title="Sao chép toàn bộ lỗi vào bộ nhớ tạm"
+            >
+              {copied ? (
+                <>
+                  <Check size={14} className="text-emerald-600 dark:text-emerald-400" />
+                  <span className="text-emerald-600 dark:text-emerald-400 font-medium">Đã sao chép!</span>
+                </>
+              ) : (
+                <>
+                  <Copy size={14} />
+                  <span>Sao chép toàn bộ lỗi ({errorItems.length})</span>
+                </>
+              )}
+            </button>
+          </div>
+        }
+        footer={
+          <div className="flex items-center justify-between w-full">
+            <span className="text-xs text-[var(--md-on-surface-variant)]">
+              Hiển thị <strong>{filteredErrorItems.length}</strong> / <strong>{errorItems.length}</strong> lỗi
+            </span>
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={() => setShowErrorModal(false)}
+            >
+              Đóng
+            </button>
+          </div>
+        }
+      >
+        <div className="flex flex-col gap-3 py-1">
+          <div className="flex items-start gap-2.5 p-3 rounded-lg border border-[var(--md-outline-variant)] bg-[var(--md-surface-container-highest)]/40 text-xs text-[var(--md-on-surface-variant)]">
+            <AlertCircle size={16} className="text-[var(--md-primary)] shrink-0 mt-0.5" aria-hidden />
+            <div className="leading-relaxed">
+              Các dòng lỗi này không hợp lệ và sẽ được bỏ qua khi nhập tồn kho. Bạn có thể sao chép danh sách này để gửi cho bộ phận chuẩn bị file Excel hiệu chỉnh lại mã hoặc đơn vị tính.
+            </div>
+          </div>
+
+          <div className="border border-[var(--md-outline-variant)] rounded-lg overflow-hidden">
+            <div className="max-h-[50vh] overflow-y-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead className="sticky top-0 bg-[var(--md-surface-container-high)] text-[var(--md-on-surface)] font-semibold border-b border-[var(--md-outline-variant)] shadow-sm z-10">
+                  <tr>
+                    <th className="py-2 px-2.5 text-center w-24">Dòng Excel</th>
+                    <th className="py-2 px-2.5 w-32">Mã vật tư</th>
+                    <th className="py-2 px-2.5 w-48">Tên vật tư</th>
+                    <th className="py-2 px-2.5">Chi tiết lỗi đối soát</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--md-outline-variant)]/60 bg-[var(--md-surface)]">
+                  {filteredErrorItems.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="text-center py-8 text-[var(--md-on-surface-variant)]">
+                        {errorSearch ? 'Không tìm thấy lỗi phù hợp với từ khóa.' : 'Không có dòng lỗi nào.'}
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredErrorItems.map(err => (
+                      <tr key={`modal-err-${err.originalIndex}`} className="hover:bg-[var(--md-surface-container-low)] transition-colors">
+                        <td className="py-2 px-2.5 text-center tabular-nums font-semibold">
+                          <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-500/15 text-rose-700 dark:text-rose-300">
+                            Dòng {err.originalIndex}
+                          </span>
+                        </td>
+                        <td className="py-2 px-2.5 font-mono font-medium text-[var(--md-primary)]">
+                          {err.materialCode || <span className="text-[var(--md-on-surface-variant)] italic">Trống</span>}
+                        </td>
+                        <td className="py-2 px-2.5 font-medium text-[var(--md-on-surface)]">
+                          {err.materialName || '—'}
+                        </td>
+                        <td className="py-2 px-2.5 text-rose-600 dark:text-rose-400 font-normal leading-relaxed">
+                          {err.error || 'Lỗi không xác định'}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </Modal>
+    )}
+  </>
   );
 }

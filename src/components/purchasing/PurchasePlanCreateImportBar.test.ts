@@ -148,7 +148,7 @@ describe('PurchasePlanCreateImportBar with Error Details Modal', () => {
     });
 
     expect(writeTextMock).toHaveBeenCalledTimes(1);
-    expect(writeTextMock.mock.calls[0][0]).toContain('Dòng 9: [itemCode] Thiếu mã vật tư');
+    expect(writeTextMock.mock.calls[0][0]).toContain('Dòng Excel 9: [itemCode] Thiếu mã vật tư');
   });
 
   it('closes modal when clicking close button', async () => {
@@ -170,5 +170,25 @@ describe('PurchasePlanCreateImportBar with Error Details Modal', () => {
     });
 
     expect(document.querySelector('[role="dialog"]')).toBeNull();
+  });
+
+  it('cleans duplicated "Dòng Excel {N}:" prefixes from backend error messages in list and modal', async () => {
+    const previewWithDuplicatePrefix: PurchasePlanImportPreviewApiDto = {
+      ...mockPreviewWithErrors,
+      errors: [
+        { rowNumber: 4, field: 'itemCode', message: 'Dòng Excel 4: Mã vật tư không tồn tại' },
+      ],
+      totalRows: 10,
+      validRowCount: 9,
+      errorRowCount: 1,
+    };
+
+    await act(() => root.render(createElement(PurchasePlanCreateImportBar, {
+      ...defaultProps,
+      preview: previewWithDuplicatePrefix,
+    })));
+
+    const errorItem = container.querySelector('.pur-create-plan__preview-errors li');
+    expect(errorItem?.textContent?.trim()).toBe('Dòng Excel 4: Mã vật tư không tồn tại');
   });
 });

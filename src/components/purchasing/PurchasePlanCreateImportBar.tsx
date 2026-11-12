@@ -16,6 +16,11 @@ interface PurchasePlanCreateImportBarProps {
   onClear: () => void;
 }
 
+function cleanErrorMessage(msg?: string): string {
+  if (!msg) return '';
+  return msg.replace(/^(?:Dòng(?: Excel)? \d+:\s*)+/i, '').trim();
+}
+
 export default function PurchasePlanCreateImportBar({
   busy,
   file,
@@ -47,7 +52,10 @@ export default function PurchasePlanCreateImportBar({
   const handleCopyErrors = async () => {
     if (!preview?.errors?.length) return;
     const text = preview.errors
-      .map(err => `Dòng ${err.rowNumber}: [${err.field || 'Chung'}] ${err.message}`)
+      .map(err => {
+        const cleanMsg = cleanErrorMessage(err.message);
+        return `Dòng Excel ${err.rowNumber}: [${err.field || 'Chung'}] ${cleanMsg}`;
+      })
       .join('\n');
     try {
       if (navigator?.clipboard?.writeText) {
@@ -146,11 +154,14 @@ export default function PurchasePlanCreateImportBar({
           )}
           {preview.errors?.length ? (
             <ul className="pur-create-plan__preview-errors">
-              {preview.errors.slice(0, 5).map((err, i) => (
-                <li key={`${err.rowNumber}-${err.field}-${i}`}>
-                  Dòng Excel {err.rowNumber}: {err.message}
-                </li>
-              ))}
+              {preview.errors.slice(0, 5).map((err, i) => {
+                const cleanMsg = cleanErrorMessage(err.message);
+                return (
+                  <li key={`${err.rowNumber}-${err.field}-${i}`}>
+                    Dòng Excel {err.rowNumber}: {cleanMsg}
+                  </li>
+                );
+              })}
               {preview.errors.length > 5 ? (
                 <li className="pur-create-plan__error-more">
                   <button
@@ -274,7 +285,7 @@ export default function PurchasePlanCreateImportBar({
                             )}
                           </td>
                           <td className="table-cell text-[var(--md-error)] font-normal leading-relaxed">
-                            {err.message}
+                            {cleanErrorMessage(err.message)}
                           </td>
                         </tr>
                       ))
