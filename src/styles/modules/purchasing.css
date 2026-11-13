@@ -1051,11 +1051,25 @@
     font-weight: var(--fw-regular);
     color: var(--md-on-surface);
   }
+  .pur-erp--plan .pur-erp__table--plans-list tbody tr {
+    cursor: pointer;
+    transition: background-color 0.15s ease-in-out;
+  }
   .pur-erp--plan .pur-erp__table--plans-list tbody tr:nth-child(even) td {
     background: color-mix(in srgb, var(--nv-navy) 3.5%, var(--md-surface-container-high));
   }
   .pur-erp--plan .pur-erp__table--plans-list tbody tr:hover td {
     background: color-mix(in srgb, var(--nv-action) 10%, var(--md-surface-container-high));
+  }
+  .pur-erp--plan .pur-erp__table--plans-list tbody tr:focus-visible {
+    outline: 2px solid var(--nv-action);
+    outline-offset: -2px;
+  }
+  .pur-erp--plan .pur-erp__table--plans-list tbody td.pur-erp__td-actions {
+    cursor: default;
+  }
+  .pur-erp__row-clickable {
+    cursor: pointer;
   }
   .pur-erp--plan .pur-erp__table--plans-list .pur-erp__td-num {
     text-align: right;

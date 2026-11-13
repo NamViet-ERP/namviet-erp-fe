@@ -476,10 +476,28 @@ export default function PurchasePlansPage({ kind = 'plan' }: Props) {
                             ]
                           : []),
                       ];
+                      const rowClasses = [
+                        'pur-erp__row-clickable cursor-pointer',
+                        isRejected ? 'pur-erp__row--rejected' : '',
+                      ].filter(Boolean).join(' ');
+
                       return (
-                        <tr key={row.code} className={isRejected ? 'pur-erp__row--rejected' : undefined}>
+                        <tr
+                          key={row.code}
+                          className={rowClasses}
+                          role="button"
+                          tabIndex={0}
+                          title={`Nhấn để xem chi tiết ${row.code}`}
+                          onClick={() => navigate(`${detailBase}/${encodeURIComponent(row.code)}`)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              navigate(`${detailBase}/${encodeURIComponent(row.code)}`);
+                            }
+                          }}
+                        >
                           <td className="tabular-nums">{formatDateTimeVi(row.createdAt) ?? '-'}</td>
-                          <td className="pur-erp__td-code">
+                          <td className="pur-erp__td-code" onClick={e => e.stopPropagation()}>
                             <EntityCodeLink
                               code={row.code}
                               to={`${detailBase}/${encodeURIComponent(row.code)}`}
@@ -517,7 +535,7 @@ export default function PurchasePlansPage({ kind = 'plan' }: Props) {
                             </div>
                           </td>
                           <td className="pur-erp__td-note">{row.note || '-'}</td>
-                          <td className="pur-erp__td-actions">
+                          <td className="pur-erp__td-actions" onClick={e => e.stopPropagation()}>
                             <Dropdown items={actionItems} />
                           </td>
                         </tr>

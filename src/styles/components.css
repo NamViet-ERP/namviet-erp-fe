@@ -6072,8 +6072,9 @@
     overflow: visible;
   }
   .project-warehouse-table .project-col-actions {
-    width: 6.5rem;
-    min-width: 6.5rem;
+    width: 19rem;
+    min-width: 19rem;
+    text-align: center;
     white-space: nowrap;
   }
 

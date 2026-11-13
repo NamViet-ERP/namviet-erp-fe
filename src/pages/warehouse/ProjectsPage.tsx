@@ -167,7 +167,7 @@ export default function ProjectsPage() {
                 <th className="table-header-cell text-right project-col-count">Mặt hàng</th>
                 <th className="table-header-cell project-col-date whitespace-nowrap">Ngày bắt đầu</th>
                 <th className="table-header-cell text-center project-col-status">Trạng thái</th>
-                <th className="table-header-cell text-right whitespace-nowrap">Thao tác</th>
+                <th className="table-header-cell text-center whitespace-nowrap project-col-actions">Thao tác</th>
               </tr>
             </thead>
             <tbody>
@@ -227,8 +227,8 @@ export default function ProjectsPage() {
                     <td className="table-cell text-center project-col-status">
                       <Badge status={projectStatusBadge(p.status)} />
                     </td>
-                    <td className="table-cell text-right" onClick={e => e.stopPropagation()}>
-                      <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
+                    <td className="table-cell text-center project-col-actions" onClick={e => e.stopPropagation()}>
+                      <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
                         <Link
                           to={`/warehouse/import?projectCode=${encodeURIComponent(p.projectCode)}`}
                           className="btn btn-outline btn-sm px-2.5 py-1 text-xs"
@@ -254,7 +254,7 @@ export default function ProjectsPage() {
                           (p.stockMaterialCount ?? 0) === 0 ? (
                             <button
                               type="button"
-                              className="btn btn-ghost btn-sm text-[var(--md-error)] hover:bg-[color-mix(in_srgb,var(--md-error)_12%,transparent)]"
+                              className="btn btn-ghost btn-sm w-8 h-8 p-0 inline-flex items-center justify-center text-[var(--md-error)] hover:bg-[color-mix(in_srgb,var(--md-error)_12%,transparent)]"
                               title={`Xóa kho dự án ${p.projectCode}`}
                               aria-label={`Xóa kho dự án ${p.projectCode}`}
                               onClick={e => handleDeleteClick(e, p)}
@@ -263,8 +263,9 @@ export default function ProjectsPage() {
                             </button>
                           ) : (
                             <span
-                              className="inline-flex items-center justify-center p-1 text-[var(--md-outline)] opacity-40 cursor-not-allowed"
+                              className="w-8 h-8 p-0 inline-flex items-center justify-center text-[var(--md-outline)] opacity-30 cursor-not-allowed"
                               title="Kho đã có mặt hàng, không thể xóa"
+                              aria-hidden="true"
                             >
                               <Trash2 size={15} />
                             </span>
