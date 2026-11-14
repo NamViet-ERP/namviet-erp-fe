@@ -7,6 +7,7 @@ import {
   hrmMenu,
   unifiedSidebarMenu,
   stocktakeMenu,
+  HRM_MODULE_ENABLED,
 } from './sidebarMenus';
 
 describe('sidebarMenus navigation structure', () => {
@@ -91,15 +92,25 @@ describe('sidebarMenus navigation structure', () => {
 
   it('unifiedSidebarMenu maintains high-level module hierarchy', () => {
     const ids = unifiedSidebarMenu.map(item => item.id);
-    expect(ids).toEqual([
+    const expected = [
       'mod-executive',
       'mod-operations',
       'mod-purchasing',
       'mod-suppliers',
       'mod-warehouse',
       'mod-cskh',
-      'mod-hrm',
+      ...(HRM_MODULE_ENABLED ? ['mod-hrm'] : []),
       'mod-admin',
-    ]);
+    ];
+    expect(ids).toEqual(expected);
+  });
+
+  it('unifiedSidebarMenu excludes mod-hrm when HRM_MODULE_ENABLED is false', () => {
+    const ids = unifiedSidebarMenu.map(item => item.id);
+    if (!HRM_MODULE_ENABLED) {
+      expect(ids).not.toContain('mod-hrm');
+    } else {
+      expect(ids).toContain('mod-hrm');
+    }
   });
 });

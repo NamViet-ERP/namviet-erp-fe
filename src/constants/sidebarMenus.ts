@@ -23,6 +23,9 @@ function toSidebarChildren(items: SidebarMenuItem[]): SidebarChildItem[] {
 /** Tắt tab / nút Báo cáo kho. Bật `true` khi dùng lại phân hệ. */
 export const WMS_REPORTS_ENABLED = true;
 
+/** Bật/tắt phân hệ Quản trị Nhân sự (HRM). Bật `true` khi dùng lại phân hệ. */
+export const HRM_MODULE_ENABLED = false;
+
 /** Thứ tự theo luồng nghiệp vụ: kho dự án → tồn → kế hoạch hàng về → nhập/xuất/chuyển/hoàn trả → kiểm kê → lỗi → báo cáo */
 export const warehouseMenu: SidebarMenuItem[] = [
   {
@@ -517,13 +520,15 @@ export const unifiedSidebarMenu: SidebarMenuItem[] = [
         children: CSKH_MODULE_LOCKED ? undefined : toSidebarChildren(cskhMenu),
       } satisfies SidebarMenuItem]
     : []),
-  {
-    id: 'mod-hrm',
-    label: 'Quản trị Nhân sự',
-    icon: Users,
-    path: '/recruitment/dashboard',
-    children: toSidebarChildren(hrmMenu),
-  },
+  ...(HRM_MODULE_ENABLED
+    ? [{
+        id: 'mod-hrm',
+        label: 'Quản trị Nhân sự',
+        icon: Users,
+        path: '/recruitment/dashboard',
+        children: toSidebarChildren(hrmMenu),
+      } satisfies SidebarMenuItem]
+    : []),
   {
     id: 'mod-admin',
     label: 'Quản trị Hệ thống',

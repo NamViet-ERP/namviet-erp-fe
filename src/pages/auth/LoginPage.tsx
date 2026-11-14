@@ -11,6 +11,7 @@ import { authService } from '../../services/authService';
 import { getDefaultRoute } from '../../utils/getDefaultRoute';
 import { getActiveRole } from '../../lib/getActiveRole';
 import { LOGIN_EMAIL_PLACEHOLDER, NAMVIET_LOGIN_LOGO_URL } from '../../constants/branding';
+import { HRM_MODULE_ENABLED } from '../../constants/sidebarMenus';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -180,19 +181,21 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-6 pt-5 border-t border-[var(--md-outline-variant)]">
-            <p className="text-center text-xs text-[var(--md-on-surface-variant)] mb-3">
-              Bạn là ứng viên? Nộp hồ sơ tại đây
-            </p>
-            <button
-              type="button"
-              onClick={() => navigate('/recruitment/apply')}
-              className="btn btn-outlined w-full py-2.5 text-sm font-semibold flex items-center justify-center gap-2"
-            >
-              <FileText size={16} />
-              Nộp đơn ứng tuyển
-            </button>
-          </div>
+          {HRM_MODULE_ENABLED && (
+            <div className="mt-6 pt-5 border-t border-[var(--md-outline-variant)]">
+              <p className="text-center text-xs text-[var(--md-on-surface-variant)] mb-3">
+                Bạn là ứng viên? Nộp hồ sơ tại đây
+              </p>
+              <button
+                type="button"
+                onClick={() => navigate('/recruitment/apply')}
+                className="btn btn-outlined w-full py-2.5 text-sm font-semibold flex items-center justify-center gap-2"
+              >
+                <FileText size={16} />
+                Nộp đơn ứng tuyển
+              </button>
+            </div>
+          )}
 
           <p className="text-center mt-5 text-xs text-[var(--md-on-surface-variant)]">
             © 2026 Mayzer ERP. Nền tảng Quản trị Doanh nghiệp Toàn diện.

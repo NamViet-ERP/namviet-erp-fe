@@ -4,7 +4,7 @@ import AppLayout from './components/layout/AppLayout';
 import PageLoader from './components/ui/PageLoader';
 import ErrorBoundary from './components/ErrorBoundary';
 import { CSKH_MODULE_ENABLED } from './constants/cskh';
-import { WMS_REPORTS_ENABLED } from './constants/sidebarMenus';
+import { HRM_MODULE_ENABLED, WMS_REPORTS_ENABLED } from './constants/sidebarMenus';
 import { getDefaultRoute } from './utils/getDefaultRoute';
 import { getActiveRole } from './lib/getActiveRole';
 import * as Pages from './routes/lazyPages';
@@ -23,8 +23,22 @@ export default function App() {
       <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route path="/login" element={<Pages.LoginPage />} />
-          <Route path="/recruitment/apply" element={<Pages.CandidateApplyPage />} />
-          <Route path="/employee/onboarding" element={<Pages.EmployeeOnboardPage />} />
+          <Route
+            path="/recruitment/apply"
+            element={
+              HRM_MODULE_ENABLED
+                ? <Pages.CandidateApplyPage />
+                : <Navigate to="/login" replace />
+            }
+          />
+          <Route
+            path="/employee/onboarding"
+            element={
+              HRM_MODULE_ENABLED
+                ? <Pages.EmployeeOnboardPage />
+                : <Navigate to="/login" replace />
+            }
+          />
           <Route path="/estimates/fill/:token" element={<Pages.PurchaseEstimateFillPage />} />
           <Route element={<AppLayout />}>
             <Route path="/" element={<Navigate to={getDefaultRoute(role)} replace />} />
@@ -76,23 +90,34 @@ export default function App() {
             <Route path="/stocktake/list" element={<Pages.StocktakeListPage />} />
             <Route path="/stocktake/settings" element={<Navigate to="/stocktake/list" replace />} />
 
-            <Route path="/members/list" element={<Pages.MembersPage />} />
-            <Route path="/members/settings" element={<Pages.MembersSettingsPage />} />
-            <Route path="/members/settings/:tab" element={<Pages.MembersSettingsPage />} />
-            <Route path="/members/new" element={<Pages.EmployeeCreatePage />} />
-            <Route path="/members/:id" element={<Pages.EmployeeDetailPage />} />
+            {HRM_MODULE_ENABLED ? (
+              <>
+                <Route path="/members/list" element={<Pages.MembersPage />} />
+                <Route path="/members/settings" element={<Pages.MembersSettingsPage />} />
+                <Route path="/members/settings/:tab" element={<Pages.MembersSettingsPage />} />
+                <Route path="/members/new" element={<Pages.EmployeeCreatePage />} />
+                <Route path="/members/:id" element={<Pages.EmployeeDetailPage />} />
 
-            <Route path="/recruitment/dashboard" element={<Pages.RecruitmentDashboardPage />} />
-            <Route path="/recruitment/plans" element={<Pages.RecruitmentPlansPage />} />
-            <Route path="/recruitment/costs" element={<Pages.RecruitmentCostsPage />} />
-            <Route path="/recruitment/candidates" element={<Pages.CandidateListPage />} />
-            <Route path="/recruitment/candidates/:id" element={<Pages.CandidateDetailPage />} />
-            <Route path="/recruitment/calendar" element={<Pages.RecruitmentCalendarPage />} />
-            <Route path="/recruitment/reports" element={<Pages.RecruitmentReportsPage />} />
-            <Route path="/recruitment/hr-stats" element={<Pages.RecruitmentHrStatsPage />} />
-            <Route path="/recruitment/settings" element={<Navigate to="/members/settings/recruitment" replace />} />
+                <Route path="/recruitment/dashboard" element={<Pages.RecruitmentDashboardPage />} />
+                <Route path="/recruitment/plans" element={<Pages.RecruitmentPlansPage />} />
+                <Route path="/recruitment/costs" element={<Pages.RecruitmentCostsPage />} />
+                <Route path="/recruitment/candidates" element={<Pages.CandidateListPage />} />
+                <Route path="/recruitment/candidates/:id" element={<Pages.CandidateDetailPage />} />
+                <Route path="/recruitment/calendar" element={<Pages.RecruitmentCalendarPage />} />
+                <Route path="/recruitment/reports" element={<Pages.RecruitmentReportsPage />} />
+                <Route path="/recruitment/hr-stats" element={<Pages.RecruitmentHrStatsPage />} />
+                <Route path="/recruitment/settings" element={<Navigate to="/members/settings/recruitment" replace />} />
 
-            <Route path="/members/recruits" element={<Navigate to="/recruitment/candidates" replace />} />
+                <Route path="/members/recruits" element={<Navigate to="/recruitment/candidates" replace />} />
+              </>
+            ) : (
+              <>
+                <Route path="/members" element={<Navigate to={getDefaultRoute(role)} replace />} />
+                <Route path="/members/*" element={<Navigate to={getDefaultRoute(role)} replace />} />
+                <Route path="/recruitment" element={<Navigate to={getDefaultRoute(role)} replace />} />
+                <Route path="/recruitment/*" element={<Navigate to={getDefaultRoute(role)} replace />} />
+              </>
+            )}
 
             <Route path="/profile" element={<Pages.UserProfilePage />} />
 

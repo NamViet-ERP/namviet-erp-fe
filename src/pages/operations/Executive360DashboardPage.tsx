@@ -1,5 +1,6 @@
 import { formatPmDisplayName, hasValidPm } from '../../lib/projectPersonnel';
 import { cskhProjectPath } from '../../constants/cskhProject';
+import { HRM_MODULE_ENABLED } from '../../constants/sidebarMenus';
 import { useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import {
@@ -259,13 +260,15 @@ export default function Executive360DashboardPage() {
                 <span className="text-xs text-[var(--md-on-surface-variant)]">
                   {project.warehouseKeepers?.length ?? 0} thủ kho phụ trách
                 </span>
-                <Link
-                  to="/members/list"
-                  className="text-xs text-[var(--md-primary)] font-semibold flex items-center gap-1 hover:underline"
-                >
-                  <span>Hồ sơ nhân sự</span>
-                  <ArrowRight size={13} />
-                </Link>
+                {HRM_MODULE_ENABLED && (
+                  <Link
+                    to="/members/list"
+                    className="text-xs text-[var(--md-primary)] font-semibold flex items-center gap-1 hover:underline"
+                  >
+                    <span>Hồ sơ nhân sự</span>
+                    <ArrowRight size={13} />
+                  </Link>
+                )}
               </div>
             </div>
 
