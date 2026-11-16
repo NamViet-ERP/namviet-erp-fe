@@ -279,6 +279,7 @@ export default function SuppliersSettingsPanel({
   const [searchParams, setSearchParams] = useSearchParams();
   const urlSearch = searchParams.get('search') ?? '';
   const [search, setSearch] = useState(urlSearch);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     if (urlSearch && urlSearch !== search) {
@@ -288,7 +289,6 @@ export default function SuppliersSettingsPanel({
   }, [urlSearch]);
   const [ratingFilter, setRatingFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_LIST_PAGE_SIZE);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<SupplierRow | null>(null);

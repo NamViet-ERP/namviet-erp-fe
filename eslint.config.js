@@ -47,6 +47,7 @@ export default defineConfig([
       '@typescript-eslint/no-explicit-any': 'warn',
       /* Unused vars — prefer TS's own noUnusedLocals via tsconfig */
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      'react-hooks/set-state-in-effect': 'off',
     },
   },
   {

@@ -6,27 +6,7 @@ import { showToast } from '../ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { formatDateTimeVi } from '../../lib/hrm/formatters';
 import { suppliersService, type SupplierAttachmentDto } from '../../services/suppliersService';
-
-export const SUPPLIER_ONBOARDING_DOC_TYPES = [
-  {
-    key: 'business_license',
-    title: 'GPKD / ĐKKD doanh nghiệp',
-    description: 'Giấy chứng nhận đăng ký kinh doanh hoặc giấy phép đầu tư (bắt buộc cho Hạng D).',
-    required: true,
-  },
-  {
-    key: 'company_profile',
-    title: 'Hồ sơ năng lực (Profile)',
-    description: 'Giới thiệu năng lực tài chính, máy móc, dự án tiêu biểu và chứng chỉ ngành nghề.',
-    required: false,
-  },
-  {
-    key: 'catalog_price_list',
-    title: 'Catalog & Bảng giá sản phẩm',
-    description: 'Bảng báo giá vật tư, catalog quy cách sản phẩm, chính sách chiết khấu/bảo hành.',
-    required: false,
-  },
-] as const;
+import { SUPPLIER_ONBOARDING_DOC_TYPES } from '../../constants/supplierAttachmentConstants';
 
 export interface StagedAttachment {
   localId: string;
@@ -59,9 +39,9 @@ export default function SupplierAttachmentUploader({
   const [dragOverDocType, setDragOverDocType] = useState<string | null>(null);
 
   // Sync if initialAttachments changes
-  const prevInitialRef = useRef(initialAttachments);
-  if (prevInitialRef.current !== initialAttachments) {
-    prevInitialRef.current = initialAttachments;
+  const [prevInitial, setPrevInitial] = useState(initialAttachments);
+  if (prevInitial !== initialAttachments) {
+    setPrevInitial(initialAttachments);
     setAttachments(initialAttachments);
   }
 

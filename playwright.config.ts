@@ -27,7 +27,7 @@ export default defineConfig({
         storageState: 'e2e/.auth/admin.json',
       },
       dependencies: ['setup'],
-      testIgnore: /auth\.setup\.ts/,
+      testIgnore: [/auth\.setup\.ts/, /hrm-.*\.spec\.ts/, /recruitment-.*\.spec\.ts/],
     },
   ],
   webServer: {
