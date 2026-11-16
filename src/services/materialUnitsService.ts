@@ -1,5 +1,10 @@
-import { apiClient } from '../lib/apiClient';
-import type { MaterialUnitApiDto } from '../types/wms';
+import { apiClient, saveBlob } from '../lib/apiClient';
+import type {
+  MaterialUnitApiDto,
+  MaterialUnitImportBatchRequest,
+  MaterialUnitImportParseResultDto,
+  MaterialUnitImportResultDto,
+} from '../types/wms';
 
 export interface UpsertMaterialUnitRequest {
   name: string;
@@ -25,5 +30,20 @@ export const materialUnitsService = {
 
   async remove(id: number): Promise<void> {
     await apiClient.delete(`${ENDPOINT}/${id}`);
+  },
+
+  async downloadImportTemplate(): Promise<boolean> {
+    const blob = await apiClient.getBlob(`${ENDPOINT}/import-template`);
+    return await saveBlob(blob, 'mau-import-don-vi-tinh.xlsx');
+  },
+
+  async parseImportFile(file: File): Promise<MaterialUnitImportParseResultDto> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return apiClient.postForm<MaterialUnitImportParseResultDto>(`${ENDPOINT}/parse-import-file`, formData);
+  },
+
+  async importBatch(request: MaterialUnitImportBatchRequest): Promise<MaterialUnitImportResultDto> {
+    return apiClient.post<MaterialUnitImportResultDto>(`${ENDPOINT}/import-batch`, request);
   },
 };

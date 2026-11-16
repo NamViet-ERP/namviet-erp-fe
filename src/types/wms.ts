@@ -225,6 +225,46 @@ export interface SupplierImportResultDto {
 
 export type ProjectLedgerKind = 'import' | 'export' | 'transfer';
 
+export interface MaterialUnitImportRowDto {
+  rowNumber: number;
+  name: string;
+  sortOrder: number;
+  isActive: boolean;
+  note?: string | null;
+  isValid: boolean;
+  errorMessage?: string | null;
+  isExisting: boolean;
+}
+
+export interface MaterialUnitImportErrorDto {
+  rowNumber: number;
+  field: string;
+  message: string;
+}
+
+export interface MaterialUnitImportParseResultDto {
+  totalRows: number;
+  validRowCount: number;
+  existingRowCount: number;
+  errorRowCount: number;
+  rows: MaterialUnitImportRowDto[];
+  errors: MaterialUnitImportErrorDto[];
+}
+
+export interface MaterialUnitImportBatchRequest {
+  rows: MaterialUnitImportRowDto[];
+  overwriteExisting?: boolean;
+}
+
+export interface MaterialUnitImportResultDto {
+  createdCount: number;
+  updatedCount: number;
+  skippedCount: number;
+  totalProcessed: number;
+  importedNames: string[];
+  errors: string[];
+}
+
 /** Shared list envelope (matches SharedKernel PagedResult&lt;T&gt; JSON). */
 export interface PagedApiResult<T> {
   items: T[];

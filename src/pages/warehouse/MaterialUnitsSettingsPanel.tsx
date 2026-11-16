@@ -1,7 +1,8 @@
 import type React from 'react';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Ruler, Plus, Trash2, Package, Pencil } from 'lucide-react';
+import { Ruler, Plus, Trash2, Package, Pencil, Upload } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import HrmPanel from '../../components/hr/HrmPanel';
 import SearchBar from '../../components/ui/SearchBar';
 import Modal from '../../components/ui/Modal';
@@ -11,6 +12,8 @@ import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { WMS_ERROR } from '../../lib/wms/messages';
 import { UI_LOADING } from '../../lib/uiMessages';
+import { queryKeys } from '../../services/queryKeys';
+import MaterialUnitImportModal from './MaterialUnitImportModal';
 import {
   useMaterialUnits,
   useCreateMaterialUnit,
@@ -20,7 +23,8 @@ import {
 import type { MaterialUnitApiDto } from '../../types/wms';
 
 export default function MaterialUnitsSettingsPanel() {
-  const { data: units = [], isLoading, isError } = useMaterialUnits(false);
+  const queryClient = useQueryClient();
+  const { data: units = [], isLoading, isError, refetch } = useMaterialUnits(false);
   const createMutation = useCreateMaterialUnit();
   const updateMutation = useUpdateMaterialUnit();
   const deleteMutation = useDeleteMaterialUnit();
@@ -30,6 +34,7 @@ export default function MaterialUnitsSettingsPanel() {
   const [deleteTarget, setDeleteTarget] = useState<MaterialUnitApiDto | null>(null);
   const [editTarget, setEditTarget] = useState<MaterialUnitApiDto | null>(null);
   const [editName, setEditName] = useState('');
+  const [importModalOpen, setImportModalOpen] = useState(false);
 
   const filtered = useMemo(() => {
     let list = [...units];
@@ -111,16 +116,26 @@ export default function MaterialUnitsSettingsPanel() {
     <>
       <div className="hrm-settings-grid hrm-settings-grid--recruitment">
         <HrmPanel className="hrm-settings-card hrm-settings-card--featured">
-          <div className="hrm-settings-card__head">
-            <div className="hrm-settings-card__icon hrm-settings-card__icon--primary">
-              <Ruler size={20} />
+          <div className="hrm-settings-card__head flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="hrm-settings-card__icon hrm-settings-card__icon--primary">
+                <Ruler size={20} />
+              </div>
+              <div>
+                <h2 className="hrm-settings-card__title">Danh sách đơn vị tính</h2>
+                <p className="hrm-settings-card__desc">
+                  Sửa tên, bật/tắt hoặc xóa đơn vị — tên được chuẩn hóa tự động (VD: mét khối → Mét khối).
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 className="hrm-settings-card__title">Danh sách đơn vị tính</h2>
-              <p className="hrm-settings-card__desc">
-                Sửa tên, bật/tắt hoặc xóa đơn vị — tên được chuẩn hóa tự động (VD: mét khối → Mét khối).
-              </p>
-            </div>
+            <button
+              type="button"
+              className="btn btn-outline flex items-center gap-1.5 shrink-0"
+              onClick={() => setImportModalOpen(true)}
+            >
+              <Upload size={16} aria-hidden />
+              <span>Nhập Excel</span>
+            </button>
           </div>
 
           <form onSubmit={handleAdd} className="hrm-recruitment-add-form hrm-admin-role-add-form">
@@ -138,7 +153,15 @@ export default function MaterialUnitsSettingsPanel() {
               disabled={createMutation.isPending}
             >
               <Plus size={18} />
-              Thêm
+              Thêm đơn vị tính
+            </button>
+            <button
+              type="button"
+              className="btn btn-outline flex items-center gap-1.5 rounded-xl px-4 h-10 shrink-0"
+              onClick={() => setImportModalOpen(true)}
+            >
+              <Upload size={16} aria-hidden />
+              <span>Nhập Excel</span>
             </button>
           </form>
 
@@ -290,6 +313,15 @@ export default function MaterialUnitsSettingsPanel() {
         confirmLabel="Xóa vĩnh viễn"
         cancelLabel="Hủy bỏ"
         isLoading={deleteMutation.isPending}
+      />
+
+      <MaterialUnitImportModal
+        isOpen={importModalOpen}
+        onClose={() => setImportModalOpen(false)}
+        onSuccess={() => {
+          void refetch();
+          void queryClient.invalidateQueries({ queryKey: queryKeys.materialUnits.all });
+        }}
       />
     </>
   );

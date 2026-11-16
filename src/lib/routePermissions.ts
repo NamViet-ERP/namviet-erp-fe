@@ -34,7 +34,10 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
   { match: p => p === '/warehouse/arrival-plans', permissions: ['purchasing.arrival_plans.view'] },
   { match: p => p === '/warehouse/projects' || p === '/warehouse/list' || p === '/warehouse/locations' || p.startsWith('/warehouse/projects/'), permissions: WMS_PROJECTS },
   { match: p => p === '/warehouse/materials' || p === '/operations/materials', permissions: WMS_MATERIALS },
-  { match: p => p === '/operations/services', permissions: ['wms.materials.view:all', 'purchasing.plans.view'] },
+  {
+    match: p => p === '/operations/services' || p.startsWith('/operations/services/') || p.startsWith('/operations/services?'),
+    permissions: ['wms.projects.view:all', 'wms.materials.view:all', 'purchasing.plans.view', 'admin.roles.view:all'],
+  },
   { match: p => p === '/operations/projects' || p === '/operations/project-list' || p === '/operations/executive-360', permissions: WMS_PROJECTS },
   {
     match: p =>

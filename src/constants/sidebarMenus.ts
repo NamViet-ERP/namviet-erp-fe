@@ -461,7 +461,7 @@ export const operationsMenu: SidebarMenuItem[] = [
     label: 'Danh mục Dịch vụ & Chi phí',
     icon: Briefcase,
     path: '/operations/services',
-    permission: ['wms.materials.view:all', 'purchasing.plans.view'],
+    permission: ['wms.projects.view:all', 'wms.materials.view:all', 'purchasing.plans.view'],
   },
   {
     id: 'ops-settings',

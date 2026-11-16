@@ -7,11 +7,24 @@ import {
 
 describe('routePermissions', () => {
   describe('getRouteAccess', () => {
-    it('returns required permissions for /operations/services', () => {
-      const access = getRouteAccess('/operations/services');
-      expect(access).toEqual({
+    it('returns required permissions for /operations/services and subpaths', () => {
+      const expectedPermissions = [
+        'wms.projects.view:all',
+        'wms.materials.view:all',
+        'purchasing.plans.view',
+        'admin.roles.view:all',
+      ];
+      expect(getRouteAccess('/operations/services')).toEqual({
         kind: 'permissions',
-        permissions: ['wms.materials.view:all', 'purchasing.plans.view'],
+        permissions: expectedPermissions,
+      });
+      expect(getRouteAccess('/operations/services/')).toEqual({
+        kind: 'permissions',
+        permissions: expectedPermissions,
+      });
+      expect(getRouteAccess('/operations/services?search=test')).toEqual({
+        kind: 'permissions',
+        permissions: expectedPermissions,
       });
     });
 
@@ -40,8 +53,10 @@ describe('routePermissions', () => {
   describe('getRequiredPermissionsForPath', () => {
     it('returns permission array for /operations/services', () => {
       expect(getRequiredPermissionsForPath('/operations/services')).toEqual([
+        'wms.projects.view:all',
         'wms.materials.view:all',
         'purchasing.plans.view',
+        'admin.roles.view:all',
       ]);
     });
 
