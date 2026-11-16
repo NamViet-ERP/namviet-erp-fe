@@ -7,6 +7,7 @@ import { getApiErrorMessage, saveBlob } from '../../lib/apiClient';
 import { useProjects } from '../../hooks/useProjects';
 import { useSuppliers } from '../../hooks/useSuppliers';
 import { useMaterials } from '../../hooks/useMaterials';
+import { useServiceExpenseItems } from '../../hooks/useServiceExpenseItems';
 import {
   useCreatePurchasePlan,
   usePurchasePlan,
@@ -61,6 +62,7 @@ export default function CreatePurchasePlanModal({
   const { data: projectsPage } = useProjects({ page: 1, pageSize: 200, status: 'Active' });
   const { data: suppliersPage } = useSuppliers({ all: true });
   const { data: materialsPage } = useMaterials({ all: true });
+  const { data: serviceItemsPage } = useServiceExpenseItems({ all: true });
   const { data: editPlan } = usePurchasePlan(open && editCode ? editCode : undefined);
   const createMutation = useCreatePurchasePlan();
   const updateMutation = useUpdatePurchasePlan();
@@ -78,6 +80,7 @@ export default function CreatePurchasePlanModal({
   const projects = projectsPage?.items ?? [];
   const suppliers = suppliersPage?.items ?? [];
   const materials = materialsPage?.items ?? [];
+  const serviceItems = serviceItemsPage?.items ?? [];
   const busy =
     createMutation.isPending
     || updateMutation.isPending
@@ -89,16 +92,24 @@ export default function CreatePurchasePlanModal({
     return new Set(materials.map(m => m.materialCode.trim().toLowerCase()));
   }, [materials]);
 
+  const knownServiceCodes = useMemo(() => {
+    return new Set(serviceItems.map(s => s.code.trim().toLowerCase()));
+  }, [serviceItems]);
+
   const missingMaterialLines = useMemo(() => {
-    if (!materialsPage || materials.length === 0) return [];
+    if ((!materialsPage || materials.length === 0) && (!serviceItemsPage || serviceItems.length === 0)) return [];
     return lines
       .map((line, idx) => ({ line, rowNumber: idx + 1 }))
       .filter(({ line }) => {
-        const isMaterial = (line.lineType || 'material') === 'material';
         const code = line.materialCode?.trim().toLowerCase() ?? '';
-        return isMaterial && Boolean(code) && !knownMaterialCodes.has(code);
+        if (!code) return false;
+        const isMaterial = (line.lineType || 'material') === 'material';
+        if (isMaterial) {
+          return !knownMaterialCodes.has(code) && !knownServiceCodes.has(code);
+        }
+        return !knownServiceCodes.has(code) && !knownMaterialCodes.has(code);
       });
-  }, [lines, materialsPage, materials, knownMaterialCodes]);
+  }, [lines, materialsPage, materials, serviceItemsPage, serviceItems, knownMaterialCodes, knownServiceCodes]);
 
   const totals = useMemo(() => {
     let budget = 0;
@@ -447,11 +458,13 @@ export default function CreatePurchasePlanModal({
           lines={lines}
           expanded={expanded}
           materials={materials}
+          serviceItems={serviceItems}
           suppliers={suppliers}
           linesLocked={linesLocked}
           totals={totals}
           risksByLineKey={risksByLineKey}
           knownMaterialCodes={knownMaterialCodes}
+          knownServiceCodes={knownServiceCodes}
           onAddLine={(type) => setLines(prev => [...prev, emptyLine(type)])}
           onUpdateLine={updateLine}
           onRemoveLine={removeLine}

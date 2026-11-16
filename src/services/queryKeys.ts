@@ -258,4 +258,9 @@ export const queryKeys = {
     masterData: ['cskh', 'masterData'] as const,
     profiles: ['cskh', 'profiles'] as const,
   },
+  serviceExpenseItems: {
+    all: ['serviceExpenseItems'] as const,
+    list: (params?: unknown) => ['serviceExpenseItems', 'list', params] as const,
+    detail: (id: number) => ['serviceExpenseItems', 'detail', id] as const,
+  },
 } as const;

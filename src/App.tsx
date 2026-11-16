@@ -79,6 +79,7 @@ export default function App() {
             <Route path="/operations/project-list" element={<Pages.OperationsProjectListPage />} />
             <Route path="/operations/projects" element={<Pages.OperationsProjectsPage />} />
             <Route path="/operations/materials" element={<Pages.MaterialsPage />} />
+            <Route path="/operations/services" element={<Pages.ServicesExpensesPage />} />
             <Route path="/operations/price-book" element={<Pages.PurchasePriceBookPage />} />
             <Route path="/operations/estimate-procurement" element={<Pages.PurchaseEstimateProcurementPage />} />
             <Route path="/operations/estimate-procurement/:id" element={<Pages.PurchaseEstimateDetailPage />} />

@@ -151,7 +151,11 @@ export function toApiLines(drafts: DraftLine[]): CreatePurchasePlanLineRequest[]
           })),
       };
     })
-    .filter(l => (l.lineType !== 'material' ? l.productName : l.materialCode) && l.unit && l.quantity > 0);
+    .filter(l => {
+      const isMaterial = (l.lineType ?? 'material') === 'material';
+      const hasIdentifier = isMaterial ? Boolean(l.materialCode) : Boolean(l.materialCode || l.productName);
+      return hasIdentifier && l.unit && l.quantity > 0;
+    });
 }
 
 export function fromPreviewLines(previewLines: PurchasePlanImportLinePreviewApiDto[]): DraftLine[] {

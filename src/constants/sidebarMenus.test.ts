@@ -19,6 +19,7 @@ describe('sidebarMenus navigation structure', () => {
       'ops-projects',
       'ops-estimate-procurement',
       'ops-materials',
+      'ops-services',
       'ops-settings',
     ]);
   });
