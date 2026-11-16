@@ -52,3 +52,46 @@ export interface ServiceExpenseItemQueryParams {
   isActive?: boolean;
   all?: boolean;
 }
+
+export interface ServiceExpenseImportRowDto {
+  rowNumber: number;
+  code: string;
+  name: string;
+  type: ServiceExpenseType;
+  unit: string;
+  referencePrice?: number | null;
+  description?: string | null;
+  isValid: boolean;
+  isExisting: boolean;
+  errors: string[];
+  warnings: string[];
+}
+
+export interface ServiceExpenseImportErrorDto {
+  rowNumber: number;
+  field: string;
+  message: string;
+}
+
+export interface ServiceExpenseImportParseResultDto {
+  totalRows: number;
+  validRowCount: number;
+  existingRowCount: number;
+  errorRowCount: number;
+  rows: ServiceExpenseImportRowDto[];
+  errors: ServiceExpenseImportErrorDto[];
+}
+
+export interface ServiceExpenseImportBatchRequest {
+  rows: ServiceExpenseImportRowDto[];
+  overwriteExisting?: boolean;
+}
+
+export interface ServiceExpenseImportResultDto {
+  createdCount: number;
+  updatedCount: number;
+  skippedCount: number;
+  totalProcessed: number;
+  importedCodes: string[];
+  errors: string[];
+}

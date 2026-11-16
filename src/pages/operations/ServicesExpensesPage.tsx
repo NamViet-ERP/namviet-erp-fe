@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, Pencil, Trash2, Briefcase, Coins, RotateCcw } from 'lucide-react';
+import { Plus, Pencil, Trash2, Briefcase, Coins, RotateCcw, Upload } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import SearchBar from '../../components/ui/SearchBar';
 import Pagination from '../../components/ui/Pagination';
@@ -14,6 +14,9 @@ import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { formatCurrency } from '../../utils/formatCurrency';
 import type { ListPageSize } from '../../constants/pagination';
+import HrmPanel from '../../components/hr/HrmPanel';
+import MaterialUnitSelect from '../../components/warehouse/MaterialUnitSelect';
+import ServiceExpenseImportModal from './ServiceExpenseImportModal';
 import {
   useServiceExpenseItems,
   useCreateServiceExpenseItem,
@@ -26,8 +29,6 @@ import type {
   ServiceExpenseItemApiDto,
   ServiceExpenseType,
 } from '../../types/api/serviceExpenseItem';
-
-const COMMON_UNITS = ['Công', 'Ca', 'Chuyến', 'Lần', 'Gói', 'Tháng', 'Hệ', 'Mét', 'Giờ', 'Bộ'];
 
 interface FormState {
   code: string;
@@ -44,7 +45,7 @@ const initialFormState: FormState = {
   code: '',
   name: '',
   type: 'service',
-  unit: 'Chuyến',
+  unit: '',
   referencePrice: '',
   description: '',
   isActive: true,
@@ -54,11 +55,12 @@ const initialFormState: FormState = {
 export default function ServicesExpensesPage() {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<'all' | 'service' | 'expense'>('all');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [showInactive, setShowInactive] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<ListPageSize>(15);
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [importModalOpen, setImportModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ServiceExpenseItemApiDto | null>(null);
   const [formData, setFormData] = useState<FormState>(initialFormState);
   const [deleteTarget, setDeleteTarget] = useState<ServiceExpenseItemApiDto | null>(null);
@@ -68,8 +70,8 @@ export default function ServicesExpensesPage() {
     pageSize,
     search: search.trim() || undefined,
     type: typeFilter === 'all' ? undefined : typeFilter,
-    isActive: statusFilter === 'all' ? undefined : statusFilter === 'active',
-  }), [page, pageSize, search, typeFilter, statusFilter]);
+    isActive: showInactive ? undefined : true,
+  }), [page, pageSize, search, typeFilter, showInactive]);
 
   const { data, isLoading, isError, refetch } = useServiceExpenseItems(queryParams);
   const createMutation = useCreateServiceExpenseItem();
@@ -86,10 +88,17 @@ export default function ServicesExpensesPage() {
     setFormData({
       ...initialFormState,
       type: typeFilter === 'expense' ? 'expense' : 'service',
-      unit: typeFilter === 'expense' ? 'Gói' : 'Chuyến',
+      unit: '',
       sortOrder: total + 1,
     });
     setModalOpen(true);
+  };
+
+  const resetFilters = () => {
+    setSearch('');
+    setTypeFilter('all');
+    setShowInactive(false);
+    setPage(1);
   };
 
   const openEditModal = (item: ServiceExpenseItemApiDto) => {
@@ -130,7 +139,7 @@ export default function ServicesExpensesPage() {
       return;
     }
     if (!unit) {
-      showToast('warning', 'Vui lòng nhập đơn vị tính.');
+      showToast('warning', 'Vui lòng chọn đơn vị tính.');
       return;
     }
 
@@ -194,116 +203,120 @@ export default function ServicesExpensesPage() {
         title="Danh mục Dịch vụ & Chi phí"
         subtitle="Mã định danh chuẩn cho dịch vụ thi công, thầu phụ và chi phí ngoài dự án (dùng trong KHMH, PO và DNTT)"
         actions={(
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={openCreateModal}
-          >
-            <Plus size={16} aria-hidden />
-            <span>Thêm dịch vụ / chi phí</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="btn btn-outline flex items-center gap-1.5"
+              onClick={() => setImportModalOpen(true)}
+            >
+              <Upload size={16} aria-hidden />
+              <span>Nhập Excel</span>
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary flex items-center gap-1.5"
+              onClick={openCreateModal}
+            >
+              <Plus size={16} aria-hidden />
+              <span>Thêm dịch vụ / chi phí</span>
+            </button>
+          </div>
         )}
       />
 
-      {/* Filter Toolbar — Archetype A */}
-      <div className="card my-4 p-4 bg-[var(--md-surface)] border border-[var(--md-outline-variant02)] shadow-sm rounded-xl">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex-1 min-w-[240px] max-w-md">
-            <SearchBar
-              value={search}
-              onChange={val => {
-                setSearch(val);
-                setPage(1);
-              }}
-              placeholder="Tìm theo mã, tên hoặc ghi chú…"
-            />
-          </div>
+      <HrmPanel noPadding className="mat-catalog-board">
+        <div className="mat-catalog-board__head">
+          <h2 className="mat-catalog-board__title">Danh sách dịch vụ & chi phí dự án</h2>
+          <p className="mat-catalog-board__desc">
+            Mã định danh chuẩn cho dịch vụ thi công và chi phí ngoài dự án (dùng trong KHMH, PO và DNTT).
+          </p>
+        </div>
 
-          <div className="flex items-center gap-3 flex-wrap">
-            {/* Pill Switcher: Phân loại */}
-            <div
-              className="inline-flex items-center gap-1 p-1 bg-[var(--md-surface-variant)]/40 rounded-lg border border-[var(--md-outline-variant02)] text-xs"
-              role="group"
-              aria-label="Lọc theo phân loại"
-            >
-              <button
-                type="button"
-                className={`px-3 py-1.5 rounded-md font-medium transition-all ${
-                  typeFilter === 'all'
-                    ? 'bg-[var(--md-surface)] text-[var(--md-primary)] shadow-sm font-semibold'
-                    : 'text-[var(--md-on-surface-variant)] hover:text-[var(--md-on-surface)]'
-                }`}
-                onClick={() => { setTypeFilter('all'); setPage(1); }}
-              >
-                Tất cả
-              </button>
-              <button
-                type="button"
-                className={`px-3 py-1.5 rounded-md font-medium transition-all inline-flex items-center gap-1.5 ${
-                  typeFilter === 'service'
-                    ? 'bg-[var(--md-surface)] text-amber-700 dark:text-amber-400 shadow-sm font-semibold'
-                    : 'text-[var(--md-on-surface-variant)] hover:text-[var(--md-on-surface)]'
-                }`}
-                onClick={() => { setTypeFilter('service'); setPage(1); }}
-              >
-                <Briefcase size={13} aria-hidden />
-                <span>Dịch vụ</span>
-              </button>
-              <button
-                type="button"
-                className={`px-3 py-1.5 rounded-md font-medium transition-all inline-flex items-center gap-1.5 ${
-                  typeFilter === 'expense'
-                    ? 'bg-[var(--md-surface)] text-purple-700 dark:text-purple-400 shadow-sm font-semibold'
-                    : 'text-[var(--md-on-surface-variant)] hover:text-[var(--md-on-surface)]'
-                }`}
-                onClick={() => { setTypeFilter('expense'); setPage(1); }}
-              >
-                <Coins size={13} aria-hidden />
-                <span>Chi phí ngoài</span>
-              </button>
-            </div>
-
-            {/* Trạng thái dropdown */}
-            <select
-              className="form-input form-input-sm text-xs font-medium"
-              value={statusFilter}
-              onChange={e => {
-                setStatusFilter(e.target.value as 'all' | 'active' | 'inactive');
-                setPage(1);
-              }}
-              aria-label="Lọc theo trạng thái hoạt động"
-            >
-              <option value="all">Tất cả trạng thái</option>
-              <option value="active">Đang hoạt động</option>
-              <option value="inactive">Đã ngừng sử dụng</option>
-            </select>
-
-            {(search || typeFilter !== 'all' || statusFilter !== 'all') && (
-              <button
-                type="button"
-                className="btn btn-text btn-sm text-[var(--md-on-surface-variant)] hover:text-[var(--md-on-surface)]"
-                onClick={() => {
-                  setSearch('');
-                  setTypeFilter('all');
-                  setStatusFilter('all');
+        <div className="hrm-list-toolbar">
+          <div className="hrm-list-toolbar__filters">
+            <div className="mat-catalog__toolbar">
+              <SearchBar
+                value={search}
+                onChange={val => {
+                  setSearch(val);
                   setPage(1);
                 }}
-                title="Xóa bộ lọc"
+                placeholder="Tìm theo mã, tên hoặc ghi chú…"
+              />
+
+              {/* Pill Switcher: Phân loại */}
+              <div
+                className="inline-flex items-center gap-1 p-1 bg-[var(--md-surface-variant)]/40 rounded-lg border border-[var(--md-outline-variant02)] text-xs"
+                role="group"
+                aria-label="Lọc theo phân loại"
               >
-                <RotateCcw size={14} aria-hidden />
-                <span>Đặt lại</span>
+                <button
+                  type="button"
+                  className={`px-3 py-1.5 rounded-md font-medium transition-all ${
+                    typeFilter === 'all'
+                      ? 'bg-[var(--md-surface)] text-[var(--md-primary)] shadow-sm font-semibold'
+                      : 'text-[var(--md-on-surface-variant)] hover:text-[var(--md-on-surface)]'
+                  }`}
+                  onClick={() => { setTypeFilter('all'); setPage(1); }}
+                >
+                  Tất cả
+                </button>
+                <button
+                  type="button"
+                  className={`px-3 py-1.5 rounded-md font-medium transition-all inline-flex items-center gap-1.5 ${
+                    typeFilter === 'service'
+                      ? 'bg-[var(--md-surface)] text-amber-700 dark:text-amber-400 shadow-sm font-semibold'
+                      : 'text-[var(--md-on-surface-variant)] hover:text-[var(--md-on-surface)]'
+                  }`}
+                  onClick={() => { setTypeFilter('service'); setPage(1); }}
+                >
+                  <Briefcase size={13} aria-hidden />
+                  <span>Dịch vụ</span>
+                </button>
+                <button
+                  type="button"
+                  className={`px-3 py-1.5 rounded-md font-medium transition-all inline-flex items-center gap-1.5 ${
+                    typeFilter === 'expense'
+                      ? 'bg-[var(--md-surface)] text-purple-700 dark:text-purple-400 shadow-sm font-semibold'
+                      : 'text-[var(--md-on-surface-variant)] hover:text-[var(--md-on-surface)]'
+                  }`}
+                  onClick={() => { setTypeFilter('expense'); setPage(1); }}
+                >
+                  <Coins size={13} aria-hidden />
+                  <span>Chi phí ngoài</span>
+                </button>
+              </div>
+
+              {/* Trạng thái nút bấm giống MaterialsPage */}
+              <button
+                type="button"
+                onClick={() => { setShowInactive(v => !v); setPage(1); }}
+                className={`mat-catalog__status${showInactive ? ' is-on' : ''}`}
+                aria-pressed={showInactive}
+              >
+                {showInactive ? 'Hiện cả ngừng SD' : 'Chỉ đang dùng'}
               </button>
-            )}
+
+              {(search || typeFilter !== 'all' || showInactive) && (
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  className="btn btn-text"
+                  title="Đặt lại bộ lọc"
+                >
+                  <RotateCcw size={14} aria-hidden />
+                  <span>Xóa lọc</span>
+                </button>
+              )}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Main Table */}
-      <div className="card overflow-hidden border border-[var(--md-outline-variant02)] shadow-sm rounded-xl">
-        <div className="table-responsive">
-          <table className="form-table w-full text-sm">
+        {/* Main Table */}
+        <div className="wms-inventory-table-wrap overflow-x-auto table-scroll">
+          <table className="wms-inventory-table mat-catalog-table">
             <thead>
-              <tr className="border-b border-[var(--md-outline-variant02)] bg-[var(--md-surface-variant)]/20">
+              <tr>
                 <th className="table-header-cell text-center w-12">#</th>
                 <th className="table-header-cell text-left w-36">Mã định danh</th>
                 <th className="table-header-cell text-left">Tên dịch vụ / chi phí</th>
@@ -336,7 +349,7 @@ export default function ServicesExpensesPage() {
                   <td colSpan={9} className="table-cell text-center py-12">
                     <EmptyState
                       message={
-                        search || typeFilter !== 'all' || statusFilter !== 'all'
+                        search || typeFilter !== 'all' || showInactive
                           ? 'Không tìm thấy mục phù hợp với bộ lọc hiện tại.'
                           : 'Chưa có dịch vụ hoặc chi phí nào trong danh mục.'
                       }
@@ -437,23 +450,22 @@ export default function ServicesExpensesPage() {
         </div>
 
         {/* Footer / Pagination */}
-        <div className="p-4 border-t border-[var(--md-outline-variant02)] flex items-center justify-between gap-4 flex-wrap bg-[var(--md-surface-variant)]/10">
-          <div className="text-xs text-[var(--md-on-surface-variant)]">
-            Hiển thị <strong>{items.length}</strong> trên tổng số <strong>{total}</strong> mục
-          </div>
+        {total > 0 && !isLoading && (
           <Pagination
+            embedded
             currentPage={page}
             totalPages={totalPages}
             pageSize={pageSize}
             totalItems={total}
+            itemLabel="mục"
             onPageChange={setPage}
             onPageSizeChange={size => {
               setPageSize(size);
               setPage(1);
             }}
           />
-        </div>
-      </div>
+        )}
+      </HrmPanel>
 
       {/* Modal Thêm / Sửa */}
       <Modal
@@ -503,7 +515,6 @@ export default function ServicesExpensesPage() {
                   onChange={() => setFormData(prev => ({
                     ...prev,
                     type: 'service',
-                    unit: prev.unit === 'Gói' ? 'Chuyến' : prev.unit,
                   }))}
                   className="text-amber-600 focus:ring-amber-500"
                 />
@@ -529,7 +540,6 @@ export default function ServicesExpensesPage() {
                   onChange={() => setFormData(prev => ({
                     ...prev,
                     type: 'expense',
-                    unit: prev.unit === 'Chuyến' ? 'Gói' : prev.unit,
                   }))}
                   className="text-purple-600 focus:ring-purple-500"
                 />
@@ -557,29 +567,12 @@ export default function ServicesExpensesPage() {
               </p>
             </FormField>
 
-            <FormField label="Đơn vị tính (ĐVT)" required>
-              <div className="space-y-1.5">
-                <input
-                  className="form-input form-input-md"
-                  value={formData.unit}
-                  placeholder="Công, Ca, Chuyến, Gói…"
-                  onChange={e => setFormData(prev => ({ ...prev, unit: e.target.value }))}
-                  aria-label="Đơn vị tính"
-                />
-                <div className="flex flex-wrap gap-1">
-                  {COMMON_UNITS.slice(0, 6).map(u => (
-                    <button
-                      key={u}
-                      type="button"
-                      className="px-1.5 py-0.5 text-[10px] rounded bg-[var(--md-surface-variant)]/50 text-[var(--md-on-surface-variant)] hover:bg-[var(--md-primary)]/10 hover:text-[var(--md-primary)] transition-colors"
-                      onClick={() => setFormData(prev => ({ ...prev, unit: u }))}
-                    >
-                      {u}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </FormField>
+            <MaterialUnitSelect
+              value={formData.unit}
+              onChange={val => setFormData(prev => ({ ...prev, unit: val }))}
+              required
+              preserveUnknownValue
+            />
           </div>
 
           {/* Tên dịch vụ / chi phí */}
@@ -637,6 +630,15 @@ export default function ServicesExpensesPage() {
           </div>
         </div>
       </Modal>
+
+      {/* Modal Nhập Excel */}
+      <ServiceExpenseImportModal
+        isOpen={importModalOpen}
+        onClose={() => setImportModalOpen(false)}
+        onSuccess={() => {
+          void refetch();
+        }}
+      />
 
       {/* Confirm Dialog Xóa */}
       <ConfirmDialog

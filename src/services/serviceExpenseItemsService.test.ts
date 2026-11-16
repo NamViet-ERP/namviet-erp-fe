@@ -10,6 +10,9 @@ const post = vi.hoisted(() => vi.fn());
 const put = vi.hoisted(() => vi.fn());
 const patch = vi.hoisted(() => vi.fn());
 const del = vi.hoisted(() => vi.fn());
+const getBlob = vi.hoisted(() => vi.fn());
+const postForm = vi.hoisted(() => vi.fn());
+const saveBlob = vi.hoisted(() => vi.fn());
 
 vi.mock('../lib/apiClient', () => ({
   apiClient: {
@@ -18,7 +21,10 @@ vi.mock('../lib/apiClient', () => ({
     put,
     patch,
     delete: del,
+    getBlob,
+    postForm,
   },
+  saveBlob,
 }));
 
 import { serviceExpenseItemsService } from './serviceExpenseItemsService';
@@ -44,6 +50,9 @@ describe('serviceExpenseItemsService', () => {
     put.mockReset();
     patch.mockReset();
     del.mockReset();
+    getBlob.mockReset();
+    postForm.mockReset();
+    saveBlob.mockReset();
   });
 
   it('lists items with query params', async () => {
@@ -134,5 +143,90 @@ describe('serviceExpenseItemsService', () => {
     await serviceExpenseItemsService.delete(1);
 
     expect(del).toHaveBeenCalledWith('/api/purchasing/service-items/1');
+  });
+
+  it('downloads import template and saves blob', async () => {
+    const fakeBlob = new Blob(['sample-data'], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    getBlob.mockResolvedValueOnce(fakeBlob);
+    saveBlob.mockResolvedValueOnce(true);
+
+    const result = await serviceExpenseItemsService.downloadImportTemplate();
+
+    expect(getBlob).toHaveBeenCalledWith('/api/purchasing/service-items/import-template');
+    expect(saveBlob).toHaveBeenCalledWith(fakeBlob, 'mau-import-dich-vu-chi-phi.xlsx');
+    expect(result).toBe(true);
+  });
+
+  it('parses import file via FormData', async () => {
+    const mockParseResult = {
+      totalRows: 1,
+      validRowCount: 1,
+      existingRowCount: 0,
+      errorRowCount: 0,
+      rows: [
+        {
+          rowNumber: 2,
+          code: 'DV-TEST-01',
+          name: 'Dịch vụ test',
+          type: 'service',
+          unit: 'Chuyến',
+          referencePrice: 1000000,
+          description: null,
+          isValid: true,
+          isExisting: false,
+          errors: [],
+          warnings: [],
+        },
+      ],
+      errors: [],
+    };
+    postForm.mockResolvedValueOnce(mockParseResult);
+
+    const fakeFile = new File(['test'], 'import.xlsx', { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const result = await serviceExpenseItemsService.parseImportFile(fakeFile);
+
+    expect(postForm).toHaveBeenCalledWith(
+      '/api/purchasing/service-items/parse-import-file',
+      expect.any(FormData),
+    );
+    expect(result.validRowCount).toBe(1);
+    expect(result.rows[0].code).toBe('DV-TEST-01');
+  });
+
+  it('imports batch of service/expense rows', async () => {
+    const mockBatchResult = {
+      createdCount: 1,
+      updatedCount: 0,
+      skippedCount: 0,
+      totalProcessed: 1,
+      importedCodes: ['DV-TEST-01'],
+      errors: [],
+    };
+    post.mockResolvedValueOnce(mockBatchResult);
+
+    const batchRequest = {
+      rows: [
+        {
+          rowNumber: 2,
+          code: 'DV-TEST-01',
+          name: 'Dịch vụ test',
+          type: 'service' as const,
+          unit: 'Chuyến',
+          referencePrice: 1000000,
+          description: null,
+          isValid: true,
+          isExisting: false,
+          errors: [],
+          warnings: [],
+        },
+      ],
+      overwriteExisting: true,
+    };
+
+    const result = await serviceExpenseItemsService.importBatch(batchRequest);
+
+    expect(post).toHaveBeenCalledWith('/api/purchasing/service-items/import-batch', batchRequest);
+    expect(result.createdCount).toBe(1);
+    expect(result.importedCodes).toContain('DV-TEST-01');
   });
 });

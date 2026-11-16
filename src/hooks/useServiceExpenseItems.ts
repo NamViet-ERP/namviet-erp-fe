@@ -3,6 +3,7 @@ import { queryKeys } from '../services/queryKeys';
 import { serviceExpenseItemsService } from '../services/serviceExpenseItemsService';
 import type {
   CreateServiceExpenseItemRequest,
+  ServiceExpenseImportBatchRequest,
   ServiceExpenseItemQueryParams,
   UpdateServiceExpenseItemRequest,
 } from '../types/api/serviceExpenseItem';
@@ -49,6 +50,17 @@ export function useDeleteServiceExpenseItem() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: number) => serviceExpenseItemsService.delete(id),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.serviceExpenseItems.all });
+    },
+  });
+}
+
+export function useImportServiceExpenseItems() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (request: ServiceExpenseImportBatchRequest) =>
+      serviceExpenseItemsService.importBatch(request),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.serviceExpenseItems.all });
     },

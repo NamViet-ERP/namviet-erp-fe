@@ -1,6 +1,9 @@
-import { apiClient } from '../lib/apiClient';
+import { apiClient, saveBlob } from '../lib/apiClient';
 import type {
   CreateServiceExpenseItemRequest,
+  ServiceExpenseImportBatchRequest,
+  ServiceExpenseImportParseResultDto,
+  ServiceExpenseImportResultDto,
   ServiceExpenseItemApiDto,
   ServiceExpenseItemPagedResponse,
   ServiceExpenseItemQueryParams,
@@ -39,5 +42,20 @@ export const serviceExpenseItemsService = {
 
   async delete(id: number): Promise<void> {
     return apiClient.delete<void>(`${ENDPOINT}/${id}`);
+  },
+
+  async downloadImportTemplate(): Promise<boolean> {
+    const blob = await apiClient.getBlob(`${ENDPOINT}/import-template`);
+    return await saveBlob(blob, 'mau-import-dich-vu-chi-phi.xlsx');
+  },
+
+  async parseImportFile(file: File): Promise<ServiceExpenseImportParseResultDto> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return apiClient.postForm<ServiceExpenseImportParseResultDto>(`${ENDPOINT}/parse-import-file`, formData);
+  },
+
+  async importBatch(request: ServiceExpenseImportBatchRequest): Promise<ServiceExpenseImportResultDto> {
+    return apiClient.post<ServiceExpenseImportResultDto>(`${ENDPOINT}/import-batch`, request);
   },
 };
