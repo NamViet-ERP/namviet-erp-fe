@@ -35,6 +35,7 @@ export default function MaterialImportModal({
   onSuccess,
 }: MaterialImportModalProps) {
   const [file, setFile] = useState<File | null>(null);
+  const [selectedSheet, setSelectedSheet] = useState<string>('');
   const [isParsing, setIsParsing] = useState(false);
   const [parseResult, setParseResult] = useState<MaterialImportParseResultDto | null>(null);
   const [parseError, setParseError] = useState<string | null>(null);
@@ -47,6 +48,7 @@ export default function MaterialImportModal({
 
   const resetState = () => {
     setFile(null);
+    setSelectedSheet('');
     setParseResult(null);
     setParseError(null);
     setOverwriteExisting(false);
@@ -73,7 +75,7 @@ export default function MaterialImportModal({
     }
   };
 
-  const handleProcessFile = async (selectedFile: File) => {
+  const handleProcessFile = async (selectedFile: File, targetSheet?: string) => {
     const ext = selectedFile.name.split('.').pop()?.toLowerCase();
     if (!['xlsx', 'xls', 'csv'].includes(ext ?? '')) {
       showToast('warning', 'Chỉ hỗ trợ file Excel (.xlsx, .xls) hoặc .csv');
@@ -91,8 +93,9 @@ export default function MaterialImportModal({
     setParseResult(null);
 
     try {
-      const res = await materialsService.parseImportFile(selectedFile);
+      const res = await materialsService.parseImportFile(selectedFile, targetSheet);
       setParseResult(res);
+      setSelectedSheet(res.selectedSheet || targetSheet || '');
       if (res.validRowCount === 0) {
         showToast('warning', 'File không có dòng dữ liệu hợp lệ nào.');
       } else {
@@ -107,16 +110,29 @@ export default function MaterialImportModal({
     }
   };
 
+  const handleSheetChange = (newSheet: string) => {
+    setSelectedSheet(newSheet);
+    if (file) {
+      void handleProcessFile(file, newSheet);
+    }
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
-    if (f) handleProcessFile(f);
+    if (f) {
+      setSelectedSheet('');
+      void handleProcessFile(f);
+    }
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     const f = e.dataTransfer.files?.[0];
-    if (f) handleProcessFile(f);
+    if (f) {
+      setSelectedSheet('');
+      void handleProcessFile(f);
+    }
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -192,6 +208,11 @@ export default function MaterialImportModal({
           <div className="text-xs text-[var(--md-on-surface-variant)]">
             {parseResult && parseResult.validRowCount > 0 ? (
               <span>
+                {(selectedSheet || parseResult.selectedSheet) && (
+                  <span className="font-semibold text-[var(--md-primary)] mr-1.5">
+                    [{selectedSheet || parseResult.selectedSheet}]
+                  </span>
+                )}
                 Sẽ xử lý <strong>{parseResult.validRowCount}</strong> dòng hợp lệ (
                 {overwriteExisting
                   ? `thêm mới và cập nhật ${parseResult.existingRowCount} mã trùng`
@@ -331,6 +352,35 @@ export default function MaterialImportModal({
         {/* Khi đã có kết quả Parse */}
         {parseResult && !isParsing && (
           <div className="space-y-3">
+            {/* Thanh chọn Sheet nếu file có nhiều sheet */}
+            {parseResult.availableSheets && parseResult.availableSheets.length > 1 && (
+              <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-2 rounded-lg border border-[var(--md-primary)]/30 bg-[var(--md-primary)]/5">
+                <div className="flex items-center gap-2">
+                  <FileSpreadsheet size={16} className="text-[var(--md-primary)] shrink-0" />
+                  <span className="text-xs font-semibold text-[var(--md-on-surface)]">
+                    Chọn Sheet cần xem / nhập:
+                  </span>
+                  <span className="text-[11px] text-[var(--md-on-surface-variant)]">
+                    (File có {parseResult.availableSheets.length} sheet)
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={selectedSheet || parseResult.selectedSheet || ''}
+                    onChange={e => handleSheetChange(e.target.value)}
+                    disabled={isParsing || isImporting}
+                    className="text-xs font-semibold px-3 py-1.5 rounded-md border border-[var(--md-outline-variant)] bg-[var(--md-surface)] text-[var(--md-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--md-primary)] cursor-pointer shadow-sm hover:border-[var(--md-primary)] transition-colors"
+                  >
+                    {parseResult.availableSheets.map(s => (
+                      <option key={s} value={s}>
+                        {s} {s === (selectedSheet || parseResult.selectedSheet) ? ' (Đang chọn)' : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+
             {/* Thanh thống kê nhanh */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               <div className="p-2.5 rounded-lg border border-[var(--md-outline-variant)] bg-[var(--md-surface-container-lowest)]">

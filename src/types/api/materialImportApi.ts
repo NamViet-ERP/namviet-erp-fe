@@ -35,6 +35,8 @@ export interface MaterialImportParseResultDto {
   errorRowCount: number;
   rows: MaterialImportRowDto[];
   errors: MaterialImportErrorDto[];
+  availableSheets?: string[];
+  selectedSheet?: string;
 }
 
 export interface MaterialImportBatchRequest {

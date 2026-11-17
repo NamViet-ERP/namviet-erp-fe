@@ -103,10 +103,16 @@ export const materialsService = {
     return await saveBlob(blob, 'mau-import-danh-muc-vat-tu.xlsx');
   },
 
-  async parseImportFile(file: File): Promise<MaterialImportParseResultDto> {
+  async parseImportFile(file: File, sheetName?: string): Promise<MaterialImportParseResultDto> {
     const formData = new FormData();
     formData.append('file', file);
-    return apiClient.postForm<MaterialImportParseResultDto>(`${ENDPOINT}/parse-import-file`, formData);
+    if (sheetName) {
+      formData.append('sheetName', sheetName);
+    }
+    const url = sheetName
+      ? `${ENDPOINT}/parse-import-file?sheetName=${encodeURIComponent(sheetName)}`
+      : `${ENDPOINT}/parse-import-file`;
+    return apiClient.postForm<MaterialImportParseResultDto>(url, formData);
   },
 
   async importBatch(request: MaterialImportBatchRequest): Promise<MaterialImportResultDto> {
