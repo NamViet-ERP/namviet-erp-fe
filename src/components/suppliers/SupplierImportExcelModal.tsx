@@ -30,6 +30,7 @@ export default function SupplierImportExcelModal({
   onSuccess,
 }: SupplierImportExcelModalProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedSheet, setSelectedSheet] = useState<string>('');
   const [previewData, setPreviewData] = useState<SupplierImportPreviewResponseDto | null>(null);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
@@ -40,6 +41,7 @@ export default function SupplierImportExcelModal({
 
   const handleReset = () => {
     setSelectedFile(null);
+    setSelectedSheet('');
     setPreviewData(null);
     setIsPreviewing(false);
     setIsImporting(false);
@@ -67,7 +69,7 @@ export default function SupplierImportExcelModal({
     }
   };
 
-  const processFile = async (file: File) => {
+  const processFile = async (file: File, targetSheet?: string) => {
     const ext = file.name.split('.').pop()?.toLowerCase();
     if (!['xlsx', 'xls'].includes(ext ?? '')) {
       showToast('warning', 'Vui lòng chọn file Excel định dạng .xlsx hoặc .xls');
@@ -86,8 +88,9 @@ export default function SupplierImportExcelModal({
     setSearch('');
 
     try {
-      const res = await suppliersService.previewImportExcel(file);
+      const res = await suppliersService.previewImportExcel(file, targetSheet);
       setPreviewData(res);
+      setSelectedSheet(res.selectedSheet || targetSheet || '');
       if (res.errorRows > 0) {
         showToast('warning', `Tìm thấy ${res.validRows} NCC hợp lệ và ${res.errorRows} dòng có lỗi trùng/thiếu thông tin.`);
       } else {
@@ -97,6 +100,13 @@ export default function SupplierImportExcelModal({
       showToast('error', getApiErrorMessage(err, 'Không thể đọc nội dung file Excel NCC.'));
     } finally {
       setIsPreviewing(false);
+    }
+  };
+
+  const handleSheetChange = (newSheet: string) => {
+    setSelectedSheet(newSheet);
+    if (selectedFile) {
+      void processFile(selectedFile, newSheet);
     }
   };
 
@@ -151,7 +161,7 @@ export default function SupplierImportExcelModal({
     if (!selectedFile) return;
     setIsImporting(true);
     try {
-      const res = await suppliersService.importExcel(selectedFile);
+      const res = await suppliersService.importExcel(selectedFile, selectedSheet || undefined);
       if (res.errors && res.errors.length > 0 && res.importedCount === 0) {
         showToast('error', `Nhập thất bại: ${res.errors.join('; ')}`);
         return;
@@ -181,7 +191,7 @@ export default function SupplierImportExcelModal({
           <div className="text-xs text-[var(--md-on-surface-variant)]">
             {selectedFile && previewData && previewData.validRows > 0 ? (
               <span>
-                Sẽ xử lý <strong>{previewData.validRows}</strong> nhà cung cấp hợp lệ (
+                Sheet: <strong>{selectedSheet || previewData.selectedSheet}</strong> — Sẽ xử lý <strong>{previewData.validRows}</strong> nhà cung cấp hợp lệ (
                 bỏ qua {previewData.errorRows} dòng trùng/lỗi).
               </span>
             ) : (
@@ -306,6 +316,35 @@ export default function SupplierImportExcelModal({
         {/* Bảng xem trước dữ liệu khi đã phân tích xong */}
         {previewData && !isPreviewing && (
           <div className="space-y-3">
+            {/* Thanh chọn Sheet nếu file có nhiều sheet */}
+            {previewData.availableSheets && previewData.availableSheets.length > 1 && (
+              <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-2 rounded-lg border border-[var(--md-primary)]/30 bg-[var(--md-primary)]/5">
+                <div className="flex items-center gap-2">
+                  <FileSpreadsheet size={16} className="text-[var(--md-primary)] shrink-0" />
+                  <span className="text-xs font-semibold text-[var(--md-on-surface)]">
+                    Chọn Sheet cần xem / nhập:
+                  </span>
+                  <span className="text-[11px] text-[var(--md-on-surface-variant)]">
+                    (File có {previewData.availableSheets.length} sheet)
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={selectedSheet || previewData.selectedSheet || ''}
+                    onChange={e => handleSheetChange(e.target.value)}
+                    disabled={isPreviewing || isImporting}
+                    className="text-xs font-semibold px-3 py-1.5 rounded-md border border-[var(--md-outline-variant)] bg-[var(--md-surface)] text-[var(--md-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--md-primary)] cursor-pointer shadow-sm hover:border-[var(--md-primary)] transition-colors"
+                  >
+                    {previewData.availableSheets.map(s => (
+                      <option key={s} value={s}>
+                        {s} {s === (selectedSheet || previewData.selectedSheet) ? ' (Đang chọn)' : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+
             {/* Thanh tổng kết số liệu (KPI Quick Stats) */}
             <div className="grid grid-cols-3 gap-2.5 text-center">
               <div className="p-2.5 rounded-lg border border-[var(--md-outline-variant)] bg-[var(--md-surface-container-lowest)]">

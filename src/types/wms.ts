@@ -12,6 +12,12 @@ export type MaterialApiDto = Schemas['MaterialDto'] & {
   origin?: string | null;
   imageUrl?: string | null;
 };
+export interface ClearAllMaterialsResultDto {
+  totalProcessed: number;
+  hardDeleted: number;
+  softDeleted: number;
+  message: string;
+}
 export type MaterialUnitApiDto = Schemas['MaterialUnitDto'];
 export type MaterialOriginApiDto = {
   id: number;
@@ -214,6 +220,8 @@ export interface SupplierImportPreviewResponseDto {
   validRows: number;
   errorRows: number;
   rows: SupplierImportRowPreviewDto[];
+  availableSheets?: string[];
+  selectedSheet?: string;
 }
 
 export interface SupplierImportResultDto {

@@ -159,20 +159,32 @@ export const suppliersService = {
     return saveBlob(blob, 'Mau_Nhap_NhaCungCap.xlsx');
   },
 
-  async previewImportExcel(file: File) {
+  async previewImportExcel(file: File, sheetName?: string) {
     const formData = new FormData();
     formData.append('file', file);
+    if (sheetName) {
+      formData.append('sheetName', sheetName);
+    }
+    const url = sheetName
+      ? `${ENDPOINT}/preview-excel?sheetName=${encodeURIComponent(sheetName)}`
+      : `${ENDPOINT}/preview-excel`;
     return apiClient.postForm<SupplierImportPreviewResponseDto>(
-      `${ENDPOINT}/preview-excel`,
+      url,
       formData,
     );
   },
 
-  async importExcel(file: File) {
+  async importExcel(file: File, sheetName?: string) {
     const formData = new FormData();
     formData.append('file', file);
+    if (sheetName) {
+      formData.append('sheetName', sheetName);
+    }
+    const url = sheetName
+      ? `${ENDPOINT}/import-excel?sheetName=${encodeURIComponent(sheetName)}`
+      : `${ENDPOINT}/import-excel`;
     return apiClient.postForm<SupplierImportResultDto>(
-      `${ENDPOINT}/import-excel`,
+      url,
       formData,
     );
   },

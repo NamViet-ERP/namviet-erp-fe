@@ -39,6 +39,20 @@ vi.mock('../../components/ui/Toast', () => ({
   showToast: vi.fn(),
 }));
 
+const mockSessionUser = vi.fn<() => {
+  user?: { id: string; username: string; role: string };
+  permissions: string[];
+  refresh: () => void;
+}>(() => ({
+  user: { id: 'usr-staff', username: 'staff1', role: 'staff' },
+  permissions: ['wms.materials.view:all'],
+  refresh: vi.fn(),
+}));
+
+vi.mock('../../auth/AuthProvider', () => ({
+  useSession: () => mockSessionUser(),
+}));
+
 const mockMaterials: MaterialApiDto[] = [
   {
     materialCode: 'BH-BHN-HT20-120 tubex3000',
@@ -106,6 +120,11 @@ let client: QueryClient;
 beforeEach(() => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
   vi.resetAllMocks();
+  mockSessionUser.mockReturnValue({
+    user: { id: 'usr-staff', username: 'staff1', role: 'staff' },
+    permissions: ['wms.materials.view:all'],
+    refresh: vi.fn(),
+  });
   vi.mocked(materialsService.list).mockResolvedValue({
     items: mockMaterials,
     totalCount: mockMaterials.length,
@@ -168,6 +187,12 @@ describe('MaterialsPage Table Rendering & Standards', () => {
 
     expect(headers).not.toContain('Mã & Tên vật tư');
     expect(headers).not.toContain('Hãng & Xuất xứ');
+    expect(headers).not.toContain('Thao tác');
+
+    const clearButton = [...container.querySelectorAll('button')].find(btn =>
+      btn.textContent?.includes('Dọn sạch danh mục'),
+    );
+    expect(clearButton).toBeUndefined();
   });
 
   it('renders first row with separated materialCode, chips, brand and origin tags, materialName, brand and origin', async () => {
@@ -243,5 +268,51 @@ describe('MaterialsPage Table Rendering & Standards', () => {
     // Cột 8: Xuất xứ hiển thị Việt Nam
     const originCell = cells[7];
     expect(originCell.textContent?.trim()).toBe('Việt Nam');
+  });
+
+  it('renders 9 columns with "Thao tác", "Dọn sạch danh mục" button, and row delete buttons when user is admin', async () => {
+    mockSessionUser.mockReturnValue({
+      user: { id: 'usr-admin', username: 'admin', role: 'admin' },
+      permissions: ['wms.materials.view:all', 'wms.materials.delete'],
+      refresh: vi.fn(),
+    });
+
+    await renderPage();
+
+    // Headers có 9 cột bao gồm 'Thao tác'
+    const headers = [...container.querySelectorAll('thead th')].map(th =>
+      th.textContent?.trim(),
+    );
+    expect(headers).toEqual([
+      'Ảnh',
+      'Mã vật tư',
+      'Tên vật tư',
+      'Phân cấp danh mục',
+      'ĐVT',
+      'Quy cách / Thông số chính',
+      'Hãng',
+      'Xuất xứ',
+      'Thao tác',
+    ]);
+    expect(headers).toHaveLength(9);
+
+    // Nút "Dọn sạch danh mục" CÓ hiển thị
+    const clearButton = [...container.querySelectorAll('button')].find(btn =>
+      btn.textContent?.includes('Dọn sạch danh mục'),
+    );
+    expect(clearButton).toBeDefined();
+
+    // Nút thùng rác xóa từng dòng CÓ hiển thị
+    const rows = container.querySelectorAll('tbody tr');
+    expect(rows.length).toBe(3);
+    rows.forEach((row, idx) => {
+      const cells = row.querySelectorAll('td');
+      expect(cells.length).toBe(9);
+      const actionCell = cells[8];
+      const deleteBtn = actionCell.querySelector(
+        `button[title="Xóa vật tư ${mockMaterials[idx].materialCode}"]`,
+      );
+      expect(deleteBtn).not.toBeNull();
+    });
   });
 });

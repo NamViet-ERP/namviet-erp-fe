@@ -1,5 +1,5 @@
 import { apiClient, saveBlob } from '../lib/apiClient';
-import type { MaterialApiDto, PagedApiResult, UpsertMaterialRequest } from '../types/wms';
+import type { ClearAllMaterialsResultDto, MaterialApiDto, PagedApiResult, UpsertMaterialRequest } from '../types/wms';
 import type {
   MaterialImportBatchRequest,
   MaterialImportParseResultDto,
@@ -84,6 +84,10 @@ export const materialsService = {
 
   async remove(code: string): Promise<void> {
     await apiClient.delete(`${ENDPOINT}/by-code?code=${encodeURIComponent(code)}`);
+  },
+
+  async clearAll(): Promise<ClearAllMaterialsResultDto> {
+    return apiClient.delete<ClearAllMaterialsResultDto>(`${ENDPOINT}/clear-all`);
   },
 
   async discontinue(code: string): Promise<void> {
