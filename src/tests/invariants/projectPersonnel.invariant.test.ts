@@ -9,6 +9,9 @@ describe('Living Invariant 1: Project Personnel Role Account Sanitization', () =
     'Admin',
     'Kế toán kho',
     'Ban giám đốc',
+    'BOD',
+    'Trưởng phòng',
+    'Department_Manager',
   ];
 
   it('marks all system role accounts as true for isSystemRoleAccount', () => {

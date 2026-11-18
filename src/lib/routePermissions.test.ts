@@ -89,5 +89,13 @@ describe('routePermissions', () => {
     it('returns /login when no permissions match', () => {
       expect(getFallbackRoute([])).toBe('/login');
     });
+
+    it('returns /operations/dashboard for BOD and Department_Manager roles', () => {
+      const bodPermissions = ['wms.projects.view:all', 'purchasing.plans.approve_l2', 'wms.prices.view'];
+      const managerPermissions = ['wms.projects.view:all', 'purchasing.plans.approve_l1'];
+
+      expect(getFallbackRoute(bodPermissions)).toBe('/operations/dashboard');
+      expect(getFallbackRoute(managerPermissions)).toBe('/operations/dashboard');
+    });
   });
 });

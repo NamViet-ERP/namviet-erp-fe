@@ -38,6 +38,10 @@ describe('projectPersonnel helper', () => {
       expect(isSystemRoleAccount('System')).toBe(true);
       expect(isSystemRoleAccount('BOD')).toBe(true);
       expect(isSystemRoleAccount('Ban giám đốc')).toBe(true);
+      expect(isSystemRoleAccount('Trưởng phòng')).toBe(true);
+      expect(isSystemRoleAccount('Truong phong')).toBe(true);
+      expect(isSystemRoleAccount('Department Manager')).toBe(true);
+      expect(isSystemRoleAccount('department_manager')).toBe(true);
       expect(isSystemRoleAccount('khohang@namviet.com')).toBe(true);
       expect(isSystemRoleAccount('admin@namviet.com')).toBe(true);
     });
