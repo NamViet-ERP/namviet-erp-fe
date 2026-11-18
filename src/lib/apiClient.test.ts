@@ -48,6 +48,21 @@ describe('parseApiError', () => {
       expect(parseApiError(payload, fallback)).toBe('Mật khẩu không đúng. Mã xác thực không hợp lệ.');
     });
 
+    it('should truncate and summarize when obj.errors has more than 3 items to avoid overflowing toast', () => {
+      const payload = {
+        errors: [
+          'Dòng 1: Lỗi một',
+          'Dòng 2: Lỗi hai',
+          'Dòng 3: Lỗi ba',
+          'Dòng 4: Lỗi bốn',
+          'Dòng 5: Lỗi năm',
+        ],
+      };
+      expect(parseApiError(payload, fallback)).toBe(
+        'Dòng 1: Lỗi một. Dòng 2: Lỗi hai. ... và 3 lỗi khác (vui lòng xem chi tiết trong bảng đối soát).'
+      );
+    });
+
     it('should fall back to detail if errors is missing or empty', () => {
       const payload = {
         detail: 'incorrect password',

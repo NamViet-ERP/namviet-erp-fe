@@ -197,6 +197,7 @@ export interface OpeningStockImportResultDto {
   totalQty: number;
   totalAmount: number;
   message: string;
+  skippedCount?: number;
 }
 
 export interface SupplierImportRowPreviewDto {

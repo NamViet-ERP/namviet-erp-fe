@@ -29,8 +29,14 @@ export function formatUserMessages(messages: string[]): string {
 
   if (unique.length === 0) return '';
   if (unique.length === 1) return ensureSentence(unique[0]);
+  if (unique.length <= 3) {
+    return unique.map(ensureSentence).join(' ');
+  }
 
-  return unique.map(ensureSentence).join(' ');
+  // Rút gọn khi có quá nhiều lỗi (> 3 lỗi) để tránh làm tràn Toast thông báo
+  const head = unique.slice(0, 2).map(ensureSentence).join(' ');
+  const remaining = unique.length - 2;
+  return `${head} ... và ${remaining} lỗi khác (vui lòng xem chi tiết trong bảng đối soát).`;
 }
 
 function ensureSentence(message: string): string {
