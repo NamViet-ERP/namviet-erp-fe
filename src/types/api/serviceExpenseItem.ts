@@ -63,6 +63,7 @@ export interface ServiceExpenseImportRowDto {
   description?: string | null;
   isValid: boolean;
   isExisting: boolean;
+  errorMessage?: string | null;
   errors: string[];
   warnings: string[];
 }
@@ -78,6 +79,9 @@ export interface ServiceExpenseImportParseResultDto {
   validRowCount: number;
   existingRowCount: number;
   errorRowCount: number;
+  validRows?: number;
+  existingRows?: number;
+  errorRows?: number;
   rows: ServiceExpenseImportRowDto[];
   errors: ServiceExpenseImportErrorDto[];
 }
@@ -89,6 +93,7 @@ export interface ServiceExpenseImportBatchRequest {
 
 export interface ServiceExpenseImportResultDto {
   createdCount: number;
+  insertedCount?: number;
   updatedCount: number;
   skippedCount: number;
   totalProcessed: number;

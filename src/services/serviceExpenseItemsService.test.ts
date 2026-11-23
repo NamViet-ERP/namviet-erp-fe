@@ -229,4 +229,81 @@ describe('serviceExpenseItemsService', () => {
     expect(result.createdCount).toBe(1);
     expect(result.importedCodes).toContain('DV-TEST-01');
   });
+
+  it('normalizes backend response with validRows, errorRows and row.errorMessage without errors array', async () => {
+    // Mô phỏng payload gốc trực tiếp từ Backend C# khi chưa có alias hoặc lỗi
+    const rawBackendParseResult = {
+      totalRows: 2,
+      validRows: 1,
+      errorRows: 1,
+      existingRows: 0,
+      rows: [
+        {
+          rowNumber: 2,
+          code: 'DV-OK',
+          name: 'Dịch vụ hợp lệ',
+          type: 'service',
+          unit: 'Chuyến',
+          referencePrice: 2000000,
+          description: null,
+          isValid: true,
+          errorMessage: null,
+          isExisting: false,
+        },
+        {
+          rowNumber: 3,
+          code: 'DV-ERR',
+          name: 'Dịch vụ lỗi',
+          type: 'expense',
+          unit: 'Gói',
+          referencePrice: null,
+          description: null,
+          isValid: false,
+          errorMessage: 'Đơn vị tính không hợp lệ',
+          isExisting: false,
+        },
+      ],
+    };
+    postForm.mockResolvedValueOnce(rawBackendParseResult);
+
+    const fakeFile = new File(['test'], 'import.xlsx');
+    const result = await serviceExpenseItemsService.parseImportFile(fakeFile);
+
+    expect(result.validRowCount).toBe(1);
+    expect(result.errorRowCount).toBe(1);
+    expect(result.existingRowCount).toBe(0);
+    expect(result.rows).toHaveLength(2);
+
+    // Row 1 (valid)
+    expect(result.rows[0].isValid).toBe(true);
+    expect(result.rows[0].errors).toEqual([]);
+    expect(result.rows[0].warnings).toEqual([]);
+
+    // Row 2 (error)
+    expect(result.rows[1].isValid).toBe(false);
+    expect(result.rows[1].errors).toEqual(['Đơn vị tính không hợp lệ']);
+    expect(result.rows[1].errorMessage).toBe('Đơn vị tính không hợp lệ');
+  });
+
+  it('normalizes backend batch result with insertedCount instead of createdCount', async () => {
+    const rawBackendBatchResult = {
+      totalProcessed: 3,
+      insertedCount: 2,
+      updatedCount: 1,
+      skippedCount: 0,
+      errors: [],
+    };
+    post.mockResolvedValueOnce(rawBackendBatchResult);
+
+    const result = await serviceExpenseItemsService.importBatch({
+      rows: [],
+      overwriteExisting: false,
+    });
+
+    expect(result.createdCount).toBe(2);
+    expect(result.insertedCount).toBe(2);
+    expect(result.updatedCount).toBe(1);
+    expect(result.skippedCount).toBe(0);
+    expect(result.totalProcessed).toBe(3);
+  });
 });

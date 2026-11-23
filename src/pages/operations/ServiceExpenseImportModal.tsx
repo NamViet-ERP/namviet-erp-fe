@@ -94,10 +94,11 @@ export default function ServiceExpenseImportModal({
     try {
       const res = await serviceExpenseItemsService.parseImportFile(selectedFile);
       setParseResult(res);
-      if (res.validRowCount === 0) {
+      const validCount = res.validRowCount ?? res.validRows ?? 0;
+      if (validCount === 0) {
         showToast('warning', 'File không có dòng dữ liệu hợp lệ nào.');
       } else {
-        showToast('success', `Đã đọc ${res.totalRows} dòng: ${res.validRowCount} hợp lệ.`);
+        showToast('success', `Đã đọc ${res.totalRows} dòng: ${validCount} hợp lệ.`);
       }
     } catch (err) {
       const msg = getApiErrorMessage(err, 'Không thể đọc dữ liệu file');
@@ -128,7 +129,7 @@ export default function ServiceExpenseImportModal({
   // Lọc danh sách dòng xem trước
   const filteredRows = useMemo(() => {
     if (!parseResult) return [];
-    return parseResult.rows.filter((row: ServiceExpenseImportRowDto) => {
+    return (parseResult.rows ?? []).filter((row: ServiceExpenseImportRowDto) => {
       // Tab filter
       if (filterTab === 'valid' && (!row.isValid || row.isExisting)) return false;
       if (filterTab === 'existing' && (!row.isValid || !row.isExisting)) return false;
@@ -143,8 +144,8 @@ export default function ServiceExpenseImportModal({
         const matchUnit = row.unit?.toLowerCase().includes(q);
         const matchDesc = row.description?.toLowerCase().includes(q);
         const matchRow = String(row.rowNumber).includes(q) || `dòng ${row.rowNumber}`.includes(q);
-        const matchErrors = row.errors?.some(e => e.toLowerCase().includes(q));
-        const matchWarnings = row.warnings?.some(w => w.toLowerCase().includes(q));
+        const matchErrors = (row.errors ?? []).some(e => e?.toLowerCase().includes(q)) || (row.errorMessage?.toLowerCase().includes(q));
+        const matchWarnings = (row.warnings ?? []).some(w => w?.toLowerCase().includes(q));
         if (!matchCode && !matchName && !matchType && !matchUnit && !matchDesc && !matchRow && !matchErrors && !matchWarnings) {
           return false;
         }
@@ -155,18 +156,20 @@ export default function ServiceExpenseImportModal({
   }, [parseResult, filterTab, search]);
 
   const handleConfirmImport = async () => {
-    if (!parseResult || parseResult.validRowCount === 0) return;
+    const validCount = parseResult?.validRowCount ?? parseResult?.validRows ?? 0;
+    if (!parseResult || validCount === 0) return;
 
     setIsImporting(true);
     try {
       const result = await serviceExpenseItemsService.importBatch({
-        rows: parseResult.rows.filter(r => r.isValid),
+        rows: (parseResult.rows ?? []).filter(r => r.isValid),
         overwriteExisting,
       });
 
+      const createdCount = result.createdCount ?? result.insertedCount ?? 0;
       showToast(
         'success',
-        `Nhập dữ liệu thành công! Thêm mới: ${result.createdCount}, Cập nhật: ${result.updatedCount}, Bỏ qua: ${result.skippedCount}`,
+        `Nhập dữ liệu thành công! Thêm mới: ${createdCount}, Cập nhật: ${result.updatedCount ?? 0}, Bỏ qua: ${result.skippedCount ?? 0}`,
       );
       onSuccess(result);
       handleClose();
@@ -176,6 +179,10 @@ export default function ServiceExpenseImportModal({
       setIsImporting(false);
     }
   };
+
+  const validRowCount = parseResult ? (parseResult.validRowCount ?? parseResult.validRows ?? 0) : 0;
+  const existingRowCount = parseResult ? (parseResult.existingRowCount ?? parseResult.existingRows ?? 0) : 0;
+  const errorRowCount = parseResult ? (parseResult.errorRowCount ?? parseResult.errorRows ?? 0) : 0;
 
   return (
     <Modal
@@ -187,12 +194,12 @@ export default function ServiceExpenseImportModal({
       footer={
         <div className="flex items-center justify-between w-full">
           <div className="text-xs text-[var(--md-on-surface-variant)]">
-            {parseResult && parseResult.validRowCount > 0 ? (
+            {parseResult && validRowCount > 0 ? (
               <span>
-                Sẽ xử lý <strong>{parseResult.validRowCount}</strong> dòng hợp lệ (
+                Sẽ xử lý <strong>{validRowCount}</strong> dòng hợp lệ (
                 {overwriteExisting
-                  ? `thêm mới và cập nhật ${parseResult.existingRowCount} mã trùng`
-                  : `bỏ qua ${parseResult.existingRowCount} mã trùng`}
+                  ? `thêm mới và cập nhật ${existingRowCount} mã trùng`
+                  : `bỏ qua ${existingRowCount} mã trùng`}
                 ).
               </span>
             ) : (
@@ -211,7 +218,7 @@ export default function ServiceExpenseImportModal({
             <button
               type="button"
               className="btn btn-primary btn-sm flex items-center gap-1.5"
-              disabled={!parseResult || parseResult.validRowCount === 0 || isImporting}
+              disabled={!parseResult || validRowCount === 0 || isImporting}
               onClick={() => { void handleConfirmImport(); }}
             >
               {isImporting ? (
@@ -222,7 +229,7 @@ export default function ServiceExpenseImportModal({
               ) : (
                 <>
                   <Upload size={14} />
-                  Xác nhận nhập ({parseResult?.validRowCount ?? 0} mục)
+                  Xác nhận nhập ({validRowCount} mục)
                 </>
               )}
             </button>
@@ -338,19 +345,19 @@ export default function ServiceExpenseImportModal({
               <div className="p-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10">
                 <span className="text-[11px] text-emerald-800 dark:text-emerald-300 font-medium">Hợp lệ</span>
                 <p className="text-lg font-bold text-emerald-700 dark:text-emerald-400 mt-0.5">
-                  {parseResult.validRowCount}
+                  {validRowCount}
                 </p>
               </div>
               <div className="p-2.5 rounded-lg border border-amber-500/30 bg-amber-500/10">
                 <span className="text-[11px] text-amber-800 dark:text-amber-300 font-medium">Mã đã tồn tại</span>
                 <p className="text-lg font-bold text-amber-700 dark:text-amber-400 mt-0.5">
-                  {parseResult.existingRowCount}
+                  {existingRowCount}
                 </p>
               </div>
               <div className="p-2.5 rounded-lg border border-rose-500/30 bg-rose-500/10">
                 <span className="text-[11px] text-rose-800 dark:text-rose-300 font-medium">Dòng có lỗi</span>
                 <p className="text-lg font-bold text-rose-700 dark:text-rose-400 mt-0.5">
-                  {parseResult.errorRowCount}
+                  {errorRowCount}
                 </p>
               </div>
             </div>
@@ -395,7 +402,7 @@ export default function ServiceExpenseImportModal({
                   }`}
                   onClick={() => setFilterTab('valid')}
                 >
-                  Mới ({parseResult.validRowCount - parseResult.existingRowCount})
+                  Mới ({Math.max(0, validRowCount - existingRowCount)})
                 </button>
                 <button
                   type="button"
@@ -406,7 +413,7 @@ export default function ServiceExpenseImportModal({
                   }`}
                   onClick={() => setFilterTab('existing')}
                 >
-                  Mã đã tồn tại ({parseResult.existingRowCount})
+                  Mã đã tồn tại ({existingRowCount})
                 </button>
                 <button
                   type="button"
@@ -417,7 +424,7 @@ export default function ServiceExpenseImportModal({
                   }`}
                   onClick={() => setFilterTab('error')}
                 >
-                  Lỗi ({parseResult.errorRowCount})
+                  Lỗi ({errorRowCount})
                 </button>
               </div>
             </div>
@@ -459,7 +466,12 @@ export default function ServiceExpenseImportModal({
                   ) : (
                     filteredRows.map((row: ServiceExpenseImportRowDto, idx: number) => {
                       const isExisting = row.isExisting;
-                      const hasErrors = row.errors.length > 0;
+                      const rowErrors = (row.errors ?? []).filter(Boolean);
+                      if (rowErrors.length === 0 && row.errorMessage) {
+                        rowErrors.push(row.errorMessage);
+                      }
+                      const hasErrors = !row.isValid || rowErrors.length > 0;
+                      const errorTooltip = rowErrors.join('; ') || row.errorMessage || 'Dữ liệu không hợp lệ';
                       const isExpense = row.type === 'expense';
 
                       return (
@@ -476,7 +488,7 @@ export default function ServiceExpenseImportModal({
                             {hasErrors ? (
                               <div
                                 className="inline-flex items-center gap-1 text-[11px] font-medium text-rose-700 bg-rose-500/10 px-2 py-0.5 rounded-full"
-                                title={row.errors.join('; ')}
+                                title={errorTooltip}
                               >
                                 <XCircle size={12} className="shrink-0" />
                                 <span>Lỗi</span>
@@ -508,7 +520,7 @@ export default function ServiceExpenseImportModal({
                           <td className="py-2 px-2.5 text-[var(--md-on-surface)] font-medium">
                             {row.name}
                             {hasErrors && (
-                              <p className="text-[10px] text-rose-600 mt-0.5">{row.errors.join('; ')}</p>
+                              <p className="text-[10px] text-rose-600 mt-0.5">{errorTooltip}</p>
                             )}
                           </td>
                           <td className="py-2 px-2.5 text-center">

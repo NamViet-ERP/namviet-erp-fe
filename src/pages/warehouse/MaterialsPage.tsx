@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { Plus, RotateCcw, Image as ImageIcon, Trash2, Upload, Package } from 'lucide-react';
 import { useSession } from '../../auth/AuthProvider';
@@ -54,16 +54,33 @@ function isRequiredOnCreate(level: number) {
 export default function MaterialsPageRoute() {
   const location = useLocation();
   const initialHighlight = (location.state as { highlightCode?: string } | null)?.highlightCode;
-  return <MaterialsPage key={location.key} initialHighlight={initialHighlight} />;
+  return <MaterialsPage initialHighlight={initialHighlight} />;
 }
 
 function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
   const qc = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const detailCode = searchParams.get('code') || null;
+
+  const initialAppliedRef = useRef(false);
+  useEffect(() => {
+    if (initialHighlight && !initialAppliedRef.current && !searchParams.get('code')) {
+      initialAppliedRef.current = true;
+      setSearchParams(
+        prev => {
+          const next = new URLSearchParams(prev);
+          next.set('code', initialHighlight);
+          return next;
+        },
+        { replace: true },
+      );
+    }
+  }, [initialHighlight, searchParams, setSearchParams]);
+
   const [search, setSearch] = useState(initialHighlight ?? '');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(15);
   const [filterSelection, setFilterSelection] = useState<Array<number | ''>>([...emptySelection]);
-  const [detailCode, setDetailCode] = useState<string | null>(initialHighlight ?? null);
   const [showCreate, setShowCreate] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [showInactive, setShowInactive] = useState(false);
@@ -369,7 +386,13 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
     return (
       <MaterialDetailView
         code={detailCode}
-        onBack={() => setDetailCode(null)}
+        onBack={() => {
+          setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            next.delete('code');
+            return next;
+          });
+        }}
       />
     );
   }
@@ -536,7 +559,13 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
                     <tr
                       key={m.materialCode}
                       className="table-row cursor-pointer hover:bg-slate-50 transition-colors"
-                      onClick={() => setDetailCode(m.materialCode)}
+                      onClick={() => {
+                        setSearchParams(prev => {
+                          const next = new URLSearchParams(prev);
+                          next.set('code', m.materialCode);
+                          return next;
+                        });
+                      }}
                     >
                       {/* 1. Ảnh */}
                       <td className="table-cell text-center" style={{ width: '48px', minWidth: '48px' }}>

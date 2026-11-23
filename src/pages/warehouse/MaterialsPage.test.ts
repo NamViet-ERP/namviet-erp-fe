@@ -23,6 +23,10 @@ vi.mock('../../hooks/useCategories', () => ({
     optionsByLevel: [[], [], [], [], []],
     isLoading: false,
   }),
+  useCategoryTree: () => ({
+    data: [],
+    isLoading: false,
+  }),
 }));
 
 vi.mock('../../hooks/useMaterialRegions', () => ({
@@ -132,6 +136,10 @@ beforeEach(() => {
     pageSize: 15,
     totalPages: 1,
   });
+  vi.mocked(materialsService.getByCode).mockImplementation(async (code: string) => {
+    const item = mockMaterials.find(m => m.materialCode === code);
+    return item ?? mockMaterials[0];
+  });
   client = new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: Infinity } },
   });
@@ -153,13 +161,17 @@ async function flushQueries() {
   });
 }
 
-async function renderPage() {
+async function renderPage(initialEntries?: (string | { pathname: string; state?: unknown; search?: string })[], initialIndex?: number) {
   await act(async () => {
     root.render(
       createElement(
         QueryClientProvider,
         { client },
-        createElement(MemoryRouter, null, createElement(MaterialsPageRoute)),
+        createElement(
+          MemoryRouter,
+          initialEntries ? { initialEntries, initialIndex } : null,
+          createElement(MaterialsPageRoute),
+        ),
       ),
     );
   });
@@ -314,5 +326,72 @@ describe('MaterialsPage Table Rendering & Standards', () => {
       );
       expect(deleteBtn).not.toBeNull();
     });
+  });
+});
+
+describe('MaterialsPage URL SearchParams & Navigation Synchronisation', () => {
+  it('renders MaterialDetailView when route contains ?code= query parameter', async () => {
+    await renderPage(['/operations/materials?code=BH-BHN-HT20-120%20tubex3000']);
+
+    // Should render detail view with the material code and title
+    expect(container.textContent).toContain('Mã vật tư: BH-BHN-HT20-120 tubex3000');
+    expect(container.textContent).toContain('Bộ hâm');
+    // Table should not be rendered
+    expect(container.querySelector('table.mat-catalog-table')).toBeNull();
+    // Back button should be present
+    expect(container.querySelector('.hrm-back-btn')).not.toBeNull();
+  });
+
+  it('navigates to detail view when clicking a row, and returns to list when clicking Back', async () => {
+    await renderPage(['/operations/materials']);
+
+    // Initially in table list
+    expect(container.querySelector('table.mat-catalog-table')).not.toBeNull();
+    const rows = container.querySelectorAll('tbody tr');
+    expect(rows.length).toBe(3);
+
+    // Click on the second row (BÔ-BOC-Hoa sen-1200x0.4mmx1000-NGOC)
+    const secondRow = rows[1] as HTMLTableRowElement;
+    await act(async () => {
+      secondRow.click();
+    });
+    await flushQueries();
+
+    // Now in detail view
+    expect(container.querySelector('table.mat-catalog-table')).toBeNull();
+    expect(container.textContent).toContain('Mã vật tư: BÔ-BOC-Hoa sen-1200x0.4mmx1000-NGOC');
+    expect(container.textContent).toContain('Bảo ôn');
+
+    // Click Back button
+    const backBtn = container.querySelector('.hrm-back-btn') as HTMLButtonElement;
+    expect(backBtn).not.toBeNull();
+    await act(async () => {
+      backBtn.click();
+    });
+    await flushQueries();
+
+    // Back to table list
+    expect(container.querySelector('table.mat-catalog-table')).not.toBeNull();
+    expect(container.querySelectorAll('tbody tr').length).toBe(3);
+  });
+
+  it('synchronizes detail view when location.state has highlightCode', async () => {
+    await renderPage([{ pathname: '/operations/materials', state: { highlightCode: 'BDB-' } }]);
+
+    // Detail view should render for BDB-
+    expect(container.querySelector('table.mat-catalog-table')).toBeNull();
+    expect(container.textContent).toContain('Mã vật tư: BDB-');
+    expect(container.textContent).toContain('Bể dập bụi');
+
+    // Click Back
+    const backBtn = container.querySelector('.hrm-back-btn') as HTMLButtonElement;
+    expect(backBtn).not.toBeNull();
+    await act(async () => {
+      backBtn.click();
+    });
+    await flushQueries();
+
+    // Returns to table list
+    expect(container.querySelector('table.mat-catalog-table')).not.toBeNull();
   });
 });
