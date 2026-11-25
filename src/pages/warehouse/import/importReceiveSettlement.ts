@@ -168,3 +168,17 @@ export function settlementTotals(drafts: ReceiveLineDraft[]) {
 export function hasPoReference(imp: Import): boolean {
   return Boolean(imp.referenceCode?.trim());
 }
+
+export function applyReceiveLinePatch(
+  drafts: ReceiveLineDraft[],
+  lineId: number,
+  patch: Partial<ReceiveLineDraft>,
+): ReceiveLineDraft[] {
+  return drafts.map(d => {
+    if (d.lineId !== lineId) return d;
+    let next = { ...d, ...patch };
+    if (patch.accepted !== undefined) next = recomputeShortage(next, 'accepted', patch.accepted);
+    if (patch.defect !== undefined) next = recomputeShortage(next, 'defect', patch.defect);
+    return next;
+  });
+}
