@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { ChevronDown } from 'lucide-react';
 import type { DropdownItem } from '../../types';
 import type { ReactNode, CSSProperties } from 'react';
+import { registerOverlay } from '../../lib/dialogStack';
 import Button from './Button';
 
 /**
@@ -68,6 +69,13 @@ export default function Dropdown({ trigger, items, className = '' }: DropdownPro
     if (!open) return;
     calculatePosition();
   }, [open, calculatePosition]);
+
+  useEffect(() => {
+    if (!open) return;
+    return registerOverlay(() => {
+      setOpen(false);
+    });
+  }, [open]);
 
   useEffect(() => {
     const handleOutside = (e: MouseEvent) => {

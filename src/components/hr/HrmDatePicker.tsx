@@ -11,6 +11,7 @@ import {
   parseIsoDate,
   toIsoDate,
 } from '../../lib/dates';
+import { registerOverlay } from '../../lib/dialogStack';
 
 const WEEKDAYS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
 const MONTHS_VI = [
@@ -179,6 +180,14 @@ export default function HrmDatePicker({
     setOpen(false);
     setPopoverLayout(null);
   }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    return registerOverlay(() => {
+      closePopover();
+      rootRef.current?.querySelector('button')?.focus();
+    });
+  }, [open, closePopover]);
 
   const onPopoverKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === 'Escape' && open) {

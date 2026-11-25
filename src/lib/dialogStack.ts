@@ -47,8 +47,14 @@ function onDocumentKeyDown(event: KeyboardEvent) {
     return;
   }
 
-  if (event.key !== 'Tab' || !top.dialog) return;
-  const dialog = top.dialog;
+  let dialog: HTMLElement | undefined;
+  for (let i = overlays.length - 1; i >= 0; i--) {
+    if (overlays[i].dialog) {
+      dialog = overlays[i].dialog;
+      break;
+    }
+  }
+  if (event.key !== 'Tab' || !dialog) return;
   const elements = focusableElements(dialog);
   const first = elements[0] ?? dialog;
   const last = elements[elements.length - 1] ?? dialog;

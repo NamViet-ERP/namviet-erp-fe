@@ -920,4 +920,148 @@
       grid-template-columns: 1fr;
     }
   }
+
+  /* ── EntityCombobox & SelectField extensions ── */
+  .search-autocomplete__control--error .search-autocomplete__input,
+  .search-autocomplete__input--error {
+    border-color: var(--md-error) !important;
+    background: color-mix(in srgb, var(--md-error) 6%, var(--md-surface)) !important;
+    color: var(--md-on-error-container);
+  }
+  .search-autocomplete__control--error .search-autocomplete__input:focus,
+  .search-autocomplete__input--error:focus {
+    border-color: var(--md-error) !important;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--md-error) 20%, transparent) !important;
+  }
+  .search-autocomplete__control--has-badge .search-autocomplete__input {
+    padding-right: 54px !important;
+  }
+  .search-autocomplete__error-badge {
+    position: absolute;
+    top: 50%;
+    right: 30px;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    color: var(--md-error);
+    cursor: help;
+  }
+  .search-autocomplete__error {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+    font-size: var(--fs-micro);
+    font-weight: var(--fw-medium);
+    line-height: var(--lh-tight);
+    color: var(--md-error);
+  }
+  .search-autocomplete__error-icon {
+    flex-shrink: 0;
+  }
+  .search-autocomplete__clear-option {
+    border-bottom: 1px solid var(--md-outline-variant02);
+  }
+  .search-autocomplete__clear-empty {
+    padding: 6px 10px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--md-outline-variant02);
+    text-align: left;
+  }
+  .search-autocomplete__clear-label {
+    font-style: italic;
+    font-size: var(--fs-xs);
+    color: var(--md-on-surface-variant);
+  }
+  .search-autocomplete__panel--wide {
+    min-width: 360px;
+    max-width: 540px;
+  }
+  .search-autocomplete__empty--wide {
+    min-width: 320px;
+    padding: 12px;
+    text-align: center;
+  }
+
+  .pur-item-option__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+  }
+  .pur-item-option__left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+  .pur-item-option__code {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
+    color: var(--md-primary);
+  }
+  .pur-item-option__meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    font-size: var(--fs-xs);
+    color: var(--md-on-surface-variant);
+  }
+  .pur-item-option__price {
+    font-size: var(--fs-micro);
+    font-weight: var(--fw-medium);
+    color: var(--md-on-surface);
+  }
+  .pur-item-option__unit {
+    padding: 2px 6px;
+    border-radius: var(--radius-xs);
+    background: var(--md-surface-container-low);
+    font-size: var(--fs-micro);
+    font-weight: var(--fw-medium);
+  }
+  .pur-item-option__name {
+    margin-top: 4px;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
+    color: var(--md-on-surface);
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .pur-item-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px;
+    border-radius: var(--radius-xs);
+    font-size: var(--fs-micro);
+    font-weight: var(--fw-semibold);
+    border: 1px solid transparent;
+  }
+  .pur-item-badge--material {
+    background: var(--md-info-container);
+    color: var(--md-on-info-container);
+    border-color: color-mix(in srgb, var(--md-info) 24%, transparent);
+  }
+  .pur-item-badge--service {
+    background: var(--md-warning-container);
+    color: var(--md-on-warning-container);
+    border-color: var(--tint-warning-border);
+  }
+  .pur-item-badge--expense {
+    background: color-mix(in srgb, var(--nv-navy) 10%, var(--md-surface));
+    color: var(--nv-navy);
+    border-color: color-mix(in srgb, var(--nv-navy) 22%, transparent);
+  }
+
+  .erp-select-field__hint {
+    margin: 4px 0 0;
+    font-size: var(--fs-xs);
+    line-height: var(--lh-normal);
+    color: var(--md-on-surface-variant);
+  }
 }

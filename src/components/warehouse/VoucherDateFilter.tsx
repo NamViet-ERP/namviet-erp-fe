@@ -1,4 +1,4 @@
-import HrmDatePicker from '../hr/HrmDatePicker';
+import DateRangeField from '../ui/DateRangeField';
 
 interface VoucherDateFilterProps {
   from: string;
@@ -19,33 +19,14 @@ export default function VoucherDateFilter({
   onReset,
   className,
 }: VoucherDateFilterProps) {
-  const hasFilter = Boolean(from || to);
-
   return (
-    <div className={`voucher-date-filter${className ? ` ${className}` : ''}`}>
-      <label className="voucher-date-filter__field">
-        <span className="voucher-date-filter__label">Từ ngày</span>
-        <HrmDatePicker
-          className="hrm-filter-date-picker"
-          value={from}
-          onChange={onFromChange}
-          max={to || undefined}
-        />
-      </label>
-      <label className="voucher-date-filter__field">
-        <span className="voucher-date-filter__label">Đến ngày</span>
-        <HrmDatePicker
-          className="hrm-filter-date-picker"
-          value={to}
-          onChange={onToChange}
-          min={from || undefined}
-        />
-      </label>
-      {hasFilter && (
-        <button type="button" className="hrm-filter-reset text-xs" onClick={onReset}>
-          Xóa lọc ngày
-        </button>
-      )}
-    </div>
+    <DateRangeField
+      from={from}
+      to={to}
+      onFromChange={onFromChange}
+      onToChange={onToChange}
+      onReset={onReset}
+      className={className}
+    />
   );
 }

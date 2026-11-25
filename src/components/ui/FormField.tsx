@@ -7,19 +7,20 @@ import type { ReactNode } from 'react';
 
 interface FormFieldProps {
   label?: string;
+  htmlFor?: string;
   required?: boolean;
   error?: string;
   children: ReactNode;
   className?: string;
 }
 
-export default function FormField({ label, required, error, children, className = '' }: FormFieldProps) {
+export default function FormField({ label, htmlFor, required, error, children, className = '' }: FormFieldProps) {
   const fieldClass = ['form-field', error ? 'form-field--error' : '', className].filter(Boolean).join(' ');
 
   return (
     <div className={fieldClass}>
       {label && (
-        <label className="form-label">
+        <label className="form-label" htmlFor={htmlFor}>
           {label}
           {required ? (
             <span className="form-label__required" aria-hidden>

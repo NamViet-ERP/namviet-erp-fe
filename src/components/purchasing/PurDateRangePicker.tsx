@@ -10,6 +10,7 @@ import {
   parseIsoDate,
   toIsoDate,
 } from '../../lib/dates';
+import { registerOverlay } from '../../lib/dialogStack';
 
 const WEEKDAYS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
 const MONTHS_VI = [
@@ -153,6 +154,7 @@ export default function PurDateRangePicker({
 }: PurDateRangePickerProps) {
   const listId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [layout, setLayout] = useState<PopoverLayout | null>(null);
@@ -193,6 +195,14 @@ export default function PurDateRangePicker({
     setOpen(false);
     setLayout(null);
   }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    return registerOverlay(() => {
+      closePicker();
+      triggerRef.current?.focus();
+    });
+  }, [open, closePicker]);
 
   useEffect(() => {
     if (!open) return;
@@ -255,6 +265,7 @@ export default function PurDateRangePicker({
     <div ref={rootRef} className={`pur-daterange ${className}`.trim()}>
       <div className="pur-daterange__trigger-wrap">
         <button
+          ref={triggerRef}
           type="button"
           className={`pur-daterange__trigger${open ? ' is-open' : ''}`}
           onClick={() => (open ? closePicker() : openPicker())}

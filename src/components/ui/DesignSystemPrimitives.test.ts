@@ -13,6 +13,9 @@ import StatusBadge, { STATUS_TONE_CLASS } from './StatusBadge';
 import PurchasingStatusBadge from '../purchasing/PurchasingStatusBadge';
 import SectionCard from './SectionCard';
 import FormSection, { FormSectionHeader } from './FormSection';
+import SelectField from './SelectField';
+import DateRangeField from './DateRangeField';
+import VoucherDateFilter from '../warehouse/VoucherDateFilter';
 import { getCandidateStatusBadge } from '../../utils/recruitmentStatusBadge';
 
 describe('Design System UI primitives', () => {
@@ -646,6 +649,165 @@ describe('Design System UI primitives', () => {
       expect(container.querySelector('.hrm-form-section-header__title')?.textContent).toBe(
         'Chứng từ CO/CQ đính kèm',
       );
+    });
+  });
+
+  describe('SelectField', () => {
+    it('renders form variant with accessible htmlFor/id, placeholder, typed options, hint, and error state', async () => {
+      const onChange = vi.fn();
+      const renderSelect = (props: Partial<Parameters<typeof SelectField>[0]>) =>
+        root.render(
+          createElement(SelectField, {
+            label: 'Đơn vị tính chuẩn',
+            value: '',
+            onChange,
+            placeholder: '— Chọn ĐVT —',
+            options: [
+              'Cây',
+              { value: 'tan', label: 'Tấn' },
+              { value: 'cuon-ngung', label: 'Cuộn (ngưng dùng)', disabled: true },
+            ],
+            required: true,
+            hint: 'Áp dụng cho vật tư Dự án Cầu Rạch Miễu 2',
+            ...props,
+          }),
+        );
+
+      await act(() => renderSelect({}));
+      const label = container.querySelector<HTMLLabelElement>('label.form-label')!;
+      const select = container.querySelector<HTMLSelectElement>('select.form-select')!;
+      expect(label.htmlFor).toBe(select.id);
+      expect(label.textContent).toContain('*');
+      expect(select.required).toBe(true);
+      expect(select.getAttribute('aria-invalid')).toBeNull();
+      expect(container.querySelector('.erp-select-field__hint')?.textContent).toBe(
+        'Áp dụng cho vật tư Dự án Cầu Rạch Miễu 2',
+      );
+      expect(select.options).toHaveLength(4);
+      expect(select.options[3].disabled).toBe(true);
+
+      select.value = 'tan';
+      await act(() => select.dispatchEvent(new Event('change', { bubbles: true })));
+      expect(onChange).toHaveBeenCalledWith('tan');
+
+      await act(() => renderSelect({ error: 'Vui lòng chọn đơn vị tính' }));
+      const erroredSelect = container.querySelector<HTMLSelectElement>('select.form-select')!;
+      expect(erroredSelect.getAttribute('aria-invalid')).toBe('true');
+      expect(erroredSelect.className).toContain('form-input--error');
+      expect(container.querySelector('[role="alert"]')?.textContent).toBe('Vui lòng chọn đơn vị tính');
+      expect(container.querySelector('.erp-select-field__hint')).toBeNull();
+    });
+
+    it('renders hrm variant, preserveUnknownValue legacy option, and loading/disabled state', async () => {
+      await act(() =>
+        root.render(
+          createElement(SelectField, {
+            variant: 'hrm',
+            label: 'Xuất xứ vật tư',
+            value: 'Nhật Bản (tiêu chuẩn JIS)',
+            onChange: vi.fn(),
+            options: ['Việt Nam', 'Hàn Quốc'],
+            preserveUnknownValue: true,
+            required: true,
+            loading: true,
+            error: 'Cần cập nhật xuất xứ theo danh mục mới',
+          }),
+        ),
+      );
+
+      expect(container.querySelector('.hrm-field')).not.toBeNull();
+      const label = container.querySelector<HTMLLabelElement>('label.hrm-field__label')!;
+      const select = container.querySelector<HTMLSelectElement>('select.hrm-field-select')!;
+      expect(label.htmlFor).toBe(select.id);
+      expect(label.className).toContain('hrm-field__label--required');
+      expect(select.disabled).toBe(true);
+      expect(select.getAttribute('aria-busy')).toBe('true');
+      expect(select.className).toContain('hrm-field-input--error');
+      expect(Array.from(select.options).map(o => o.value)).toContain('Nhật Bản (tiêu chuẩn JIS)');
+      expect(container.querySelector('.hrm-field__error[role="alert"]')?.textContent).toBe(
+        'Cần cập nhật xuất xứ theo danh mục mới',
+      );
+    });
+  });
+
+  describe('DateRangeField & VoucherDateFilter', () => {
+    it('links htmlFor/id, cross-clamps min/max bounds, and toggles reset button', async () => {
+      vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+        x: 20,
+        y: 80,
+        top: 80,
+        left: 20,
+        right: 220,
+        bottom: 116,
+        width: 200,
+        height: 36,
+        toJSON: () => ({}),
+      } as DOMRect);
+
+      const onReset = vi.fn();
+      const renderRange = (from: string, to: string, includeReset = true) =>
+        root.render(
+          createElement(DateRangeField, {
+            from,
+            to,
+            onFromChange: vi.fn(),
+            onToChange: vi.fn(),
+            onReset: includeReset ? onReset : undefined,
+          }),
+        );
+
+      await act(() => renderRange('', ''));
+      const labels = container.querySelectorAll<HTMLLabelElement>('label.voucher-date-filter__label');
+      const triggers = container.querySelectorAll<HTMLButtonElement>('.hrm-date-picker__trigger');
+      expect(labels).toHaveLength(2);
+      expect(triggers).toHaveLength(2);
+      expect(labels[0].htmlFor).toBe(triggers[0].id);
+      expect(labels[1].htmlFor).toBe(triggers[1].id);
+      expect(container.querySelector('.hrm-filter-reset')).toBeNull();
+
+      await act(() => renderRange('2026-10-10', '2026-10-20'));
+      const resetBtn = container.querySelector<HTMLButtonElement>('.hrm-filter-reset')!;
+      expect(resetBtn).not.toBeNull();
+      await act(() => resetBtn.click());
+      expect(onReset).toHaveBeenCalledTimes(1);
+
+      // Opening `from` picker enforces `max="2026-10-20"` so day 25 is disabled
+      await act(() => triggers[0].click());
+      const fromPopover = document.getElementById(triggers[0].getAttribute('aria-controls')!)!;
+      const day25 = Array.from(fromPopover.querySelectorAll<HTMLButtonElement>('.hrm-date-picker__day')).find(
+        b => b.textContent === '25',
+      )!;
+      expect(day25.disabled).toBe(true);
+
+      // Opening `to` picker enforces `min="2026-10-10"` so day 5 is disabled
+      await act(() => triggers[1].click());
+      const toPopover = document.getElementById(triggers[1].getAttribute('aria-controls')!)!;
+      const day5 = Array.from(toPopover.querySelectorAll<HTMLButtonElement>('.hrm-date-picker__day')).find(
+        b => b.textContent === '5',
+      )!;
+      expect(day5.disabled).toBe(true);
+    });
+
+    it('VoucherDateFilter wraps DateRangeField cleanly with reset action', async () => {
+      const onReset = vi.fn();
+      await act(() =>
+        root.render(
+          createElement(VoucherDateFilter, {
+            from: '2026-11-01',
+            to: '',
+            onFromChange: vi.fn(),
+            onToChange: vi.fn(),
+            onReset,
+            className: 'wms-voucher-dates',
+          }),
+        ),
+      );
+      const wrapper = container.querySelector('.voucher-date-filter');
+      expect(wrapper?.className).toContain('wms-voucher-dates');
+      const resetBtn = container.querySelector<HTMLButtonElement>('.hrm-filter-reset')!;
+      expect(resetBtn.textContent).toBe('Xóa lọc ngày');
+      await act(() => resetBtn.click());
+      expect(onReset).toHaveBeenCalledTimes(1);
     });
   });
 });
