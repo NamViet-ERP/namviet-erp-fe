@@ -2,12 +2,16 @@ import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Download } from 'lucide-react';
+import PageShell from '../../components/ui/PageShell';
 import PageHeader from '../../components/ui/PageHeader';
-import HrmPanel from '../../components/hr/HrmPanel';
+import SectionCard from '../../components/ui/SectionCard';
+import MetricsStrip from '../../components/ui/MetricsStrip';
+import KpiCard, { type KpiCardTone } from '../../components/ui/KpiCard';
+import TableShell from '../../components/ui/TableShell';
+import StatusBadge, { type StatusTone } from '../../components/ui/StatusBadge';
+import Button from '../../components/ui/Button';
 import VoucherDateFilter from '../../components/warehouse/VoucherDateFilter';
 import PermissionGate from '../../components/auth/PermissionGate';
-import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
-import EmptyState from '../../components/ui/EmptyState';
 import EntityCodeLink from '../../components/ui/EntityCodeLink';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
@@ -80,13 +84,77 @@ export default function WarehouseReportsPage() {
   const stockRows = stockQuery.data ?? [];
   const pending = pendingQuery.data;
 
+  const movementCards: Array<{
+    label: string;
+    value?: string | number;
+    tone: KpiCardTone;
+  }> = [
+    { label: 'Phiếu nhập', value: movement?.importCount, tone: 'primary' },
+    {
+      label: 'Giá trị nhập',
+      value: movement ? `${formatCurrency(movement.importValue)} đ` : undefined,
+      tone: 'success',
+    },
+    { label: 'Phiếu xuất', value: movement?.exportCount, tone: 'warning' },
+    {
+      label: 'Giá trị xuất',
+      value: movement ? `${formatCurrency(movement.exportValue)} đ` : undefined,
+      tone: 'info',
+    },
+    { label: 'Phiếu chuyển', value: movement?.transferCount, tone: 'neutral' },
+  ];
+
+  const pendingCountBadges: Array<{
+    key: string;
+    label: string;
+    tone: StatusTone;
+  }> = pending
+    ? [
+        {
+          key: 'import',
+          label: `Nhập: ${pending.importCount}`,
+          tone: pending.importCount > 0 ? 'info' : 'neutral',
+        },
+        {
+          key: 'export',
+          label: `Xuất: ${pending.exportCount}`,
+          tone: pending.exportCount > 0 ? 'warning' : 'neutral',
+        },
+        {
+          key: 'transfer',
+          label: `Chuyển: ${pending.transferCount}`,
+          tone: pending.transferCount > 0 ? 'primary' : 'neutral',
+        },
+        {
+          key: 'stocktake',
+          label: `Kiểm kê: ${pending.stocktakeCount}`,
+          tone: pending.stocktakeCount > 0 ? 'warning' : 'neutral',
+        },
+      ]
+    : [];
+
+  const renderExportButton = (kind: 'movement' | 'stock' | 'pending') => (
+    <PermissionGate permission="wms.reports.export">
+      <Button
+        type="button"
+        variant="outlined"
+        size="sm"
+        leftIcon={Download}
+        loading={exporting === kind}
+        onClick={() => handleExport(kind)}
+      >
+        {exporting === kind ? 'Đang xuất…' : 'Xuất Excel'}
+      </Button>
+    </PermissionGate>
+  );
+
   useEffect(() => {
     if (!focusPending || pendingQuery.isLoading) return;
     pendingSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [focusPending, pendingQuery.isLoading]);
 
   return (
-    <div className="page-shell space-y-4">
+    <PageShell variant="dashboard">
       <PageHeader
         eyebrow="Kho hàng"
         title={focusPending ? 'Phiếu chờ duyệt' : 'Báo cáo kho'}
@@ -97,7 +165,7 @@ export default function WarehouseReportsPage() {
         }
       />
 
-      <HrmPanel title="Nhập – xuất theo kỳ" subtitle="Lọc theo ngày chứng từ">
+      <SectionCard title="Nhập – xuất theo kỳ" subtitle="Lọc theo ngày chứng từ">
         <div className="space-y-4">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <VoucherDateFilter
@@ -110,43 +178,28 @@ export default function WarehouseReportsPage() {
                 setDateTo('');
               }}
             />
-            <PermissionGate permission="wms.reports.export">
-              <button
-                type="button"
-                className="btn btn-outline btn-sm"
-                disabled={exporting === 'movement'}
-                onClick={() => handleExport('movement')}
-              >
-                <Download size={14} />
-                {exporting === 'movement' ? 'Đang xuất…' : 'Xuất Excel'}
-              </button>
-            </PermissionGate>
+            {renderExportButton('movement')}
           </div>
 
-          {movementQuery.isLoading ? (
-            <p className="text-sm text-[var(--md-on-surface-variant)]">Đang tải…</p>
-          ) : movementQuery.isError ? (
-            <p className="text-sm text-[var(--md-error)]">{WMS_ERROR.loadDefault}</p>
-          ) : movement ? (
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-              {[
-                { label: 'Phiếu nhập', value: movement.importCount },
-                { label: 'Giá trị nhập', value: `${formatCurrency(movement.importValue)} đ` },
-                { label: 'Phiếu xuất', value: movement.exportCount },
-                { label: 'Giá trị xuất', value: `${formatCurrency(movement.exportValue)} đ` },
-                { label: 'Phiếu chuyển', value: movement.transferCount },
-              ].map(tile => (
-                <div key={tile.label} className="rounded-xl border border-[var(--md-outline-variant)] bg-[var(--md-surface-container-low)] p-3">
-                  <p className="text-[11px] uppercase tracking-wide text-[var(--md-on-surface-variant)]">{tile.label}</p>
-                  <p className="mt-1 text-lg font-bold tabular-nums text-[var(--md-on-surface)]">{tile.value}</p>
-                </div>
+          {movementQuery.isError ? (
+            <p role="alert" className="text-sm text-[var(--md-error)]">{WMS_ERROR.loadDefault}</p>
+          ) : movementQuery.isLoading || movement ? (
+            <MetricsStrip columns={5} ariaLabel="Tổng hợp nhập xuất theo kỳ">
+              {movementCards.map(tile => (
+                <KpiCard
+                  key={tile.label}
+                  label={tile.label}
+                  value={tile.value}
+                  tone={tile.tone}
+                  loading={movementQuery.isLoading}
+                />
               ))}
-            </div>
+            </MetricsStrip>
           ) : null}
         </div>
-      </HrmPanel>
+      </SectionCard>
 
-      <HrmPanel title="Tồn kho theo dự án" subtitle="Chỉ hiển thị vật tư còn tồn">
+      <SectionCard title="Tồn kho theo dự án" subtitle="Chỉ hiển thị vật tư còn tồn">
         <div className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <select
@@ -162,161 +215,116 @@ export default function WarehouseReportsPage() {
                 </option>
               ))}
             </select>
-            <PermissionGate permission="wms.reports.export">
-              <button
-                type="button"
-                className="btn btn-outline btn-sm"
-                disabled={exporting === 'stock'}
-                onClick={() => handleExport('stock')}
-              >
-                <Download size={14} />
-                {exporting === 'stock' ? 'Đang xuất…' : 'Xuất Excel'}
-              </button>
-            </PermissionGate>
+            {renderExportButton('stock')}
           </div>
 
-          <div className="overflow-x-auto table-scroll wms-inventory-table-wrap">
-            <table className="wms-inventory-table">
-              <thead>
-                <tr>
-                  <th className="table-header-cell">Dự án</th>
-                  <th className="table-header-cell">Mã vật tư</th>
-                  <th className="table-header-cell">Tên vật tư</th>
-                  <th className="table-header-cell text-center">ĐVT</th>
-                  <th className="table-header-cell text-right">SL tồn</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stockQuery.isLoading ? (
-                  <TableSkeletonRows colSpan={5} />
-                ) : stockQuery.isError ? (
-                  <tr>
-                    <td colSpan={5} className="table-cell text-center text-[var(--md-error)]">
-                      {WMS_ERROR.loadDefault}
-                    </td>
-                  </tr>
-                ) : stockRows.length === 0 ? (
-                  <tr>
-                    <td colSpan={5}>
-                      <EmptyState message="Không có vật tư nào còn tồn theo bộ lọc hiện tại." />
-                    </td>
-                  </tr>
-                ) : (
-                  stockRows.slice(0, 100).map(row => (
-                    <tr key={`${row.projectCode}-${row.materialCode}`} className="table-row">
-                      <td className="table-cell">
-                        <span className="font-medium">{row.projectName}</span>
-                        <div>
-                          <EntityCodeLink
-                            code={row.projectCode}
-                            to={`/warehouse/projects/${encodeURIComponent(row.projectCode)}`}
-                          />
-                        </div>
-                      </td>
-                      <td className="table-cell">
-                        <EntityCodeLink
-                          code={row.materialCode}
-                          to="/operations/materials"
-                          state={{ highlightCode: row.materialCode }}
-                        />
-                      </td>
-                      <td className="table-cell">{row.materialName}</td>
-                      <td className="table-cell text-center">{row.unit}</td>
-                      <td className="table-cell text-right tabular-nums font-semibold">{row.qty}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-          {stockRows.length > 100 && (
-            <p className="text-xs text-[var(--md-on-surface-variant)]">
-              Hiển thị 100/{stockRows.length} dòng - xuất Excel để xem đầy đủ.
-            </p>
-          )}
+          <TableShell
+            header={
+              <tr>
+                <th className="table-header-cell">Dự án</th>
+                <th className="table-header-cell">Mã vật tư</th>
+                <th className="table-header-cell">Tên vật tư</th>
+                <th className="table-header-cell text-center">ĐVT</th>
+                <th className="table-header-cell text-right">SL tồn</th>
+              </tr>
+            }
+            colSpan={5}
+            loading={stockQuery.isLoading}
+            error={stockQuery.isError ? WMS_ERROR.loadDefault : null}
+            isEmpty={stockRows.length === 0}
+            emptyMessage="Không có vật tư nào còn tồn theo bộ lọc hiện tại."
+            caption={
+              !stockQuery.isLoading && !stockQuery.isError && stockRows.length > 100
+                ? `Hiển thị 100/${stockRows.length} dòng - xuất Excel để xem đầy đủ.`
+                : undefined
+            }
+          >
+            {stockRows.slice(0, 100).map(row => (
+              <tr key={`${row.projectCode}-${row.materialCode}`} className="table-row">
+                <td className="table-cell">
+                  <span className="font-medium">{row.projectName}</span>
+                  <div>
+                    <EntityCodeLink
+                      code={row.projectCode}
+                      to={`/warehouse/projects/${encodeURIComponent(row.projectCode)}`}
+                    />
+                  </div>
+                </td>
+                <td className="table-cell">
+                  <EntityCodeLink
+                    code={row.materialCode}
+                    to="/operations/materials"
+                    state={{ highlightCode: row.materialCode }}
+                  />
+                </td>
+                <td className="table-cell">{row.materialName}</td>
+                <td className="table-cell text-center">{row.unit}</td>
+                <td className="table-cell text-right tabular-nums font-semibold">{row.qty}</td>
+              </tr>
+            ))}
+          </TableShell>
         </div>
-      </HrmPanel>
+      </SectionCard>
 
-      <div
+      <SectionCard
         ref={pendingSectionRef}
         id="reports-pending"
-        className={focusPending ? 'rounded-2xl ring-2 ring-[var(--md-primary)]/30 scroll-mt-24' : 'scroll-mt-24'}
+        highlighted={focusPending}
+        title="Phiếu chờ duyệt"
+        subtitle="Tổng hợp theo loại chứng từ"
       >
-      <HrmPanel title="Phiếu chờ duyệt" subtitle="Tổng hợp theo loại chứng từ">
         <div className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             {pending ? (
-              <div className="flex flex-wrap gap-2 text-sm">
-                <span className="rounded-full bg-[var(--md-surface-container-high)] px-3 py-1">Nhập: <strong>{pending.importCount}</strong></span>
-                <span className="rounded-full bg-[var(--md-surface-container-high)] px-3 py-1">Xuất: <strong>{pending.exportCount}</strong></span>
-                <span className="rounded-full bg-[var(--md-surface-container-high)] px-3 py-1">Chuyển: <strong>{pending.transferCount}</strong></span>
-                <span className="rounded-full bg-[var(--md-surface-container-high)] px-3 py-1">Kiểm kê: <strong>{pending.stocktakeCount}</strong></span>
+              <div className="flex flex-wrap gap-2">
+                {pendingCountBadges.map(badge => (
+                  <StatusBadge
+                    key={badge.key}
+                    tone={badge.tone}
+                    label={badge.label}
+                  />
+                ))}
               </div>
             ) : (
               <span />
             )}
-            <PermissionGate permission="wms.reports.export">
-              <button
-                type="button"
-                className="btn btn-outline btn-sm"
-                disabled={exporting === 'pending'}
-                onClick={() => handleExport('pending')}
-              >
-                <Download size={14} />
-                {exporting === 'pending' ? 'Đang xuất…' : 'Xuất Excel'}
-              </button>
-            </PermissionGate>
+            {renderExportButton('pending')}
           </div>
 
-          <div className="overflow-x-auto table-scroll wms-inventory-table-wrap">
-            <table className="wms-inventory-table">
-              <thead>
-                <tr>
-                  <th className="table-header-cell">Loại</th>
-                  <th className="table-header-cell">Mã phiếu</th>
-                  <th className="table-header-cell">Ngày</th>
-                  <th className="table-header-cell">Người tạo</th>
-                  <th className="table-header-cell">Dự án / Kho</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pendingQuery.isLoading ? (
-                  <TableSkeletonRows colSpan={5} />
-                ) : pendingQuery.isError ? (
-                  <tr>
-                    <td colSpan={5} className="table-cell text-center text-[var(--md-error)]">
-                      {WMS_ERROR.loadDefault}
-                    </td>
-                  </tr>
-                ) : !pending?.items.length ? (
-                  <tr>
-                    <td colSpan={5}>
-                      <EmptyState message="Không có phiếu chờ duyệt. Tất cả phiếu đã được xử lý." />
-                    </td>
-                  </tr>
-                ) : (
-                  pending.items.map(item => (
-                    <tr key={`${item.kind}-${item.voucherCode}`} className="table-row">
-                      <td className="table-cell">{KIND_LABELS[item.kind] ?? item.kind}</td>
-                      <td className="table-cell">
-                        {KIND_LIST_PATH[item.kind] ? (
-                          <EntityCodeLink code={item.voucherCode} to={KIND_LIST_PATH[item.kind]} />
-                        ) : (
-                          <span className="entity-code">{item.voucherCode}</span>
-                        )}
-                      </td>
-                      <td className="table-cell">{item.date}</td>
-                      <td className="table-cell">{item.createdBy}</td>
-                      <td className="table-cell">{item.project || '—'}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+          <TableShell
+            header={
+              <tr>
+                <th className="table-header-cell">Loại</th>
+                <th className="table-header-cell">Mã phiếu</th>
+                <th className="table-header-cell">Ngày</th>
+                <th className="table-header-cell">Người tạo</th>
+                <th className="table-header-cell">Dự án / Kho</th>
+              </tr>
+            }
+            colSpan={5}
+            loading={pendingQuery.isLoading}
+            error={pendingQuery.isError ? WMS_ERROR.loadDefault : null}
+            isEmpty={!pending?.items.length}
+            emptyMessage="Không có phiếu chờ duyệt. Tất cả phiếu đã được xử lý."
+          >
+            {(pending?.items ?? []).map(item => (
+              <tr key={`${item.kind}-${item.voucherCode}`} className="table-row">
+                <td className="table-cell">{KIND_LABELS[item.kind] ?? item.kind}</td>
+                <td className="table-cell">
+                  {KIND_LIST_PATH[item.kind] ? (
+                    <EntityCodeLink code={item.voucherCode} to={KIND_LIST_PATH[item.kind]} />
+                  ) : (
+                    <span className="entity-code">{item.voucherCode}</span>
+                  )}
+                </td>
+                <td className="table-cell">{item.date}</td>
+                <td className="table-cell">{item.createdBy}</td>
+                <td className="table-cell">{item.project || '—'}</td>
+              </tr>
+            ))}
+          </TableShell>
         </div>
-      </HrmPanel>
-      </div>
-    </div>
+      </SectionCard>
+    </PageShell>
   );
 }
