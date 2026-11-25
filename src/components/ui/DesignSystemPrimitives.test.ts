@@ -1,0 +1,480 @@
+import { act, createElement, createRef } from 'react';
+import { createRoot, type Root } from 'react-dom/client';
+import { MemoryRouter } from 'react-router-dom';
+import { AlertTriangle, Building2, Package, ShieldCheck } from 'lucide-react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import PageShell from './PageShell';
+import PageHeader from './PageHeader';
+import FilterToolbar from './FilterToolbar';
+import TableShell from './TableShell';
+import KpiCard from './KpiCard';
+import MetricsStrip from './MetricsStrip';
+import StatusBadge, { STATUS_TONE_CLASS } from './StatusBadge';
+import PurchasingStatusBadge from '../purchasing/PurchasingStatusBadge';
+import SectionCard from './SectionCard';
+import FormSection from './FormSection';
+
+describe('Design System UI primitives', () => {
+  let container: HTMLDivElement;
+  let root: Root;
+
+  beforeEach(() => {
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+    container = document.createElement('div');
+    document.body.append(container);
+    root = createRoot(container);
+  });
+
+  afterEach(async () => {
+    await act(() => root.unmount());
+    container.remove();
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  describe('PageShell', () => {
+    it('renders default list variant and full width classes', async () => {
+      await act(() =>
+        root.render(
+          createElement(PageShell, {
+            children: createElement('p', null, 'Danh sách vật tư Dự án Cầu Rạch Miễu 2'),
+          }),
+        ),
+      );
+      const shell = container.firstElementChild as HTMLElement;
+      expect(shell.className).toContain('page-shell');
+      expect(shell.className).toContain('erp-page-shell');
+      expect(shell.className).toContain('erp-page-shell--list');
+      expect(shell.className).not.toContain('erp-page-shell--narrow');
+    });
+
+    it('applies dashboard variant, narrow width, and custom className', async () => {
+      await act(() =>
+        root.render(
+          createElement(PageShell, {
+            variant: 'dashboard',
+            width: 'narrow',
+            className: 'wms-reports-shell',
+            children: createElement('span', null, 'Báo cáo nhập xuất kho'),
+          }),
+        ),
+      );
+      const shell = container.firstElementChild as HTMLElement;
+      expect(shell.className).toContain('erp-page-shell--dashboard');
+      expect(shell.className).toContain('erp-page-shell--narrow');
+      expect(shell.className).toContain('wms-reports-shell');
+    });
+  });
+
+  describe('PageHeader', () => {
+    it('renders default header without back button', async () => {
+      await act(() =>
+        root.render(
+          createElement(PageHeader, {
+            eyebrow: 'Kho hàng',
+            title: 'Danh mục vật tư',
+            subtitle: 'Quản lý mã vật tư và đơn vị tính chuẩn',
+            actions: createElement('button', { type: 'button' }, 'Thêm vật tư'),
+          }),
+        ),
+      );
+      expect(container.querySelector('.page-header')).not.toBeNull();
+      expect(container.querySelector('.page-header--detail')).toBeNull();
+      expect(container.querySelector('.page-header__back')).toBeNull();
+      expect(container.querySelector('h1.page-header__title')?.textContent).toBe('Danh mục vật tư');
+      expect(container.querySelector('.page-header__eyebrow')?.textContent).toBe('Kho hàng');
+      expect(container.querySelector('.page-header__subtitle')?.textContent).toBe(
+        'Quản lý mã vật tư và đơn vị tính chuẩn',
+      );
+      expect(container.querySelector('.page-header__actions button')?.textContent).toBe('Thêm vật tư');
+    });
+
+    it('renders detail variant with back button and invokes onBack', async () => {
+      const onBack = vi.fn();
+      await act(() =>
+        root.render(
+          createElement(PageHeader, {
+            variant: 'detail',
+            onBack,
+            backLabel: 'Về danh sách dự án',
+            eyebrow: 'Dự án EPC',
+            title: 'Dự án Cầu Rạch Miễu 2',
+            subtitle: 'Nhà cung cấp: Công ty TNHH VLXD Minh Long',
+            actions: createElement('button', { type: 'button' }, 'Cập nhật'),
+          }),
+        ),
+      );
+      const header = container.querySelector('header.page-header.page-header--detail');
+      expect(header).not.toBeNull();
+      expect(container.querySelector('.page-header__detail-row')).not.toBeNull();
+
+      const backBtn = container.querySelector<HTMLButtonElement>('.page-header__back')!;
+      expect(backBtn).not.toBeNull();
+      expect(backBtn.textContent).toContain('Về danh sách dự án');
+      await act(() => backBtn.click());
+      expect(onBack).toHaveBeenCalledTimes(1);
+    });
+
+    it('renders default backLabel "Quay lại" when onBack is given without variant', async () => {
+      const onBack = vi.fn();
+      await act(() =>
+        root.render(createElement(PageHeader, { title: 'Chi tiết phiếu nhập NK-2026-014', onBack })),
+      );
+      expect(container.querySelector('.page-header--detail')).not.toBeNull();
+      expect(container.querySelector('.page-header__back')?.textContent).toContain('Quay lại');
+    });
+  });
+
+  describe('FilterToolbar', () => {
+    it('composes TabFilter, SearchBar, filters, actions, and conditional reset button', async () => {
+      const onSearchChange = vi.fn();
+      const onTabChange = vi.fn();
+      const onReset = vi.fn();
+
+      const renderToolbar = (hasActiveFilters: boolean) =>
+        root.render(
+          createElement(FilterToolbar, {
+            search: 'Thép hộp',
+            onSearchChange,
+            searchPlaceholder: 'Tìm mã vật tư, tên vật tư...',
+            tabs: [
+              { id: 'all', label: 'Tất cả', count: 24 },
+              { id: 'active', label: 'Đang sử dụng', count: 18 },
+            ],
+            activeTab: 'all',
+            onTabChange,
+            filters: createElement('select', { 'aria-label': 'Nhóm vật tư' }, createElement('option', null, 'Thép hình')),
+            actions: createElement('button', { type: 'button' }, 'Xuất Excel'),
+            hasActiveFilters,
+            onReset,
+          }),
+        );
+
+      await act(() => renderToolbar(false));
+      expect(container.querySelector('.tab-filter')).not.toBeNull();
+      expect(container.querySelector('input[type="search"]')).not.toBeNull();
+      expect(container.querySelector('select[aria-label="Nhóm vật tư"]')).not.toBeNull();
+      expect(container.querySelector('.erp-filter-toolbar__actions button')?.textContent).toBe('Xuất Excel');
+      expect(container.querySelector('.hrm-filter-reset')).toBeNull();
+
+      const tabButtons = container.querySelectorAll<HTMLButtonElement>('.tab-filter__tab');
+      await act(() => tabButtons[1].click());
+      expect(onTabChange).toHaveBeenCalledWith('active');
+
+      await act(() => renderToolbar(true));
+      const resetBtn = container.querySelector<HTMLButtonElement>('.hrm-filter-reset')!;
+      expect(resetBtn).not.toBeNull();
+      expect(resetBtn.textContent).toContain('Xóa lọc');
+      await act(() => resetBtn.click());
+      expect(onReset).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('TableShell', () => {
+    const tableHeader = createElement(
+      'tr',
+      null,
+      createElement('th', { className: 'table-header-cell' }, 'Mã VT'),
+      createElement('th', { className: 'table-header-cell' }, 'Tên vật tư'),
+      createElement('th', { className: 'table-header-cell' }, 'Nhà cung cấp'),
+    );
+
+    it('renders loading skeleton rows inside scroll wrapper', async () => {
+      await act(() =>
+        root.render(
+          createElement(TableShell, {
+            header: tableHeader,
+            colSpan: 3,
+            loading: true,
+            skeletonRows: 4,
+            flushTop: true,
+          }),
+        ),
+      );
+      const scroll = container.querySelector('.erp-table-shell__scroll');
+      expect(scroll).not.toBeNull();
+      expect(scroll?.className).toContain('hrm-table-wrap');
+      expect(scroll?.className).toContain('wms-inventory-table-wrap--flush-top');
+      expect(container.querySelectorAll('.hrm-table-skeleton-row')).toHaveLength(4);
+    });
+
+    it('renders error alert when error is provided', async () => {
+      await act(() =>
+        root.render(
+          createElement(TableShell, {
+            header: tableHeader,
+            colSpan: 3,
+            error: 'Không tải được tồn kho Dự án Cầu Rạch Miễu 2.',
+          }),
+        ),
+      );
+      const alert = container.querySelector('[role="alert"]');
+      expect(alert?.textContent).toBe('Không tải được tồn kho Dự án Cầu Rạch Miễu 2.');
+    });
+
+    it('renders EmptyState with action when isEmpty is true', async () => {
+      await act(() =>
+        root.render(
+          createElement(TableShell, {
+            header: tableHeader,
+            colSpan: 3,
+            isEmpty: true,
+            emptyMessage: 'Chưa có vật tư tồn kho trong Dự án Cầu Rạch Miễu 2.',
+            emptyIcon: Package,
+            emptyAction: createElement('button', { type: 'button' }, 'Nhập kho ngay'),
+          }),
+        ),
+      );
+      expect(container.querySelector('.empty-state__message')?.textContent).toBe(
+        'Chưa có vật tư tồn kho trong Dự án Cầu Rạch Miễu 2.',
+      );
+      expect(container.querySelector('.empty-state__action button')?.textContent).toBe('Nhập kho ngay');
+    });
+
+    it('renders structured data rows, tfoot, caption, and embedded pagination', async () => {
+      const onPageChange = vi.fn();
+      await act(() =>
+        root.render(
+          createElement(
+            TableShell,
+            {
+              header: tableHeader,
+              colSpan: 3,
+              tfoot: createElement(
+                'tr',
+                null,
+                createElement('td', { colSpan: 3 }, 'Tổng cộng: 2 dòng vật tư'),
+              ),
+              caption: 'Đơn giá đã bao gồm VAT theo hợp đồng với Công ty TNHH VLXD Minh Long.',
+              pagination: {
+                currentPage: 1,
+                totalPages: 3,
+                pageSize: 15,
+                totalItems: 38,
+                onPageChange,
+              },
+            },
+            createElement(
+              'tr',
+              { className: 'table-row' },
+              createElement('td', { className: 'table-cell' }, 'VT-TH-50100'),
+              createElement('td', { className: 'table-cell' }, 'Thép hộp 50x100x2mm'),
+              createElement('td', { className: 'table-cell' }, 'Công ty TNHH VLXD Minh Long'),
+            ),
+            createElement(
+              'tr',
+              { className: 'table-row' },
+              createElement('td', { className: 'table-cell' }, 'VT-XM-PCB40'),
+              createElement('td', { className: 'table-cell' }, 'Xi măng Hà Tiên PCB40'),
+              createElement('td', { className: 'table-cell' }, 'Công ty TNHH VLXD Minh Long'),
+            ),
+          ),
+        ),
+      );
+
+      expect(container.textContent).toContain('Thép hộp 50x100x2mm');
+      expect(container.textContent).toContain('Xi măng Hà Tiên PCB40');
+      expect(container.querySelector('tfoot')?.textContent).toContain('Tổng cộng: 2 dòng vật tư');
+      expect(container.querySelector('.erp-table-shell__caption')?.textContent).toContain(
+        'Công ty TNHH VLXD Minh Long',
+      );
+      expect(container.querySelector('.erp-table-shell__footer .pagination-bar--embedded')).not.toBeNull();
+
+      const nextPageBtn = container.querySelector<HTMLButtonElement>('button[aria-label="Trang sau"]')!;
+      await act(() => nextPageBtn.click());
+      expect(onPageChange).toHaveBeenCalledWith(2);
+    });
+
+    it('supports wrapper mode when header is omitted', async () => {
+      await act(() =>
+        root.render(
+          createElement(
+            TableShell,
+            { tableClassName: 'hrm-table' },
+            createElement(
+              'thead',
+              null,
+              createElement('tr', null, createElement('th', null, 'Vật tư')),
+            ),
+            createElement(
+              'tbody',
+              null,
+              createElement('tr', null, createElement('td', null, 'Xi măng Hà Tiên PCB40')),
+            ),
+          ),
+        ),
+      );
+      const scroll = container.querySelector('.erp-table-shell__scroll');
+      expect(scroll).not.toBeNull();
+      expect(scroll?.querySelector('table.hrm-table')).not.toBeNull();
+      expect(scroll?.textContent).toContain('Xi măng Hà Tiên PCB40');
+    });
+  });
+
+  describe('KpiCard & MetricsStrip', () => {
+    it('renders loading skeleton with aria-busy="true"', async () => {
+      await act(() =>
+        root.render(
+          createElement(MetricsStrip, {
+            columns: 5,
+            ariaLabel: 'Chỉ số kho vận',
+            children: createElement(KpiCard, {
+              label: 'Tổng giá trị nhập kho',
+              loading: true,
+              tone: 'primary',
+            }),
+          }),
+        ),
+      );
+      const list = container.querySelector('[role="list"]');
+      expect(list?.getAttribute('aria-label')).toBe('Chỉ số kho vận');
+      expect(list?.className).toContain('erp-metrics-strip--cols-5');
+
+      const item = container.querySelector('[role="listitem"]');
+      expect(item?.getAttribute('aria-busy')).toBe('true');
+      expect(item?.className).toContain('erp-kpi-card--loading');
+      expect(item?.querySelector('.skeleton')).not.toBeNull();
+    });
+
+    it('renders clickable card with aria-pressed and maps tones to CardAccent', async () => {
+      const onClick = vi.fn();
+      await act(() =>
+        root.render(
+          createElement(
+            MemoryRouter,
+            null,
+            createElement(MetricsStrip, {
+              columns: 3,
+              children: [
+                createElement(KpiCard, {
+                  key: 'stock',
+                  label: 'Thép hộp 50x100x2mm tồn kho',
+                  value: '1.250 cây',
+                  hint: 'Dự án Cầu Rạch Miễu 2',
+                  tone: 'warning',
+                  icon: Building2,
+                  selected: true,
+                  onClick,
+                }),
+                createElement(KpiCard, {
+                  key: 'pass',
+                  label: 'Đạt chuẩn nghiệm thu',
+                  value: '98%',
+                  tone: 'success',
+                  to: '/warehouse/reports',
+                }),
+              ],
+            }),
+          ),
+        ),
+      );
+
+      const buttonCard = container.querySelector<HTMLButtonElement>('button[role="listitem"]')!;
+      expect(buttonCard).not.toBeNull();
+      expect(buttonCard.getAttribute('aria-pressed')).toBe('true');
+      expect(buttonCard.className).toContain('kpi-card--accent-amber');
+      expect(buttonCard.textContent).toContain('1.250 cây');
+      await act(() => buttonCard.click());
+      expect(onClick).toHaveBeenCalledTimes(1);
+
+      const linkCard = container.querySelector<HTMLAnchorElement>('a[role="listitem"]')!;
+      expect(linkCard.className).toContain('kpi-card--accent-success');
+      expect(linkCard.getAttribute('href')).toBe('/warehouse/reports');
+    });
+  });
+
+  describe('StatusBadge & PurchasingStatusBadge', () => {
+    it('delegates to Badge when status is provided without tone', async () => {
+      await act(() =>
+        root.render(createElement(StatusBadge, { status: 'approved' })),
+      );
+      const badge = container.querySelector('.badge');
+      expect(badge?.className).toContain('badge-approved');
+      expect(badge?.textContent).toContain('Đã duyệt');
+    });
+
+    it('renders explicit tone, label, and optional icon', async () => {
+      await act(() =>
+        root.render(
+          createElement(StatusBadge, {
+            tone: 'error',
+            label: 'Thiếu chứng từ CO/CQ',
+            icon: AlertTriangle,
+          }),
+        ),
+      );
+      const badge = container.querySelector('.badge');
+      expect(badge?.className).toContain(STATUS_TONE_CLASS.error);
+      expect(badge?.querySelector('svg')).not.toBeNull();
+      expect(badge?.textContent).toContain('Thiếu chứng từ CO/CQ');
+    });
+
+    it('delegates PurchasingStatusBadge danger tone to error badge class', async () => {
+      await act(() =>
+        root.render(
+          createElement(PurchasingStatusBadge, {
+            tone: 'danger',
+            label: 'Quá hạn giao hàng',
+          }),
+        ),
+      );
+      const badge = container.querySelector('.badge');
+      expect(badge?.className).toContain('badge-error');
+      expect(badge?.textContent).toBe('Quá hạn giao hàng');
+    });
+  });
+
+  describe('SectionCard & FormSection', () => {
+    it('renders SectionCard with footer, highlighted state, id, and forwarded ref', async () => {
+      const ref = createRef<HTMLDivElement>();
+      await act(() =>
+        root.render(
+          createElement(SectionCard, {
+            ref,
+            id: 'pending-vouchers-section',
+            title: 'Phiếu chờ duyệt',
+            subtitle: 'Kho trung tâm và các kho dự án',
+            highlighted: true,
+            actions: createElement(StatusBadge, { tone: 'info', label: 'Đang theo dõi', icon: ShieldCheck }),
+            footer: createElement('span', null, 'Cập nhật theo dữ liệu máy chủ'),
+            children: createElement('p', null, 'Xi măng Hà Tiên PCB40 — chờ kiểm nhận'),
+          }),
+        ),
+      );
+
+      expect(ref.current).not.toBeNull();
+      expect(ref.current?.id).toBe('pending-vouchers-section');
+      expect(ref.current?.className).toContain('erp-section-card--highlighted');
+      expect(container.querySelector('.erp-section-card__footer')?.textContent).toBe(
+        'Cập nhật theo dữ liệu máy chủ',
+      );
+    });
+
+    it('renders FormSection with step badge, description, and responsive grid columns', async () => {
+      await act(() =>
+        root.render(
+          createElement(FormSection, {
+            step: 1,
+            title: 'Thông tin vật tư nhập kho',
+            description: 'Chọn đúng quy cách và nhà cung cấp đã duyệt',
+            columns: 3,
+            children: [
+              createElement('div', { key: 'code' }, 'Mã VT: VT-TH-50100'),
+              createElement('div', { key: 'name' }, 'Tên: Thép hộp 50x100x2mm'),
+              createElement('div', { key: 'supplier' }, 'NCC: Công ty TNHH VLXD Minh Long'),
+            ],
+          }),
+        ),
+      );
+
+      expect(container.querySelector('.hrm-form-section-header__step')?.textContent).toBe('1');
+      expect(container.querySelector('.hrm-form-section-header__title')?.textContent).toBe(
+        'Thông tin vật tư nhập kho',
+      );
+      expect(container.querySelector('.erp-form-section__desc')?.textContent).toBe(
+        'Chọn đúng quy cách và nhà cung cấp đã duyệt',
+      );
+      expect(container.querySelector('.erp-form-section__grid--cols-3')).not.toBeNull();
+    });
+  });
+});
