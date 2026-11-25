@@ -1,12 +1,12 @@
 import { Plus } from 'lucide-react';
-import EmptyState from '../../../components/ui/EmptyState';
-import EntityCodeLink from '../../../components/ui/EntityCodeLink';
-import Pagination from '../../../components/ui/Pagination';
-import TableSkeletonRows from '../../../components/ui/TableSkeletonRows';
 import ProjectAutocomplete from '../../../components/purchasing/ProjectAutocomplete';
+import Button from '../../../components/ui/Button';
+import EntityCodeLink from '../../../components/ui/EntityCodeLink';
+import SelectField from '../../../components/ui/SelectField';
+import TableShell from '../../../components/ui/TableShell';
+import type { ListPageSize } from '../../../constants/pagination';
 import { getApiErrorMessage } from '../../../lib/apiClient';
 import { formatDateCell } from '../../../lib/hrm/formatters';
-import type { ListPageSize } from '../../../constants/pagination';
 import type { PurchaseWarrantyApiDto } from '../../../services/purchaseWarrantiesService';
 import type { WarehouseProjectApiDto } from '../../../types/wms';
 import {
@@ -65,6 +65,21 @@ export default function WarrantyRegistryPanel({
 }: WarrantyRegistryPanelProps) {
   const start = (page - 1) * pageSize;
   const pageRows = rows.slice(start, start + pageSize);
+  const errorMessage = isError ? getApiErrorMessage(error, 'Không tải được danh sách BH.') : null;
+  const pagination = rows.length > 0 && !isLoading
+    ? {
+        embedded: true,
+        currentPage: page,
+        totalPages: Math.max(1, Math.ceil(rows.length / pageSize)),
+        pageSize,
+        onPageChange,
+        onPageSizeChange: (size: ListPageSize) => {
+          onPageSizeChange(size);
+          onPageChange(1);
+        },
+        totalItems: rows.length,
+      }
+    : undefined;
 
   return (
     <>
@@ -91,127 +106,100 @@ export default function WarrantyRegistryPanel({
               placeholder="Mã vật tư"
               aria-label="Lọc mã vật tư"
             />
-            <select
-              className="form-input"
+            <SelectField
               value={status}
-              onChange={e => onStatusChange(e.target.value)}
+              onChange={onStatusChange}
+              options={WARRANTY_STATUS_OPTIONS}
               aria-label="Lọc trạng thái"
-            >
-              {WARRANTY_STATUS_OPTIONS.map(o => (
-                <option key={o.value || 'all'} value={o.value}>{o.label}</option>
-              ))}
-            </select>
+              selectClassName="form-input"
+            />
           </div>
         </div>
       </div>
-      <div className="overflow-x-auto table-scroll wms-inventory-table-wrap">
-        <table className="wms-inventory-table">
-          <thead>
-            <tr>
-              <th className="table-header-cell">Hàng hoá</th>
-              <th className="table-header-cell">NCC</th>
-              <th className="table-header-cell warranty-col-project">Dự án</th>
-              <th className="table-header-cell warranty-col-po">PO</th>
-              <th className="table-header-cell">Ngày nhận</th>
-              <th className="table-header-cell text-right">SL</th>
-              <th className="table-header-cell">Bảo hành</th>
-              <th className="table-header-cell">Tình trạng</th>
-              <th className="table-header-cell text-center">Số khiếu nại</th>
-              <th className="table-header-cell warranty-col-actions" />
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
-              <TableSkeletonRows colSpan={COL_COUNT} />
-            ) : isError ? (
-              <tr>
-                <td colSpan={COL_COUNT}>
-                  <EmptyState message={getApiErrorMessage(error, 'Không tải được danh sách BH.')} />
-                </td>
-              </tr>
-            ) : pageRows.length === 0 ? (
-              <tr>
-                <td colSpan={COL_COUNT}>
-                  <EmptyState message="Chưa có lô hàng có bảo hành. Set tháng BH trên dòng PO rồi nhập kho / Đồng bộ." />
-                </td>
-              </tr>
-            ) : (
-              pageRows.map(row => (
-                <tr
-                  key={row.id}
-                  className="table-row wms-inventory-row--interactive"
-                  onClick={() => onOpenDetail(row)}
+
+      <TableShell
+        tableClassName="wms-inventory-table"
+        colSpan={COL_COUNT}
+        loading={isLoading}
+        error={errorMessage}
+        isEmpty={pageRows.length === 0}
+        emptyMessage="Chưa có lô hàng có bảo hành. Set tháng BH trên dòng PO rồi nhập kho / Đồng bộ."
+        pagination={pagination}
+        header={(
+          <tr>
+            <th className="table-header-cell">Hàng hoá</th>
+            <th className="table-header-cell">NCC</th>
+            <th className="table-header-cell warranty-col-project">Dự án</th>
+            <th className="table-header-cell warranty-col-po">PO</th>
+            <th className="table-header-cell">Ngày nhận</th>
+            <th className="table-header-cell text-right">SL</th>
+            <th className="table-header-cell">Bảo hành</th>
+            <th className="table-header-cell">Tình trạng</th>
+            <th className="table-header-cell text-center">Số khiếu nại</th>
+            <th className="table-header-cell warranty-col-actions" />
+          </tr>
+        )}
+      >
+        {pageRows.map(row => (
+          <tr
+            key={row.id}
+            className="table-row wms-inventory-row--interactive"
+            onClick={() => onOpenDetail(row)}
+          >
+            <td className="table-cell">
+              <div className="font-semibold">{row.materialName}</div>
+              <div className="font-mono text-[var(--md-on-surface-variant)]">
+                {row.materialCode || row.code}
+              </div>
+            </td>
+            <td className="table-cell">{row.supplierName || '-'}</td>
+            <td className="table-cell warranty-col-project">
+              {row.projectCode ? (
+                <EntityCodeLink
+                  code={row.projectCode}
+                  to={`/warehouse/projects/${encodeURIComponent(row.projectCode)}`}
+                />
+              ) : '-'}
+            </td>
+            <td className="table-cell warranty-col-po">
+              {row.poCode ? (
+                <EntityCodeLink
+                  code={row.poCode}
+                  to={`/purchasing/orders/${encodeURIComponent(row.poCode)}`}
+                />
+              ) : '-'}
+            </td>
+            <td className="table-cell tabular-nums">
+              {formatDateCell(row.deliveryDate ?? undefined)}
+            </td>
+            <td className="table-cell text-right tabular-nums">
+              {row.quantity} {row.unit}
+            </td>
+            <td className="table-cell tabular-nums">
+              {row.warrantyMonths} tháng · {anchorLabel(row.anchorType)}
+            </td>
+            <td className="table-cell">
+              <span className={`pur-erp__pill pur-erp__pill--${statusTone(row.status)}`}>
+                {statusLabel(row.status)}
+              </span>
+            </td>
+            <td className="table-cell text-center tabular-nums">{row.claimCount}</td>
+            <td className="table-cell warranty-col-actions" onClick={e => e.stopPropagation()}>
+              {canCreate && row.status !== 'void' ? (
+                <Button
+                  type="button"
+                  variant="filled"
+                  size="sm"
+                  leftIcon={Plus}
+                  onClick={() => onCreateComplaint(row)}
                 >
-                  <td className="table-cell">
-                    <div className="font-semibold">{row.materialName}</div>
-                    <div className="font-mono text-[var(--md-on-surface-variant)]">
-                      {row.materialCode || row.code}
-                    </div>
-                  </td>
-                  <td className="table-cell">{row.supplierName || '-'}</td>
-                  <td className="table-cell warranty-col-project">
-                    {row.projectCode ? (
-                      <EntityCodeLink
-                        code={row.projectCode}
-                        to={`/warehouse/projects/${encodeURIComponent(row.projectCode)}`}
-                      />
-                    ) : '-'}
-                  </td>
-                  <td className="table-cell warranty-col-po">
-                    {row.poCode ? (
-                      <EntityCodeLink
-                        code={row.poCode}
-                        to={`/purchasing/orders/${encodeURIComponent(row.poCode)}`}
-                      />
-                    ) : '-'}
-                  </td>
-                  <td className="table-cell tabular-nums">
-                    {formatDateCell(row.deliveryDate ?? undefined)}
-                  </td>
-                  <td className="table-cell text-right tabular-nums">
-                    {row.quantity} {row.unit}
-                  </td>
-                  <td className="table-cell tabular-nums">
-                    {row.warrantyMonths} tháng · {anchorLabel(row.anchorType)}
-                  </td>
-                  <td className="table-cell">
-                    <span className={`pur-erp__pill pur-erp__pill--${statusTone(row.status)}`}>
-                      {statusLabel(row.status)}
-                    </span>
-                  </td>
-                  <td className="table-cell text-center tabular-nums">{row.claimCount}</td>
-                  <td className="table-cell warranty-col-actions" onClick={e => e.stopPropagation()}>
-                    {canCreate && row.status !== 'void' ? (
-                      <button
-                        type="button"
-                        className="btn btn-primary btn-sm"
-                        onClick={() => onCreateComplaint(row)}
-                      >
-                        <Plus size={14} aria-hidden />
-                        Tạo khiếu nại
-                      </button>
-                    ) : null}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-      {rows.length > 0 && !isLoading ? (
-        <Pagination
-          embedded
-          currentPage={page}
-          totalPages={Math.max(1, Math.ceil(rows.length / pageSize))}
-          pageSize={pageSize}
-          onPageChange={onPageChange}
-          onPageSizeChange={size => {
-            onPageSizeChange(size);
-            onPageChange(1);
-          }}
-          totalItems={rows.length}
-        />
-      ) : null}
+                  Tạo khiếu nại
+                </Button>
+              ) : null}
+            </td>
+          </tr>
+        ))}
+      </TableShell>
     </>
   );
 }

@@ -1,28 +1,35 @@
-import PageHeader from '../../../components/ui/PageHeader';
-import EmptyState from '../../../components/ui/EmptyState';
-import TableSkeletonRows from '../../../components/ui/TableSkeletonRows';
-import ConfirmDialog from '../../../components/ui/ConfirmDialog';
-import PoVoucherPreview from '../../../components/purchasing/PoVoucherPreview';
 import PoAttachmentsPanel from '../../../components/purchasing/PoAttachmentsPanel';
 import PoCommentsPanel from '../../../components/purchasing/PoCommentsPanel';
+import PoVoucherPreview from '../../../components/purchasing/PoVoucherPreview';
+import Button from '../../../components/ui/Button';
+import ConfirmDialog from '../../../components/ui/ConfirmDialog';
+import EmptyState from '../../../components/ui/EmptyState';
+import PageHeader from '../../../components/ui/PageHeader';
+import PageShell from '../../../components/ui/PageShell';
+import TableShell from '../../../components/ui/TableShell';
 import { getApiErrorMessage } from '../../../lib/apiClient';
+import { PoDeliveryEvaluationsSection } from './PoDeliveryEvaluationsSection';
 import { PoDetailHeaderActions } from './PoDetailHeaderActions';
 import { PoDetailLinesTable } from './PoDetailLinesTable';
 import { PoDetailSummaryCard } from './PoDetailSummaryCard';
 import { PoInstallmentsSection } from './PoInstallmentsSection';
 import { PoRelatedImportsSection } from './PoRelatedImportsSection';
-import { PoDeliveryEvaluationsSection } from './PoDeliveryEvaluationsSection';
 import { usePurchaseOrderDetail } from './usePurchaseOrderDetail';
 
 export function PurchaseOrderDetailView({ code }: { code: string }) {
   const d = usePurchaseOrderDetail(code);
 
   return (
-    <div className="hrm-page w-full pur-detail">
+    <PageShell variant="detail" className="w-full pur-detail">
       <div className="no-print">
         <PageHeader
           variant="detail"
           onBack={d.requestBack}
+          breadcrumbs={[
+            { label: 'Mua hàng', to: '/purchasing/dashboard' },
+            { label: 'Đơn hàng', to: '/purchasing/orders' },
+            { label: code.trim() },
+          ]}
           title={/^po([\s_-]|$)/i.test(code.trim()) ? code.trim() : `PO ${code.trim()}`}
           subtitle={d.order?.supplierName || d.order?.planCode || undefined}
           actions={(
@@ -51,14 +58,14 @@ export function PurchaseOrderDetailView({ code }: { code: string }) {
           <EmptyState
             message={getApiErrorMessage(d.error, 'Không tải được chi tiết đơn hàng.')}
             action={(
-              <button type="button" className="btn btn-primary btn-sm" onClick={() => { void d.refetch(); }}>
+              <Button type="button" variant="filled" size="sm" onClick={() => { void d.refetch(); }}>
                 Thử lại
-              </button>
+              </Button>
             )}
           />
         ) : d.isLoading || !d.order ? (
           <section className="pur-detail__card">
-            <table className="pur-erp__table"><tbody><TableSkeletonRows rows={5} colSpan={4} /></tbody></table>
+            <TableShell loading skeletonRows={5} colSpan={4} tableClassName="pur-erp__table" />
           </section>
         ) : (
           <>
@@ -133,6 +140,6 @@ export function PurchaseOrderDetailView({ code }: { code: string }) {
           <PoVoucherPreview model={d.printModel} />
         </div>
       ) : null}
-    </div>
+    </PageShell>
   );
 }

@@ -34,7 +34,7 @@ export default function PurchasePlansPage({ kind = 'plan' }: Props) {
             : 'Kế hoạch mua theo dự án - gửi duyệt Trưởng cung ứng → Sếp, rồi mới tạo PO'
         }
         actions={(
-          <div className="pur-erp__head-actions">
+          <div className="flex flex-wrap gap-2">
             {!vm.isAdhoc ? (
               <Button
                 type="button"

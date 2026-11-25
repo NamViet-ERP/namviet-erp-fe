@@ -1,28 +1,32 @@
 import { useMemo, useState } from 'react';
 import { Download, ExternalLink, FolderOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import PageShell from '../../components/ui/PageShell';
-import PageHeader from '../../components/ui/PageHeader';
-import SectionCard from '../../components/ui/SectionCard';
-import FilterToolbar from '../../components/ui/FilterToolbar';
 import ProjectAutocomplete from '../../components/purchasing/ProjectAutocomplete';
-import EmptyState from '../../components/ui/EmptyState';
+import Button from '../../components/ui/Button';
 import EntityCodeLink from '../../components/ui/EntityCodeLink';
-import Pagination from '../../components/ui/Pagination';
-import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
+import FilterToolbar from '../../components/ui/FilterToolbar';
+import PageHeader from '../../components/ui/PageHeader';
+import PageShell from '../../components/ui/PageShell';
+import SectionCard from '../../components/ui/SectionCard';
+import SelectField from '../../components/ui/SelectField';
+import TableShell from '../../components/ui/TableShell';
 import { showToast } from '../../components/ui/Toast';
 import { DEFAULT_LIST_PAGE_SIZE, type ListPageSize } from '../../constants/pagination';
-import { usePurchaseDocuments } from '../../hooks/usePurchaseDocuments';
 import { useProjects } from '../../hooks/useProjects';
+import { usePurchaseDocuments } from '../../hooks/usePurchaseDocuments';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { formatDateTimeVi } from '../../lib/hrm/formatters';
-import { purchaseDocumentsService } from '../../services/purchaseDocumentsService';
 import {
   PURCHASE_DOC_TYPE_OPTIONS,
   purchaseDocTypeLabel,
 } from '../../lib/purchasing/purchaseDocTypes';
+import { purchaseDocumentsService } from '../../services/purchaseDocumentsService';
 
 const COL_COUNT = 8;
+const DOC_TYPE_OPTIONS = [
+  { value: '', label: 'Tất cả loại' },
+  ...PURCHASE_DOC_TYPE_OPTIONS,
+];
 
 export default function PurchaseDocumentsPage() {
   const { data: projectsPage } = useProjects({ page: 1, pageSize: 200 });
@@ -72,6 +76,21 @@ export default function PurchaseDocumentsPage() {
     }
   };
 
+  const pagination = totalItems > 0 && !isLoading
+    ? {
+        embedded: true,
+        currentPage: page,
+        totalPages,
+        pageSize,
+        totalItems,
+        onPageChange: setPage,
+        onPageSizeChange: (size: ListPageSize) => {
+          setPageSize(size);
+          setPage(1);
+        },
+      }
+    : undefined;
+
   return (
     <PageShell>
       <PageHeader
@@ -93,8 +112,8 @@ export default function PurchaseDocumentsPage() {
             <div className="hrm-list-toolbar__filter-row hrm-list-toolbar__filter-row--selects">
               <ProjectAutocomplete
                 value={projectCode}
-                onChange={code => {
-                  setProjectCode(code);
+                onChange={nextCode => {
+                  setProjectCode(nextCode);
                   setPage(1);
                 }}
                 projects={projects}
@@ -111,130 +130,98 @@ export default function PurchaseDocumentsPage() {
                 placeholder="Mã PO"
                 aria-label="Lọc mã PO"
               />
-              <select
-                className="form-input"
+              <SelectField
                 value={docType}
-                onChange={e => {
-                  setDocType(e.target.value);
+                onChange={next => {
+                  setDocType(next);
                   setPage(1);
                 }}
+                options={DOC_TYPE_OPTIONS}
                 aria-label="Lọc loại hồ sơ"
-              >
-                <option value="">Tất cả loại</option>
-                {PURCHASE_DOC_TYPE_OPTIONS.map(o => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
+                selectClassName="form-input"
+              />
             </div>
           )}
         />
-      {isError ? (
-        <EmptyState message={getApiErrorMessage(error, 'Không tải được danh sách hồ sơ.')} />
-      ) : (
-        <>
-          <div className="overflow-x-auto table-scroll wms-inventory-table-wrap">
-            <table className="wms-inventory-table">
-              <thead>
-                <tr>
-                  <th className="table-header-cell">Loại</th>
-                  <th className="table-header-cell">Tên file</th>
-                  <th className="table-header-cell">PO</th>
-                  <th className="table-header-cell">Dự án</th>
-                  <th className="table-header-cell">NCC</th>
-                  <th className="table-header-cell">Người tải</th>
-                  <th className="table-header-cell">Ngày tải</th>
-                  <th className="table-header-cell text-center">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody>
-                {isLoading ? (
-                  <TableSkeletonRows rows={8} colSpan={COL_COUNT} />
-                ) : items.length === 0 ? (
-                  <tr className="table-row">
-                    <td className="table-cell" colSpan={COL_COUNT}>
-                      <EmptyState
-                        icon={FolderOpen}
-                        message="Chưa có hồ sơ. Tải lên từ chi tiết đơn hàng."
-                      />
-                    </td>
-                  </tr>
-                ) : (
-                  items.map(row => (
-                    <tr key={row.id} className="table-row">
-                      <td className="table-cell">
-                        <span className="pur-erp__pill">{purchaseDocTypeLabel(row.docType)}</span>
-                      </td>
-                      <td className="table-cell">
-                        <div className="font-semibold truncate" title={row.fileName}>
-                          {row.fileName}
-                        </div>
-                      </td>
-                      <td className="table-cell">
-                        <EntityCodeLink
-                          code={row.poCode}
-                          to={`/purchasing/orders/${encodeURIComponent(row.poCode)}`}
-                        />
-                      </td>
-                      <td className="table-cell">
-                        {row.projectCode ? (
-                          <EntityCodeLink
-                            code={row.projectCode}
-                            to={`/warehouse/projects/${encodeURIComponent(row.projectCode)}`}
-                          />
-                        ) : '—'}
-                      </td>
-                      <td className="table-cell">{row.supplierName || '—'}</td>
-                      <td className="table-cell">{row.uploadedByName || '—'}</td>
-                      <td className="table-cell tabular-nums">
-                        {formatDateTimeVi(row.uploadedAt) ?? '—'}
-                      </td>
-                      <td className="table-cell text-center">
-                        <div className="inline-flex items-center gap-1">
-                          <button
-                            type="button"
-                            className="btn btn-ghost btn-sm"
-                            disabled={downloadingId === row.id}
-                            aria-label={`Tải ${row.fileName}`}
-                            onClick={() => {
-                              void onDownload(row);
-                            }}
-                          >
-                            <Download size={14} aria-hidden />
-                          </button>
-                          <Link
-                            to={`/purchasing/orders/${encodeURIComponent(row.poCode)}`}
-                            className="btn btn-ghost btn-sm"
-                            aria-label={`Mở PO ${row.poCode}`}
-                            title="Mở PO"
-                          >
-                            <ExternalLink size={14} aria-hidden />
-                          </Link>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-          {totalItems > 0 && !isLoading ? (
-            <Pagination
-              embedded
-              currentPage={page}
-              totalPages={totalPages}
-              pageSize={pageSize}
-              totalItems={totalItems}
-              onPageChange={setPage}
-              onPageSizeChange={size => {
-                setPageSize(size);
-                setPage(1);
-              }}
-            />
-          ) : null}
-        </>
-      )}
+        <TableShell
+          tableClassName="wms-inventory-table"
+          colSpan={COL_COUNT}
+          loading={isLoading}
+          skeletonRows={8}
+          error={isError ? getApiErrorMessage(error, 'Không tải được danh sách hồ sơ.') : null}
+          isEmpty={items.length === 0}
+          emptyIcon={FolderOpen}
+          emptyMessage="Chưa có hồ sơ. Tải lên từ chi tiết đơn hàng."
+          pagination={pagination}
+          header={(
+            <tr>
+              <th className="table-header-cell">Loại</th>
+              <th className="table-header-cell">Tên file</th>
+              <th className="table-header-cell">PO</th>
+              <th className="table-header-cell">Dự án</th>
+              <th className="table-header-cell">NCC</th>
+              <th className="table-header-cell">Người tải</th>
+              <th className="table-header-cell">Ngày tải</th>
+              <th className="table-header-cell text-center">Thao tác</th>
+            </tr>
+          )}
+        >
+          {items.map(row => (
+            <tr key={row.id} className="table-row">
+              <td className="table-cell">
+                <span className="pur-erp__pill">{purchaseDocTypeLabel(row.docType)}</span>
+              </td>
+              <td className="table-cell">
+                <div className="font-semibold truncate" title={row.fileName}>
+                  {row.fileName}
+                </div>
+              </td>
+              <td className="table-cell">
+                <EntityCodeLink
+                  code={row.poCode}
+                  to={`/purchasing/orders/${encodeURIComponent(row.poCode)}`}
+                />
+              </td>
+              <td className="table-cell">
+                {row.projectCode ? (
+                  <EntityCodeLink
+                    code={row.projectCode}
+                    to={`/warehouse/projects/${encodeURIComponent(row.projectCode)}`}
+                  />
+                ) : '—'}
+              </td>
+              <td className="table-cell">{row.supplierName || '—'}</td>
+              <td className="table-cell">{row.uploadedByName || '—'}</td>
+              <td className="table-cell tabular-nums">
+                {formatDateTimeVi(row.uploadedAt) ?? '—'}
+              </td>
+              <td className="table-cell text-center">
+                <div className="inline-flex items-center gap-1">
+                  <Button
+                    type="button"
+                    variant="text"
+                    size="sm"
+                    disabled={downloadingId === row.id}
+                    aria-label={`Tải ${row.fileName}`}
+                    onClick={() => {
+                      void onDownload(row);
+                    }}
+                  >
+                    <Download size={14} aria-hidden />
+                  </Button>
+                  <Link
+                    to={`/purchasing/orders/${encodeURIComponent(row.poCode)}`}
+                    className="btn btn-text btn-sm"
+                    aria-label={`Mở PO ${row.poCode}`}
+                    title="Mở PO"
+                  >
+                    <ExternalLink size={14} aria-hidden />
+                  </Link>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </TableShell>
       </SectionCard>
     </PageShell>
   );

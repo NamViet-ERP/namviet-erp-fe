@@ -1,10 +1,10 @@
 import { Plus } from 'lucide-react';
-import EmptyState from '../../../components/ui/EmptyState';
-import Pagination from '../../../components/ui/Pagination';
-import TableSkeletonRows from '../../../components/ui/TableSkeletonRows';
+import Button from '../../../components/ui/Button';
+import SelectField from '../../../components/ui/SelectField';
+import TableShell from '../../../components/ui/TableShell';
+import type { ListPageSize } from '../../../constants/pagination';
 import { getApiErrorMessage } from '../../../lib/apiClient';
 import { formatDateCell } from '../../../lib/hrm/formatters';
-import type { ListPageSize } from '../../../constants/pagination';
 import type { PurchaseWarrantyClaimListApiDto } from '../../../services/purchaseWarrantiesService';
 import {
   CLAIM_STATUS_OPTIONS,
@@ -55,6 +55,21 @@ export default function WarrantyComplaintsPanel({
 }: WarrantyComplaintsPanelProps) {
   const start = (page - 1) * pageSize;
   const pageRows = rows.slice(start, start + pageSize);
+  const errorMessage = isError ? getApiErrorMessage(error, 'Không tải được phiếu khiếu nại.') : null;
+  const pagination = rows.length > 0 && !isLoading
+    ? {
+        embedded: true,
+        currentPage: page,
+        totalPages: Math.max(1, Math.ceil(rows.length / pageSize)),
+        pageSize,
+        onPageChange,
+        onPageSizeChange: (size: ListPageSize) => {
+          onPageSizeChange(size);
+          onPageChange(1);
+        },
+        totalItems: rows.length,
+      }
+    : undefined;
 
   return (
     <>
@@ -68,114 +83,86 @@ export default function WarrantyComplaintsPanel({
               placeholder="Tìm mã phiếu, vật tư, NCC, PO"
               aria-label="Tìm khiếu nại bảo hành"
             />
-            <select
-              className="form-input"
+            <SelectField
               value={status}
-              onChange={e => onStatusChange(e.target.value)}
+              onChange={onStatusChange}
+              options={CLAIM_STATUS_OPTIONS}
               aria-label="Lọc trạng thái khiếu nại"
-            >
-              {CLAIM_STATUS_OPTIONS.map(o => (
-                <option key={o.value || 'all'} value={o.value}>{o.label}</option>
-              ))}
-            </select>
+              selectClassName="form-input"
+            />
             {canCreate && onCreate ? (
-              <button type="button" className="btn btn-primary btn-sm" onClick={onCreate}>
-                <Plus size={14} aria-hidden />
+              <Button type="button" variant="filled" size="sm" leftIcon={Plus} onClick={onCreate}>
                 Tạo khiếu nại mới
-              </button>
+              </Button>
             ) : null}
           </div>
         </div>
       </div>
-      <div className="overflow-x-auto table-scroll wms-inventory-table-wrap">
-        <table className="wms-inventory-table">
-          <thead>
-            <tr>
-              <th className="table-header-cell">Mã</th>
-              <th className="table-header-cell">Ngày</th>
-              <th className="table-header-cell">NCC</th>
-              <th className="table-header-cell">Hàng hoá</th>
-              <th className="table-header-cell">Loại lỗi</th>
-              <th className="table-header-cell">Mức độ</th>
-              <th className="table-header-cell">Bảo hành</th>
-              <th className="table-header-cell">Trạng thái</th>
-              <th className="table-header-cell warranty-col-actions" />
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
-              <TableSkeletonRows colSpan={COL_COUNT} />
-            ) : isError ? (
-              <tr>
-                <td colSpan={COL_COUNT}>
-                  <EmptyState message={getApiErrorMessage(error, 'Không tải được phiếu khiếu nại.')} />
-                </td>
-              </tr>
-            ) : pageRows.length === 0 ? (
-              <tr>
-                <td colSpan={COL_COUNT}>
-                  <EmptyState message="Chưa có khiếu nại bảo hành nào." />
-                </td>
-              </tr>
-            ) : (
-              pageRows.map(row => (
-                <tr key={row.id} className="table-row">
-                  <td className="table-cell font-mono">{row.ticketCode}</td>
-                  <td className="table-cell tabular-nums">
-                    {formatDateCell(row.createdAt)}
-                  </td>
-                  <td className="table-cell">{row.supplierName || '-'}</td>
-                  <td className="table-cell">
-                    <div className="font-semibold">{row.materialName}</div>
-                    <div className="font-mono text-[var(--md-on-surface-variant)]">
-                      {row.materialCode || row.poCode}
-                    </div>
-                  </td>
-                  <td className="table-cell">{defectTypeLabel(row.defectType)}</td>
-                  <td className="table-cell">
-                    <span className={`pur-erp__pill pur-erp__pill--${severityTone(row.severity)}`}>
-                      {severityLabel(row.severity)}
-                    </span>
-                  </td>
-                  <td className="table-cell">
-                    <span className={`pur-erp__pill pur-erp__pill--${statusTone(row.warrantyStatus)}`}>
-                      {statusLabel(row.warrantyStatus)}
-                    </span>
-                  </td>
-                  <td className="table-cell">
-                    <span className={`pur-erp__pill pur-erp__pill--${statusTone(row.status)}`}>
-                      {claimStatusLabel(row.status)}
-                    </span>
-                  </td>
-                  <td className="table-cell warranty-col-actions">
-                    <button
-                      type="button"
-                      className="btn btn-primary btn-sm"
-                      onClick={() => onOpenWarranty(row.warrantyId)}
-                    >
-                      Xử lý
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-      {rows.length > 0 && !isLoading ? (
-        <Pagination
-          embedded
-          currentPage={page}
-          totalPages={Math.max(1, Math.ceil(rows.length / pageSize))}
-          pageSize={pageSize}
-          onPageChange={onPageChange}
-          onPageSizeChange={size => {
-            onPageSizeChange(size);
-            onPageChange(1);
-          }}
-          totalItems={rows.length}
-        />
-      ) : null}
+
+      <TableShell
+        tableClassName="wms-inventory-table"
+        colSpan={COL_COUNT}
+        loading={isLoading}
+        error={errorMessage}
+        isEmpty={pageRows.length === 0}
+        emptyMessage="Chưa có khiếu nại bảo hành nào."
+        pagination={pagination}
+        header={(
+          <tr>
+            <th className="table-header-cell">Mã</th>
+            <th className="table-header-cell">Ngày</th>
+            <th className="table-header-cell">NCC</th>
+            <th className="table-header-cell">Hàng hoá</th>
+            <th className="table-header-cell">Loại lỗi</th>
+            <th className="table-header-cell">Mức độ</th>
+            <th className="table-header-cell">Bảo hành</th>
+            <th className="table-header-cell">Trạng thái</th>
+            <th className="table-header-cell warranty-col-actions" />
+          </tr>
+        )}
+      >
+        {pageRows.map(row => (
+          <tr key={row.id} className="table-row">
+            <td className="table-cell font-mono">{row.ticketCode}</td>
+            <td className="table-cell tabular-nums">
+              {formatDateCell(row.createdAt)}
+            </td>
+            <td className="table-cell">{row.supplierName || '-'}</td>
+            <td className="table-cell">
+              <div className="font-semibold">{row.materialName}</div>
+              <div className="font-mono text-[var(--md-on-surface-variant)]">
+                {row.materialCode || row.poCode}
+              </div>
+            </td>
+            <td className="table-cell">{defectTypeLabel(row.defectType)}</td>
+            <td className="table-cell">
+              <span className={`pur-erp__pill pur-erp__pill--${severityTone(row.severity)}`}>
+                {severityLabel(row.severity)}
+              </span>
+            </td>
+            <td className="table-cell">
+              <span className={`pur-erp__pill pur-erp__pill--${statusTone(row.warrantyStatus)}`}>
+                {statusLabel(row.warrantyStatus)}
+              </span>
+            </td>
+            <td className="table-cell">
+              <span className={`pur-erp__pill pur-erp__pill--${statusTone(row.status)}`}>
+                {claimStatusLabel(row.status)}
+              </span>
+            </td>
+            <td className="table-cell warranty-col-actions">
+              <Button
+                type="button"
+                variant="filled"
+                size="sm"
+                onClick={() => onOpenWarranty(row.warrantyId)}
+              >
+                Xử lý
+              </Button>
+            </td>
+          </tr>
+        ))}
+      </TableShell>
     </>
   );
 }

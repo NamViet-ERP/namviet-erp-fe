@@ -1,255 +1,132 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { Package, RefreshCw, ShieldCheck, TriangleAlert } from 'lucide-react';
-import PageHeader from '../../components/ui/PageHeader';
-import TabFilter from '../../components/ui/TabFilter';
-import SectionCard from '../../components/ui/SectionCard';
+import Button from '../../components/ui/Button';
 import KpiCard from '../../components/ui/KpiCard';
 import MetricsStrip from '../../components/ui/MetricsStrip';
-import { showToast } from '../../components/ui/Toast';
-import { DEFAULT_LIST_PAGE_SIZE, type ListPageSize } from '../../constants/pagination';
-import {
-  usePurchaseWarranties,
-  usePurchaseWarrantyClaims,
-  useSyncPurchaseWarranties,
-} from '../../hooks/usePurchaseWarranties';
-import { usePermission } from '../../hooks/usePermission';
-import { useProjects } from '../../hooks/useProjects';
-import { getApiErrorMessage } from '../../lib/apiClient';
-import type { TabItem } from '../../types';
-import type { PurchaseWarrantyApiDto } from '../../services/purchaseWarrantiesService';
+import PageHeader from '../../components/ui/PageHeader';
+import PageShell from '../../components/ui/PageShell';
+import SectionCard from '../../components/ui/SectionCard';
+import TabFilter from '../../components/ui/TabFilter';
 import CreateComplaintTicketPanel from './warranties/CreateComplaintTicketPanel';
+import { usePurchaseWarrantiesController } from './warranties/usePurchaseWarrantiesController';
 import WarrantyComplaintsPanel from './warranties/WarrantyComplaintsPanel';
 import WarrantyDetailModal from './warranties/WarrantyDetailModal';
 import WarrantyRegistryPanel from './warranties/WarrantyRegistryPanel';
-import {
-  WARRANTY_PAGE_TABS,
-  type WarrantyPageTab,
-} from './warranties/warrantyLabels';
-
-function tabFromParam(value: string | null): WarrantyPageTab {
-  if (value === 'complaints' || value === 'create-complaint') return 'complaints';
-  return 'registry';
-}
-
-function shouldOpenCreate(value: string | null): boolean {
-  return value === 'create-complaint' || value === 'create-warranty';
-}
+import type { WarrantyPageTab } from './warranties/warrantyLabels';
 
 export default function PurchaseWarrantiesPage() {
-  const { has } = usePermission();
-  const canCreate = has('purchasing.warranties.create');
-  const canUpdate = has('purchasing.warranties.update');
-  const { data: projectsPage } = useProjects({ page: 1, pageSize: 200 });
-  const projects = projectsPage?.items ?? [];
-  const [searchParams, setSearchParams] = useSearchParams();
-  const tabParam = searchParams.get('tab');
-  const tab = tabFromParam(tabParam);
-
-  const [search, setSearch] = useState('');
-  const [projectCode, setProjectCode] = useState('');
-  const [materialCode, setMaterialCode] = useState('');
-  const [status, setStatus] = useState('');
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState<ListPageSize>(DEFAULT_LIST_PAGE_SIZE);
-  const [claimSearch, setClaimSearch] = useState('');
-  const [claimStatus, setClaimStatus] = useState('');
-  const [claimPage, setClaimPage] = useState(1);
-  const [claimPageSize, setClaimPageSize] = useState<ListPageSize>(DEFAULT_LIST_PAGE_SIZE);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [preselectedLotId, setPreselectedLotId] = useState('');
-  const [createOpen, setCreateOpen] = useState(() => shouldOpenCreate(tabParam));
-
-  const listParams = useMemo(
-    () => ({
-      search: search.trim() || undefined,
-      projectCode: projectCode.trim() || undefined,
-      materialCode: materialCode.trim() || undefined,
-      status: status || undefined,
-    }),
-    [search, projectCode, materialCode, status],
-  );
-  const claimParams = useMemo(() => ({ kind: 'complaint' as const }), []);
-
-  const { data = [], isLoading, isError, error } = usePurchaseWarranties(listParams);
-  const lotsQuery = usePurchaseWarranties({});
-  const lots = lotsQuery.data ?? [];
-  const claimsQuery = usePurchaseWarrantyClaims(claimParams);
-  const claims = useMemo(() => {
-    let rows = claimsQuery.data ?? [];
-    if (claimStatus) rows = rows.filter(c => c.status === claimStatus);
-    const q = claimSearch.trim().toLowerCase();
-    if (q) {
-      rows = rows.filter(c =>
-        [c.ticketCode, c.reason, c.poCode, c.materialName, c.materialCode ?? '', c.supplierName ?? '', c.projectCode ?? '']
-          .join(' ')
-          .toLowerCase()
-          .includes(q),
-      );
-    }
-    return rows;
-  }, [claimsQuery.data, claimSearch, claimStatus]);
-  const syncMutation = useSyncPurchaseWarranties();
-
-  const totalLots = lots.length;
-  const activeLots = lots.filter(r => r.status === 'active').length;
-  const expiredLots = lots.filter(r => r.status === 'expired').length;
-  const openComplaints = (claimsQuery.data ?? []).filter(
-    c => c.status !== 'closed' && c.status !== 'cancelled',
-  ).length;
-  const highOpen = (claimsQuery.data ?? []).filter(
-    c => c.severity === 'high' && c.status !== 'closed' && c.status !== 'cancelled',
-  ).length;
-
-  useEffect(() => {
-    if (!shouldOpenCreate(tabParam)) return;
-    // Deep-link URL (?tab=create / create-complaint) opens create modal once
-
-    setCreateOpen(true);
-    setSearchParams(tabParam === 'create-complaint' ? { tab: 'complaints' } : {}, { replace: true });
-  }, [tabParam, setSearchParams]);
-
-  const setTab = (next: WarrantyPageTab) => {
-    setSearchParams(next === 'registry' ? {} : { tab: next }, { replace: true });
-  };
-
-  const openCreate = (lotId = '') => {
-    setPreselectedLotId(lotId);
-    setCreateOpen(true);
-  };
-
-  const closeCreate = () => {
-    setCreateOpen(false);
-    setPreselectedLotId('');
-  };
-
-  const onSync = async () => {
-    try {
-      const result = await syncMutation.mutateAsync();
-      showToast('success', `Đã đồng bộ: tạo ${result.created}, cập nhật ${result.updated} hồ sơ BH.`);
-    } catch (err) {
-      showToast('error', getApiErrorMessage(err, 'Không đồng bộ được bảo hành'));
-    }
-  };
-
-  const tabs: TabItem[] = WARRANTY_PAGE_TABS.map(t => {
-    if (t.id === 'registry') return { ...t, count: totalLots };
-    if (t.id === 'complaints') return { ...t, count: claimsQuery.data?.length ?? 0 };
-    return t;
-  });
-
-  const goCreateComplaint = (row: PurchaseWarrantyApiDto) => openCreate(row.id);
+  const vm = usePurchaseWarrantiesController();
 
   return (
-    <div className="page-shell space-y-4 pur-warranty-page">
+    <PageShell className="pur-warranty-page">
       <PageHeader
         eyebrow="Mua hàng"
         title="Quản lý bảo hành"
         subtitle="Danh mục lô hàng còn/hết hạn BH và khiếu nại bảo hành / chất lượng với NCC."
         actions={
-          canUpdate ? (
-            <button
+          vm.canUpdate ? (
+            <Button
               type="button"
-              className="btn btn-secondary btn-sm"
-              disabled={syncMutation.isPending}
+              variant="outlined"
+              size="sm"
+              leftIcon={RefreshCw}
+              disabled={vm.syncPending}
               onClick={() => {
-                void onSync();
+                void vm.onSync();
               }}
             >
-              <RefreshCw size={14} aria-hidden />
-              {syncMutation.isPending ? 'Đang đồng bộ…' : 'Đồng bộ từ PO đã nhận'}
-            </button>
+              {vm.syncPending ? 'Đang đồng bộ…' : 'Đồng bộ từ PO đã nhận'}
+            </Button>
           ) : null
         }
       />
 
-      <div className="tab-filter-row">
-        <TabFilter tabs={tabs} activeTab={tab} onChange={id => setTab(id as WarrantyPageTab)} />
+      <div className="erp-filter-toolbar__tabs">
+        <TabFilter tabs={vm.tabs} activeTab={vm.tab} onChange={id => vm.setTab(id as WarrantyPageTab)} />
       </div>
 
-      {tab === 'registry' ? (
+      {vm.tab === 'registry' ? (
         <MetricsStrip columns={3}>
-          <KpiCard label="Tổng số lô hàng có bảo hành" value={totalLots} icon={Package} tone="primary" />
-          <KpiCard label="Còn bảo hành" value={activeLots} icon={ShieldCheck} tone="success" />
-          <KpiCard label="Đã hết bảo hành" value={expiredLots} icon={TriangleAlert} tone="warning" />
+          <KpiCard label="Tổng số lô hàng có bảo hành" value={vm.totalLots} icon={Package} tone="primary" />
+          <KpiCard label="Còn bảo hành" value={vm.activeLots} icon={ShieldCheck} tone="success" />
+          <KpiCard label="Đã hết bảo hành" value={vm.expiredLots} icon={TriangleAlert} tone="warning" />
         </MetricsStrip>
       ) : null}
-      {tab === 'complaints' ? (
+      {vm.tab === 'complaints' ? (
         <MetricsStrip columns={3}>
-          <KpiCard label="Khiếu nại đang xử lý" value={openComplaints} icon={TriangleAlert} tone="warning" />
-          <KpiCard label="Tổng số khiếu nại" value={claimsQuery.data?.length ?? 0} icon={Package} tone="primary" />
-          <KpiCard label="Mức nghiêm trọng chưa đóng" value={highOpen} icon={TriangleAlert} tone="warning" />
+          <KpiCard label="Khiếu nại đang xử lý" value={vm.openComplaints} icon={TriangleAlert} tone="warning" />
+          <KpiCard label="Tổng số khiếu nại" value={vm.claimsTotalCount} icon={Package} tone="primary" />
+          <KpiCard label="Mức nghiêm trọng chưa đóng" value={vm.highOpen} icon={TriangleAlert} tone="warning" />
         </MetricsStrip>
       ) : null}
 
-      {tab === 'registry' ? (
+      {vm.tab === 'registry' ? (
         <SectionCard noPadding>
           <WarrantyRegistryPanel
-            rows={data}
-            isLoading={isLoading}
-            isError={isError}
-            error={error}
-            search={search}
-            onSearchChange={v => { setSearch(v); setPage(1); }}
-            projectCode={projectCode}
-            onProjectCodeChange={v => { setProjectCode(v); setPage(1); }}
-            materialCode={materialCode}
-            onMaterialCodeChange={v => { setMaterialCode(v); setPage(1); }}
-            status={status}
-            onStatusChange={v => { setStatus(v); setPage(1); }}
-            projects={projects}
-            page={page}
-            pageSize={pageSize}
-            onPageChange={setPage}
-            onPageSizeChange={setPageSize}
-            canCreate={canCreate}
-            onOpenDetail={row => setSelectedId(row.id)}
-            onCreateComplaint={goCreateComplaint}
+            rows={vm.warrantiesData}
+            isLoading={vm.warrantiesLoading}
+            isError={vm.warrantiesError}
+            error={vm.warrantiesErrorObj}
+            search={vm.search}
+            onSearchChange={v => { vm.setSearch(v); vm.setPage(1); }}
+            projectCode={vm.projectCode}
+            onProjectCodeChange={v => { vm.setProjectCode(v); vm.setPage(1); }}
+            materialCode={vm.materialCode}
+            onMaterialCodeChange={v => { vm.setMaterialCode(v); vm.setPage(1); }}
+            status={vm.status}
+            onStatusChange={v => { vm.setStatus(v); vm.setPage(1); }}
+            projects={vm.projects}
+            page={vm.page}
+            pageSize={vm.pageSize}
+            onPageChange={vm.setPage}
+            onPageSizeChange={vm.setPageSize}
+            canCreate={vm.canCreate}
+            onOpenDetail={row => vm.setSelectedId(row.id)}
+            onCreateComplaint={row => vm.openCreate(row.id)}
           />
         </SectionCard>
       ) : null}
 
-      {tab === 'complaints' ? (
+      {vm.tab === 'complaints' ? (
         <SectionCard noPadding>
           <WarrantyComplaintsPanel
-            rows={claims}
-            isLoading={claimsQuery.isLoading}
-            isError={claimsQuery.isError}
-            error={claimsQuery.error}
-            search={claimSearch}
-            onSearchChange={v => { setClaimSearch(v); setClaimPage(1); }}
-            status={claimStatus}
-            onStatusChange={v => { setClaimStatus(v); setClaimPage(1); }}
-            page={claimPage}
-            pageSize={claimPageSize}
-            onPageChange={setClaimPage}
-            onPageSizeChange={setClaimPageSize}
-            onOpenWarranty={id => setSelectedId(id)}
-            canCreate={canCreate}
-            onCreate={() => openCreate()}
+            rows={vm.claims}
+            isLoading={vm.claimsLoading}
+            isError={vm.claimsError}
+            error={vm.claimsErrorObj}
+            search={vm.claimSearch}
+            onSearchChange={v => { vm.setClaimSearch(v); vm.setClaimPage(1); }}
+            status={vm.claimStatus}
+            onStatusChange={v => { vm.setClaimStatus(v); vm.setClaimPage(1); }}
+            page={vm.claimPage}
+            pageSize={vm.claimPageSize}
+            onPageChange={vm.setClaimPage}
+            onPageSizeChange={vm.setClaimPageSize}
+            onOpenWarranty={id => vm.setSelectedId(id)}
+            canCreate={vm.canCreate}
+            onCreate={() => vm.openCreate()}
           />
         </SectionCard>
       ) : null}
 
       <CreateComplaintTicketPanel
-        key={createOpen ? `open-${preselectedLotId || 'new'}` : 'closed'}
-        isOpen={createOpen}
-        onClose={closeCreate}
-        lots={lots}
-        preselectedId={preselectedLotId}
-        canCreate={canCreate}
+        key={vm.createOpen ? `create-open-${vm.preselectedLotId || 'new'}` : 'create-closed'}
+        isOpen={vm.createOpen}
+        onClose={vm.closeCreate}
+        lots={vm.lots}
+        preselectedId={vm.preselectedLotId}
+        canCreate={vm.canCreate}
         onCreated={() => {
-          closeCreate();
-          setTab('complaints');
+          vm.closeCreate();
+          vm.setTab('complaints');
         }}
       />
 
       <WarrantyDetailModal
-        key={selectedId ?? 'closed'}
-        selectedId={selectedId}
-        canUpdate={canUpdate}
-        onClose={() => setSelectedId(null)}
+        key={vm.selectedId ? `detail-${vm.selectedId}` : 'detail-closed'}
+        selectedId={vm.selectedId}
+        canUpdate={vm.canUpdate}
+        onClose={() => vm.setSelectedId(null)}
       />
-    </div>
+    </PageShell>
   );
 }
