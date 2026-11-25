@@ -1,51 +1,59 @@
-import { useState, useMemo } from 'react';
-import type React from 'react';
-import { Ban, RotateCcw, Image as ImageIcon, Trash2, Upload } from 'lucide-react';
+import { useState } from 'react';
 import SectionCard from '../../components/ui/SectionCard';
 import DetailFieldGrid from '../../components/hr/DetailFieldGrid';
-import { FieldInput, FieldTextarea, FieldView } from '../../components/hr/DetailFields';
+import { FieldView } from '../../components/hr/DetailFields';
 import PageHeader from '../../components/ui/PageHeader';
 import HrmEditActions from '../../components/hr/HrmEditActions';
 import HrmNotFound, { HrmLoadingState } from '../../components/hr/HrmNotFound';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
-import { useMaterial, useUpdateMaterial, useDiscontinueMaterial, useReactivateMaterial } from '../../hooks/useMaterials';
+import {
+  useMaterial,
+  useUpdateMaterial,
+  useDiscontinueMaterial,
+  useReactivateMaterial,
+} from '../../hooks/useMaterials';
 import { useCategoryCascade, useCategoryTree } from '../../hooks/useCategories';
-import MaterialUnitSelect from '../../components/warehouse/MaterialUnitSelect';
-import MaterialCountrySelect from '../../components/warehouse/MaterialCountrySelect';
-import MaterialBrandSelect from '../../components/warehouse/MaterialBrandSelect';
-import { useMaterialRegions } from '../../hooks/useMaterialRegions';
-import { materialsService } from '../../services/materialsService';
 import { resolveMediaUrl } from '../../lib/hrm/employeeApiMapper';
 import {
   MATERIAL_CATEGORY_LEVELS,
-  MATERIAL_CREATE_REQUIRED_LEVELS,
-  MATERIAL_FIELD_PLACEHOLDERS,
-  MATERIAL_SELECT_PLACEHOLDER,
-  REGION_OPTIONS,
   formatOriginString,
-  materialInputError,
-  materialSelectError,
   parseOriginParts,
 } from '../../constants/materialCategoryLevels';
 import {
-  categoryLevel,
   resolveLeafCategoryId,
   selectionFromCategoryId,
 } from '../../lib/wms/materialCategoryTree';
-import CurrencyInput from '../../components/ui/CurrencyInput';
-import { formatCurrencyFull } from '../../utils/formatCurrency';
 import type { MaterialApiDto } from '../../types/wms';
+import MaterialCategoryCascadeFields from './materials/MaterialCategoryCascadeFields';
+import MaterialDetailEditForm, { type MaterialDetailEditState } from './materials/MaterialDetailEditForm';
+import {
+  MaterialDetailInfoReadGrid,
+  MaterialDetailStatusCard,
+} from './materials/MaterialDetailReadView';
+import { useMaterialImageDraft } from './materials/useMaterialImageDraft';
+import {
+  EMPTY_CATEGORY_SELECTION,
+  buildMaterialUpsertBody,
+  updateCategorySelection,
+  uploadMaterialImageIfSelected,
+  validateMaterialForm,
+  type CategorySelection,
+} from './materials/materialFormHelpers';
 
-const emptySelection: Array<number | ''> = ['', '', '', '', ''];
+const emptyEditForm: MaterialDetailEditState = {
+  materialName: '',
+  unit: '',
+  imageUrl: '',
+  technicalSpec: '',
+  generalTechnicalSpec: '',
+  qualityStandard: '',
+  ceilingPrice: '',
+};
 
 function pathCell(m: MaterialApiDto, key: keyof MaterialApiDto['categoryPath']) {
   return m.categoryPath?.[key]?.trim() || '—';
-}
-
-function isRequiredOnCreate(level: number) {
-  return (MATERIAL_CREATE_REQUIRED_LEVELS as readonly number[]).includes(level);
 }
 
 interface MaterialDetailViewProps {
@@ -62,190 +70,87 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
 
   const [isEditing, setIsEditing] = useState(false);
   const [showDiscontinueConfirm, setShowDiscontinueConfirm] = useState(false);
-  const [editSelection, setEditSelection] = useState<Array<number | ''>>([...emptySelection]);
-  const [editForm, setEditForm] = useState({
-    materialName: '',
-    unit: '',
-    imageUrl: '',
-    technicalSpec: '',
-    generalTechnicalSpec: '',
-    qualityStandard: '',
-    ceilingPrice: '',
-  });
-  const [originBrand, setOriginBrand] = useState('');
-  const [originCountry, setOriginCountry] = useState('');
-  const [originRegion, setOriginRegion] = useState('');
-  const [editImageFile, setEditImageFile] = useState<File | null>(null);
-  const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
+  const [editSelection, setEditSelection] = useState<CategorySelection>([...EMPTY_CATEGORY_SELECTION]);
+  const [editForm, setEditForm] = useState<MaterialDetailEditState>({ ...emptyEditForm });
+  const [originParts, setOriginParts] = useState({ brand: '', country: '', region: '' });
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [editErrors, setEditErrors] = useState<Record<string, string>>({});
+  const { imageFile, imagePreview, selectFile, clearImage } = useMaterialImageDraft();
 
   const { optionsByLevel: editOptions, isLoading: editCategoriesLoading } =
     useCategoryCascade(editSelection);
 
-  const { data: dbRegions = [] } = useMaterialRegions(true);
-  const regionOptions = useMemo(() => {
-    const list: string[] = [];
-    const seen = new Set<string>();
-    const add = (name?: string | null) => {
-      const t = name?.trim();
-      if (!t) return;
-      const k = t.toLowerCase();
-      if (!seen.has(k)) {
-        seen.add(k);
-        list.push(t);
-      }
-    };
-    dbRegions.forEach(r => add(r.name));
-    REGION_OPTIONS.forEach(r => add(r));
-    return list;
-  }, [dbRegions]);
-
   if (isLoading) return <HrmLoadingState />;
   if (isError || !material) {
-    return (
-      <HrmNotFound
-        message="Không tìm thấy vật tư."
-        backLabel="Quay lại danh sách"
-        onBack={onBack}
-      />
-    );
+    return <HrmNotFound message="Không tìm thấy vật tư." backLabel="Quay lại danh sách" onBack={onBack} />;
   }
 
-  const setEditLevel = (levelIndex: number, value: number | '') => {
-    setEditSelection(prev => {
-      const next = [...prev];
-      next[levelIndex] = value;
-      for (let i = levelIndex + 1; i < 5; i++) next[i] = '';
-      return next;
+  const resetEditFromMaterial = () => {
+    setEditSelection(selectionFromCategoryId(categories, material.categoryId));
+    setEditForm({
+      materialName: material.materialName,
+      unit: material.unit,
+      imageUrl: material.imageUrl ?? '',
+      technicalSpec: material.technicalSpec ?? '',
+      generalTechnicalSpec: material.generalTechnicalSpec ?? '',
+      qualityStandard: material.qualityStandard ?? '',
+      ceilingPrice: material.ceilingPrice != null ? String(material.ceilingPrice) : '',
     });
-  };
-
-  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 10 * 1024 * 1024) {
-      showToast('warning', 'Kích thước ảnh tối đa là 10MB');
-      return;
-    }
-    setEditImageFile(file);
-    if (editImagePreview) URL.revokeObjectURL(editImagePreview);
-    setEditImagePreview(URL.createObjectURL(file));
+    setOriginParts(parseOriginParts(material.origin));
+    clearImage();
+    setEditErrors({});
   };
 
   const handleRemoveImage = () => {
-    setEditImageFile(null);
-    if (editImagePreview) URL.revokeObjectURL(editImagePreview);
-    setEditImagePreview(null);
+    clearImage();
     setEditForm(f => ({ ...f, imageUrl: '' }));
   };
 
   const startEdit = () => {
-    setEditSelection(selectionFromCategoryId(categories, material.categoryId));
-    setEditForm({
-      materialName: material.materialName,
-      unit: material.unit,
-      imageUrl: material.imageUrl ?? '',
-      technicalSpec: material.technicalSpec ?? '',
-      generalTechnicalSpec: material.generalTechnicalSpec ?? '',
-      qualityStandard: material.qualityStandard ?? '',
-      ceilingPrice: material.ceilingPrice != null ? String(material.ceilingPrice) : '',
-    });
-    const parsed = parseOriginParts(material.origin);
-    setOriginBrand(parsed.brand);
-    setOriginCountry(parsed.country);
-    setOriginRegion(parsed.region);
-    setEditImageFile(null);
-    if (editImagePreview) URL.revokeObjectURL(editImagePreview);
-    setEditImagePreview(null);
-    setEditErrors({});
+    resetEditFromMaterial();
     setIsEditing(true);
   };
 
   const cancelEdit = () => {
-    setEditSelection(selectionFromCategoryId(categories, material.categoryId));
-    setEditForm({
-      materialName: material.materialName,
-      unit: material.unit,
-      imageUrl: material.imageUrl ?? '',
-      technicalSpec: material.technicalSpec ?? '',
-      generalTechnicalSpec: material.generalTechnicalSpec ?? '',
-      qualityStandard: material.qualityStandard ?? '',
-      ceilingPrice: material.ceilingPrice != null ? String(material.ceilingPrice) : '',
-    });
-    const parsed = parseOriginParts(material.origin);
-    setOriginBrand(parsed.brand);
-    setOriginCountry(parsed.country);
-    setOriginRegion(parsed.region);
-    setEditImageFile(null);
-    if (editImagePreview) URL.revokeObjectURL(editImagePreview);
-    setEditImagePreview(null);
-    setEditErrors({});
+    resetEditFromMaterial();
     setIsEditing(false);
   };
 
-  const validateEdit = (): boolean => {
-    const errors: Record<string, string> = {};
-    for (const lvl of MATERIAL_CREATE_REQUIRED_LEVELS) {
-      if (editSelection[lvl - 1] === '') {
-        errors[`level${lvl}`] = materialSelectError(MATERIAL_CATEGORY_LEVELS[lvl - 1].label);
-      }
-    }
-    if (!editForm.materialName.trim()) errors.materialName = materialInputError('tên vật tư');
-    if (!editForm.unit.trim()) errors.unit = materialSelectError('đơn vị tính');
-
-    const categoryId = resolveLeafCategoryId(editSelection);
-    if (categoryId && categoryLevel(categories, categoryId)! < 2) {
-      errors.level2 = 'Vui lòng chọn đến cấp Nhóm vật tư';
-    }
-
-    setEditErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
   const handleSave = async () => {
-    if (!validateEdit()) return;
+    const nextErrors = validateMaterialForm({
+      selection: editSelection,
+      categories,
+      materialName: editForm.materialName,
+      unit: editForm.unit,
+    });
+    setEditErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
+
     const categoryId = resolveLeafCategoryId(editSelection);
     if (!categoryId) return;
 
     try {
-      let finalImageUrl = editForm.imageUrl.trim() || null;
-      if (editImageFile) {
-        setIsUploadingImage(true);
-        try {
-          const res = await materialsService.uploadImage(editImageFile, material.materialCode);
-          finalImageUrl = res.imageUrl;
-        } catch (uploadErr) {
-          showToast('error', getApiErrorMessage(uploadErr, 'Không thể tải ảnh lên'));
-          setIsUploadingImage(false);
-          return;
-        }
-        setIsUploadingImage(false);
-      }
+      setIsUploadingImage(Boolean(imageFile));
+      const uploaded = await uploadMaterialImageIfSelected(imageFile, editForm.imageUrl, material.materialCode);
+      setIsUploadingImage(false);
+      if (!uploaded.ok) return;
 
-      const finalOrigin = formatOriginString(originBrand, originCountry, originRegion);
-
+      const finalOrigin = formatOriginString(originParts.brand, originParts.country, originParts.region);
       await updateMutation.mutateAsync({
         code: material.materialCode,
-        body: {
+        body: buildMaterialUpsertBody({
+          ...editForm,
           materialCode: material.materialCode,
-          materialName: editForm.materialName.trim(),
           categoryId,
-          unit: editForm.unit.trim(),
-          origin: finalOrigin.trim() || null,
-          imageUrl: finalImageUrl,
-          technicalSpec: editForm.technicalSpec.trim() || null,
-          generalTechnicalSpec: editForm.generalTechnicalSpec.trim() || null,
-          qualityStandard: editForm.qualityStandard.trim() || null,
-          ceilingPrice: editForm.ceilingPrice
-            ? Number(String(editForm.ceilingPrice).replace(/[^\d.-]/g, '')) || null
-            : null,
+          origin: finalOrigin,
+          imageUrl: uploaded.imageUrl,
           isConsumable: material.isConsumable,
-        },
+        }),
       });
       showToast('success', 'Đã cập nhật thông tin vật tư');
       setIsEditing(false);
     } catch (err) {
+      setIsUploadingImage(false);
       showToast('error', getApiErrorMessage(err, 'Không thể cập nhật vật tư'));
     }
   };
@@ -272,7 +177,7 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
 
   const isActive = material.isActive !== false;
   const currentPreview =
-    editImagePreview || (editForm.imageUrl ? resolveMediaUrl(editForm.imageUrl) : null);
+    imagePreview ?? (editForm.imageUrl ? (resolveMediaUrl(editForm.imageUrl) ?? null) : null);
 
   return (
     <div className="hrm-page w-full">
@@ -294,37 +199,14 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
 
       <SectionCard variant="detail" title="Phân loại danh mục">
         {isEditing ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {MATERIAL_CATEGORY_LEVELS.map((lvl, idx) => (
-              <label key={lvl.key} className="hrm-field">
-                <span className="hrm-field__label">
-                  {lvl.label}
-                  {isRequiredOnCreate(lvl.level) && (
-                    <span className="text-[var(--md-error)]"> *</span>
-                  )}
-                </span>
-                <select
-                  className="hrm-field-select"
-                  disabled={editCategoriesLoading || (idx > 0 && editSelection[idx - 1] === '')}
-                  value={editSelection[idx]}
-                  onChange={e => {
-                    const v = e.target.value;
-                    setEditLevel(idx, v === '' ? '' : Number(v));
-                  }}
-                >
-                  <option value="">{MATERIAL_SELECT_PLACEHOLDER}</option>
-                  {editOptions[idx]
-                    ?.filter(c => idx > 0 || c.code !== 'UNCATEGORIZED')
-                    .map(c => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                </select>
-                {editErrors[`level${lvl.level}`] && (
-                  <p className="hrm-field__error">{editErrors[`level${lvl.level}`]}</p>
-                )}
-              </label>
-            ))}
-          </div>
+          <MaterialCategoryCascadeFields
+            variant="hrm"
+            selection={editSelection}
+            optionsByLevel={editOptions}
+            isLoading={editCategoriesLoading}
+            errors={editErrors}
+            onSelectLevel={(idx, val) => setEditSelection(prev => updateCategorySelection(prev, idx, val))}
+          />
         ) : (
           <DetailFieldGrid layout="three">
             {MATERIAL_CATEGORY_LEVELS.map(lvl => (
@@ -336,260 +218,32 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
 
       <SectionCard variant="detail" title="Thông tin vật tư">
         {isEditing ? (
-          <DetailFieldGrid layout="responsive">
-            <FieldView label="Mã vật tư" value={material.materialCode} />
-            <FieldInput
-              label="Tên vật tư *"
-              value={editForm.materialName}
-              onChange={v => setEditForm(f => ({ ...f, materialName: v }))}
-              error={editErrors.materialName}
-              placeholder={MATERIAL_FIELD_PLACEHOLDERS.materialName}
-            />
-            <MaterialUnitSelect
-              value={editForm.unit}
-              onChange={unit => setEditForm(f => ({ ...f, unit }))}
-              required
-              error={editErrors.unit}
-              preserveUnknownValue
-              variant="hrm"
-            />
-            <FieldInput
-              label="Quy cách"
-              value={editForm.technicalSpec}
-              onChange={v => setEditForm(f => ({ ...f, technicalSpec: v }))}
-              placeholder={MATERIAL_FIELD_PLACEHOLDERS.technicalSpec}
-            />
-            <div className="hrm-field">
-              <span className="hrm-field__label">Giá trần tham chiếu</span>
-              <CurrencyInput
-                value={editForm.ceilingPrice}
-                onChange={ceilingPrice => setEditForm(f => ({ ...f, ceilingPrice }))}
-                placeholder="Cảnh báo khi mua vượt giá"
-              />
-            </div>
-            <div className="col-span-full border-t border-[var(--color-border)] pt-3 pb-1">
-              <label className="hrm-field__label block mb-1.5 font-semibold text-slate-800">
-                Xuất xứ (3 thành phần: Nhãn hiệu, Nước sản xuất, Nhóm nước)
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <MaterialBrandSelect
-                  value={originBrand}
-                  onChange={setOriginBrand}
-                  variant="hrm"
-                />
-                <MaterialCountrySelect
-                  value={originCountry}
-                  onChange={(country, defaultRegion) => {
-                    setOriginCountry(country);
-                    if (defaultRegion && !originRegion) {
-                      setOriginRegion(defaultRegion);
-                    }
-                  }}
-                  variant="hrm"
-                />
-                <div className="hrm-field">
-                  <label className="hrm-field__label">Nhóm nước</label>
-                  <select
-                    className="hrm-field-select"
-                    value={originRegion}
-                    onChange={e => setOriginRegion(e.target.value)}
-                  >
-                    <option value="">-- Chọn nhóm nước --</option>
-                    {regionOptions.map((r: string) => (
-                      <option key={r} value={r}>
-                        {r}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
-            <FieldInput
-              className="col-span-full"
-              label="Tiêu chuẩn chất lượng"
-              value={editForm.qualityStandard}
-              onChange={v => setEditForm(f => ({ ...f, qualityStandard: v }))}
-              placeholder={MATERIAL_FIELD_PLACEHOLDERS.qualityStandard}
-            />
-            <FieldTextarea
-              className="col-span-full"
-              label="Thông số kỹ thuật chung"
-              value={editForm.generalTechnicalSpec}
-              onChange={v => setEditForm(f => ({ ...f, generalTechnicalSpec: v }))}
-              placeholder={MATERIAL_FIELD_PLACEHOLDERS.generalTechnicalSpec}
-            />
-            <div className="col-span-full border-t border-[var(--color-border)] pt-3">
-              <label className="hrm-field__label block mb-1.5 font-medium">Hình ảnh vật tư</label>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-3 rounded-lg border border-dashed border-[var(--color-border)] bg-[var(--color-surface-hover)]/30">
-                {currentPreview ? (
-                  <div className="relative group w-24 h-24 rounded-lg overflow-hidden border border-[var(--color-border)] bg-[var(--color-surface)] flex-shrink-0 shadow-xs">
-                    <img
-                      src={currentPreview}
-                      alt="Xem trước ảnh vật tư"
-                      className="w-full h-full object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleRemoveImage}
-                      className="absolute inset-0 bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 text-xs font-medium cursor-pointer"
-                      title="Xóa ảnh"
-                    >
-                      <Trash2 size={16} />
-                      Xóa
-                    </button>
-                  </div>
-                ) : (
-                  <div className="w-24 h-24 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] flex flex-col items-center justify-center text-[var(--color-text-muted)] flex-shrink-0">
-                    <ImageIcon size={28} className="opacity-40 mb-1" />
-                    <span className="text-[11px]">Chưa có ảnh</span>
-                  </div>
-                )}
-                <div className="flex-1 space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <label className="btn btn-sm btn-outline cursor-pointer inline-flex items-center gap-1.5">
-                      <Upload size={14} />
-                      <span>{currentPreview ? 'Đổi ảnh khác' : 'Chọn ảnh tải lên'}</span>
-                      <input
-                        type="file"
-                        accept="image/png,image/jpeg,image/webp,image/gif"
-                        className="hidden"
-                        onChange={handleImageFileChange}
-                      />
-                    </label>
-                    {currentPreview && (
-                      <button
-                        type="button"
-                        onClick={handleRemoveImage}
-                        className="btn btn-sm btn-ghost text-red-600 hover:bg-red-50"
-                      >
-                        <Trash2 size={14} className="mr-1 inline" />
-                        Gỡ ảnh
-                      </button>
-                    )}
-                  </div>
-                  <p className="text-xs text-[var(--color-text-muted)]">
-                    Hỗ trợ định dạng JPG, PNG, WEBP, GIF. Kích thước tối đa 10MB.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </DetailFieldGrid>
+          <MaterialDetailEditForm
+            materialCode={material.materialCode}
+            form={editForm}
+            errors={editErrors}
+            originBrand={originParts.brand}
+            originCountry={originParts.country}
+            originRegion={originParts.region}
+            imagePreview={currentPreview}
+            onPatchForm={patch => setEditForm(f => ({ ...f, ...patch }))}
+            onOriginChange={setOriginParts}
+            onSelectImage={selectFile}
+            onRemoveImage={handleRemoveImage}
+          />
         ) : (
-          <DetailFieldGrid layout="responsive">
-            <FieldView label="Mã vật tư" value={material.materialCode} />
-            <FieldView label="Tên" value={material.materialName} />
-            <FieldView label="Đơn vị tính" value={material.unit} />
-            {(() => {
-              const parsed = parseOriginParts(material.origin);
-              if (parsed.brand || parsed.country || parsed.region) {
-                return (
-                  <>
-                    <FieldView label="Hãng / Nhãn hiệu" value={parsed.brand || undefined} />
-                    <FieldView
-                      label="Nước sản xuất"
-                      value={
-                        parsed.country
-                          ? `${parsed.country}${parsed.region ? ` (${parsed.region})` : ''}`
-                          : undefined
-                      }
-                    />
-                    {parsed.region && !parsed.country ? (
-                      <FieldView label="Nhóm nước" value={parsed.region} />
-                    ) : null}
-                  </>
-                );
-              }
-              return <FieldView label="Xuất xứ" value={material.origin ?? undefined} />;
-            })()}
-            <FieldView label="Quy cách" value={material.technicalSpec ?? undefined} />
-            <FieldView
-              label="Giá trần tham chiếu"
-              value={material.ceilingPrice != null ? formatCurrencyFull(material.ceilingPrice) : undefined}
-            />
-            <FieldView label="Tiêu chuẩn chất lượng" value={material.qualityStandard ?? undefined} />
-            <FieldView
-              className="col-span-full"
-              label="Thông số kỹ thuật chung"
-              value={material.generalTechnicalSpec ?? undefined}
-              multiline
-            />
-            <div className="col-span-full pt-2">
-              <span className="hrm-field__label block mb-2 font-medium">Hình ảnh vật tư</span>
-              {material.imageUrl?.trim() ? (
-                <div className="flex items-start gap-4">
-                  <a
-                    href={resolveMediaUrl(material.imageUrl.trim())}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block rounded-lg overflow-hidden border border-[var(--color-border)] shadow-xs hover:opacity-90 transition-opacity"
-                    title="Bấm để mở ảnh kích thước gốc"
-                  >
-                    <img
-                      src={resolveMediaUrl(material.imageUrl.trim())}
-                      alt={material.materialName}
-                      className="w-32 h-32 object-cover bg-[var(--color-surface)]"
-                      onError={e => {
-                        (e.target as HTMLElement).style.display = 'none';
-                      }}
-                    />
-                  </a>
-                  <div className="text-xs text-[var(--color-text-muted)] pt-1 space-y-1">
-                    <p className="font-medium text-[var(--color-text)]">Đã tải lên ảnh đại diện vật tư</p>
-                    <p>Bấm vào ảnh để xem kích thước gốc trong tab mới.</p>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-sm text-[var(--color-text-muted)] italic">Chưa có hình ảnh</p>
-              )}
-            </div>
-          </DetailFieldGrid>
+          <MaterialDetailInfoReadGrid material={material} />
         )}
       </SectionCard>
 
       {!isEditing && (
-        <SectionCard
-          variant="detail"
-          className={isActive ? 'hrm-detail-section--status-active' : 'hrm-detail-section--status-inactive'}
-          title={isActive ? 'Ngừng sử dụng' : 'Kích hoạt lại'}
-          description={
-            isActive
-              ? 'Ẩn khỏi danh sách tạo phiếu mới; giữ nguyên tồn kho và lịch sử dự án.'
-              : 'Cho phép chọn vật tư trong phiếu nhập/xuất mới.'
-          }
-        >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-[var(--md-on-surface)]">
-                {material.materialCode} — {material.materialName}
-              </p>
-              <p className="text-xs text-[var(--md-on-surface-variant)] mt-1">
-                {isActive
-                  ? 'Dùng khi mã không còn nhập mới nhưng dự án cũ vẫn cần đối soát.'
-                  : 'Vật tư hiện không xuất hiện khi lập phiếu mới.'}
-              </p>
-            </div>
-            {isActive ? (
-              <button
-                type="button"
-                className="btn btn-outline btn-sm rounded-full px-4 flex items-center gap-2 shrink-0 text-[var(--md-error)] border-[var(--md-error)]"
-                onClick={() => setShowDiscontinueConfirm(true)}
-              >
-                <Ban size={15} />
-                Ngừng sử dụng
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="btn btn-outline btn-sm rounded-full px-4 flex items-center gap-2 shrink-0"
-                disabled={reactivateMutation.isPending}
-                onClick={() => void handleReactivate()}
-              >
-                <RotateCcw size={15} />
-                Kích hoạt lại
-              </button>
-            )}
-          </div>
-        </SectionCard>
+        <MaterialDetailStatusCard
+          material={material}
+          isActive={isActive}
+          isReactivating={reactivateMutation.isPending}
+          onRequestDiscontinue={() => setShowDiscontinueConfirm(true)}
+          onReactivate={() => void handleReactivate()}
+        />
       )}
 
       <ConfirmDialog

@@ -31,6 +31,19 @@ const GOLDEN_SURFACE_FILES = [
   'src/pages/warehouse/MaterialsPage.tsx',
   'src/pages/warehouse/materials/MaterialsTableRow.tsx',
   'src/pages/warehouse/materials/MaterialsFilterToolbar.tsx',
+  'src/pages/warehouse/DashboardWarehousePage.tsx',
+  'src/pages/warehouse/dashboard/WarehouseActivityFeed.tsx',
+  'src/pages/warehouse/import/ImportDetailModal.tsx',
+  'src/pages/warehouse/import/ImportDetailSettlementTable.tsx',
+  'src/pages/warehouse/import/ImportDetailEvidenceBlock.tsx',
+  'src/pages/warehouse/materials/MaterialCreateModal.tsx',
+  'src/pages/warehouse/MaterialDetailView.tsx',
+  'src/pages/warehouse/materials/MaterialOriginSection.tsx',
+  'src/pages/warehouse/materials/MaterialDynamicSpecsSection.tsx',
+  'src/pages/warehouse/materials/MaterialImageField.tsx',
+  'src/pages/warehouse/materials/MaterialDetailReadView.tsx',
+  'src/pages/warehouse/materials/MaterialDetailEditForm.tsx',
+  'src/pages/warehouse/materials/MaterialCategoryCascadeFields.tsx',
 ];
 
 const RAW_HEX_RE = /#[0-9a-fA-F]{3,8}\b/;
