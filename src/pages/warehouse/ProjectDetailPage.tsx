@@ -13,14 +13,16 @@ import {
   Wallet,
 } from 'lucide-react';
 import { useSession } from '../../auth/AuthProvider';
-import PageHeader from '../../components/ui/PageHeader';
-import HrmNotFound from '../../components/hr/HrmNotFound';
-import SectionCard from '../../components/ui/SectionCard';
+import Badge from '../../components/ui/Badge';
+import Button from '../../components/ui/Button';
 import KpiCard from '../../components/ui/KpiCard';
 import MetricsStrip from '../../components/ui/MetricsStrip';
-import Badge from '../../components/ui/Badge';
+import PageHeader from '../../components/ui/PageHeader';
+import PageShell from '../../components/ui/PageShell';
+import SectionCard from '../../components/ui/SectionCard';
 import TabFilter from '../../components/ui/TabFilter';
-import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
+import TableShell from '../../components/ui/TableShell';
+import HrmNotFound from '../../components/hr/HrmNotFound';
 import ProjectBudgetTab from '../../components/warehouse/ProjectBudgetTab';
 import ProjectWarehouseHistoryTab from '../../components/warehouse/ProjectWarehouseHistoryTab';
 import { getSessionUser, isSessionAdmin } from '../../constants/systemUsers';
@@ -65,7 +67,6 @@ export default function ProjectDetailPage() {
   const { user: authUser } = useSession();
   const sessionUser = authUser ?? getSessionUser();
   const isAdmin = isSessionAdmin(sessionUser);
-
   const goBack = () => navigate('/warehouse/projects');
 
   const stockWithQty = useMemo(
@@ -84,10 +85,7 @@ export default function ProjectDetailPage() {
     () => inventory.filter(r => r.minStockQty > 0 && r.actualInventoryQty < r.minStockQty),
     [inventory],
   );
-  const actualStockLines = useMemo(
-    () => inventory.filter(r => r.actualInventoryQty > 0),
-    [inventory],
-  );
+  const actualStockLines = useMemo(() => inventory.filter(r => r.actualInventoryQty > 0), [inventory]);
   const pendingLedgerEntries = useMemo(
     () => ledger.filter(r => r.status === 'draft' || r.status === 'pending'),
     [ledger],
@@ -120,37 +118,34 @@ export default function ProjectDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="hrm-page project-detail-page">
+      <PageShell variant="detail" className="project-detail-page">
         <div className="mb-4 space-y-2">
           <div className="hrm-table-skeleton h-7 w-72 max-w-full" />
           <div className="hrm-table-skeleton h-3.5 w-40 max-w-full" />
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-4">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="hrm-table-skeleton h-16 rounded-xl" />
-          ))}
-        </div>
+        <MetricsStrip columns={3} className="mb-4">
+          <KpiCard label="Tồn thực tế" tone="primary" loading />
+          <KpiCard label="Giá trị đã nhập" tone="success" loading />
+          <KpiCard label="Thủ kho phụ trách" tone="neutral" loading />
+        </MetricsStrip>
         <SectionCard noPadding>
-          <div className="overflow-x-auto table-scroll">
-            <table className="wms-inventory-table">
-              <thead>
-                <tr>
-                  <th className="table-header-cell">Mã vật tư</th>
-                  <th className="table-header-cell">Tên vật tư</th>
-                  <th className="table-header-cell text-right">Tồn thực tế</th>
-                  <th className="table-header-cell text-right">Nhập dự kiến</th>
-                  <th className="table-header-cell text-right">Xuất dự kiến</th>
-                  <th className="table-header-cell text-right">Tồn dự kiến</th>
-                  <th className="table-header-cell text-right">Giá trị</th>
-                </tr>
-              </thead>
-              <tbody>
-                <TableSkeletonRows colSpan={7} />
-              </tbody>
-            </table>
-          </div>
+          <TableShell
+            loading
+            colSpan={7}
+            header={
+              <tr>
+                <th className="table-header-cell">Mã vật tư</th>
+                <th className="table-header-cell">Tên vật tư</th>
+                <th className="table-header-cell text-right">Tồn thực tế</th>
+                <th className="table-header-cell text-right">Nhập dự kiến</th>
+                <th className="table-header-cell text-right">Xuất dự kiến</th>
+                <th className="table-header-cell text-right">Tồn dự kiến</th>
+                <th className="table-header-cell text-right">Giá trị</th>
+              </tr>
+            }
+          />
         </SectionCard>
-      </div>
+      </PageShell>
     );
   }
 
@@ -165,9 +160,11 @@ export default function ProjectDetailPage() {
   }
 
   const isClosed = project.status === 'Closed';
+  const canDeleteEmptyWarehouse =
+    isAdmin && (project.stockMaterialCount ?? 0) === 0 && actualStockLines.length === 0 && stockWithQty.length === 0;
 
   return (
-    <div className="hrm-page project-detail-page">
+    <PageShell variant="detail" className="project-detail-page">
       <PageHeader
         variant="detail"
         onBack={goBack}
@@ -177,88 +174,48 @@ export default function ProjectDetailPage() {
           <div className="flex flex-wrap items-center gap-2">
             {!isClosed ? (
               <>
-                <button type="button" className="hrm-header-btn" onClick={() => setShowEdit(true)}>
-                  <Pencil size={14} /> Chỉnh sửa
-                </button>
-                <Link
-                  to="/warehouse/import"
-                  state={{ projectCode: project.projectCode }}
-                  className="hrm-header-btn"
-                >
+                <Button type="button" variant="outlined" size="sm" leftIcon={Pencil} onClick={() => setShowEdit(true)}>
+                  Chỉnh sửa
+                </Button>
+                <Link to="/warehouse/import" state={{ projectCode: project.projectCode }} className="btn btn-outlined btn-sm">
                   <PackagePlus size={14} /> Nhập kho
                 </Link>
-                <Link
-                  to="/warehouse/export"
-                  state={{ projectCode: project.projectCode }}
-                  className="hrm-header-btn"
-                >
+                <Link to="/warehouse/export" state={{ projectCode: project.projectCode }} className="btn btn-outlined btn-sm">
                   <PackageMinus size={14} /> Xuất kho
                 </Link>
-                <Link
-                  to="/warehouse/transfer"
-                  state={{ projectCode: project.projectCode }}
-                  className="hrm-header-btn"
-                >
+                <Link to="/warehouse/transfer" state={{ projectCode: project.projectCode }} className="btn btn-outlined btn-sm">
                   <ArrowRightLeft size={14} /> Hoàn trả
                 </Link>
-                <button
-                  type="button"
-                  className="hrm-header-btn"
-                  onClick={() => setShowCloseConfirm(true)}
-                >
-                  <PackageX size={14} /> Đóng kho
-                </button>
+                <Button type="button" variant="outlined" size="sm" leftIcon={PackageX} onClick={() => setShowCloseConfirm(true)}>
+                  Đóng kho
+                </Button>
               </>
             ) : (
               <Badge status="completed" />
             )}
-            {isAdmin && (project.stockMaterialCount ?? 0) === 0 && actualStockLines.length === 0 && stockWithQty.length === 0 && (
-              <button
-                type="button"
-                className="hrm-header-btn text-[var(--md-error)] hover:bg-[color-mix(in_srgb,var(--md-error)_12%,transparent)]"
-                onClick={() => setShowDeleteConfirm(true)}
-              >
-                <Trash2 size={14} /> Xóa kho
-              </button>
+            {canDeleteEmptyWarehouse && (
+              <Button type="button" variant="danger" size="sm" leftIcon={Trash2} onClick={() => setShowDeleteConfirm(true)}>
+                Xóa kho
+              </Button>
             )}
           </div>
         }
       />
 
       <MetricsStrip columns={canViewPrices ? 4 : 2} className="project-detail-stat-grid">
-        <KpiCard
-          label="Tồn thực tế"
-          value={totalActualQty}
-          hint={`${actualStockLines.length} mặt hàng`}
-          icon={Package}
-          tone="primary"
-        />
+        <KpiCard label="Tồn thực tế" value={totalActualQty} hint={`${actualStockLines.length} mặt hàng`} icon={Package} tone="primary" />
         {canViewPrices && (
-          <KpiCard
-            label="Giá trị đã nhập"
-            value={formatCurrencyFull(approvedImportValue)}
-            hint="Phiếu nhập đã duyệt"
-            icon={CircleDollarSign}
-            tone="success"
-          />
+          <KpiCard label="Giá trị đã nhập" value={formatCurrencyFull(approvedImportValue)} hint="Phiếu nhập đã duyệt" icon={CircleDollarSign} tone="success" />
         )}
         {canViewPrices && (
-          <KpiCard
-            label="Ngân sách còn lại"
-            value={formatCurrencyFull(materialBudgetRemaining)}
-            hint={budgetRemainingHint}
-            icon={Wallet}
-            tone={budgetRemainingTone}
-          />
+          <KpiCard label="Ngân sách còn lại" value={formatCurrencyFull(materialBudgetRemaining)} hint={budgetRemainingHint} icon={Wallet} tone={budgetRemainingTone} />
         )}
         <KpiCard
           label="Thủ kho phụ trách"
           value={
             (project.warehouseKeepers?.length ?? 0) > 0
               ? project.warehouseKeepers!.map(k => k.displayName).join(', ')
-              : !isSystemRoleAccount(project.pmName)
-                ? project.pmName
-                : '—'
+              : !isSystemRoleAccount(project.pmName) ? project.pmName : '—'
           }
           icon={UserRound}
           tone="neutral"
@@ -266,34 +223,19 @@ export default function ProjectDetailPage() {
       </MetricsStrip>
 
       <SectionCard noPadding>
-        <div className="px-3 pt-2 pb-0 border-b border-[var(--md-outline-variant02)]">
+        <div className="erp-filter-toolbar__tabs">
           <TabFilter tabs={tabs} activeTab={activeTab} onChange={id => setActiveTab(id as DetailTab)} />
         </div>
 
         {activeTab === 'stock' && code && (
-          <ProjectStockTab
-            code={code}
-            stockWithQty={stockWithQty}
-            belowMinRows={belowMinRows}
-            isLoading={invLoading}
-          />
+          <ProjectStockTab code={code} stockWithQty={stockWithQty} belowMinRows={belowMinRows} isLoading={invLoading} />
         )}
-
         {activeTab === 'budget' && (
-          <ProjectBudgetTab
-            project={project}
-            ledger={ledger}
-            onOpenEditBudget={() => setShowEdit(true)}
-          />
+          <ProjectBudgetTab project={project} ledger={ledger} onOpenEditBudget={() => setShowEdit(true)} />
         )}
-
         {activeTab === 'history' && code && <ProjectWarehouseHistoryTab projectCode={code} />}
-
         {activeTab === 'info' && (
-          <ProjectInfoTab
-            project={project}
-            materialBudgetRemaining={materialBudgetRemaining}
-          />
+          <ProjectInfoTab project={project} materialBudgetRemaining={materialBudgetRemaining} />
         )}
       </SectionCard>
 
@@ -314,6 +256,6 @@ export default function ProjectDetailPage() {
           totalActualQty={totalActualQty}
         />
       )}
-    </div>
+    </PageShell>
   );
 }

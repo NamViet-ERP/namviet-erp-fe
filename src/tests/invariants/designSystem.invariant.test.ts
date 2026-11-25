@@ -48,6 +48,23 @@ const GOLDEN_SURFACE_FILES = [
   'src/components/warehouse/AdminOpeningStockModal.tsx',
   'src/components/warehouse/AdminOpeningStockErrorModal.tsx',
   'src/components/warehouse/AdminOpeningStockPreviewTable.tsx',
+  'src/pages/warehouse/ImportListPageApi.tsx',
+  'src/pages/warehouse/ExportListPageApi.tsx',
+  'src/pages/warehouse/TransferListPageApi.tsx',
+  'src/pages/warehouse/MaterialReturnPage.tsx',
+  'src/pages/warehouse/DefectsPage.tsx',
+  'src/pages/warehouse/ArrivalPlansPage.tsx',
+  'src/pages/warehouse/ProjectsPage.tsx',
+  'src/pages/warehouse/ProjectDetailPage.tsx',
+  'src/pages/warehouse/import/ImportCreateModal.tsx',
+  'src/pages/warehouse/import/ImportCreateModalFooter.tsx',
+  'src/pages/warehouse/import/ImportTable.tsx',
+  'src/pages/warehouse/export/ExportTable.tsx',
+  'src/pages/warehouse/transfer/TransferTable.tsx',
+  'src/pages/warehouse/materialReturn/ExportReturnTable.tsx',
+  'src/pages/warehouse/defects/DefectsTable.tsx',
+  'src/pages/warehouse/arrivalPlans/ArrivalProjectCard.tsx',
+  'src/pages/warehouse/projects/ProjectsTable.tsx',
 ];
 
 const RAW_HEX_RE = /#[0-9a-fA-F]{3,8}\b/;

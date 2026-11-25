@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react';
 import { Check, Plus, Trash2, XCircle } from 'lucide-react';
-import PageHeader from '../../components/ui/PageHeader';
-import PermissionGate from '../../components/auth/PermissionGate';
-import SearchBar from '../../components/ui/SearchBar';
-import TabFilter from '../../components/ui/TabFilter';
-import Pagination from '../../components/ui/Pagination';
-import SectionCard from '../../components/ui/SectionCard';
+import Button from '../../components/ui/Button';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
+import FilterToolbar from '../../components/ui/FilterToolbar';
+import PageHeader from '../../components/ui/PageHeader';
+import PageShell from '../../components/ui/PageShell';
+import SectionCard from '../../components/ui/SectionCard';
+import PermissionGate from '../../components/auth/PermissionGate';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
@@ -135,80 +135,58 @@ export default function DefectsPage() {
   const buildRowActions = (row: PurchaseDefectApiDto): DropdownItem[] => {
     const items: DropdownItem[] = [];
     if (canApprove && row.status === 'pending') {
-      items.push({
-        label: 'Duyệt',
-        icon: Check,
-        onClick: () => void handleApproveRow(row),
-      });
+      items.push({ label: 'Duyệt', icon: Check, onClick: () => void handleApproveRow(row) });
     }
     if (canCreate && row.status === 'pending') {
-      items.push({
-        label: 'Hủy phiếu',
-        icon: XCircle,
-        onClick: () => setCancelTarget(row),
-        danger: true,
-      });
+      items.push({ label: 'Hủy phiếu', icon: XCircle, onClick: () => setCancelTarget(row), danger: true });
     }
     if (canCreate && row.status === 'draft') {
-      items.push({
-        label: 'Xóa phiếu',
-        icon: Trash2,
-        onClick: () => setDeleteTarget(row),
-        danger: true,
-      });
+      items.push({ label: 'Xóa phiếu', icon: Trash2, onClick: () => setDeleteTarget(row), danger: true });
     }
     return items;
   };
 
+  const defectTabs = [
+    { id: 'all', label: 'Tất cả', count: tabCounts.all },
+    { id: 'draft', label: 'Nháp', count: tabCounts.draft },
+    { id: 'pending', label: 'Chờ duyệt', count: tabCounts.pending },
+    { id: 'approved', label: 'Đã duyệt', count: tabCounts.approved },
+    { id: 'processing', label: 'Đang xử lý', count: tabCounts.processing },
+    { id: 'processed', label: 'Đã xử lý', count: tabCounts.processed },
+    { id: 'rejected', label: 'Đã hủy', count: tabCounts.rejected },
+  ];
+
   return (
-    <div className="hrm-page space-y-4">
+    <PageShell>
       <PageHeader
         title="Hàng lỗi và Bảo hành"
         subtitle="Ghi nhận hàng lỗi từ PO hoặc từ tồn kho — duyệt xong xử lý nguyên nhân, phản hồi NCC và hướng bảo hành."
         actions={(
           <PermissionGate permission="wms.defects.create">
-            <button
+            <Button
               type="button"
-              className="btn btn-primary flex items-center gap-2"
+              variant="filled"
+              leftIcon={Plus}
               onClick={() => {
                 setCreateEpoch(e => e + 1);
                 setShowCreate(true);
               }}
             >
-              <Plus size={16} aria-hidden />
               Tạo phiếu hàng lỗi
-            </button>
+            </Button>
           </PermissionGate>
         )}
       />
 
-      <SectionCard>
-        <div className="flex flex-wrap items-center gap-3 mb-3">
-          <TabFilter
-            tabs={[
-              { id: 'all', label: `Tất cả (${tabCounts.all})` },
-              { id: 'draft', label: `Nháp (${tabCounts.draft})` },
-              { id: 'pending', label: `Chờ duyệt (${tabCounts.pending})` },
-              { id: 'approved', label: `Đã duyệt (${tabCounts.approved})` },
-              { id: 'processing', label: `Đang xử lý (${tabCounts.processing})` },
-              { id: 'processed', label: `Đã xử lý (${tabCounts.processed})` },
-              { id: 'rejected', label: `Đã hủy (${tabCounts.rejected})` },
-            ]}
-            activeTab={activeTab}
-            onChange={id => {
-              setActiveTab(id as DefectTab);
-              setPage(1);
-            }}
-          />
-          <SearchBar
-            value={search}
-            onChange={v => {
-              setSearch(v);
-              setPage(1);
-            }}
-            placeholder="Tìm mã HL, PO, KHMH, dự án…"
-          />
-        </div>
+      <SectionCard noPadding>
+        <FilterToolbar
+          tabs={defectTabs}
+          activeTab={activeTab}
+          onTabChange={id => { setActiveTab(id as DefectTab); setPage(1); }}
+          search={search}
+          onSearchChange={v => { setSearch(v); setPage(1); }}
+          searchPlaceholder="Tìm mã HL, PO, KHMH, dự án…"
+        />
 
         <DefectsTable
           isLoading={listQuery.isLoading}
@@ -218,20 +196,19 @@ export default function DefectsPage() {
           rows={paged}
           buildRowActions={buildRowActions}
           onOpenDetail={row => { void openDetail(row); }}
-        />
-
-        <Pagination
-          embedded
-          itemLabel="phiếu HL"
-          currentPage={page}
-          totalPages={Math.max(1, Math.ceil(filtered.length / pageSize) || 1)}
-          totalItems={filtered.length}
-          onPageChange={setPage}
-          pageSize={pageSize}
-          onPageSizeChange={size => {
-            setPageSize(size);
-            setPage(1);
-          }}
+          pagination={
+            filtered.length > 0 && !listQuery.isLoading
+              ? {
+                  itemLabel: 'phiếu HL',
+                  currentPage: page,
+                  totalPages: Math.max(1, Math.ceil(filtered.length / pageSize) || 1),
+                  totalItems: filtered.length,
+                  onPageChange: setPage,
+                  pageSize,
+                  onPageSizeChange: size => { setPageSize(size); setPage(1); },
+                }
+              : undefined
+          }
         />
       </SectionCard>
 
@@ -244,10 +221,7 @@ export default function DefectsPage() {
       <DefectDetailModal
         isOpen={showDetail}
         selected={selected}
-        onClose={() => {
-          setShowDetail(false);
-          setSelected(null);
-        }}
+        onClose={() => { setShowDetail(false); setSelected(null); }}
         onHide={() => setShowDetail(false)}
         onSelectedChange={setSelected}
         onRequestCancel={row => setCancelTarget(row)}
@@ -258,11 +232,7 @@ export default function DefectsPage() {
         onClose={() => setDeleteTarget(null)}
         onConfirm={() => void handleConfirmDelete()}
         title="Xóa phiếu hàng lỗi"
-        message={
-          deleteTarget
-            ? `Xóa phiếu nháp ${deleteTarget.ticketCode}? Thao tác không hoàn tác.`
-            : ''
-        }
+        message={deleteTarget ? `Xóa phiếu nháp ${deleteTarget.ticketCode}? Thao tác không hoàn tác.` : ''}
         confirmLabel="Xóa phiếu"
         variant="danger"
         isLoading={deleteMutation.isPending}
@@ -273,15 +243,11 @@ export default function DefectsPage() {
         onClose={() => setCancelTarget(null)}
         onConfirm={() => void handleConfirmCancel()}
         title="Hủy phiếu hàng lỗi"
-        message={
-          cancelTarget
-            ? `Hủy phiếu chờ duyệt ${cancelTarget.ticketCode}? Phiếu chuyển sang Đã hủy, không trừ tồn.`
-            : ''
-        }
+        message={cancelTarget ? `Hủy phiếu chờ duyệt ${cancelTarget.ticketCode}? Phiếu chuyển sang Đã hủy, không trừ tồn.` : ''}
         confirmLabel="Hủy phiếu"
         variant="danger"
         isLoading={cancelMutation.isPending}
       />
-    </div>
+    </PageShell>
   );
 }

@@ -1,10 +1,11 @@
+import type { ComponentProps } from 'react';
 import { Check, Send, Pencil } from 'lucide-react';
 import type { ExportReturn } from '../../../types';
+import Dropdown from '../../../components/ui/Dropdown';
+import Pagination from '../../../components/ui/Pagination';
+import TableShell from '../../../components/ui/TableShell';
 import VoucherStatusCell from '../../../components/warehouse/VoucherStatusCell';
 import VoucherCodeCell from '../../../components/warehouse/VoucherCodeCell';
-import Dropdown from '../../../components/ui/Dropdown';
-import EmptyState from '../../../components/ui/EmptyState';
-import TableSkeletonRows from '../../../components/ui/TableSkeletonRows';
 import { getApiErrorMessage } from '../../../lib/apiClient';
 
 interface ExportReturnTableProps {
@@ -16,6 +17,7 @@ interface ExportReturnTableProps {
   onEdit?: (row: ExportReturn) => void;
   onSubmit: (row: ExportReturn) => void;
   onApprove: (row: ExportReturn) => void;
+  pagination?: ComponentProps<typeof Pagination>;
 }
 
 function rowActionItems(
@@ -48,83 +50,71 @@ export default function ExportReturnTable({
   onEdit,
   onSubmit,
   onApprove,
+  pagination,
 }: ExportReturnTableProps) {
   const showActionsCol = rows.some(row => rowActionItems(row, { onEdit, onSubmit, onApprove }).length > 0);
   const colSpan = showActionsCol ? 6 : 5;
 
   return (
-    <div className="overflow-x-auto table-scroll wms-inventory-table-wrap">
-      <table className="wms-inventory-table export-return-list-table">
-        <thead>
-          <tr>
-            <th className="table-header-cell whitespace-nowrap">Mã phiếu HT</th>
-            <th className="table-header-cell">Phiếu xuất nguồn</th>
-            <th className="table-header-cell">Kho dự án</th>
-            <th className="table-header-cell">Ngày</th>
-            <th className="table-header-cell text-center">Trạng thái</th>
+    <TableShell
+      flushTop
+      tableClassName="wms-inventory-table export-return-list-table"
+      colSpan={colSpan}
+      loading={isLoading}
+      error={isError ? getApiErrorMessage(error, 'Không tải được phiếu hoàn trả.') : null}
+      isEmpty={rows.length === 0}
+      emptyMessage="Chưa có phiếu hoàn trả nào."
+      pagination={pagination}
+      header={
+        <tr>
+          <th className="table-header-cell whitespace-nowrap">Mã phiếu HT</th>
+          <th className="table-header-cell">Phiếu xuất nguồn</th>
+          <th className="table-header-cell">Kho dự án</th>
+          <th className="table-header-cell">Ngày</th>
+          <th className="table-header-cell text-center">Trạng thái</th>
+          {showActionsCol ? <th className="table-header-cell text-center w-16">Tác vụ</th> : null}
+        </tr>
+      }
+    >
+      {rows.map(row => {
+        const actions = rowActionItems(row, { onEdit, onSubmit, onApprove });
+        return (
+          <tr
+            key={row.id}
+            className="table-row wms-inventory-row--interactive"
+            onClick={() => onOpenDetail(row)}
+          >
+            <td className="table-cell">
+              <VoucherCodeCell
+                code={row.voucherCode}
+                voucher={row}
+                showCreator
+                onCodeClick={() => onOpenDetail(row)}
+              />
+            </td>
+            <td className="table-cell">
+              <span className="entity-code">{row.sourceExportCode || '—'}</span>
+            </td>
+            <td className="table-cell export-return-project-cell" title={row.projectName || row.project || undefined}>
+              {row.projectName || row.project || '—'}
+            </td>
+            <td className="table-cell whitespace-nowrap">{row.date}</td>
+            <td className="table-cell text-center">
+              <VoucherStatusCell
+                status={row.status}
+                voucherKind="exportReturn"
+                approvedBy={row.approvedBy}
+                approvedAt={row.approvedAt}
+              />
+            </td>
             {showActionsCol ? (
-              <th className="table-header-cell text-center w-16">Tác vụ</th>
+              <td className="table-cell text-center" onClick={e => e.stopPropagation()}>
+                {actions.length > 0 ? <Dropdown items={actions} /> : null}
+              </td>
             ) : null}
           </tr>
-        </thead>
-        <tbody>
-          {isLoading ? (
-            <TableSkeletonRows colSpan={colSpan} />
-          ) : isError ? (
-            <tr>
-              <td colSpan={colSpan}>
-                <EmptyState message={getApiErrorMessage(error, 'Không tải được phiếu hoàn trả.')} />
-              </td>
-            </tr>
-          ) : rows.length === 0 ? (
-            <tr>
-              <td colSpan={colSpan}>
-                <EmptyState message="Chưa có phiếu hoàn trả nào." />
-              </td>
-            </tr>
-          ) : (
-            rows.map(row => {
-              const actions = rowActionItems(row, { onEdit, onSubmit, onApprove });
-              return (
-                <tr
-                  key={row.id}
-                  className="table-row wms-inventory-row--interactive"
-                  onClick={() => onOpenDetail(row)}
-                >
-                  <td className="table-cell">
-                    <VoucherCodeCell
-                      code={row.voucherCode}
-                      voucher={row}
-                      showCreator
-                      onCodeClick={() => onOpenDetail(row)}
-                    />
-                  </td>
-                  <td className="table-cell">
-                    <span className="entity-code">{row.sourceExportCode || '—'}</span>
-                  </td>
-                  <td className="table-cell export-return-project-cell" title={row.projectName || row.project || undefined}>
-                    {row.projectName || row.project || '—'}
-                  </td>
-                  <td className="table-cell whitespace-nowrap">{row.date}</td>
-                  <td className="table-cell text-center">
-                    <VoucherStatusCell
-                      status={row.status}
-                      voucherKind="exportReturn"
-                      approvedBy={row.approvedBy}
-                      approvedAt={row.approvedAt}
-                    />
-                  </td>
-                  {showActionsCol ? (
-                    <td className="table-cell text-center" onClick={e => e.stopPropagation()}>
-                      {actions.length > 0 ? <Dropdown items={actions} /> : null}
-                    </td>
-                  ) : null}
-                </tr>
-              );
-            })
-          )}
-        </tbody>
-      </table>
-    </div>
+        );
+      })}
+    </TableShell>
   );
 }
