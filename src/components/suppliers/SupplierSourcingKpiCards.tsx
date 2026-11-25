@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
-import { UserPlus, Award, TrendingUp, Users } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { AlertTriangle, Award, RefreshCw, TrendingUp, UserPlus, Users } from 'lucide-react';
+import { getApiErrorMessage } from '../../lib/apiClient';
 import { suppliersService, type SourcingKpiSummaryDto } from '../../services/suppliersService';
 
 interface SupplierSourcingKpiCardsProps {
@@ -9,15 +10,20 @@ interface SupplierSourcingKpiCardsProps {
 export default function SupplierSourcingKpiCards({ onGradeFilterSelect }: SupplierSourcingKpiCardsProps) {
   const [kpi, setKpi] = useState<SourcingKpiSummaryDto | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const loadKpi = useCallback(() => {
     let isMounted = true;
+    setLoading(true);
+    setError(null);
     suppliersService.getSourcingKpi()
       .then((data) => {
         if (isMounted) setKpi(data);
       })
       .catch((err) => {
-        console.warn('Could not load sourcing KPI:', err);
+        if (isMounted) {
+          setError(getApiErrorMessage(err, 'Không tải được chỉ số KPI nguồn cung ứng.'));
+        }
       })
       .finally(() => {
         if (isMounted) setLoading(false);
@@ -28,12 +34,36 @@ export default function SupplierSourcingKpiCards({ onGradeFilterSelect }: Suppli
     };
   }, []);
 
-  if (loading || !kpi) {
+  useEffect(() => loadKpi(), [loadKpi]);
+
+  if (loading) {
     return (
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="h-20 rounded-xl bg-slate-100 dark:bg-slate-800/40 animate-pulse border border-slate-200/60 dark:border-slate-800" />
+          <div key={i} className="h-20 rounded-xl bg-[var(--md-surface-container)] animate-pulse border border-[var(--md-outline-variant)]" />
         ))}
+      </div>
+    );
+  }
+
+  if (error || !kpi) {
+    return (
+      <div
+        role="alert"
+        className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50/70 px-4 py-3 text-sm text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200"
+      >
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="h-4 w-4 shrink-0" />
+          <span>{error ?? 'Không có dữ liệu KPI nguồn cung ứng.'}</span>
+        </div>
+        <button
+          type="button"
+          className="btn btn-outline btn-sm inline-flex items-center gap-1.5 shrink-0"
+          onClick={loadKpi}
+        >
+          <RefreshCw className="h-3.5 w-3.5" />
+          <span>Thử lại</span>
+        </button>
       </div>
     );
   }

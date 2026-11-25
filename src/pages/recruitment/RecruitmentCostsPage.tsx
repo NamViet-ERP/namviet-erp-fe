@@ -7,6 +7,7 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import CurrencyInput from '../../components/ui/CurrencyInput';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
+import { downloadCsv } from '../../lib/csvExport';
 import { formatCurrency } from '../../utils/formatCurrency';
 import { parseCurrencyInput } from '../../utils/currencyInput';
 import { RECRUITMENT_SOURCES } from '../../constants/recruitment';
@@ -177,14 +178,7 @@ export default function RecruitmentCostsPage() {
       c.paymentMonth ?? '',
       c.note ?? '',
     ]);
-    const csv = [header, ...rows].map(r => r.join(',')).join('\n');
-    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `chi-phi-tuyen-dung-${CURRENT_YEAR}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    void downloadCsv(`chi-phi-tuyen-dung-${CURRENT_YEAR}.csv`, header, rows);
   };
 
   return (

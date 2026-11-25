@@ -277,6 +277,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 function requestForm<T>(path: string, formData: FormData, method: 'POST' | 'PUT'): Promise<T> {
   const run = async (retried = false): Promise<T> => {
     const token = authTokenProvider();
+    const publicApi = isPublicApiPath(path);
     const url = buildUrl(path);
     const response = await fetch(url, {
       method,
@@ -285,13 +286,13 @@ function requestForm<T>(path: string, formData: FormData, method: 'POST' | 'PUT'
       signal: AbortSignal.timeout(FORM_UPLOAD_TIMEOUT_MS),
       headers: {
         Accept: 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(token && !publicApi ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: formData,
     });
     const data = await readResponseBody(response);
 
-    if (response.status === 401 && !retried) {
+    if (response.status === 401 && !retried && !publicApi) {
       return handleUnauthorizedRetry(
         () => run(true),
         () => {
@@ -301,7 +302,9 @@ function requestForm<T>(path: string, formData: FormData, method: 'POST' | 'PUT'
     }
 
     if (!response.ok) {
-      throwResponseError(response, data);
+      throwResponseError(response, data, {
+        forceLogout: response.status === 401 && !publicApi,
+      });
     }
     return data as T;
   };
@@ -332,18 +335,19 @@ export const apiClient = {
   ) => {
     const run = async (retried = false): Promise<Blob> => {
       const token = authTokenProvider();
+      const publicApi = isPublicApiPath(path);
       const response = await fetch(buildUrl(path, params), {
         method: 'GET',
         credentials: 'include',
         signal: options?.signal ?? AbortSignal.timeout(REQUEST_TIMEOUT_MS),
         headers: {
           Accept: '*/*',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(token && !publicApi ? { Authorization: `Bearer ${token}` } : {}),
           ...options?.headers,
         },
       });
 
-      if (response.status === 401 && !retried) {
+      if (response.status === 401 && !retried && !publicApi) {
         const data = await readResponseBody(response);
         return handleUnauthorizedRetry(
           () => run(true),
@@ -354,7 +358,9 @@ export const apiClient = {
       }
 
       if (!response.ok) {
-        throwResponseError(response, await readResponseBody(response));
+        throwResponseError(response, await readResponseBody(response), {
+          forceLogout: response.status === 401 && !publicApi,
+        });
       }
       return response.blob();
     };

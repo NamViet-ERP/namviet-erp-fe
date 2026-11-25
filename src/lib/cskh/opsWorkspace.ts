@@ -413,3 +413,37 @@ export function upsertMeeting(ops: CskhProjectOps, item: CskhMeeting): CskhProje
 export function removeMeeting(ops: CskhProjectOps, id: string): CskhProjectOps {
   return { ...ops, meetings: removeById(ops.meetings, id) };
 }
+
+/** Tính toán tự động tiến độ Rollup từ các mục con lên mục cha WBS. */
+export function rollupWbsProgress(items: CskhGanttItem[]): CskhGanttItem[] {
+  const itemMap = new Map<string, CskhGanttItem>(items.map(it => [it.id, { ...it }]));
+
+  for (let lvl = 3; lvl >= 0; lvl--) {
+    for (const [id, item] of itemMap.entries()) {
+      if (item.level === lvl && item.isGroup) {
+        const children = Array.from(itemMap.values()).filter(c => c.parentId === id);
+        if (children.length > 0) {
+          const totalDays = children.reduce((s, c) => s + Math.max(1, c.days), 0);
+          const weightedPct = children.reduce((s, c) => s + c.actualPct * Math.max(1, c.days), 0);
+          item.actualPct = Math.round(weightedPct / totalDays);
+        }
+      }
+    }
+  }
+
+  return Array.from(itemMap.values());
+}
+
+/** Đếm tổng số con cháu trực tiếp và gián tiếp của một nút WBS. */
+export function countWbsDescendants(items: CskhGanttItem[], parentId: string): number {
+  let count = 0;
+  for (const item of items) {
+    if (item.parentId === parentId) {
+      count++;
+      if (item.isGroup) {
+        count += countWbsDescendants(items, item.id);
+      }
+    }
+  }
+  return count;
+}

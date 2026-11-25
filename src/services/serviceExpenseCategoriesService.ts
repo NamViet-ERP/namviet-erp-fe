@@ -11,11 +11,7 @@ export interface ServiceExpenseCategoryDto {
 
 export const serviceExpenseCategoriesService = {
   async getAll(): Promise<ServiceExpenseCategoryDto[]> {
-    try {
-      const res = await apiClient.get<ServiceExpenseCategoryDto[]>('/api/purchasing/service-categories');
-      return res ?? [];
-    } catch {
-      return [];
-    }
+    const res = await apiClient.get<ServiceExpenseCategoryDto[]>('/api/purchasing/service-categories');
+    return res ?? [];
   },
 };

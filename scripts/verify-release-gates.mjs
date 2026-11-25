@@ -25,7 +25,7 @@ run('verify:no-mock', 'npm', ['run', 'verify:no-mock']);
 run('api:check', 'npm', ['run', 'api:check']);
 run('tsc --noEmit', 'npx', ['tsc', '--noEmit', '-p', 'tsconfig.json']);
 run('E2E typecheck', 'npm', ['run', 'typecheck:e2e']);
-run('lint', 'npm', ['run', 'lint']);
+run('lint', 'npm', ['run', 'lint:strict']);
 run('unit tests', 'npm', ['run', 'test:run']);
 if (process.argv.includes('--live')) run('live API contract', 'npm', ['run', 'api:check:live']);
 

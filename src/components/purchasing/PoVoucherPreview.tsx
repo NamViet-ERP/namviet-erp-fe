@@ -1,4 +1,5 @@
 import { formatDateCell } from '../../lib/hrm/formatters';
+import { formatCurrency, formatCurrencyFull } from '../../lib/format/currency';
 
 /** Bên mua — khớp mẫu PO Mayzer. */
 const BUYER_NAME = 'CÔNG TY TNHH MAYZER';
@@ -50,11 +51,6 @@ export interface PoVoucherModel {
 function val(v?: string | null, empty = '—') {
   const t = v?.trim();
   return t ? t : empty;
-}
-
-/** Số kiểu mẫu Excel (dấu phẩy hàng nghìn). */
-function money(n: number) {
-  return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(Math.round(n));
 }
 
 function buildDeliveryText(lines: PoVoucherLine[]): string | undefined {
@@ -183,9 +179,9 @@ export default function PoVoucherPreview({ model }: { model: PoVoucherModel }) {
                 <td className="po-sheet__desc">{line.name}</td>
                 <td className="po-sheet__center">{val(line.model, '')}</td>
                 <td className="po-sheet__center">{val(line.unit)}</td>
-                <td className="po-sheet__center">{money(line.qty)}</td>
-                <td className="po-sheet__num">{money(line.unitPrice)}</td>
-                <td className="po-sheet__num">{money(line.amount)}</td>
+                <td className="po-sheet__center">{formatCurrency(line.qty)}</td>
+                <td className="po-sheet__num">{formatCurrencyFull(Math.round(line.unitPrice))}</td>
+                <td className="po-sheet__num">{formatCurrencyFull(Math.round(line.amount))}</td>
               </tr>
             ))
           ) : (
@@ -202,15 +198,15 @@ export default function PoVoucherPreview({ model }: { model: PoVoucherModel }) {
         <tbody>
           <tr>
             <th scope="row">Subtotal:</th>
-            <td>{money(subtotal)}</td>
+            <td>{formatCurrencyFull(Math.round(subtotal))}</td>
           </tr>
           <tr>
             <th scope="row">VAT {(vatRate * 100).toFixed(0)}%:</th>
-            <td>{money(vat)}</td>
+            <td>{formatCurrencyFull(Math.round(vat))}</td>
           </tr>
           <tr className="po-sheet__sum-grand">
             <th scope="row">Grand Total:</th>
-            <td>{money(grandTotal)}</td>
+            <td>{formatCurrencyFull(Math.round(grandTotal))}</td>
           </tr>
         </tbody>
       </table>

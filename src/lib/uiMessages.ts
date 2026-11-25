@@ -24,7 +24,6 @@ export const UI_COMING_SOON = {
   title: 'Sắp có',
   module: (label: string, deptTitle: string) =>
     `Phân hệ "${label}" thuộc bộ phận "${deptTitle}" đang được phát triển.`,
-  settings: 'Phân hệ "Cài đặt" đang được phát triển.',
 } as const;
 
 export const UI_PERMISSION_DENIED = {

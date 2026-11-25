@@ -245,19 +245,19 @@ export const cskhService = {
   },
 
   // Master Data & Profiles
-  getMasterData<T = any>(): Promise<T> {
+  getMasterData<T = unknown>(): Promise<T> {
     return apiClient.get<T>(`${BASE_CSKH}/master-data`);
   },
 
-  saveMasterData<T = any>(store: T): Promise<void> {
+  saveMasterData<T = unknown>(store: T): Promise<void> {
     return apiClient.put<void>(`${BASE_CSKH}/master-data`, store);
   },
 
-  getProjectProfiles<T = any>(): Promise<T> {
+  getProjectProfiles<T = unknown>(): Promise<T> {
     return apiClient.get<T>(`${BASE_CSKH}/master-data/profiles`);
   },
 
-  saveProjectProfiles<T = any>(profiles: T): Promise<void> {
+  saveProjectProfiles<T = unknown>(profiles: T): Promise<void> {
     return apiClient.put<void>(`${BASE_CSKH}/master-data/profiles`, profiles);
   },
 

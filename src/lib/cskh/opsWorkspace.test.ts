@@ -101,4 +101,25 @@ describe('cskh ops workspace', () => {
     expect(kpis.openActions).toBe(1);
     expect(kpis.overdueActions).toBe(1);
   });
+
+  it('counts nested WBS descendants and rolls up weighted progress', async () => {
+    const { countWbsDescendants, rollupWbsProgress } = await import('./opsWorkspace');
+    const items = [
+      { id: 'root', name: 'Tổng', days: 30, startDate: '2026-08-01', endDate: '2026-08-30', actualPct: 0, level: 0, isGroup: true, parentId: undefined },
+      { id: 'g1', name: 'Nhóm 1', days: 20, startDate: '2026-08-01', endDate: '2026-08-20', actualPct: 0, level: 1, isGroup: true, parentId: 'root' },
+      { id: 't1', name: 'Việc 1', days: 10, startDate: '2026-08-01', endDate: '2026-08-10', actualPct: 100, level: 2, isGroup: false, parentId: 'g1' },
+      { id: 't2', name: 'Việc 2', days: 10, startDate: '2026-08-11', endDate: '2026-08-20', actualPct: 50, level: 2, isGroup: false, parentId: 'g1' },
+      { id: 't3', name: 'Việc 3', days: 10, startDate: '2026-08-21', endDate: '2026-08-30', actualPct: 15, level: 1, isGroup: false, parentId: 'root' },
+    ];
+
+    expect(countWbsDescendants(items, 'root')).toBe(4);
+    expect(countWbsDescendants(items, 'g1')).toBe(2);
+    expect(countWbsDescendants(items, 't1')).toBe(0);
+
+    const rolled = rollupWbsProgress(items);
+    const g1 = rolled.find(i => i.id === 'g1');
+    const root = rolled.find(i => i.id === 'root');
+    expect(g1?.actualPct).toBe(75);
+    expect(root?.actualPct).toBe(55);
+  });
 });

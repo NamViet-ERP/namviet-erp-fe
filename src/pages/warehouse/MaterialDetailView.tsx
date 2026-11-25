@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import type React from 'react';
 import { Ban, RotateCcw, Image as ImageIcon, Trash2, Upload } from 'lucide-react';
 import DetailSection from '../../components/hr/DetailSection';
 import DetailFieldGrid from '../../components/hr/DetailFieldGrid';

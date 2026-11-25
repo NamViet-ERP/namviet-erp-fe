@@ -1,5 +1,3 @@
-export const CSKH_MASTER_STORAGE_KEY = 'nv-cskh-master-data';
-
 export type CskhColorToken = 'ok' | 'warn' | 'danger';
 
 export type CskhTimeRelation = 'from_advance' | 'after_end' | 'end_with';
@@ -137,34 +135,24 @@ function parseBands(value: unknown): CskhCapacityBand[] {
   }));
 }
 
-export function loadMasterStore(): CskhMasterStore {
-  try {
-    const raw = localStorage.getItem(CSKH_MASTER_STORAGE_KEY);
-    if (!raw) return EMPTY_MASTER_STORE;
-    const parsed = JSON.parse(raw) as Partial<CskhMasterStore>;
-    return {
-      industries: asArray(parsed.industries),
-      boilerTypes: asArray(parsed.boilerTypes),
-      statuses: asArray<CskhColorItem>(parsed.statuses).map(row => ({ ...row, color: asColor(row.color) })),
-      priorities: asArray<CskhColorItem>(parsed.priorities).map(row => ({ ...row, color: asColor(row.color) })),
-      phases: asArray<CskhPhaseItem>(parsed.phases).map(row => ({
-        ...row,
-        order: Number.isFinite(Number(row.order)) ? Number(row.order) : 0,
-        active: row.active !== false,
-      })),
-      schedules: asArray<Partial<CskhScheduleCombo>>(parsed.schedules).map(row => ({
-        boilerTypeId: typeof row.boilerTypeId === 'string' ? row.boilerTypeId : '',
-        priorityId: typeof row.priorityId === 'string' ? row.priorityId : '',
-        bands: parseBands(row.bands),
-      })),
-    };
-  } catch {
-    return EMPTY_MASTER_STORE;
-  }
-}
-
-export function saveMasterStore(store: CskhMasterStore): void {
-  localStorage.setItem(CSKH_MASTER_STORAGE_KEY, JSON.stringify(store));
+export function normalizeMasterStore(raw?: Partial<CskhMasterStore> | null): CskhMasterStore {
+  if (!raw || typeof raw !== 'object') return EMPTY_MASTER_STORE;
+  return {
+    industries: asArray(raw.industries),
+    boilerTypes: asArray(raw.boilerTypes),
+    statuses: asArray<CskhColorItem>(raw.statuses).map(row => ({ ...row, color: asColor(row.color) })),
+    priorities: asArray<CskhColorItem>(raw.priorities).map(row => ({ ...row, color: asColor(row.color) })),
+    phases: asArray<CskhPhaseItem>(raw.phases).map(row => ({
+      ...row,
+      order: Number.isFinite(Number(row.order)) ? Number(row.order) : 0,
+      active: row.active !== false,
+    })),
+    schedules: asArray<Partial<CskhScheduleCombo>>(raw.schedules).map(row => ({
+      boilerTypeId: typeof row.boilerTypeId === 'string' ? row.boilerTypeId : '',
+      priorityId: typeof row.priorityId === 'string' ? row.priorityId : '',
+      bands: parseBands(row.bands),
+    })),
+  };
 }
 
 export function findScheduleCombo(

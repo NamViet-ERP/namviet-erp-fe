@@ -128,7 +128,7 @@ export default function Sidebar({
   };
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+
     setExpandedItems(prev => {
       const next = { ...prev };
       let changed = false;
@@ -144,7 +144,7 @@ export default function Sidebar({
 
   useEffect(() => {
     if (isEffectiveCollapsed) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+  
       setExpandedItems({});
       setUserCollapsed(new Set());
       setHoveredItem(null);

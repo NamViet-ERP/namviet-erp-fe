@@ -25,6 +25,7 @@ import { useMaterials } from '../../hooks/useMaterials';
 import { useProjects } from '../../hooks/useProjects';
 import { useSuppliers } from '../../hooks/useSuppliers';
 import { getApiErrorMessage } from '../../lib/apiClient';
+import { downloadCsv } from '../../lib/csvExport';
 import { formatDateCell } from '../../lib/hrm/formatters';
 import { formatCurrency } from '../../utils/formatCurrency';
 import type { DropdownItem } from '../../types';
@@ -301,7 +302,7 @@ export default forwardRef<RfqQuotesPanelHandle, {
 
   const exportCsv = () => {
     const header = ['Ngày báo giá', 'Mã hàng', 'Tên hàng', 'Nhà cung cấp', 'Đơn giá', 'Hạn giữ giá', 'Thời gian giao hàng', 'Điều khoản thanh toán', 'Trạng thái'];
-    const lines = items.map(row => [
+    const rows = items.map(row => [
       row.quoteDate,
       row.materialCode,
       row.materialName,
@@ -311,14 +312,8 @@ export default forwardRef<RfqQuotesPanelHandle, {
       row.leadTimeDays != null ? String(row.leadTimeDays) : '',
       row.paymentTerm ?? '',
       STATUS_LABEL[row.status] ?? row.status,
-    ].map(v => `"${String(v).replaceAll('"', '""')}"`).join(','));
-    const blob = new Blob(['\uFEFF' + [header.join(','), ...lines].join('\n')], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'BaoGia_RFQ.csv';
-    a.click();
-    URL.revokeObjectURL(url);
+    ]);
+    void downloadCsv('BaoGia_RFQ.csv', header, rows);
   };
 
   useImperativeHandle(ref, () => ({ openCreate, exportCsv }), [canWrite, items]);

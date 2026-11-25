@@ -31,68 +31,102 @@ function deduplicateAndSort(items: ProjectPersonnelItem[]): ProjectPersonnelItem
   return result.sort((a, b) => a.name.localeCompare(b.name, 'vi'));
 }
 
+function isFallbackableError(err: unknown): boolean {
+  if (err && typeof err === 'object' && 'status' in err) {
+    const status = (err as { status?: unknown }).status;
+    return status === 403 || status === 404;
+  }
+  const msg = err instanceof Error ? err.message : '';
+  return msg.includes('403') || msg.includes('404');
+}
+
 export const projectPersonnelService = {
   async getPersonnel(): Promise<ProjectPersonnelItem[]> {
+    let anySucceeded = false;
+    let firstUnexpectedError: unknown = null;
+    let lastError: unknown = null;
+
+    const recordError = (err: unknown) => {
+      lastError = err;
+      if (!isFallbackableError(err) && firstUnexpectedError === null) {
+        firstUnexpectedError = err;
+      }
+    };
+
     // 1. Ưu tiên endpoint chuẩn dành riêng cho nhân sự dự án (wms.projects.view:all)
     try {
       const res = await apiClient.get<ProjectPersonnelItem[]>('/api/warehouse/projects/personnel');
-      if (Array.isArray(res) && res.length > 0) {
-        return deduplicateAndSort(res);
+      if (Array.isArray(res)) {
+        anySucceeded = true;
+        if (res.length > 0) return deduplicateAndSort(res);
       }
-    } catch {
-      // Endpoint có thể 404 nếu backend đang chạy debug chưa được build/restart
+    } catch (err) {
+      recordError(err);
     }
 
     // 2. Dự phòng: Thử lấy từ adminUsersService (nếu user có quyền admin)
     try {
       const adminRes = await adminUsersService.list({ pageSize: 100 });
-      if (adminRes?.items && adminRes.items.length > 0) {
-        const mapped: ProjectPersonnelItem[] = adminRes.items
-          .filter(u => u.isActive !== false)
-          .map(u => ({
-            id: u.id,
-            name: u.fullName,
-            code: u.employeeCode,
-            email: u.email,
-          }));
-        if (mapped.length > 0) {
-          return deduplicateAndSort(mapped);
+      if (adminRes?.items) {
+        anySucceeded = true;
+        if (adminRes.items.length > 0) {
+          const mapped: ProjectPersonnelItem[] = adminRes.items
+            .filter(u => u.isActive !== false)
+            .map(u => ({
+              id: u.id,
+              name: u.fullName,
+              code: u.employeeCode,
+              email: u.email,
+            }));
+          if (mapped.length > 0) {
+            return deduplicateAndSort(mapped);
+          }
         }
       }
-    } catch {
-      // Bỏ qua nếu không có quyền admin.users.view:all
+    } catch (err) {
+      recordError(err);
     }
 
     // 3. Dự phòng: Thử lấy từ employeesService (nếu user có quyền hrm)
     try {
       const empRes = await employeesService.listActive();
-      if (Array.isArray(empRes) && empRes.length > 0) {
-        const mapped: ProjectPersonnelItem[] = empRes.map(e => ({
-          id: e.id,
-          name: e.fullName,
-          code: e.code,
-          email: e.personalEmail,
-        }));
-        if (mapped.length > 0) {
-          return deduplicateAndSort(mapped);
+      if (Array.isArray(empRes)) {
+        anySucceeded = true;
+        if (empRes.length > 0) {
+          const mapped: ProjectPersonnelItem[] = empRes.map(e => ({
+            id: e.id,
+            name: e.fullName,
+            code: e.code,
+            email: e.personalEmail,
+          }));
+          if (mapped.length > 0) {
+            return deduplicateAndSort(mapped);
+          }
         }
       }
-    } catch {
-      // Bỏ qua nếu không có quyền hrm.employees.view:all
+    } catch (err) {
+      recordError(err);
     }
 
     // 4. Dự phòng: Lấy từ danh sách thủ kho kho dự án (/api/warehouse/keepers)
     try {
       const keepers = await apiClient.get<ProjectWarehouseKeeperDto[]>('/api/warehouse/keepers');
-      if (Array.isArray(keepers) && keepers.length > 0) {
-        const mapped: ProjectPersonnelItem[] = keepers.map(k => ({
-          id: k.userId,
-          name: k.displayName,
-        }));
-        return deduplicateAndSort(mapped);
+      if (Array.isArray(keepers)) {
+        anySucceeded = true;
+        if (keepers.length > 0) {
+          const mapped: ProjectPersonnelItem[] = keepers.map(k => ({
+            id: k.userId,
+            name: k.displayName,
+          }));
+          return deduplicateAndSort(mapped);
+        }
       }
-    } catch {
-      // Bỏ qua nếu lỗi
+    } catch (err) {
+      recordError(err);
+    }
+
+    if (!anySucceeded && (firstUnexpectedError ?? lastError)) {
+      throw firstUnexpectedError ?? lastError;
     }
 
     return [];

@@ -2,6 +2,7 @@ import { apiClient, saveBlob } from '../lib/apiClient';
 import type {
   CreateServiceExpenseItemRequest,
   ServiceExpenseImportBatchRequest,
+  ServiceExpenseImportErrorDto,
   ServiceExpenseImportParseResultDto,
   ServiceExpenseImportResultDto,
   ServiceExpenseImportRowDto,
@@ -12,6 +13,78 @@ import type {
 } from '../types/api/serviceExpenseItem';
 
 const ENDPOINT = '/api/purchasing/service-items';
+
+interface RawServiceExpenseImportRow {
+  rowNumber?: unknown;
+  code?: unknown;
+  name?: unknown;
+  type?: unknown;
+  unit?: unknown;
+  referencePrice?: unknown;
+  description?: unknown;
+  isValid?: unknown;
+  isExisting?: unknown;
+  errorMessage?: unknown;
+  errors?: unknown;
+  warnings?: unknown;
+}
+
+interface RawServiceExpenseParseResponse {
+  totalRows?: number;
+  validRowCount?: number;
+  validRows?: number;
+  existingRowCount?: number;
+  existingRows?: number;
+  errorRowCount?: number;
+  errorRows?: number;
+  rows?: RawServiceExpenseImportRow[];
+  errors?: unknown[];
+}
+
+function normalizeParseImportErrors(rawErrors: unknown): ServiceExpenseImportErrorDto[] {
+  if (!Array.isArray(rawErrors)) return [];
+  const normalized: ServiceExpenseImportErrorDto[] = [];
+  for (const entry of rawErrors) {
+    if (typeof entry === 'string') {
+      const msg = entry.trim();
+      if (msg) normalized.push({ rowNumber: 0, field: '', message: msg });
+      continue;
+    }
+    if (entry && typeof entry === 'object') {
+      const obj = entry as Record<string, unknown>;
+      const rawMsg = obj.message;
+      const message =
+        typeof rawMsg === 'string'
+          ? rawMsg.trim()
+          : rawMsg != null
+            ? String(rawMsg).trim()
+            : '';
+      if (!message) continue;
+      const rowNum = Number(obj.rowNumber);
+      normalized.push({
+        rowNumber: Number.isFinite(rowNum) ? rowNum : 0,
+        field:
+          typeof obj.field === 'string'
+            ? obj.field
+            : obj.field != null
+              ? String(obj.field)
+              : '',
+        message,
+      });
+    }
+  }
+  return normalized;
+}
+
+interface RawServiceExpenseImportResponse {
+  createdCount?: number;
+  insertedCount?: number;
+  updatedCount?: number;
+  skippedCount?: number;
+  totalProcessed?: number;
+  importedCodes?: string[];
+  errors?: string[];
+}
 
 export const serviceExpenseItemsService = {
   async list(params: ServiceExpenseItemQueryParams = {}): Promise<ServiceExpenseItemPagedResponse> {
@@ -53,14 +126,14 @@ export const serviceExpenseItemsService = {
   async parseImportFile(file: File): Promise<ServiceExpenseImportParseResultDto> {
     const formData = new FormData();
     formData.append('file', file);
-    const raw = await apiClient.postForm<any>(`${ENDPOINT}/parse-import-file`, formData);
+    const raw = await apiClient.postForm<RawServiceExpenseParseResponse>(`${ENDPOINT}/parse-import-file`, formData);
 
     const validRowCount = raw.validRowCount ?? raw.validRows ?? 0;
     const existingRowCount = raw.existingRowCount ?? raw.existingRows ?? 0;
     const errorRowCount = raw.errorRowCount ?? raw.errorRows ?? 0;
     const totalRows = raw.totalRows ?? (validRowCount + errorRowCount);
 
-    const rows: ServiceExpenseImportRowDto[] = (raw.rows ?? []).map((r: any) => {
+    const rows: ServiceExpenseImportRowDto[] = (raw.rows ?? []).map((r: RawServiceExpenseImportRow) => {
       let errors: string[] = [];
       if (Array.isArray(r.errors)) {
         errors = r.errors.filter(Boolean).map(String);
@@ -82,7 +155,7 @@ export const serviceExpenseItemsService = {
         description: r.description != null ? String(r.description) : null,
         isValid: typeof r.isValid === 'boolean' ? r.isValid : errors.length === 0,
         isExisting: Boolean(r.isExisting),
-        errorMessage: r.errorMessage ?? (errors.length > 0 ? errors[0] : null),
+        errorMessage: typeof r.errorMessage === 'string' ? r.errorMessage : (errors.length > 0 ? errors[0] : null),
         errors,
         warnings,
       };
@@ -97,12 +170,12 @@ export const serviceExpenseItemsService = {
       existingRows: existingRowCount,
       errorRows: errorRowCount,
       rows,
-      errors: Array.isArray(raw.errors) ? raw.errors : [],
+      errors: normalizeParseImportErrors(raw.errors),
     };
   },
 
   async importBatch(request: ServiceExpenseImportBatchRequest): Promise<ServiceExpenseImportResultDto> {
-    const raw = await apiClient.post<any>(`${ENDPOINT}/import-batch`, request);
+    const raw = await apiClient.post<RawServiceExpenseImportResponse>(`${ENDPOINT}/import-batch`, request);
     const createdCount = raw.createdCount ?? raw.insertedCount ?? 0;
     const updatedCount = raw.updatedCount ?? 0;
     const skippedCount = raw.skippedCount ?? 0;

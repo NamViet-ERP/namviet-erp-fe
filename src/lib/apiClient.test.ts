@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { parseApiError } from './apiClient';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { apiClient, ApiError, parseApiError, setAuthTokenProvider } from './apiClient';
+import { isSessionExpired, resolveSessionExpired } from './sessionExpiry';
 
 describe('parseApiError', () => {
   const fallback = 'Đã xảy ra lỗi hệ thống';
@@ -153,6 +154,48 @@ describe('parseApiError', () => {
         };
         expect(parseApiError(payload, fallback)).toBe('Actual error detail');
       });
+    });
+  });
+
+  describe('public API handling in requestForm and getBlob', () => {
+    afterEach(() => {
+      setAuthTokenProvider(() => null);
+      resolveSessionExpired();
+      vi.restoreAllMocks();
+    });
+
+    it('omits Authorization header and skips session expiry prompt for public postForm requests', async () => {
+      setAuthTokenProvider(() => 'secret-jwt');
+      const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+        new Response(JSON.stringify({ detail: 'Unauthorized public' }), {
+          status: 401,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      );
+
+      const formData = new FormData();
+      formData.append('name', 'Candidate');
+
+      await expect(apiClient.postForm('/api/public/recruitment/apply', formData)).rejects.toBeInstanceOf(ApiError);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      const init = fetchMock.mock.calls[0]?.[1];
+      const headers = init?.headers as Record<string, string>;
+      expect(headers.Authorization).toBeUndefined();
+      expect(isSessionExpired()).toBe(false);
+    });
+
+    it('omits Authorization header and skips session expiry prompt for public getBlob requests', async () => {
+      setAuthTokenProvider(() => 'secret-jwt');
+      const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+        new Response('Forbidden', { status: 401 }),
+      );
+
+      await expect(apiClient.getBlob('/api/public/files/sample')).rejects.toBeInstanceOf(ApiError);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      const init = fetchMock.mock.calls[0]?.[1];
+      const headers = init?.headers as Record<string, string>;
+      expect(headers.Authorization).toBeUndefined();
+      expect(isSessionExpired()).toBe(false);
     });
   });
 });

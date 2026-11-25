@@ -210,11 +210,11 @@ export function usePoStockInFlow({ poCode, order, directDispatch = false }: Prop
     if (!order) return;
     if (!showCreate || editing) return;
     // Seed supplier/ref when order loads while create modal is open
-    /* eslint-disable react-hooks/set-state-in-effect -- hydrate create form from loaded PO */
+
     setDefaultSupplier(order.supplierName ?? '');
     setReferenceCode(poCode);
     setSelectedPoCode(poCode);
-    /* eslint-enable react-hooks/set-state-in-effect */
+
   }, [order, poCode, showCreate, editing]);
 
   useEffect(() => {
@@ -222,11 +222,11 @@ export function usePoStockInFlow({ poCode, order, directDispatch = false }: Prop
     const preview = poPreviewQuery.data;
     if (!preview) return;
     // Seed from PO preview once available
-    /* eslint-disable react-hooks/set-state-in-effect -- hydrate create form from PO preview */
+
     setDefaultSupplier(preview.supplierName ?? order?.supplierName ?? '');
     setReferenceCode(preview.poCode ?? poCode);
     setCreateErrors({});
-    /* eslint-enable react-hooks/set-state-in-effect */
+
   }, [poPreviewQuery.data, editing, showCreate, order?.supplierName, poCode]);
 
   const openCreate = () => {

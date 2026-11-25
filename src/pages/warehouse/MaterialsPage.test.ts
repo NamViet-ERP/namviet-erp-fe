@@ -1,4 +1,5 @@
 import { act, createElement } from 'react';
+import type React from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -12,7 +13,10 @@ vi.mock('../../services/materialsService', () => ({
     list: vi.fn(),
     getByCode: vi.fn(),
     create: vi.fn(),
+    uploadImage: vi.fn(),
     update: vi.fn(),
+    remove: vi.fn(),
+    clearAll: vi.fn(),
     discontinue: vi.fn(),
   },
 }));
@@ -32,6 +36,27 @@ vi.mock('../../hooks/useCategories', () => ({
 vi.mock('../../hooks/useMaterialRegions', () => ({
   useMaterialRegions: () => ({
     data: ['G7', 'EU', 'ĐNA'],
+  }),
+}));
+
+vi.mock('../../hooks/useMaterialUnits', () => ({
+  useMaterialUnits: () => ({
+    data: [],
+    isLoading: false,
+  }),
+}));
+
+vi.mock('../../hooks/useMaterialOrigins', () => ({
+  useMaterialOrigins: () => ({
+    data: [],
+    isLoading: false,
+  }),
+}));
+
+vi.mock('../../hooks/useMaterialBrands', () => ({
+  useMaterialBrands: () => ({
+    data: [],
+    isLoading: false,
   }),
 }));
 
@@ -393,5 +418,43 @@ describe('MaterialsPage URL SearchParams & Navigation Synchronisation', () => {
 
     // Returns to table list
     expect(container.querySelector('table.mat-catalog-table')).not.toBeNull();
+  });
+});
+
+describe('MaterialsPage Create Material Modal', () => {
+  it('opens "Tạo mã vật tư mới" modal with required sections and shows validation errors on empty submit', async () => {
+    await renderPage();
+
+    const createTrigger = [...container.querySelectorAll('button')].find(btn =>
+      btn.textContent?.includes('Tạo mã vật tư'),
+    );
+    expect(createTrigger).toBeDefined();
+
+    await act(async () => {
+      createTrigger!.click();
+    });
+
+    const dialog = document.body.querySelector('[role="dialog"]');
+    expect(dialog).not.toBeNull();
+    expect(dialog?.textContent).toContain('Tạo mã vật tư mới');
+    expect(dialog?.textContent).toContain('Mã vật tư');
+    expect(dialog?.textContent).toContain('Tên vật tư');
+    expect(dialog?.textContent).toContain('Xuất xứ & Nhãn hiệu');
+
+    const submitButton = [...dialog!.querySelectorAll('button')].find(btn =>
+      btn.textContent?.trim() === 'Tạo mới',
+    );
+    expect(submitButton).toBeDefined();
+
+    await act(async () => {
+      submitButton!.click();
+    });
+
+    expect(dialog?.textContent).toContain('Vui lòng chọn danh mục');
+    expect(dialog?.textContent).toContain('Vui lòng chọn nhóm vật tư');
+    expect(dialog?.textContent).toContain('Vui lòng nhập mã vật tư');
+    expect(dialog?.textContent).toContain('Vui lòng nhập tên vật tư');
+    expect(dialog?.textContent).toContain('Vui lòng chọn đơn vị tính');
+    expect(materialsService.create).not.toHaveBeenCalled();
   });
 });

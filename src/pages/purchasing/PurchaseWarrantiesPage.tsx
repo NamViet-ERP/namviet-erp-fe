@@ -103,7 +103,7 @@ export default function PurchaseWarrantiesPage() {
   useEffect(() => {
     if (!shouldOpenCreate(tabParam)) return;
     // Deep-link URL (?tab=create / create-complaint) opens create modal once
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- deep-link opens create modal once
+
     setCreateOpen(true);
     setSearchParams(tabParam === 'create-complaint' ? { tab: 'complaints' } : {}, { replace: true });
   }, [tabParam, setSearchParams]);

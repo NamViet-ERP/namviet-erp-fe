@@ -445,7 +445,7 @@ export default function CskhDocsArchivePage({ project }: CskhDocsArchivePageProp
             <FormField label="Đơn vị lập / Chịu trách nhiệm">
               <input 
                 className="form-input w-full" 
-                placeholder="VD: Ban chỉ huy công trường Nam Việt" 
+                placeholder="VD: Ban chỉ huy công trường" 
                 value={form.author} 
                 onChange={e => setForm(f => ({ ...f, author: e.target.value }))} 
               />

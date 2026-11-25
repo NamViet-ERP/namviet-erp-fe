@@ -1,4 +1,4 @@
-import { apiClient } from '../lib/apiClient';
+import { apiClient, ApiError } from '../lib/apiClient';
 import { fromApi, toApi, type EmployeeApiDto } from '../lib/hrm/employeeApiMapper';
 import type { CreateEmployeeDto, Employee, UpdateEmployeeDto } from '../types/hr';
 import { isActiveEmployee } from '../types/hr';
@@ -78,9 +78,11 @@ export const employeesService = {
     try {
       const emp = await this.getById(id);
       return isActiveEmployee(emp) ? emp : undefined;
-    } catch (e) {
-      console.error('Failed to fetch active employee:', e);
-      return undefined;
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) {
+        return undefined;
+      }
+      throw err;
     }
   },
 };

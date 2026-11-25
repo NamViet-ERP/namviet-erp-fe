@@ -1,13 +1,8 @@
-import { useState, useRef, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import {
-  Download,
-  Upload,
-  FileSpreadsheet,
   CheckCircle2,
   XCircle,
-  RefreshCw,
   Search,
-  X,
   Warehouse,
   Building2,
   FolderGit2,
@@ -16,11 +11,12 @@ import {
   Check,
 } from 'lucide-react';
 import Modal from '../ui/Modal';
+import ExcelImportModalShell from '../shared/ExcelImportModalShell';
 import { showToast } from '../ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { useProjects } from '../../hooks/useProjects';
 import { stockService } from '../../services/stockService';
-import type { OpeningStockItemPreviewDto, OpeningStockPreviewResponseDto } from '../../types/wms';
+import type { OpeningStockPreviewResponseDto } from '../../types/wms';
 import { formatCurrencyFull } from '../../utils/formatCurrency';
 
 interface AdminOpeningStockModalProps {
@@ -48,10 +44,12 @@ export default function AdminOpeningStockModal({
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorSearch, setErrorSearch] = useState('');
   const [copied, setCopied] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: projectPage } = useProjects();
   const projects = projectPage?.items ?? [];
+
+  const targetWarehouseLabel =
+    targetType === 'project' ? `Kho Dự án ${selectedProjectCode}` : 'Kho trung tâm';
 
   const handleReset = () => {
     setSelectedFile(null);
@@ -63,7 +61,6 @@ export default function AdminOpeningStockModal({
     setShowErrorModal(false);
     setErrorSearch('');
     setCopied(false);
-    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleClose = () => {
@@ -86,17 +83,6 @@ export default function AdminOpeningStockModal({
   };
 
   const processFile = async (file: File) => {
-    const ext = file.name.split('.').pop()?.toLowerCase();
-    if (!['xlsx', 'xls'].includes(ext ?? '')) {
-      showToast('warning', 'Vui lòng chọn file Excel định dạng .xlsx hoặc .xls');
-      return;
-    }
-
-    if (file.size > 10 * 1024 * 1024) {
-      showToast('warning', 'Kích thước file tối đa là 10MB');
-      return;
-    }
-
     setSelectedFile(file);
     setIsPreviewing(true);
     setPreviewData(null);
@@ -119,41 +105,22 @@ export default function AdminOpeningStockModal({
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) void processFile(file);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const file = e.dataTransfer.files?.[0];
-    if (file) void processFile(file);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
-  // Filter preview items by Tab & Instant Search
   const filteredItems = useMemo(() => {
     if (!previewData) return [];
     return previewData.items
-      .map((item: OpeningStockItemPreviewDto, index: number) => ({ ...item, originalIndex: index + 1 }))
-      .filter((item: OpeningStockItemPreviewDto & { originalIndex: number }) => {
-        // Tab Filter
+      .map((item, index) => ({ ...item, originalIndex: index + 1 }))
+      .filter(item => {
         if (filterTab === 'valid' && !item.isValid) return false;
         if (filterTab === 'error' && item.isValid) return false;
 
-        // Instant Search Filter
         if (search.trim()) {
           const q = search.trim().toLowerCase();
           const matchCode = item.materialCode?.toLowerCase().includes(q);
           const matchName = item.materialName?.toLowerCase().includes(q);
           const matchUnit = item.unit?.toLowerCase().includes(q);
           const matchError = item.error?.toLowerCase().includes(q);
-          const matchIndex = String(item.originalIndex) === q || `dòng ${item.originalIndex}`.toLowerCase().includes(q);
+          const matchIndex =
+            String(item.originalIndex) === q || `dòng ${item.originalIndex}`.toLowerCase().includes(q);
           if (!matchCode && !matchName && !matchUnit && !matchError && !matchIndex) {
             return false;
           }
@@ -176,14 +143,11 @@ export default function AdminOpeningStockModal({
     if (!q) return errorItems;
     return errorItems.filter(it => {
       const idxStr = String(it.originalIndex);
-      const codeStr = (it.materialCode ?? '').toLowerCase();
-      const nameStr = (it.materialName ?? '').toLowerCase();
-      const errStr = (it.error ?? '').toLowerCase();
       return (
         idxStr.includes(q) ||
-        codeStr.includes(q) ||
-        nameStr.includes(q) ||
-        errStr.includes(q) ||
+        (it.materialCode ?? '').toLowerCase().includes(q) ||
+        (it.materialName ?? '').toLowerCase().includes(q) ||
+        (it.error ?? '').toLowerCase().includes(q) ||
         `dòng ${idxStr}`.includes(q)
       );
     });
@@ -209,8 +173,8 @@ export default function AdminOpeningStockModal({
       }
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy', err);
+    } catch {
+      showToast('error', 'Không thể sao chép vào bộ nhớ tạm.');
     }
   };
 
@@ -234,537 +198,355 @@ export default function AdminOpeningStockModal({
     }
   };
 
+  const targetDestinationSlot = (
+    <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg border border-[var(--md-outline-variant)] bg-[var(--md-surface-container-low)]">
+      <div className="flex items-center gap-2 text-xs font-semibold text-[var(--md-on-surface)]">
+        <Warehouse size={16} className="text-[var(--md-primary)] shrink-0" />
+        <span>Nơi tiếp nhận số dư tồn kho:</span>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        {/* Segmented Pill Switcher cao cấp */}
+        <div className="inline-flex p-1 rounded-lg bg-[var(--md-surface-container-high)] border border-[var(--md-outline-variant)] text-xs">
+          <button
+            type="button"
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-all ${
+              targetType === 'general'
+                ? 'bg-[var(--md-primary)] text-white shadow-sm'
+                : 'text-[var(--md-on-surface-variant)] hover:text-[var(--md-on-surface)]'
+            }`}
+            onClick={() => {
+              setTargetType('general');
+              if (selectedFile) void processFile(selectedFile);
+            }}
+          >
+            <Building2 size={13} />
+            <span className="whitespace-nowrap">Kho trung tâm</span>
+          </button>
+
+          <button
+            type="button"
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-all ${
+              targetType === 'project'
+                ? 'bg-[var(--md-primary)] text-white shadow-sm'
+                : 'text-[var(--md-on-surface-variant)] hover:text-[var(--md-on-surface)]'
+            }`}
+            onClick={() => setTargetType('project')}
+          >
+            <FolderGit2 size={13} />
+            <span className="whitespace-nowrap">Kho Dự Án</span>
+          </button>
+        </div>
+
+        {targetType === 'project' && (
+          <select
+            className="form-input form-input-sm text-xs min-w-[220px] max-w-[320px] truncate"
+            value={selectedProjectCode}
+            onChange={e => {
+              setSelectedProjectCode(e.target.value);
+              if (selectedFile) void processFile(selectedFile);
+            }}
+            disabled={isPreviewing || isImporting}
+          >
+            <option value="">-- Chọn dự án nhận tồn kho --</option>
+            {projects.map(p => (
+              <option key={p.projectCode} value={p.projectCode}>
+                {p.projectCode} — {p.projectName}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
+    </div>
+  );
+
+  const errorAlertSlot = previewData && previewData.errorRows > 0 ? (
+    <div className="p-3 rounded-lg border border-rose-500/40 bg-rose-500/10 dark:bg-rose-950/30 text-xs">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+        <div className="flex items-center gap-1.5 font-semibold text-rose-700 dark:text-rose-300">
+          <AlertCircle size={16} className="shrink-0 text-rose-600 dark:text-rose-400" />
+          <span>Phát hiện {previewData.errorRows} dòng có lỗi đối soát</span>
+        </div>
+        <button
+          type="button"
+          className="btn btn-outline btn-xs text-rose-700 dark:text-rose-300 border-rose-500/40 hover:bg-rose-500/10 inline-flex items-center gap-1 font-medium"
+          onClick={() => setShowErrorModal(true)}
+        >
+          Xem chi tiết &amp; Sao chép danh sách lỗi
+        </button>
+      </div>
+      <ul className="space-y-1 pl-5 list-disc text-rose-700 dark:text-rose-300 text-[11px] leading-relaxed">
+        {errorItems.slice(0, 5).map(it => (
+          <li key={`err-summary-${it.originalIndex}`}>
+            Dòng Excel {it.originalIndex}: Mã &apos;{it.materialCode || 'Trống'}&apos; — {it.error || 'Lỗi không xác định'}
+          </li>
+        ))}
+        {errorItems.length > 5 && (
+          <li className="list-none -ml-5 pt-1">
+            <button
+              type="button"
+              className="inline-flex items-center gap-1 font-medium underline text-rose-700 dark:text-rose-300 hover:opacity-80 transition-opacity"
+              onClick={() => setShowErrorModal(true)}
+            >
+              …và {errorItems.length - 5} lỗi khác (Bấm để xem và sao chép toàn bộ)
+            </button>
+          </li>
+        )}
+      </ul>
+    </div>
+  ) : null;
+
+  const errorDetailsModal = previewData ? (
+    <Modal
+      isOpen={showErrorModal}
+      onClose={() => setShowErrorModal(false)}
+      size="lg"
+      title={`Chi tiết lỗi đối soát tồn kho đầu kỳ (${errorItems.length} lỗi trên ${previewData.errorRows} dòng)`}
+      subtitle={(
+        <div className="text-xs text-[var(--md-on-surface-variant)] mt-0.5">
+          File: <strong>{selectedFile?.name ?? 'Excel'}</strong> — Nơi nhận: <strong>{targetWarehouseLabel}</strong>
+        </div>
+      )}
+      beforeBody={(
+        <div className="px-6 py-3 border-b border-[var(--md-outline-variant)] bg-[var(--md-surface-container-low)] flex flex-wrap items-center justify-between gap-3">
+          <div className="relative flex-1 min-w-[220px]">
+            <Search
+              size={14}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--md-on-surface-variant)] pointer-events-none"
+              aria-hidden
+            />
+            <input
+              type="search"
+              value={errorSearch}
+              onChange={e => setErrorSearch(e.target.value)}
+              placeholder="Tìm theo số dòng, mã vật tư hoặc nội dung lỗi…"
+              aria-label="Tìm kiếm lỗi"
+              className="w-full pl-8 pr-3 py-1.5 text-xs rounded-md border border-[var(--md-outline-variant)] bg-[var(--md-surface)] text-[var(--md-on-surface)] placeholder:text-[var(--md-on-surface-variant)]/60 focus:outline-none focus:ring-1 focus:ring-[var(--md-primary)]"
+            />
+          </div>
+          <button
+            type="button"
+            className="btn btn-outline btn-sm inline-flex items-center gap-1.5 text-xs"
+            onClick={() => void handleCopyErrors()}
+            title="Sao chép toàn bộ lỗi vào bộ nhớ tạm"
+          >
+            {copied ? (
+              <>
+                <Check size={14} className="text-emerald-600 dark:text-emerald-400" />
+                <span className="text-emerald-600 dark:text-emerald-400 font-medium">Đã sao chép!</span>
+              </>
+            ) : (
+              <>
+                <Copy size={14} />
+                <span>Sao chép toàn bộ lỗi ({errorItems.length})</span>
+              </>
+            )}
+          </button>
+        </div>
+      )}
+      footer={(
+        <div className="flex items-center justify-between w-full">
+          <span className="text-xs text-[var(--md-on-surface-variant)]">
+            Hiển thị <strong>{filteredErrorItems.length}</strong> / <strong>{errorItems.length}</strong> lỗi
+          </span>
+          <button type="button" className="btn btn-primary btn-sm" onClick={() => setShowErrorModal(false)}>
+            Đóng
+          </button>
+        </div>
+      )}
+    >
+      <div className="flex flex-col gap-3 py-1">
+        <div className="flex items-start gap-2.5 p-3 rounded-lg border border-[var(--md-outline-variant)] bg-[var(--md-surface-container-highest)]/40 text-xs text-[var(--md-on-surface-variant)]">
+          <AlertCircle size={16} className="text-[var(--md-primary)] shrink-0 mt-0.5" aria-hidden />
+          <div className="leading-relaxed">
+            Các dòng lỗi này không hợp lệ và sẽ được bỏ qua khi nhập tồn kho. Bạn có thể sao chép danh sách này để gửi cho bộ phận chuẩn bị file Excel hiệu chỉnh lại mã hoặc đơn vị tính.
+          </div>
+        </div>
+
+        <div className="border border-[var(--md-outline-variant)] rounded-lg overflow-hidden">
+          <div className="max-h-[50vh] overflow-y-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead className="sticky top-0 bg-[var(--md-surface-container-high)] text-[var(--md-on-surface)] font-semibold border-b border-[var(--md-outline-variant)] shadow-sm z-10">
+                <tr>
+                  <th className="py-2 px-2.5 text-center w-24">Dòng Excel</th>
+                  <th className="py-2 px-2.5 w-32">Mã vật tư</th>
+                  <th className="py-2 px-2.5 w-48">Tên vật tư</th>
+                  <th className="py-2 px-2.5">Chi tiết lỗi đối soát</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--md-outline-variant)]/60 bg-[var(--md-surface)]">
+                {filteredErrorItems.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="text-center py-8 text-[var(--md-on-surface-variant)]">
+                      {errorSearch ? 'Không tìm thấy lỗi phù hợp với từ khóa.' : 'Không có dòng lỗi nào.'}
+                    </td>
+                  </tr>
+                ) : (
+                  filteredErrorItems.map(err => (
+                    <tr key={`modal-err-${err.originalIndex}`} className="hover:bg-[var(--md-surface-container-low)] transition-colors">
+                      <td className="py-2 px-2.5 text-center tabular-nums font-semibold">
+                        <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-500/15 text-rose-700 dark:text-rose-300">
+                          Dòng {err.originalIndex}
+                        </span>
+                      </td>
+                      <td className="py-2 px-2.5 font-mono font-medium text-[var(--md-primary)]">
+                        {err.materialCode || <span className="text-[var(--md-on-surface-variant)] italic">Trống</span>}
+                      </td>
+                      <td className="py-2 px-2.5 font-medium text-[var(--md-on-surface)]">
+                        {err.materialName || '—'}
+                      </td>
+                      <td className="py-2 px-2.5 text-rose-600 dark:text-rose-400 font-normal leading-relaxed">
+                        {err.error || 'Lỗi không xác định'}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </Modal>
+  ) : null;
+
   return (
-    <>
-      <Modal
+    <ExcelImportModalShell
       isOpen={isOpen}
       onClose={handleClose}
       title="Nhập số dư tồn kho đầu kỳ từ file Excel (Admin)"
       subtitle="Hỗ trợ khởi tạo số dư kho tổng hoặc kho dự án, tự động đối soát với danh mục vật tư."
-      size="wide"
-      footer={
-        <div className="flex items-center justify-between w-full">
-          <div className="text-xs text-[var(--md-on-surface-variant)]">
-            {selectedFile && previewData && previewData.validRows > 0 ? (
-              <span>
-                Sẽ xử lý <strong>{previewData.validRows}</strong> mặt hàng hợp lệ vào{' '}
-                <strong>{targetType === 'project' ? `Kho Dự án ${selectedProjectCode}` : 'Kho Tổng Nam Việt'}</strong>
-                {previewData.errorRows > 0 && ` (bỏ qua ${previewData.errorRows} dòng lỗi)`}.
-              </span>
-            ) : (
-              <span>Vui lòng chọn file Excel để bắt đầu xem trước.</span>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              className="btn btn-outline btn-sm"
-              onClick={handleClose}
-              disabled={isImporting}
-            >
-              Hủy
-            </button>
-            <button
-              type="button"
-              className="btn btn-primary btn-sm flex items-center gap-1.5"
-              onClick={handleConfirmImport}
-              disabled={!selectedFile || !previewData || previewData.validRows === 0 || isImporting}
-            >
-              {isImporting ? (
-                <>
-                  <RefreshCw size={14} className="animate-spin" />
-                  Đang ghi nhận số dư…
-                </>
-              ) : (
-                <>
-                  <Upload size={14} />
-                  Xác nhận nhập ({previewData?.validRows ?? 0} vật tư)
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-      }
+      selectedFile={selectedFile}
+      onFileSelect={file => void processFile(file)}
+      acceptedExtensions={['xlsx', 'xls']}
+      acceptAttr=".xlsx,.xls"
+      maxFileSizeMb={10}
+      isDownloadingTemplate={isDownloading}
+      onDownloadTemplate={() => void handleDownloadTemplate()}
+      templateHint="(Bao gồm mã VT, tên VT, ĐVT, số lượng tồn và đơn giá vốn)"
+      dropzoneTitle="Kéo thả file Excel (.xlsx, .xls) tồn kho đầu kỳ vào đây"
+      dropzoneSubtitle="Hệ thống tự động nhận diện cột: Mã vật tư, Tên vật tư, ĐVT, Số lượng tồn, Đơn giá vốn, Ghi chú..."
+      dropzoneHint="Hoặc bấm vào đây để duyệt file từ máy tính (tối đa 10MB)"
+      isParsing={isPreviewing}
+      parsingTitle="Đang phân tích và đối soát số dư tồn kho với CSDL…"
+      parsingSubtitle="Kiểm tra mã vật tư đang hoạt động, đơn vị tính và tính toàn vẹn số liệu"
+      hasPreview={Boolean(previewData)}
+      beforeUploadSlot={targetDestinationSlot}
+      stats={previewData ? [
+        { key: 'total', label: 'Tổng số dòng', value: previewData.totalRows, tone: 'neutral' },
+        { key: 'valid', label: 'Hợp lệ', value: previewData.validRows, tone: 'success' },
+        { key: 'error', label: 'Dòng có lỗi', value: previewData.errorRows, tone: 'danger' },
+        { key: 'amount', label: 'Tổng giá trị vốn', value: formatCurrencyFull(previewData.totalAmount), tone: 'neutral' },
+      ] : undefined}
+      statsColumns={4}
+      alertSlot={errorAlertSlot}
+      filterTabs={previewData ? [
+        { id: 'all', label: `Tất cả (${previewData.totalRows})`, tone: 'neutral' },
+        { id: 'valid', label: `Hợp lệ (${previewData.validRows})`, tone: 'success' },
+        { id: 'error', label: `Có lỗi (${previewData.errorRows})`, tone: 'danger' },
+      ] : undefined}
+      activeFilterTab={filterTab}
+      onFilterTabChange={tabId => setFilterTab(tabId as FilterTab)}
+      searchValue={search}
+      onSearchChange={setSearch}
+      searchPlaceholder="Lọc theo STT, mã VT, tên VT, ĐVT, nội dung lỗi..."
+      footerSummary={selectedFile && previewData && previewData.validRows > 0 ? (
+        <span>
+          Sẽ xử lý <strong>{previewData.validRows}</strong> mặt hàng hợp lệ vào{' '}
+          <strong>{targetWarehouseLabel}</strong>
+          {previewData.errorRows > 0 && ` (bỏ qua ${previewData.errorRows} dòng lỗi)`}.
+        </span>
+      ) : (
+        <span>Vui lòng chọn file Excel để bắt đầu xem trước.</span>
+      )}
+      confirmLabel={`Xác nhận nhập (${previewData?.validRows ?? 0} vật tư)`}
+      confirmingLabel="Đang ghi nhận số dư…"
+      confirmDisabled={!selectedFile || !previewData || previewData.validRows === 0}
+      isImporting={isImporting}
+      onConfirm={() => void handleConfirmImport()}
+      extraModals={errorDetailsModal}
     >
-      <div className="space-y-4">
-        {/* Khối 1: Thanh chọn Nơi tiếp nhận tồn kho (Target Destination Bar) */}
-        <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg border border-[var(--md-outline-variant)] bg-[var(--md-surface-container-low)]">
-          <div className="flex items-center gap-2 text-xs font-semibold text-[var(--md-on-surface)]">
-            <Warehouse size={16} className="text-[var(--md-primary)] shrink-0" />
-            <span>Nơi tiếp nhận số dư tồn kho:</span>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Segmented Pill Switcher cao cấp */}
-            <div className="inline-flex p-1 rounded-lg bg-[var(--md-surface-container-high)] border border-[var(--md-outline-variant)] text-xs">
-              <button
-                type="button"
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-all ${
-                  targetType === 'general'
-                    ? 'bg-[var(--md-primary)] text-white shadow-sm'
-                    : 'text-[var(--md-on-surface-variant)] hover:text-[var(--md-on-surface)]'
-                }`}
-                onClick={() => {
-                  setTargetType('general');
-                  if (selectedFile) void processFile(selectedFile);
-                }}
-              >
-                <Building2 size={13} />
-                <span className="whitespace-nowrap">Kho Tổng Nam Việt</span>
-              </button>
-
-              <button
-                type="button"
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-all ${
-                  targetType === 'project'
-                    ? 'bg-[var(--md-primary)] text-white shadow-sm'
-                    : 'text-[var(--md-on-surface-variant)] hover:text-[var(--md-on-surface)]'
-                }`}
-                onClick={() => setTargetType('project')}
-              >
-                <FolderGit2 size={13} />
-                <span className="whitespace-nowrap">Kho Dự Án</span>
-              </button>
-            </div>
-
-            {/* Dropdown dự án khi chọn Kho Dự Án */}
-            {targetType === 'project' && (
-              <select
-                className="form-input form-input-sm text-xs min-w-[220px] max-w-[320px] truncate"
-                value={selectedProjectCode}
-                onChange={e => {
-                  setSelectedProjectCode(e.target.value);
-                  if (selectedFile) void processFile(selectedFile);
-                }}
-                disabled={isPreviewing || isImporting}
-              >
-                <option value="">-- Chọn dự án nhận tồn kho --</option>
-                {projects.map(p => (
-                  <option key={p.projectCode} value={p.projectCode}>
-                    {p.projectCode} — {p.projectName}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
-        </div>
-
-        {/* Khối 2: Thanh Top Control Bar (Tải mẫu + Nút Chọn file) - Khớp 100% với MaterialImportModal */}
-        <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg border border-[var(--md-outline-variant)] bg-[var(--md-surface-container-low)]">
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              className="btn btn-outline btn-sm text-xs flex items-center gap-1.5 cursor-pointer text-[var(--md-primary)] hover:bg-[var(--md-primary)]/10"
-              onClick={handleDownloadTemplate}
-              disabled={isDownloading}
-            >
-              {isDownloading ? (
-                <>
-                  <RefreshCw size={13} className="animate-spin" />
-                  Đang tải file mẫu...
-                </>
-              ) : (
-                <>
-                  <Download size={13} />
-                  Tải file mẫu Excel (.xlsx)
-                </>
-              )}
-            </button>
-            <span className="text-[11px] text-[var(--md-on-surface-variant)]">
-              (Bao gồm mã VT, tên VT, ĐVT, số lượng tồn và đơn giá vốn)
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".xlsx,.xls"
-              className="hidden"
-              onChange={handleFileChange}
-              disabled={isPreviewing || isImporting}
-            />
-            <button
-              type="button"
-              className="btn btn-primary btn-sm text-xs flex items-center gap-1.5"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isPreviewing || isImporting}
-            >
-              <FileSpreadsheet size={13} />
-              {selectedFile ? 'Chọn file khác' : 'Chọn file Excel tải lên'}
-            </button>
-          </div>
-        </div>
-
-        {/* Khu vực Dropzone nếu chưa có file */}
-        {!selectedFile && !isPreviewing && (
-          <div
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-            onClick={() => fileInputRef.current?.click()}
-            className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-[var(--md-outline-variant)] hover:border-[var(--md-primary)] rounded-xl bg-[var(--md-surface-container-lowest)] cursor-pointer transition-colors text-center"
-          >
-            <div className="w-12 h-12 rounded-full bg-[var(--md-primary-container)] text-[var(--md-primary)] flex items-center justify-center mb-3">
-              <Upload size={24} />
-            </div>
-            <p className="text-sm font-semibold text-[var(--md-on-surface)]">
-              Kéo thả file Excel (.xlsx, .xls) tồn kho đầu kỳ vào đây
-            </p>
-            <p className="text-xs text-[var(--md-on-surface-variant)] mt-1">
-              Hệ thống tự động nhận diện cột: Mã vật tư, Tên vật tư, ĐVT, Số lượng tồn, Đơn giá vốn, Ghi chú...
-            </p>
-            <p className="text-[11px] text-[var(--md-primary)] font-medium mt-3">
-              Hoặc bấm vào đây để duyệt file từ máy tính (tối đa 10MB)
-            </p>
-          </div>
-        )}
-
-        {/* Loading khi đang phân tích file */}
-        {isPreviewing && (
-          <div className="flex flex-col items-center justify-center p-8 text-center">
-            <RefreshCw size={28} className="animate-spin text-[var(--md-primary)] mb-2" />
-            <p className="text-sm font-medium text-[var(--md-on-surface)]">
-              Đang phân tích và đối soát số dư tồn kho với CSDL…
-            </p>
-            <p className="text-xs text-[var(--md-on-surface-variant)] mt-1">
-              Kiểm tra mã vật tư đang hoạt động, đơn vị tính và tính toàn vẹn số liệu
-            </p>
-          </div>
-        )}
-
-        {/* Bảng xem trước dữ liệu khi đã phân tích xong */}
-        {previewData && !isPreviewing && (
-          <div className="space-y-3">
-            {/* Thanh tổng kết số liệu (KPI Quick Stats) */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-              <div className="p-2.5 rounded-lg border border-[var(--md-outline-variant)] bg-[var(--md-surface-container-lowest)]">
-                <span className="text-[11px] text-[var(--md-on-surface-variant)]">Tổng số dòng</span>
-                <p className="text-lg font-bold text-[var(--md-on-surface)] mt-0.5">{previewData.totalRows}</p>
-              </div>
-              <div className="p-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10">
-                <span className="text-[11px] text-emerald-800 dark:text-emerald-300 font-medium">Hợp lệ</span>
-                <p className="text-lg font-bold text-emerald-700 dark:text-emerald-400 mt-0.5">
-                  {previewData.validRows}
-                </p>
-              </div>
-              <div className="p-2.5 rounded-lg border border-rose-500/30 bg-rose-500/10">
-                <span className="text-[11px] text-rose-800 dark:text-rose-300 font-medium">Dòng có lỗi</span>
-                <p className="text-lg font-bold text-rose-700 dark:text-rose-400 mt-0.5">
-                  {previewData.errorRows}
-                </p>
-              </div>
-              <div className="p-2.5 rounded-lg border border-[var(--md-outline-variant)] bg-[var(--md-surface-container-lowest)]">
-                <span className="text-[11px] text-[var(--md-on-surface-variant)]">Tổng giá trị vốn</span>
-                <p className="text-lg font-bold text-emerald-700 dark:text-emerald-400 mt-0.5">
-                  {formatCurrencyFull(previewData.totalAmount)}
-                </p>
-              </div>
-            </div>
-
-            {/* Hộp báo lỗi đối soát nếu có dòng lỗi (Alert Box chuẩn KHMH) */}
-            {previewData.errorRows > 0 && (
-              <div className="p-3 rounded-lg border border-rose-500/40 bg-rose-500/10 dark:bg-rose-950/30 text-xs">
-                <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                  <div className="flex items-center gap-1.5 font-semibold text-rose-700 dark:text-rose-300">
-                    <AlertCircle size={16} className="shrink-0 text-rose-600 dark:text-rose-400" />
-                    <span>Phát hiện {previewData.errorRows} dòng có lỗi đối soát</span>
-                  </div>
-                  <button
-                    type="button"
-                    className="btn btn-outline btn-xs text-rose-700 dark:text-rose-300 border-rose-500/40 hover:bg-rose-500/10 inline-flex items-center gap-1 font-medium"
-                    onClick={() => setShowErrorModal(true)}
-                  >
-                    Xem chi tiết &amp; Sao chép danh sách lỗi
-                  </button>
-                </div>
-                <ul className="space-y-1 pl-5 list-disc text-rose-700 dark:text-rose-300 text-[11px] leading-relaxed">
-                  {errorItems.slice(0, 5).map(it => (
-                    <li key={`err-summary-${it.originalIndex}`}>
-                      Dòng Excel {it.originalIndex}: Mã &apos;{it.materialCode || 'Trống'}&apos; — {it.error || 'Lỗi không xác định'}
-                    </li>
-                  ))}
-                  {errorItems.length > 5 && (
-                    <li className="list-none -ml-5 pt-1">
-                      <button
-                        type="button"
-                        className="inline-flex items-center gap-1 font-medium underline text-rose-700 dark:text-rose-300 hover:opacity-80 transition-opacity"
-                        onClick={() => setShowErrorModal(true)}
+      <div className="border border-[var(--md-outline-variant)] rounded-lg overflow-hidden max-h-[380px] overflow-y-auto">
+        <table className="w-full text-left border-collapse text-xs">
+          <thead className="sticky top-0 z-20 bg-[var(--md-surface-container-high)] text-[var(--md-on-surface)] font-semibold border-b border-[var(--md-outline-variant)] shadow-sm">
+            <tr>
+              <th className="py-2 px-2.5 w-12 text-center">STT</th>
+              <th className="py-2 px-2.5 w-28 text-center">Trạng thái</th>
+              <th className="py-2 px-2.5 w-36">Mã vật tư</th>
+              <th className="py-2 px-2.5">Tên vật tư</th>
+              <th className="py-2 px-2.5 text-center w-16">ĐVT</th>
+              <th className="py-2 px-2.5 text-right w-24">SL tồn</th>
+              <th className="py-2 px-2.5 text-right w-28">Đơn giá</th>
+              <th className="py-2 px-2.5 text-right w-32">Thành tiền</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[var(--md-outline-variant)]/50 bg-[var(--md-surface)]">
+            {filteredItems.length === 0 ? (
+              <tr>
+                <td colSpan={8} className="py-8 text-center text-xs text-[var(--md-on-surface-variant)]">
+                  Không có dòng dữ liệu nào phù hợp với bộ lọc hiện tại.
+                </td>
+              </tr>
+            ) : (
+              filteredItems.map(it => (
+                <tr
+                  key={`${it.materialCode}-${it.originalIndex}`}
+                  className={`hover:bg-[var(--md-surface-container-lowest)] transition-colors ${
+                    !it.isValid ? 'bg-rose-500/5 dark:bg-rose-950/20' : ''
+                  }`}
+                >
+                  <td className="py-2 px-2.5 text-center text-[var(--md-on-surface-variant)] font-mono">
+                    {it.originalIndex}
+                  </td>
+                  <td className="py-2 px-2.5 text-center">
+                    {it.isValid ? (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-500/15 px-2 py-0.5 rounded-full">
+                        <CheckCircle2 size={12} className="shrink-0" />
+                        <span>Hợp lệ</span>
+                      </span>
+                    ) : (
+                      <span
+                        className="inline-flex items-center gap-1 text-[11px] font-medium text-rose-700 dark:text-rose-300 bg-rose-500/15 px-2 py-0.5 rounded-full cursor-help"
+                        title={it.error || 'Lỗi dữ liệu'}
                       >
-                        …và {errorItems.length - 5} lỗi khác (Bấm để xem và sao chép toàn bộ)
-                      </button>
-                    </li>
-                  )}
-                </ul>
-              </div>
+                        <XCircle size={12} className="shrink-0" />
+                        <span>Lỗi</span>
+                      </span>
+                    )}
+                  </td>
+                  <td className="py-2 px-2.5 font-mono font-medium text-[var(--md-primary)]">
+                    {it.materialCode}
+                  </td>
+                  <td className="py-2 px-2.5">
+                    <span className="font-medium text-[var(--md-on-surface)]" title={it.materialName}>
+                      {it.materialName}
+                    </span>
+                    {it.isValid && it.note && (
+                      <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-0.5 font-normal">
+                        ℹ {it.note}
+                      </p>
+                    )}
+                    {!it.isValid && it.error && (
+                      <p className="text-[10px] text-rose-600 dark:text-rose-400 mt-0.5 font-normal">
+                        ⚠ {it.error}
+                      </p>
+                    )}
+                  </td>
+                  <td className="py-2 px-2.5 text-center text-[var(--md-on-surface)]">{it.unit}</td>
+                  <td className="py-2 px-2.5 text-right font-semibold tabular-nums text-[var(--md-on-surface)]">
+                    {it.qty.toLocaleString('vi-VN')}
+                  </td>
+                  <td className="py-2 px-2.5 text-right tabular-nums text-[var(--md-on-surface)]">
+                    {it.unitPrice > 0 ? formatCurrencyFull(it.unitPrice) : '0 ₫'}
+                  </td>
+                  <td className="py-2 px-2.5 text-right font-medium tabular-nums text-emerald-700 dark:text-emerald-400">
+                    {it.totalAmount > 0 ? formatCurrencyFull(it.totalAmount) : '0 ₫'}
+                  </td>
+                </tr>
+              ))
             )}
-
-            {/* Thanh điều khiển Preview Bar: Bộ lọc Tab + Search */}
-            <div className="flex flex-wrap items-center justify-between gap-3 p-2.5 rounded-lg border border-[var(--md-outline-variant)] bg-[var(--md-surface-container-low)]">
-              {/* Bộ 3 Tabs lọc */}
-              <div className="flex items-center gap-1 bg-[var(--md-surface-container-highest)] p-1 rounded-md text-xs">
-                <button
-                  type="button"
-                  className={`px-3 py-1 rounded transition-colors ${
-                    filterTab === 'all'
-                      ? 'bg-[var(--md-surface)] text-[var(--md-on-surface)] font-semibold shadow-sm'
-                      : 'text-[var(--md-on-surface-variant)] hover:text-[var(--md-on-surface)]'
-                  }`}
-                  onClick={() => setFilterTab('all')}
-                >
-                  Tất cả ({previewData.totalRows})
-                </button>
-                <button
-                  type="button"
-                  className={`px-3 py-1 rounded transition-colors ${
-                    filterTab === 'valid'
-                      ? 'bg-[var(--md-surface)] text-emerald-700 dark:text-emerald-300 font-semibold shadow-sm'
-                      : 'text-[var(--md-on-surface-variant)] hover:text-emerald-700'
-                  }`}
-                  onClick={() => setFilterTab('valid')}
-                >
-                  Hợp lệ ({previewData.validRows})
-                </button>
-                <button
-                  type="button"
-                  className={`px-3 py-1 rounded transition-colors ${
-                    filterTab === 'error'
-                      ? 'bg-[var(--md-surface)] text-rose-700 dark:text-rose-300 font-semibold shadow-sm'
-                      : 'text-[var(--md-on-surface-variant)] hover:text-rose-700'
-                  }`}
-                  onClick={() => setFilterTab('error')}
-                >
-                  Có lỗi ({previewData.errorRows})
-                </button>
-              </div>
-
-              {/* Ô Instant Search */}
-              <div className="relative flex-1 max-w-sm">
-                <Search size={14} className="absolute left-3 top-2.5 text-[var(--md-on-surface-variant)]" />
-                <input
-                  type="text"
-                  className="w-full pl-8 pr-8 py-1.5 text-xs rounded-md border border-[var(--md-outline-variant)] bg-[var(--md-surface)] text-[var(--md-on-surface)] placeholder:text-[var(--md-on-surface-variant)]/60 focus:outline-none focus:ring-1 focus:ring-[var(--md-primary)]"
-                  placeholder="Lọc theo STT, mã VT, tên VT, ĐVT, nội dung lỗi..."
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                />
-                {search && (
-                  <button
-                    type="button"
-                    onClick={() => setSearch('')}
-                    className="absolute right-2.5 top-2 text-[var(--md-on-surface-variant)] hover:text-[var(--md-on-surface)]"
-                  >
-                    <X size={14} />
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Bảng danh sách dòng preview */}
-            <div className="border border-[var(--md-outline-variant)] rounded-lg overflow-hidden max-h-[380px] overflow-y-auto">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead className="sticky top-0 z-20 bg-[var(--md-surface-container-high)] text-[var(--md-on-surface)] font-semibold border-b border-[var(--md-outline-variant)] shadow-sm">
-                  <tr>
-                    <th className="py-2 px-2.5 w-12 text-center">STT</th>
-                    <th className="py-2 px-2.5 w-28 text-center">Trạng thái</th>
-                    <th className="py-2 px-2.5 w-36">Mã vật tư</th>
-                    <th className="py-2 px-2.5">Tên vật tư</th>
-                    <th className="py-2 px-2.5 text-center w-16">ĐVT</th>
-                    <th className="py-2 px-2.5 text-right w-24">SL tồn</th>
-                    <th className="py-2 px-2.5 text-right w-28">Đơn giá</th>
-                    <th className="py-2 px-2.5 text-right w-32">Thành tiền</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[var(--md-outline-variant)]/50 bg-[var(--md-surface)]">
-                  {filteredItems.length === 0 ? (
-                    <tr>
-                      <td colSpan={8} className="py-8 text-center text-xs text-[var(--md-on-surface-variant)]">
-                        Không có dòng dữ liệu nào phù hợp với bộ lọc hiện tại.
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredItems.map(it => (
-                      <tr
-                        key={`${it.materialCode}-${it.originalIndex}`}
-                        className={`hover:bg-[var(--md-surface-container-lowest)] transition-colors ${
-                          !it.isValid ? 'bg-rose-500/5 dark:bg-rose-950/20' : ''
-                        }`}
-                      >
-                        <td className="py-2 px-2.5 text-center text-[var(--md-on-surface-variant)] font-mono">
-                          {it.originalIndex}
-                        </td>
-                        <td className="py-2 px-2.5 text-center">
-                          {it.isValid ? (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-500/15 px-2 py-0.5 rounded-full">
-                              <CheckCircle2 size={12} className="shrink-0" />
-                              <span>Hợp lệ</span>
-                            </span>
-                          ) : (
-                            <span
-                              className="inline-flex items-center gap-1 text-[11px] font-medium text-rose-700 dark:text-rose-300 bg-rose-500/15 px-2 py-0.5 rounded-full cursor-help"
-                              title={it.error || 'Lỗi dữ liệu'}
-                            >
-                              <XCircle size={12} className="shrink-0" />
-                              <span>Lỗi</span>
-                            </span>
-                          )}
-                        </td>
-                        <td className="py-2 px-2.5 font-mono font-medium text-[var(--md-primary)]">
-                          {it.materialCode}
-                        </td>
-                        <td className="py-2 px-2.5">
-                          <span className="font-medium text-[var(--md-on-surface)]" title={it.materialName}>
-                            {it.materialName}
-                          </span>
-                          {it.isValid && it.note && (
-                            <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-0.5 font-normal">
-                              ℹ {it.note}
-                            </p>
-                          )}
-                          {!it.isValid && it.error && (
-                            <p className="text-[10px] text-rose-600 dark:text-rose-400 mt-0.5 font-normal">
-                              ⚠ {it.error}
-                            </p>
-                          )}
-                        </td>
-                        <td className="py-2 px-2.5 text-center text-[var(--md-on-surface)]">{it.unit}</td>
-                        <td className="py-2 px-2.5 text-right font-semibold tabular-nums text-[var(--md-on-surface)]">
-                          {it.qty.toLocaleString('vi-VN')}
-                        </td>
-                        <td className="py-2 px-2.5 text-right tabular-nums text-[var(--md-on-surface)]">
-                          {it.unitPrice > 0 ? formatCurrencyFull(it.unitPrice) : '0 ₫'}
-                        </td>
-                        <td className="py-2 px-2.5 text-right font-medium tabular-nums text-emerald-700 dark:text-emerald-400">
-                          {it.totalAmount > 0 ? formatCurrencyFull(it.totalAmount) : '0 ₫'}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+          </tbody>
+        </table>
       </div>
-    </Modal>
-
-    {/* Modal xem chi tiết lỗi đối soát */}
-    {previewData && (
-      <Modal
-        isOpen={showErrorModal}
-        onClose={() => setShowErrorModal(false)}
-        size="lg"
-        title={`Chi tiết lỗi đối soát tồn kho đầu kỳ (${errorItems.length} lỗi trên ${previewData.errorRows} dòng)`}
-        subtitle={
-          <div className="text-xs text-[var(--md-on-surface-variant)] mt-0.5">
-            File: <strong>{selectedFile?.name ?? 'Excel'}</strong> — Nơi nhận:{' '}
-            <strong>{targetType === 'project' ? `Kho Dự Án ${selectedProjectCode}` : 'Kho Tổng Nam Việt'}</strong>
-          </div>
-        }
-        beforeBody={
-          <div className="px-6 py-3 border-b border-[var(--md-outline-variant)] bg-[var(--md-surface-container-low)] flex flex-wrap items-center justify-between gap-3">
-            <div className="relative flex-1 min-w-[220px]">
-              <Search
-                size={14}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--md-on-surface-variant)] pointer-events-none"
-                aria-hidden
-              />
-              <input
-                type="search"
-                value={errorSearch}
-                onChange={e => setErrorSearch(e.target.value)}
-                placeholder="Tìm theo số dòng, mã vật tư hoặc nội dung lỗi…"
-                aria-label="Tìm kiếm lỗi"
-                className="w-full pl-8 pr-3 py-1.5 text-xs rounded-md border border-[var(--md-outline-variant)] bg-[var(--md-surface)] text-[var(--md-on-surface)] placeholder:text-[var(--md-on-surface-variant)]/60 focus:outline-none focus:ring-1 focus:ring-[var(--md-primary)]"
-              />
-            </div>
-            <button
-              type="button"
-              className="btn btn-outline btn-sm inline-flex items-center gap-1.5 text-xs"
-              onClick={handleCopyErrors}
-              title="Sao chép toàn bộ lỗi vào bộ nhớ tạm"
-            >
-              {copied ? (
-                <>
-                  <Check size={14} className="text-emerald-600 dark:text-emerald-400" />
-                  <span className="text-emerald-600 dark:text-emerald-400 font-medium">Đã sao chép!</span>
-                </>
-              ) : (
-                <>
-                  <Copy size={14} />
-                  <span>Sao chép toàn bộ lỗi ({errorItems.length})</span>
-                </>
-              )}
-            </button>
-          </div>
-        }
-        footer={
-          <div className="flex items-center justify-between w-full">
-            <span className="text-xs text-[var(--md-on-surface-variant)]">
-              Hiển thị <strong>{filteredErrorItems.length}</strong> / <strong>{errorItems.length}</strong> lỗi
-            </span>
-            <button
-              type="button"
-              className="btn btn-primary btn-sm"
-              onClick={() => setShowErrorModal(false)}
-            >
-              Đóng
-            </button>
-          </div>
-        }
-      >
-        <div className="flex flex-col gap-3 py-1">
-          <div className="flex items-start gap-2.5 p-3 rounded-lg border border-[var(--md-outline-variant)] bg-[var(--md-surface-container-highest)]/40 text-xs text-[var(--md-on-surface-variant)]">
-            <AlertCircle size={16} className="text-[var(--md-primary)] shrink-0 mt-0.5" aria-hidden />
-            <div className="leading-relaxed">
-              Các dòng lỗi này không hợp lệ và sẽ được bỏ qua khi nhập tồn kho. Bạn có thể sao chép danh sách này để gửi cho bộ phận chuẩn bị file Excel hiệu chỉnh lại mã hoặc đơn vị tính.
-            </div>
-          </div>
-
-          <div className="border border-[var(--md-outline-variant)] rounded-lg overflow-hidden">
-            <div className="max-h-[50vh] overflow-y-auto">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead className="sticky top-0 bg-[var(--md-surface-container-high)] text-[var(--md-on-surface)] font-semibold border-b border-[var(--md-outline-variant)] shadow-sm z-10">
-                  <tr>
-                    <th className="py-2 px-2.5 text-center w-24">Dòng Excel</th>
-                    <th className="py-2 px-2.5 w-32">Mã vật tư</th>
-                    <th className="py-2 px-2.5 w-48">Tên vật tư</th>
-                    <th className="py-2 px-2.5">Chi tiết lỗi đối soát</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[var(--md-outline-variant)]/60 bg-[var(--md-surface)]">
-                  {filteredErrorItems.length === 0 ? (
-                    <tr>
-                      <td colSpan={4} className="text-center py-8 text-[var(--md-on-surface-variant)]">
-                        {errorSearch ? 'Không tìm thấy lỗi phù hợp với từ khóa.' : 'Không có dòng lỗi nào.'}
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredErrorItems.map(err => (
-                      <tr key={`modal-err-${err.originalIndex}`} className="hover:bg-[var(--md-surface-container-low)] transition-colors">
-                        <td className="py-2 px-2.5 text-center tabular-nums font-semibold">
-                          <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-500/15 text-rose-700 dark:text-rose-300">
-                            Dòng {err.originalIndex}
-                          </span>
-                        </td>
-                        <td className="py-2 px-2.5 font-mono font-medium text-[var(--md-primary)]">
-                          {err.materialCode || <span className="text-[var(--md-on-surface-variant)] italic">Trống</span>}
-                        </td>
-                        <td className="py-2 px-2.5 font-medium text-[var(--md-on-surface)]">
-                          {err.materialName || '—'}
-                        </td>
-                        <td className="py-2 px-2.5 text-rose-600 dark:text-rose-400 font-normal leading-relaxed">
-                          {err.error || 'Lỗi không xác định'}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </Modal>
-    )}
-  </>
+    </ExcelImportModalShell>
   );
 }

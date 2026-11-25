@@ -2,17 +2,15 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { NAMVIET_GROUP_LOGO_URL } from '../../constants/branding';
 import {
-  Settings, BarChart3, Bell, ChevronDown,
+  BarChart3, Bell, ChevronDown,
   User, LogOut, X, PackagePlus, PackageMinus, ArrowLeftRight, ClipboardCheck, FileSpreadsheet,
   Menu,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { showToast } from '../ui/Toast';
 import { clearSessionUser } from '../../constants/systemUsers';
 import { useSession } from '../../auth/AuthProvider';
 import { authService } from '../../services/authService';
-import { UI_COMING_SOON } from '../../lib/uiMessages';
 import { WMS_REPORTS_ENABLED } from '../../constants/sidebarMenus';
 import { useWmsNotifications } from '../../hooks/useWmsNotifications';
 import { useActivityRealtime } from '../../hooks/useActivityRealtime';
@@ -292,11 +290,6 @@ export default function Header({
     }
   };
 
-  const handleSettingsClick = () => {
-    showToast('info', UI_COMING_SOON.settings, UI_COMING_SOON.title);
-    setShowUserMenu(false);
-  };
-
   return (
     <header className="nv-header">
       <div className="nv-header__inner">
@@ -555,7 +548,6 @@ export default function Header({
 
                   <div className="user-menu-panel__section">
                     <MenuBtn icon={User} label="Thông tin tài khoản" onClick={() => { navigate('/profile'); setShowUserMenu(false); }} />
-                    <MenuBtn icon={Settings} label="Cài đặt" onClick={handleSettingsClick} />
                   </div>
                   <div className="user-menu-panel__section user-menu-panel__section--bordered">
                     <MenuBtn icon={LogOut} label="Đăng xuất" danger onClick={() => {

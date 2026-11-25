@@ -395,7 +395,7 @@ function ExportListPageApi({ initialProjectCode, openVoucherCode }: ExportListPa
     );
     if (match) {
       // Deep-link from navigation state opens matching voucher once list loads
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- deep-link seeds search once
+
       setSearch(openVoucherCode);
       void openDetail(match);
     }

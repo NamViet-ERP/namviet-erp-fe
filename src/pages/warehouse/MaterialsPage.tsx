@@ -1,55 +1,36 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { Plus, RotateCcw, Image as ImageIcon, Trash2, Upload, Package } from 'lucide-react';
+import { Plus, Trash2, Upload, Package } from 'lucide-react';
 import { useSession } from '../../auth/AuthProvider';
 import { isSessionAdmin } from '../../constants/systemUsers';
-import SearchBar from '../../components/ui/SearchBar';
 import Pagination from '../../components/ui/Pagination';
 import EmptyState from '../../components/ui/EmptyState';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import PageHeader from '../../components/ui/PageHeader';
 import HrmPanel from '../../components/hr/HrmPanel';
 import PermissionGate from '../../components/auth/PermissionGate';
-import Modal from '../../components/ui/Modal';
-import FormField from '../../components/ui/FormField';
-import MaterialUnitSelect from '../../components/warehouse/MaterialUnitSelect';
-import MaterialCountrySelect from '../../components/warehouse/MaterialCountrySelect';
-import MaterialBrandSelect from '../../components/warehouse/MaterialBrandSelect';
-import { useMaterialRegions } from '../../hooks/useMaterialRegions';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { WMS_EMPTY, WMS_ERROR } from '../../lib/wms/messages';
-import { useMaterials, useCreateMaterial } from '../../hooks/useMaterials';
+import { useMaterials } from '../../hooks/useMaterials';
 import { useCategoryCascade } from '../../hooks/useCategories';
 import { materialsService } from '../../services/materialsService';
 import { queryKeys } from '../../services/queryKeys';
 import { resolveMediaUrl } from '../../lib/hrm/employeeApiMapper';
 import MaterialDetailView from './MaterialDetailView';
 import MaterialImportModal from './MaterialImportModal';
+import MaterialCreateModal from './materials/MaterialCreateModal';
+import MaterialClearConfirmModal from './materials/MaterialClearConfirmModal';
+import MaterialsFilterToolbar from './materials/MaterialsFilterToolbar';
 import {
-  MATERIAL_CATEGORY_LEVELS,
-  MATERIAL_CREATE_REQUIRED_LEVELS,
-  MATERIAL_FIELD_PLACEHOLDERS,
-  MATERIAL_SELECT_PLACEHOLDER,
   MATERIAL_TABLE_COLUMNS,
-  REGION_OPTIONS,
-  formatOriginString,
-  isEquipmentCategory,
-  isSteelCategory,
   materialCodeParts,
-  materialInputError,
-  materialSelectError,
   parseOriginParts,
 } from '../../constants/materialCategoryLevels';
-import { categoryLevel, resolveLeafCategoryId } from '../../lib/wms/materialCategoryTree';
-import CurrencyInput from '../../components/ui/CurrencyInput';
+import { resolveLeafCategoryId } from '../../lib/wms/materialCategoryTree';
 
 const emptySelection: Array<number | ''> = ['', '', '', '', ''];
-
-function isRequiredOnCreate(level: number) {
-  return (MATERIAL_CREATE_REQUIRED_LEVELS as readonly number[]).includes(level);
-}
 
 export default function MaterialsPageRoute() {
   const location = useLocation();
@@ -88,112 +69,10 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
   const { user } = useSession();
   const isAdmin = isSessionAdmin(user);
   const [showClearModal, setShowClearModal] = useState(false);
-  const [clearConfirmText, setClearConfirmText] = useState('');
-  const [isClearingAll, setIsClearingAll] = useState(false);
   const [isDeletingRow, setIsDeletingRow] = useState<string | null>(null);
-
-  const [createSelection, setCreateSelection] = useState<Array<number | ''>>([...emptySelection]);
-  const [createForm, setCreateForm] = useState({
-    materialCode: '',
-    materialName: '',
-    unit: '',
-    origin: '',
-    technicalSpec: '',
-    generalTechnicalSpec: '',
-    qualityStandard: '',
-    ceilingPrice: '',
-    imageUrl: '',
-  });
-  // 3-part Origin state
-  const [originBrand, setOriginBrand] = useState('');
-  const [originCountry, setOriginCountry] = useState('');
-  const [originRegion, setOriginRegion] = useState('');
-
-  // Dynamic Steel geometry state
-  const [steelDimension, setSteelDimension] = useState('');
-  const [steelThickness, setSteelThickness] = useState('');
-  const [steelLength, setSteelLength] = useState('');
-  const [steelGrade, setSteelGrade] = useState('');
-
-  // Dynamic Equipment / Pump / Fan specs state
-  const [pumpPower, setPumpPower] = useState('');
-  const [pumpFlow, setPumpFlow] = useState('');
-  const [pumpPressure, setPumpPressure] = useState('');
-  const [pumpVoltage, setPumpVoltage] = useState('');
-  const [pumpDrive, setPumpDrive] = useState('');
-
-  const [createImageFile, setCreateImageFile] = useState<File | null>(null);
-  const [createImagePreview, setCreateImagePreview] = useState<string | null>(null);
-  const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const [createErrors, setCreateErrors] = useState<Record<string, string>>({});
 
   const { optionsByLevel: filterOptions, isLoading: categoriesLoading } =
     useCategoryCascade(filterSelection);
-  const { categories, optionsByLevel: createOptions, isLoading: createCategoriesLoading } =
-    useCategoryCascade(createSelection);
-  const createMutation = useCreateMaterial();
-
-  const selectedL1Cat = categories.find(c => c.id === createSelection[0]);
-  const isSteel = isSteelCategory(selectedL1Cat?.name);
-  const isEquipment = isEquipmentCategory(selectedL1Cat?.name);
-
-  const { data: dbRegions = [] } = useMaterialRegions(true);
-  const regionOptions = useMemo(() => {
-    const list: string[] = [];
-    const seen = new Set<string>();
-    const add = (name?: string | null) => {
-      const t = name?.trim();
-      if (!t) return;
-      const k = t.toLowerCase();
-      if (!seen.has(k)) {
-        seen.add(k);
-        list.push(t);
-      }
-    };
-    dbRegions.forEach(r => add(r.name));
-    REGION_OPTIONS.forEach(r => add(r));
-    return list;
-  }, [dbRegions]);
-
-  const updateOrigin = (brand: string, country: string, region: string) => {
-    setOriginBrand(brand);
-    setOriginCountry(country);
-    setOriginRegion(region);
-    setCreateForm(f => ({ ...f, origin: formatOriginString(brand, country, region) }));
-  };
-
-  const updateSteel = (dim: string, thick: string, len: string, grade: string) => {
-    setSteelDimension(dim);
-    setSteelThickness(thick);
-    setSteelLength(len);
-    setSteelGrade(grade);
-    const dims = [dim.trim(), thick.trim(), len.trim()].filter(Boolean);
-    const spec = dims.length > 0 ? dims.join('x') + (dims.some(d => d.endsWith('mm')) ? '' : 'mm') : '';
-    setCreateForm(f => ({
-      ...f,
-      technicalSpec: spec,
-      qualityStandard: grade.trim() || f.qualityStandard,
-    }));
-  };
-
-  const updatePump = (power: string, flow: string, pressure: string, voltage: string, drive: string) => {
-    setPumpPower(power);
-    setPumpFlow(flow);
-    setPumpPressure(pressure);
-    setPumpVoltage(voltage);
-    setPumpDrive(drive);
-    const parts = [
-      power.trim() && (power.toLowerCase().endsWith('kw') ? power.trim() : `${power.trim()}kW`),
-      flow.trim() && (flow.toLowerCase().includes('m3') ? flow.trim() : `${flow.trim()} m³/h`),
-      pressure.trim() && (pressure.toLowerCase().includes('pa') || pressure.toLowerCase().includes('h2o') ? pressure.trim() : `${pressure.trim()} Pa`),
-      voltage.trim() && `Điện áp ${voltage.trim()}`,
-      drive.trim(),
-    ].filter(Boolean);
-    setCreateForm(f => ({
-      ...f,
-      generalTechnicalSpec: parts.join(' | '),
-    }));
-  };
 
   const filterCategoryId = resolveLeafCategoryId(filterSelection);
 
@@ -225,146 +104,6 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
     setFilterSelection([...emptySelection]);
     setSearch('');
     setPage(1);
-  };
-
-  const resetCreateForm = () => {
-    setCreateSelection([...emptySelection]);
-    setCreateForm({
-      materialCode: '',
-      materialName: '',
-      unit: '',
-      origin: '',
-      technicalSpec: '',
-      generalTechnicalSpec: '',
-      qualityStandard: '',
-      ceilingPrice: '',
-      imageUrl: '',
-    });
-    setOriginBrand('');
-    setOriginCountry('');
-    setOriginRegion('');
-    setSteelDimension('');
-    setSteelThickness('');
-    setSteelLength('');
-    setSteelGrade('');
-    setPumpPower('');
-    setPumpFlow('');
-    setPumpPressure('');
-    setPumpVoltage('');
-    setPumpDrive('');
-    setCreateImageFile(null);
-    if (createImagePreview) URL.revokeObjectURL(createImagePreview);
-    setCreateImagePreview(null);
-    setCreateErrors({});
-  };
-
-  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 10 * 1024 * 1024) {
-      showToast('warning', 'Kích thước ảnh tối đa là 10MB');
-      return;
-    }
-    setCreateImageFile(file);
-    if (createImagePreview) URL.revokeObjectURL(createImagePreview);
-    setCreateImagePreview(URL.createObjectURL(file));
-  };
-
-  const handleRemoveImage = () => {
-    setCreateImageFile(null);
-    if (createImagePreview) URL.revokeObjectURL(createImagePreview);
-    setCreateImagePreview(null);
-    setCreateForm(f => ({ ...f, imageUrl: '' }));
-  };
-
-  const setCreateLevel = (levelIndex: number, value: number | '') => {
-    setCreateSelection(prev => {
-      const next = [...prev];
-      next[levelIndex] = value;
-      for (let i = levelIndex + 1; i < 5; i++) next[i] = '';
-      return next;
-    });
-  };
-
-  const validateCreate = (): boolean => {
-    const errors: Record<string, string> = {};
-    for (const lvl of MATERIAL_CREATE_REQUIRED_LEVELS) {
-      if (createSelection[lvl - 1] === '') {
-        const label = MATERIAL_CATEGORY_LEVELS[lvl - 1].label;
-        errors[`level${lvl}`] = materialSelectError(label);
-      }
-    }
-    if (!createForm.materialCode.trim()) errors.materialCode = materialInputError('mã vật tư');
-    if (!createForm.materialName.trim()) errors.materialName = materialInputError('tên vật tư');
-    if (!createForm.unit.trim()) errors.unit = materialSelectError('đơn vị tính');
-
-    const categoryId = resolveLeafCategoryId(createSelection);
-    if (categoryId && categoryLevel(categories, categoryId)! < 2) {
-      errors.level2 = 'Vui lòng chọn đến cấp Nhóm vật tư';
-    }
-
-    setCreateErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleCreate = async () => {
-    if (!validateCreate()) return;
-    const categoryId = resolveLeafCategoryId(createSelection);
-    if (!categoryId) return;
-
-    try {
-      let finalImageUrl = createForm.imageUrl.trim() || null;
-      if (createImageFile) {
-        setIsUploadingImage(true);
-        try {
-          const res = await materialsService.uploadImage(createImageFile, createForm.materialCode.trim());
-          finalImageUrl = res.imageUrl;
-        } catch (uploadErr) {
-          showToast('error', getApiErrorMessage(uploadErr, 'Không thể tải ảnh lên'));
-          setIsUploadingImage(false);
-          return;
-        }
-        setIsUploadingImage(false);
-      }
-
-      await createMutation.mutateAsync({
-        materialCode: createForm.materialCode.trim(),
-        materialName: createForm.materialName.trim(),
-        categoryId,
-        unit: createForm.unit.trim(),
-        origin: createForm.origin.trim() || null,
-        imageUrl: finalImageUrl,
-        technicalSpec: createForm.technicalSpec.trim() || null,
-        generalTechnicalSpec: createForm.generalTechnicalSpec.trim() || null,
-        qualityStandard: createForm.qualityStandard.trim() || null,
-        ceilingPrice: createForm.ceilingPrice
-          ? Number(String(createForm.ceilingPrice).replace(/[^\d.-]/g, '')) || null
-          : null,
-        isConsumable: false,
-      });
-      showToast('success', 'Đã tạo mã vật tư mới');
-      setShowCreate(false);
-      resetCreateForm();
-    } catch (err) {
-      showToast('error', getApiErrorMessage(err, 'Không thể tạo vật tư'));
-    }
-  };
-
-  const handleClearAllMaterials = async () => {
-    if (clearConfirmText.trim() !== 'XOA HET') return;
-    try {
-      setIsClearingAll(true);
-      const res = await materialsService.clearAll();
-      showToast('success', res.message || 'Đã dọn sạch danh mục vật tư');
-      setShowClearModal(false);
-      setClearConfirmText('');
-      await qc.invalidateQueries({ queryKey: queryKeys.materials.all });
-      setPage(1);
-    } catch (err) {
-      showToast('error', getApiErrorMessage(err, 'Không thể dọn sạch danh mục vật tư'));
-    } finally {
-      setIsClearingAll(false);
-    }
   };
 
   const handleDeleteSingleMaterial = async (code: string, name: string) => {
@@ -409,10 +148,7 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
               <button
                 type="button"
                 className="btn btn-outline flex items-center gap-1.5 text-rose-600 border-rose-300 hover:bg-rose-50 hover:border-rose-400 dark:hover:bg-rose-950/30"
-                onClick={() => {
-                  setClearConfirmText('');
-                  setShowClearModal(true);
-                }}
+                onClick={() => setShowClearModal(true)}
                 disabled={isLoading || totalCount === 0}
                 title="Dọn sạch toàn bộ danh mục vật tư hiện có (Chỉ Quản trị viên)"
               >
@@ -434,7 +170,7 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
               <button
                 type="button"
                 className="btn btn-primary flex items-center gap-1.5"
-                onClick={() => { resetCreateForm(); setShowCreate(true); }}
+                onClick={() => setShowCreate(true)}
               >
                 <Plus size={16} aria-hidden />
                 Tạo mã vật tư
@@ -457,57 +193,17 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
           </p>
         </div>
 
-        <div className="hrm-list-toolbar">
-          <div className="hrm-list-toolbar__filters">
-            <div className="mat-catalog__filters">
-              {MATERIAL_CATEGORY_LEVELS.map((lvl, idx) => (
-                <label key={lvl.key} className="mat-catalog__filter-field">
-                  <span>{lvl.label}</span>
-                  <select
-                    className="form-input form-input-md"
-                    disabled={categoriesLoading || (idx > 0 && filterSelection[idx - 1] === '')}
-                    value={filterSelection[idx]}
-                    onChange={e => {
-                      const v = e.target.value;
-                      setFilterLevel(idx, v === '' ? '' : Number(v));
-                    }}
-                  >
-                    <option value="">- Tất cả -</option>
-                    {filterOptions[idx]
-                      ?.filter(c => idx > 0 || c.code !== 'UNCATEGORIZED')
-                      .map(c => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                      ))}
-                  </select>
-                </label>
-              ))}
-            </div>
-            <div className="mat-catalog__toolbar">
-              <SearchBar
-                value={search}
-                onChange={v => { setSearch(v); setPage(1); }}
-                placeholder="Tìm mã vật tư, tên vật tư..."
-              />
-              <button
-                type="button"
-                onClick={() => { setShowInactive(v => !v); setPage(1); }}
-                className={`mat-catalog__status${showInactive ? ' is-on' : ''}`}
-                aria-pressed={showInactive}
-              >
-                {showInactive ? 'Hiện cả ngừng SD' : 'Chỉ đang dùng'}
-              </button>
-              <button
-                type="button"
-                onClick={resetFilters}
-                className="btn btn-text"
-                title="Đặt lại bộ lọc"
-              >
-                <RotateCcw size={14} aria-hidden />
-                Xóa lọc
-              </button>
-            </div>
-          </div>
-        </div>
+        <MaterialsFilterToolbar
+          filterSelection={filterSelection}
+          filterOptions={filterOptions}
+          categoriesLoading={categoriesLoading}
+          onFilterLevelChange={setFilterLevel}
+          search={search}
+          onSearchChange={v => { setSearch(v); setPage(1); }}
+          showInactive={showInactive}
+          onToggleInactive={() => { setShowInactive(v => !v); setPage(1); }}
+          onResetFilters={resetFilters}
+        />
 
         <div className="wms-inventory-table-wrap overflow-x-auto table-scroll">
           <table className="wms-inventory-table mat-catalog-table">
@@ -762,325 +458,10 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
         )}
       </HrmPanel>
 
-      <Modal
+      <MaterialCreateModal
         isOpen={showCreate}
-        onClose={() => { setShowCreate(false); resetCreateForm(); }}
-        title="Tạo mã vật tư mới"
-        size="xl"
-        footer={
-          <>
-            <button
-              type="button"
-              className="btn btn-outline"
-              onClick={() => { setShowCreate(false); resetCreateForm(); }}
-            >
-              Hủy
-            </button>
-            <button
-              type="button"
-              className="btn btn-primary"
-              disabled={createMutation.isPending || isUploadingImage}
-              onClick={() => void handleCreate()}
-            >
-              {isUploadingImage ? 'Đang tải ảnh...' : createMutation.isPending ? 'Đang lưu...' : 'Tạo mới'}
-            </button>
-          </>
-        }
-      >
-        <div className="space-y-4 modal-form-bordered mat-catalog-create">
-          {!createCategoriesLoading && (createOptions[0]?.length ?? 0) === 0 && (
-            <p className="alert-banner alert-banner--error">
-              Chưa có dữ liệu cây vật tư. Vào <strong>SLC - Thiết lập - Cây vật tư</strong> để khai báo trước khi tạo vật tư mới.
-            </p>
-          )}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-            {MATERIAL_CATEGORY_LEVELS.map((lvl, idx) => (
-              <FormField
-                key={lvl.key}
-                label={lvl.label}
-                required={isRequiredOnCreate(lvl.level)}
-                error={createErrors[`level${lvl.level}`]}
-              >
-                <select
-                  className="form-input form-input-md w-full"
-                  disabled={createCategoriesLoading || (idx > 0 && createSelection[idx - 1] === '')}
-                  value={createSelection[idx]}
-                  onChange={e => {
-                    const v = e.target.value;
-                    setCreateLevel(idx, v === '' ? '' : Number(v));
-                  }}
-                >
-                  <option value="">{MATERIAL_SELECT_PLACEHOLDER}</option>
-                  {createOptions[idx]
-                    ?.filter(c => idx > 0 || c.code !== 'UNCATEGORIZED')
-                    .map(c => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                </select>
-              </FormField>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <FormField label="Mã vật tư" required error={createErrors.materialCode}>
-              <input
-                className="form-input w-full"
-                value={createForm.materialCode}
-                onChange={e => setCreateForm(f => ({ ...f, materialCode: e.target.value }))}
-                placeholder={MATERIAL_FIELD_PLACEHOLDERS.materialCode}
-              />
-            </FormField>
-            <FormField label="Tên vật tư" required error={createErrors.materialName}>
-              <input
-                className="form-input w-full"
-                value={createForm.materialName}
-                onChange={e => setCreateForm(f => ({ ...f, materialName: e.target.value }))}
-                placeholder={MATERIAL_FIELD_PLACEHOLDERS.materialName}
-              />
-            </FormField>
-            <MaterialUnitSelect
-              value={createForm.unit}
-              onChange={unit => setCreateForm(f => ({ ...f, unit }))}
-              required
-              error={createErrors.unit}
-            />
-            {/* Cụm Xuất xứ 3 cấp: Nhãn hiệu / Nước sản xuất / Nhóm nước */}
-            <div className="sm:col-span-2 p-3 rounded-lg border border-slate-200 bg-slate-50/50 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-800 uppercase tracking-wide">
-                  Xuất xứ & Nhãn hiệu
-                </span>
-                {createForm.origin && (
-                  <span className="text-[11px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                    Chuỗi: {createForm.origin}
-                  </span>
-                )}
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                <MaterialBrandSelect
-                  value={originBrand}
-                  onChange={brand => updateOrigin(brand, originCountry, originRegion)}
-                />
-                <MaterialCountrySelect
-                  value={originCountry}
-                  onChange={(country, defaultRegion) => {
-                    const nextRegion = defaultRegion || originRegion;
-                    updateOrigin(originBrand, country, nextRegion);
-                  }}
-                />
-                <FormField label="Nhóm nước">
-                  <select
-                    className="form-input w-full"
-                    value={originRegion}
-                    onChange={e => updateOrigin(originBrand, originCountry, e.target.value)}
-                  >
-                    <option value="">-- Chọn nhóm nước --</option>
-                    {regionOptions.map((r: string) => (
-                      <option key={r} value={r}>{r}</option>
-                    ))}
-                  </select>
-                </FormField>
-              </div>
-            </div>
-
-            {isSteel ? (
-              /* Cụm thông số hình học cho Thép / Kim khí */
-              <div className="sm:col-span-2 p-3 rounded-lg border border-blue-200 bg-blue-50/30 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-blue-900 uppercase tracking-wide flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-blue-600 inline-block" />
-                    Thông số hình học (Thép & Nguyên vật liệu)
-                  </span>
-                  {createForm.technicalSpec && (
-                    <span className="text-[11px] font-bold text-slate-800 bg-white px-2 py-0.5 rounded border border-blue-200 shadow-2xs">
-                      Quy cách: {createForm.technicalSpec}
-                    </span>
-                  )}
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                  <FormField label="Phi / Rộng (mm)">
-                    <input
-                      className="form-input w-full"
-                      value={steelDimension}
-                      onChange={e => updateSteel(e.target.value, steelThickness, steelLength, steelGrade)}
-                      placeholder="VD: Ø355 hoặc 1500"
-                    />
-                  </FormField>
-                  <FormField label="Độ dày (mm)">
-                    <input
-                      className="form-input w-full"
-                      value={steelThickness}
-                      onChange={e => updateSteel(steelDimension, e.target.value, steelLength, steelGrade)}
-                      placeholder="VD: 9 hoặc 4"
-                    />
-                  </FormField>
-                  <FormField label="Chiều dài (mm)">
-                    <input
-                      className="form-input w-full"
-                      value={steelLength}
-                      onChange={e => updateSteel(steelDimension, steelThickness, e.target.value, steelGrade)}
-                      placeholder="VD: 6000"
-                    />
-                  </FormField>
-                  <FormField label="Mác thép / Tiêu chuẩn">
-                    <input
-                      className="form-input w-full"
-                      value={steelGrade}
-                      onChange={e => updateSteel(steelDimension, steelThickness, steelLength, e.target.value)}
-                      placeholder="VD: SS400, SA516"
-                    />
-                  </FormField>
-                </div>
-              </div>
-            ) : isEquipment ? (
-              /* Cụm thông số kỹ thuật cho Động cơ / Bơm / Quạt */
-              <div className="sm:col-span-2 p-3 rounded-lg border border-amber-200 bg-amber-50/30 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-amber-900 uppercase tracking-wide flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-amber-600 inline-block" />
-                    Thông số cơ điện (Động cơ / Bơm / Quạt)
-                  </span>
-                  {createForm.generalTechnicalSpec && (
-                    <span className="text-[11px] font-bold text-slate-800 bg-white px-2 py-0.5 rounded border border-amber-200 shadow-2xs max-w-xs truncate">
-                      {createForm.generalTechnicalSpec}
-                    </span>
-                  )}
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                  <FormField label="Công suất (kW)">
-                    <input
-                      className="form-input w-full"
-                      value={pumpPower}
-                      onChange={e => updatePump(e.target.value, pumpFlow, pumpPressure, pumpVoltage, pumpDrive)}
-                      placeholder="VD: 160kW hoặc 5.5kW"
-                    />
-                  </FormField>
-                  <FormField label="Lưu lượng (m³/h)">
-                    <input
-                      className="form-input w-full"
-                      value={pumpFlow}
-                      onChange={e => updatePump(pumpPower, e.target.value, pumpPressure, pumpVoltage, pumpDrive)}
-                      placeholder="VD: 71500 m³/h"
-                    />
-                  </FormField>
-                  <FormField label="Cột áp (Pa / mH2O)">
-                    <input
-                      className="form-input w-full"
-                      value={pumpPressure}
-                      onChange={e => updatePump(pumpPower, pumpFlow, e.target.value, pumpVoltage, pumpDrive)}
-                      placeholder="VD: 5600Pa hoặc 24-42 mH2O"
-                    />
-                  </FormField>
-                  <FormField label="Điện áp">
-                    <input
-                      className="form-input w-full"
-                      value={pumpVoltage}
-                      onChange={e => updatePump(pumpPower, pumpFlow, pumpPressure, e.target.value, pumpDrive)}
-                      placeholder="VD: 3phase/380V/50Hz"
-                    />
-                  </FormField>
-                  <FormField label="Kiểu truyền động" className="sm:col-span-2">
-                    <input
-                      className="form-input w-full"
-                      value={pumpDrive}
-                      onChange={e => updatePump(pumpPower, pumpFlow, pumpPressure, pumpVoltage, e.target.value)}
-                      placeholder="VD: Truyền động trực tiếp / Gián tiếp qua dây đai"
-                    />
-                  </FormField>
-                </div>
-              </div>
-            ) : null}
-
-            <FormField label="Quy cách chi tiết">
-              <input
-                className="form-input w-full"
-                value={createForm.technicalSpec}
-                onChange={e => setCreateForm(f => ({ ...f, technicalSpec: e.target.value }))}
-                placeholder={MATERIAL_FIELD_PLACEHOLDERS.technicalSpec}
-              />
-            </FormField>
-            <FormField label="Giá trần tham chiếu">
-              <CurrencyInput
-                value={createForm.ceilingPrice}
-                onChange={ceilingPrice => setCreateForm(f => ({ ...f, ceilingPrice }))}
-                placeholder="Dùng cảnh báo khi mua vượt giá"
-              />
-            </FormField>
-            <FormField label="Tiêu chuẩn chất lượng" className="sm:col-span-2">
-              <input
-                className="form-input w-full"
-                value={createForm.qualityStandard}
-                onChange={e => setCreateForm(f => ({ ...f, qualityStandard: e.target.value }))}
-                placeholder={MATERIAL_FIELD_PLACEHOLDERS.qualityStandard}
-              />
-            </FormField>
-            <FormField label="Thông số kỹ thuật chung / Diễn giải" className="sm:col-span-2">
-              <textarea
-                className="form-input w-full"
-                rows={3}
-                value={createForm.generalTechnicalSpec}
-                onChange={e => setCreateForm(f => ({ ...f, generalTechnicalSpec: e.target.value }))}
-                placeholder={MATERIAL_FIELD_PLACEHOLDERS.generalTechnicalSpec}
-              />
-            </FormField>
-            <div className="sm:col-span-2 border-t border-[var(--color-border)] pt-3">
-              <label className="hrm-label block mb-1.5 font-medium">Hình ảnh vật tư</label>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-3 rounded-lg border border-dashed border-[var(--color-border)] bg-[var(--color-surface-hover)]/30">
-                {createImagePreview ? (
-                  <div className="relative group w-24 h-24 rounded-lg overflow-hidden border border-[var(--color-border)] bg-[var(--color-surface)] flex-shrink-0 shadow-xs">
-                    <img
-                      src={createImagePreview}
-                      alt="Xem trước ảnh vật tư"
-                      className="w-full h-full object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleRemoveImage}
-                      className="absolute inset-0 bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 text-xs font-medium cursor-pointer"
-                      title="Xóa ảnh"
-                    >
-                      <Trash2 size={16} />
-                      Xóa
-                    </button>
-                  </div>
-                ) : (
-                  <div className="w-24 h-24 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] flex flex-col items-center justify-center text-[var(--color-text-muted)] flex-shrink-0">
-                    <ImageIcon size={28} className="opacity-40 mb-1" />
-                    <span className="text-[11px]">Chưa có ảnh</span>
-                  </div>
-                )}
-                <div className="flex-1 space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <label className="btn btn-sm btn-outline cursor-pointer inline-flex items-center gap-1.5">
-                      <Upload size={14} />
-                      <span>{createImagePreview ? 'Đổi ảnh khác' : 'Chọn ảnh tải lên'}</span>
-                      <input
-                        type="file"
-                        accept="image/png,image/jpeg,image/webp,image/gif"
-                        className="hidden"
-                        onChange={handleImageFileChange}
-                      />
-                    </label>
-                    {createImagePreview && (
-                      <button
-                        type="button"
-                        onClick={handleRemoveImage}
-                        className="btn btn-sm btn-ghost text-red-600 hover:bg-red-50"
-                      >
-                        <Trash2 size={14} className="mr-1 inline" />
-                        Gỡ ảnh
-                      </button>
-                    )}
-                  </div>
-                  <p className="text-xs text-[var(--color-text-muted)]">
-                    Hỗ trợ định dạng JPG, PNG, WEBP, GIF. Kích thước tối đa 10MB. Ảnh tải lên sẽ được lưu và gắn vào danh mục vật tư.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </Modal>
+        onClose={() => setShowCreate(false)}
+      />
 
       <MaterialImportModal
         isOpen={showImport}
@@ -1094,72 +475,15 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
       />
 
       {isAdmin && (
-        <Modal
+        <MaterialClearConfirmModal
           isOpen={showClearModal}
-          onClose={() => {
-            if (!isClearingAll) {
-              setShowClearModal(false);
-              setClearConfirmText('');
-            }
+          totalCount={totalCount}
+          onClose={() => setShowClearModal(false)}
+          onCleared={async () => {
+            await qc.invalidateQueries({ queryKey: queryKeys.materials.all });
+            setPage(1);
           }}
-          title="Dọn sạch toàn bộ danh mục vật tư"
-          size="md"
-          footer={
-            <>
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={() => {
-                  setShowClearModal(false);
-                  setClearConfirmText('');
-                }}
-                disabled={isClearingAll}
-              >
-                Hủy
-              </button>
-              <button
-                type="button"
-                className="btn btn-danger flex items-center gap-1.5"
-                disabled={clearConfirmText.trim() !== 'XOA HET' || isClearingAll}
-                onClick={handleClearAllMaterials}
-              >
-                <Trash2 size={16} aria-hidden />
-                {isClearingAll ? 'Đang dọn sạch...' : 'Xác nhận dọn sạch'}
-              </button>
-            </>
-          }
-        >
-          <div className="space-y-4">
-            <div className="p-3.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200 text-sm leading-relaxed">
-              <p className="font-semibold mb-1 flex items-center gap-1.5 text-rose-700 dark:text-rose-300">
-                <Trash2 size={16} />
-                Cảnh báo quan trọng (Chỉ Quản trị viên)
-              </p>
-              <p>
-                Thao tác này sẽ dọn sạch toàn bộ danh mục vật tư hiện tại trên hệ thống (hiện có <strong className="font-bold underline">{totalCount}</strong> vật tư).
-              </p>
-              <ul className="list-disc list-inside mt-2 space-y-1 text-xs text-rose-700/90 dark:text-rose-300/90">
-                <li>Các vật tư chưa phát sinh giao dịch sẽ được <strong>xóa hoàn toàn</strong> khỏi cơ sở dữ liệu.</li>
-                <li>Các vật tư đã có phát sinh giao dịch sẽ được <strong>chuyển sang trạng thái lưu trữ</strong> để bảo toàn lịch sử phiếu kho.</li>
-              </ul>
-            </div>
-
-            <div className="space-y-2">
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Để xác nhận, vui lòng nhập chính xác cụm từ <span className="font-mono text-rose-600 font-bold bg-rose-100 dark:bg-rose-900/50 px-1.5 py-0.5 rounded">XOA HET</span> vào ô bên dưới:
-              </label>
-              <input
-                type="text"
-                className="form-input w-full font-mono text-center tracking-wider text-rose-600 font-bold"
-                placeholder="Nhập 'XOA HET'"
-                value={clearConfirmText}
-                onChange={e => setClearConfirmText(e.target.value)}
-                disabled={isClearingAll}
-                autoFocus
-              />
-            </div>
-          </div>
-        </Modal>
+        />
       )}
     </div>
   );

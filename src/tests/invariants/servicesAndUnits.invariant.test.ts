@@ -1,10 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { getRouteAccess, getRequiredPermissionsForPath } from '../../lib/routePermissions';
 import { hasAnyPermission } from '../../lib/permissions';
 import { operationsMenu } from '../../constants/sidebarMenus';
 import { materialUnitsService } from '../../services/materialUnitsService';
+
+const currentDir = path.dirname(fileURLToPath(import.meta.url));
 
 describe('Living Invariants: Services and Material Units Excel Import', () => {
   describe('Invariant 1: /operations/services Route & Permission Access', () => {
@@ -55,7 +58,7 @@ describe('Living Invariants: Services and Material Units Excel Import', () => {
 
   describe('Invariant 2: Physical On-Disk Code & UI Components', () => {
     it('ServicesExpensesPage contains Nhập Excel button and mounts ServiceExpenseImportModal', () => {
-      const pagePath = path.resolve(__dirname, '../../pages/operations/ServicesExpensesPage.tsx');
+      const pagePath = path.resolve(currentDir, '../../pages/operations/ServicesExpensesPage.tsx');
       expect(fs.existsSync(pagePath)).toBe(true);
       const content = fs.readFileSync(pagePath, 'utf-8');
 
@@ -70,7 +73,7 @@ describe('Living Invariants: Services and Material Units Excel Import', () => {
     });
 
     it('MaterialUnitsSettingsPanel contains Nhập Excel button and mounts MaterialUnitImportModal', () => {
-      const panelPath = path.resolve(__dirname, '../../pages/warehouse/MaterialUnitsSettingsPanel.tsx');
+      const panelPath = path.resolve(currentDir, '../../pages/warehouse/MaterialUnitsSettingsPanel.tsx');
       expect(fs.existsSync(panelPath)).toBe(true);
       const content = fs.readFileSync(panelPath, 'utf-8');
 

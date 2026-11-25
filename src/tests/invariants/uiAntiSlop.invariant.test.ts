@@ -1,10 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const currentDir = path.dirname(fileURLToPath(import.meta.url));
 
 describe('Living Invariant 3: UI Anti-Slop & Text Wrapping Standards', () => {
   const modalFilePath = path.resolve(
-    __dirname,
+    currentDir,
     '../../components/warehouse/AdminOpeningStockModal.tsx',
   );
 

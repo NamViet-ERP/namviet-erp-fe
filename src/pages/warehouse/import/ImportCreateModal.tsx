@@ -196,7 +196,7 @@ export default function ImportCreateModal({
   );
 
   // Đồng bộ draft dòng PO khi đổi PO/preview (cần gọi onItemsChange của parent).
-  /* eslint-disable react-hooks/set-state-in-effect -- sync PO line drafts from preview into parent items */
+
   useEffect(() => {
     if (!isCreateMode || !selectedPoCode) {
       if (isCreateMode) setPoLineDrafts({});
@@ -234,7 +234,7 @@ export default function ImportCreateModal({
     onItemsChange(poDraftsToItems(poPreviewLines, nextDrafts));
     // eslint-disable-next-line react-hooks/exhaustive-deps -- seed một lần khi mở sửa + preview sẵn
   }, [isOpen, isPoBoundEdit, selectedPoCode, poPreviewKey, editVoucher?.code]);
-  /* eslint-enable react-hooks/set-state-in-effect */
+
 
   const setPoLine = (poItemId: number, patch: Partial<PoLineDraft>) => {
     setPoLineDrafts(prev => {

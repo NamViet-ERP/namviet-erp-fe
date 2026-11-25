@@ -9,7 +9,7 @@ export default function CskhMaintenancePage() {
   return (
     <div className="page-shell">
       <PageHeader
-        eyebrow="Hệ thống ERP Nam Việt"
+        eyebrow="Mayzer ERP"
         title="Chăm sóc khách hàng (CSKH)"
       />
 

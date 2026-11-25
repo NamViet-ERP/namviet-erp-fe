@@ -1,11 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { MATERIAL_TABLE_COLUMNS } from '../../constants/materialCategoryLevels';
+
+const currentDir = path.dirname(fileURLToPath(import.meta.url));
 
 describe('Living Invariant: Material Table Columns & Code Parts Standards', () => {
   const materialsPagePath = path.resolve(
-    __dirname,
+    currentDir,
     '../../pages/warehouse/MaterialsPage.tsx',
   );
 

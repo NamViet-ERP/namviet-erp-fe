@@ -6,7 +6,7 @@ import { cskhService } from '../../services/cskhService';
 import { projectsService } from '../../services/projectsService';
 import { queryKeys } from '../../services/queryKeys';
 import { useCskhCommandCenter } from './useCskhCommandCenter';
-import { loadCommandStore, type CskhCommandStore } from '../../lib/cskh/commandCenter';
+import type { CskhCommandStore } from '../../lib/cskh/commandCenter';
 import type { WarehouseProjectApiDto } from '../../types/wms';
 
 vi.mock('../../services/cskhService', () => ({ cskhService: {
@@ -107,7 +107,8 @@ describe('CSKH uses the shared project record', () => {
   });
 
   it('does not resurrect browser-only projects or sample data after an empty server response', async () => {
-    expect(loadCommandStore().localProjects).toEqual([]);
+    const getItemSpy = vi.spyOn(Storage.prototype, 'getItem');
+    expect(getItemSpy).not.toHaveBeenCalledWith('nv-cskh-command-center');
     profiles.localProjects = [{ code: 'LOCAL-ONLY', name: 'Old browser draft', year: 2026,
       phaseId: 'survey', planPct: 0, actualPct: 0, bottleneckCount: 0, pendingDocs: 0, warrantyWatch: false }];
     serverProjects = [];

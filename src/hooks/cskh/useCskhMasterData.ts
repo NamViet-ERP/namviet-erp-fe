@@ -1,48 +1,58 @@
-import { useCallback, useEffect, useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useMemo } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../../services/queryKeys';
 import { cskhService } from '../../services/cskhService';
 import {
-  loadMasterStore,
-  saveMasterStore,
+  EMPTY_MASTER_STORE,
+  normalizeMasterStore,
   type CskhMasterStore,
 } from '../../lib/cskh/masterData';
 
 export function useCskhMasterData() {
   const queryClient = useQueryClient();
-  const [store, setStore] = useState<CskhMasterStore>(loadMasterStore);
 
-  const { data: dbStore, isLoading } = useQuery({
+  const { data: dbStore, isLoading, isError, error } = useQuery({
     queryKey: queryKeys.cskh.masterData,
-    queryFn: () => cskhService.getMasterData<CskhMasterStore>(),
+    queryFn: () => cskhService.getMasterData<Partial<CskhMasterStore>>(),
   });
 
-  const [prevDbStore, setPrevDbStore] = useState(dbStore);
-  if (dbStore && dbStore !== prevDbStore) {
-    setPrevDbStore(dbStore);
-    if (typeof dbStore === 'object' && Array.isArray((dbStore as any).phases)) {
-      setStore(dbStore);
-    }
-  }
+  const store = useMemo(
+    () => normalizeMasterStore(dbStore ?? EMPTY_MASTER_STORE),
+    [dbStore],
+  );
 
-  useEffect(() => {
-    if (dbStore && typeof dbStore === 'object' && Array.isArray((dbStore as any).phases)) {
-      saveMasterStore(dbStore);
-    }
-  }, [dbStore]);
+  const mutation = useMutation({
+    mutationFn: async (nextStore: CskhMasterStore) => {
+      await cskhService.saveMasterData(nextStore);
+      return nextStore;
+    },
+    onSuccess: nextStore => {
+      queryClient.setQueryData(queryKeys.cskh.masterData, nextStore);
+      void queryClient.invalidateQueries({ queryKey: queryKeys.cskh.masterData });
+    },
+  });
 
-  const persist = useCallback((next: CskhMasterStore | ((prev: CskhMasterStore) => CskhMasterStore)) => {
-    setStore(prev => {
-      const resolved = typeof next === 'function' ? next(prev) : next;
-      saveMasterStore(resolved);
-      cskhService.saveMasterData(resolved).then(() => {
-        queryClient.invalidateQueries({ queryKey: queryKeys.cskh.masterData });
-      }).catch(err => {
-        console.warn('[CSKH Master Data] Could not save to server:', err);
-      });
-      return resolved;
-    });
-  }, [queryClient]);
+  const persist = useCallback(
+    async (
+      next: CskhMasterStore | ((prev: CskhMasterStore) => CskhMasterStore),
+    ): Promise<void> => {
+      const current = normalizeMasterStore(
+        queryClient.getQueryData<Partial<CskhMasterStore>>(queryKeys.cskh.masterData) ??
+          dbStore ??
+          EMPTY_MASTER_STORE,
+      );
+      const resolved = typeof next === 'function' ? next(current) : next;
+      await mutation.mutateAsync(resolved);
+    },
+    [dbStore, mutation, queryClient],
+  );
 
-  return { store, persist, isLoading };
+  return {
+    store,
+    persist,
+    isLoading,
+    isError,
+    error,
+    isSaving: mutation.isPending,
+  };
 }

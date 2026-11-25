@@ -8,6 +8,7 @@ import Button from '../../components/ui/Button';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import EmptyState from '../../components/ui/EmptyState';
 import { showToast } from '../../components/ui/Toast';
+import { getApiErrorMessage } from '../../lib/apiClient';
 import { ICON_SIZE } from '../../constants/icons';
 import { useCskhMasterData } from '../../hooks/cskh/useCskhMasterData';
 import {
@@ -55,19 +56,25 @@ export default function CskhSchedulePage() {
   const selectedPriority = priorityId || priorityOptions[0]?.value || '';
   const combo = ready ? findScheduleCombo(store, selectedBoiler, selectedPriority) : undefined;
 
-  const writeCombo = (next: CskhScheduleCombo) => {
-    persist(current => upsertScheduleCombo(current, next));
+  const writeCombo = async (next: CskhScheduleCombo): Promise<boolean> => {
+    try {
+      await persist(current => upsertScheduleCombo(current, next));
+      return true;
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không lưu được bảng tiến độ chuẩn.'));
+      return false;
+    }
   };
 
-  const createCombo = () => {
+  const createCombo = async () => {
     if (!selectedBoiler || !selectedPriority) return;
-    writeCombo(emptyScheduleCombo(selectedBoiler, selectedPriority));
-    showToast('success', 'Đã tạo bảng tiến độ cho tổ hợp này.');
+    const ok = await writeCombo(emptyScheduleCombo(selectedBoiler, selectedPriority));
+    if (ok) showToast('success', 'Đã tạo bảng tiến độ cho tổ hợp này.');
   };
 
   const patchBand = (bandId: string, patch: Partial<CskhCapacityBand>) => {
     if (!combo) return;
-    writeCombo({
+    void writeCombo({
       ...combo,
       bands: combo.bands.map(band => (band.id === bandId ? { ...band, ...patch } : band)),
     });
@@ -75,7 +82,7 @@ export default function CskhSchedulePage() {
 
   const patchRow = (bandId: string, rowId: string, patch: Partial<CskhScheduleRow>) => {
     if (!combo) return;
-    writeCombo({
+    void writeCombo({
       ...combo,
       bands: combo.bands.map(band => {
         if (band.id !== bandId) return band;
@@ -111,20 +118,22 @@ export default function CskhSchedulePage() {
 
   const addBand = () => {
     if (!combo) return;
-    writeCombo({
+    void writeCombo({
       ...combo,
       bands: [...combo.bands, { id: newMasterId(), minTon: null, maxTon: null, rows: [] }],
     });
   };
 
-  const confirmDeleteBand = () => {
+  const confirmDeleteBand = async () => {
     if (!combo || !deleteBand) return;
-    writeCombo({
+    const ok = await writeCombo({
       ...combo,
       bands: combo.bands.filter(band => band.id !== deleteBand.id),
     });
-    setDeleteBand(null);
-    showToast('success', 'Đã xóa mức công suất.');
+    if (ok) {
+      setDeleteBand(null);
+      showToast('success', 'Đã xóa mức công suất.');
+    }
   };
 
   return (

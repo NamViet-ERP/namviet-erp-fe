@@ -8,6 +8,7 @@ import Modal from '../../components/ui/Modal';
 import FormField from '../../components/ui/FormField';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { showToast } from '../../components/ui/Toast';
+import { getApiErrorMessage } from '../../lib/apiClient';
 import { useCskhMasterData } from '../../hooks/cskh/useCskhMasterData';
 import {
   CSKH_COLOR_OPTIONS,
@@ -66,7 +67,7 @@ export default function CskhStatusPriorityPage() {
     setErrors({});
   };
 
-  const save = () => {
+  const save = async () => {
     const name = form.name.trim();
     const next: { name?: string; color?: string } = {};
     if (!name) next.name = 'Nhập tên hiển thị.';
@@ -84,22 +85,30 @@ export default function CskhStatusPriorityPage() {
       name,
       color: form.color as CskhColorToken,
     };
-    persist(current => ({
-      ...current,
-      [target]: upsertById(current[target], item),
-    }));
-    showToast('success', editingId ? 'Đã cập nhật.' : 'Đã thêm.');
-    closeForm();
+    try {
+      await persist(current => ({
+        ...current,
+        [target]: upsertById(current[target], item),
+      }));
+      showToast('success', editingId ? 'Đã cập nhật.' : 'Đã thêm.');
+      closeForm();
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không lưu được dữ liệu.'));
+    }
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!deleteTarget) return;
-    persist(current => ({
-      ...current,
-      [deleteTarget.list]: removeById(current[deleteTarget.list], deleteTarget.id),
-    }));
-    showToast('success', `Đã xóa ${deleteTarget.name}.`);
-    setDeleteTarget(null);
+    try {
+      await persist(current => ({
+        ...current,
+        [deleteTarget.list]: removeById(current[deleteTarget.list], deleteTarget.id),
+      }));
+      showToast('success', `Đã xóa ${deleteTarget.name}.`);
+      setDeleteTarget(null);
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không xóa được dữ liệu.'));
+    }
   };
 
   const colorColumns = [

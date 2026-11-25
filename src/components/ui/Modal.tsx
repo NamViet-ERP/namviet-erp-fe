@@ -25,6 +25,9 @@ interface ModalProps {
   beforeBody?: ReactNode;
   footer?: ReactNode;
   className?: string;
+  closeOnBackdrop?: boolean;
+  closeOnEscape?: boolean;
+  showCloseButton?: boolean;
 }
 
 const sizeClass: Record<ModalSize, string> = {
@@ -59,11 +62,16 @@ export default function Modal({
   beforeBody,
   footer,
   className,
+  closeOnBackdrop = true,
+  closeOnEscape = true,
+  showCloseButton = true,
 }: ModalProps) {
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   useBodyScrollLock(isOpen);
-  useDialogFocus(isOpen, dialogRef, onClose);
+  useDialogFocus(isOpen, dialogRef, () => {
+    if (closeOnEscape) onClose();
+  });
   if (!isOpen) return null;
 
   const dialogClass = [
@@ -77,7 +85,7 @@ export default function Modal({
 
   return createPortal(
     <div className="md-dialog-overlay" role="dialog" aria-modal="true" aria-labelledby={titleId}>
-      <div className="md-dialog-scrim" onClick={onClose} aria-hidden />
+      <div className="md-dialog-scrim" onClick={closeOnBackdrop ? onClose : undefined} aria-hidden />
       <div className={dialogClass} ref={dialogRef} tabIndex={-1} data-modal-focus>
         <div className={`md-dialog__header${headerCompact ? ' md-dialog__header--compact' : ''}`}>
           <div className="min-w-0 flex-1">
@@ -89,9 +97,11 @@ export default function Modal({
             </div>
             {subtitle}
           </div>
-          <button type="button" className="md-dialog__close" onClick={onClose} aria-label="Đóng">
-            <X size={20} />
-          </button>
+          {showCloseButton ? (
+            <button type="button" className="md-dialog__close" onClick={onClose} aria-label="Đóng">
+              <X size={20} />
+            </button>
+          ) : null}
         </div>
         <div className="md-dialog__divider" aria-hidden />
         {beforeBody}

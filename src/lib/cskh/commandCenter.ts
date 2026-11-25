@@ -153,8 +153,6 @@ export interface CskhCommandStore {
   deletedCodes?: string[];
 }
 
-const STORAGE_KEY = 'nv-cskh-command-center';
-
 export function clampPct(value: number): number {
   if (!Number.isFinite(value)) return 0;
   return Math.max(0, Math.min(100, Math.round(value)));
@@ -231,34 +229,6 @@ export function progressGridCopy(status: CskhProgressStatus): { badge: string; s
   if (status === 'blocked') return { badge: 'Nghẽn nặng', summary: 'Đang nghẽn' };
   if (status === 'slight_delay') return { badge: 'Chậm nhẹ', summary: 'Chậm nhẹ' };
   return { badge: 'Đúng tiến độ', summary: 'Đúng / vượt tiến độ' };
-}
-
-export function loadCommandStore(): CskhCommandStore {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      return {
-        overlays: {},
-        localProjects: [],
-      };
-    }
-    const parsed = JSON.parse(raw) as CskhCommandStore;
-    const local = Array.isArray(parsed.localProjects) ? parsed.localProjects : [];
-    return {
-      overlays: parsed.overlays ?? {},
-      localProjects: local,
-      deletedCodes: Array.isArray(parsed.deletedCodes) ? parsed.deletedCodes : [],
-    };
-  } catch {
-    return {
-      overlays: {},
-      localProjects: [],
-    };
-  }
-}
-
-export function saveCommandStore(store: CskhCommandStore): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
 }
 
 export function mergeCommandProjects(
@@ -429,46 +399,6 @@ export function deleteProjectRecord(store: CskhCommandStore, code: string): Cskh
   delete overlays[code];
   const deletedCodes = Array.from(new Set([...(store.deletedCodes ?? []), code]));
   return { ...store, localProjects, overlays, deletedCodes };
-}
-
-export function addLocalProject(store: CskhCommandStore, draft: CskhProjectDraft): CskhCommandStore {
-  const exists = store.localProjects.some(p => p.code === draft.code);
-  const nextDeleted = (store.deletedCodes ?? []).filter(c => c !== draft.code);
-  return {
-    ...store,
-    deletedCodes: nextDeleted,
-    overlays: {
-      ...store.overlays,
-      [draft.code]: {
-        name: draft.name,
-        clientName: draft.clientName,
-        pmName: draft.pmName,
-        salesName: draft.salesName,
-        startDate: draft.startDate,
-        contractSignedDate: draft.contractSignedDate,
-        advanceDate: draft.advanceDate,
-        boilerType: draft.boilerType,
-        industry: draft.industry,
-        capacity: draft.capacity,
-        priority: draft.priority,
-        targetCodDate: draft.targetCodDate,
-        notes: draft.notes,
-        phaseId: draft.phaseId,
-        planPct: draft.planPct,
-        actualPct: draft.actualPct,
-        bottleneckCount: draft.bottleneckCount,
-        pendingDocs: draft.pendingDocs,
-        warrantyWatch: draft.warrantyWatch,
-        year: draft.year,
-        acceptanceDate: draft.acceptanceDate,
-        warrantyMonths: draft.warrantyMonths,
-        phaseMode: draft.phaseMode ?? 'auto',
-      },
-    },
-    localProjects: exists
-      ? store.localProjects.map(p => (p.code === draft.code ? draft : p))
-      : [...store.localProjects, draft],
-  };
 }
 
 export function toCsv(projects: CskhCommandProject[]): string {

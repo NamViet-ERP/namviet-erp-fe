@@ -351,7 +351,7 @@ export default function CskhProjectDashboardPage() {
         <div className="cskh-desk__section-head mb-4">
           <div>
             <h2 className="section-heading__title m-0">Tất Cả Dự Án Lò Hơi Đang Điều Hành</h2>
-            <p className="section-heading__sub mb-0">Theo dõi đồng thời danh mục các dự án Boiler EPC của Nam Việt</p>
+            <p className="section-heading__sub mb-0">Theo dõi đồng thời danh mục các dự án Boiler EPC của công ty</p>
           </div>
         </div>
 

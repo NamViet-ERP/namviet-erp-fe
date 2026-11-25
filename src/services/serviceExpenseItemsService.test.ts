@@ -306,4 +306,28 @@ describe('serviceExpenseItemsService', () => {
     expect(result.skippedCount).toBe(0);
     expect(result.totalProcessed).toBe(3);
   });
+
+  it('normalizes top-level errors supporting both object and fallback string entries', async () => {
+    postForm.mockResolvedValueOnce({
+      totalRows: 1,
+      validRowCount: 0,
+      existingRowCount: 0,
+      errorRowCount: 1,
+      rows: [],
+      errors: [
+        { rowNumber: 2, field: 'unit', message: 'Thiếu đơn vị tính' },
+        'File thiếu cột bắt buộc',
+        '',
+        null,
+      ],
+    });
+
+    const fakeFile = new File(['test'], 'err.xlsx');
+    const result = await serviceExpenseItemsService.parseImportFile(fakeFile);
+
+    expect(result.errors).toEqual([
+      { rowNumber: 2, field: 'unit', message: 'Thiếu đơn vị tính' },
+      { rowNumber: 0, field: '', message: 'File thiếu cột bắt buộc' },
+    ]);
+  });
 });

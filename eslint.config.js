@@ -50,11 +50,4 @@ export default defineConfig([
       'react-hooks/set-state-in-effect': 'off',
     },
   },
-  {
-    files: ['src/components/purchasing/**/*.{ts,tsx}'],
-    rules: {
-      // These DEV-only mock modals intentionally hydrate/reset local form drafts when opened.
-      'react-hooks/set-state-in-effect': 'off',
-    },
-  },
 ])

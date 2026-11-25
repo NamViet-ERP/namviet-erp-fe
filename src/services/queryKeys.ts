@@ -220,6 +220,7 @@ export const queryKeys = {
   },
   purchasePriceBook: {
     all: ['purchasing', 'price-book'] as const,
+    markupSettings: ['purchasing', 'markup-settings'] as const,
   },
   purchaseRfq: {
     all: ['purchasing', 'rfq'] as const,

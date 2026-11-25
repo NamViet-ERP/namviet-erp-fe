@@ -203,4 +203,26 @@ describe('dialog focus stack', () => {
     await key(trigger, 'Escape');
     expect(onClose).toHaveBeenCalledTimes(1);
   });
+
+  it('respects closeOnBackdrop=false, closeOnEscape=false, and showCloseButton=false', async () => {
+    const onClose = vi.fn();
+    await act(() => root.render(createElement(Modal, {
+      isOpen: true,
+      title: 'Locked modal',
+      onClose,
+      closeOnBackdrop: false,
+      closeOnEscape: false,
+      showCloseButton: false,
+      children: createElement('input', { id: 'locked-input' }),
+    })));
+    expect(document.querySelector('.md-dialog__close')).toBeNull();
+    const scrim = document.querySelector<HTMLElement>('.md-dialog-scrim')!;
+    await act(() => scrim.click());
+    expect(onClose).not.toHaveBeenCalled();
+
+    const input = document.getElementById('locked-input')!;
+    input.focus();
+    await key(input, 'Escape');
+    expect(onClose).not.toHaveBeenCalled();
+  });
 });

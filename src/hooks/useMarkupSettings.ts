@@ -1,113 +1,100 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSession } from '../auth/AuthProvider';
+import {
+  DEFAULT_MARKUP_CONFIG,
+  markupSettingsService,
+  type CategoryMarkupItem,
+  type MarkupSettingsConfig,
+} from '../services/markupSettingsService';
+import { queryKeys } from '../services/queryKeys';
 
-export interface CategoryMarkupItem {
-  id: string;
-  name: string;
-  percent: number;
-  note?: string;
-}
+export type { CategoryMarkupItem, MarkupSettingsConfig };
 
-export interface MarkupSettingsConfig {
-  globalMarkupPercent: number;
-  categories: CategoryMarkupItem[];
-  itemOverrides?: Record<string, number>;
-  updatedAt?: string;
-  updatedBy?: string;
-}
-
-export const DEFAULT_MARKUP_CATEGORIES: CategoryMarkupItem[] = [
-  { id: 'HE_THEP', name: 'Hệ ống thép & phụ kiện hàn', percent: 12, note: 'Tỷ trọng lớn, cạnh tranh cao' },
-  { id: 'HE_VAN', name: 'Hệ van công nghiệp & phụ kiện mặt bích', percent: 15, note: 'Van cơ, van điều khiển, khớp nối' },
-  { id: 'HE_BOM', name: 'Hệ máy bơm & tủ điện điều khiển', percent: 18, note: 'Bơm cứu hỏa, bơm cấp nước, biến tần' },
-  { id: 'PCCC', name: 'Hệ thiết bị PCCC & báo cháy tự động', percent: 15, note: 'Đầu phun, cuộn vòi, tủ trung tâm' },
-  { id: 'DIEN_LANH', name: 'Hệ điều hòa Chiller & thông gió VRV', percent: 16, note: 'Ống gió, miệng gió, bảo ôn' },
-  { id: 'VAT_TU_PHU', name: 'Vật tư phụ, bu lông neo, que hàn & giá đỡ', percent: 20, note: 'Hao hụt thi công công trường' },
-  { id: 'NHAN_CONG', name: 'Chi phí nhân công thi công & lắp đặt thầu phụ', percent: 25, note: 'Quản lý nhân công khoán' },
-  { id: 'VAN_CHUYEN', name: 'Chi phí cẩu tháp, vận chuyển & bốc xếp', percent: 10, note: 'Logistics vật tư nặng' },
-  { id: 'KHAC', name: 'Vật tư & dịch vụ kỹ thuật khác', percent: 15, note: 'Dự phòng rủi ro biến động giá' },
-];
-
-const STORAGE_KEY = 'mayzer_boss_markup_settings';
-const MARKUP_CHANGED_EVENT = 'nv-markup-settings-changed';
-
-export function readStoredMarkupConfig(): MarkupSettingsConfig {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw) as MarkupSettingsConfig;
-      if (typeof parsed?.globalMarkupPercent === 'number' && Array.isArray(parsed?.categories)) {
-        return {
-          ...parsed,
-          itemOverrides: parsed.itemOverrides || {},
-        };
-      }
+export function resolveMarkupPercent(
+  config: MarkupSettingsConfig,
+  materialCodeOrCategoryKey?: string | number | null,
+  categoryKey?: string | number | null,
+): number {
+  if (
+    materialCodeOrCategoryKey !== undefined &&
+    materialCodeOrCategoryKey !== null &&
+    materialCodeOrCategoryKey !== ''
+  ) {
+    const code = String(materialCodeOrCategoryKey).trim();
+    if (config.itemOverrides && config.itemOverrides[code] !== undefined) {
+      return config.itemOverrides[code];
     }
-  } catch {
-    /* fallback default */
   }
-  return {
-    globalMarkupPercent: 15,
-    categories: DEFAULT_MARKUP_CATEGORIES,
-    itemOverrides: {},
-    updatedAt: new Date().toISOString(),
-    updatedBy: 'Hệ thống (Mặc định)',
-  };
+
+  const targetCategory = categoryKey !== undefined ? categoryKey : materialCodeOrCategoryKey;
+  if (targetCategory === undefined || targetCategory === null || targetCategory === '') {
+    return config.globalMarkupPercent;
+  }
+
+  const keyStr = String(targetCategory).trim().toUpperCase();
+  if (!keyStr) return config.globalMarkupPercent;
+
+  const found = config.categories.find(c => {
+    const idUpper = c.id.trim().toUpperCase();
+    const nameUpper = c.name.trim().toUpperCase();
+    return (
+      idUpper === keyStr ||
+      nameUpper === keyStr ||
+      (nameUpper.length > 0 && keyStr.includes(nameUpper)) ||
+      (keyStr.length > 0 && nameUpper.includes(keyStr))
+    );
+  });
+
+  return found ? found.percent : config.globalMarkupPercent;
 }
 
 export function useMarkupSettings() {
-  const { user } = useSession();
-  const [config, setConfig] = useState<MarkupSettingsConfig>(readStoredMarkupConfig);
+  const { user, permissions } = useSession();
+  const qc = useQueryClient();
+  const canViewMarkup =
+    Boolean(user) && (permissions?.includes('purchasing.pricebook.view') ?? false);
 
-  const refresh = useCallback(() => {
-    setConfig(readStoredMarkupConfig());
-  }, []);
+  const query = useQuery({
+    queryKey: queryKeys.purchasePriceBook.markupSettings,
+    queryFn: () => markupSettingsService.get(),
+    enabled: canViewMarkup,
+  });
 
-  useEffect(() => {
-    const handler = () => refresh();
-    window.addEventListener(MARKUP_CHANGED_EVENT, handler);
-    window.addEventListener('storage', handler);
-    return () => {
-      window.removeEventListener(MARKUP_CHANGED_EVENT, handler);
-      window.removeEventListener('storage', handler);
-    };
-  }, [refresh]);
+  const config = query.data ?? DEFAULT_MARKUP_CONFIG;
+
+  const mutation = useMutation({
+    mutationFn: (newConfig: MarkupSettingsConfig) =>
+      markupSettingsService.update({
+        globalMarkupPercent: newConfig.globalMarkupPercent,
+        categories: newConfig.categories,
+        itemOverrides: newConfig.itemOverrides ?? config.itemOverrides ?? {},
+      }),
+    onSuccess: updated => {
+      qc.setQueryData(queryKeys.purchasePriceBook.markupSettings, updated);
+      void qc.invalidateQueries({ queryKey: queryKeys.purchasePriceBook.markupSettings });
+    },
+  });
+
+  const refresh = useCallback(() => query.refetch(), [query]);
 
   const saveConfig = useCallback(
-    (newConfig: MarkupSettingsConfig) => {
-      const payload: MarkupSettingsConfig = {
-        ...newConfig,
-        updatedAt: new Date().toISOString(),
-        updatedBy: user?.name || user?.username || 'Sếp / Ban Lãnh Đạo',
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-      setConfig(payload);
-      window.dispatchEvent(new Event(MARKUP_CHANGED_EVENT));
+    async (newConfig: MarkupSettingsConfig): Promise<void> => {
+      await mutation.mutateAsync(newConfig);
     },
-    [user],
+    [mutation],
   );
 
   const getMarkupPercent = useCallback(
-    (materialCodeOrCategoryKey?: string | number | null, categoryKey?: string | number | null): number => {
-      if (materialCodeOrCategoryKey) {
-        const code = String(materialCodeOrCategoryKey).trim();
-        if (config.itemOverrides && config.itemOverrides[code] !== undefined) {
-          return config.itemOverrides[code];
-        }
-      }
-      const targetCategory = categoryKey !== undefined ? categoryKey : materialCodeOrCategoryKey;
-      if (!targetCategory) return config.globalMarkupPercent;
-      const keyStr = String(targetCategory).trim().toUpperCase();
-      const found = config.categories.find(
-        c => c.id.toUpperCase() === keyStr || c.name.toUpperCase().includes(keyStr),
-      );
-      return found ? found.percent : config.globalMarkupPercent;
-    },
+    (
+      materialCodeOrCategoryKey?: string | number | null,
+      categoryKey?: string | number | null,
+    ): number => resolveMarkupPercent(config, materialCodeOrCategoryKey, categoryKey),
     [config],
   );
 
   const saveItemMarkup = useCallback(
-    (materialCode: string, percent: number) => {
+    async (materialCode: string, percent: number): Promise<void> => {
       const trimmed = materialCode.trim();
       if (!trimmed) return;
       const clamped = Math.max(0, Math.min(100, Math.round(percent)));
@@ -115,7 +102,7 @@ export function useMarkupSettings() {
         ...(config.itemOverrides || {}),
         [trimmed]: clamped,
       };
-      saveConfig({
+      await saveConfig({
         ...config,
         itemOverrides: nextOverrides,
       });
@@ -125,6 +112,10 @@ export function useMarkupSettings() {
 
   return {
     config,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error,
+    isSaving: mutation.isPending,
     saveConfig,
     getMarkupPercent,
     saveItemMarkup,

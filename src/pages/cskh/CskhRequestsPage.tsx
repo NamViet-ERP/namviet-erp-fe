@@ -13,6 +13,7 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import EmptyState from '../../components/ui/EmptyState';
 import { showToast } from '../../components/ui/Toast';
 import { isoToDisplay, toIsoDate } from '../../lib/dates';
+import { downloadCsvContent } from '../../lib/csvExport';
 import { useCskhOpsWorkspace } from '../../hooks/cskh/useCskhOpsWorkspace';
 import { cskhProjectTabMeta } from '../../constants/cskhProject';
 import { CSKH_DEPARTMENTS, departmentLabel } from '../../lib/cskh/docsPipeline';
@@ -142,13 +143,7 @@ export default function CskhRequestsPage({ project }: CskhRequestsPageProps) {
   };
 
   const exportCsv = () => {
-    const blob = new Blob([requestsToCsv(ops.requests)], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `cskh-yeu-cau-${project.code}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
+    void downloadCsvContent(requestsToCsv(ops.requests), `cskh-yeu-cau-${project.code}.csv`);
   };
 
   return (

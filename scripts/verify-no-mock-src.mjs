@@ -25,6 +25,11 @@ const FORBIDDEN_PATTERNS = [
   { name: 'suppliersMock', re: /\bsuppliersMock\b/ },
   { name: 'create*Seed factory', re: /\bcreate[A-Za-z0-9]*Seed\b/ },
   { name: 'runtime default seed', re: /\bDEFAULT_SEED\b/ },
+  { name: 'CHAIN_YARN demo fixture', re: /CHAIN_YARN/ },
+  { name: 'CSKH master localStorage key', re: /['"]nv-cskh-master-data['"]/ },
+  { name: 'CSKH command center localStorage key', re: /['"]nv-cskh-command-center['"]/ },
+  { name: 'Boss markup localStorage key', re: /['"]mayzer_boss_markup_settings['"]/ },
+  { name: 'DEFAULT_MARKUP_CATEGORIES seed', re: /\bDEFAULT_MARKUP_CATEGORIES\b/ },
 ];
 
 async function exists(p) {

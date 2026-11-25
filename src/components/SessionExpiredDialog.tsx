@@ -78,7 +78,10 @@ export default function SessionExpiredDialog() {
   return (
     <Modal
       isOpen={expired}
-      onClose={resolveSessionExpired}
+      onClose={() => {}}
+      closeOnBackdrop={false}
+      closeOnEscape={false}
+      showCloseButton={false}
       title="Phiên đăng nhập đã hết hạn"
       size="sm"
       footer={(

@@ -85,4 +85,13 @@ describe('projectPersonnelService', () => {
     expect(result).toHaveLength(1);
     expect(result[0].name).toBe('Nguyễn Văn Khoa');
   });
+
+  it('throws the underlying error when every personnel endpoint fails', async () => {
+    vi.mocked(apiClient.get).mockRejectedValue(new Error('500 Server Error'));
+    vi.mocked(adminUsersService.list).mockRejectedValue(new Error('403 Forbidden'));
+    const { employeesService } = await import('./employeesService');
+    vi.mocked(employeesService.listActive).mockRejectedValue(new Error('403 Forbidden'));
+
+    await expect(projectPersonnelService.getPersonnel()).rejects.toThrow('500 Server Error');
+  });
 });

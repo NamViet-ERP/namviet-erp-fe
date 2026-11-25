@@ -60,6 +60,7 @@ docs/*
 !docs/DEPLOY.md
 !docs/RELEASE_GATES.md
 !docs/UNSHIPPED_MODULES.md
+wms_spec_sheets.md
 
 # Build scripts for production (verify + build-prod + OpenAPI + release gates)
 scripts/*
@@ -70,6 +71,8 @@ scripts/*
 !scripts/verify-release-gates.mjs
 !scripts/fetch-swagger.mjs
 !scripts/check-openapi-generated.mjs
+!scripts/gen-openapi.mjs
+!scripts/write-file-retry.mjs
 .vercel
 .env*
 *.py

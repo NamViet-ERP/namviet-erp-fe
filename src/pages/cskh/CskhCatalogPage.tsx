@@ -8,6 +8,7 @@ import Modal from '../../components/ui/Modal';
 import FormField from '../../components/ui/FormField';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { showToast } from '../../components/ui/Toast';
+import { getApiErrorMessage } from '../../lib/apiClient';
 import { useCskhMasterData } from '../../hooks/cskh/useCskhMasterData';
 import {
   nextCatalogCode,
@@ -144,7 +145,7 @@ export default function CskhCatalogPage({ tab }: CskhCatalogPageProps) {
     setStatusError('');
   };
 
-  const save = () => {
+  const save = async () => {
     const name = form.name.trim();
     if (!name) {
       setNameError(`Nhập ${def.nameLabel.toLowerCase()}.`);
@@ -172,30 +173,38 @@ export default function CskhCatalogPage({ tab }: CskhCatalogPageProps) {
       description: form.description.trim() || undefined,
     };
 
-    persist(current => {
-      if (def.key === 'phases') {
-        const order = Number(form.order);
-        const item: CskhPhaseItem = {
-          ...base,
-          order: Number.isFinite(order) && order > 0 ? order : 1,
-          active: form.active === 'active',
-        };
-        return { ...current, phases: upsertById(current.phases, item) };
-      }
-      return { ...current, [def.key]: upsertById(current[def.key] as CskhCatalogItem[], base) };
-    });
-    showToast('success', editingId ? 'Đã cập nhật danh mục.' : 'Đã thêm vào danh mục.');
-    closeForm();
+    try {
+      await persist(current => {
+        if (def.key === 'phases') {
+          const order = Number(form.order);
+          const item: CskhPhaseItem = {
+            ...base,
+            order: Number.isFinite(order) && order > 0 ? order : 1,
+            active: form.active === 'active',
+          };
+          return { ...current, phases: upsertById(current.phases, item) };
+        }
+        return { ...current, [def.key]: upsertById(current[def.key] as CskhCatalogItem[], base) };
+      });
+      showToast('success', editingId ? 'Đã cập nhật danh mục.' : 'Đã thêm vào danh mục.');
+      closeForm();
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không lưu được dữ liệu danh mục.'));
+    }
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!deleteTarget) return;
-    persist(current => {
-      if (def.key === 'phases') return { ...current, phases: removeById(current.phases, deleteTarget.id) };
-      return { ...current, [def.key]: removeById(current[def.key] as CskhCatalogItem[], deleteTarget.id) };
-    });
-    showToast('success', `Đã xóa ${deleteTarget.name}.`);
-    setDeleteTarget(null);
+    try {
+      await persist(current => {
+        if (def.key === 'phases') return { ...current, phases: removeById(current.phases, deleteTarget.id) };
+        return { ...current, [def.key]: removeById(current[def.key] as CskhCatalogItem[], deleteTarget.id) };
+      });
+      showToast('success', `Đã xóa ${deleteTarget.name}.`);
+      setDeleteTarget(null);
+    } catch (err) {
+      showToast('error', getApiErrorMessage(err, 'Không xóa được dữ liệu danh mục.'));
+    }
   };
 
   const columns = useMemo(() => {

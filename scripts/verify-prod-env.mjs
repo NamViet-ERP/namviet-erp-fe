@@ -45,6 +45,12 @@ if (mock === 'true' || mock === '1' || mock === 'yes') {
   process.exit(1);
 }
 
+const e2e = (process.env.VITE_E2E ?? fileEnv.VITE_E2E ?? '').trim().toLowerCase();
+if (e2e === 'true' || e2e === '1' || e2e === 'yes') {
+  console.error('[verify-prod-env] FAIL: VITE_E2E must be false or unset for production builds.');
+  process.exit(1);
+}
+
 const apiBase = (process.env.VITE_API_BASE_URL ?? fileEnv.VITE_API_BASE_URL ?? '').trim();
 // Empty = same-origin (reverse proxy). Absolute URL also allowed.
 if (apiBase && !/^https?:\/\//i.test(apiBase) && !apiBase.startsWith('/')) {

@@ -10,6 +10,7 @@ import { useCskhCommandCenter } from '../../hooks/cskh/useCskhCommandCenter';
 import { useCskhProject } from '../../hooks/cskh/useCskhProject';
 import { cskhProjectPath } from '../../constants/cskhProject';
 import { toCsv } from '../../lib/cskh/commandCenter';
+import { downloadCsvContent } from '../../lib/csvExport';
 import CskhEditProjectModal from './CskhEditProjectModal';
 import CskhProjectKanban from './CskhProjectKanban';
 import CskhProjectGrid from './CskhProjectGrid';
@@ -73,13 +74,7 @@ export default function CskhDashboardPage() {
   };
 
   const exportCsv = () => {
-    const blob = new Blob([toCsv(filtered)], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `cskh-du-an-${new Date().toISOString().slice(0, 10)}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
+    void downloadCsvContent(toCsv(filtered), `cskh-du-an-${new Date().toISOString().slice(0, 10)}.csv`);
   };
 
   return (

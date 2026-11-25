@@ -12,6 +12,7 @@ import SupplierPayablesOverview from '../../components/suppliers/SupplierPayable
 import { usePermission } from '../../hooks/usePermission';
 import { useSupplierPayables } from '../../hooks/useSupplierPayables';
 import { getApiErrorMessage } from '../../lib/apiClient';
+import { downloadCsv } from '../../lib/csvExport';
 import { formatDateCell, formatDateTimeVi } from '../../lib/hrm/formatters';
 import { formatCurrencyFull } from '../../utils/formatCurrency';
 import type { SupplierPayableLineApiDto } from '../../types/api/purchasingApi';
@@ -59,47 +60,31 @@ function lineStatusBadge(line: SupplierPayableLineApiDto) {
   );
 }
 
-function csvCell(value: string | number | null | undefined) {
-  const raw = value == null ? '' : String(value);
-  if (/[",\n]/.test(raw)) return `"${raw.replaceAll('"', '""')}"`;
-  return raw;
-}
-
 function exportLinesCsv(lines: SupplierPayableLineApiDto[]) {
   const header = [
     'NCC', 'Mã NCC', 'Dự án', 'PO', 'DNTT', 'Ngày PO', 'Giá trị', 'Điều khoản',
     'Hạn TT', 'Đã thanh toán', 'Còn nợ', 'Trạng thái', 'Số ngày quá hạn',
   ];
   const rows = lines.map(line => [
-    csvCell(line.supplierName),
-    csvCell(line.supplierCode),
-    csvCell(line.projectName || line.projectCode),
-    csvCell(line.poCode),
-    csvCell(line.paymentCode),
-    csvCell(line.poDate),
-    csvCell(line.requested),
-    csvCell(line.paymentTerm),
-    csvCell(line.dueDate),
-    csvCell(line.paid),
-    csvCell(line.outstanding),
-    csvCell(
-      line.lineStatus === 'paid' && (line.paidAt || line.paidByName)
-        ? [lineStatusLabel(line), formatDateTimeVi(line.paidAt ?? undefined), line.paidByName?.trim()]
-          .filter(Boolean)
-          .join(' - ')
-        : lineStatusLabel(line),
-    ),
-    csvCell(line.daysOverdue),
-  ].join(','));
-  const blob = new Blob(['\uFEFF' + [header.join(','), ...rows].join('\n')], {
-    type: 'text/csv;charset=utf-8',
-  });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `CongNo_NCC_${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+    line.supplierName,
+    line.supplierCode,
+    line.projectName || line.projectCode,
+    line.poCode,
+    line.paymentCode,
+    line.poDate,
+    line.requested,
+    line.paymentTerm,
+    line.dueDate,
+    line.paid,
+    line.outstanding,
+    line.lineStatus === 'paid' && (line.paidAt || line.paidByName)
+      ? [lineStatusLabel(line), formatDateTimeVi(line.paidAt ?? undefined), line.paidByName?.trim()]
+        .filter(Boolean)
+        .join(' - ')
+      : lineStatusLabel(line),
+    line.daysOverdue,
+  ]);
+  void downloadCsv(`CongNo_NCC_${new Date().toISOString().slice(0, 10)}.csv`, header, rows);
 }
 
 function ApFilterTabs({

@@ -383,19 +383,6 @@ export function removeUnifiedDoc(docs: CskhProjectDocs, id: string): CskhProject
 
 export type CskhArchiveCategoryFilter = 'all' | 'acceptance' | 'cocq' | 'asbuilt' | 'warranty';
 
-export function archiveOverviewKpis(docs: CskhUnifiedDoc[] = []) {
-  const archiveDocs = docs.filter(d => d.stage === 'archived' || d.stage === 'approved');
-  const asbuiltAndCocq = archiveDocs.filter(
-    d => d.category?.includes('As-built') || d.category?.includes('CO/CQ') || d.docType?.includes('As-built') || d.docType?.includes('CO/CQ')
-  ).length;
-
-  return {
-    totalArchived: archiveDocs.length,
-    asbuiltAndCocq,
-    warrantyMonthsRemaining: 42, // Countdown 42/48 months
-  };
-}
-
 export function filterArchiveDocs(docs: CskhUnifiedDoc[] = [], filter: CskhArchiveCategoryFilter = 'all'): CskhUnifiedDoc[] {
   const archiveDocs = docs.filter(d => d.stage === 'archived' || d.stage === 'approved');
   return archiveDocs.filter(d => {
