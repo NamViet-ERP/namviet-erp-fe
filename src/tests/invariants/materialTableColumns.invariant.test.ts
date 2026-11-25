@@ -11,6 +11,10 @@ describe('Living Invariant: Material Table Columns & Code Parts Standards', () =
     currentDir,
     '../../pages/warehouse/MaterialsPage.tsx',
   );
+  const materialsRowPath = path.resolve(
+    currentDir,
+    '../../pages/warehouse/materials/MaterialsTableRow.tsx',
+  );
 
   it('MATERIAL_TABLE_COLUMNS separates materialCode, materialName, brand, and origin', () => {
     const keys = MATERIAL_TABLE_COLUMNS.map(col => col.key);
@@ -37,27 +41,31 @@ describe('Living Invariant: Material Table Columns & Code Parts Standards', () =
     expect(originCol?.label).toBe('Xuất xứ');
   });
 
-  it('MaterialsPage.tsx imports and uses materialCodeParts to render code chips, brand and origin tags', () => {
+  it('MaterialsPage delegates rows to MaterialsTableRow and renders code chips, brand and origin tags', () => {
     expect(fs.existsSync(materialsPagePath)).toBe(true);
-    const content = fs.readFileSync(materialsPagePath, 'utf-8');
+    expect(fs.existsSync(materialsRowPath)).toBe(true);
+    const pageContent = fs.readFileSync(materialsPagePath, 'utf-8');
+    const rowContent = fs.readFileSync(materialsRowPath, 'utf-8');
+
+    expect(pageContent).toContain('MaterialsTableRow');
 
     // Must import and use materialCodeParts
-    expect(content).toContain('materialCodeParts');
-    expect(content).toMatch(/const\s+codeParts\s*=\s*materialCodeParts\(/);
+    expect(rowContent).toContain('materialCodeParts');
+    expect(rowContent).toMatch(/const\s+codeParts\s*=\s*materialCodeParts\(/);
 
     // Must render badge and segmented chip parts
-    expect(content).toContain('mat-code-cell');
-    expect(content).toContain('mat-code-cell__badge');
-    expect(content).toContain('mat-code-cell__parts');
-    expect(content).toContain('mat-code-cell__part');
-    expect(content).toMatch(/mat-code-cell__part--\$\{\(i % 4\) \+ 1\}/);
+    expect(rowContent).toContain('mat-code-cell');
+    expect(rowContent).toContain('mat-code-cell__badge');
+    expect(rowContent).toContain('mat-code-cell__parts');
+    expect(rowContent).toContain('mat-code-cell__part');
+    expect(rowContent).toMatch(/mat-code-cell__part--\$\{\(i % 4\) \+ 1\}/);
 
     // Must have brand and origin chips in mat-code-cell
-    expect(content).toContain('parsedOrigin.brand');
-    expect(content).toContain('parsedOrigin.country');
+    expect(rowContent).toContain('parsedOrigin.brand');
+    expect(rowContent).toContain('parsedOrigin.country');
 
     // Must have mat-name-cell for materialName
-    expect(content).toContain('mat-name-cell');
-    expect(content).toContain('mat-name-cell__title');
+    expect(rowContent).toContain('mat-name-cell');
+    expect(rowContent).toContain('mat-name-cell__title');
   });
 });

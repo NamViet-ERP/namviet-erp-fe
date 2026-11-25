@@ -25,6 +25,12 @@ const GOLDEN_SURFACE_FILES = [
   'src/components/ui/DateRangeField.tsx',
   'src/components/shared/ExcelImportModalShell.tsx',
   'src/pages/warehouse/WarehouseReportsPage.tsx',
+  'src/pages/stocktake/StocktakeListPage.tsx',
+  'src/pages/stocktake/StocktakeCreateModal.tsx',
+  'src/pages/stocktake/StocktakeDetailModal.tsx',
+  'src/pages/warehouse/MaterialsPage.tsx',
+  'src/pages/warehouse/materials/MaterialsTableRow.tsx',
+  'src/pages/warehouse/materials/MaterialsFilterToolbar.tsx',
 ];
 
 const RAW_HEX_RE = /#[0-9a-fA-F]{3,8}\b/;

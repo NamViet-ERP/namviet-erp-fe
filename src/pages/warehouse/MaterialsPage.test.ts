@@ -458,3 +458,62 @@ describe('MaterialsPage Create Material Modal', () => {
     expect(materialsService.create).not.toHaveBeenCalled();
   });
 });
+
+describe('MaterialsPage Delete ConfirmDialog & 375px Header Wrap', () => {
+  it('wraps header action buttons with flex-wrap to prevent 375px button clipping', async () => {
+    mockSessionUser.mockReturnValue({
+      user: { id: 'usr-admin', username: 'admin', role: 'admin' },
+      permissions: ['wms.materials.view:all', 'wms.materials.create', 'wms.materials.delete'],
+      refresh: vi.fn(),
+    });
+    await renderPage();
+
+    const actionsWrap = container.querySelector('.page-header__actions > div');
+    expect(actionsWrap).not.toBeNull();
+    expect(actionsWrap?.className).toContain('flex-wrap');
+  });
+
+  it('opens ConfirmDialog [role="alertdialog"] on row delete without native browser confirm, and confirms removal', async () => {
+    mockSessionUser.mockReturnValue({
+      user: { id: 'usr-admin', username: 'admin', role: 'admin' },
+      permissions: ['wms.materials.view:all', 'wms.materials.delete'],
+      refresh: vi.fn(),
+    });
+    vi.mocked(materialsService.remove).mockResolvedValue(undefined);
+    const confirmSpy = vi.spyOn(window, 'confirm');
+
+    await renderPage();
+
+    const deleteBtn = container.querySelector(
+      'button[title="Xóa vật tư BH-BHN-HT20-120 tubex3000"]',
+    ) as HTMLButtonElement;
+    expect(deleteBtn).not.toBeNull();
+    expect(deleteBtn.getAttribute('aria-label')).toBe('Xóa vật tư BH-BHN-HT20-120 tubex3000');
+
+    await act(async () => {
+      deleteBtn.click();
+    });
+
+    expect(confirmSpy).not.toHaveBeenCalled();
+    const alertDialog = document.body.querySelector('[role="alertdialog"]') as HTMLElement;
+    expect(alertDialog).not.toBeNull();
+    expect(alertDialog.textContent).toContain('Bộ hâm');
+    expect(alertDialog.textContent).toContain('BH-BHN-HT20-120 tubex3000');
+    expect(materialsService.remove).not.toHaveBeenCalled();
+
+    const confirmBtn = [...alertDialog.querySelectorAll('button')].find(btn =>
+      btn.textContent?.trim() === 'Xóa vật tư',
+    ) as HTMLButtonElement;
+    expect(confirmBtn).toBeDefined();
+
+    await act(async () => {
+      confirmBtn.click();
+    });
+    await flushQueries();
+
+    expect(confirmSpy).not.toHaveBeenCalled();
+    expect(materialsService.remove).toHaveBeenCalledWith('BH-BHN-HT20-120 tubex3000');
+    expect(document.body.querySelector('[role="alertdialog"]')).toBeNull();
+    confirmSpy.mockRestore();
+  });
+});

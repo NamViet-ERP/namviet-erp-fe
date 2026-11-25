@@ -1,4 +1,5 @@
 import { RotateCcw } from 'lucide-react';
+import Button from '../../../components/ui/Button';
 import SearchBar from '../../../components/ui/SearchBar';
 import { MATERIAL_CATEGORY_LEVELS } from '../../../constants/materialCategoryLevels';
 import type { MaterialCategoryApiDto } from '../../../types/wms';
@@ -34,7 +35,8 @@ export default function MaterialsFilterToolbar({
             <label key={lvl.key} className="mat-catalog__filter-field">
               <span>{lvl.label}</span>
               <select
-                className="form-input form-input-md"
+                aria-label={lvl.label}
+                className="form-select"
                 disabled={categoriesLoading || (idx > 0 && filterSelection[idx - 1] === '')}
                 value={filterSelection[idx]}
                 onChange={e => {
@@ -66,15 +68,15 @@ export default function MaterialsFilterToolbar({
           >
             {showInactive ? 'Hiện cả ngừng SD' : 'Chỉ đang dùng'}
           </button>
-          <button
+          <Button
             type="button"
+            variant="text"
+            leftIcon={RotateCcw}
             onClick={onResetFilters}
-            className="btn btn-text"
             title="Đặt lại bộ lọc"
           >
-            <RotateCcw size={14} aria-hidden />
             Xóa lọc
-          </button>
+          </Button>
         </div>
       </div>
     </div>
