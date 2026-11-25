@@ -307,13 +307,13 @@ function TransferListPageApi({ initialProjectCode }: TransferListPageApiProps) {
   const handleExportExcel = async () => {
     setIsExporting(true);
     try {
-      await downloadVoucherExport('/api/transfers/export', `phieu-chuyen-${new Date().toISOString().slice(0, 10)}.xlsx`, {
+      const ok = await downloadVoucherExport('/api/transfers/export', `phieu-chuyen-${new Date().toISOString().slice(0, 10)}.xlsx`, {
         dateFrom: dateFrom || undefined,
         dateTo: dateTo || undefined,
         status: activeTab,
         search,
       });
-      showToast('success', 'Đã xuất danh sách phiếu chuyển');
+      if (ok) showToast('success', 'Đã xuất danh sách phiếu chuyển');
     } catch (err) {
       showToast('error', getApiErrorMessage(err, 'Không thể xuất Excel'));
     } finally {

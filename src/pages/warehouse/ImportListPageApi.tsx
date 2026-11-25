@@ -1,33 +1,17 @@
-import { useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Download } from 'lucide-react';
-
-import type { ImportBudgetExceededApiDto } from '../../types/api/importBudgetApi';
-import type { Import } from '../../types';
-
-import TabFilter from '../../components/ui/TabFilter';
-import SearchBar from '../../components/ui/SearchBar';
-import Pagination from '../../components/ui/Pagination';
-import PageHeader from '../../components/ui/PageHeader';
-import { usePermission } from '../../hooks/usePermission';
-import Panel from '../../components/ui/Panel';
-import { showToast } from '../../components/ui/Toast';
-import { getApiErrorMessage, saveBlob } from '../../lib/apiClient';
-import { parseImportBudgetExceeded } from '../../lib/wms/projectBudget';
-import { downloadVoucherExport } from '../../lib/wms/voucherExportDownload';
-import type { ImportApproveSettlementPayload } from './import/importReceiveSettlement';
-import { formatCurrencyFull } from '../../utils/formatCurrency';
+import Button from '../../components/ui/Button';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
-import { useCanViewWmsPrices } from '../../lib/wms/priceVisibility';
-import { getVoucherTabLabels } from '../../lib/wms/voucherStatusLabels';
-import { useImports, useApproveImport } from '../../hooks/useImports';
-import { useProjects } from '../../hooks/useProjects';
-import { DEFAULT_LIST_PAGE_SIZE } from '../../constants/pagination';
-import { importsService } from '../../services/importsService';
+import FilterToolbar from '../../components/ui/FilterToolbar';
+import PageHeader from '../../components/ui/PageHeader';
+import PageShell from '../../components/ui/PageShell';
+import SectionCard from '../../components/ui/SectionCard';
+import VoucherDateFilter from '../../components/warehouse/VoucherDateFilter';
+import { formatCurrencyFull } from '../../utils/formatCurrency';
 import { isIssueFromGeneralWarehouse } from './import/importUtils';
 import ImportTable from './import/ImportTable';
 import ImportDetailModal from './import/ImportDetailModal';
-import VoucherDateFilter from '../../components/warehouse/VoucherDateFilter';
+import { useImportListController } from './import/useImportListController';
 
 export default function ImportListPageRoute() {
   const location = useLocation();
@@ -40,319 +24,117 @@ interface ImportListPageApiProps {
 }
 
 function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
-  const [activeTab, setActiveTab] = useState('all');
-  const [search, setSearch] = useState('');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(DEFAULT_LIST_PAGE_SIZE);
-
-  const [showDetail, setShowDetail] = useState(false);
-  const [selected, setSelected] = useState<Import | null>(null);
-  const [isEvidencePending, setIsEvidencePending] = useState(false);
-
-  const [budgetConfirmImport, setBudgetConfirmImport] = useState<Import | null>(null);
-  const [budgetExceeded, setBudgetExceeded] = useState<ImportBudgetExceededApiDto | null>(null);
-  const [pendingSettlement, setPendingSettlement] = useState<ImportApproveSettlementPayload | null>(null);
-
-  const [isExporting, setIsExporting] = useState(false);
-
-  const { data: imports = [], isLoading, isError, error } = useImports({
-    dateFrom: dateFrom || undefined,
-    dateTo: dateTo || undefined,
-  });
-
-  const { data: projectsPage } = useProjects({ pageSize: 100, status: 'Active' });
-  const approveMutation = useApproveImport();
-
-  const { has } = usePermission();
-  const canApproveImport = has('wms.imports.approve');
-  const canViewPrices = useCanViewWmsPrices();
-
-  const projects = useMemo(() => projectsPage?.items ?? [], [projectsPage?.items]);
-  const voucherTabs = getVoucherTabLabels('import');
-
-  // Thủ kho: chỉ xem và duyệt dự kiến + thực tế (phiếu nháp/dự kiến được tạo bên Mua hàng PO).
-  const warehouseImports = useMemo(
-    () => imports.filter(i =>
-      (i.status === 'pending' || i.status === 'approved')
-      && !i.isDirectProcurement
-      && (!initialProjectCode || i.project === initialProjectCode)),
-    [imports, initialProjectCode],
-  );
-
-  const tabs = [
-    { id: 'all', label: 'Tất cả', count: warehouseImports.length },
-    { id: 'pending', label: voucherTabs.pending, count: warehouseImports.filter(i => i.status === 'pending').length },
-    { id: 'approved', label: voucherTabs.approved, count: warehouseImports.filter(i => i.status === 'approved').length },
-  ];
-
-  const filtered = useMemo(() => {
-    let list = warehouseImports;
-    if (activeTab !== 'all') list = list.filter(i => i.status === activeTab);
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      list = list.filter(
-        i =>
-          i.voucherCode.toLowerCase().includes(q) ||
-          i.supplier.toLowerCase().includes(q) ||
-          i.referenceCode.toLowerCase().includes(q) ||
-          (i.project ?? '').toLowerCase().includes(q),
-      );
-    }
-    return list;
-  }, [warehouseImports, activeTab, search]);
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
-
-  const projectName = (code?: string) =>
-    projects.find(p => p.projectCode === code)?.projectName ?? code ?? '—';
-
-  const runApprove = async (
-    imp: Import,
-    bypassBudget: boolean,
-    settlement?: ImportApproveSettlementPayload | null,
-  ) => {
-    try {
-      await approveMutation.mutateAsync({
-        id: imp.id,
-        confirmOverBudget: bypassBudget,
-        lines: settlement?.lines,
-        shortageReport: settlement?.shortageReport,
-        defectReason: settlement?.defectReason,
-      });
-      showToast('success', `Đã duyệt phiếu ${imp.voucherCode}.`);
-      setBudgetConfirmImport(null);
-      setBudgetExceeded(null);
-      setPendingSettlement(null);
-      setShowDetail(false);
-    } catch (err) {
-      const budget = parseImportBudgetExceeded(err);
-      if (budget) {
-        setBudgetConfirmImport(imp);
-        setBudgetExceeded(budget);
-        setPendingSettlement(settlement ?? null);
-        return;
-      }
-      showToast('error', getApiErrorMessage(err, 'Không thể duyệt phiếu'));
-    }
-  };
-
-  const handleApprove = async (imp: Import, settlement: ImportApproveSettlementPayload) => {
-    const text = (settlement.evaluation ?? imp.receiptEvaluation ?? '').trim();
-    const hasPhoto = (imp.attachments ?? []).some(a => a.kind === 'photo' || a.kind === 'defect_photo');
-    const hasDoc = (imp.attachments ?? []).some(a => a.kind === 'document');
-
-    if (!text || !hasPhoto || !hasDoc) {
-      showToast(
-        'error',
-        !text
-          ? 'Thiếu đánh giá nhận hàng. Nhập trên chi tiết phiếu trước khi duyệt.'
-          : !hasPhoto
-            ? 'Thiếu ảnh nhận hàng. Tải ảnh trên chi tiết phiếu trước khi duyệt.'
-            : 'Thiếu file chứng từ. Tải file trên chi tiết phiếu trước khi duyệt.',
-      );
-      return;
-    }
-
-    try {
-      if ((imp.receiptEvaluation ?? '').trim() !== text) {
-        setIsEvidencePending(true);
-        await importsService.updateReceiptEvaluation(imp.id, text);
-        await reloadImport(imp.id);
-      }
-      await runApprove(imp, false, settlement);
-    } catch (err) {
-      showToast('error', getApiErrorMessage(err, 'Không thể duyệt phiếu'));
-    } finally {
-      setIsEvidencePending(false);
-    }
-  };
-
-  const handleExportExcel = async () => {
-    setIsExporting(true);
-    try {
-      await downloadVoucherExport(
-        '/api/imports/export',
-        `PhieuNhapKho_${new Date().toISOString().slice(0, 10)}.xlsx`,
-        {
-          dateFrom: dateFrom || undefined,
-          dateTo: dateTo || undefined,
-        },
-      );
-      showToast('success', 'Đã xuất file Excel.');
-    } catch (err) {
-      showToast('error', getApiErrorMessage(err, 'Không thể xuất file Excel'));
-    } finally {
-      setIsExporting(false);
-    }
-  };
-
-  const openDetail = (imp: Import) => {
-    setSelected(imp);
-    setShowDetail(true);
-  };
-
-  const reloadImport = async (id: string) => {
-    const refreshed = await importsService.getById(id);
-    setSelected(prev => (prev?.id === id ? refreshed : prev));
-    return refreshed;
-  };
-
-  const handleUploadAttachment = async (
-    imp: Import,
-    file: File,
-    kind: 'document' | 'photo' | 'defect_photo',
-  ) => {
-    try {
-      setIsEvidencePending(true);
-      await importsService.uploadAttachment(imp.id, file, kind);
-      await reloadImport(imp.id);
-      showToast('success', 'Đã tải file lên phiếu nhập.');
-    } catch (err) {
-      showToast('error', getApiErrorMessage(err, 'Không tải được file.'));
-    } finally {
-      setIsEvidencePending(false);
-    }
-  };
-
-  const handleDeleteAttachment = async (imp: Import, attachmentId: string) => {
-    try {
-      setIsEvidencePending(true);
-      await importsService.deleteAttachment(imp.id, attachmentId);
-      await reloadImport(imp.id);
-      showToast('success', 'Đã xóa file đính kèm.');
-    } catch (err) {
-      showToast('error', getApiErrorMessage(err, 'Không thể xóa file.'));
-    } finally {
-      setIsEvidencePending(false);
-    }
-  };
-
-  const handleDownloadAttachment = async (imp: Import, attachmentId: string, fileName: string) => {
-    try {
-      const blob = await importsService.downloadAttachment(imp.id, attachmentId);
-      await saveBlob(blob, fileName);
-    } catch (err) {
-      showToast('error', getApiErrorMessage(err, 'Không thể tải file'));
-    }
-  };
-
-  const handleSaveEvaluation = async (imp: Import, evaluation: string) => {
-    try {
-      setIsEvidencePending(true);
-      await importsService.updateReceiptEvaluation(imp.id, evaluation.trim());
-      await reloadImport(imp.id);
-      showToast('success', 'Đã lưu đánh giá nhận hàng.');
-    } catch (err) {
-      showToast('error', getApiErrorMessage(err, 'Không thể lưu đánh giá'));
-    } finally {
-      setIsEvidencePending(false);
-    }
-  };
+  const vm = useImportListController(initialProjectCode);
 
   return (
-    <div className="hrm-page">
+    <PageShell>
       <PageHeader
         title="Nhập kho"
         subtitle="Phiếu nhập dự kiến chờ duyệt thực tế và phiếu đã nhập — tạo phiếu nháp/dự kiến trên đơn hàng PO."
         actions={
-          <button type="button" className="hrm-header-btn" onClick={() => void handleExportExcel()} disabled={isExporting}>
-            <Download size={14} /> {isExporting ? 'Đang xuất…' : 'Xuất Excel'}
-          </button>
+          <Button
+            type="button"
+            variant="outlined"
+            size="sm"
+            leftIcon={Download}
+            onClick={() => void vm.handleExportExcel()}
+            disabled={vm.isExporting}
+          >
+            {vm.isExporting ? 'Đang xuất…' : 'Xuất Excel'}
+          </Button>
         }
       />
 
-      <Panel noPadding>
-        <div className="px-4 pt-3 pb-1 border-b border-[var(--md-outline-variant02)]">
-          <TabFilter tabs={tabs} activeTab={activeTab} onChange={id => { setActiveTab(id); setPage(1); }} />
-        </div>
-
-        <div className="hrm-list-toolbar">
-          <div className="hrm-list-toolbar__filters">
-            <SearchBar value={search} onChange={v => { setSearch(v); setPage(1); }} placeholder="Tìm mã chứng từ, NCC, kho dự án..." />
+      <SectionCard noPadding>
+        <FilterToolbar
+          tabs={vm.tabs}
+          activeTab={vm.activeTab}
+          onTabChange={id => { vm.setActiveTab(id); vm.setPage(1); }}
+          search={vm.search}
+          onSearchChange={v => { vm.setSearch(v); vm.setPage(1); }}
+          searchPlaceholder="Tìm mã chứng từ, NCC, kho dự án..."
+          filters={
             <VoucherDateFilter
-              from={dateFrom}
-              to={dateTo}
-              onFromChange={v => { setDateFrom(v); setPage(1); }}
-              onToChange={v => { setDateTo(v); setPage(1); }}
-              onReset={() => { setDateFrom(''); setDateTo(''); setPage(1); }}
+              from={vm.dateFrom}
+              to={vm.dateTo}
+              onFromChange={v => { vm.setDateFrom(v); vm.setPage(1); }}
+              onToChange={v => { vm.setDateTo(v); vm.setPage(1); }}
+              onReset={() => { vm.setDateFrom(''); vm.setDateTo(''); vm.setPage(1); }}
             />
-          </div>
-        </div>
-
-        <ImportTable
-          rows={paginated}
-          isLoading={isLoading}
-          isError={isError}
-          error={error}
-          projectName={projectName}
-          onOpenDetail={openDetail}
-          showPrices={canViewPrices}
+          }
         />
 
-        {filtered.length > 0 && !isLoading && (
-          <Pagination
-            embedded
-            itemLabel="phiếu nhập"
-            currentPage={page}
-            totalPages={totalPages}
-            onPageChange={setPage}
-            pageSize={pageSize}
-            onPageSizeChange={s => { setPageSize(s); setPage(1); }}
-            totalItems={filtered.length}
-          />
-        )}
-      </Panel>
+        <ImportTable
+          rows={vm.paginated}
+          isLoading={vm.isLoading}
+          isError={vm.isError}
+          error={vm.error}
+          projectName={vm.projectName}
+          onOpenDetail={vm.openDetail}
+          showPrices={vm.canViewPrices}
+          pagination={
+            vm.filtered.length > 0 && !vm.isLoading
+              ? {
+                  itemLabel: 'phiếu nhập',
+                  currentPage: vm.page,
+                  totalPages: vm.totalPages,
+                  onPageChange: vm.setPage,
+                  pageSize: vm.pageSize,
+                  onPageSizeChange: s => { vm.setPageSize(s); vm.setPage(1); },
+                  totalItems: vm.filtered.length,
+                }
+              : undefined
+          }
+        />
+      </SectionCard>
 
       <ImportDetailModal
-        isOpen={showDetail}
-        onClose={() => setShowDetail(false)}
-        selected={selected}
-        projectName={projectName}
-        onApprove={canApproveImport ? (imp, settlement) => { void handleApprove(imp, settlement); } : undefined}
-        isApproving={approveMutation.isPending}
-        onDownloadAttachment={handleDownloadAttachment}
-        canUpdateEvidence={canApproveImport}
-        isEvidencePending={isEvidencePending}
-        onUploadAttachment={handleUploadAttachment}
-        onDeleteAttachment={handleDeleteAttachment}
-        onSaveEvaluation={handleSaveEvaluation}
-        showPrices={canViewPrices && !isIssueFromGeneralWarehouse(selected)}
+        isOpen={vm.showDetail}
+        onClose={() => vm.setShowDetail(false)}
+        selected={vm.selected}
+        projectName={vm.projectName}
+        onApprove={vm.canApproveImport ? (imp, settlement) => { void vm.handleApprove(imp, settlement); } : undefined}
+        isApproving={vm.approveMutation.isPending}
+        onDownloadAttachment={vm.handleDownloadAttachment}
+        canUpdateEvidence={vm.canApproveImport}
+        isEvidencePending={vm.isEvidencePending}
+        onUploadAttachment={vm.handleUploadAttachment}
+        onDeleteAttachment={vm.handleDeleteAttachment}
+        onSaveEvaluation={vm.handleSaveEvaluation}
+        showPrices={vm.canViewPrices && !isIssueFromGeneralWarehouse(vm.selected)}
       />
 
       <ConfirmDialog
-        isOpen={budgetConfirmImport != null && budgetExceeded != null}
+        isOpen={vm.budgetConfirmImport != null && vm.budgetExceeded != null}
         onClose={() => {
-          setBudgetConfirmImport(null);
-          setBudgetExceeded(null);
+          vm.setBudgetConfirmImport(null);
+          vm.setBudgetExceeded(null);
         }}
         onConfirm={() => {
-          if (budgetConfirmImport) void runApprove(budgetConfirmImport, true, pendingSettlement);
+          if (vm.budgetConfirmImport) void vm.runApprove(vm.budgetConfirmImport, true, vm.pendingSettlement);
         }}
         title="Vượt ngân sách vật tư"
         variant="default"
         confirmLabel="Vẫn duyệt"
-        isLoading={approveMutation.isPending}
-        message={budgetExceeded ? (
+        isLoading={vm.approveMutation.isPending}
+        message={vm.budgetExceeded ? (
           <div>
             <p className="mb-2">
-              Dự án <strong>{projectName(budgetExceeded.projectCode)}</strong> ({budgetExceeded.projectCode})
+              Dự án <strong>{vm.projectName(vm.budgetExceeded.projectCode)}</strong> ({vm.budgetExceeded.projectCode})
               đang vượt ngân sách kế hoạch:
             </p>
             <div className="bg-[var(--md-surface-variant)] p-3 rounded text-sm space-y-1 mb-2">
               <div className="flex justify-between">
                 <span>Ngân sách kế hoạch:</span>
-                <span className="font-semibold">{formatCurrencyFull(budgetExceeded.materialBudget)}</span>
+                <span className="font-semibold">{formatCurrencyFull(vm.budgetExceeded.materialBudget)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Đã thực hiện (gồm phiếu này):</span>
-                <span className="font-semibold text-amber-600">{formatCurrencyFull(budgetExceeded.approvedImportValue + budgetExceeded.importValue)}</span>
+                <span className="font-semibold text-[var(--md-warning)]">{formatCurrencyFull(vm.budgetExceeded.approvedImportValue + vm.budgetExceeded.importValue)}</span>
               </div>
-              <div className="flex justify-between border-t border-[var(--md-outline-variant)] pt-1 text-red-600 font-semibold">
+              <div className="flex justify-between border-t border-[var(--md-outline-variant)] pt-1 text-[var(--md-error)] font-semibold">
                 <span>Vượt ngân sách:</span>
-                <span>+{formatCurrencyFull(budgetExceeded.overflowAmount)}</span>
+                <span>+{formatCurrencyFull(vm.budgetExceeded.overflowAmount)}</span>
               </div>
             </div>
             <p className="text-xs text-[var(--md-on-surface-variant)]">
@@ -361,6 +143,6 @@ function ImportListPageApi({ initialProjectCode }: ImportListPageApiProps) {
           </div>
         ) : ''}
       />
-    </div>
+    </PageShell>
   );
 }

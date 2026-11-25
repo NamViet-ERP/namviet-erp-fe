@@ -11,12 +11,12 @@ export async function downloadVoucherExport(
   endpoint: string,
   fileName: string,
   params?: VoucherExportQuery,
-): Promise<void> {
+): Promise<boolean> {
   const blob = await apiClient.getBlob(endpoint, {
     dateFrom: params?.dateFrom,
     dateTo: params?.dateTo,
     status: params?.status && params.status !== 'all' ? params.status : undefined,
     search: params?.search?.trim() || undefined,
   });
-  saveBlob(blob, fileName);
+  return saveBlob(blob, fileName);
 }
