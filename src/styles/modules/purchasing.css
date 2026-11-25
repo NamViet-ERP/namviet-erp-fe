@@ -2061,7 +2061,8 @@
     --plan-accent-border: color-mix(in srgb, var(--plan-accent) 35%, var(--md-outline-variant02));
     --pur-field-bg: var(--md-surface-container);
   }
-  .pur-erp--po .pur-erp__workspace > .pur-erp__filter-card {
+  .pur-erp--po .pur-erp__workspace > .pur-erp__filter-card,
+  .pur-erp--po .erp-section-card > .pur-erp__filter-card {
     padding: 0.9rem 1rem;
     border-bottom: 1px solid var(--nv-epc-border);
     background: var(--md-surface-container-low);

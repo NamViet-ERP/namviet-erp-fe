@@ -65,6 +65,17 @@ const GOLDEN_SURFACE_FILES = [
   'src/pages/warehouse/defects/DefectsTable.tsx',
   'src/pages/warehouse/arrivalPlans/ArrivalProjectCard.tsx',
   'src/pages/warehouse/projects/ProjectsTable.tsx',
+  'src/pages/purchasing/PurchasePlansPage.tsx',
+  'src/pages/purchasing/plans/PurchasePlansTable.tsx',
+  'src/components/purchasing/CreatePurchasePlanModal.tsx',
+  'src/components/purchasing/PurchasePlanCreateLinesTable.tsx',
+  'src/components/purchasing/PurchasePlanLineDetailRow.tsx',
+  'src/pages/purchasing/PurchaseOrdersPage.tsx',
+  'src/pages/purchasing/orders/PurchaseOrdersFilterBar.tsx',
+  'src/pages/purchasing/orders/PurchaseOrdersTable.tsx',
+  'src/pages/purchasing/PurchaseContractsPage.tsx',
+  'src/pages/purchasing/contracts/PurchaseContractsTable.tsx',
+  'src/pages/purchasing/contracts/PurchaseContractModal.tsx',
 ];
 
 const RAW_HEX_RE = /#[0-9a-fA-F]{3,8}\b/;
