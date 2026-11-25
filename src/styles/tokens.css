@@ -138,7 +138,7 @@
   --md-success:              #1F7A4D;
   --md-success-container:    #C8EBD8;
   --md-on-success-container: #0F4A2E;
-  --md-warning:              #A16207;
+  --md-warning:              #92510A;
   --md-warning-container:    #FEF3C7;
   --md-on-warning-container: #78350F;
   --md-info:                 var(--nv-steel);
@@ -147,7 +147,7 @@
 
   /* ── Status accents ── */
   --status-success: #1F7A4D;
-  --status-warning: #A16207;
+  --status-warning: #92510A;
   --status-info:    var(--nv-steel);
   --status-error:   #C42B22;
 

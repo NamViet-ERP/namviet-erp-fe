@@ -30,6 +30,130 @@ const DARK_PREFIX_RE = /\bdark:/;
 const ARBITRARY_FONT_PX_RE = /\btext-\[\d+px\]/;
 const RGBA_RE = /\brgba\(/i;
 const INLINE_FONT_SIZE_RE = /\bfontSize\s*:/;
+const PRIMARY_OPACITY_MODIFIER_RE =
+  /\b(?:bg|text|border|ring|divide|from|to|via)-primary(?:-[0-9]+)?\/[0-9]+/;
+
+type RgbTuple = [number, number, number];
+
+function parseHexColor(value: string): RgbTuple | null {
+  const trimmed = value.trim();
+  const full = /^#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/.exec(trimmed);
+  if (full) {
+    return [parseInt(full[1], 16), parseInt(full[2], 16), parseInt(full[3], 16)];
+  }
+  const short = /^#([0-9a-fA-F])([0-9a-fA-F])([0-9a-fA-F])$/.exec(trimmed);
+  if (short) {
+    return [
+      parseInt(short[1] + short[1], 16),
+      parseInt(short[2] + short[2], 16),
+      parseInt(short[3] + short[3], 16),
+    ];
+  }
+  return null;
+}
+
+function splitTopLevelCommas(input: string): string[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < input.length; i++) {
+    const ch = input[i];
+    if (ch === '(') depth++;
+    else if (ch === ')') depth = Math.max(0, depth - 1);
+    else if (ch === ',' && depth === 0) {
+      parts.push(input.slice(start, i).trim());
+      start = i + 1;
+    }
+  }
+  parts.push(input.slice(start).trim());
+  return parts;
+}
+
+function parseRootTokens(css: string): Map<string, string> {
+  const stripped = css.replace(/\/\*[\s\S]*?\*\//g, '');
+  const rootMatch = /:root\s*\{([\s\S]*?)\}/.exec(stripped);
+  const block = rootMatch ? rootMatch[1] : stripped;
+  const map = new Map<string, string>();
+  const declRe = /(--[a-zA-Z0-9_-]+)\s*:\s*([^;]+);/g;
+  let match: RegExpExecArray | null;
+  while ((match = declRe.exec(block)) !== null) {
+    map.set(match[1], match[2].trim());
+  }
+  return map;
+}
+
+function resolveColorToken(expr: string, tokens: Map<string, string>, depth = 0): RgbTuple {
+  if (depth > 16) {
+    throw new Error(`Exceeded CSS variable recursion depth resolving "${expr}"`);
+  }
+  const trimmed = expr.trim();
+  const hex = parseHexColor(trimmed);
+  if (hex) return hex;
+
+  const varMatch = /^var\(\s*(--[a-zA-Z0-9_-]+)\s*(?:,\s*([^)]+))?\)$/.exec(trimmed);
+  if (varMatch) {
+    const target = tokens.get(varMatch[1]) ?? varMatch[2];
+    if (!target) {
+      throw new Error(`Missing CSS token "${varMatch[1]}"`);
+    }
+    return resolveColorToken(target, tokens, depth + 1);
+  }
+
+  const mixMatch = /^color-mix\(([\s\S]+)\)$/.exec(trimmed);
+  if (mixMatch) {
+    const args = splitTopLevelCommas(mixMatch[1]);
+    if (args.length !== 3 || !args[0].toLowerCase().startsWith('in srgb')) {
+      throw new Error(`Unsupported color-mix syntax: "${trimmed}"`);
+    }
+    const pctMatch = /^([\s\S]+?)\s+(\d+(?:\.\d+)?)%$/.exec(args[1]);
+    if (!pctMatch) {
+      throw new Error(`Expected percentage in color-mix first color: "${args[1]}"`);
+    }
+    const p1 = Number(pctMatch[2]) / 100;
+    const p2 = 1 - p1;
+    const c1 = resolveColorToken(pctMatch[1], tokens, depth + 1);
+    const c2 = resolveColorToken(args[2], tokens, depth + 1);
+    return [
+      c1[0] * p1 + c2[0] * p2,
+      c1[1] * p1 + c2[1] * p2,
+      c1[2] * p1 + c2[2] * p2,
+    ];
+  }
+
+  throw new Error(`Cannot resolve color expression "${trimmed}"`);
+}
+
+function linearizeChannel(channel8Bit: number): number {
+  const c = channel8Bit / 255;
+  return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+}
+
+function relativeLuminance([r, g, b]: RgbTuple): number {
+  return (
+    0.2126 * linearizeChannel(r) +
+    0.7152 * linearizeChannel(g) +
+    0.0722 * linearizeChannel(b)
+  );
+}
+
+function contrastRatio(fg: RgbTuple, bg: RgbTuple): number {
+  const l1 = relativeLuminance(fg);
+  const l2 = relativeLuminance(bg);
+  return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+}
+
+function collectSourceFiles(dir: string): string[] {
+  const out: string[] = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      out.push(...collectSourceFiles(full));
+    } else if (/\.(ts|tsx)$/.test(entry.name)) {
+      out.push(full);
+    }
+  }
+  return out;
+}
 
 describe('Living Invariant: Design System Tokens, CSS Order & Token-Only Primitives', () => {
   it('tailwind.config.js aligns colors, fontFamily, borderRadius, and boxShadow to CSS tokens with zero hex', async () => {
@@ -59,6 +183,9 @@ describe('Living Invariant: Design System Tokens, CSS Order & Token-Only Primiti
     expect(fontFamily.roboto).toEqual(['var(--font-sans)']);
     expect(fontFamily.mono).toEqual(['var(--font-mono)']);
     expect(colors.primary.DEFAULT).toBe('var(--nv-action)');
+    for (const shade of ['50', '100', '300', '400', '500', '600', '700', '950']) {
+      expect(colors.primary[shade]).toContain('<alpha-value>');
+    }
 
     expect(borderRadius.md).toBe('var(--radius-xs)');
     expect(borderRadius.lg).toBe('var(--radius-sm)');
@@ -105,10 +232,40 @@ describe('Living Invariant: Design System Tokens, CSS Order & Token-Only Primiti
 
     expect(tokensCss).not.toMatch(/#C47A00/i);
     expect(tokensCss).not.toMatch(/#B56F08/i);
-    expect(tokensCss).toMatch(/--md-warning:\s*#A16207;/i);
-    expect(tokensCss).toMatch(/--status-warning:\s*#A16207;/i);
-    expect(tokensCss).toMatch(/--nv-amber-dark:\s*#92510A;/i);
-    expect(tokensCss).toMatch(/--md-on-warning-container:\s*#78350F;/i);
+
+    const tokenMap = parseRootTokens(tokensCss);
+    const whiteBg = resolveColorToken('#FFFFFF', tokenMap);
+    const pageBg = resolveColorToken('var(--nv-epc-bg)', tokenMap);
+    const warningContainerBg = resolveColorToken('var(--md-warning-container)', tokenMap);
+
+    for (const token of [
+      '--md-warning',
+      '--status-warning',
+      '--nv-amber-dark',
+      '--md-on-warning-container',
+    ]) {
+      const fg = resolveColorToken(`var(${token})`, tokenMap);
+      expect(contrastRatio(fg, whiteBg), `${token} vs #FFFFFF must pass WCAG AA`).toBeGreaterThanOrEqual(4.5);
+      expect(contrastRatio(fg, pageBg), `${token} vs --nv-epc-bg must pass WCAG AA`).toBeGreaterThanOrEqual(4.5);
+      expect(
+        contrastRatio(fg, warningContainerBg),
+        `${token} vs --md-warning-container (#FEF3C7) must pass WCAG AA`,
+      ).toBeGreaterThanOrEqual(4.5);
+    }
+
+    const primaryContainerBg = resolveColorToken('var(--md-primary-container)', tokenMap);
+    const onPrimaryContainerFg = resolveColorToken('var(--md-on-primary-container)', tokenMap);
+    expect(
+      contrastRatio(onPrimaryContainerFg, primaryContainerBg),
+      '--md-on-primary-container vs --md-primary-container must pass WCAG AA',
+    ).toBeGreaterThanOrEqual(4.5);
+
+    const secondaryContainerBg = resolveColorToken('var(--md-secondary-container)', tokenMap);
+    const onSecondaryContainerFg = resolveColorToken('var(--md-on-secondary-container)', tokenMap);
+    expect(
+      contrastRatio(onSecondaryContainerFg, secondaryContainerBg),
+      '--md-on-secondary-container vs --md-secondary-container must pass WCAG AA',
+    ).toBeGreaterThanOrEqual(4.5);
   });
 
   it('src/index.css imports shared-kit.css after components.css and before modules/index.css', () => {
@@ -124,7 +281,7 @@ describe('Living Invariant: Design System Tokens, CSS Order & Token-Only Primiti
     expect(modulesIdx).toBeGreaterThan(sharedKitIdx);
   });
 
-  it('src/styles/shared-kit.css maintains scroll safety, accessible .hrm-empty-cell contrast, and 0 raw hex colors', () => {
+  it('src/styles/shared-kit.css maintains scroll safety, accessible contrasts, and 0 raw hex colors', () => {
     const sharedKitPath = path.join(repoRoot, 'src/styles/shared-kit.css');
     expect(fs.existsSync(sharedKitPath)).toBe(true);
     const sharedCss = fs.readFileSync(sharedKitPath, 'utf-8');
@@ -132,7 +289,26 @@ describe('Living Invariant: Design System Tokens, CSS Order & Token-Only Primiti
     expect(sharedCss).toMatch(/\.erp-table-shell__scroll\s*\{[^}]*overflow-x:\s*auto;/s);
     expect(sharedCss).not.toMatch(/\.hrm-empty-cell\s*\{[^}]*var\(--md-outline\)/s);
     expect(sharedCss).toMatch(/\.hrm-empty-cell\s*\{[^}]*var\(--md-on-surface-variant\)/s);
+    expect(sharedCss).toMatch(
+      /\.hrm-back-btn:hover,\s*\.hrm-header-btn:hover\s*\{[^}]*color:\s*var\(--md-on-primary-container\);/s,
+    );
+    expect(sharedCss).toMatch(
+      /\.page-header__back:hover\s*\{[^}]*color:\s*var\(--md-on-primary-container\);/s,
+    );
     expect(sharedCss).not.toMatch(RAW_HEX_RE);
+  });
+
+  it('no source file uses unsupported /opacity modifiers on CSS-var primary classes', () => {
+    const files = collectSourceFiles(path.join(repoRoot, 'src'));
+    for (const fullPath of files) {
+      const relPath = path.relative(repoRoot, fullPath).replace(/\\/g, '/');
+      if (relPath === 'src/tests/invariants/designSystem.invariant.test.ts') continue;
+      const source = fs.readFileSync(fullPath, 'utf-8');
+      expect(
+        source,
+        `${relPath} must not use /opacity modifiers on CSS-var primary classes`,
+      ).not.toMatch(PRIMARY_OPACITY_MODIFIER_RE);
+    }
   });
 
   it('canonical UI primitives and Golden Reference page contain zero raw hex, palette classes, dark:, text-[Npx], rgba(, or inline fontSize', () => {

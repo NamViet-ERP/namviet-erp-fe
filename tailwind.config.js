@@ -1,3 +1,6 @@
+const withAlphaMix = colorExpr =>
+  `color-mix(in srgb, ${colorExpr} calc(<alpha-value> * 100%), transparent)`;
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -10,14 +13,14 @@ export default {
       colors: {
         primary: {
           DEFAULT: 'var(--nv-action)',
-          50:  'color-mix(in srgb, var(--nv-action) 8%, var(--md-surface-container))',
-          100: 'var(--md-primary-container)',
-          300: 'color-mix(in srgb, var(--nv-action) 55%, var(--md-surface-container))',
-          400: 'color-mix(in srgb, var(--nv-action) 80%, var(--md-surface-container))',
-          500: 'var(--nv-action)',
-          600: 'var(--nv-action)',
-          700: 'var(--nv-action-hover)',
-          950: 'var(--md-on-primary-container)',
+          50:  withAlphaMix('color-mix(in srgb, var(--nv-action) 8%, var(--md-surface-container))'),
+          100: withAlphaMix('var(--md-primary-container)'),
+          300: withAlphaMix('color-mix(in srgb, var(--nv-action) 55%, var(--md-surface-container))'),
+          400: withAlphaMix('color-mix(in srgb, var(--nv-action) 80%, var(--md-surface-container))'),
+          500: withAlphaMix('var(--nv-action)'),
+          600: withAlphaMix('var(--nv-action)'),
+          700: withAlphaMix('var(--nv-action-hover)'),
+          950: withAlphaMix('var(--md-on-primary-container)'),
         },
         /* Status accent tokens defined in src/styles/tokens.css */
         status: {

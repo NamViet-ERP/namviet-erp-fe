@@ -138,7 +138,7 @@ export default function SupplierAttachmentUploader({
       <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-lg border border-[var(--md-outline-variant)] bg-[var(--md-surface-variant)]/30">
         <div>
           <div className="text-xs font-bold uppercase tracking-wider text-[var(--md-on-surface)] flex items-center gap-1.5">
-            <FileCheck2 size={16} className="text-primary-600 dark:text-primary-400" />
+            <FileCheck2 size={16} className="text-primary-600" />
             Hồ sơ Onboarding đầu vào (Quy chuẩn Hạng D)
           </div>
           <div className="text-[11px] text-[var(--md-on-surface-variant)] mt-0.5">
@@ -183,7 +183,7 @@ export default function SupplierAttachmentUploader({
               onDrop={e => handleDrop(e, slot.key)}
               className={`flex flex-col justify-between rounded-xl border p-3.5 transition-all duration-150 ${
                 isDragOver
-                  ? 'border-primary-500 bg-primary-50/50 dark:bg-primary-950/30 scale-[1.01]'
+                  ? 'border-primary-500 bg-primary-100 scale-[1.01]'
                   : isSlotFulfilled
                   ? 'border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/15 dark:bg-emerald-950/10'
                   : slot.required
@@ -228,7 +228,7 @@ export default function SupplierAttachmentUploader({
                   {slotStaged.map(staged => (
                     <div
                       key={staged.localId}
-                      className="flex items-center justify-between gap-2 p-2 rounded-lg border border-dashed border-primary-300 dark:border-primary-700 bg-primary-50/40 dark:bg-primary-950/30 text-xs"
+                      className="flex items-center justify-between gap-2 p-2 rounded-lg border border-dashed border-primary-300 bg-primary-50 text-xs"
                     >
                       <div className="flex items-center gap-1.5 min-w-0">
                         <FileText size={14} className="text-primary-600 shrink-0" />

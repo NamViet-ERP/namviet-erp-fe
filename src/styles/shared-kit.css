@@ -543,7 +543,7 @@
   .hrm-header-btn:hover {
     background: var(--md-primary-container);
     border-color: var(--md-secondary);
-    color: var(--md-primary);
+    color: var(--md-on-primary-container);
     box-shadow: var(--md-shadow-2);
   }
   .hrm-back-btn:active,
@@ -704,7 +704,7 @@
   .page-header__back:hover {
     background: var(--md-primary-container);
     border-color: var(--md-secondary);
-    color: var(--md-primary);
+    color: var(--md-on-primary-container);
     box-shadow: var(--md-shadow-2);
   }
   .page-header__back:active {
