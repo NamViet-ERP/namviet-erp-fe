@@ -7,7 +7,7 @@ export type KpiCardTone = 'primary' | 'success' | 'warning' | 'danger' | 'info' 
 const TONE_TO_ACCENT: Record<KpiCardTone, CardAccent> = {
   primary: 'blue',
   success: 'success',
-  warning: 'amber',
+  warning: 'warning',
   danger: 'danger',
   info: 'info',
   neutral: 'neutral',

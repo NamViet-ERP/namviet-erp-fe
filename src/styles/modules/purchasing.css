@@ -1426,12 +1426,6 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
-  @media (max-width: 639px) {
-    .pur-erp--plan .hrm-stat-grid,
-    .pur-erp--plan .erp-metrics-strip {
-      grid-template-columns: 1fr;
-    }
-  }
   .pur-erp--plan .pur-erp__workspace {
     border: 1px solid var(--nv-epc-border);
     border-radius: var(--radius-md);

@@ -414,7 +414,7 @@ describe('Design System UI primitives', () => {
       const buttonCard = container.querySelector<HTMLButtonElement>('button[role="listitem"]')!;
       expect(buttonCard).not.toBeNull();
       expect(buttonCard.getAttribute('aria-pressed')).toBe('true');
-      expect(buttonCard.className).toContain('kpi-card--accent-amber');
+      expect(buttonCard.className).toContain('kpi-card--accent-warning');
       expect(buttonCard.textContent).toContain('1.250 cây');
       await act(() => buttonCard.click());
       expect(onClick).toHaveBeenCalledTimes(1);

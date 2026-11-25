@@ -198,18 +198,6 @@
     gap: 6px;
     min-width: 10.5rem;
   }
-  @media (max-width: 639px) {
-    .voucher-date-filter {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
-      width: 100%;
-    }
-    .voucher-date-filter__field {
-      min-width: 0;
-      width: 100%;
-    }
-  }
   .voucher-date-filter__label {
     font-size: var(--fs-xs);
     font-weight: var(--fw-medium);
@@ -369,6 +357,29 @@
   }
   .hrm-list-toolbar .hrm-filter-date-picker .hrm-date-picker__placeholder {
     opacity: 0.72;
+  }
+  @media (max-width: 639px) {
+    .voucher-date-filter {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      width: 100%;
+    }
+    .voucher-date-filter__field {
+      min-width: 0;
+      width: 100%;
+    }
+    .hrm-list-toolbar .hrm-filter-date-picker,
+    .voucher-date-filter .hrm-filter-date-picker {
+      min-width: 0;
+      width: 100%;
+    }
+    .hrm-list-toolbar .hrm-filter-date-picker .hrm-date-picker__trigger,
+    .voucher-date-filter .hrm-date-picker__trigger {
+      min-width: 0;
+      width: 100%;
+      padding-inline: 10px;
+    }
   }
   .hrm-filter-input-inline {
     height: 40px;

@@ -159,6 +159,23 @@ function collectSourceFiles(dir: string): string[] {
   return out;
 }
 
+function extractMobileMediaBlocks(css: string): string[] {
+  const mediaBlocks: string[] = [];
+  const mediaRe = /@media\s*\(max-width:\s*639px\)\s*\{/g;
+  let match: RegExpExecArray | null;
+  while ((match = mediaRe.exec(css)) !== null) {
+    let depth = 1;
+    let cursor = match.index + match[0].length;
+    while (cursor < css.length && depth > 0) {
+      if (css[cursor] === '{') depth += 1;
+      else if (css[cursor] === '}') depth -= 1;
+      cursor += 1;
+    }
+    mediaBlocks.push(css.slice(match.index, cursor));
+  }
+  return mediaBlocks;
+}
+
 describe('Living Invariant: Design System Tokens, CSS Order & Token-Only Primitives', () => {
   it('tailwind.config.js aligns colors, fontFamily, borderRadius, and boxShadow to CSS tokens with zero hex', async () => {
     const configPath = path.join(repoRoot, 'tailwind.config.js');
@@ -334,29 +351,51 @@ describe('Living Invariant: Design System Tokens, CSS Order & Token-Only Primiti
     );
   });
 
-  it('shared-kit.css: 375px mobile viewport does not overflow voucher-date-filter (max-width 639px grid fix)', () => {
+  it('shared-kit.css & recruitment-hr.css: 375px mobile viewport clears date-picker trigger min-width without overflow', () => {
     const sharedKitPath = path.join(repoRoot, 'src/styles/shared-kit.css');
     const sharedCss = fs.readFileSync(sharedKitPath, 'utf-8');
-    // Extract balanced @media (max-width: 639px) blocks so nested } inside .voucher-date-filter doesn't truncate
-    const mediaBlocks: string[] = [];
-    const mediaRe = /@media\s*\(max-width:\s*639px\)\s*\{/g;
-    let match: RegExpExecArray | null;
-    while ((match = mediaRe.exec(sharedCss)) !== null) {
-      let depth = 1;
-      let cursor = match.index + match[0].length;
-      while (cursor < sharedCss.length && depth > 0) {
-        if (sharedCss[cursor] === '{') depth += 1;
-        else if (sharedCss[cursor] === '}') depth -= 1;
-        cursor += 1;
-      }
-      mediaBlocks.push(sharedCss.slice(match.index, cursor));
-    }
+    const mediaBlocks = extractMobileMediaBlocks(sharedCss);
     expect(mediaBlocks.length).toBeGreaterThan(0);
 
     const voucherMediaBlock = mediaBlocks.find(block => block.includes('.voucher-date-filter'));
     expect(voucherMediaBlock).toBeDefined();
     expect(voucherMediaBlock).toMatch(/\.voucher-date-filter\s*\{[^}]*display:\s*grid;/s);
     expect(voucherMediaBlock).toMatch(/\.voucher-date-filter__field\s*\{[^}]*min-width:\s*0;/s);
+    expect(voucherMediaBlock).toContain('.hrm-list-toolbar .hrm-filter-date-picker');
+    expect(voucherMediaBlock).toMatch(
+      /\.hrm-list-toolbar\s+\.hrm-filter-date-picker\s+\.hrm-date-picker__trigger[^{]*\{[^}]*min-width:\s*0;/s,
+    );
+    expect(voucherMediaBlock).toMatch(
+      /\.voucher-date-filter\s+\.hrm-date-picker__trigger[^{]*\{[^}]*min-width:\s*0;/s,
+    );
+
+    const desktopTriggerIdx = sharedCss.indexOf('.hrm-list-toolbar .hrm-filter-date-picker .hrm-date-picker__trigger {');
+    const mobileBlockIdx = sharedCss.indexOf(voucherMediaBlock!);
+    expect(desktopTriggerIdx).toBeGreaterThan(-1);
+    expect(mobileBlockIdx).toBeGreaterThan(desktopTriggerIdx);
+
+    const hrmCssPath = path.join(repoRoot, 'src/styles/modules/recruitment-hr.css');
+    const hrmCss = fs.readFileSync(hrmCssPath, 'utf-8');
+    const hrmMediaBlocks = extractMobileMediaBlocks(hrmCss);
+    const hrmPickerBlock = hrmMediaBlocks.find(block => block.includes('.hrm-date-picker__trigger'));
+    expect(hrmPickerBlock).toBeDefined();
+    expect(hrmPickerBlock).toMatch(/\.hrm-date-picker__trigger\s*\{[^}]*min-width:\s*0;/s);
+  });
+
+  it('KpiCard warning tone maps to warning accent and uses --md-warning instead of --nv-action', () => {
+    const componentsCssPath = path.join(repoRoot, 'src/styles/components.css');
+    const componentsCss = fs.readFileSync(componentsCssPath, 'utf-8');
+    expect(componentsCss).toMatch(
+      /\.kpi-card\.card-md\.kpi-card--accent-warning\s*\{[^}]*--kpi-accent:\s*var\(--md-warning\);/s,
+    );
+    const warningIdx = componentsCss.indexOf('.kpi-card.card-md.kpi-card--accent-warning');
+    const warningRule = componentsCss.slice(warningIdx, componentsCss.indexOf('}', warningIdx) + 1);
+    expect(warningRule).not.toContain('var(--nv-action)');
+
+    const kpiCardPath = path.join(repoRoot, 'src/components/ui/KpiCard.tsx');
+    const kpiCardSrc = fs.readFileSync(kpiCardPath, 'utf-8');
+    expect(kpiCardSrc).toMatch(/warning:\s*'warning'/);
+    expect(kpiCardSrc).not.toMatch(/warning:\s*'amber'/);
   });
 
   it('components.css: .kpi-card__value allows wrapping and tight line-height for long values on 375px grid', () => {

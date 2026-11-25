@@ -2417,6 +2417,11 @@
     text-align: left;
     min-width: 10.5rem;
   }
+  @media (max-width: 639px) {
+    .hrm-date-picker__trigger {
+      min-width: 0;
+    }
+  }
   .hrm-date-picker__trigger:disabled {
     opacity: 0.55;
     cursor: not-allowed;
@@ -2428,12 +2433,19 @@
   .hrm-date-picker__value {
     color: var(--md-on-surface);
     font-weight: var(--fw-medium);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
   }
   .hrm-date-picker__placeholder {
     color: var(--md-on-surface-variant);
     opacity: 0.75;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .hrm-date-picker__icon {
     flex-shrink: 0;
