@@ -84,31 +84,31 @@ export interface ExcelImportModalShellProps {
 }
 
 const STAT_BOX_CLASS: Record<NonNullable<ExcelImportStatCard['tone']>, string> = {
-  neutral: 'border-[var(--md-outline-variant)] bg-[var(--md-surface-container-lowest)]',
-  success: 'border-emerald-500/30 bg-emerald-500/10',
-  warning: 'border-amber-500/30 bg-amber-500/10',
-  danger: 'border-rose-500/30 bg-rose-500/10',
+  neutral: 'excel-import-stat--neutral',
+  success: 'excel-import-stat--success',
+  warning: 'excel-import-stat--warning',
+  danger: 'excel-import-stat--danger',
 };
 
 const STAT_LABEL_CLASS: Record<NonNullable<ExcelImportStatCard['tone']>, string> = {
-  neutral: 'text-[var(--md-on-surface-variant)]',
-  success: 'text-emerald-800 dark:text-emerald-300 font-medium',
-  warning: 'text-amber-800 dark:text-amber-300 font-medium',
-  danger: 'text-rose-800 dark:text-rose-300 font-medium',
+  neutral: 'excel-import-stat__label--neutral',
+  success: 'excel-import-stat__label--success',
+  warning: 'excel-import-stat__label--warning',
+  danger: 'excel-import-stat__label--danger',
 };
 
 const STAT_VALUE_CLASS: Record<NonNullable<ExcelImportStatCard['tone']>, string> = {
-  neutral: 'text-[var(--md-on-surface)]',
-  success: 'text-emerald-700 dark:text-emerald-400',
-  warning: 'text-amber-700 dark:text-amber-400',
-  danger: 'text-rose-700 dark:text-rose-400',
+  neutral: 'excel-import-stat__value--neutral',
+  success: 'excel-import-stat__value--success',
+  warning: 'excel-import-stat__value--warning',
+  danger: 'excel-import-stat__value--danger',
 };
 
 const ACTIVE_TAB_CLASS: Record<NonNullable<ExcelImportFilterTab['tone']>, string> = {
-  neutral: 'bg-[var(--md-surface)] text-[var(--md-on-surface)] font-semibold shadow-sm',
-  success: 'bg-[var(--md-surface)] text-emerald-700 dark:text-emerald-300 font-semibold shadow-sm',
-  warning: 'bg-[var(--md-surface)] text-amber-700 dark:text-amber-300 font-semibold shadow-sm',
-  danger: 'bg-[var(--md-surface)] text-rose-700 dark:text-rose-300 font-semibold shadow-sm',
+  neutral: 'excel-import-tab--active-neutral',
+  success: 'excel-import-tab--active-success',
+  warning: 'excel-import-tab--active-warning',
+  danger: 'excel-import-tab--active-danger',
 };
 
 export default function ExcelImportModalShell({
@@ -256,7 +256,7 @@ export default function ExcelImportModalShell({
                   <div>
                     <div className="text-xs font-semibold text-[var(--md-on-surface)]">{templateTitle}</div>
                     {templateHint ? (
-                      <div className="text-[11px] text-[var(--md-on-surface-variant)]">{templateHint}</div>
+                      <div className="excel-import-micro-note">{templateHint}</div>
                     ) : null}
                   </div>
                 </>
@@ -281,7 +281,7 @@ export default function ExcelImportModalShell({
                     )}
                   </button>
                   {templateHint ? (
-                    <span className="text-[11px] text-[var(--md-on-surface-variant)]">{templateHint}</span>
+                    <span className="excel-import-micro-note">{templateHint}</span>
                   ) : null}
                 </>
               )}
@@ -351,7 +351,7 @@ export default function ExcelImportModalShell({
                 <>
                   <p className="text-sm font-semibold text-[var(--md-on-surface)]">{dropzoneTitle}</p>
                   <p className="text-xs text-[var(--md-on-surface-variant)] mt-1">{dropzoneSubtitle}</p>
-                  <p className="text-[11px] text-[var(--md-primary)] font-medium mt-3">{dropzoneHint}</p>
+                  <p className="excel-import-dropzone__hint mt-3">{dropzoneHint}</p>
                 </>
               )}
             </div>
@@ -386,7 +386,7 @@ export default function ExcelImportModalShell({
                     <span className="text-xs font-semibold text-[var(--md-on-surface)]">
                       Chọn Sheet cần xem / nhập:
                     </span>
-                    <span className="text-[11px] text-[var(--md-on-surface-variant)]">
+                    <span className="excel-import-micro-note">
                       (File có {availableSheets.length} sheet)
                     </span>
                   </div>
@@ -411,7 +411,7 @@ export default function ExcelImportModalShell({
                     const tone = stat.tone ?? 'neutral';
                     return (
                       <div key={stat.key} className={`p-2.5 rounded-lg border ${STAT_BOX_CLASS[tone]}`}>
-                        <span className={`text-[11px] ${STAT_LABEL_CLASS[tone]}`}>{stat.label}</span>
+                        <span className={`excel-import-stat__label ${STAT_LABEL_CLASS[tone]}`}>{stat.label}</span>
                         <p className={`text-lg font-bold mt-0.5 ${STAT_VALUE_CLASS[tone]}`}>{stat.value}</p>
                       </div>
                     );
@@ -439,7 +439,7 @@ export default function ExcelImportModalShell({
                           />
                           <span className="font-medium">{overwriteOption.label}</span>
                           {overwriteOption.hint ? (
-                            <span className="text-[11px] text-[var(--md-on-surface-variant)]">
+                            <span className="excel-import-micro-note">
                               {overwriteOption.hint}
                             </span>
                           ) : null}

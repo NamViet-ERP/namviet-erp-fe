@@ -1064,4 +1064,81 @@
     line-height: var(--lh-normal);
     color: var(--md-on-surface-variant);
   }
+
+  /* ── ExcelImportModalShell semantic tone & typography classes ── */
+  .excel-import-stat--neutral {
+    border-color: var(--md-outline-variant);
+    background: var(--md-surface-container-lowest);
+  }
+  .excel-import-stat--success {
+    border-color: color-mix(in srgb, var(--md-success) 30%, transparent);
+    background: color-mix(in srgb, var(--md-success) 10%, transparent);
+  }
+  .excel-import-stat--warning {
+    border-color: color-mix(in srgb, var(--md-warning) 30%, transparent);
+    background: color-mix(in srgb, var(--md-warning) 10%, transparent);
+  }
+  .excel-import-stat--danger {
+    border-color: color-mix(in srgb, var(--md-error) 30%, transparent);
+    background: color-mix(in srgb, var(--md-error) 10%, transparent);
+  }
+  .excel-import-stat__label {
+    font-size: var(--fs-xs);
+  }
+  .excel-import-stat__label--neutral {
+    color: var(--md-on-surface-variant);
+  }
+  .excel-import-stat__label--success {
+    color: var(--md-on-success-container);
+    font-weight: var(--fw-medium);
+  }
+  .excel-import-stat__label--warning {
+    color: var(--md-on-warning-container);
+    font-weight: var(--fw-medium);
+  }
+  .excel-import-stat__label--danger {
+    color: var(--md-on-error-container);
+    font-weight: var(--fw-medium);
+  }
+  .excel-import-stat__value--neutral {
+    color: var(--md-on-surface);
+  }
+  .excel-import-stat__value--success {
+    color: var(--md-success);
+  }
+  .excel-import-stat__value--warning {
+    color: var(--md-warning);
+  }
+  .excel-import-stat__value--danger {
+    color: var(--md-error);
+  }
+  .excel-import-tab--active-neutral,
+  .excel-import-tab--active-success,
+  .excel-import-tab--active-warning,
+  .excel-import-tab--active-danger {
+    background: var(--md-surface);
+    font-weight: var(--fw-semibold);
+    box-shadow: var(--md-shadow-1);
+  }
+  .excel-import-tab--active-neutral {
+    color: var(--md-on-surface);
+  }
+  .excel-import-tab--active-success {
+    color: var(--md-success);
+  }
+  .excel-import-tab--active-warning {
+    color: var(--md-warning);
+  }
+  .excel-import-tab--active-danger {
+    color: var(--md-error);
+  }
+  .excel-import-micro-note {
+    font-size: var(--fs-xs);
+    color: var(--md-on-surface-variant);
+  }
+  .excel-import-dropzone__hint {
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
+    color: var(--md-primary);
+  }
 }

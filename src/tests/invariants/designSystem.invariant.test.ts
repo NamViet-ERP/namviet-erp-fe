@@ -20,6 +20,10 @@ const PRIMITIVE_FILES = [
 
 const GOLDEN_SURFACE_FILES = [
   ...PRIMITIVE_FILES,
+  'src/components/ui/EntityCombobox.tsx',
+  'src/components/ui/SelectField.tsx',
+  'src/components/ui/DateRangeField.tsx',
+  'src/components/shared/ExcelImportModalShell.tsx',
   'src/pages/warehouse/WarehouseReportsPage.tsx',
 ];
 
