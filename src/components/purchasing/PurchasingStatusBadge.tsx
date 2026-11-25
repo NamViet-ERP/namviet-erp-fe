@@ -1,12 +1,14 @@
+import StatusBadge, { type StatusTone } from '../ui/StatusBadge';
+
 /** Tone tokens for purchasing/supplier status chips (UI-only, not API wire). */
 export type PurchasingTone = 'success' | 'warning' | 'danger' | 'neutral' | 'primary';
 
-const TONE_CLASS: Record<PurchasingTone, string> = {
-  success: 'badge badge-success',
-  warning: 'badge badge-warning',
-  danger: 'badge badge-error',
-  neutral: 'badge badge-neutral',
-  primary: 'badge badge-md-primary',
+const TONE_MAP: Record<PurchasingTone, StatusTone> = {
+  success: 'success',
+  warning: 'warning',
+  danger: 'error',
+  neutral: 'neutral',
+  primary: 'primary',
 };
 
 interface PurchasingStatusBadgeProps {
@@ -15,5 +17,5 @@ interface PurchasingStatusBadgeProps {
 }
 
 export default function PurchasingStatusBadge({ label, tone }: PurchasingStatusBadgeProps) {
-  return <span className={TONE_CLASS[tone]}>{label}</span>;
+  return <StatusBadge tone={TONE_MAP[tone]} label={label} />;
 }
