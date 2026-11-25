@@ -249,13 +249,15 @@
   }
   .kpi-card__value {
     margin: 0;
+    min-width: 0;
     font-family: var(--font-mono);
     font-size: var(--fs-3xl);
     font-weight: var(--fw-bold);
-    line-height: 1;
+    line-height: var(--lh-tight);
     color: var(--kpi-accent);
     letter-spacing: -0.03em;
     font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
   }
   .kpi-card__subtitle {
     margin: 0;
@@ -375,7 +377,9 @@
   .kpi-card.card-md.kpi-card--accent-primary {
     --kpi-accent: var(--nv-action);
   }
-  .kpi-card.card-md.kpi-card--accent-blue,
+  .kpi-card.card-md.kpi-card--accent-blue {
+    --kpi-accent: var(--nv-action);
+  }
   .kpi-card.card-md.kpi-card--accent-success {
     --kpi-accent: var(--md-success);
   }
@@ -5546,8 +5550,8 @@
     line-height: 1.2;
     text-wrap: balance;
   }
-  .app-shell--wms .page-header__subtitle,
-  .app-shell--wms .page-header__eyebrow {
+  .app-shell--wms .page-header:not(.page-header--detail) .page-header__subtitle,
+  .app-shell--wms .page-header:not(.page-header--detail) .page-header__eyebrow {
     display: none;
   }
   .app-shell--wms .page-header__actions {
@@ -5570,7 +5574,7 @@
   .app-shell--wms .hrm-header-btn:hover {
     border-color: color-mix(in srgb, var(--wms-accent) 35%, var(--md-outline-variant02));
     background: var(--wms-accent-soft);
-    color: var(--md-secondary);
+    color: var(--md-on-primary-container);
     box-shadow: none;
   }
   .app-shell--wms .hrm-stat-grid:not(.project-detail-stat-grid) {

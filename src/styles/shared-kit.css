@@ -198,6 +198,18 @@
     gap: 6px;
     min-width: 10.5rem;
   }
+  @media (max-width: 639px) {
+    .voucher-date-filter {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      width: 100%;
+    }
+    .voucher-date-filter__field {
+      min-width: 0;
+      width: 100%;
+    }
+  }
   .voucher-date-filter__label {
     font-size: var(--fs-xs);
     font-weight: var(--fw-medium);

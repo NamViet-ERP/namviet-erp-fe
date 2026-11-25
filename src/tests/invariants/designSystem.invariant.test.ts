@@ -311,6 +311,85 @@ describe('Living Invariant: Design System Tokens, CSS Order & Token-Only Primiti
     }
   });
 
+  it('components.css: .kpi-card--accent-blue maps to --nv-action and .kpi-card--accent-success maps to --md-success independently', () => {
+    const componentsCssPath = path.join(repoRoot, 'src/styles/components.css');
+    expect(fs.existsSync(componentsCssPath)).toBe(true);
+    const componentsCss = fs.readFileSync(componentsCssPath, 'utf-8');
+
+    // accent-blue must resolve to --nv-action (không phải --md-success)
+    expect(componentsCss).toMatch(
+      /\.kpi-card\.card-md\.kpi-card--accent-blue\s*\{[^}]*--kpi-accent:\s*var\(--nv-action\);/s,
+    );
+    // accent-success must resolve to --md-success (không phải --nv-action)
+    expect(componentsCss).toMatch(
+      /\.kpi-card\.card-md\.kpi-card--accent-success\s*\{[^}]*--kpi-accent:\s*var\(--md-success\);/s,
+    );
+    // Cấm gộp hai accent vào cùng rule với --md-success
+    expect(componentsCss).not.toMatch(
+      /\.kpi-card\.card-md\.kpi-card--accent-blue,\s*\n?\s*\.kpi-card\.card-md\.kpi-card--accent-success\s*\{[^}]*--kpi-accent:\s*var\(--md-success\);/s,
+    );
+  });
+
+  it('shared-kit.css: 375px mobile viewport does not overflow voucher-date-filter (max-width 639px grid fix)', () => {
+    const sharedKitPath = path.join(repoRoot, 'src/styles/shared-kit.css');
+    const sharedCss = fs.readFileSync(sharedKitPath, 'utf-8');
+    // Extract balanced @media (max-width: 639px) blocks so nested } inside .voucher-date-filter doesn't truncate
+    const mediaBlocks: string[] = [];
+    const mediaRe = /@media\s*\(max-width:\s*639px\)\s*\{/g;
+    let match: RegExpExecArray | null;
+    while ((match = mediaRe.exec(sharedCss)) !== null) {
+      let depth = 1;
+      let cursor = match.index + match[0].length;
+      while (cursor < sharedCss.length && depth > 0) {
+        if (sharedCss[cursor] === '{') depth += 1;
+        else if (sharedCss[cursor] === '}') depth -= 1;
+        cursor += 1;
+      }
+      mediaBlocks.push(sharedCss.slice(match.index, cursor));
+    }
+    expect(mediaBlocks.length).toBeGreaterThan(0);
+
+    const voucherMediaBlock = mediaBlocks.find(block => block.includes('.voucher-date-filter'));
+    expect(voucherMediaBlock).toBeDefined();
+    expect(voucherMediaBlock).toMatch(/\.voucher-date-filter\s*\{[^}]*display:\s*grid;/s);
+    expect(voucherMediaBlock).toMatch(/\.voucher-date-filter__field\s*\{[^}]*min-width:\s*0;/s);
+  });
+
+  it('components.css: .kpi-card__value allows wrapping and tight line-height for long values on 375px grid', () => {
+    const componentsCssPath = path.join(repoRoot, 'src/styles/components.css');
+    const componentsCss = fs.readFileSync(componentsCssPath, 'utf-8');
+    const idx = componentsCss.indexOf('.kpi-card__value {');
+    expect(idx).toBeGreaterThan(-1);
+    const rule = componentsCss.slice(idx, componentsCss.indexOf('}', idx) + 1);
+    expect(rule).toMatch(/min-width:\s*0;/);
+    expect(rule).toMatch(/overflow-wrap:\s*anywhere;/);
+    expect(rule).toMatch(/line-height:\s*var\(--lh-tight\);/);
+  });
+
+  it('components.css: .app-shell--wms keeps detail header subtitle and eyebrow visible', () => {
+    const componentsCssPath = path.join(repoRoot, 'src/styles/components.css');
+    const componentsCss = fs.readFileSync(componentsCssPath, 'utf-8');
+    expect(componentsCss).toMatch(
+      /\.app-shell--wms\s+\.page-header:not\(\.page-header--detail\)\s+\.page-header__subtitle/,
+    );
+    expect(componentsCss).not.toMatch(
+      /\.app-shell--wms\s+\.page-header__subtitle\s*[,{]/,
+    );
+  });
+
+  it('components.css: .app-shell--wms .hrm-header-btn:hover uses --md-on-primary-container not --md-secondary', () => {
+    const componentsCssPath = path.join(repoRoot, 'src/styles/components.css');
+    const componentsCss = fs.readFileSync(componentsCssPath, 'utf-8');
+    // color phải là --md-on-primary-container
+    expect(componentsCss).toMatch(
+      /\.app-shell--wms\s+\.hrm-header-btn:hover\s*\{[^}]*color:\s*var\(--md-on-primary-container\);/s,
+    );
+    // Cấm dùng --md-secondary trong rule này
+    const wmsHoverIdx = componentsCss.indexOf('.app-shell--wms .hrm-header-btn:hover');
+    const ruleSnippet = componentsCss.slice(wmsHoverIdx, componentsCss.indexOf('}', wmsHoverIdx) + 1);
+    expect(ruleSnippet).not.toContain('var(--md-secondary)');
+  });
+
   it('canonical UI primitives and Golden Reference page contain zero raw hex, palette classes, dark:, text-[Npx], rgba(, or inline fontSize', () => {
     for (const relPath of GOLDEN_SURFACE_FILES) {
       const fullPath = path.join(repoRoot, relPath);
