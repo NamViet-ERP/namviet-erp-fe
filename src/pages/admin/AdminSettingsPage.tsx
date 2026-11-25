@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Shield, Plus, Trash2, UserCog, Pencil, KeyRound } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import SearchBar from '../../components/ui/SearchBar';
-import HrmPanel from '../../components/hr/HrmPanel';
+import SectionCard from '../../components/ui/SectionCard';
 import Modal from '../../components/ui/Modal';
 import FormField from '../../components/ui/FormField';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
@@ -116,7 +116,7 @@ export default function AdminSettingsPage() {
       />
 
       <div className="hrm-settings-grid hrm-settings-grid--recruitment">
-        <HrmPanel className="hrm-settings-card hrm-settings-card--featured">
+        <SectionCard className="hrm-settings-card hrm-settings-card--featured">
           <div className="hrm-settings-card__head">
             <div className="hrm-settings-card__icon hrm-settings-card__icon--primary">
               <Shield size={20} />
@@ -228,9 +228,9 @@ export default function AdminSettingsPage() {
               <> · Đang lọc theo "{searchTerm}"</>
             )}
           </p>
-        </HrmPanel>
+        </SectionCard>
 
-        <HrmPanel className="hrm-settings-card">
+        <SectionCard className="hrm-settings-card">
           <div className="hrm-settings-card__head">
             <div className="hrm-settings-card__icon hrm-settings-card__icon--neutral">
               <UserCog size={20} />
@@ -250,7 +250,7 @@ export default function AdminSettingsPage() {
             <UserCog size={15} />
             Đi tới quản lý người dùng
           </Link>
-        </HrmPanel>
+        </SectionCard>
       </div>
 
       <Modal

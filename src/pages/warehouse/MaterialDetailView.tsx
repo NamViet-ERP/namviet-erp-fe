@@ -1,10 +1,10 @@
 import { useState, useMemo } from 'react';
 import type React from 'react';
 import { Ban, RotateCcw, Image as ImageIcon, Trash2, Upload } from 'lucide-react';
-import DetailSection from '../../components/hr/DetailSection';
+import SectionCard from '../../components/ui/SectionCard';
 import DetailFieldGrid from '../../components/hr/DetailFieldGrid';
 import { FieldInput, FieldTextarea, FieldView } from '../../components/hr/DetailFields';
-import { HrmDetailHeader } from '../../components/hr/HrmPageChrome';
+import PageHeader from '../../components/ui/PageHeader';
 import HrmEditActions from '../../components/hr/HrmEditActions';
 import HrmNotFound, { HrmLoadingState } from '../../components/hr/HrmNotFound';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
@@ -276,7 +276,8 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
 
   return (
     <div className="hrm-page w-full">
-      <HrmDetailHeader
+      <PageHeader
+        variant="detail"
         onBack={onBack}
         title={isEditing ? editForm.materialName || material.materialName : material.materialName}
         subtitle={`Mã vật tư: ${material.materialCode}${!isActive ? ' · Ngừng sử dụng' : ''}`}
@@ -291,7 +292,7 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
         }
       />
 
-      <DetailSection title="Phân loại danh mục">
+      <SectionCard variant="detail" title="Phân loại danh mục">
         {isEditing ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {MATERIAL_CATEGORY_LEVELS.map((lvl, idx) => (
@@ -331,9 +332,9 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
             ))}
           </DetailFieldGrid>
         )}
-      </DetailSection>
+      </SectionCard>
 
-      <DetailSection title="Thông tin vật tư">
+      <SectionCard variant="detail" title="Thông tin vật tư">
         {isEditing ? (
           <DetailFieldGrid layout="responsive">
             <FieldView label="Mã vật tư" value={material.materialCode} />
@@ -543,57 +544,52 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
             </div>
           </DetailFieldGrid>
         )}
-      </DetailSection>
+      </SectionCard>
 
       {!isEditing && (
-        <section
-          className={`hrm-detail-section ${isActive ? 'hrm-detail-section--status-active' : 'hrm-detail-section--status-inactive'}`}
+        <SectionCard
+          variant="detail"
+          className={isActive ? 'hrm-detail-section--status-active' : 'hrm-detail-section--status-inactive'}
+          title={isActive ? 'Ngừng sử dụng' : 'Kích hoạt lại'}
+          description={
+            isActive
+              ? 'Ẩn khỏi danh sách tạo phiếu mới; giữ nguyên tồn kho và lịch sử dự án.'
+              : 'Cho phép chọn vật tư trong phiếu nhập/xuất mới.'
+          }
         >
-          <div className="hrm-detail-section__head">
-            <h3 className="hrm-detail-section__title">
-              {isActive ? 'Ngừng sử dụng' : 'Kích hoạt lại'}
-            </h3>
-            <p className="hrm-detail-section__desc">
-              {isActive
-                ? 'Ẩn khỏi danh sách tạo phiếu mới; giữ nguyên tồn kho và lịch sử dự án.'
-                : 'Cho phép chọn vật tư trong phiếu nhập/xuất mới.'}
-            </p>
-          </div>
-          <div className="hrm-detail-section__body">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-[var(--md-on-surface)]">
-                  {material.materialCode} — {material.materialName}
-                </p>
-                <p className="text-xs text-[var(--md-on-surface-variant)] mt-1">
-                  {isActive
-                    ? 'Dùng khi mã không còn nhập mới nhưng dự án cũ vẫn cần đối soát.'
-                    : 'Vật tư hiện không xuất hiện khi lập phiếu mới.'}
-                </p>
-              </div>
-              {isActive ? (
-                <button
-                  type="button"
-                  className="btn btn-outline btn-sm rounded-full px-4 flex items-center gap-2 shrink-0 text-[var(--md-error)] border-[var(--md-error)]"
-                  onClick={() => setShowDiscontinueConfirm(true)}
-                >
-                  <Ban size={15} />
-                  Ngừng sử dụng
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="btn btn-outline btn-sm rounded-full px-4 flex items-center gap-2 shrink-0"
-                  disabled={reactivateMutation.isPending}
-                  onClick={() => void handleReactivate()}
-                >
-                  <RotateCcw size={15} />
-                  Kích hoạt lại
-                </button>
-              )}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-[var(--md-on-surface)]">
+                {material.materialCode} — {material.materialName}
+              </p>
+              <p className="text-xs text-[var(--md-on-surface-variant)] mt-1">
+                {isActive
+                  ? 'Dùng khi mã không còn nhập mới nhưng dự án cũ vẫn cần đối soát.'
+                  : 'Vật tư hiện không xuất hiện khi lập phiếu mới.'}
+              </p>
             </div>
+            {isActive ? (
+              <button
+                type="button"
+                className="btn btn-outline btn-sm rounded-full px-4 flex items-center gap-2 shrink-0 text-[var(--md-error)] border-[var(--md-error)]"
+                onClick={() => setShowDiscontinueConfirm(true)}
+              >
+                <Ban size={15} />
+                Ngừng sử dụng
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="btn btn-outline btn-sm rounded-full px-4 flex items-center gap-2 shrink-0"
+                disabled={reactivateMutation.isPending}
+                onClick={() => void handleReactivate()}
+              >
+                <RotateCcw size={15} />
+                Kích hoạt lại
+              </button>
+            )}
           </div>
-        </section>
+        </SectionCard>
       )}
 
       <ConfirmDialog

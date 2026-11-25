@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Plus, Pencil, Trash2, Wallet, Calculator, RotateCcw } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
-import HrmPanel from '../../components/hr/HrmPanel';
+import SectionCard from '../../components/ui/SectionCard';
 import Modal from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import CurrencyInput from '../../components/ui/CurrencyInput';
@@ -214,15 +214,15 @@ export default function RecruitmentCostsPage() {
         )}
       />
 
-      <HrmPanel>
+      <SectionCard>
         <div className="recruitment-budget-donut-grid">
           <BudgetDonut label="Tổng ngân sách cấp" value={allocated} total={Math.max(allocated, used, 1)} color="#1a73e8" />
           <BudgetDonut label="Đã dùng" value={used} total={Math.max(allocated, used, 1)} color="#34a853" />
           <BudgetDonut label="Còn lại" value={remaining} total={Math.max(allocated, used, 1)} color="#5f6368" />
         </div>
-      </HrmPanel>
+      </SectionCard>
 
-      <HrmPanel noPadding>
+      <SectionCard noPadding>
         <div className="hrm-list-toolbar">
           <div className="hrm-list-toolbar__filters">
             <div className="hrm-list-toolbar__filters-right">
@@ -325,7 +325,7 @@ export default function RecruitmentCostsPage() {
             </tbody>
           </table>
         </div>
-      </HrmPanel>
+      </SectionCard>
 
       <Modal
         isOpen={formOpen}

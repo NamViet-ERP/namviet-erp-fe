@@ -14,7 +14,7 @@ import PageHeader from '../../components/ui/PageHeader';
 import PageLoader from '../../components/ui/PageLoader';
 import EmptyState from '../../components/ui/EmptyState';
 import Card from '../../components/ui/Card';
-import HrmPanel from '../../components/hr/HrmPanel';
+import SectionCard from '../../components/ui/SectionCard';
 import Badge from '../../components/ui/Badge';
 import EntityCodeLink from '../../components/ui/EntityCodeLink';
 import { getApiErrorMessage } from '../../lib/apiClient';
@@ -147,7 +147,7 @@ function OpsBoard({
   children: ReactNode;
 }) {
   return (
-    <HrmPanel noPadding className="ops-projects-board">
+    <SectionCard noPadding className="ops-projects-board">
       <div className="ops-projects-board__head">
         <h2 className="ops-projects-board__title">{title}</h2>
         <p className="ops-projects-board__desc">{desc}</p>
@@ -163,7 +163,7 @@ function OpsBoard({
       <div className="wms-inventory-table-wrap overflow-x-auto table-scroll">
         {children}
       </div>
-    </HrmPanel>
+    </SectionCard>
   );
 }
 
@@ -244,14 +244,14 @@ export default function OperationsDashboardPage() {
           title="Tổng quan vận hành"
           subtitle="Theo dõi tồn kho, đơn mua, thanh toán và dự án đang chạy."
         />
-        <HrmPanel>
+        <SectionCard>
           <EmptyState message={getApiErrorMessage(dash.error, 'Không tải được tổng quan vận hành.')} />
           <div className="mt-3 text-center">
             <button type="button" className="btn btn-secondary btn-sm" onClick={() => dash.refetchAll()}>
               Thử lại
             </button>
           </div>
-        </HrmPanel>
+        </SectionCard>
       </div>
     );
   }

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Flag, Gauge, Plus } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
-import HrmPanel from '../../components/hr/HrmPanel';
+import SectionCard from '../../components/ui/SectionCard';
 import HrmSelect from '../../components/hr/HrmSelect';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
@@ -132,7 +132,7 @@ export default function CskhStatusPriorityPage() {
   ];
 
   const renderList = (list: Target, title: string, add: string, empty: string) => (
-    <HrmPanel className="cskh-desk__panel">
+    <SectionCard className="cskh-desk__panel">
       <div className="cskh-desk__section-head">
         <div className="cskh-settings-lead">
           <h2 className="section-heading__title m-0">{title}</h2>
@@ -155,7 +155,7 @@ export default function CskhStatusPriorityPage() {
         onEdit={row => openEdit(list, row)}
         onDelete={row => setDeleteTarget({ list, id: row.id, name: row.name })}
       />
-    </HrmPanel>
+    </SectionCard>
   );
 
   return (

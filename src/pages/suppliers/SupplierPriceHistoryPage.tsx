@@ -4,7 +4,7 @@ import EmptyState from '../../components/ui/EmptyState';
 import EntityCodeLink from '../../components/ui/EntityCodeLink';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import Pagination from '../../components/ui/Pagination';
-import HrmPanel from '../../components/hr/HrmPanel';
+import SectionCard from '../../components/ui/SectionCard';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { formatDateCell } from '../../lib/hrm/formatters';
 import { useSupplierPriceHistory } from '../../hooks/useSupplierPoAnalytics';
@@ -88,7 +88,7 @@ export default function SupplierPriceHistoryPage() {
         chỉ cần đối chiếu giá đã có.
       </div>
 
-      <HrmPanel noPadding className="sup-price-history-board">
+      <SectionCard noPadding className="sup-price-history-board">
         <div className="sup-price-history-board__head">
           <h2 className="sup-price-history-board__title">Lịch sử giá theo mặt hàng - nhà cung cấp</h2>
           <p className="sup-price-history-board__desc">
@@ -242,7 +242,7 @@ export default function SupplierPriceHistoryPage() {
             totalItems={filtered.length}
           />
         ) : null}
-      </HrmPanel>
+      </SectionCard>
     </div>
   );
 }

@@ -3,8 +3,9 @@ import { useSearchParams } from 'react-router-dom';
 import { Package, RefreshCw, ShieldCheck, TriangleAlert } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import TabFilter from '../../components/ui/TabFilter';
-import HrmPanel from '../../components/hr/HrmPanel';
-import HrmStatCard from '../../components/hr/HrmStatCard';
+import SectionCard from '../../components/ui/SectionCard';
+import KpiCard from '../../components/ui/KpiCard';
+import MetricsStrip from '../../components/ui/MetricsStrip';
 import { showToast } from '../../components/ui/Toast';
 import { DEFAULT_LIST_PAGE_SIZE, type ListPageSize } from '../../constants/pagination';
 import {
@@ -167,22 +168,22 @@ export default function PurchaseWarrantiesPage() {
       </div>
 
       {tab === 'registry' ? (
-        <div className="hrm-stat-grid">
-          <HrmStatCard label="Tổng số lô hàng có bảo hành" value={totalLots} icon={Package} tone="primary" />
-          <HrmStatCard label="Còn bảo hành" value={activeLots} icon={ShieldCheck} tone="success" />
-          <HrmStatCard label="Đã hết bảo hành" value={expiredLots} icon={TriangleAlert} tone="warning" />
-        </div>
+        <MetricsStrip columns={3}>
+          <KpiCard label="Tổng số lô hàng có bảo hành" value={totalLots} icon={Package} tone="primary" />
+          <KpiCard label="Còn bảo hành" value={activeLots} icon={ShieldCheck} tone="success" />
+          <KpiCard label="Đã hết bảo hành" value={expiredLots} icon={TriangleAlert} tone="warning" />
+        </MetricsStrip>
       ) : null}
       {tab === 'complaints' ? (
-        <div className="hrm-stat-grid">
-          <HrmStatCard label="Khiếu nại đang xử lý" value={openComplaints} icon={TriangleAlert} tone="warning" />
-          <HrmStatCard label="Tổng số khiếu nại" value={claimsQuery.data?.length ?? 0} icon={Package} tone="primary" />
-          <HrmStatCard label="Mức nghiêm trọng chưa đóng" value={highOpen} icon={TriangleAlert} tone="warning" />
-        </div>
+        <MetricsStrip columns={3}>
+          <KpiCard label="Khiếu nại đang xử lý" value={openComplaints} icon={TriangleAlert} tone="warning" />
+          <KpiCard label="Tổng số khiếu nại" value={claimsQuery.data?.length ?? 0} icon={Package} tone="primary" />
+          <KpiCard label="Mức nghiêm trọng chưa đóng" value={highOpen} icon={TriangleAlert} tone="warning" />
+        </MetricsStrip>
       ) : null}
 
       {tab === 'registry' ? (
-        <HrmPanel noPadding>
+        <SectionCard noPadding>
           <WarrantyRegistryPanel
             rows={data}
             isLoading={isLoading}
@@ -205,11 +206,11 @@ export default function PurchaseWarrantiesPage() {
             onOpenDetail={row => setSelectedId(row.id)}
             onCreateComplaint={goCreateComplaint}
           />
-        </HrmPanel>
+        </SectionCard>
       ) : null}
 
       {tab === 'complaints' ? (
-        <HrmPanel noPadding>
+        <SectionCard noPadding>
           <WarrantyComplaintsPanel
             rows={claims}
             isLoading={claimsQuery.isLoading}
@@ -227,7 +228,7 @@ export default function PurchaseWarrantiesPage() {
             canCreate={canCreate}
             onCreate={() => openCreate()}
           />
-        </HrmPanel>
+        </SectionCard>
       ) : null}
 
       <CreateComplaintTicketPanel

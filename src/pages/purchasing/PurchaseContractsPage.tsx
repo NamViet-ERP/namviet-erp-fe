@@ -1,6 +1,9 @@
 import { useMemo, useRef, useState } from 'react';
 import { Download, FileText, Plus, RefreshCw, Trash2, Upload } from 'lucide-react';
-import PurchasingListLayout from '../../components/purchasing/PurchasingListLayout';
+import PageShell from '../../components/ui/PageShell';
+import PageHeader from '../../components/ui/PageHeader';
+import SectionCard from '../../components/ui/SectionCard';
+import FilterToolbar from '../../components/ui/FilterToolbar';
 import ProjectAutocomplete from '../../components/purchasing/ProjectAutocomplete';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import CurrencyInput from '../../components/ui/CurrencyInput';
@@ -307,80 +310,85 @@ export default function PurchaseContractsPage() {
 
   return (
     <>
-      <PurchasingListLayout
-        title="Hợp đồng"
-        subtitle="Quản lý hợp đồng mua hàng độc lập - gắn PO / NCC / dự án"
-        search={search}
-        onSearchChange={value => {
-          setSearch(value);
-          setPage(1);
-        }}
-        searchPlaceholder="Tìm số HĐ, tiêu đề, PO, NCC…"
-        hasFilters={hasFilters}
-        onResetFilters={handleResetFilters}
-        actions={(
-          <div className="flex flex-wrap gap-2">
-            {canCreate ? (
-              <button
-                type="button"
-                className="btn btn-outline btn-sm"
-                disabled={busy}
-                onClick={() => {
-                  void importMutation
-                    .mutateAsync()
-                    .then(r => {
-                      showToast(
-                        'success',
-                        `Đã nhập ${r.imported} HĐ từ PO (bỏ qua ${r.skipped} đã có).`,
-                      );
-                    })
-                    .catch(err => {
-                      showToast('error', getApiErrorMessage(err, 'Không nhập được từ PO.'));
-                    });
-                }}
-              >
-                <RefreshCw size={14} aria-hidden />
-                {importMutation.isPending ? 'Đang nhập…' : 'Nhập từ đính kèm PO'}
-              </button>
-            ) : null}
-            {canCreate ? (
-              <button type="button" className="btn btn-primary btn-sm" onClick={openCreate}>
-                <Plus size={14} aria-hidden />
-                Tạo hợp đồng
-              </button>
-            ) : null}
-          </div>
-        )}
-        filters={(
-          <>
-            <ProjectAutocomplete
-              value={projectCode}
-              onChange={code => {
-                setProjectCode(code);
-                setPage(1);
-              }}
-              projects={projects}
-              placeholder="Lọc dự án"
-              compact
-            />
-            <select
-              className="form-input"
-              value={status}
-              onChange={e => {
-                setStatus(e.target.value);
-                setPage(1);
-              }}
-              aria-label="Lọc trạng thái"
-            >
-              {STATUS_OPTIONS.map(o => (
-                <option key={o.value || 'all'} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </>
-        )}
-      >
+      <PageShell>
+        <PageHeader
+          eyebrow="Mua hàng"
+          title="Hợp đồng"
+          subtitle="Quản lý hợp đồng mua hàng độc lập - gắn PO / NCC / dự án"
+          actions={(
+            <div className="flex flex-wrap gap-2">
+              {canCreate ? (
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  disabled={busy}
+                  onClick={() => {
+                    void importMutation
+                      .mutateAsync()
+                      .then(r => {
+                        showToast(
+                          'success',
+                          `Đã nhập ${r.imported} HĐ từ PO (bỏ qua ${r.skipped} đã có).`,
+                        );
+                      })
+                      .catch(err => {
+                        showToast('error', getApiErrorMessage(err, 'Không nhập được từ PO.'));
+                      });
+                  }}
+                >
+                  <RefreshCw size={14} aria-hidden />
+                  {importMutation.isPending ? 'Đang nhập…' : 'Nhập từ đính kèm PO'}
+                </button>
+              ) : null}
+              {canCreate ? (
+                <button type="button" className="btn btn-primary btn-sm" onClick={openCreate}>
+                  <Plus size={14} aria-hidden />
+                  Tạo hợp đồng
+                </button>
+              ) : null}
+            </div>
+          )}
+        />
+        <SectionCard noPadding>
+          <FilterToolbar
+            search={search}
+            onSearchChange={value => {
+              setSearch(value);
+              setPage(1);
+            }}
+            searchPlaceholder="Tìm số HĐ, tiêu đề, PO, NCC…"
+            hasActiveFilters={hasFilters}
+            onReset={handleResetFilters}
+            filters={(
+              <div className="hrm-list-toolbar__filter-row hrm-list-toolbar__filter-row--selects">
+                <ProjectAutocomplete
+                  value={projectCode}
+                  onChange={code => {
+                    setProjectCode(code);
+                    setPage(1);
+                  }}
+                  projects={projects}
+                  placeholder="Lọc dự án"
+                  compact
+                />
+                <select
+                  className="form-input"
+                  value={status}
+                  onChange={e => {
+                    setStatus(e.target.value);
+                    setPage(1);
+                  }}
+                  aria-label="Lọc trạng thái"
+                >
+                  {STATUS_OPTIONS.map(o => (
+                    <option key={o.value || 'all'} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          />
         {isError ? (
           <EmptyState message={getApiErrorMessage(error, 'Không tải được danh sách hợp đồng.')} />
         ) : (
@@ -497,7 +505,8 @@ export default function PurchaseContractsPage() {
             ) : null}
           </>
         )}
-      </PurchasingListLayout>
+        </SectionCard>
+      </PageShell>
 
       <Modal isOpen={modalOpen} onClose={closeModal} title={modalTitle} size="lg">
         {!creating && detailQuery.isLoading ? (

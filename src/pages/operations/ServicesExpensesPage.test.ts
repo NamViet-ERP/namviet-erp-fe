@@ -116,7 +116,7 @@ async function renderPage() {
 }
 
 describe('ServicesExpensesPage Standard Layout & Actions', () => {
-  it('renders HrmPanel with Mayzer navy header and unified toolbar', async () => {
+  it('renders SectionCard with Mayzer navy header and unified toolbar', async () => {
     await renderPage();
 
     // Check board head

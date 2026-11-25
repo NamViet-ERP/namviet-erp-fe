@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CalendarDays, Plus, Trash2 } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
-import HrmPanel from '../../components/hr/HrmPanel';
+import SectionCard from '../../components/ui/SectionCard';
 import HrmSelect from '../../components/hr/HrmSelect';
 import Button from '../../components/ui/Button';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
@@ -146,7 +146,7 @@ export default function CskhSchedulePage() {
         ) : undefined}
       />
 
-      <HrmPanel className="cskh-desk__panel">
+      <SectionCard className="cskh-desk__panel">
         {!ready ? (
           <EmptyState
             icon={CalendarDays}
@@ -233,7 +233,7 @@ export default function CskhSchedulePage() {
             )}
           </>
         )}
-      </HrmPanel>
+      </SectionCard>
 
       <ConfirmDialog
         isOpen={Boolean(deleteBand)}

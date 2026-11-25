@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
 import { Users, UserCheck, UserX, Baby } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
-import HrmPanel from '../../components/hr/HrmPanel';
-import HrmStatCard from '../../components/hr/HrmStatCard';
+import SectionCard from '../../components/ui/SectionCard';
+import KpiCard from '../../components/ui/KpiCard';
+import MetricsStrip from '../../components/ui/MetricsStrip';
 import PageLoader from '../../components/ui/PageLoader';
 import { useEmployees } from '../../hooks/useEmployees';
 import { useRecruitmentDashboard } from '../../hooks/useRecruitmentDashboard';
@@ -42,27 +43,27 @@ export default function RecruitmentHrStatsPage() {
 
       <div>
         <h2 className="text-sm font-semibold text-[var(--md-on-surface-variant)] mb-2">Nhân sự</h2>
-        <div className="hrm-stat-grid">
-          <HrmStatCard label="Tổng NV" value={stats.total} icon={Users} tone="primary" />
-          <HrmStatCard label="Đang làm" value={stats.active} icon={UserCheck} tone="success" />
-          <HrmStatCard label="Nghỉ việc" value={stats.resigned} icon={UserX} tone="warning" />
-          <HrmStatCard label="Thai sản" value={stats.maternity} icon={Baby} tone="neutral" />
-        </div>
+        <MetricsStrip columns={4}>
+          <KpiCard label="Tổng NV" value={stats.total} icon={Users} tone="primary" />
+          <KpiCard label="Đang làm" value={stats.active} icon={UserCheck} tone="success" />
+          <KpiCard label="Nghỉ việc" value={stats.resigned} icon={UserX} tone="warning" />
+          <KpiCard label="Thai sản" value={stats.maternity} icon={Baby} tone="neutral" />
+        </MetricsStrip>
       </div>
 
       {k && (
         <div>
           <h2 className="text-sm font-semibold text-[var(--md-on-surface-variant)] mb-2">Tuyển dụng (kỳ hiện tại)</h2>
-          <div className="hrm-stat-grid">
-            <HrmStatCard label="Tổng CV" value={k.totalCandidates} icon={Users} tone="primary" />
-            <HrmStatCard label="Đã PV" value={k.interviewedCount} icon={Users} tone="neutral" />
-            <HrmStatCard label="Đã tuyển" value={k.acceptedCount} icon={UserCheck} tone="success" />
-            <HrmStatCard label="Còn thiếu KHTD" value={k.totalRemaining} icon={Users} tone="warning" />
-          </div>
+          <MetricsStrip columns={4}>
+            <KpiCard label="Tổng CV" value={k.totalCandidates} icon={Users} tone="primary" />
+            <KpiCard label="Đã PV" value={k.interviewedCount} icon={Users} tone="neutral" />
+            <KpiCard label="Đã tuyển" value={k.acceptedCount} icon={UserCheck} tone="success" />
+            <KpiCard label="Còn thiếu KHTD" value={k.totalRemaining} icon={Users} tone="warning" />
+          </MetricsStrip>
         </div>
       )}
 
-      <HrmPanel noPadding>
+      <SectionCard noPadding>
         <div className="p-4 border-b border-[var(--md-outline-variant)]">
           <h2 className="text-base font-semibold">Nhân sự theo phòng ban</h2>
         </div>
@@ -101,7 +102,7 @@ export default function RecruitmentHrStatsPage() {
             </tbody>
           </table>
         </div>
-      </HrmPanel>
+      </SectionCard>
     </div>
   );
 }

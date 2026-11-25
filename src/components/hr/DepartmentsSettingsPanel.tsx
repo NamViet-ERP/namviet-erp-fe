@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Building2, Plus, Pencil, Trash2, UserPlus } from 'lucide-react';
-import HrmPanel from './HrmPanel';
+import SectionCard from '../ui/SectionCard';
 import ConfirmDialog from '../ui/ConfirmDialog';
 import Modal from '../ui/Modal';
 import EmptyState from '../ui/EmptyState';
@@ -145,7 +145,7 @@ export default function DepartmentsSettingsPanel({ canUpdate }: { canUpdate: boo
 
   return (
     <>
-      <HrmPanel className="hrm-settings-card hrm-settings-card--featured">
+      <SectionCard className="hrm-settings-card hrm-settings-card--featured">
         <div className="hrm-settings-card__head">
           <div className="hrm-settings-card__icon hrm-settings-card__icon--primary">
             <Building2 size={20} aria-hidden />
@@ -242,7 +242,7 @@ export default function DepartmentsSettingsPanel({ canUpdate }: { canUpdate: boo
             </table>
           </div>
         )}
-      </HrmPanel>
+      </SectionCard>
 
       <Modal
         isOpen={formOpen}

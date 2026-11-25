@@ -7,7 +7,7 @@ import { Upload, FileText, Trash2, CheckCircle2, ChevronRight, AlertCircle } fro
 import { showToast } from '../ui/Toast';
 import { candidatesService } from '../../services/candidatesService';
 import { filesService } from '../../services/filesService';
-import FormSectionHeader from '../hr/FormSectionHeader';
+import { FormSectionHeader } from '../ui/FormSection';
 import HrmDatePicker from '../hr/HrmDatePicker';
 import HrmFieldLabel from '../hr/HrmFieldLabel';
 import { hrmFieldClass } from '../hr/hrmFieldClass';

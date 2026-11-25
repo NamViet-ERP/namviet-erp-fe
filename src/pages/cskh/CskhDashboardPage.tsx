@@ -4,7 +4,7 @@ import { Download, Kanban, LayoutGrid, Search, Table } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
-import HrmPanel from '../../components/hr/HrmPanel';
+import SectionCard from '../../components/ui/SectionCard';
 import HrmSelect from '../../components/hr/HrmSelect';
 import { useCskhCommandCenter } from '../../hooks/cskh/useCskhCommandCenter';
 import { useCskhProject } from '../../hooks/cskh/useCskhProject';
@@ -130,7 +130,7 @@ export default function CskhDashboardPage() {
         />
       </div>
 
-      <HrmPanel className="cskh-desk__panel">
+      <SectionCard className="cskh-desk__panel">
         <div className="cskh-desk__section-head">
           <div>
             <h2 className="section-heading__title m-0">Danh sách dự án</h2>
@@ -211,7 +211,7 @@ export default function CskhDashboardPage() {
         ) : (
           <CskhProjectKanban projects={filtered} onMove={moveProject} onOpen={openProject} />
         )}
-      </HrmPanel>
+      </SectionCard>
 
       {editingProject && (
         <CskhEditProjectModal

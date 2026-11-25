@@ -11,7 +11,7 @@ import {
 import PageHeader from '../../components/ui/PageHeader';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
-import HrmPanel from '../../components/hr/HrmPanel';
+import SectionCard from '../../components/ui/SectionCard';
 import { useCskhCommandCenter } from '../../hooks/cskh/useCskhCommandCenter';
 import { useProjectDashboardStats } from '../../hooks/cskh/useProjectDashboardStats';
 import { cskhProjectPath } from '../../constants/cskhProject';
@@ -234,7 +234,7 @@ export default function CskhProjectDashboardPage() {
       </div>
 
       {/* 6 EPC CORE PHASES PROGRESS */}
-      <HrmPanel className="cskh-desk__panel">
+      <SectionCard className="cskh-desk__panel">
         <div className="cskh-desk__section-head mb-4">
           <div>
             <h2 className="section-heading__title m-0">6 Giai Đoạn EPC Cốt Lõi Dự Án Lò Hơi</h2>
@@ -344,10 +344,10 @@ export default function CskhProjectDashboardPage() {
             })}
           </div>
         )}
-      </HrmPanel>
+      </SectionCard>
 
       {/* DANH SÁCH TỔNG QUAN TẤT CẢ DỰ ÁN */}
-      <HrmPanel className="cskh-desk__panel">
+      <SectionCard className="cskh-desk__panel">
         <div className="cskh-desk__section-head mb-4">
           <div>
             <h2 className="section-heading__title m-0">Tất Cả Dự Án Lò Hơi Đang Điều Hành</h2>
@@ -428,11 +428,11 @@ export default function CskhProjectDashboardPage() {
             </tbody>
           </table>
         </div>
-      </HrmPanel>
+      </SectionCard>
 
       {/* ĐIỂM NGHẼN RỦI RO ĐƯỜNG GĂNG (HIGHLIGHT) */}
       {urgentBottlenecks.length > 0 && (
-        <HrmPanel className="cskh-desk__panel">
+        <SectionCard className="cskh-desk__panel">
           <div className="cskh-desk__section-head" style={{ marginBottom: '12px' }}>
             <div className="flex items-center gap-2">
               <AlertTriangle size={20} color="var(--md-error)" />
@@ -483,7 +483,7 @@ export default function CskhProjectDashboardPage() {
               </div>
             ))}
           </div>
-        </HrmPanel>
+        </SectionCard>
       )}
 
       <CskhEditProjectModal

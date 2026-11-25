@@ -9,7 +9,7 @@ import { employeesService, getSuggestedEmployeeCode, validateUniqueCode } from '
 import { employeeCodeNextHint } from '../../lib/hrm/suggestedEmployeeCode';
 import { filesService } from '../../services/filesService';
 import { removeVietnameseTones } from '../../lib/vietnamese';
-import FormSectionHeader from './FormSectionHeader';
+import { FormSectionHeader } from '../ui/FormSection';
 import HrmDatePicker from './HrmDatePicker';
 import HrmFieldLabel from './HrmFieldLabel';
 import { hrmFieldClass } from './hrmFieldClass';

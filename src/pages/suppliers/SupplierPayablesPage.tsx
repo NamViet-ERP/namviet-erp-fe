@@ -7,7 +7,7 @@ import EmptyState from '../../components/ui/EmptyState';
 import SearchBar from '../../components/ui/SearchBar';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import Skeleton from '../../components/ui/Skeleton';
-import HrmPanel from '../../components/hr/HrmPanel';
+import SectionCard from '../../components/ui/SectionCard';
 import SupplierPayablesOverview from '../../components/suppliers/SupplierPayablesOverview';
 import { usePermission } from '../../hooks/usePermission';
 import { useSupplierPayables } from '../../hooks/useSupplierPayables';
@@ -127,7 +127,7 @@ function ApBoard({
   children: ReactNode;
 }) {
   return (
-    <HrmPanel noPadding className="ops-projects-board">
+    <SectionCard noPadding className="ops-projects-board">
       <div className="ops-projects-board__head">
         <h2 className="ops-projects-board__title">{title}</h2>
         <p className="ops-projects-board__desc">{desc}</p>
@@ -138,7 +138,7 @@ function ApBoard({
         </div>
       ) : null}
       {children}
-    </HrmPanel>
+    </SectionCard>
   );
 }
 

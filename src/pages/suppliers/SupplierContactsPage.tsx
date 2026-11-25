@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Pencil, Plus, Trash2, X } from 'lucide-react';
-import PurchasingListLayout from '../../components/purchasing/PurchasingListLayout';
+import PageShell from '../../components/ui/PageShell';
+import PageHeader from '../../components/ui/PageHeader';
+import SectionCard from '../../components/ui/SectionCard';
+import FilterToolbar from '../../components/ui/FilterToolbar';
 import PurchasingStatusBadge from '../../components/purchasing/PurchasingStatusBadge';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import EmptyState from '../../components/ui/EmptyState';
@@ -131,40 +134,44 @@ export default function SupplierContactsPage() {
   };
 
   return (
-    <PurchasingListLayout
-      eyebrow="Nhà cung cấp"
-      title="Liên hệ NCC"
-      subtitle="Danh sách người liên hệ của từng nhà cung cấp."
-      search={search}
-      onSearchChange={value => {
-        setSearch(value);
-        setPage(1);
-      }}
-      searchPlaceholder="Tìm tên, chức vụ, điện thoại, email…"
-      filters={(
-        <div className="hrm-filter-select-wrap">
-          <select
-            className="hrm-filter-select"
-            value={supplierFilter}
-            aria-label="Lọc theo nhà cung cấp"
-            onChange={e => handleSupplierFilterChange(e.target.value)}
-          >
-            <option value="">Tất cả nhà cung cấp</option>
-            {(suppliers?.items ?? []).map(s => (
-              <option key={s.id} value={s.id}>{s.supplierName}</option>
-            ))}
-          </select>
-        </div>
-      )}
-      hasFilters={hasFilters}
-      onResetFilters={handleResetFilters}
-      actions={(
-        <button type="button" className="btn btn-primary" onClick={openCreate}>
-          <Plus size={16} aria-hidden />
-          Thêm liên hệ
-        </button>
-      )}
-    >
+    <PageShell>
+      <PageHeader
+        eyebrow="Nhà cung cấp"
+        title="Liên hệ NCC"
+        subtitle="Danh sách người liên hệ của từng nhà cung cấp."
+        actions={(
+          <button type="button" className="btn btn-primary" onClick={openCreate}>
+            <Plus size={16} aria-hidden />
+            Thêm liên hệ
+          </button>
+        )}
+      />
+      <SectionCard noPadding>
+        <FilterToolbar
+          search={search}
+          onSearchChange={value => {
+            setSearch(value);
+            setPage(1);
+          }}
+          searchPlaceholder="Tìm tên, chức vụ, điện thoại, email…"
+          filters={(
+            <div className="hrm-filter-select-wrap">
+              <select
+                className="hrm-filter-select"
+                value={supplierFilter}
+                aria-label="Lọc theo nhà cung cấp"
+                onChange={e => handleSupplierFilterChange(e.target.value)}
+              >
+                <option value="">Tất cả nhà cung cấp</option>
+                {(suppliers?.items ?? []).map(s => (
+                  <option key={s.id} value={s.id}>{s.supplierName}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          hasActiveFilters={hasFilters}
+          onReset={handleResetFilters}
+        />
       {supplierFilter ? (
         <div className="flex items-center justify-between gap-2 px-3.5 py-2 mb-3 rounded-lg bg-[var(--md-primary-container)]/30 border border-[var(--md-outline-variant)] text-xs text-[var(--md-on-surface)]">
           <div className="flex items-center gap-1.5 font-medium">
@@ -312,6 +319,7 @@ export default function SupplierContactsPage() {
         variant="danger"
         isLoading={deleteMutation.isPending}
       />
-    </PurchasingListLayout>
+      </SectionCard>
+    </PageShell>
   );
 }

@@ -6,7 +6,7 @@ import EmptyState from '../../components/ui/EmptyState';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import MaterialAutocomplete from '../../components/ui/MaterialAutocomplete';
 import CurrencyInput from '../../components/ui/CurrencyInput';
-import { HrmDetailHeader } from '../../components/hr/HrmPageChrome';
+import PageHeader from '../../components/ui/PageHeader';
 import { showToast } from '../../components/ui/Toast';
 import {
   useApproveEstimateL1,
@@ -197,7 +197,8 @@ export default function PurchaseEstimateDetailPage() {
 
   return (
     <div className="page-shell space-y-3 pur-estimate-detail">
-      <HrmDetailHeader
+      <PageHeader
+        variant="detail"
         onBack={back}
         title={row ? `${row.code} · ${row.title}` : 'Dự toán'}
         subtitle={row ? `${row.projectCode} · ${meta}` : 'Mua hàng dự toán'}

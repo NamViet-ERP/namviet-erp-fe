@@ -1,8 +1,8 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import EmployeeOnboardForm from '../../components/hr/EmployeeOnboardForm';
-import { HrmDetailHeader } from '../../components/hr/HrmPageChrome';
-import HrmPanel from '../../components/hr/HrmPanel';
+import PageHeader from '../../components/ui/PageHeader';
+import SectionCard from '../../components/ui/SectionCard';
 import { showToast } from '../../components/ui/Toast';
 import { queryKeys } from '../../services/queryKeys';
 import type { Candidate } from '../../types/hr';
@@ -19,7 +19,8 @@ export default function EmployeeCreatePage() {
 
   return (
     <div className="hrm-page w-full max-w-4xl mx-auto">
-      <HrmDetailHeader
+      <PageHeader
+        variant="detail"
         onBack={() => navigate(fromCandidate ? `/recruitment/candidates/${fromCandidate.id}` : '/members/list')}
         title="Thêm nhân viên"
         subtitle={
@@ -28,7 +29,7 @@ export default function EmployeeCreatePage() {
             : 'HR nhập hồ sơ thủ công theo cùng form khai báo nhân viên công khai'
         }
       />
-      <HrmPanel>
+      <SectionCard>
         <EmployeeOnboardForm
           mode="hr"
           prefillFromCandidate={fromCandidate}
@@ -38,7 +39,7 @@ export default function EmployeeCreatePage() {
             navigate(`/members/${emp.id}`);
           }}
         />
-      </HrmPanel>
+      </SectionCard>
     </div>
   );
 }

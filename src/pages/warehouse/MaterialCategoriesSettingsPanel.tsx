@@ -1,7 +1,7 @@
 import type React from 'react';
 import { useMemo, useState } from 'react';
 import { Package, Plus, Trash2, RotateCcw } from 'lucide-react';
-import HrmPanel from '../../components/hr/HrmPanel';
+import SectionCard from '../../components/ui/SectionCard';
 import IOSSwitch from '../../components/ui/IOSSwitch';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import SearchBar from '../../components/ui/SearchBar';
@@ -178,7 +178,7 @@ export default function MaterialCategoriesSettingsPanel() {
         : `Chưa có ${levelLabel.toLowerCase()} nào.`;
 
   return (
-    <HrmPanel noPadding className="mat-cat-settings-board">
+    <SectionCard noPadding className="mat-cat-settings-board">
       <div className="mat-cat-settings-board__head">
         <Package size={18} aria-hidden />
         <div>
@@ -400,6 +400,6 @@ export default function MaterialCategoriesSettingsPanel() {
         cancelLabel="Hủy"
         isLoading={deleteMutation.isPending}
       />
-    </HrmPanel>
+    </SectionCard>
   );
 }

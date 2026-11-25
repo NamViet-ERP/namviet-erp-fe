@@ -5,7 +5,7 @@ import PermissionGate from '../../components/auth/PermissionGate';
 import SearchBar from '../../components/ui/SearchBar';
 import TabFilter from '../../components/ui/TabFilter';
 import Pagination from '../../components/ui/Pagination';
-import HrmPanel from '../../components/hr/HrmPanel';
+import SectionCard from '../../components/ui/SectionCard';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
@@ -182,7 +182,7 @@ export default function DefectsPage() {
         )}
       />
 
-      <HrmPanel>
+      <SectionCard>
         <div className="flex flex-wrap items-center gap-3 mb-3">
           <TabFilter
             tabs={[
@@ -233,7 +233,7 @@ export default function DefectsPage() {
             setPage(1);
           }}
         />
-      </HrmPanel>
+      </SectionCard>
 
       <DefectCreateModal
         key={createEpoch}

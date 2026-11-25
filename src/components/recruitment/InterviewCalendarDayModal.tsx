@@ -1,8 +1,8 @@
 import Modal from '../ui/Modal';
-import CandidateStatusBadge from './CandidateStatusBadge';
+import StatusBadge from '../ui/StatusBadge';
+import { getCandidateStatusBadge } from '../../utils/recruitmentStatusBadge';
 import type { ParsedInterviewEvent } from '../../lib/hrm/interviewCalendarUtils';
 import { resolveEventTimeLabel } from '../../lib/hrm/interviewCalendarUtils';
-import type { CandidatePipelineStatus } from '../../types/hr';
 
 interface InterviewCalendarDayModalProps {
   open: boolean;
@@ -35,6 +35,7 @@ export default function InterviewCalendarDayModal({
         <ul className="recruitment-cal-day-list">
           {events.map(ev => {
             const timeLabel = resolveEventTimeLabel(ev);
+            const badge = getCandidateStatusBadge(ev.status);
             return (
             <li key={`${ev.candidateId}-${ev.sortAt}`}>
               <button
@@ -47,7 +48,11 @@ export default function InterviewCalendarDayModal({
                 )}
                 <span className="recruitment-cal-day-list__name">{ev.fullName}</span>
                 <span className="recruitment-cal-day-list__meta">{ev.position}</span>
-                <CandidateStatusBadge status={ev.status as CandidatePipelineStatus} className="shrink-0" />
+                <StatusBadge
+                  tone={badge.tone}
+                  label={badge.label}
+                  className={[badge.className, 'shrink-0'].filter(Boolean).join(' ')}
+                />
               </button>
             </li>
             );

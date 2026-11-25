@@ -8,7 +8,7 @@ import Pagination from '../../components/ui/Pagination';
 import EmptyState from '../../components/ui/EmptyState';
 import PageHeader from '../../components/ui/PageHeader';
 import Badge from '../../components/ui/Badge';
-import HrmPanel from '../../components/hr/HrmPanel';
+import SectionCard from '../../components/ui/SectionCard';
 import Card from '../../components/ui/Card';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { showToast } from '../../components/ui/Toast';
@@ -128,7 +128,7 @@ export default function ProjectsPage() {
         />
       </div>
 
-      <HrmPanel noPadding>
+      <SectionCard noPadding>
         <div className="hrm-list-toolbar">
           <div className="hrm-list-toolbar__filters">
             <SearchBar
@@ -292,7 +292,7 @@ export default function ProjectsPage() {
             totalItems={totalCount}
           />
         )}
-      </HrmPanel>
+      </SectionCard>
 
       <ConfirmDialog
         isOpen={Boolean(deletingProject)}

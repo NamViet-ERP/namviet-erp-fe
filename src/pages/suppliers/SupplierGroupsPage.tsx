@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Pencil, Plus, Trash2, Users } from 'lucide-react';
-import PurchasingListLayout from '../../components/purchasing/PurchasingListLayout';
+import PageShell from '../../components/ui/PageShell';
+import PageHeader from '../../components/ui/PageHeader';
+import SectionCard from '../../components/ui/SectionCard';
+import FilterToolbar from '../../components/ui/FilterToolbar';
 import PurchasingStatusBadge from '../../components/purchasing/PurchasingStatusBadge';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import EmptyState from '../../components/ui/EmptyState';
@@ -89,28 +92,32 @@ export default function SupplierGroupsPage() {
   };
 
   return (
-    <PurchasingListLayout
-      eyebrow="Nhà cung cấp"
-      title="Nhóm nhà cung cấp"
-      subtitle="Phân nhóm theo ngành / loại. Một NCC có thể thuộc nhiều nhóm."
-      search={search}
-      onSearchChange={value => {
-        setSearch(value);
-        setPage(1);
-      }}
-      searchPlaceholder="Tìm theo tên nhóm…"
-      hasFilters={Boolean(search)}
-      onResetFilters={() => {
-        setSearch('');
-        setPage(1);
-      }}
-      actions={(
-        <button type="button" className="btn btn-primary" onClick={openCreate}>
-          <Plus size={16} aria-hidden />
-          Tạo nhóm
-        </button>
-      )}
-    >
+    <PageShell>
+      <PageHeader
+        eyebrow="Nhà cung cấp"
+        title="Nhóm nhà cung cấp"
+        subtitle="Phân nhóm theo ngành / loại. Một NCC có thể thuộc nhiều nhóm."
+        actions={(
+          <button type="button" className="btn btn-primary" onClick={openCreate}>
+            <Plus size={16} aria-hidden />
+            Tạo nhóm
+          </button>
+        )}
+      />
+      <SectionCard noPadding>
+        <FilterToolbar
+          search={search}
+          onSearchChange={value => {
+            setSearch(value);
+            setPage(1);
+          }}
+          searchPlaceholder="Tìm theo tên nhóm…"
+          hasActiveFilters={Boolean(search)}
+          onReset={() => {
+            setSearch('');
+            setPage(1);
+          }}
+        />
       <div className="overflow-x-auto table-scroll hrm-table-wrap supplier-groups-table">
         <table className="w-full border-collapse hrm-table table-min-w--720">
           <thead>
@@ -264,6 +271,7 @@ export default function SupplierGroupsPage() {
         variant="danger"
         isLoading={deleteMutation.isPending}
       />
-    </PurchasingListLayout>
+      </SectionCard>
+    </PageShell>
   );
 }

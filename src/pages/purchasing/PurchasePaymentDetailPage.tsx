@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import DnttVoucherPreview, { type DnttPreviewModel } from '../../components/purchasing/DnttVoucherPreview';
 import PoAutocomplete from '../../components/purchasing/PoAutocomplete';
-import { HrmDetailHeader } from '../../components/hr/HrmPageChrome';
+import PageHeader from '../../components/ui/PageHeader';
 import EmptyState from '../../components/ui/EmptyState';
 import FormField from '../../components/ui/FormField';
 import HrmDatePicker from '../../components/hr/HrmDatePicker';
@@ -348,7 +348,7 @@ export default function PurchasePaymentDetailPage() {
     return (
       <div className="page-shell pur-dntt">
         <div className="no-print">
-          <HrmDetailHeader onBack={back} title={code ? `DNTT ${code}` : 'Chi tiết DNTT'} />
+          <PageHeader variant="detail" onBack={back} title={code ? `DNTT ${code}` : 'Chi tiết DNTT'} />
         </div>
         <EmptyState message="Đang tải DNTT…" />
       </div>
@@ -359,7 +359,7 @@ export default function PurchasePaymentDetailPage() {
     return (
       <div className="page-shell pur-dntt">
         <div className="no-print">
-          <HrmDetailHeader onBack={back} title={code ? `DNTT ${code}` : 'Chi tiết DNTT'} />
+          <PageHeader variant="detail" onBack={back} title={code ? `DNTT ${code}` : 'Chi tiết DNTT'} />
         </div>
         <EmptyState
           message={getApiErrorMessage(paymentQuery.error, 'Không tải được DNTT.')}
@@ -376,7 +376,8 @@ export default function PurchasePaymentDetailPage() {
   return (
     <div className="page-shell pur-dntt">
       <div className="no-print">
-        <HrmDetailHeader
+        <PageHeader
+          variant="detail"
           onBack={back}
           title={isCreate ? 'Tạo đề nghị thanh toán' : `DNTT ${payment?.code ?? code}`}
           subtitle={

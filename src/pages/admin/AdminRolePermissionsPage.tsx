@@ -2,10 +2,9 @@ import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { RotateCcw, Save } from 'lucide-react';
 import PermissionGate from '../../components/auth/PermissionGate';
-import { HrmBackButton } from '../../components/hr/HrmPageChrome';
-import HrmPanel from '../../components/hr/HrmPanel';
+import PageHeader, { BackButton } from '../../components/ui/PageHeader';
+import SectionCard from '../../components/ui/SectionCard';
 import EmptyState from '../../components/ui/EmptyState';
-import PageHeader from '../../components/ui/PageHeader';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import { showToast } from '../../components/ui/Toast';
 import { usePermission } from '../../hooks/usePermission';
@@ -187,7 +186,7 @@ export default function AdminRolePermissionsPage() {
   return (
     <div className="hrm-page admin-role-permissions-page">
       <div className="admin-role-permissions-chrome">
-        <HrmBackButton onBack={() => navigate('/admin/settings')} />
+        <BackButton onBack={() => navigate('/admin/settings')} />
         <PageHeader
           title={roleLabel}
           subtitle={subtitle}
@@ -224,7 +223,7 @@ export default function AdminRolePermissionsPage() {
         </p>
       )}
 
-      <HrmPanel noPadding className="admin-role-permissions-board">
+      <SectionCard noPadding className="admin-role-permissions-board">
         <PermissionFilterToolbar
           search={search}
           onSearchChange={setSearch}
@@ -314,7 +313,7 @@ export default function AdminRolePermissionsPage() {
             />
           </div>
         ) : null}
-      </HrmPanel>
+      </SectionCard>
 
       <p className="admin-role-permissions-page__footer-note text-xs text-[var(--md-on-surface-variant)]">
         Quyền được gán theo vai trò - người dùng kế thừa từ role đã chọn khi cấp tài khoản.{' '}

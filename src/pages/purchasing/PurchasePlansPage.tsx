@@ -23,7 +23,8 @@ import PurchasePlanVariancePanel from '../../components/purchasing/PurchasePlanV
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Dropdown from '../../components/ui/Dropdown';
 import EmptyState from '../../components/ui/EmptyState';
-import HrmStatCard from '../../components/hr/HrmStatCard';
+import KpiCard from '../../components/ui/KpiCard';
+import MetricsStrip from '../../components/ui/MetricsStrip';
 import Pagination from '../../components/ui/Pagination';
 import SearchBar from '../../components/ui/SearchBar';
 import TabFilter from '../../components/ui/TabFilter';
@@ -252,32 +253,32 @@ export default function PurchasePlansPage({ kind = 'plan' }: Props) {
         </div>
       </header>
 
-      <div className="hrm-stat-grid">
-        <HrmStatCard
+      <MetricsStrip columns={4}>
+        <KpiCard
           label={isAdhoc ? 'Tổng phiếu' : 'Tổng KHMH'}
           value={statsAll?.totalCount ?? '-'}
           icon={ClipboardList}
           tone="primary"
         />
-        <HrmStatCard
+        <KpiCard
           label="Nháp"
           value={statsDraft?.totalCount ?? '-'}
           icon={FileText}
           tone="warning"
         />
-        <HrmStatCard
+        <KpiCard
           label="Chờ duyệt"
           value={pendingCount}
           icon={Clock}
           tone="neutral"
         />
-        <HrmStatCard
+        <KpiCard
           label="Đã duyệt"
           value={statsApproved?.totalCount ?? '-'}
           icon={CheckCircle2}
           tone="success"
         />
-      </div>
+      </MetricsStrip>
 
       <div className="pur-erp__workspace">
         {!isAdhoc && showVariance ? <PurchasePlanVariancePanel /> : null}

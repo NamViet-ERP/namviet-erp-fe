@@ -799,7 +799,8 @@
     align-items: flex-start;
     gap: 12px;
   }
-  .admin-role-permissions-chrome .hrm-back-btn {
+  .admin-role-permissions-chrome .hrm-back-btn,
+  .admin-role-permissions-chrome .page-header__back {
     margin-top: 10px;
     flex-shrink: 0;
   }
@@ -1229,7 +1230,8 @@
       flex-direction: column;
       gap: 8px;
     }
-    .admin-role-permissions-chrome .hrm-back-btn {
+    .admin-role-permissions-chrome .hrm-back-btn,
+    .admin-role-permissions-chrome .page-header__back {
       margin-top: 0;
     }
     .admin-role-permissions-board {
@@ -1263,7 +1265,8 @@
     align-items: flex-start;
     gap: 12px;
   }
-  .admin-user-detail-chrome .hrm-back-btn {
+  .admin-user-detail-chrome .hrm-back-btn,
+  .admin-user-detail-chrome .page-header__back {
     margin-top: 10px;
     flex-shrink: 0;
   }
@@ -1444,7 +1447,8 @@
       flex-direction: column;
       gap: 8px;
     }
-    .admin-user-detail-chrome .hrm-back-btn {
+    .admin-user-detail-chrome .hrm-back-btn,
+    .admin-user-detail-chrome .page-header__back {
       margin-top: 0;
     }
     .admin-user-detail-facts {

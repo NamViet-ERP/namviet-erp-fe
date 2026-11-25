@@ -7,7 +7,7 @@ import SearchBar from '../../components/ui/SearchBar';
 import Pagination from '../../components/ui/Pagination';
 import PageHeader from '../../components/ui/PageHeader';
 import PermissionGate from '../../components/auth/PermissionGate';
-import HrmPanel from '../../components/hr/HrmPanel';
+import SectionCard from '../../components/ui/SectionCard';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage, saveBlob } from '../../lib/apiClient';
 import { downloadVoucherExport } from '../../lib/wms/voucherExportDownload';
@@ -441,7 +441,7 @@ function ExportListPageApi({ initialProjectCode, openVoucherCode }: ExportListPa
         }
       />
 
-      <HrmPanel noPadding>
+      <SectionCard noPadding>
         <div className="px-4 pt-3 pb-1 border-b border-[var(--md-outline-variant02)]">
           <TabFilter tabs={kindTabs} activeTab={kindTab} onChange={id => { setKindTab(id); setPage(1); }} />
         </div>
@@ -484,7 +484,7 @@ function ExportListPageApi({ initialProjectCode, openVoucherCode }: ExportListPa
             totalItems={filtered.length}
           />
         )}
-      </HrmPanel>
+      </SectionCard>
 
       <ExportCreateModal
         isOpen={showCreate}

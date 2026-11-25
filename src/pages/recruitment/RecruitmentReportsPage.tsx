@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Download } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
-import HrmPanel from '../../components/hr/HrmPanel';
+import SectionCard from '../../components/ui/SectionCard';
 import VoucherDateFilter from '../../components/warehouse/VoucherDateFilter';
 import PermissionGate from '../../components/auth/PermissionGate';
 import { showToast } from '../../components/ui/Toast';
@@ -34,7 +34,7 @@ export default function RecruitmentReportsPage() {
         subtitle="Chất lượng nguồn, funnel chuyển đổi và top vị trí theo kỳ."
       />
 
-      <HrmPanel>
+      <SectionCard>
         <div className="mb-3">
           <h2 className="text-base font-semibold">Bộ lọc kỳ</h2>
           <p className="text-sm text-[var(--md-on-surface-variant)]">Lọc theo ngày nộp hồ sơ</p>
@@ -57,7 +57,7 @@ export default function RecruitmentReportsPage() {
             </button>
           </PermissionGate>
         </div>
-      </HrmPanel>
+      </SectionCard>
 
       {isLoading ? (
         <p className="text-sm text-[var(--md-on-surface-variant)]">Đang tải báo cáo…</p>
@@ -65,7 +65,7 @@ export default function RecruitmentReportsPage() {
         <p className="text-sm text-[var(--md-error)]">{getApiErrorMessage(error, 'Không tải được báo cáo')}</p>
       ) : data ? (
         <>
-          <HrmPanel noPadding>
+          <SectionCard noPadding>
             <div className="p-4 pb-0">
               <h2 className="text-base font-semibold">Theo nguồn</h2>
               <p className="text-sm text-[var(--md-on-surface-variant)]">CV → PV/Offer → Đã tuyển</p>
@@ -94,9 +94,9 @@ export default function RecruitmentReportsPage() {
                 </tbody>
               </table>
             </div>
-          </HrmPanel>
+          </SectionCard>
 
-          <HrmPanel noPadding>
+          <SectionCard noPadding>
             <div className="p-4 pb-0">
               <h2 className="text-base font-semibold">Top vị trí</h2>
               <p className="text-sm text-[var(--md-on-surface-variant)]">Vị trí có nhiều CV nhất</p>
@@ -122,7 +122,7 @@ export default function RecruitmentReportsPage() {
                 </tbody>
               </table>
             </div>
-          </HrmPanel>
+          </SectionCard>
         </>
       ) : null}
     </div>

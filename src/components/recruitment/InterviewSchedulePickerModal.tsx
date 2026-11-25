@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import Modal from '../ui/Modal';
 import SearchBar from '../ui/SearchBar';
-import CandidateStatusBadge from './CandidateStatusBadge';
+import StatusBadge from '../ui/StatusBadge';
+import { getCandidateStatusBadge } from '../../utils/recruitmentStatusBadge';
 import { useCandidates } from '../../hooks/useCandidates';
-import type { Candidate, CandidatePipelineStatus } from '../../types/hr';
+import type { Candidate } from '../../types/hr';
 
 interface InterviewSchedulePickerModalProps {
   open: boolean;
@@ -67,7 +68,7 @@ export default function InterviewSchedulePickerModal({
                     {candidate.phone ? ` · ${candidate.phone}` : ''}
                   </span>
                 </span>
-                <CandidateStatusBadge status={candidate.status as CandidatePipelineStatus} />
+                <StatusBadge {...getCandidateStatusBadge(candidate.status)} />
               </button>
             ))
           )}

@@ -7,7 +7,7 @@ import SearchBar from '../../components/ui/SearchBar';
 import Pagination from '../../components/ui/Pagination';
 import PageHeader from '../../components/ui/PageHeader';
 import PermissionGate from '../../components/auth/PermissionGate';
-import HrmPanel from '../../components/hr/HrmPanel';
+import SectionCard from '../../components/ui/SectionCard';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { downloadVoucherExport } from '../../lib/wms/voucherExportDownload';
@@ -344,7 +344,7 @@ function TransferListPageApi({ initialProjectCode }: TransferListPageApiProps) {
         }
       />
 
-      <HrmPanel noPadding>
+      <SectionCard noPadding>
         <div className="px-4 pt-3 pb-1 border-b border-[var(--md-outline-variant02)]">
           <TabFilter
             tabs={typeTabs}
@@ -401,7 +401,7 @@ function TransferListPageApi({ initialProjectCode }: TransferListPageApiProps) {
             totalItems={filtered.length}
           />
         )}
-      </HrmPanel>
+      </SectionCard>
 
       <TransferCreateModal
         isOpen={showCreate}

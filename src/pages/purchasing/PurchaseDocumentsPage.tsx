@@ -1,7 +1,10 @@
 import { useMemo, useState } from 'react';
 import { Download, ExternalLink, FolderOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import PurchasingListLayout from '../../components/purchasing/PurchasingListLayout';
+import PageShell from '../../components/ui/PageShell';
+import PageHeader from '../../components/ui/PageHeader';
+import SectionCard from '../../components/ui/SectionCard';
+import FilterToolbar from '../../components/ui/FilterToolbar';
 import ProjectAutocomplete from '../../components/purchasing/ProjectAutocomplete';
 import EmptyState from '../../components/ui/EmptyState';
 import EntityCodeLink from '../../components/ui/EntityCodeLink';
@@ -70,58 +73,63 @@ export default function PurchaseDocumentsPage() {
   };
 
   return (
-    <PurchasingListLayout
-      title="Hồ sơ mua hàng"
-      subtitle="CO, CQ, CNXK, BBGH, BBNT, tờ khai, IV, PL và chứng từ gắn PO"
-      search={search}
-      onSearchChange={value => {
-        setSearch(value);
-        setPage(1);
-      }}
-      searchPlaceholder="Tìm theo tên file, PO, NCC…"
-      hasFilters={hasFilters}
-      onResetFilters={handleResetFilters}
-      filters={(
-        <>
-          <ProjectAutocomplete
-            value={projectCode}
-            onChange={code => {
-              setProjectCode(code);
-              setPage(1);
-            }}
-            projects={projects}
-            placeholder="Lọc dự án"
-            compact
-          />
-          <input
-            className="form-input"
-            value={poCode}
-            onChange={e => {
-              setPoCode(e.target.value);
-              setPage(1);
-            }}
-            placeholder="Mã PO"
-            aria-label="Lọc mã PO"
-          />
-          <select
-            className="form-input"
-            value={docType}
-            onChange={e => {
-              setDocType(e.target.value);
-              setPage(1);
-            }}
-            aria-label="Lọc loại hồ sơ"
-          >
-            <option value="">Tất cả loại</option>
-            {PURCHASE_DOC_TYPE_OPTIONS.map(o => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </>
-      )}
-    >
+    <PageShell>
+      <PageHeader
+        eyebrow="Mua hàng"
+        title="Hồ sơ mua hàng"
+        subtitle="CO, CQ, CNXK, BBGH, BBNT, tờ khai, IV, PL và chứng từ gắn PO"
+      />
+      <SectionCard noPadding>
+        <FilterToolbar
+          search={search}
+          onSearchChange={value => {
+            setSearch(value);
+            setPage(1);
+          }}
+          searchPlaceholder="Tìm theo tên file, PO, NCC…"
+          hasActiveFilters={hasFilters}
+          onReset={handleResetFilters}
+          filters={(
+            <div className="hrm-list-toolbar__filter-row hrm-list-toolbar__filter-row--selects">
+              <ProjectAutocomplete
+                value={projectCode}
+                onChange={code => {
+                  setProjectCode(code);
+                  setPage(1);
+                }}
+                projects={projects}
+                placeholder="Lọc dự án"
+                compact
+              />
+              <input
+                className="form-input"
+                value={poCode}
+                onChange={e => {
+                  setPoCode(e.target.value);
+                  setPage(1);
+                }}
+                placeholder="Mã PO"
+                aria-label="Lọc mã PO"
+              />
+              <select
+                className="form-input"
+                value={docType}
+                onChange={e => {
+                  setDocType(e.target.value);
+                  setPage(1);
+                }}
+                aria-label="Lọc loại hồ sơ"
+              >
+                <option value="">Tất cả loại</option>
+                {PURCHASE_DOC_TYPE_OPTIONS.map(o => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        />
       {isError ? (
         <EmptyState message={getApiErrorMessage(error, 'Không tải được danh sách hồ sơ.')} />
       ) : (
@@ -227,6 +235,7 @@ export default function PurchaseDocumentsPage() {
           ) : null}
         </>
       )}
-    </PurchasingListLayout>
+      </SectionCard>
+    </PageShell>
   );
 }

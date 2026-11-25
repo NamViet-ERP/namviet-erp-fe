@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { AlertTriangle, Building2, Package, ShieldCheck } from 'lucide-react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import PageShell from './PageShell';
-import PageHeader from './PageHeader';
+import PageHeader, { BackButton } from './PageHeader';
 import FilterToolbar from './FilterToolbar';
 import TableShell from './TableShell';
 import KpiCard from './KpiCard';
@@ -12,7 +12,8 @@ import MetricsStrip from './MetricsStrip';
 import StatusBadge, { STATUS_TONE_CLASS } from './StatusBadge';
 import PurchasingStatusBadge from '../purchasing/PurchasingStatusBadge';
 import SectionCard from './SectionCard';
-import FormSection from './FormSection';
+import FormSection, { FormSectionHeader } from './FormSection';
+import { getCandidateStatusBadge } from '../../utils/recruitmentStatusBadge';
 
 describe('Design System UI primitives', () => {
   let container: HTMLDivElement;
@@ -122,6 +123,44 @@ describe('Design System UI primitives', () => {
       );
       expect(container.querySelector('.page-header--detail')).not.toBeNull();
       expect(container.querySelector('.page-header__back')?.textContent).toContain('Quay lại');
+    });
+
+    it('hides back button when hideBackButton is true while preserving detail layout', async () => {
+      const onBack = vi.fn();
+      await act(() =>
+        root.render(
+          createElement(PageHeader, {
+            variant: 'detail',
+            onBack,
+            hideBackButton: true,
+            title: 'Đơn hàng PO-2026-089',
+            subtitle: 'Nhà cung cấp: Công ty TNHH VLXD Minh Long',
+          }),
+        ),
+      );
+      expect(container.querySelector('.page-header--detail')).not.toBeNull();
+      expect(container.querySelector('.page-header__back')).toBeNull();
+      expect(container.querySelector('.page-header__subtitle')?.textContent).toBe(
+        'Nhà cung cấp: Công ty TNHH VLXD Minh Long',
+      );
+    });
+
+    it('renders standalone BackButton with default/custom label and invokes onBack', async () => {
+      const onBack = vi.fn();
+      await act(() =>
+        root.render(
+          createElement(BackButton, {
+            onBack,
+            label: 'Về danh sách phân quyền',
+            className: 'custom-back',
+          }),
+        ),
+      );
+      const btn = container.querySelector<HTMLButtonElement>('button.page-header__back.custom-back');
+      expect(btn).not.toBeNull();
+      expect(btn?.textContent).toContain('Về danh sách phân quyền');
+      await act(() => btn!.click());
+      expect(onBack).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -476,11 +515,36 @@ describe('Design System UI primitives', () => {
       expect(badge?.className).toContain('badge-error');
       expect(badge?.textContent).toBe('Quá hạn giao hàng');
     });
+
+    it('maps recruitment candidate pipeline statuses via getCandidateStatusBadge onto StatusBadge', async () => {
+      const newCfg = getCandidateStatusBadge('New');
+      expect(newCfg).toEqual({ tone: 'primary', label: 'CV mới', className: 'badge-hrm-new' });
+
+      const rejectedCfg = getCandidateStatusBadge('Rejected');
+      expect(rejectedCfg).toEqual({ tone: 'error', label: 'PV không đạt' });
+
+      const unknownCfg = getCandidateStatusBadge('');
+      expect(unknownCfg).toEqual({ tone: 'neutral', label: '—' });
+
+      await act(() =>
+        root.render(
+          createElement(StatusBadge, {
+            tone: newCfg.tone,
+            label: newCfg.label,
+            className: newCfg.className,
+          }),
+        ),
+      );
+      const badge = container.querySelector('.badge');
+      expect(badge?.className).toContain('badge-md-primary');
+      expect(badge?.className).toContain('badge-hrm-new');
+      expect(badge?.textContent).toBe('CV mới');
+    });
   });
 
   describe('SectionCard & FormSection', () => {
     it('renders SectionCard with footer, highlighted state, id, and forwarded ref', async () => {
-      const ref = createRef<HTMLDivElement>();
+      const ref = createRef<HTMLElement>();
       await act(() =>
         root.render(
           createElement(SectionCard, {
@@ -504,6 +568,40 @@ describe('Design System UI primitives', () => {
       );
     });
 
+    it('renders SectionCard variant="detail" with hrm-detail-section structure and description', async () => {
+      const ref = createRef<HTMLElement>();
+      await act(() =>
+        root.render(
+          createElement(SectionCard, {
+            ref,
+            variant: 'detail',
+            title: 'Thông số vật tư',
+            description: 'Quy cách tiêu chuẩn Dự án Cầu Rạch Miễu 2',
+            className: 'hrm-detail-section--status-active',
+            actions: createElement('button', { type: 'button' }, 'Chỉnh sửa'),
+            children: createElement('p', null, 'Thép hình H300 · VT-THEP-001'),
+          }),
+        ),
+      );
+
+      const section = container.querySelector('section.erp-section-card.hrm-detail-section');
+      expect(section).not.toBeNull();
+      expect(section).toBe(ref.current);
+      expect(section?.className).toContain('hrm-detail-section--status-active');
+      expect(container.querySelector('h3.hrm-detail-section__title')?.textContent).toBe(
+        'Thông số vật tư',
+      );
+      expect(container.querySelector('p.hrm-detail-section__desc')?.textContent).toBe(
+        'Quy cách tiêu chuẩn Dự án Cầu Rạch Miễu 2',
+      );
+      expect(container.querySelector('.hrm-detail-section__body')?.textContent).toBe(
+        'Thép hình H300 · VT-THEP-001',
+      );
+      expect(container.querySelector('.hrm-detail-section__head button')?.textContent).toBe(
+        'Chỉnh sửa',
+      );
+    });
+
     it('renders FormSection with step badge, description, and responsive grid columns', async () => {
       await act(() =>
         root.render(
@@ -513,8 +611,8 @@ describe('Design System UI primitives', () => {
             description: 'Chọn đúng quy cách và nhà cung cấp đã duyệt',
             columns: 3,
             children: [
-              createElement('div', { key: 'code' }, 'Mã VT: VT-TH-50100'),
-              createElement('div', { key: 'name' }, 'Tên: Thép hộp 50x100x2mm'),
+              createElement('div', { key: 'code' }, 'Mã VT: VT-THEP-001'),
+              createElement('div', { key: 'name' }, 'Tên: Thép hình H300'),
               createElement('div', { key: 'supplier' }, 'NCC: Công ty TNHH VLXD Minh Long'),
             ],
           }),
@@ -529,6 +627,25 @@ describe('Design System UI primitives', () => {
         'Chọn đúng quy cách và nhà cung cấp đã duyệt',
       );
       expect(container.querySelector('.erp-form-section__grid--cols-3')).not.toBeNull();
+    });
+
+    it('renders standalone named FormSectionHeader with optional step and className', async () => {
+      await act(() =>
+        root.render(
+          createElement(FormSectionHeader, {
+            step: 2,
+            title: 'Chứng từ CO/CQ đính kèm',
+            className: 'hrm-form-section-header--spaced',
+          }),
+        ),
+      );
+
+      const header = container.querySelector('.hrm-form-section-header');
+      expect(header?.className).toContain('hrm-form-section-header--spaced');
+      expect(container.querySelector('.hrm-form-section-header__step')?.textContent).toBe('2');
+      expect(container.querySelector('.hrm-form-section-header__title')?.textContent).toBe(
+        'Chứng từ CO/CQ đính kèm',
+      );
     });
   });
 });

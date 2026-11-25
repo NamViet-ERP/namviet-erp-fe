@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, CalendarDays, Plus } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
-import HrmPanel from '../../components/hr/HrmPanel';
+import SectionCard from '../../components/ui/SectionCard';
 import EmptyState from '../../components/ui/EmptyState';
 import InterviewCalendarEventModal from '../../components/recruitment/InterviewCalendarEventModal';
 import InterviewCalendarDayModal from '../../components/recruitment/InterviewCalendarDayModal';
@@ -121,7 +121,7 @@ export default function RecruitmentCalendarPage() {
         )}
       />
 
-      <HrmPanel noPadding className="recruitment-cal-board">
+      <SectionCard noPadding className="recruitment-cal-board">
         <div className="recruitment-cal-nav">
           <div className="recruitment-cal-nav__left">
             <button type="button" className="recruitment-cal-nav__today" onClick={goToday}>
@@ -226,7 +226,7 @@ export default function RecruitmentCalendarPage() {
             </div>
           </div>
         )}
-      </HrmPanel>
+      </SectionCard>
 
       <InterviewCalendarDayModal
         open={Boolean(dayModal)}

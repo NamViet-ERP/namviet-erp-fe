@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Globe, Package, Tag, Layers } from 'lucide-react';
-import HrmPanel from '../../components/hr/HrmPanel';
+import SectionCard from '../../components/ui/SectionCard';
 import { useMaterialOrigins } from '../../hooks/useMaterialOrigins';
 import { useMaterialRegions } from '../../hooks/useMaterialRegions';
 import { useMaterialBrands } from '../../hooks/useMaterialBrands';
@@ -18,7 +18,7 @@ export default function MaterialOriginsSettingsPanel() {
 
   return (
     <div className="hrm-settings-grid hrm-settings-grid--recruitment">
-      <HrmPanel className="hrm-settings-card hrm-settings-card--featured">
+      <SectionCard className="hrm-settings-card hrm-settings-card--featured">
         <div className="hrm-settings-card__head">
           <div className="hrm-settings-card__icon hrm-settings-card__icon--primary">
             <Globe size={20} />
@@ -74,10 +74,10 @@ export default function MaterialOriginsSettingsPanel() {
         {activeTab === 'brands' && <BrandsTabPanel />}
         {activeTab === 'countries' && <CountriesTabPanel />}
         {activeTab === 'regions' && <RegionsTabPanel />}
-      </HrmPanel>
+      </SectionCard>
 
       {/* Cột hướng dẫn */}
-      <HrmPanel className="hrm-settings-card">
+      <SectionCard className="hrm-settings-card">
         <div className="hrm-settings-card__head">
           <div className="hrm-settings-card__icon hrm-settings-card__icon--neutral">
             <Package size={20} />
@@ -104,7 +104,7 @@ export default function MaterialOriginsSettingsPanel() {
           <Package size={15} />
           Đi tới danh mục vật tư
         </Link>
-      </HrmPanel>
+      </SectionCard>
     </div>
   );
 }

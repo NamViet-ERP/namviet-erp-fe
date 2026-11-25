@@ -1,7 +1,7 @@
 import { Clock } from 'lucide-react';
 import { calcSeniority, type Employee } from '../../types/hr';
 import { formatDateVi } from '../../lib/hrm/formatters';
-import DetailSection from './DetailSection';
+import SectionCard from '../ui/SectionCard';
 import DetailFieldGrid from './DetailFieldGrid';
 import { FieldView, MaskedFieldView, SecureImagePreview } from './DetailFields';
 
@@ -15,7 +15,7 @@ export default function EmployeeRecordView({ employee }: EmployeeRecordViewProps
 
   return (
     <>
-      <DetailSection title="Thông tin HR (Mã NV, Tổ chức)">
+      <SectionCard variant="detail" title="Thông tin HR (Mã NV, Tổ chức)">
         {employee.status === 'Nghỉ việc' && (
           <p className="hrm-alert hrm-alert--warning">
             Nhân viên đã nghỉ việc — tài khoản hệ thống (nếu có) bị khóa và không hiển thị trong các danh sách chọn.
@@ -31,9 +31,9 @@ export default function EmployeeRecordView({ employee }: EmployeeRecordViewProps
           <FieldView label="Trạng thái" value={employee.status} />
           <FieldView label="Ngày nghỉ việc" value={formatDateVi(employee.resignDate)} />
         </DetailFieldGrid>
-      </DetailSection>
+      </SectionCard>
 
-      <DetailSection title="Thông tin cơ bản">
+      <SectionCard variant="detail" title="Thông tin cơ bản">
         <DetailFieldGrid>
           <FieldView label="Họ và tên" value={employee.fullName} />
           <FieldView label="Giới tính" value={employee.gender} />
@@ -49,9 +49,9 @@ export default function EmployeeRecordView({ employee }: EmployeeRecordViewProps
             {seniority.years} năm {seniority.months} tháng {seniority.days} ngày
           </p>
         </div>
-      </DetailSection>
+      </SectionCard>
 
-      <DetailSection title="CMND / CCCD">
+      <SectionCard variant="detail" title="CMND / CCCD">
         {(employee.cccdFront?.previewUrl || employee.cccdNumber) && (
           <p className="hrm-alert hrm-alert--info mb-4">
             Thông tin nhạy cảm được che mặc định. Nhấn biểu tượng mắt hoặc &quot;Xem ảnh&quot; để hiện đầy đủ khi cần.
@@ -69,18 +69,18 @@ export default function EmployeeRecordView({ employee }: EmployeeRecordViewProps
           <SecureImagePreview label="CCCD mặt trước" url={employee.cccdFront?.previewUrl} fileName={employee.cccdFront?.fileName} document />
           <SecureImagePreview label="CCCD mặt sau" url={employee.cccdBack?.previewUrl} fileName={employee.cccdBack?.fileName} document />
         </DetailFieldGrid>
-      </DetailSection>
+      </SectionCard>
 
-      <DetailSection title="Liên hệ">
+      <SectionCard variant="detail" title="Liên hệ">
         <DetailFieldGrid layout="two">
           <FieldView label="Email cá nhân" value={employee.personalEmail} />
           <FieldView label="SĐT cá nhân" value={employee.personalPhone} />
           <FieldView label="Địa chỉ thường trú" value={employee.permanentAddress} />
           <FieldView label="Địa chỉ tạm trú" value={employee.temporaryAddress} />
         </DetailFieldGrid>
-      </DetailSection>
+      </SectionCard>
 
-      <DetailSection title="Học vấn">
+      <SectionCard variant="detail" title="Học vấn">
         <DetailFieldGrid layout="two">
           <FieldView label="Trình độ" value={employee.education} />
           <FieldView label="Trường" value={employee.school} />
@@ -90,32 +90,32 @@ export default function EmployeeRecordView({ employee }: EmployeeRecordViewProps
         <div className="mt-4">
           <SecureImagePreview label="Ảnh bằng cấp" url={employee.degreePhoto?.previewUrl} fileName={employee.degreePhoto?.fileName} document />
         </div>
-      </DetailSection>
+      </SectionCard>
 
-      <DetailSection title="Ngân hàng">
+      <SectionCard variant="detail" title="Ngân hàng">
         <DetailFieldGrid layout="two">
           <FieldView label="Tên chủ TK" value={employee.bankAccountName} />
           <MaskedFieldView label="Số tài khoản" value={employee.bankAccountNumber} />
           <FieldView label="Tên ngân hàng" value={employee.bankName} />
           <FieldView label="Chi nhánh" value={employee.bankBranch} />
         </DetailFieldGrid>
-      </DetailSection>
+      </SectionCard>
 
-      <DetailSection title="BHXH & Thuế">
+      <SectionCard variant="detail" title="BHXH & Thuế">
         <DetailFieldGrid layout="three">
           <FieldView label="Đã tham gia BHXH" value={employee.hadSocialInsurance} />
           <MaskedFieldView label="Số BHXH" value={employee.siNumber} />
           <MaskedFieldView label="Mã số thuế" value={employee.taxCode} />
         </DetailFieldGrid>
-      </DetailSection>
+      </SectionCard>
 
-      <DetailSection title="BHXH hiện tại">
+      <SectionCard variant="detail" title="BHXH hiện tại">
         <p className="hrm-placeholder">Sẽ tích hợp từ module BHXH sau.</p>
-      </DetailSection>
+      </SectionCard>
 
-      <DetailSection title="Hợp đồng lao động">
+      <SectionCard variant="detail" title="Hợp đồng lao động">
         <p className="hrm-placeholder">Sẽ tích hợp từ module HĐLĐ sau.</p>
-      </DetailSection>
+      </SectionCard>
     </>
   );
 }

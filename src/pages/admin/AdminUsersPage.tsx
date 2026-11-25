@@ -11,7 +11,7 @@ import Pagination from '../../components/ui/Pagination';
 import EmptyState from '../../components/ui/EmptyState';
 import EntityCodeLink from '../../components/ui/EntityCodeLink';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
-import HrmPanel from '../../components/hr/HrmPanel';
+import SectionCard from '../../components/ui/SectionCard';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import AdminAccountSwitch from '../../components/admin/AdminAccountSwitch';
 import AdminCreateSystemUserModal from '../../components/admin/AdminCreateSystemUserModal';
@@ -232,7 +232,7 @@ export default function AdminUsersPage() {
         ))}
       </div>
 
-      <HrmPanel noPadding className="admin-users-board">
+      <SectionCard noPadding className="admin-users-board">
         <div className="hrm-list-toolbar">
           <div className="admin-users-toolbar">
             <SearchBar
@@ -399,7 +399,7 @@ export default function AdminUsersPage() {
             onPageSizeChange={s => { setPageSize(s); setPage(1); }}
           />
         )}
-      </HrmPanel>
+      </SectionCard>
 
       <AdminProvisionAccountModal
         key={provisionTarget ? `provision-${provisionTarget.id}` : 'provision-closed'}

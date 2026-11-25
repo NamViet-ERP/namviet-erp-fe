@@ -17,7 +17,7 @@ import { formatDateVi } from '../../lib/hrm/formatters';
 import { sanitizeEmployeeForSave } from '../../lib/hrm/sanitizeInput';
 import type { LocalFileState } from '../../components/hr/HrmImageUpload';
 import { filesService, type UploadCategory } from '../../services/filesService';
-import DetailSection from '../../components/hr/DetailSection';
+import SectionCard from '../../components/ui/SectionCard';
 import DetailFieldGrid from '../../components/hr/DetailFieldGrid';
 import {
   FieldView,
@@ -27,7 +27,7 @@ import {
   SecureImagePreview,
   EditableImageField,
 } from '../../components/hr/DetailFields';
-import { HrmDetailHeader } from '../../components/hr/HrmPageChrome';
+import PageHeader from '../../components/ui/PageHeader';
 import HrmEditActions from '../../components/hr/HrmEditActions';
 import HrmNotFound, { HrmLoadingState } from '../../components/hr/HrmNotFound';
 import HrmProfileStripPhoto from '../../components/hr/HrmProfileStripPhoto';
@@ -155,7 +155,8 @@ export default function EmployeeDetailPage() {
 
   return (
     <div className="hrm-page w-full">
-      <HrmDetailHeader
+      <PageHeader
+        variant="detail"
         onBack={() => navigate('/members/list')}
         title={employee.fullName}
         subtitle={employee.code ? `Mã NV: ${employee.code}` : 'Chưa có mã nhân viên'}
@@ -189,7 +190,7 @@ export default function EmployeeDetailPage() {
         </div>
       </div>
 
-      <DetailSection title="Thông tin HR (Mã NV, Tổ chức)">
+      <SectionCard variant="detail" title="Thông tin HR (Mã NV, Tổ chức)">
         {form.status === 'Nghỉ việc' && !isEditing && (
           <p className="hrm-alert hrm-alert--warning">
             Nhân viên đã nghỉ việc — tài khoản hệ thống (nếu có) bị khóa và không hiển thị trong các danh sách chọn.
@@ -255,9 +256,9 @@ export default function EmployeeDetailPage() {
             </>
           )}
         </DetailFieldGrid>
-      </DetailSection>
+      </SectionCard>
 
-      <DetailSection title="Thông tin cơ bản">
+      <SectionCard variant="detail" title="Thông tin cơ bản">
         <DetailFieldGrid>
           {isEditing ? (
             <>
@@ -284,9 +285,9 @@ export default function EmployeeDetailPage() {
             {seniority.years} năm {seniority.months} tháng {seniority.days} ngày
           </p>
         </div>
-      </DetailSection>
+      </SectionCard>
 
-      <DetailSection title="CMND / CCCD">
+      <SectionCard variant="detail" title="CMND / CCCD">
         {!isEditing && (form.cccdFront?.previewUrl || form.cccdNumber) && (
           <p className="hrm-alert hrm-alert--info mb-4">
             Thông tin nhạy cảm được che mặc định. Nhấn biểu tượng mắt hoặc &quot;Xem ảnh&quot; để hiện đầy đủ khi cần.
@@ -342,9 +343,9 @@ export default function EmployeeDetailPage() {
             </>
           )}
         </DetailFieldGrid>
-      </DetailSection>
+      </SectionCard>
 
-      <DetailSection title="Liên hệ">
+      <SectionCard variant="detail" title="Liên hệ">
         <DetailFieldGrid layout="two">
           {isEditing ? (
             <>
@@ -362,9 +363,9 @@ export default function EmployeeDetailPage() {
             </>
           )}
         </DetailFieldGrid>
-      </DetailSection>
+      </SectionCard>
 
-      <DetailSection title="Học vấn">
+      <SectionCard variant="detail" title="Học vấn">
         <DetailFieldGrid layout="two">
           {isEditing ? (
             <>
@@ -397,9 +398,9 @@ export default function EmployeeDetailPage() {
             <SecureImagePreview label="Ảnh bằng cấp" url={form.degreePhoto?.previewUrl} fileName={form.degreePhoto?.fileName} document />
           )}
         </div>
-      </DetailSection>
+      </SectionCard>
 
-      <DetailSection title="Ngân hàng">
+      <SectionCard variant="detail" title="Ngân hàng">
         <DetailFieldGrid layout="two">
           {isEditing ? (
             <>
@@ -417,9 +418,9 @@ export default function EmployeeDetailPage() {
             </>
           )}
         </DetailFieldGrid>
-      </DetailSection>
+      </SectionCard>
 
-      <DetailSection title="BHXH & Thuế">
+      <SectionCard variant="detail" title="BHXH & Thuế">
         <DetailFieldGrid layout="three">
           {isEditing ? (
             <>
@@ -435,15 +436,15 @@ export default function EmployeeDetailPage() {
             </>
           )}
         </DetailFieldGrid>
-      </DetailSection>
+      </SectionCard>
 
-      <DetailSection title="BHXH hiện tại">
+      <SectionCard variant="detail" title="BHXH hiện tại">
         <p className="hrm-placeholder">Sẽ tích hợp từ module BHXH sau.</p>
-      </DetailSection>
+      </SectionCard>
 
-      <DetailSection title="Hợp đồng lao động">
+      <SectionCard variant="detail" title="Hợp đồng lao động">
         <p className="hrm-placeholder">Sẽ tích hợp từ module HĐLĐ sau.</p>
-      </DetailSection>
+      </SectionCard>
     </div>
   );
 }

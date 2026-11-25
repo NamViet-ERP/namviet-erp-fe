@@ -5577,7 +5577,8 @@
     color: var(--md-on-primary-container);
     box-shadow: none;
   }
-  .app-shell--wms .hrm-stat-grid:not(.project-detail-stat-grid) {
+  .app-shell--wms .hrm-stat-grid:not(.project-detail-stat-grid),
+  .app-shell--wms .erp-metrics-strip:not(.project-detail-stat-grid) {
     margin-bottom: 16px;
   }
   .app-shell--wms .hrm-panel {
@@ -6039,7 +6040,8 @@
   .project-detail-page .project-detail-stat-grid {
     gap: 12px;
   }
-  .app-shell--wms .project-detail-page .project-detail-stat-grid .hrm-stat-card {
+  .app-shell--wms .project-detail-page .project-detail-stat-grid .hrm-stat-card,
+  .app-shell--wms .project-detail-page .project-detail-stat-grid .kpi-card {
     padding: 11px 14px;
   }
   .project-warehouse-table .project-col-code {

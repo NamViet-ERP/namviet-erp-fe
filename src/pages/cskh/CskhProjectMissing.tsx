@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { FolderKanban } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
-import HrmPanel from '../../components/hr/HrmPanel';
+import SectionCard from '../../components/ui/SectionCard';
 import EmptyState from '../../components/ui/EmptyState';
 import Button from '../../components/ui/Button';
 
@@ -25,7 +25,7 @@ export default function CskhProjectMissing({ loading }: { loading: boolean }) {
         title="Không tìm thấy dự án"
         subtitle="Mã này không có trên trung tâm điều hành."
       />
-      <HrmPanel className="cskh-desk__panel">
+      <SectionCard className="cskh-desk__panel">
         <EmptyState
           icon={FolderKanban}
           message="Không tìm thấy dự án. Quay lại danh sách để chọn thẻ khác."
@@ -35,7 +35,7 @@ export default function CskhProjectMissing({ loading }: { loading: boolean }) {
             </Button>
           )}
         />
-      </HrmPanel>
+      </SectionCard>
     </div>
   );
 }

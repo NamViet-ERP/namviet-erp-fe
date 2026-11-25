@@ -5,7 +5,7 @@ import PageHeader from '../../components/ui/PageHeader';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import FormField from '../../components/ui/FormField';
-import HrmPanel from '../../components/hr/HrmPanel';
+import SectionCard from '../../components/ui/SectionCard';
 import HrmDatePicker from '../../components/hr/HrmDatePicker';
 import Modal from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
@@ -166,7 +166,7 @@ export default function CskhMeetingsPage({ project }: CskhMeetingsPageProps) {
         <Card className="cskh-desk__kpi-card" title="Quá hạn" value={kpis.overdueActions} subtitle="Có thể tạo điểm nghẽn" accent="danger" />
       </div>
 
-      <HrmPanel className="cskh-desk__panel" noPadding>
+      <SectionCard className="cskh-desk__panel" noPadding>
         {rows.length === 0 ? (
           <EmptyState icon={CalendarDays} message={meta.empty} />
         ) : (
@@ -334,7 +334,7 @@ export default function CskhMeetingsPage({ project }: CskhMeetingsPageProps) {
             </section>
           </div>
         )}
-      </HrmPanel>
+      </SectionCard>
 
       <Modal
         isOpen={open}

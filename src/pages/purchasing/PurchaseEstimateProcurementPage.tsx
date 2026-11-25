@@ -11,7 +11,9 @@ import {
   Trash2,
   XCircle,
 } from 'lucide-react';
-import PurchasingListLayout from '../../components/purchasing/PurchasingListLayout';
+import PageShell from '../../components/ui/PageShell';
+import PageHeader from '../../components/ui/PageHeader';
+import SectionCard from '../../components/ui/SectionCard';
 import ProjectAutocomplete from '../../components/purchasing/ProjectAutocomplete';
 import Dropdown from '../../components/ui/Dropdown';
 import EmptyState from '../../components/ui/EmptyState';
@@ -243,41 +245,41 @@ export default function PurchaseEstimateProcurementPage() {
   };
 
   return (
-    <PurchasingListLayout
-      title="Mua hàng dự toán"
-      subtitle="Dự toán vật tư theo dự án và giá chào thầu"
-      hideSearch
-      search=""
-      onSearchChange={() => {}}
-      actions={
-        tab === 'estimates' && canWriteEstimate ? (
-          <button type="button" className="btn btn-primary btn-sm" onClick={openCreate}>
-            <Plus size={14} aria-hidden />
-            Tạo dự toán
-          </button>
-        ) : tab === 'rfq' ? (
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              className="btn btn-outline btn-sm"
-              onClick={() => rfqPanelRef.current?.exportCsv()}
-            >
-              Xuất CSV
+    <PageShell>
+      <PageHeader
+        eyebrow="Mua hàng"
+        title="Mua hàng dự toán"
+        subtitle="Dự toán vật tư theo dự án và giá chào thầu"
+        actions={
+          tab === 'estimates' && canWriteEstimate ? (
+            <button type="button" className="btn btn-primary btn-sm" onClick={openCreate}>
+              <Plus size={14} aria-hidden />
+              Tạo dự toán
             </button>
-            {canWriteRfq ? (
+          ) : tab === 'rfq' ? (
+            <div className="flex flex-wrap gap-2">
               <button
                 type="button"
-                className="btn btn-primary btn-sm"
-                onClick={() => rfqPanelRef.current?.openCreate()}
+                className="btn btn-outline btn-sm"
+                onClick={() => rfqPanelRef.current?.exportCsv()}
               >
-                <Plus size={14} aria-hidden />
-                Ghi nhận báo giá mới
+                Xuất CSV
               </button>
-            ) : null}
-          </div>
-        ) : null
-      }
-    >
+              {canWriteRfq ? (
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  onClick={() => rfqPanelRef.current?.openCreate()}
+                >
+                  <Plus size={14} aria-hidden />
+                  Ghi nhận báo giá mới
+                </button>
+              ) : null}
+            </div>
+          ) : null
+        }
+      />
+      <SectionCard noPadding>
       <div className="pur-erp__tabs-row px-4 pt-3">
         <TabFilter
           tabs={[
@@ -600,6 +602,7 @@ export default function PurchaseEstimateProcurementPage() {
           </section>
         </div>
       </Modal>
-    </PurchasingListLayout>
+      </SectionCard>
+    </PageShell>
   );
 }

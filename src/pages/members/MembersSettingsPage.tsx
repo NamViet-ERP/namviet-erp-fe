@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Link2, Copy, Check, ExternalLink, Shield, FileText, Users, Plus, Ban } from 'lucide-react';
 
 import PageHeader from '../../components/ui/PageHeader';
-import HrmPanel from '../../components/hr/HrmPanel';
+import SectionCard from '../../components/ui/SectionCard';
 import DepartmentsSettingsPanel from '../../components/hr/DepartmentsSettingsPanel';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
@@ -107,7 +107,7 @@ export default function MembersSettingsPage() {
       <div className="hrm-settings-grid">
         <DepartmentsSettingsPanel canUpdate={canUpdate} />
 
-        <HrmPanel className="hrm-settings-card hrm-settings-card--featured">
+        <SectionCard className="hrm-settings-card hrm-settings-card--featured">
           <div className="hrm-settings-card__head">
             <div className="hrm-settings-card__icon hrm-settings-card__icon--primary">
               <Link2 size={20} />
@@ -214,9 +214,9 @@ export default function MembersSettingsPage() {
               );
             })}
           </div>
-        </HrmPanel>
+        </SectionCard>
 
-        <HrmPanel className="hrm-settings-card">
+        <SectionCard className="hrm-settings-card">
           <div className="hrm-settings-card__head">
             <div className="hrm-settings-card__icon hrm-settings-card__icon--shield">
               <Shield size={20} />
@@ -236,9 +236,9 @@ export default function MembersSettingsPage() {
           <p className="hrm-settings-note">
             HR có thể xem đầy đủ khi cần; nhân viên khác không truy cập được trang chi tiết nếu không có quyền.
           </p>
-        </HrmPanel>
+        </SectionCard>
 
-        <HrmPanel className="hrm-settings-card">
+        <SectionCard className="hrm-settings-card">
           <div className="hrm-settings-card__head">
             <div className="hrm-settings-card__icon hrm-settings-card__icon--neutral">
               <FileText size={20} />
@@ -266,7 +266,7 @@ export default function MembersSettingsPage() {
             <Users size={15} />
             Đi tới danh sách nhân viên
           </Link>
-        </HrmPanel>
+        </SectionCard>
       </div>
 
       <ConfirmDialog

@@ -1,4 +1,4 @@
-import { HrmDetailHeader } from '../../../components/hr/HrmPageChrome';
+import PageHeader from '../../../components/ui/PageHeader';
 import EmptyState from '../../../components/ui/EmptyState';
 import TableSkeletonRows from '../../../components/ui/TableSkeletonRows';
 import ConfirmDialog from '../../../components/ui/ConfirmDialog';
@@ -20,7 +20,8 @@ export function PurchaseOrderDetailView({ code }: { code: string }) {
   return (
     <div className="hrm-page w-full pur-detail">
       <div className="no-print">
-        <HrmDetailHeader
+        <PageHeader
+          variant="detail"
           onBack={d.requestBack}
           title={/^po([\s_-]|$)/i.test(code.trim()) ? code.trim() : `PO ${code.trim()}`}
           subtitle={d.order?.supplierName || d.order?.planCode || undefined}

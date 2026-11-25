@@ -548,7 +548,8 @@
       transform var(--md-duration) var(--md-easing);
   }
   /* Standalone back on module pages (not inside .hrm-detail-header) */
-  .app-shell--module .page-shell > .hrm-back-btn {
+  .app-shell--module .page-shell > .hrm-back-btn,
+  .app-shell--module .page-shell > .page-header__back {
     margin-top: 12px;
   }
   .hrm-back-btn:hover,

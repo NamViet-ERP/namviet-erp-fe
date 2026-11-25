@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Briefcase, Plus, Trash2, Link2, Copy, Check, ExternalLink, Users } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import SearchBar from '../../components/ui/SearchBar';
-import HrmPanel from '../../components/hr/HrmPanel';
+import SectionCard from '../../components/ui/SectionCard';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { usePositions, useCreatePosition, useDeletePosition, useTogglePositionStatus } from '../../hooks/usePositions';
 import { getApiErrorMessage } from '../../lib/apiClient';
@@ -85,7 +85,7 @@ export default function RecruitmentSettingsPage() {
       />
 
       <div className="hrm-settings-grid hrm-settings-grid--recruitment">
-        <HrmPanel className="hrm-settings-card hrm-settings-card--featured">
+        <SectionCard className="hrm-settings-card hrm-settings-card--featured">
           <div className="hrm-settings-card__head">
             <div className="hrm-settings-card__icon hrm-settings-card__icon--primary">
               <Briefcase size={20} />
@@ -173,10 +173,10 @@ export default function RecruitmentSettingsPage() {
               <> · Tìm thấy <strong>{filteredPositions.length}</strong></>
             )}
           </p>
-        </HrmPanel>
+        </SectionCard>
 
         <div className="hrm-settings-grid hrm-settings-grid--recruitment-side">
-          <HrmPanel className="hrm-settings-card">
+          <SectionCard className="hrm-settings-card">
             <div className="hrm-settings-card__head">
               <div className="hrm-settings-card__icon hrm-settings-card__icon--primary">
                 <Link2 size={20} />
@@ -221,9 +221,9 @@ export default function RecruitmentSettingsPage() {
                 Mở form xem thử
               </a>
             </div>
-          </HrmPanel>
+          </SectionCard>
 
-          <HrmPanel className="hrm-settings-card">
+          <SectionCard className="hrm-settings-card">
             <div className="hrm-settings-card__head">
               <div className="hrm-settings-card__icon hrm-settings-card__icon--neutral">
                 <Briefcase size={20} />
@@ -241,7 +241,7 @@ export default function RecruitmentSettingsPage() {
               <Users size={15} />
               Đi tới danh sách ứng viên
             </Link>
-          </HrmPanel>
+          </SectionCard>
         </div>
       </div>
 

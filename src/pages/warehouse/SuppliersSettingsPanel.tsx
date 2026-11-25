@@ -7,7 +7,10 @@ import {
   History, Pencil, Plus, Trash2, Upload, Users, X,
 } from 'lucide-react';
 import SupplierSourcingKpiCards from '../../components/suppliers/SupplierSourcingKpiCards';
-import PurchasingListLayout from '../../components/purchasing/PurchasingListLayout';
+import PageShell from '../../components/ui/PageShell';
+import PageHeader from '../../components/ui/PageHeader';
+import SectionCard from '../../components/ui/SectionCard';
+import FilterToolbar from '../../components/ui/FilterToolbar';
 import { usePermission } from '../../hooks/usePermission';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
@@ -334,54 +337,60 @@ export default function SuppliersSettingsPanel({
 
   return (
     <>
-      <PurchasingListLayout
-        eyebrow="Nhà cung cấp"
-        title="Nhà cung cấp"
-        subtitle={subtitle}
-        intro={<SupplierSourcingKpiCards onGradeFilterSelect={(g) => { setRatingFilter(g); setPage(1); }} />}
-        search={search}
-        onSearchChange={value => {
-          setSearch(value);
-          setPage(1);
-        }}
-        searchPlaceholder="Tìm mã NCC, tên nhà cung cấp…"
-        filters={(
-          <SuppliersFilterBar
-            ratingFilter={ratingFilter}
-            onRatingFilterChange={value => {
-              setRatingFilter(value);
+      <PageShell>
+        <PageHeader
+          eyebrow="Nhà cung cấp"
+          title="Nhà cung cấp"
+          subtitle={subtitle}
+          actions={(
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className="btn btn-outline inline-flex items-center gap-1.5"
+                onClick={() => setIsImportModalOpen(true)}
+                title="Nhập danh sách nhà cung cấp hàng loạt từ file Excel"
+              >
+                <Upload size={16} aria-hidden />
+                Upload Excel NCC
+              </button>
+              <button type="button" className="btn btn-primary inline-flex items-center gap-1.5" onClick={() => void openCreate()}>
+                <Plus size={16} aria-hidden />
+                Thêm NCC
+              </button>
+            </div>
+          )}
+        />
+        <SupplierSourcingKpiCards onGradeFilterSelect={(g) => { setRatingFilter(g); setPage(1); }} />
+        <SectionCard noPadding>
+          <FilterToolbar
+            search={search}
+            onSearchChange={value => {
+              setSearch(value);
               setPage(1);
             }}
-            statusFilter={statusFilter}
-            onStatusFilterChange={value => {
-              setStatusFilter(value);
-              setPage(1);
-            }}
-            groupIdFromUrl={groupIdFromUrl}
-            filteredGroupName={filteredGroupName}
-            onClearGroupFilter={clearGroupFilter}
+            searchPlaceholder="Tìm mã NCC, tên nhà cung cấp…"
+            filters={(
+              <div className="hrm-list-toolbar__filter-row hrm-list-toolbar__filter-row--selects">
+                <SuppliersFilterBar
+                  ratingFilter={ratingFilter}
+                  onRatingFilterChange={value => {
+                    setRatingFilter(value);
+                    setPage(1);
+                  }}
+                  statusFilter={statusFilter}
+                  onStatusFilterChange={value => {
+                    setStatusFilter(value);
+                    setPage(1);
+                  }}
+                  groupIdFromUrl={groupIdFromUrl}
+                  filteredGroupName={filteredGroupName}
+                  onClearGroupFilter={clearGroupFilter}
+                />
+              </div>
+            )}
+            hasActiveFilters={hasActiveFilters}
+            onReset={resetFilters}
           />
-        )}
-        hasFilters={hasActiveFilters}
-        onResetFilters={resetFilters}
-        actions={(
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              className="btn btn-outline inline-flex items-center gap-1.5"
-              onClick={() => setIsImportModalOpen(true)}
-              title="Nhập danh sách nhà cung cấp hàng loạt từ file Excel"
-            >
-              <Upload size={16} aria-hidden />
-              Upload Excel NCC
-            </button>
-            <button type="button" className="btn btn-primary inline-flex items-center gap-1.5" onClick={() => void openCreate()}>
-              <Plus size={16} aria-hidden />
-              Thêm NCC
-            </button>
-          </div>
-        )}
-      >
         <SuppliersTable
           items={items}
           isLoading={isLoading}
@@ -400,7 +409,8 @@ export default function SuppliersSettingsPanel({
           onViewSupplier={setViewing}
           rowActions={rowActions}
         />
-      </PurchasingListLayout>
+        </SectionCard>
+      </PageShell>
 
       <SupplierDetailModal
         viewing={viewing}

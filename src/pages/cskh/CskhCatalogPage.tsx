@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Factory, Flame, ListOrdered, Plus, type LucideIcon } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
-import HrmPanel from '../../components/hr/HrmPanel';
+import SectionCard from '../../components/ui/SectionCard';
 import HrmSelect from '../../components/hr/HrmSelect';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
@@ -296,7 +296,7 @@ export default function CskhCatalogPage({ tab }: CskhCatalogPageProps) {
         )}
       />
 
-      <HrmPanel className="cskh-desk__panel">
+      <SectionCard className="cskh-desk__panel">
         <CskhMasterTable
           columns={columns}
           rows={sortedRows}
@@ -310,7 +310,7 @@ export default function CskhCatalogPage({ tab }: CskhCatalogPageProps) {
           onEdit={openEdit}
           onDelete={row => setDeleteTarget({ id: row.id, name: row.name })}
         />
-      </HrmPanel>
+      </SectionCard>
 
       <Modal
         isOpen={formOpen}

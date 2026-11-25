@@ -14,7 +14,7 @@ import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { formatCurrency } from '../../utils/formatCurrency';
 import type { ListPageSize } from '../../constants/pagination';
-import HrmPanel from '../../components/hr/HrmPanel';
+import SectionCard from '../../components/ui/SectionCard';
 import MaterialUnitSelect from '../../components/warehouse/MaterialUnitSelect';
 import ServiceExpenseImportModal from './ServiceExpenseImportModal';
 import {
@@ -224,7 +224,7 @@ export default function ServicesExpensesPage() {
         )}
       />
 
-      <HrmPanel noPadding className="mat-catalog-board">
+      <SectionCard noPadding className="mat-catalog-board">
         <div className="mat-catalog-board__head">
           <h2 className="mat-catalog-board__title">Danh sách dịch vụ & chi phí dự án</h2>
           <p className="mat-catalog-board__desc">
@@ -465,7 +465,7 @@ export default function ServicesExpensesPage() {
             }}
           />
         )}
-      </HrmPanel>
+      </SectionCard>
 
       {/* Modal Thêm / Sửa */}
       <Modal

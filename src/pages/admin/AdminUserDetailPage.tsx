@@ -2,9 +2,8 @@ import type React from 'react';
 import { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { KeyRound, Pencil, UserPlus } from 'lucide-react';
-import PageHeader from '../../components/ui/PageHeader';
-import { HrmBackButton } from '../../components/hr/HrmPageChrome';
-import HrmPanel from '../../components/hr/HrmPanel';
+import PageHeader, { BackButton } from '../../components/ui/PageHeader';
+import SectionCard from '../../components/ui/SectionCard';
 import HrmNotFound, { HrmLoadingState } from '../../components/hr/HrmNotFound';
 import Modal from '../../components/ui/Modal';
 import FormField from '../../components/ui/FormField';
@@ -263,7 +262,7 @@ export default function AdminUserDetailPage() {
   return (
     <div className="hrm-page admin-user-detail-page">
       <div className="admin-user-detail-chrome">
-        <HrmBackButton onBack={() => navigate('/admin/users')} />
+        <BackButton onBack={() => navigate('/admin/users')} />
         <PageHeader
           title={user.fullName}
           subtitle={subtitle}
@@ -304,7 +303,7 @@ export default function AdminUserDetailPage() {
         />
       </div>
 
-      <HrmPanel noPadding className="admin-user-detail-board">
+      <SectionCard noPadding className="admin-user-detail-board">
         <header className="admin-user-detail-board__head">
           <h2 className="admin-user-detail-board__title">Tài khoản hệ thống</h2>
           <span className={statusBadgeClass(user)}>{user.statusLabel}</span>
@@ -453,7 +452,7 @@ export default function AdminUserDetailPage() {
             {user.canProvision ? ' Dùng Cấp tài khoản ở trên để tạo.' : ''}
           </p>
         )}
-      </HrmPanel>
+      </SectionCard>
 
       <Modal
         isOpen={showProvision}

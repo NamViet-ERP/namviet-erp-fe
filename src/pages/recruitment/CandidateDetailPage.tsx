@@ -10,12 +10,13 @@ import { useDepartments } from '../../hooks/useDepartments';
 import { candidatesService } from '../../services/candidatesService';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { UI_ERROR } from '../../lib/uiMessages';
-import DetailSection from '../../components/hr/DetailSection';
+import SectionCard from '../../components/ui/SectionCard';
 import { FieldView, FieldInput, FieldSelect } from '../../components/hr/DetailFields';
-import { HrmDetailHeader } from '../../components/hr/HrmPageChrome';
+import PageHeader from '../../components/ui/PageHeader';
 import HrmEditActions from '../../components/hr/HrmEditActions';
 import HrmNotFound, { HrmLoadingState } from '../../components/hr/HrmNotFound';
-import CandidateStatusBadge from '../../components/recruitment/CandidateStatusBadge';
+import StatusBadge from '../../components/ui/StatusBadge';
+import { getCandidateStatusBadge } from '../../utils/recruitmentStatusBadge';
 import CandidateStatusModal, { type CandidateStatusFormValues } from '../../components/recruitment/CandidateStatusModal';
 import { formatCandidateAppliedAt } from '../../lib/hrm/candidateApiMapper';
 import { sanitizeCandidateForSave } from '../../lib/hrm/sanitizeInput';
@@ -148,7 +149,7 @@ export default function CandidateDetailPage() {
           disabled={!canUpdateCandidate}
           onClick={() => setStatusModalOpen(true)}
         >
-          <CandidateStatusBadge status={candidate.status} />
+          <StatusBadge {...getCandidateStatusBadge(candidate.status)} />
         </button>
       )}
       {editActions}
@@ -157,14 +158,15 @@ export default function CandidateDetailPage() {
 
   return (
     <div className="hrm-page w-full">
-      <HrmDetailHeader
+      <PageHeader
+        variant="detail"
         onBack={() => navigate('/recruitment/candidates')}
         title={candidate.fullName}
         subtitle={`Nộp hồ sơ · ${formatCandidateAppliedAt(candidate.appliedAt)}`}
         actions={headerActions}
       />
 
-      <DetailSection title="Thông tin ứng viên" description="Hồ sơ từ form ứng tuyển công khai">
+      <SectionCard variant="detail" title="Thông tin ứng viên" description="Hồ sơ từ form ứng tuyển công khai">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {isEditing ? (
             <>
@@ -213,9 +215,9 @@ export default function CandidateDetailPage() {
             <Download size={14} /> Tải CV
           </button>
         </div>
-      </DetailSection>
+      </SectionCard>
 
-      <DetailSection title="Quy trình tuyển dụng" description="Theo dõi từ sơ tuyển đến nhận việc">
+      <SectionCard variant="detail" title="Quy trình tuyển dụng" description="Theo dõi từ sơ tuyển đến nhận việc">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {isEditing ? (
             <>
@@ -253,7 +255,7 @@ export default function CandidateDetailPage() {
             </>
           )}
         </div>
-      </DetailSection>
+      </SectionCard>
 
       <CandidateStatusModal
         open={statusModalOpen}

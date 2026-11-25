@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { HrmDetailHeader } from '../../components/hr/HrmPageChrome';
+import PageHeader from '../../components/ui/PageHeader';
 import HrmProfileStripPhoto from '../../components/hr/HrmProfileStripPhoto';
 import EmployeeRecordView from '../../components/hr/EmployeeRecordView';
 import HrmNotFound, { HrmLoadingState } from '../../components/hr/HrmNotFound';
@@ -40,7 +40,8 @@ export default function UserProfilePage() {
 
   return (
     <div className="hrm-page w-full">
-      <HrmDetailHeader
+      <PageHeader
+        variant="detail"
         onBack={() => navigate(-1)}
         title={employee.fullName}
         subtitle={employee.code ? `Mã NV: ${employee.code}` : 'Chưa có mã nhân viên'}

@@ -8,9 +8,11 @@ import PageHeader from '../../components/ui/PageHeader';
 import SearchBar from '../../components/ui/SearchBar';
 import Pagination from '../../components/ui/Pagination';
 import EmptyState from '../../components/ui/EmptyState';
-import HrmPanel from '../../components/hr/HrmPanel';
-import HrmStatCard from '../../components/hr/HrmStatCard';
-import CandidateStatusBadge from '../../components/recruitment/CandidateStatusBadge';
+import SectionCard from '../../components/ui/SectionCard';
+import KpiCard from '../../components/ui/KpiCard';
+import MetricsStrip from '../../components/ui/MetricsStrip';
+import StatusBadge from '../../components/ui/StatusBadge';
+import { getCandidateStatusBadge } from '../../utils/recruitmentStatusBadge';
 import CandidateStatusModal, { type CandidateStatusFormValues } from '../../components/recruitment/CandidateStatusModal';
 import CandidateCreateModal from '../../components/recruitment/CandidateCreateModal';
 import { showToast } from '../../components/ui/Toast';
@@ -151,19 +153,19 @@ export default function CandidateListPage() {
         )}
       />
 
-      <div className="hrm-stat-grid">
-        <HrmStatCard label="Tổng hồ sơ" value={totalUnfiltered} icon={Users} tone="primary" />
-        <HrmStatCard
+      <MetricsStrip columns={3}>
+        <KpiCard label="Tổng hồ sơ" value={totalUnfiltered} icon={Users} tone="primary" />
+        <KpiCard
           label="Đang hiển thị"
           value={totalCount}
           hint={hasFilters ? 'Đã lọc' : ''}
           icon={Users}
           tone="neutral"
         />
-        <HrmStatCard label="Vị trí khác nhau" value={uniquePositions} icon={Briefcase} tone="success" />
-      </div>
+        <KpiCard label="Vị trí khác nhau" value={uniquePositions} icon={Briefcase} tone="success" />
+      </MetricsStrip>
 
-      <HrmPanel noPadding>
+      <SectionCard noPadding>
         <div className="hrm-list-toolbar">
           <div className="hrm-list-toolbar__filters">
             <SearchBar
@@ -335,7 +337,7 @@ export default function CandidateListPage() {
                           setStatusModal({ candidate: cand, action: 'custom' as CandidateQuickAction });
                         }}
                       >
-                        <CandidateStatusBadge status={cand.status} />
+                        <StatusBadge {...getCandidateStatusBadge(cand.status)} />
                       </button>
                     </td>
                     <td className="table-cell hrm-table-candidates__actions" onClick={e => e.stopPropagation()}>
@@ -391,7 +393,7 @@ export default function CandidateListPage() {
             onPageSizeChange={s => { setPageSize(s); setPage(1); }}
           />
         )}
-      </HrmPanel>
+      </SectionCard>
 
       <CandidateCreateModal open={createOpen} onClose={() => setCreateOpen(false)} />
 

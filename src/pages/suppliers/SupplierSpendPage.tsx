@@ -3,7 +3,7 @@ import { Banknote } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import EmptyState from '../../components/ui/EmptyState';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
-import HrmPanel from '../../components/hr/HrmPanel';
+import SectionCard from '../../components/ui/SectionCard';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { useSupplierSpend } from '../../hooks/useSupplierPoAnalytics';
 import { formatCurrencyFull } from '../../utils/formatCurrency';
@@ -21,7 +21,7 @@ export default function SupplierSpendPage() {
         subtitle="Tổng hợp số PO và giá trị đã đặt hàng theo từng nhà cung cấp trên toàn bộ dự án."
       />
 
-      <HrmPanel>
+      <SectionCard>
         <div className="sup-analytics__head">
           <h2 className="sup-analytics__title">Chi tiêu &amp; tỷ trọng theo nhà cung cấp</h2>
           <p className="sup-analytics__desc">
@@ -120,7 +120,7 @@ export default function SupplierSpendPage() {
             ) : null}
           </table>
         </div>
-      </HrmPanel>
+      </SectionCard>
     </div>
   );
 }

@@ -7,8 +7,9 @@ import Pagination from '../../components/ui/Pagination';
 import EmptyState from '../../components/ui/EmptyState';
 import EntityCodeLink from '../../components/ui/EntityCodeLink';
 import TabFilter from '../../components/ui/TabFilter';
-import HrmPanel from '../../components/hr/HrmPanel';
-import HrmStatCard from '../../components/hr/HrmStatCard';
+import SectionCard from '../../components/ui/SectionCard';
+import KpiCard from '../../components/ui/KpiCard';
+import MetricsStrip from '../../components/ui/MetricsStrip';
 import PermissionGate from '../../components/auth/PermissionGate';
 import EmployeeStatusSwap from '../../components/hr/EmployeeStatusSwap';
 import { useEmployees } from '../../hooks/useEmployees';
@@ -95,14 +96,14 @@ export default function MembersPage() {
         }
       />
 
-      <div className="hrm-stat-grid">
-        <HrmStatCard label="Tổng" value={employeeList.length} icon={Users} tone="primary" />
-        <HrmStatCard label="Đang làm" value={stats.active} icon={UserCheck} tone="success" />
-        <HrmStatCard label="Nghỉ việc" value={stats.resigned} icon={UserX} tone="warning" />
-        <HrmStatCard label="Thai sản" value={stats.maternity} icon={Baby} tone="neutral" />
-      </div>
+      <MetricsStrip columns={4}>
+        <KpiCard label="Tổng" value={employeeList.length} icon={Users} tone="primary" />
+        <KpiCard label="Đang làm" value={stats.active} icon={UserCheck} tone="success" />
+        <KpiCard label="Nghỉ việc" value={stats.resigned} icon={UserX} tone="warning" />
+        <KpiCard label="Thai sản" value={stats.maternity} icon={Baby} tone="neutral" />
+      </MetricsStrip>
 
-      <HrmPanel noPadding>
+      <SectionCard noPadding>
         <div className="px-4 pt-3 pb-1 border-b border-[var(--md-outline-variant02)]">
           <TabFilter
             tabs={MEMBER_STATUS_TABS.map(tab => {
@@ -216,7 +217,7 @@ export default function MembersPage() {
             onPageSizeChange={s => { setPageSize(s); setPage(1); }}
           />
         )}
-      </HrmPanel>
+      </SectionCard>
     </div>
   );
 }

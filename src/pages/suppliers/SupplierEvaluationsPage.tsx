@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import PageHeader from '../../components/ui/PageHeader';
 import TabFilter from '../../components/ui/TabFilter';
-import HrmPanel from '../../components/hr/HrmPanel';
+import SectionCard from '../../components/ui/SectionCard';
 import SupplierTierGradingPanel from '../../components/suppliers/SupplierTierGradingPanel';
 import SupplierOrderEvaluationsPanel from '../../components/suppliers/SupplierOrderEvaluationsPanel';
 import SupplierKpiEvaluationsPanel from '../../components/suppliers/SupplierKpiEvaluationsPanel';
@@ -77,7 +77,7 @@ export default function SupplierEvaluationsPage() {
 
       <SupplierSourcingKpiCards />
 
-      <HrmPanel noPadding>
+      <SectionCard noPadding>
         <div className="px-4 pt-3 border-b border-[var(--md-outline-variant)]">
           <TabFilter
             tabs={tabs}
@@ -88,7 +88,7 @@ export default function SupplierEvaluationsPage() {
         {tab === 'tier' ? <SupplierTierGradingPanel /> : null}
         {tab === 'order' ? <SupplierOrderEvaluationsPanel /> : null}
         {tab === 'kpi' ? <SupplierKpiEvaluationsPanel /> : null}
-      </HrmPanel>
+      </SectionCard>
     </div>
   );
 }

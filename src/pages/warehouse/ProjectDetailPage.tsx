@@ -13,10 +13,11 @@ import {
   Wallet,
 } from 'lucide-react';
 import { useSession } from '../../auth/AuthProvider';
-import { HrmDetailHeader } from '../../components/hr/HrmPageChrome';
+import PageHeader from '../../components/ui/PageHeader';
 import HrmNotFound from '../../components/hr/HrmNotFound';
-import HrmPanel from '../../components/hr/HrmPanel';
-import HrmStatCard from '../../components/hr/HrmStatCard';
+import SectionCard from '../../components/ui/SectionCard';
+import KpiCard from '../../components/ui/KpiCard';
+import MetricsStrip from '../../components/ui/MetricsStrip';
 import Badge from '../../components/ui/Badge';
 import TabFilter from '../../components/ui/TabFilter';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
@@ -129,7 +130,7 @@ export default function ProjectDetailPage() {
             <div key={i} className="hrm-table-skeleton h-16 rounded-xl" />
           ))}
         </div>
-        <HrmPanel noPadding>
+        <SectionCard noPadding>
           <div className="overflow-x-auto table-scroll">
             <table className="wms-inventory-table">
               <thead>
@@ -148,7 +149,7 @@ export default function ProjectDetailPage() {
               </tbody>
             </table>
           </div>
-        </HrmPanel>
+        </SectionCard>
       </div>
     );
   }
@@ -167,7 +168,8 @@ export default function ProjectDetailPage() {
 
   return (
     <div className="hrm-page project-detail-page">
-      <HrmDetailHeader
+      <PageHeader
+        variant="detail"
         onBack={goBack}
         title={project.projectName}
         subtitle={`Mã kho: ${project.projectCode}`}
@@ -223,8 +225,8 @@ export default function ProjectDetailPage() {
         }
       />
 
-      <div className="hrm-stat-grid project-detail-stat-grid">
-        <HrmStatCard
+      <MetricsStrip columns={canViewPrices ? 4 : 2} className="project-detail-stat-grid">
+        <KpiCard
           label="Tồn thực tế"
           value={totalActualQty}
           hint={`${actualStockLines.length} mặt hàng`}
@@ -232,7 +234,7 @@ export default function ProjectDetailPage() {
           tone="primary"
         />
         {canViewPrices && (
-          <HrmStatCard
+          <KpiCard
             label="Giá trị đã nhập"
             value={formatCurrencyFull(approvedImportValue)}
             hint="Phiếu nhập đã duyệt"
@@ -241,7 +243,7 @@ export default function ProjectDetailPage() {
           />
         )}
         {canViewPrices && (
-          <HrmStatCard
+          <KpiCard
             label="Ngân sách còn lại"
             value={formatCurrencyFull(materialBudgetRemaining)}
             hint={budgetRemainingHint}
@@ -249,7 +251,7 @@ export default function ProjectDetailPage() {
             tone={budgetRemainingTone}
           />
         )}
-        <HrmStatCard
+        <KpiCard
           label="Thủ kho phụ trách"
           value={
             (project.warehouseKeepers?.length ?? 0) > 0
@@ -261,9 +263,9 @@ export default function ProjectDetailPage() {
           icon={UserRound}
           tone="neutral"
         />
-      </div>
+      </MetricsStrip>
 
-      <HrmPanel noPadding>
+      <SectionCard noPadding>
         <div className="px-3 pt-2 pb-0 border-b border-[var(--md-outline-variant02)]">
           <TabFilter tabs={tabs} activeTab={activeTab} onChange={id => setActiveTab(id as DetailTab)} />
         </div>
@@ -293,7 +295,7 @@ export default function ProjectDetailPage() {
             materialBudgetRemaining={materialBudgetRemaining}
           />
         )}
-      </HrmPanel>
+      </SectionCard>
 
       {code && (
         <ProjectDialogs

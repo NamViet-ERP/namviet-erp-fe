@@ -8,7 +8,7 @@ import Pagination from '../../components/ui/Pagination';
 import EmptyState from '../../components/ui/EmptyState';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import PageHeader from '../../components/ui/PageHeader';
-import HrmPanel from '../../components/hr/HrmPanel';
+import SectionCard from '../../components/ui/SectionCard';
 import PermissionGate from '../../components/auth/PermissionGate';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
@@ -185,7 +185,7 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
         Khi tạo mã: chọn ba cấp đầu rồi nhập mã và tên vật tư.
       </div>
 
-      <HrmPanel noPadding className="mat-catalog-board">
+      <SectionCard noPadding className="mat-catalog-board">
         <div className="mat-catalog-board__head">
           <h2 className="mat-catalog-board__title">Danh sách mã vật tư</h2>
           <p className="mat-catalog-board__desc">
@@ -456,7 +456,7 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
             totalItems={totalCount}
           />
         )}
-      </HrmPanel>
+      </SectionCard>
 
       <MaterialCreateModal
         isOpen={showCreate}

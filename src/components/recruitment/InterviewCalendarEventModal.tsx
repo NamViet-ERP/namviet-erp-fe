@@ -1,10 +1,10 @@
 import { Calendar, Mail, Phone, User } from 'lucide-react';
 import Modal from '../ui/Modal';
-import CandidateStatusBadge from './CandidateStatusBadge';
+import StatusBadge from '../ui/StatusBadge';
+import { getCandidateStatusBadge } from '../../utils/recruitmentStatusBadge';
 import { formatCandidateAppliedAt } from '../../lib/hrm/candidateApiMapper';
 import { formatInterviewDateOnly, resolveEventTimeLabel } from '../../lib/hrm/interviewCalendarUtils';
 import type { ParsedInterviewEvent } from '../../lib/hrm/interviewCalendarUtils';
-import type { CandidatePipelineStatus } from '../../types/hr';
 
 interface InterviewCalendarEventModalProps {
   open: boolean;
@@ -75,7 +75,7 @@ export default function InterviewCalendarEventModal({
           <FieldRow label="Ngày nộp" value={appliedLabel} />
           <div className="recruitment-cal-modal__field">
             <span className="recruitment-cal-modal__label">Trạng thái</span>
-            <CandidateStatusBadge status={event.status as CandidatePipelineStatus} />
+            <StatusBadge {...getCandidateStatusBadge(event.status)} />
           </div>
         </div>
 

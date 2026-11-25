@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import PageHeader from '../../components/ui/PageHeader';
-import HrmPanel from '../../components/hr/HrmPanel';
+import SectionCard from '../../components/ui/SectionCard';
 import EmptyState from '../../components/ui/EmptyState';
 import { useCskhCommandCenter } from '../../hooks/cskh/useCskhCommandCenter';
 import {
@@ -45,9 +45,9 @@ export default function CskhProjectSectionPage() {
         title={meta.title}
         subtitle={`${project.code} - ${project.name}. ${meta.subtitle}`}
       />
-      <HrmPanel className="cskh-desk__panel">
+      <SectionCard className="cskh-desk__panel">
         <EmptyState icon={meta.icon} message={meta.empty} />
-      </HrmPanel>
+      </SectionCard>
     </div>
   );
 }

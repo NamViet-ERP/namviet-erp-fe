@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { HrmDetailHeader } from '../../../components/hr/HrmPageChrome';
+import PageHeader from '../../../components/ui/PageHeader';
 import { CreatePoFormFields } from './CreatePoFormFields';
 import { CreatePoLinePicker } from './CreatePoLinePicker';
 import { PoInstallmentCreatePanels } from './PoInstallmentCreatePanels';
@@ -11,7 +11,8 @@ export function CreatePurchaseOrderForm({ onCreated }: { onCreated: (code: strin
 
   return (
     <div className="hrm-page w-full pur-detail">
-      <HrmDetailHeader
+      <PageHeader
+        variant="detail"
         onBack={() => navigate('/purchasing/orders')}
         title="Tạo đơn hàng"
         subtitle="Chọn nguồn (KHMH hoặc phát sinh đã duyệt) → NCC → mặt hàng còn lại"

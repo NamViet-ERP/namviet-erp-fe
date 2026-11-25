@@ -8,7 +8,7 @@ import Pagination from '../../components/ui/Pagination';
 import PageHeader from '../../components/ui/PageHeader';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
-import HrmPanel from '../../components/hr/HrmPanel';
+import SectionCard from '../../components/ui/SectionCard';
 import EmptyState from '../../components/ui/EmptyState';
 import Modal from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
@@ -241,7 +241,7 @@ export default function CskhDocsArchivePage({ project }: CskhDocsArchivePageProp
         />
       </div>
 
-      <HrmPanel className="cskh-desk__panel" noPadding>
+      <SectionCard className="cskh-desk__panel" noPadding>
         <div className="cskh-split-toolbar">
           <CskhFilterTabs options={FILTERS} value={filter} onChange={val => setFilter(val as typeof filter)} />
           <div className="text-xs text-[var(--md-on-surface-variant)] font-medium">
@@ -381,7 +381,7 @@ export default function CskhDocsArchivePage({ project }: CskhDocsArchivePageProp
           onPageChange={setPage} 
           onPageSizeChange={(size) => { setPageSize(size); setPage(1); }} 
         />
-      </HrmPanel>
+      </SectionCard>
 
       {/* Modal Nhập kho / Chỉnh sửa hồ sơ */}
       <Modal 

@@ -5,7 +5,7 @@ import {
 } from 'recharts';
 import { Banknote, Building2, ClipboardList, Users, Wallet, WalletCards } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
-import HrmPanel from '../../components/hr/HrmPanel';
+import SectionCard from '../../components/ui/SectionCard';
 import Card from '../../components/ui/Card';
 import EmptyState from '../../components/ui/EmptyState';
 import Skeleton from '../../components/ui/Skeleton';
@@ -62,7 +62,7 @@ function DashBoard({
   children: ReactNode;
 }) {
   return (
-    <HrmPanel noPadding className="ops-projects-board">
+    <SectionCard noPadding className="ops-projects-board">
       <div className="ops-projects-board__head">
         <h2 className="ops-projects-board__title">{title}</h2>
         <p className="ops-projects-board__desc">{desc}</p>
@@ -70,7 +70,7 @@ function DashBoard({
       <div className="ops-projects-board__body">
         {children}
       </div>
-    </HrmPanel>
+    </SectionCard>
   );
 }
 
@@ -99,7 +99,7 @@ export default function SuppliersDashboardPage() {
         subtitle="Tổng quan nhà cung cấp. Công nợ trên dashboard lấy từ DNTT, không lấy tổng giá trị PO."
       />
 
-      <HrmPanel noPadding className="ops-projects-board">
+      <SectionCard noPadding className="ops-projects-board">
         <div className="ops-projects-board__head">
           <h2 className="ops-projects-board__title">Kỳ báo cáo</h2>
           <p className="ops-projects-board__desc">Lọc số liệu DNTT và đơn hàng theo kỳ, theo nhà cung cấp.</p>
@@ -146,7 +146,7 @@ export default function SuppliersDashboardPage() {
             ) : null}
           </div>
         </div>
-      </HrmPanel>
+      </SectionCard>
 
       {isError ? (
         <DashBoard title="Tổng quan nhà cung cấp" desc="Không tải được dữ liệu.">

@@ -6,7 +6,7 @@ import {
 } from 'recharts';
 import PageHeader from '../../components/ui/PageHeader';
 import Card from '../../components/ui/Card';
-import HrmPanel from '../../components/hr/HrmPanel';
+import SectionCard from '../../components/ui/SectionCard';
 import PageLoader from '../../components/ui/PageLoader';
 import EmptyState from '../../components/ui/EmptyState';
 import { showToast } from '../../components/ui/Toast';
@@ -138,7 +138,7 @@ export default function RecruitmentDashboardPage() {
       ) : null}
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        <HrmPanel className="recruitment-dash-chart">
+        <SectionCard className="recruitment-dash-chart">
           <h2 className="recruitment-dash-chart__title">Tuyển dụng theo Tháng</h2>
           <ChartLegend items={[
             { color: CHART_ACTION, label: 'Tổng CV' },
@@ -162,9 +162,9 @@ export default function RecruitmentDashboardPage() {
               </ResponsiveContainer>
             </div>
           )}
-        </HrmPanel>
+        </SectionCard>
 
-        <HrmPanel className="recruitment-dash-chart">
+        <SectionCard className="recruitment-dash-chart">
           <h2 className="recruitment-dash-chart__title">Tỷ trọng Vị trí ứng tuyển</h2>
           {positionData.length === 0 ? (
             <EmptyState message="Chưa có dữ liệu." />
@@ -205,9 +205,9 @@ export default function RecruitmentDashboardPage() {
               </div>
             </>
           )}
-        </HrmPanel>
+        </SectionCard>
 
-        <HrmPanel className="recruitment-dash-chart">
+        <SectionCard className="recruitment-dash-chart">
           <h2 className="recruitment-dash-chart__title">Phễu chuyển đổi ứng viên</h2>
           {!k ? null : funnelData.every(row => row.value === 0) ? (
             <EmptyState message="Chưa có dữ liệu." />
@@ -228,9 +228,9 @@ export default function RecruitmentDashboardPage() {
               </ResponsiveContainer>
             </div>
           )}
-        </HrmPanel>
+        </SectionCard>
 
-        <HrmPanel className="recruitment-dash-chart">
+        <SectionCard className="recruitment-dash-chart">
           <h2 className="recruitment-dash-chart__title">Chi phí theo Nguồn (VNĐ)</h2>
           {costBySource.isError ? (
             <EmptyState message="Chưa có dữ liệu chi phí hoặc chưa được phép xem." />
@@ -262,7 +262,7 @@ export default function RecruitmentDashboardPage() {
               </ResponsiveContainer>
             </div>
           )}
-        </HrmPanel>
+        </SectionCard>
       </div>
     </div>
   );

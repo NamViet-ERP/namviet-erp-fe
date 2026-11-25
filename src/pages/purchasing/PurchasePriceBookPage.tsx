@@ -4,7 +4,10 @@ import { useSession } from '../../auth/AuthProvider';
 import HrmSelect from '../../components/hr/HrmSelect';
 import AdminMarkupSettingModal from '../../components/purchasing/AdminMarkupSettingModal';
 import { rootCategoryIdOf } from '../../components/purchasing/MaterialByGroupFields';
-import PurchasingListLayout from '../../components/purchasing/PurchasingListLayout';
+import PageShell from '../../components/ui/PageShell';
+import PageHeader from '../../components/ui/PageHeader';
+import SectionCard from '../../components/ui/SectionCard';
+import FilterToolbar from '../../components/ui/FilterToolbar';
 import EmptyState from '../../components/ui/EmptyState';
 import FormField from '../../components/ui/FormField';
 import TabFilter from '../../components/ui/TabFilter';
@@ -196,83 +199,88 @@ export default function PurchasePriceBookPage() {
   };
 
   return (
-    <PurchasingListLayout
-      eyebrow="Dự án EPC / Chào thầu"
-      title="Sổ giá chào thầu & Phân tích"
-      subtitle="Sổ giá chào thầu theo mặt hàng · Giá chào thầu (RFQ) · Phân tích Mua vào - Bán ra"
-      actions={
-        isBoss ? (
-          <button
-            type="button"
-            className="btn btn-primary inline-flex items-center gap-1.5 shadow-sm bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-semibold text-xs py-1.5 px-3"
-            onClick={() => setMarkupModalOpen(true)}
-            title="Cài đặt hệ số đắp giá / chào thầu theo từng nhóm hàng (Dành riêng cho BLĐ & Admin)"
-          >
-            <Zap size={14} className="text-yellow-300 fill-yellow-300 animate-pulse" />
-            <span>⚡ Cài Đặt Markup Quản Trị</span>
-          </button>
-        ) : null
-      }
-      hideSearch={tab !== 'items'}
-      search={search}
-      onSearchChange={setSearch}
-      searchPlaceholder="Tìm theo mã/tên hàng…"
-      hasFilters={tab === 'items' && Boolean(search.trim() || categoryId || periodType !== 'all')}
-      filters={tab === 'items' ? (
-        <>
-          <HrmSelect
-            aria-label="Nhóm hàng"
-            placeholder="Tất cả nhóm hàng"
-            value={itemsCategoryValue ? categoryOption(itemsCategoryValue) : ''}
-            options={categoryLabels}
-            onChange={label => {
-              const found = rootCategories.find(c => categoryOption(c) === label);
-              setCategoryId(found?.id ?? '');
+    <PageShell>
+      <PageHeader
+        eyebrow="Dự án EPC / Chào thầu"
+        title="Sổ giá chào thầu & Phân tích"
+        subtitle="Sổ giá chào thầu theo mặt hàng · Giá chào thầu (RFQ) · Phân tích Mua vào - Bán ra"
+        actions={
+          isBoss ? (
+            <button
+              type="button"
+              className="btn btn-primary inline-flex items-center gap-1.5 shadow-sm bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-semibold text-xs py-1.5 px-3"
+              onClick={() => setMarkupModalOpen(true)}
+              title="Cài đặt hệ số đắp giá / chào thầu theo từng nhóm hàng (Dành riêng cho BLĐ & Admin)"
+            >
+              <Zap size={14} className="text-yellow-300 fill-yellow-300 animate-pulse" />
+              <span>⚡ Cài Đặt Markup Quản Trị</span>
+            </button>
+          ) : null
+        }
+      />
+      <SectionCard noPadding>
+        {tab === 'items' ? (
+          <FilterToolbar
+            search={search}
+            onSearchChange={setSearch}
+            searchPlaceholder="Tìm theo mã/tên hàng…"
+            hasActiveFilters={Boolean(search.trim() || categoryId || periodType !== 'all')}
+            onReset={() => {
+              setCategoryId('');
+              setSearch('');
+              setPeriodType('all');
             }}
+            filters={(
+              <div className="hrm-list-toolbar__filter-row hrm-list-toolbar__filter-row--selects">
+                <HrmSelect
+                  aria-label="Nhóm hàng"
+                  placeholder="Tất cả nhóm hàng"
+                  value={itemsCategoryValue ? categoryOption(itemsCategoryValue) : ''}
+                  options={categoryLabels}
+                  onChange={label => {
+                    const found = rootCategories.find(c => categoryOption(c) === label);
+                    setCategoryId(found?.id ?? '');
+                  }}
+                />
+                <HrmSelect
+                  aria-label="Kỳ"
+                  value={periodType === 'all' ? 'Tất cả (toàn bộ lịch sử)' : periodType === 'month' ? 'Theo tháng' : periodType === 'quarter' ? 'Theo quý' : 'Theo năm'}
+                  options={['Tất cả (toàn bộ lịch sử)', 'Theo tháng', 'Theo quý', 'Theo năm']}
+                  onChange={label => {
+                    if (label.startsWith('Tất cả')) setPeriodType('all');
+                    else if (label === 'Theo tháng') setPeriodType('month');
+                    else if (label === 'Theo quý') setPeriodType('quarter');
+                    else setPeriodType('year');
+                  }}
+                />
+                {periodType !== 'all' ? (
+                  <HrmSelect
+                    aria-label="Năm"
+                    value={String(periodYear)}
+                    options={PRICE_BOOK_YEARS.map(String)}
+                    onChange={v => setPeriodYear(Number(v))}
+                  />
+                ) : null}
+                {periodType === 'quarter' ? (
+                  <HrmSelect
+                    aria-label="Quý"
+                    value={`Quý ${periodQuarter}`}
+                    options={['Quý 1', 'Quý 2', 'Quý 3', 'Quý 4']}
+                    onChange={v => setPeriodQuarter(Number(v.replace('Quý ', '')))}
+                  />
+                ) : null}
+                {periodType === 'month' ? (
+                  <HrmSelect
+                    aria-label="Tháng"
+                    value={`Tháng ${periodMonth}`}
+                    options={Array.from({ length: 12 }, (_, i) => `Tháng ${i + 1}`)}
+                    onChange={v => setPeriodMonth(Number(v.replace('Tháng ', '')))}
+                  />
+                ) : null}
+              </div>
+            )}
           />
-          <HrmSelect
-            aria-label="Kỳ"
-            value={periodType === 'all' ? 'Tất cả (toàn bộ lịch sử)' : periodType === 'month' ? 'Theo tháng' : periodType === 'quarter' ? 'Theo quý' : 'Theo năm'}
-            options={['Tất cả (toàn bộ lịch sử)', 'Theo tháng', 'Theo quý', 'Theo năm']}
-            onChange={label => {
-              if (label.startsWith('Tất cả')) setPeriodType('all');
-              else if (label === 'Theo tháng') setPeriodType('month');
-              else if (label === 'Theo quý') setPeriodType('quarter');
-              else setPeriodType('year');
-            }}
-          />
-          {periodType !== 'all' ? (
-            <HrmSelect
-              aria-label="Năm"
-              value={String(periodYear)}
-              options={PRICE_BOOK_YEARS.map(String)}
-              onChange={v => setPeriodYear(Number(v))}
-            />
-          ) : null}
-          {periodType === 'quarter' ? (
-            <HrmSelect
-              aria-label="Quý"
-              value={`Quý ${periodQuarter}`}
-              options={['Quý 1', 'Quý 2', 'Quý 3', 'Quý 4']}
-              onChange={v => setPeriodQuarter(Number(v.replace('Quý ', '')))}
-            />
-          ) : null}
-          {periodType === 'month' ? (
-            <HrmSelect
-              aria-label="Tháng"
-              value={`Tháng ${periodMonth}`}
-              options={Array.from({ length: 12 }, (_, i) => `Tháng ${i + 1}`)}
-              onChange={v => setPeriodMonth(Number(v.replace('Tháng ', '')))}
-            />
-          ) : null}
-        </>
-      ) : null}
-      onResetFilters={() => {
-        setCategoryId('');
-        setSearch('');
-        setPeriodType('all');
-      }}
-    >
+        ) : null}
       <div className="pur-pricebook-chrome">
         <p className="pur-pricebook-intro text-[length:var(--fs-sm)] text-[var(--md-on-surface-variant)]">
           {PRICE_BOOK_TAB_INTRO[tab]}
@@ -499,6 +507,7 @@ export default function PurchasePriceBookPage() {
           isSaving={isSavingMarkup}
         />
       )}
-    </PurchasingListLayout>
+      </SectionCard>
+    </PageShell>
   );
 }

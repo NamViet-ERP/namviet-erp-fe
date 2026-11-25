@@ -2,8 +2,9 @@ import type React from 'react';
 import { useMemo, useState } from 'react';
 import { Plus, Target, Trash2, Pencil, RotateCcw } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
-import HrmPanel from '../../components/hr/HrmPanel';
-import HrmStatCard from '../../components/hr/HrmStatCard';
+import SectionCard from '../../components/ui/SectionCard';
+import KpiCard from '../../components/ui/KpiCard';
+import MetricsStrip from '../../components/ui/MetricsStrip';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Modal from '../../components/ui/Modal';
 import { showToast } from '../../components/ui/Toast';
@@ -166,13 +167,13 @@ export default function RecruitmentPlansPage() {
         }
       />
 
-      <div className="hrm-stat-grid">
-        <HrmStatCard label="Tổng chiến dịch" value={totals.campaigns} icon={Target} tone="primary" />
-        <HrmStatCard label="Đang tuyển" value={totals.recruiting} icon={Target} tone="success" />
-        <HrmStatCard label="Đã hoàn thành / Đóng" value={totals.closed} icon={Target} tone="warning" />
-      </div>
+      <MetricsStrip columns={3}>
+        <KpiCard label="Tổng chiến dịch" value={totals.campaigns} icon={Target} tone="primary" />
+        <KpiCard label="Đang tuyển" value={totals.recruiting} icon={Target} tone="success" />
+        <KpiCard label="Đã hoàn thành / Đóng" value={totals.closed} icon={Target} tone="warning" />
+      </MetricsStrip>
 
-      <HrmPanel noPadding>
+      <SectionCard noPadding>
         <div className="hrm-list-toolbar">
           <div className="hrm-list-toolbar__filters">
             <div className="hrm-list-toolbar__filters-right">
@@ -295,7 +296,7 @@ export default function RecruitmentPlansPage() {
             </tbody>
           </table>
         </div>
-      </HrmPanel>
+      </SectionCard>
 
       <Modal
         isOpen={formOpen}

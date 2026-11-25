@@ -5,7 +5,7 @@ import PageHeader from '../../components/ui/PageHeader';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import FormField from '../../components/ui/FormField';
-import HrmPanel from '../../components/hr/HrmPanel';
+import SectionCard from '../../components/ui/SectionCard';
 import HrmSelect from '../../components/hr/HrmSelect';
 import HrmDatePicker from '../../components/hr/HrmDatePicker';
 import Modal from '../../components/ui/Modal';
@@ -170,7 +170,7 @@ export default function CskhRequestsPage({ project }: CskhRequestsPageProps) {
         <Card className="cskh-desk__kpi-card" title="Đã đóng" value={Math.max(0, kpis.total - kpis.open)} subtitle="Đã xác nhận xong" accent="success" />
       </div>
 
-      <HrmPanel className="cskh-desk__panel" noPadding>
+      <SectionCard className="cskh-desk__panel" noPadding>
         {ops.requests.length === 0 ? (
           <EmptyState icon={Lightbulb} message={meta.empty} />
         ) : (
@@ -244,7 +244,7 @@ export default function CskhRequestsPage({ project }: CskhRequestsPageProps) {
             )}
           </>
         )}
-      </HrmPanel>
+      </SectionCard>
 
       <Modal
         isOpen={open}

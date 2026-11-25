@@ -1,4 +1,4 @@
-import HrmPanel from '../../components/hr/HrmPanel';
+import SectionCard from '../../components/ui/SectionCard';
 import PageHeader from '../../components/ui/PageHeader';
 import SupplierBlacklistPanel from '../../components/suppliers/SupplierBlacklistPanel';
 
@@ -11,9 +11,9 @@ export default function SupplierBlacklistPage() {
         title="Danh sách blacklist"
         subtitle="NCC bị hạn chế hợp tác. Thêm từ hồ sơ Nhà cung cấp; gỡ tại đây khi đã xử lý rủi ro."
       />
-      <HrmPanel noPadding>
+      <SectionCard noPadding>
         <SupplierBlacklistPanel embedded />
-      </HrmPanel>
+      </SectionCard>
     </div>
   );
 }

@@ -364,7 +364,7 @@ describe('MaterialsPage URL SearchParams & Navigation Synchronisation', () => {
     // Table should not be rendered
     expect(container.querySelector('table.mat-catalog-table')).toBeNull();
     // Back button should be present
-    expect(container.querySelector('.hrm-back-btn')).not.toBeNull();
+    expect(container.querySelector('.page-header__back')).not.toBeNull();
   });
 
   it('navigates to detail view when clicking a row, and returns to list when clicking Back', async () => {
@@ -388,7 +388,7 @@ describe('MaterialsPage URL SearchParams & Navigation Synchronisation', () => {
     expect(container.textContent).toContain('Bảo ôn');
 
     // Click Back button
-    const backBtn = container.querySelector('.hrm-back-btn') as HTMLButtonElement;
+    const backBtn = container.querySelector('.page-header__back') as HTMLButtonElement;
     expect(backBtn).not.toBeNull();
     await act(async () => {
       backBtn.click();
@@ -409,7 +409,7 @@ describe('MaterialsPage URL SearchParams & Navigation Synchronisation', () => {
     expect(container.textContent).toContain('Bể dập bụi');
 
     // Click Back
-    const backBtn = container.querySelector('.hrm-back-btn') as HTMLButtonElement;
+    const backBtn = container.querySelector('.page-header__back') as HTMLButtonElement;
     expect(backBtn).not.toBeNull();
     await act(async () => {
       backBtn.click();

@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Ruler, Plus, Trash2, Package, Pencil, Upload } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
-import HrmPanel from '../../components/hr/HrmPanel';
+import SectionCard from '../../components/ui/SectionCard';
 import SearchBar from '../../components/ui/SearchBar';
 import Modal from '../../components/ui/Modal';
 import FormField from '../../components/ui/FormField';
@@ -115,7 +115,7 @@ export default function MaterialUnitsSettingsPanel() {
   return (
     <>
       <div className="hrm-settings-grid hrm-settings-grid--recruitment">
-        <HrmPanel className="hrm-settings-card hrm-settings-card--featured">
+        <SectionCard className="hrm-settings-card hrm-settings-card--featured">
           <div className="hrm-settings-card__head flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="hrm-settings-card__icon hrm-settings-card__icon--primary">
@@ -234,9 +234,9 @@ export default function MaterialUnitsSettingsPanel() {
               <> · Đang lọc theo &ldquo;{searchTerm}&rdquo;</>
             )}
           </p>
-        </HrmPanel>
+        </SectionCard>
 
-        <HrmPanel className="hrm-settings-card">
+        <SectionCard className="hrm-settings-card">
           <div className="hrm-settings-card__head">
             <div className="hrm-settings-card__icon hrm-settings-card__icon--neutral">
               <Package size={20} />
@@ -255,7 +255,7 @@ export default function MaterialUnitsSettingsPanel() {
             <Package size={15} />
             Đi tới danh sách vật tư
           </Link>
-        </HrmPanel>
+        </SectionCard>
       </div>
 
       <Modal

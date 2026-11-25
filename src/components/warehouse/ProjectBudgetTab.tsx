@@ -1,6 +1,7 @@
 import { formatPmDisplayName } from '../../lib/projectPersonnel';
 import { Wallet, CircleDollarSign, TrendingUp, ShieldCheck, AlertTriangle, Pencil, HardHat, Truck, Layers } from 'lucide-react';
-import HrmStatCard from '../hr/HrmStatCard';
+import KpiCard from '../ui/KpiCard';
+import MetricsStrip from '../ui/MetricsStrip';
 import Badge from '../ui/Badge';
 import PermissionGate from '../auth/PermissionGate';
 import { formatCurrencyFull } from '../../utils/formatCurrency';
@@ -60,36 +61,36 @@ export default function ProjectBudgetTab({
   return (
     <div className="p-4 sm:p-5 space-y-6">
       {/* KPI Cards */}
-      <div className="hrm-stat-grid project-detail-stat-grid">
-        <HrmStatCard
+      <MetricsStrip columns={4} className="project-detail-stat-grid">
+        <KpiCard
           label="Tổng dự toán vật tư"
           value={formatCurrencyFull(materialBudget)}
           hint="Hạn mức được phê duyệt"
           icon={Wallet}
           tone="primary"
         />
-        <HrmStatCard
+        <KpiCard
           label="Đã giải ngân nhập kho"
           value={formatCurrencyFull(approvedImportValue)}
           hint={`Xuất kho thực tế: ${formatCurrencyFull(approvedExportValue)}`}
           icon={CircleDollarSign}
           tone="success"
         />
-        <HrmStatCard
+        <KpiCard
           label="Tỷ lệ sử dụng ngân sách"
           value={`${usedPct.toFixed(1)}%`}
           hint={`${formatCurrencyFull(approvedImportValue)} / ${formatCurrencyFull(materialBudget)}`}
           icon={TrendingUp}
           tone={tone}
         />
-        <HrmStatCard
+        <KpiCard
           label="Ngân sách còn lại"
           value={formatCurrencyFull(materialBudgetRemaining)}
           hint={hint}
           icon={isOverBudget ? AlertTriangle : ShieldCheck}
           tone={tone}
         />
-      </div>
+      </MetricsStrip>
 
       {/* Progress Bar Header */}
       <div className="rounded-xl border border-[var(--md-outline-variant02)] bg-[var(--md-surface-container-low)] p-4 space-y-3">

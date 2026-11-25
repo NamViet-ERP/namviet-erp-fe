@@ -12,7 +12,7 @@ import {
   Send,
   XCircle,
 } from 'lucide-react';
-import { HrmDetailHeader } from '../../components/hr/HrmPageChrome';
+import PageHeader from '../../components/ui/PageHeader';
 import CreatePurchasePlanModal from '../../components/purchasing/CreatePurchasePlanModal';
 import EmptyState from '../../components/ui/EmptyState';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
@@ -351,7 +351,7 @@ export default function PurchasePlanDetailPage() {
   if (isError) {
     return (
       <div className="hrm-page w-full pur-detail">
-        <HrmDetailHeader onBack={back} title={code ? `KHMH ${code}` : 'Chi tiết KHMH'} />
+        <PageHeader variant="detail" onBack={back} title={code ? `KHMH ${code}` : 'Chi tiết KHMH'} />
         <EmptyState
           message={getApiErrorMessage(error, 'Không tải được chi tiết KHMH.')}
           action={(
@@ -367,7 +367,7 @@ export default function PurchasePlanDetailPage() {
   if (isLoading || !plan) {
     return (
       <div className="hrm-page w-full pur-detail">
-        <HrmDetailHeader onBack={back} title={code ? `KHMH ${code}` : 'Chi tiết KHMH'} />
+        <PageHeader variant="detail" onBack={back} title={code ? `KHMH ${code}` : 'Chi tiết KHMH'} />
         <section className="pur-detail__card">
           <div className="overflow-x-auto table-scroll">
             <table className="pur-erp__table">
@@ -391,7 +391,8 @@ export default function PurchasePlanDetailPage() {
 
   return (
     <div className="hrm-page w-full pur-detail">
-      <HrmDetailHeader
+      <PageHeader
+        variant="detail"
         onBack={back}
         title={`KHMH ${plan.code}`}
         subtitle={projectSubtitle}

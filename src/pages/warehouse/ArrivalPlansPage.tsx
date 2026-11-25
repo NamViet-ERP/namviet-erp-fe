@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import { CalendarClock, PackagePlus, Truck } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
-import HrmPanel from '../../components/hr/HrmPanel';
-import HrmStatCard from '../../components/hr/HrmStatCard';
+import SectionCard from '../../components/ui/SectionCard';
+import KpiCard from '../../components/ui/KpiCard';
+import MetricsStrip from '../../components/ui/MetricsStrip';
 import EmptyState from '../../components/ui/EmptyState';
 import SearchBar from '../../components/ui/SearchBar';
 import { useArrivalPlans } from '../../hooks/useArrivalPlans';
@@ -69,28 +70,28 @@ export default function ArrivalPlansPage() {
         subtitle="Theo dõi ngày dự kiến trên KHMH: nhập kho hoặc xuất thẳng ra công trường. Không thao tác trên tab này."
       />
 
-      <div className="hrm-stat-grid">
-        <HrmStatCard
+      <MetricsStrip columns={3}>
+        <KpiCard
           label="Dự án có hàng về"
           value={isLoading ? '—' : filtered.length}
           icon={Truck}
           tone="primary"
         />
-        <HrmStatCard
+        <KpiCard
           label="Dòng chờ nhận"
           value={isLoading ? '—' : totalLines}
           icon={CalendarClock}
           tone="warning"
         />
-        <HrmStatCard
+        <KpiCard
           label="SL còn lại"
           value={isLoading ? '—' : fmtQty(totalQty)}
           icon={PackagePlus}
           tone="success"
         />
-      </div>
+      </MetricsStrip>
 
-      <HrmPanel noPadding>
+      <SectionCard noPadding>
         <div className="hrm-list-toolbar arrival-plans-toolbar">
           <div className="hrm-list-toolbar__filters arrival-plans-filters">
             <div className="arrival-plans-day-chips" role="group" aria-label="Lọc thời gian">
@@ -185,7 +186,7 @@ export default function ArrivalPlansPage() {
             ))}
           </ul>
         )}
-      </HrmPanel>
+      </SectionCard>
     </div>
   );
 }
