@@ -8,6 +8,17 @@ export default {
   theme: {
     extend: {
       colors: {
+        primary: {
+          DEFAULT: 'var(--nv-action)',
+          50:  'color-mix(in srgb, var(--nv-action) 8%, var(--md-surface-container))',
+          100: 'var(--md-primary-container)',
+          300: 'color-mix(in srgb, var(--nv-action) 55%, var(--md-surface-container))',
+          400: 'color-mix(in srgb, var(--nv-action) 80%, var(--md-surface-container))',
+          500: 'var(--nv-action)',
+          600: 'var(--nv-action)',
+          700: 'var(--nv-action-hover)',
+          950: 'var(--md-on-primary-container)',
+        },
         /* Status accent tokens defined in src/styles/tokens.css */
         status: {
           success: 'var(--status-success)',
@@ -18,8 +29,9 @@ export default {
       },
 
       fontFamily: {
-        roboto: ['Roboto', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
-        sans:   ['Roboto', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
+        sans:   ['var(--font-sans)'],
+        roboto: ['var(--font-sans)'],
+        mono:   ['var(--font-mono)'],
       },
 
       /* Radii & elevation tokens live in src/styles/tokens.css */

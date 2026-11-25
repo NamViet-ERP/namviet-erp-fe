@@ -5,12 +5,12 @@
    File chữ Google: @import ngay dưới. Family: --font-sans.
    ═══════════════════════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
 
 :root {
   /* ── KNOBS — sửa hex / family ở đây là xong toàn app ── */
-  --font-sans: 'Roboto', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-  --font-mono: ui-monospace, 'Cascadia Code', 'Segoe UI Mono', 'Roboto Mono', monospace;
+  --font-sans: 'Plus Jakarta Sans', 'Be Vietnam Pro', 'Segoe UI', Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace;
 
   --fs-micro: 11px;   /* badge, eyebrow, chip, helper */
   --fs-xs:    12px;   /* table header, meta, caption */
@@ -31,10 +31,10 @@
   --lh-normal: 1.45;
 
   /* ── Density — table paddings (Ant compact, still ERP-dense) ── */
-  --table-header-py: 9px;
-  --table-header-px: 12px;
-  --table-cell-py:   8px;
-  --table-cell-px:   12px;
+  --table-header-py: 10px;
+  --table-header-px: 14px;
+  --table-cell-py:   9px;
+  --table-cell-px:   14px;
 
   /* ── Shape — Modern ERP rounded radii ── */
   --radius-xs: 6px;   /* input, chip, badge */
@@ -52,15 +52,15 @@
      Đổi accent: --nv-action (+ hover). Navy / giấy / chữ / cảnh báo tách riêng.
      --nv-steel bám action — đừng ghi hex lần nữa. */
   --nv-navy:                     #0E3063;
-  --nv-navy-2:                   #164785;
+  --nv-navy-2:                   color-mix(in srgb, var(--nv-navy) 82%, #ffffff);
   --nv-action:                   #0077B3;
   --nv-action-hover:             #005F8F;
   --nv-steel:                    var(--nv-action);
-  --nv-steel-light:              #D9EDF7;
+  --nv-steel-light:              color-mix(in srgb, var(--nv-action) 14%, var(--md-surface-container));
   --nv-amber:                    #E39B12;
-  --nv-amber-dark:               #B56F08;
-  --nv-epc-bg:                   #F4F4F4;
-  --nv-epc-border:               #E8E8E8;
+  --nv-amber-dark:               #92510A;
+  --nv-epc-bg:                   #F5F7FA;
+  --nv-epc-border:               #E2E8F0;
   --nv-epc-muted:                #5A6178;
   --nv-epc-text:                 #323A45;
 
@@ -81,7 +81,7 @@
   --nv-table-header-text:        #FFFFFF;
 
   /* ── Table grid — một viền cho mọi bảng ERP (đổi ở đây là đổi cả app) ── */
-  --table-border:        color-mix(in srgb, var(--nv-navy) 28%, var(--nv-epc-border));
+  --table-border:        color-mix(in srgb, var(--nv-navy) 14%, var(--nv-epc-border));
   --table-header-border: color-mix(in srgb, #fff 18%, var(--nv-table-header-bg));
   --table-header-lip:    var(--nv-amber);
 
@@ -94,18 +94,18 @@
   --md-primary:                  var(--nv-action);
   --md-on-primary:               #FFFFFF;
   --md-primary-container:        var(--nv-steel-light);
-  --md-on-primary-container:     #0A4A6E;
+  --md-on-primary-container:     color-mix(in srgb, var(--nv-action) 78%, var(--nv-epc-text));
 
   /* ── Secondary (steel) ── */
   --md-secondary:                var(--nv-steel);
   --md-on-secondary:             #FFFFFF;
   --md-secondary-container:      var(--nv-steel-light);
-  --md-on-secondary-container:   #163044;
+  --md-on-secondary-container:   color-mix(in srgb, var(--nv-navy) 70%, var(--nv-action));
 
   /* ── Tertiary (amber live state) ── */
   --md-tertiary:                 var(--nv-amber);
   --md-on-tertiary:              #1A1200;
-  --md-tertiary-container:       #F8E4B5;
+  --md-tertiary-container:       #FEF3C7;
   --md-on-tertiary-container:    var(--nv-amber-dark);
 
   /* ── Surface System — cool gray page + white cards ── */
@@ -115,17 +115,17 @@
   --md-surface-variant_purple:   #B5BAFF;
   --md-on-surface-variant:       var(--nv-epc-muted);
   --md-surface-container:        #FFFFFF;
-  --md-surface-container-low:    #F4F4F4;
+  --md-surface-container-low:    #F8FAFC;
   --md-surface-container-lowest: #FFFFFF;
   --md-surface-container-high:   #FFFFFF;
-  --md-surface-container-highest:#EAECEF;
+  --md-surface-container-highest:#E2E8F0;
   --md-surface-variant05:        color-mix(in srgb, var(--nv-navy) 5%, var(--md-surface-container));
   --md-inverse-surface:          var(--nv-navy);
   --md-inverse-on-surface:       #FFFFFF;
 
   /* ── Outline ── */
-  --md-outline:                  #C5CAD3;
-  --md-outline-variant:          #E8E8E8;
+  --md-outline:                  #CBD5E1;
+  --md-outline-variant:          #E2E8F0;
   --md-outline-variant02:        var(--nv-epc-border);
 
   /* ── Error / danger ── */
@@ -138,16 +138,16 @@
   --md-success:              #1F7A4D;
   --md-success-container:    #C8EBD8;
   --md-on-success-container: #0F4A2E;
-  --md-warning:              #C47A00;
-  --md-warning-container:    #F8E4B5;
-  --md-on-warning-container: #6A4200;
+  --md-warning:              #A16207;
+  --md-warning-container:    #FEF3C7;
+  --md-on-warning-container: #78350F;
   --md-info:                 var(--nv-steel);
   --md-info-container:       var(--nv-steel-light);
   --md-on-info-container:    #0A4A6E;
 
   /* ── Status accents ── */
   --status-success: #1F7A4D;
-  --status-warning: #C47A00;
+  --status-warning: #A16207;
   --status-info:    var(--nv-steel);
   --status-error:   #C42B22;
 
@@ -161,12 +161,12 @@
   --tint-primary-soft:   color-mix(in srgb, var(--nv-action) 10%, transparent);
   --tint-primary-hover:  color-mix(in srgb, var(--nv-action) 12%, transparent);
   --tint-primary-active: color-mix(in srgb, var(--nv-action) 18%, transparent);
-  --tint-success-soft:   rgba(31, 122, 77, 0.12);
-  --tint-success-border: rgba(31, 122, 77, 0.22);
-  --tint-warning-soft:   rgba(196, 122, 0, 0.14);
-  --tint-warning-border: rgba(196, 122, 0, 0.26);
-  --tint-error-soft:     rgba(196, 43, 34, 0.10);
-  --tint-error-strong:   rgba(196, 43, 34, 0.16);
+  --tint-success-soft:   color-mix(in srgb, var(--md-success) 12%, transparent);
+  --tint-success-border: color-mix(in srgb, var(--md-success) 22%, transparent);
+  --tint-warning-soft:   color-mix(in srgb, var(--md-warning) 14%, transparent);
+  --tint-warning-border: color-mix(in srgb, var(--md-warning) 26%, transparent);
+  --tint-error-soft:     color-mix(in srgb, var(--md-error) 10%, transparent);
+  --tint-error-strong:   color-mix(in srgb, var(--md-error) 16%, transparent);
 
   /* ── Chart series — 6 màu phân biệt, không lặp ── */
   --chart-1: var(--nv-navy);
@@ -180,13 +180,13 @@
   --icon-stroke: 2;
 
   /* ── Modal scrim ── */
-  --md-scrim: rgba(14, 48, 99, 0.52);
+  --md-scrim: color-mix(in srgb, var(--nv-navy) 52%, transparent);
 
   /* ── Elevation — cool navy ink, real offset ── */
-  --md-shadow-1: 0 1px 2px 0 rgba(14, 48, 99, 0.08);
-  --md-shadow-2: 0 3px 8px 0 rgba(14, 48, 99, 0.10);
-  --md-shadow-3: 0 8px 22px 0 rgba(14, 48, 99, 0.14);
-  --md-shadow-4: 0 16px 36px 0 rgba(14, 48, 99, 0.18);
+  --md-shadow-1: 0 1px 2px 0 color-mix(in srgb, var(--nv-navy) 7%, transparent);
+  --md-shadow-2: 0 3px 10px 0 color-mix(in srgb, var(--nv-navy) 10%, transparent);
+  --md-shadow-3: 0 8px 22px 0 color-mix(in srgb, var(--nv-navy) 14%, transparent);
+  --md-shadow-4: 0 16px 36px 0 color-mix(in srgb, var(--nv-navy) 18%, transparent);
 
   /* ── Transition ── */
   --md-easing: cubic-bezier(0.2, 0, 0, 1);
@@ -247,7 +247,7 @@
   --nv-sidebar-bg:       color-mix(in srgb, #fff 9%, var(--nv-navy));
   --nv-sidebar-bg-alt:   var(--nv-sidebar-bg);
   --nv-sidebar-border:   rgba(255, 255, 255, 0.14);
-  --nv-sidebar-accent:   #4FC3F7;
+  --nv-sidebar-accent:   color-mix(in srgb, var(--nv-action) 55%, #ffffff);
   --nv-sidebar-on:       rgba(255, 255, 255, 0.78);
   --nv-sidebar-on-strong:#FFFFFF;
   --nv-sidebar-on-muted: rgba(255, 255, 255, 0.45);
