@@ -184,6 +184,11 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
       <PageHeader
         variant="detail"
         onBack={onBack}
+        breadcrumbs={[
+          { label: 'Kho vận & Tồn kho', to: '/warehouse/dashboard-warehouse' },
+          { label: 'Danh mục vật tư', to: '/warehouse/materials' },
+          { label: material.materialCode },
+        ]}
         title={isEditing ? editForm.materialName || material.materialName : material.materialName}
         subtitle={`Mã vật tư: ${material.materialCode}${!isActive ? ' · Ngừng sử dụng' : ''}`}
         actions={

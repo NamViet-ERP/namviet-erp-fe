@@ -165,6 +165,52 @@ describe('Design System UI primitives', () => {
       await act(() => btn!.click());
       expect(onBack).toHaveBeenCalledTimes(1);
     });
+
+    it('renders optional breadcrumbs with Router Links and aria-current="page" on final item', async () => {
+      await act(() =>
+        root.render(
+          createElement(
+            MemoryRouter,
+            null,
+            createElement(PageHeader, {
+              variant: 'detail',
+              onBack: vi.fn(),
+              title: 'Thép hình H300',
+              breadcrumbs: [
+                { label: 'Kho vận & Tồn kho', to: '/warehouse/dashboard-warehouse' },
+                { label: 'Danh mục vật tư', to: '/warehouse/materials' },
+                { label: 'VT-THEP-H300' },
+              ],
+            }),
+          ),
+        ),
+      );
+
+      const nav = container.querySelector('nav[aria-label="Breadcrumb"]');
+      expect(nav).not.toBeNull();
+      const links = nav!.querySelectorAll<HTMLAnchorElement>('a.page-header__breadcrumb-link');
+      expect(links).toHaveLength(2);
+      expect(links[0].getAttribute('href')).toBe('/warehouse/dashboard-warehouse');
+      expect(links[0].textContent).toBe('Kho vận & Tồn kho');
+      expect(links[1].getAttribute('href')).toBe('/warehouse/materials');
+      expect(links[1].textContent).toBe('Danh mục vật tư');
+
+      const current = nav!.querySelector<HTMLSpanElement>('span[aria-current="page"].page-header__breadcrumb-current');
+      expect(current).not.toBeNull();
+      expect(current?.textContent).toBe('VT-THEP-H300');
+      expect(nav!.querySelectorAll('.page-header__breadcrumb-sep')).toHaveLength(2);
+    });
+
+    it('renders zero breadcrumb nav when breadcrumbs prop is omitted', async () => {
+      await act(() =>
+        root.render(
+          createElement(PageHeader, {
+            title: 'Danh mục vật tư',
+          }),
+        ),
+      );
+      expect(container.querySelector('nav[aria-label="Breadcrumb"]')).toBeNull();
+    });
   });
 
   describe('FilterToolbar', () => {

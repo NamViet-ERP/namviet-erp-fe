@@ -168,6 +168,11 @@ export default function ProjectDetailPage() {
       <PageHeader
         variant="detail"
         onBack={goBack}
+        breadcrumbs={[
+          { label: 'Kho vận & Tồn kho', to: '/warehouse/dashboard-warehouse' },
+          { label: 'Kho dự án', to: '/warehouse/projects' },
+          { label: project.projectCode },
+        ]}
         title={project.projectName}
         subtitle={`Mã kho: ${project.projectCode}`}
         actions={
