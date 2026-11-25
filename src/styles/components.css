@@ -174,9 +174,9 @@
     height: auto;
     padding: 14px 16px;
     border: 1px solid var(--md-outline-variant02);
-    border-top: 3px solid var(--kpi-accent, var(--nv-navy));
+    border-top: 2px solid var(--kpi-accent, var(--nv-navy));
     border-radius: var(--radius-md);
-    box-shadow: var(--md-shadow-1);
+    box-shadow: var(--md-shadow-1), inset 0 1px 0 color-mix(in srgb, var(--md-surface-container) 90%, transparent);
     background: var(--md-surface-container);
     transition: transform 0.15s ease, box-shadow 0.15s ease;
   }
@@ -5291,9 +5291,14 @@
   .page-header__actions {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 8px;
     flex: 0 0 auto;
     margin-left: auto;
+    max-width: 100%;
+  }
+  .page-header__actions > .flex {
+    flex-wrap: wrap;
     max-width: 100%;
   }
   .page-header__updated {
@@ -6297,6 +6302,11 @@ button.entity-code-link:focus-visible {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
+  }
+  .app-shell--wms .page-header {
+    margin-inline: 0;
+    width: 100%;
+    padding: 8px 0;
   }
   .ops-projects__toolbar {
     gap: 6px;
