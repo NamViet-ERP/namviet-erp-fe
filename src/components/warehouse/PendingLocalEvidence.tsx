@@ -13,6 +13,10 @@ function formatBytes(size: number): string {
   return `${(size / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function getFileExt(fileName: string): string {
+  return fileName.includes('.') ? fileName.slice(fileName.lastIndexOf('.') + 1).toUpperCase() : 'FILE';
+}
+
 function useObjectUrls(files: File[]): string[] {
   const urls = useMemo(() => files.map(file => URL.createObjectURL(file)), [files]);
   useEffect(() => () => {
@@ -21,16 +25,17 @@ function useObjectUrls(files: File[]): string[] {
   return urls;
 }
 
-type PendingPhotoGridProps = {
-  files: File[];
-  onRemove: (index: number) => void;
-};
+function RemoveEvidenceButton({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button type="button" className="pending-evidence__remove" aria-label={label} onClick={onClick}>
+      <Trash2 size={14} />
+    </button>
+  );
+}
 
-export function PendingPhotoGrid({ files, onRemove }: PendingPhotoGridProps) {
+export function PendingPhotoGrid({ files, onRemove }: { files: File[]; onRemove: (index: number) => void }) {
   const urls = useObjectUrls(files);
-  if (files.length === 0) {
-    return null;
-  }
+  if (files.length === 0) return null;
   return (
     <ul className="pending-evidence__photos" aria-label="Ảnh đã chọn">
       {files.map((file, idx) => (
@@ -40,264 +45,65 @@ export function PendingPhotoGrid({ files, onRemove }: PendingPhotoGridProps) {
             <span className="pending-evidence__name" title={file.name}>{file.name}</span>
             <span className="pending-evidence__size">{formatBytes(file.size)}</span>
           </div>
-          <button
-            type="button"
-            className="pending-evidence__remove"
-            aria-label={`Xóa ảnh ${file.name}`}
-            onClick={() => onRemove(idx)}
-          >
-            <Trash2 size={14} />
-          </button>
+          <RemoveEvidenceButton label={`Xóa ảnh ${file.name}`} onClick={() => onRemove(idx)} />
         </li>
       ))}
     </ul>
   );
 }
 
-type PendingDocListProps = {
-  files: File[];
-  onRemove: (index: number) => void;
-};
-
-export function PendingDocList({ files, onRemove }: PendingDocListProps) {
-  if (files.length === 0) {
-    return null;
-  }
+export function PendingDocList({ files, onRemove }: { files: File[]; onRemove: (index: number) => void }) {
+  if (files.length === 0) return null;
   return (
     <ul className="pending-evidence__docs" aria-label="File đã chọn">
-      {files.map((file, idx) => {
-        const ext = file.name.includes('.')
-          ? file.name.slice(file.name.lastIndexOf('.') + 1).toUpperCase()
-          : 'FILE';
-        return (
-          <li key={`${file.name}-${file.size}-${idx}`} className="pending-evidence__doc">
-            <span className="pending-evidence__doc-icon" aria-hidden>
-              <FileText size={16} />
-            </span>
-            <div className="pending-evidence__doc-body">
-              <span className="pending-evidence__name" title={file.name}>{file.name}</span>
-              <span className="pending-evidence__size">{ext} · {formatBytes(file.size)}</span>
-            </div>
-            <button
-              type="button"
-              className="pending-evidence__remove"
-              aria-label={`Xóa file ${file.name}`}
-              onClick={() => onRemove(idx)}
-            >
-              <Trash2 size={14} />
-            </button>
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
-
-type SavedPhotoGridProps = {
-  ticketCode: string;
-  attachments: PurchaseDefectAttachmentApiDto[];
-  canEdit?: boolean;
-  onDelete?: (attachmentId: string) => void;
-};
-
-export function SavedDefectPhotoGrid({
-  ticketCode,
-  attachments,
-  canEdit = false,
-  onDelete,
-}: SavedPhotoGridProps) {
-  const photos = useMemo(
-    () => attachments.filter(a => a.kind === 'photo'),
-    [attachments],
-  );
-  const photoKey = photos.map(p => p.id).join(',');
-  const photosRef = useRef(photos);
-  useEffect(() => {
-    photosRef.current = photos;
-  }, [photos]);
-  const [urls, setUrls] = useState<Record<string, string>>({});
-  const [failed, setFailed] = useState<Record<string, boolean>>({});
-  const [reloadToken, setReloadToken] = useState(0);
-
-  useEffect(() => {
-    let alive = true;
-    const created: string[] = [];
-    const currentPhotos = photosRef.current;
-    if (currentPhotos.length === 0) {
-      return () => {
-        alive = false;
-      };
-    }
-    void (async () => {
-      const next: Record<string, string> = {};
-      const nextFailed: Record<string, boolean> = {};
-      await Promise.all(
-        currentPhotos.map(async att => {
-          try {
-            const blob = await defectsService.getAttachmentBlob(ticketCode, att.id);
-            if (!alive) return;
-            const url = URL.createObjectURL(blob);
-            created.push(url);
-            next[att.id] = url;
-          } catch {
-            nextFailed[att.id] = true;
-          }
-        }),
-      );
-      if (!alive) {
-        for (const url of created) URL.revokeObjectURL(url);
-        return;
-      }
-      setUrls(next);
-      setFailed(nextFailed);
-    })();
-    return () => {
-      alive = false;
-      for (const url of created) URL.revokeObjectURL(url);
-    };
-  }, [ticketCode, photoKey, reloadToken]);
-
-  if (photos.length === 0) {
-    return <p className="pending-evidence__empty">Chưa có ảnh.</p>;
-  }
-
-  return (
-    <ul className="pending-evidence__photos" aria-label="Ảnh hàng lỗi">
-      {photos.map(att => (
-        <li key={att.id} className="pending-evidence__photo">
-          {urls[att.id] ? (
-            <button
-              type="button"
-              className="pending-evidence__photo-open"
-              onClick={() => {
-                void defectsService.downloadAttachment(ticketCode, att.id, att.fileName);
-              }}
-              title={`Tải ${att.fileName}`}
-            >
-              <img src={urls[att.id]} alt={att.fileName} className="pending-evidence__photo-img" />
-            </button>
-          ) : failed[att.id] ? (
-            <button
-              type="button"
-              className="pending-evidence__photo-img pending-evidence__photo-img--failed"
-              onClick={() => setReloadToken(t => t + 1)}
-              title="Thử tải lại ảnh"
-            >
-              Không tải được — bấm thử lại
-            </button>
-          ) : (
-            <div className="pending-evidence__photo-img pending-evidence__photo-img--loading">
-              Đang tải…
-            </div>
-          )}
-          <div className="pending-evidence__photo-meta">
-            <span className="pending-evidence__name" title={att.fileName}>{att.fileName}</span>
+      {files.map((file, idx) => (
+        <li key={`${file.name}-${file.size}-${idx}`} className="pending-evidence__doc">
+          <span className="pending-evidence__doc-icon" aria-hidden><FileText size={16} /></span>
+          <div className="pending-evidence__doc-body">
+            <span className="pending-evidence__name" title={file.name}>{file.name}</span>
+            <span className="pending-evidence__size">{getFileExt(file.name)} · {formatBytes(file.size)}</span>
           </div>
-          {canEdit && onDelete ? (
-            <button
-              type="button"
-              className="pending-evidence__remove"
-              aria-label={`Xóa ảnh ${att.fileName}`}
-              onClick={() => onDelete(att.id)}
-            >
-              <Trash2 size={14} />
-            </button>
-          ) : null}
+          <RemoveEvidenceButton label={`Xóa file ${file.name}`} onClick={() => onRemove(idx)} />
         </li>
       ))}
     </ul>
   );
 }
 
-type SavedDocListProps = {
-  ticketCode: string;
-  attachments: PurchaseDefectAttachmentApiDto[];
-  canEdit?: boolean;
-  onDelete?: (attachmentId: string) => void;
-};
+type EvidenceAttachment = { id: string; kind: string; fileName: string };
 
-export function SavedDefectDocList({
-  ticketCode,
-  attachments,
-  canEdit = false,
-  onDelete,
-}: SavedDocListProps) {
-  const docs = useMemo(
-    () => attachments.filter(a => a.kind !== 'photo'),
-    [attachments],
-  );
-  if (docs.length === 0) {
-    return <p className="pending-evidence__empty">Chưa có file.</p>;
-  }
-  return (
-    <ul className="pending-evidence__docs" aria-label="File chứng từ">
-      {docs.map(att => {
-        const ext = att.fileName.includes('.')
-          ? att.fileName.slice(att.fileName.lastIndexOf('.') + 1).toUpperCase()
-          : 'FILE';
-        return (
-          <li key={att.id} className="pending-evidence__doc">
-            <span className="pending-evidence__doc-icon" aria-hidden>
-              <FileText size={16} />
-            </span>
-            <div className="pending-evidence__doc-body">
-              <button
-                type="button"
-                className="pending-evidence__name pending-evidence__name--link"
-                title={att.fileName}
-                onClick={() => {
-                  void defectsService.downloadAttachment(ticketCode, att.id, att.fileName);
-                }}
-              >
-                {att.fileName}
-              </button>
-              <span className="pending-evidence__size">{ext}</span>
-            </div>
-            {canEdit && onDelete ? (
-              <button
-                type="button"
-                className="pending-evidence__remove"
-                aria-label={`Xóa file ${att.fileName}`}
-                onClick={() => onDelete(att.id)}
-              >
-                <Trash2 size={14} />
-              </button>
-            ) : null}
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
-
-type SavedImportPhotoGridProps = {
-  importId: string;
-  attachments: ImportAttachment[];
-  canEdit?: boolean;
-  onDelete?: (attachmentId: string) => void;
-  onDownload?: (attachmentId: string, fileName: string) => void;
-  /** Mặc định chỉ ảnh nhận hàng (`photo`). */
+type SavedBlobPhotoGridProps = {
+  entityKey: string;
+  attachments: EvidenceAttachment[];
   kinds?: string[];
+  ariaLabel: string;
+  fetchBlob: (attachmentId: string) => Promise<Blob>;
+  onOpen?: (attachmentId: string, fileName: string) => void;
+  canEdit?: boolean;
+  onDelete?: (attachmentId: string) => void;
+  distinguish404?: boolean;
 };
 
-/** Ảnh đã lưu trên phiếu nhập — cùng chrome với PendingPhotoGrid. */
-export function SavedImportPhotoGrid({
-  importId,
+function SavedBlobPhotoGrid({
+  entityKey,
   attachments,
+  kinds = ['photo'],
+  ariaLabel,
+  fetchBlob,
+  onOpen,
   canEdit = false,
   onDelete,
-  onDownload,
-  kinds = ['photo'],
-}: SavedImportPhotoGridProps) {
-  const photos = useMemo(
-    () => attachments.filter(a => kinds.includes(a.kind)),
-    [attachments, kinds],
-  );
+  distinguish404 = true,
+}: SavedBlobPhotoGridProps) {
+  const photos = useMemo(() => attachments.filter(a => kinds.includes(a.kind)), [attachments, kinds]);
   const photoKey = photos.map(p => p.id).join(',');
   const photosRef = useRef(photos);
+  const fetchBlobRef = useRef(fetchBlob);
   useEffect(() => {
     photosRef.current = photos;
-  }, [photos]);
+    fetchBlobRef.current = fetchBlob;
+  }, [photos, fetchBlob]);
+
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [failed, setFailed] = useState<Record<string, 'missing' | 'error'>>({});
   const [reloadToken, setReloadToken] = useState(0);
@@ -306,24 +112,20 @@ export function SavedImportPhotoGrid({
     let alive = true;
     const created: string[] = [];
     const currentPhotos = photosRef.current;
-    if (currentPhotos.length === 0) {
-      return () => {
-        alive = false;
-      };
-    }
+    if (currentPhotos.length === 0) return () => { alive = false; };
     void (async () => {
       const next: Record<string, string> = {};
       const nextFailed: Record<string, 'missing' | 'error'> = {};
       await Promise.all(
         currentPhotos.map(async att => {
           try {
-            const blob = await importsService.downloadAttachment(importId, att.id);
+            const blob = await fetchBlobRef.current(att.id);
             if (!alive) return;
             const url = URL.createObjectURL(blob);
             created.push(url);
             next[att.id] = url;
           } catch (err) {
-            nextFailed[att.id] = err instanceof ApiError && err.status === 404 ? 'missing' : 'error';
+            nextFailed[att.id] = distinguish404 && err instanceof ApiError && err.status === 404 ? 'missing' : 'error';
           }
         }),
       );
@@ -338,23 +140,16 @@ export function SavedImportPhotoGrid({
       alive = false;
       for (const url of created) URL.revokeObjectURL(url);
     };
-  }, [importId, photoKey, reloadToken]);
+  }, [entityKey, photoKey, reloadToken, distinguish404]);
 
-  if (photos.length === 0) {
-    return <p className="pending-evidence__empty">Chưa có ảnh.</p>;
-  }
+  if (photos.length === 0) return <p className="pending-evidence__empty">Chưa có ảnh.</p>;
 
   return (
-    <ul className="pending-evidence__photos" aria-label="Ảnh nhận hàng">
+    <ul className="pending-evidence__photos" aria-label={ariaLabel}>
       {photos.map(att => (
         <li key={att.id} className="pending-evidence__photo">
           {urls[att.id] ? (
-            <button
-              type="button"
-              className="pending-evidence__photo-open"
-              onClick={() => onDownload?.(att.id, att.fileName)}
-              title={`Tải ${att.fileName}`}
-            >
+            <button type="button" className="pending-evidence__photo-open" onClick={() => onOpen?.(att.id, att.fileName)} title={`Tải ${att.fileName}`}>
               <img src={urls[att.id]} alt={att.fileName} className="pending-evidence__photo-img" />
             </button>
           ) : failed[att.id] ? (
@@ -367,202 +162,97 @@ export function SavedImportPhotoGrid({
               {failed[att.id] === 'missing' ? 'Ảnh không còn trên máy chủ' : 'Không tải được — bấm thử lại'}
             </button>
           ) : (
-            <div className="pending-evidence__photo-img pending-evidence__photo-img--loading">
-              Đang tải…
-            </div>
+            <div className="pending-evidence__photo-img pending-evidence__photo-img--loading">Đang tải…</div>
           )}
           <div className="pending-evidence__photo-meta">
             <span className="pending-evidence__name" title={att.fileName}>{att.fileName}</span>
           </div>
-          {canEdit && onDelete ? (
-            <button
-              type="button"
-              className="pending-evidence__remove"
-              aria-label={`Xóa ảnh ${att.fileName}`}
-              onClick={() => onDelete(att.id)}
-            >
-              <Trash2 size={14} />
-            </button>
-          ) : null}
+          {canEdit && onDelete ? <RemoveEvidenceButton label={`Xóa ảnh ${att.fileName}`} onClick={() => onDelete(att.id)} /> : null}
         </li>
       ))}
     </ul>
   );
 }
 
-type SavedExportReturnPhotoGridProps = {
-  returnId: string;
-  attachments: ImportAttachment[];
+type SavedDocListBaseProps = {
+  attachments: EvidenceAttachment[];
   canEdit?: boolean;
   onDelete?: (attachmentId: string) => void;
   onDownload?: (attachmentId: string, fileName: string) => void;
 };
+
+function SavedDocListBase({ attachments, canEdit = false, onDelete, onDownload }: SavedDocListBaseProps) {
+  const docs = useMemo(() => attachments.filter(a => a.kind !== 'photo'), [attachments]);
+  if (docs.length === 0) return <p className="pending-evidence__empty">Chưa có file.</p>;
+  return (
+    <ul className="pending-evidence__docs" aria-label="File chứng từ">
+      {docs.map(att => (
+        <li key={att.id} className="pending-evidence__doc">
+          <span className="pending-evidence__doc-icon" aria-hidden><FileText size={16} /></span>
+          <div className="pending-evidence__doc-body">
+            <button
+              type="button"
+              className="pending-evidence__name pending-evidence__name--link"
+              title={att.fileName}
+              onClick={() => onDownload?.(att.id, att.fileName)}
+            >
+              {att.fileName}
+            </button>
+            <span className="pending-evidence__size">{getFileExt(att.fileName)}</span>
+          </div>
+          {canEdit && onDelete ? <RemoveEvidenceButton label={`Xóa file ${att.fileName}`} onClick={() => onDelete(att.id)} /> : null}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+type SavedDefectProps = { ticketCode: string; attachments: PurchaseDefectAttachmentApiDto[]; canEdit?: boolean; onDelete?: (attachmentId: string) => void };
+type SavedVoucherProps = { attachments: ImportAttachment[]; canEdit?: boolean; onDelete?: (attachmentId: string) => void; onDownload?: (attachmentId: string, fileName: string) => void };
+
+export function SavedDefectPhotoGrid({ ticketCode, attachments, canEdit = false, onDelete }: SavedDefectProps) {
+  return (
+    <SavedBlobPhotoGrid
+      entityKey={ticketCode} attachments={attachments} ariaLabel="Ảnh hàng lỗi" distinguish404={false}
+      fetchBlob={id => defectsService.getAttachmentBlob(ticketCode, id)}
+      onOpen={(id, fileName) => { void defectsService.downloadAttachment(ticketCode, id, fileName); }}
+      canEdit={canEdit} onDelete={onDelete}
+    />
+  );
+}
+
+export function SavedDefectDocList({ ticketCode, attachments, canEdit = false, onDelete }: SavedDefectProps) {
+  return (
+    <SavedDocListBase
+      attachments={attachments} canEdit={canEdit} onDelete={onDelete}
+      onDownload={(id, fileName) => { void defectsService.downloadAttachment(ticketCode, id, fileName); }}
+    />
+  );
+}
+
+/** Ảnh đã lưu trên phiếu nhập — cùng chrome với PendingPhotoGrid. Mặc định chỉ ảnh nhận hàng (`photo`). */
+export function SavedImportPhotoGrid({ importId, attachments, canEdit = false, onDelete, onDownload, kinds = ['photo'] }: SavedVoucherProps & { importId: string; kinds?: string[] }) {
+  return (
+    <SavedBlobPhotoGrid
+      entityKey={importId} attachments={attachments} kinds={kinds} ariaLabel="Ảnh nhận hàng"
+      fetchBlob={id => importsService.downloadAttachment(importId, id)}
+      onOpen={onDownload} canEdit={canEdit} onDelete={onDelete}
+    />
+  );
+}
 
 /** Ảnh đã lưu trên phiếu trả hàng — cùng chrome với PendingPhotoGrid. */
-export function SavedExportReturnPhotoGrid({
-  returnId,
-  attachments,
-  canEdit = false,
-  onDelete,
-  onDownload,
-}: SavedExportReturnPhotoGridProps) {
-  const photos = useMemo(
-    () => attachments.filter(a => a.kind === 'photo'),
-    [attachments],
-  );
-  const photoKey = photos.map(p => p.id).join(',');
-  const photosRef = useRef(photos);
-  useEffect(() => {
-    photosRef.current = photos;
-  }, [photos]);
-  const [urls, setUrls] = useState<Record<string, string>>({});
-  const [failed, setFailed] = useState<Record<string, 'missing' | 'error'>>({});
-  const [reloadToken, setReloadToken] = useState(0);
-
-  useEffect(() => {
-    let alive = true;
-    const created: string[] = [];
-    const currentPhotos = photosRef.current;
-    if (currentPhotos.length === 0) {
-      return () => {
-        alive = false;
-      };
-    }
-    void (async () => {
-      const next: Record<string, string> = {};
-      const nextFailed: Record<string, 'missing' | 'error'> = {};
-      await Promise.all(
-        currentPhotos.map(async att => {
-          try {
-            const blob = await exportReturnsService.downloadAttachment(returnId, att.id);
-            if (!alive) return;
-            const url = URL.createObjectURL(blob);
-            created.push(url);
-            next[att.id] = url;
-          } catch (err) {
-            nextFailed[att.id] = err instanceof ApiError && err.status === 404 ? 'missing' : 'error';
-          }
-        }),
-      );
-      if (!alive) {
-        for (const url of created) URL.revokeObjectURL(url);
-        return;
-      }
-      setUrls(next);
-      setFailed(nextFailed);
-    })();
-    return () => {
-      alive = false;
-      for (const url of created) URL.revokeObjectURL(url);
-    };
-  }, [returnId, photoKey, reloadToken]);
-
-  if (photos.length === 0) {
-    return <p className="pending-evidence__empty">Chưa có ảnh.</p>;
-  }
-
+export function SavedExportReturnPhotoGrid({ returnId, attachments, canEdit = false, onDelete, onDownload }: SavedVoucherProps & { returnId: string }) {
   return (
-    <ul className="pending-evidence__photos" aria-label="Ảnh trả hàng">
-      {photos.map(att => (
-        <li key={att.id} className="pending-evidence__photo">
-          {urls[att.id] ? (
-            <button
-              type="button"
-              className="pending-evidence__photo-open"
-              onClick={() => onDownload?.(att.id, att.fileName)}
-              title={`Tải ${att.fileName}`}
-            >
-              <img src={urls[att.id]} alt={att.fileName} className="pending-evidence__photo-img" />
-            </button>
-          ) : failed[att.id] ? (
-            <button
-              type="button"
-              className="pending-evidence__photo-img pending-evidence__photo-img--failed"
-              onClick={() => setReloadToken(t => t + 1)}
-              title={failed[att.id] === 'missing' ? 'Ảnh không còn trên máy chủ (mã 404). Bấm để thử lại.' : 'Thử tải lại ảnh'}
-            >
-              {failed[att.id] === 'missing' ? 'Ảnh không còn trên máy chủ' : 'Không tải được — bấm thử lại'}
-            </button>
-          ) : (
-            <div className="pending-evidence__photo-img pending-evidence__photo-img--loading">
-              Đang tải…
-            </div>
-          )}
-          <div className="pending-evidence__photo-meta">
-            <span className="pending-evidence__name" title={att.fileName}>{att.fileName}</span>
-          </div>
-          {canEdit && onDelete ? (
-            <button
-              type="button"
-              className="pending-evidence__remove"
-              aria-label={`Xóa ảnh ${att.fileName}`}
-              onClick={() => onDelete(att.id)}
-            >
-              <Trash2 size={14} />
-            </button>
-          ) : null}
-        </li>
-      ))}
-    </ul>
+    <SavedBlobPhotoGrid
+      entityKey={returnId} attachments={attachments} ariaLabel="Ảnh trả hàng"
+      fetchBlob={id => exportReturnsService.downloadAttachment(returnId, id)}
+      onOpen={onDownload} canEdit={canEdit} onDelete={onDelete}
+    />
   );
 }
 
-type SavedImportDocListProps = {
-  attachments: ImportAttachment[];
-  canEdit?: boolean;
-  onDelete?: (attachmentId: string) => void;
-  onDownload?: (attachmentId: string, fileName: string) => void;
-};
-
 /** File chứng từ đã lưu trên phiếu nhập — cùng chrome với PendingDocList. */
-export function SavedImportDocList({
-  attachments,
-  canEdit = false,
-  onDelete,
-  onDownload,
-}: SavedImportDocListProps) {
-  const docs = useMemo(
-    () => attachments.filter(a => a.kind !== 'photo'),
-    [attachments],
-  );
-  if (docs.length === 0) {
-    return <p className="pending-evidence__empty">Chưa có file.</p>;
-  }
-  return (
-    <ul className="pending-evidence__docs" aria-label="File chứng từ">
-      {docs.map(att => {
-        const ext = att.fileName.includes('.')
-          ? att.fileName.slice(att.fileName.lastIndexOf('.') + 1).toUpperCase()
-          : 'FILE';
-        return (
-          <li key={att.id} className="pending-evidence__doc">
-            <span className="pending-evidence__doc-icon" aria-hidden>
-              <FileText size={16} />
-            </span>
-            <div className="pending-evidence__doc-body">
-              <button
-                type="button"
-                className="pending-evidence__name pending-evidence__name--link"
-                title={att.fileName}
-                onClick={() => onDownload?.(att.id, att.fileName)}
-              >
-                {att.fileName}
-              </button>
-              <span className="pending-evidence__size">{ext}</span>
-            </div>
-            {canEdit && onDelete ? (
-              <button
-                type="button"
-                className="pending-evidence__remove"
-                aria-label={`Xóa file ${att.fileName}`}
-                onClick={() => onDelete(att.id)}
-              >
-                <Trash2 size={14} />
-              </button>
-            ) : null}
-          </li>
-        );
-      })}
-    </ul>
-  );
+export function SavedImportDocList({ attachments, canEdit = false, onDelete, onDownload }: SavedVoucherProps) {
+  return <SavedDocListBase attachments={attachments} canEdit={canEdit} onDelete={onDelete} onDownload={onDownload} />;
 }

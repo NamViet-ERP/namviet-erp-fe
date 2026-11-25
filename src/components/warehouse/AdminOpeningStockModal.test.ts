@@ -169,4 +169,71 @@ describe('AdminOpeningStockModal characterization', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(showToast).toHaveBeenCalled();
   });
+
+  it('switches to project destination, renders SelectField, and re-previews when changing project', async () => {
+    const preview: OpeningStockPreviewResponseDto = {
+      totalRows: 1,
+      validRows: 1,
+      errorRows: 0,
+      totalQty: 5,
+      totalAmount: 250000,
+      items: [
+        {
+          materialCode: 'VT-01',
+          materialName: 'Ống thép đúc',
+          unit: 'Mét',
+          qty: 5,
+          unitPrice: 50000,
+          totalAmount: 250000,
+          isValid: true,
+        },
+      ],
+    };
+    vi.mocked(stockService.previewOpeningStock).mockResolvedValue(preview);
+
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    await act(async () => {
+      root.render(
+        createElement(
+          QueryClientProvider,
+          { client: queryClient },
+          createElement(AdminOpeningStockModal, {
+            isOpen: true,
+            onClose: vi.fn(),
+            onSuccess: vi.fn(),
+          }),
+        ),
+      );
+    });
+    await flush();
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const fakeFile = new File(['xlsx'], 'ton-kho-da01.xlsx', {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    Object.defineProperty(fileInput, 'files', { value: [fakeFile], writable: true });
+    await act(async () => {
+      fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    await flush();
+
+    const projectTabBtn = Array.from(document.querySelectorAll('button')).find(b =>
+      b.textContent?.includes('Kho Dự Án'),
+    )!;
+    await act(async () => {
+      projectTabBtn.click();
+    });
+
+    const selectEl = document.querySelector('select[aria-label="Chọn dự án nhận tồn kho"]') as HTMLSelectElement;
+    expect(selectEl).not.toBeNull();
+    expect(selectEl.textContent).toContain('DA-01 — Lò Hơi A');
+
+    await act(async () => {
+      selectEl.value = 'DA-01';
+      selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    await flush();
+
+    expect(stockService.previewOpeningStock).toHaveBeenLastCalledWith(fakeFile, 'DA-01');
+  });
 });

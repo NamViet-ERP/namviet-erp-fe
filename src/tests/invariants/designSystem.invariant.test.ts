@@ -44,6 +44,10 @@ const GOLDEN_SURFACE_FILES = [
   'src/pages/warehouse/materials/MaterialDetailReadView.tsx',
   'src/pages/warehouse/materials/MaterialDetailEditForm.tsx',
   'src/pages/warehouse/materials/MaterialCategoryCascadeFields.tsx',
+  'src/components/warehouse/PendingLocalEvidence.tsx',
+  'src/components/warehouse/AdminOpeningStockModal.tsx',
+  'src/components/warehouse/AdminOpeningStockErrorModal.tsx',
+  'src/components/warehouse/AdminOpeningStockPreviewTable.tsx',
 ];
 
 const RAW_HEX_RE = /#[0-9a-fA-F]{3,8}\b/;
