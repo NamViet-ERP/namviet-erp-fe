@@ -8,68 +8,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        /* ══════════════════════════════════════════════════════
-           Material Design 3 — Navy Blue Seed (#0E3063)
-           Each token references the CSS custom property defined in
-           src/index.css, so Tailwind utilities (bg-md-primary) and
-           arbitrary values (bg-[var(--md-primary)]) behave identically
-           AND both adapt automatically to dark mode.
-           ══════════════════════════════════════════════════════ */
-        md: {
-          /* Primary */
-          primary:                'var(--md-primary)',
-          'on-primary':           'var(--md-on-primary)',
-          'primary-container':    'var(--md-primary-container)',
-          'on-primary-container': 'var(--md-on-primary-container)',
-
-          /* Secondary */
-          secondary:                'var(--md-secondary)',
-          'on-secondary':           'var(--md-on-secondary)',
-          'secondary-container':    'var(--md-secondary-container)',
-          'on-secondary-container': 'var(--md-on-secondary-container)',
-
-          /* Tertiary */
-          tertiary:                'var(--md-tertiary)',
-          'on-tertiary':           'var(--md-on-tertiary)',
-          'tertiary-container':    'var(--md-tertiary-container)',
-          'on-tertiary-container': 'var(--md-on-tertiary-container)',
-
-          /* Surface system */
-          surface:                  'var(--md-surface)',
-          'on-surface':             'var(--md-on-surface)',
-          'surface-variant':        'var(--md-surface-variant)',
-          'on-surface-variant':     'var(--md-on-surface-variant)',
-          'surface-container':      'var(--md-surface-container)',
-          'surface-container-low':  'var(--md-surface-container-low)',
-          'surface-container-high': 'var(--md-surface-container-high)',
-          'inverse-surface':        'var(--md-inverse-surface)',
-          'inverse-on-surface':     'var(--md-inverse-on-surface)',
-
-          /* Outline */
-          outline:           'var(--md-outline)',
-          'outline-variant': 'var(--md-outline-variant)',
-
-          /* Error */
-          error:                'var(--md-error)',
-          'on-error':           'var(--md-on-error)',
-          'error-container':    'var(--md-error-container)',
-          'on-error-container': 'var(--md-on-error-container)',
-
-          /* Status tonal (containers) */
-          success:                'var(--md-success)',
-          'success-container':    'var(--md-success-container)',
-          'on-success-container': 'var(--md-on-success-container)',
-
-          warning:                'var(--md-warning)',
-          'warning-container':    'var(--md-warning-container)',
-          'on-warning-container': 'var(--md-on-warning-container)',
-
-          info:                'var(--md-info)',
-          'info-container':    'var(--md-info-container)',
-          'on-info-container': 'var(--md-on-info-container)',
-        },
-
-        /* Status accent tokens for icons / charts / dots — adapt to dark mode */
+        /* Status accent tokens defined in src/styles/tokens.css */
         status: {
           success: 'var(--status-success)',
           warning: 'var(--status-warning)',
@@ -83,38 +22,19 @@ export default {
         sans:   ['Roboto', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
       },
 
-      fontSize: {
-        /* MD3 Type Scale */
-        'md-display-lg':  ['3.5rem',   { lineHeight: '1.15', letterSpacing: '-0.015em', fontWeight: '400' }],
-        'md-headline-lg': ['3rem',     { lineHeight: '1.2',  letterSpacing: '-0.01em',  fontWeight: '500' }],
-        'md-headline-md': ['2rem',     { lineHeight: '1.25', letterSpacing: '0',        fontWeight: '500' }],
-        'md-title-lg':    ['1.5rem',   { lineHeight: '1.3',  letterSpacing: '0',        fontWeight: '500' }],
-        'md-title-md':    ['1.25rem',  { lineHeight: '1.4',  letterSpacing: '0.005em',  fontWeight: '500' }],
-        'md-title-sm':    ['0.875rem', { lineHeight: '1.4',  letterSpacing: '0.01em',   fontWeight: '500' }],
-        'md-body-lg':     ['1rem',     { lineHeight: '1.5',  letterSpacing: '0.015em',  fontWeight: '400' }],
-        'md-body-md':     ['0.875rem', { lineHeight: '1.5',  letterSpacing: '0.01em',   fontWeight: '400' }],
-        'md-label-lg':    ['0.875rem', { lineHeight: '1.4',  letterSpacing: '0.01em',   fontWeight: '500' }],
-        'md-label-md':    ['0.75rem',  { lineHeight: '1.4',  letterSpacing: '0.04em',   fontWeight: '500' }],
-        'md-label-sm':    ['0.6875rem',{ lineHeight: '1.3',  letterSpacing: '0.04em',   fontWeight: '500' }],
-      },
-
+      /* Radii & elevation tokens live in src/styles/tokens.css */
       borderRadius: {
-        'md-xs':  '8px',
-        'md-sm':  '12px',
-        'md':     '16px',
-        'md-lg':  '24px',
-        'md-xl':  '28px',
-        'md-2xl': '32px',
-        'md-3xl': '48px',
+        md: 'var(--radius-xs)',    // 6px  (inputs, chips, badges)
+        lg: 'var(--radius-sm)',    // 8px  (buttons, segmented controls)
+        xl: 'var(--radius-md)',    // 12px (cards, panels, table wrappers)
+        '2xl': 'var(--radius-lg)', // 16px (modals, sheets)
       },
 
       boxShadow: {
-        /* Brutalist / Minimalist: No generic drop shadows, use solid borders instead */
-        'md-1': 'none',
-        'md-2': 'none',
-        'md-3': 'none',
-        'md-4': 'none',
-        'md-5': 'none',
+        'md-1': 'var(--md-shadow-1)',
+        'md-2': 'var(--md-shadow-2)',
+        'md-3': 'var(--md-shadow-3)',
+        'md-4': 'var(--md-shadow-4)',
       },
 
       transitionTimingFunction: {
@@ -129,7 +49,7 @@ export default {
         'md-slow': '300ms',
       },
 
-      /* Keyframes + animations live in a single source: src/index.css
+      /* Keyframes + animations live in a single source: src/styles/utilities.css
          (the app uses the .animate-fade-in / .animate-scale-in / .animate-slide-up
          utilities defined there). Don't redeclare them here. */
     },
