@@ -176,13 +176,13 @@
     border: 1px solid var(--md-outline-variant02);
     border-top: 3px solid var(--kpi-accent, var(--nv-navy));
     border-radius: var(--radius-md);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-    background: #FFFFFF;
+    box-shadow: var(--md-shadow-1);
+    background: var(--md-surface-container);
     transition: transform 0.15s ease, box-shadow 0.15s ease;
   }
   .kpi-card.card-md:hover,
   .kpi-card.card-md:active {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--md-shadow-2);
     transform: translateY(-1px);
     filter: none;
   }
