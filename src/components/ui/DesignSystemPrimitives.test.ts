@@ -381,6 +381,60 @@ describe('Design System UI primitives', () => {
       expect(linkCard.className).toContain('kpi-card--accent-success');
       expect(linkCard.getAttribute('href')).toBe('/warehouse/reports');
     });
+
+    it('supports mobileColumns={1} and defaults to 2-col mobile grid behavior', async () => {
+      await act(() =>
+        root.render(
+          createElement(MetricsStrip, {
+            columns: 4,
+            ariaLabel: 'Thống kê nhập xuất kho',
+            children: createElement(KpiCard, {
+              label: 'Tổng tồn kho VLXD',
+              value: '482 tấn',
+              tone: 'primary',
+            }),
+          }),
+        ),
+      );
+      let list = container.querySelector('[role="list"]');
+      expect(list?.className).toContain('erp-metrics-strip--cols-4');
+      expect(list?.className).not.toContain('erp-metrics-strip--mobile-1');
+
+      await act(() =>
+        root.render(
+          createElement(MetricsStrip, {
+            columns: 4,
+            mobileColumns: 1,
+            ariaLabel: 'Thống kê nhập xuất kho',
+            children: createElement(KpiCard, {
+              label: 'Tổng tồn kho VLXD',
+              value: '482 tấn',
+              tone: 'primary',
+            }),
+          }),
+        ),
+      );
+      list = container.querySelector('[role="list"]');
+      expect(list?.className).toContain('erp-metrics-strip--cols-4');
+      expect(list?.className).toContain('erp-metrics-strip--mobile-1');
+
+      await act(() =>
+        root.render(
+          createElement(MetricsStrip, {
+            columns: 4,
+            mobileColumns: 2,
+            ariaLabel: 'Thống kê nhập xuất kho',
+            children: createElement(KpiCard, {
+              label: 'Tổng tồn kho VLXD',
+              value: '482 tấn',
+              tone: 'primary',
+            }),
+          }),
+        ),
+      );
+      list = container.querySelector('[role="list"]');
+      expect(list?.className).not.toContain('erp-metrics-strip--mobile-1');
+    });
   });
 
   describe('StatusBadge & PurchasingStatusBadge', () => {
