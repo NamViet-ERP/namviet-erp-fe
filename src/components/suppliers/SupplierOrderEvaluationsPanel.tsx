@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ClipboardCheck, X } from 'lucide-react';
 import PurchasingStatusBadge from '../purchasing/PurchasingStatusBadge';
@@ -43,9 +43,11 @@ export default function SupplierOrderEvaluationsPanel() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_LIST_PAGE_SIZE);
   const [completing, setCompleting] = useState<SupplierDeliveryEvaluationApiDto | null>(null);
+  const prevUrlSupplierIdRef = useRef(urlSupplierId);
 
   useEffect(() => {
-    if (urlSupplierId !== supplierFilter) {
+    if (urlSupplierId !== prevUrlSupplierIdRef.current) {
+      prevUrlSupplierIdRef.current = urlSupplierId;
       setSupplierFilter(urlSupplierId);
       setPage(1);
     }

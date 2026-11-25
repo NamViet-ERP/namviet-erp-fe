@@ -87,10 +87,13 @@ export default function SupplierAutocomplete({
     updatePanelPosition();
   };
 
-  const commitFreeText = (raw: string) => {
-    const next = raw.trim();
-    if (next !== value.trim()) onChange(next);
-  };
+  const commitFreeText = useCallback(
+    (raw: string) => {
+      const next = raw.trim();
+      if (next !== value.trim()) onChange(next);
+    },
+    [value, onChange],
+  );
 
   const selectSupplier = (supplier: SupplierApiDto) => {
     onChange(supplier.supplierName);
@@ -143,7 +146,7 @@ export default function SupplierAutocomplete({
     };
     document.addEventListener('mousedown', onPointerDown);
     return () => document.removeEventListener('mousedown', onPointerDown);
-  }, [open, draft, value]);
+  }, [open, draft, commitFreeText]);
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'ArrowDown') {

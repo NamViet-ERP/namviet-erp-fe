@@ -27,11 +27,15 @@ export default function SupplierEvaluationsPage() {
   const [tab, setTab] = useState<EvalTab>(getInitialTab);
 
   useEffect(() => {
-    if (urlTab && VALID_TABS.includes(urlTab) && urlTab !== tab) {
-      setTab(urlTab);
-    } else if (!urlTab && urlSupplierId && tab === 'tier') {
-      setTab('order');
-    }
+    setTab(prev => {
+      if (urlTab && VALID_TABS.includes(urlTab) && urlTab !== prev) {
+        return urlTab;
+      }
+      if (!urlTab && urlSupplierId && prev === 'tier') {
+        return 'order';
+      }
+      return prev;
+    });
   }, [urlTab, urlSupplierId]);
 
   const handleTabChange = (newTabId: string) => {

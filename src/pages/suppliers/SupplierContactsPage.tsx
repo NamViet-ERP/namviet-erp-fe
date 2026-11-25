@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Pencil, Plus, Trash2, X } from 'lucide-react';
 import PurchasingListLayout from '../../components/purchasing/PurchasingListLayout';
@@ -38,9 +38,11 @@ export default function SupplierContactsPage() {
   const [editing, setEditing] = useState<SupplierContactApiDto | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<SupplierContactApiDto | null>(null);
   const [contactApiErrors, setContactApiErrors] = useState<{ phone?: string; email?: string; fullName?: string }>({});
+  const prevUrlSupplierIdRef = useRef(urlSupplierId);
 
   useEffect(() => {
-    if (urlSupplierId !== supplierFilter) {
+    if (urlSupplierId !== prevUrlSupplierIdRef.current) {
+      prevUrlSupplierIdRef.current = urlSupplierId;
       setSupplierFilter(urlSupplierId);
       setPage(1);
     }

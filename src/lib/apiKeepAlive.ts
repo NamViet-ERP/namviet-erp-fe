@@ -5,8 +5,12 @@ function pingApi(): void {
   void fetch('/health', { cache: 'no-store', credentials: 'omit' }).catch(() => undefined);
 }
 
+let keepAliveStarted = false;
+
 /** Keep the Render API awake while this tab is open. */
 export function startApiKeepAlive(): void {
+  if (keepAliveStarted) return;
+  keepAliveStarted = true;
   pingApi();
   window.setInterval(pingApi, KEEP_ALIVE_MS);
   document.addEventListener('visibilitychange', () => {

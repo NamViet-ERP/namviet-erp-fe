@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { Check, Pencil, X } from 'lucide-react';
 import FormField from '../../components/ui/FormField';
 import Modal from '../../components/ui/Modal';
@@ -145,9 +145,9 @@ export default forwardRef<RfqQuotesPanelHandle, {
     [categories],
   );
 
-  const items = list.data?.items ?? [];
-  const materials = materialsPage?.items ?? [];
-  const suppliers = suppliersPage?.items ?? [];
+  const items = useMemo(() => list.data?.items ?? [], [list.data?.items]);
+  const materials = useMemo(() => materialsPage?.items ?? [], [materialsPage?.items]);
+  const suppliers = useMemo(() => suppliersPage?.items ?? [], [suppliersPage?.items]);
   const projects = projectsPage?.items ?? [];
   const supplierOptions = useMemo(
     () => [...suppliers].sort((a, b) => a.supplierName.localeCompare(b.supplierName, 'vi')),
@@ -175,13 +175,13 @@ export default forwardRef<RfqQuotesPanelHandle, {
   }, [form.materialCode, categoryId, materials, categories]);
   const busy = createMutation.isPending || updateMutation.isPending;
 
-  const openCreate = () => {
+  const openCreate = useCallback(() => {
     setCreating(true);
     setEditing(null);
     setForm(emptyForm());
     setCategoryId('');
     setFormErrors({});
-  };
+  }, []);
 
   const openEdit = (row: PurchaseRfqQuoteApiDto) => {
     if (row.status === 'won' || row.status === 'lost') {
@@ -300,7 +300,7 @@ export default forwardRef<RfqQuotesPanelHandle, {
     return items;
   };
 
-  const exportCsv = () => {
+  const exportCsv = useCallback(() => {
     const header = ['Ngày báo giá', 'Mã hàng', 'Tên hàng', 'Nhà cung cấp', 'Đơn giá', 'Hạn giữ giá', 'Thời gian giao hàng', 'Điều khoản thanh toán', 'Trạng thái'];
     const rows = items.map(row => [
       row.quoteDate,
@@ -314,9 +314,9 @@ export default forwardRef<RfqQuotesPanelHandle, {
       STATUS_LABEL[row.status] ?? row.status,
     ]);
     void downloadCsv('BaoGia_RFQ.csv', header, rows);
-  };
+  }, [items]);
 
-  useImperativeHandle(ref, () => ({ openCreate, exportCsv }), [canWrite, items]);
+  useImperativeHandle(ref, () => ({ openCreate, exportCsv }), [openCreate, exportCsv]);
 
   return (
     <div className="space-y-3">

@@ -78,9 +78,9 @@ export default function CreatePurchasePlanModal({
   const [hydratedCode, setHydratedCode] = useState<string | null>(null);
 
   const projects = projectsPage?.items ?? [];
-  const suppliers = suppliersPage?.items ?? [];
-  const materials = materialsPage?.items ?? [];
-  const serviceItems = serviceItemsPage?.items ?? [];
+  const suppliers = useMemo(() => suppliersPage?.items ?? [], [suppliersPage?.items]);
+  const materials = useMemo(() => materialsPage?.items ?? [], [materialsPage?.items]);
+  const serviceItems = useMemo(() => serviceItemsPage?.items ?? [], [serviceItemsPage?.items]);
   const busy =
     createMutation.isPending
     || updateMutation.isPending

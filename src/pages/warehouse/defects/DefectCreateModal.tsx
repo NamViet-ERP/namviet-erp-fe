@@ -51,13 +51,13 @@ export default function DefectCreateModal({ isOpen, onClose }: DefectCreateModal
 
   const poOptions = purchaseOrdersQuery.data ?? [];
 
-  const poPreviewLines = poPreviewQuery.data?.lines ?? [];
+  const poPreviewLines = useMemo(() => poPreviewQuery.data?.lines ?? [], [poPreviewQuery.data?.lines]);
   const poPreviewKey = useMemo(
     () => `${selectedPoCode}|${poPreviewLines.map(l => `${l.poItemId}:${l.available}`).join(',')}`,
     [selectedPoCode, poPreviewLines],
   );
 
-  const stockPreviewLines = stockPreviewQuery.data?.lines ?? [];
+  const stockPreviewLines = useMemo(() => stockPreviewQuery.data?.lines ?? [], [stockPreviewQuery.data?.lines]);
   const stockPreviewKey = useMemo(
     () => `${stockProjectCode}|${stockPreviewLines.map(l => `${l.materialCode}:${l.available}`).join(',')}`,
     [stockProjectCode, stockPreviewLines],

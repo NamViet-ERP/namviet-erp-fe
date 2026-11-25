@@ -7,6 +7,7 @@ import { CSKH_MODULE_ENABLED } from './constants/cskh';
 import { HRM_MODULE_ENABLED, WMS_REPORTS_ENABLED } from './constants/sidebarMenus';
 import { getDefaultRoute } from './utils/getDefaultRoute';
 import { getActiveRole } from './lib/getActiveRole';
+import { useSession } from './auth/AuthProvider';
 import * as Pages from './routes/lazyPages';
 
 const SuppliersModuleRoutes = lazy(() => import('./routes/SuppliersModuleRoutes'));
@@ -16,7 +17,8 @@ const DevAgentation = import.meta.env.DEV
   : () => null;
 
 export default function App() {
-  const role = getActiveRole();
+  const { user } = useSession();
+  const role = user?.role || getActiveRole();
 
   return (
     <BrowserRouter>

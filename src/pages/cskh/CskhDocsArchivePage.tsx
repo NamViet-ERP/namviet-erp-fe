@@ -60,7 +60,7 @@ export default function CskhDocsArchivePage({ project }: CskhDocsArchivePageProp
     queryKey: queryKeys.cskh.documents(project.code),
     queryFn: async (): Promise<CskhUnifiedDoc[]> => (await projectsService.listDocuments(project.code)).map(doc => applyDynamicSla(doc)),
   });
-  const docsList = documentsQuery.data ?? [];
+  const docsList = useMemo(() => documentsQuery.data ?? [], [documentsQuery.data]);
   const loadData = () => documentsQuery.refetch();
   const { run, isPending, error: actionError } = useCskhAction();
 

@@ -128,7 +128,7 @@ export default function PurchasePaymentPlansPage() {
 
   const { data, isLoading, isError, error, refetch } = usePurchasePaymentPlans(listParams);
 
-  const items = data?.items ?? [];
+  const items = useMemo(() => data?.items ?? [], [data?.items]);
   const totalCount = data?.totalCount ?? 0;
   const totalPages = Math.max(1, data?.totalPages ?? 1);
   const maxStages = useMemo(

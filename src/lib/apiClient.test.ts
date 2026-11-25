@@ -199,3 +199,65 @@ describe('parseApiError', () => {
     });
   });
 });
+
+describe('AbortSignal composition in apiClient.get and apiClient.getBlob', () => {
+  afterEach(() => {
+    setAuthTokenProvider(() => null);
+    resolveSessionExpired();
+    vi.restoreAllMocks();
+  });
+
+  it('passes an aborted signal and aborts apiClient.get when caller AbortController aborts', async () => {
+    const controller = new AbortController();
+    let capturedSignal: AbortSignal | undefined;
+
+    vi.spyOn(globalThis, 'fetch').mockImplementation((_input, init) => {
+      capturedSignal = init?.signal ?? undefined;
+      return new Promise<Response>((_resolve, reject) => {
+        if (capturedSignal?.aborted) {
+          reject(new DOMException('Aborted', 'AbortError'));
+          return;
+        }
+        capturedSignal?.addEventListener('abort', () => {
+          reject(new DOMException('Aborted', 'AbortError'));
+        });
+      });
+    });
+
+    const pending = apiClient.get('/api/materials', undefined, { signal: controller.signal });
+    expect(capturedSignal).toBeDefined();
+    expect(capturedSignal?.aborted).toBe(false);
+
+    controller.abort();
+
+    expect(capturedSignal?.aborted).toBe(true);
+    await expect(pending).rejects.toMatchObject({ name: 'AbortError' });
+  });
+
+  it('passes an aborted signal and aborts apiClient.getBlob when caller AbortController aborts', async () => {
+    const controller = new AbortController();
+    let capturedSignal: AbortSignal | undefined;
+
+    vi.spyOn(globalThis, 'fetch').mockImplementation((_input, init) => {
+      capturedSignal = init?.signal ?? undefined;
+      return new Promise<Response>((_resolve, reject) => {
+        if (capturedSignal?.aborted) {
+          reject(new DOMException('Aborted', 'AbortError'));
+          return;
+        }
+        capturedSignal?.addEventListener('abort', () => {
+          reject(new DOMException('Aborted', 'AbortError'));
+        });
+      });
+    });
+
+    const pending = apiClient.getBlob('/api/files/private', undefined, { signal: controller.signal });
+    expect(capturedSignal).toBeDefined();
+    expect(capturedSignal?.aborted).toBe(false);
+
+    controller.abort();
+
+    expect(capturedSignal?.aborted).toBe(true);
+    await expect(pending).rejects.toMatchObject({ name: 'AbortError' });
+  });
+});

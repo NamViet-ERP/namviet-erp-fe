@@ -130,7 +130,7 @@ export default function PurchaseContractsPage() {
   const { data: ordersPage } = usePurchaseOrders({ page: 1, pageSize: 200 });
   const projects = projectsPage?.items ?? [];
   const suppliers = suppliersPage?.items ?? [];
-  const orders = ordersPage?.items ?? [];
+  const orders = useMemo(() => ordersPage?.items ?? [], [ordersPage?.items]);
 
   const [search, setSearch] = useState('');
   const [projectCode, setProjectCode] = useState('');

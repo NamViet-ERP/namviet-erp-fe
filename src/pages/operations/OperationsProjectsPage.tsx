@@ -38,7 +38,7 @@ export default function OperationsProjectsPage() {
   const { data: projectOptions } = useProjects({ page: 1, pageSize: 200 });
   const progressQ = useProjectPurchasingProgress(progressProjectFilter || undefined);
 
-  const projectSelectItems = projectOptions?.items ?? [];
+  const projectSelectItems = useMemo(() => projectOptions?.items ?? [], [projectOptions?.items]);
   const ganttProjectOptions = useMemo(
     () => [
       { value: 'all', label: 'Tất cả dự án' },

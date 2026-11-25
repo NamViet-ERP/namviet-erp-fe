@@ -26,7 +26,7 @@
         "api:sync": "npm run api:fetch && npm run api:gen",
         "api:check": "node scripts/check-openapi-generated.mjs",
         "api:check:live": "node scripts/check-openapi-generated.mjs --live",
-        "lint:strict": "eslint src --ext .ts,.tsx --rule \"no-undef: error\"",
+        "lint:strict": "eslint src --ext .ts,.tsx --rule \"no-undef: error\" --max-warnings 0",
         "verify:all": "npm run typecheck && npm run lint:strict",
         "test:invariants": "vitest run src/tests/invariants"
     },

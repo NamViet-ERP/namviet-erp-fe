@@ -46,7 +46,7 @@ export default function ArrivalPlansPage() {
   const { data, isLoading, isError, error } = useArrivalPlans(daysAhead, {
     lineStatus: lineStatus === 'all' ? undefined : lineStatus,
   });
-  const projects = data?.projects ?? [];
+  const projects = useMemo(() => data?.projects ?? [], [data?.projects]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();

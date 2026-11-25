@@ -3,7 +3,10 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ServiceExpenseImportModal from './ServiceExpenseImportModal';
 import { serviceExpenseItemsService } from '../../services/serviceExpenseItemsService';
-import type { ServiceExpenseImportParseResultDto } from '../../types/api/serviceExpenseItem';
+import type {
+  ServiceExpenseImportParseResultDto,
+  ServiceExpenseImportRowDto,
+} from '../../types/api/serviceExpenseItem';
 
 vi.mock('../../services/serviceExpenseItemsService', () => ({
   serviceExpenseItemsService: {
@@ -38,7 +41,14 @@ describe('ServiceExpenseImportModal Defensive Rendering', () => {
   });
 
   it('renders preview rows safely without crashing even if row.errors is undefined or backend format is raw', async () => {
-    const mockParseResult: any = {
+    type RawImportRow = Omit<ServiceExpenseImportRowDto, 'errors' | 'warnings'> & {
+      errors?: string[];
+      warnings?: string[];
+    };
+    type RawParseResult = Omit<ServiceExpenseImportParseResultDto, 'rows'> & {
+      rows: RawImportRow[];
+    };
+    const mockParseResult: RawParseResult = {
       totalRows: 2,
       validRowCount: 1,
       existingRowCount: 0,
@@ -73,7 +83,9 @@ describe('ServiceExpenseImportModal Defensive Rendering', () => {
       ],
     };
 
-    vi.mocked(serviceExpenseItemsService.parseImportFile).mockResolvedValueOnce(mockParseResult as ServiceExpenseImportParseResultDto);
+    vi.mocked(serviceExpenseItemsService.parseImportFile).mockResolvedValueOnce(
+      mockParseResult as unknown as ServiceExpenseImportParseResultDto,
+    );
 
     await act(async () => {
       root.render(

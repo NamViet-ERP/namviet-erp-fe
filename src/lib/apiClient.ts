@@ -16,9 +16,31 @@ import { translateErrorMessage, isTechnicalUserMessage, formatUserMessages } fro
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
 
 /** Timeout mặc định cho request JSON. */
-const REQUEST_TIMEOUT_MS = 20_000;
+const REQUEST_TIMEOUT_MS = 30_000;
 /** Timeout riêng cho upload FormData (file lớn, mạng chậm). */
 const FORM_UPLOAD_TIMEOUT_MS = 120_000;
+
+function composeRequestSignal(timeoutMs: number, external?: AbortSignal | null): AbortSignal {
+  const timeoutSignal = AbortSignal.timeout(timeoutMs);
+  if (!external) return timeoutSignal;
+  if (typeof AbortSignal.any === 'function') {
+    return AbortSignal.any([external, timeoutSignal]);
+  }
+  if (external.aborted) return external;
+
+  const controller = new AbortController();
+  const onExternalAbort = () => {
+    timeoutSignal.removeEventListener('abort', onTimeoutAbort);
+    if (!controller.signal.aborted) controller.abort(external.reason);
+  };
+  const onTimeoutAbort = () => {
+    external.removeEventListener('abort', onExternalAbort);
+    if (!controller.signal.aborted) controller.abort(timeoutSignal.reason);
+  };
+  external.addEventListener('abort', onExternalAbort, { once: true });
+  timeoutSignal.addEventListener('abort', onTimeoutAbort, { once: true });
+  return controller.signal;
+}
 
 /** Normalized API failure. Carries the HTTP status and any server payload. */
 export class ApiError extends Error {
@@ -238,7 +260,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   const response = await fetch(buildUrl(path, params), {
     ...rest,
     credentials: 'include',
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    signal: composeRequestSignal(REQUEST_TIMEOUT_MS, rest.signal),
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/json',
@@ -283,7 +305,7 @@ function requestForm<T>(path: string, formData: FormData, method: 'POST' | 'PUT'
       method,
       credentials: 'include',
       // Upload file cần thời gian dài hơn request JSON thường.
-      signal: AbortSignal.timeout(FORM_UPLOAD_TIMEOUT_MS),
+      signal: composeRequestSignal(FORM_UPLOAD_TIMEOUT_MS),
       headers: {
         Accept: 'application/json',
         ...(token && !publicApi ? { Authorization: `Bearer ${token}` } : {}),
@@ -312,8 +334,12 @@ function requestForm<T>(path: string, formData: FormData, method: 'POST' | 'PUT'
 }
 
 export const apiClient = {
-  get: <T>(path: string, params?: RequestOptions['params']) =>
-    request<T>(path, { method: 'GET', params }),
+  get: <T>(
+    path: string,
+    params?: RequestOptions['params'],
+    options?: Pick<RequestOptions, 'signal' | 'headers'>,
+  ) =>
+    request<T>(path, { method: 'GET', params, ...options }),
   post: <T>(path: string, body?: unknown) =>
     request<T>(path, { method: 'POST', body }),
   put: <T>(path: string, body?: unknown) =>
@@ -339,7 +365,7 @@ export const apiClient = {
       const response = await fetch(buildUrl(path, params), {
         method: 'GET',
         credentials: 'include',
-        signal: options?.signal ?? AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+        signal: composeRequestSignal(REQUEST_TIMEOUT_MS, options?.signal),
         headers: {
           Accept: '*/*',
           ...(token && !publicApi ? { Authorization: `Bearer ${token}` } : {}),

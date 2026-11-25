@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Eye, Pencil, Plus, Trash2, X } from 'lucide-react';
 import PurchasingStatusBadge from '../purchasing/PurchasingStatusBadge';
@@ -47,9 +47,11 @@ export default function SupplierKpiEvaluationsPanel() {
   const [editing, setEditing] = useState<SupplierEvaluationApiDto | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<SupplierEvaluationApiDto | null>(null);
   const [detailId, setDetailId] = useState<number | null>(null);
+  const prevUrlSupplierIdRef = useRef(urlSupplierId);
 
   useEffect(() => {
-    if (urlSupplierId !== supplierFilter) {
+    if (urlSupplierId !== prevUrlSupplierIdRef.current) {
+      prevUrlSupplierIdRef.current = urlSupplierId;
       setSupplierFilter(urlSupplierId);
       setPage(1);
     }

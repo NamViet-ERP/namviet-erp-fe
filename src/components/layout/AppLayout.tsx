@@ -177,7 +177,6 @@ export default function AppLayout() {
     <div className={`app-shell ${shellModuleClass}${hideSidebar ? ' app-shell--no-sidebar' : sidebarCollapsed ? ' app-shell--sidebar-collapsed' : ''}${mobileSidebarOpen ? ' app-shell--mobile-open' : ''}`}>
       <Header
         currentModule={currentModule}
-        onModuleSwitch={() => {}}
         onToggleSidebar={() => setMobileSidebarOpen(p => !p)}
         isSidebarOpen={mobileSidebarOpen}
       />

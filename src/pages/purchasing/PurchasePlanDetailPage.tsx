@@ -267,7 +267,7 @@ export default function PurchasePlanDetailPage() {
   const canReject = has('purchasing.plans.reject');
   const canRemake = has('purchasing.plans.remake');
 
-  const lines = plan?.lines ?? [];
+  const lines = useMemo(() => plan?.lines ?? [], [plan?.lines]);
 
   const actionBusy =
     updateMutation.isPending

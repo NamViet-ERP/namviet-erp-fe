@@ -11,6 +11,18 @@ interface State {
   error?: Error;
 }
 
+const CHUNK_RELOAD_STORAGE_KEY = 'nv-chunk-reload-ts';
+const CHUNK_RELOAD_WINDOW_MS = 15_000;
+const CHUNK_LOAD_ERROR_PATTERN =
+  /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|ChunkLoadError/i;
+
+function isChunkLoadError(error: Error): boolean {
+  return (
+    CHUNK_LOAD_ERROR_PATTERN.test(error.message || error.name)
+    || CHUNK_LOAD_ERROR_PATTERN.test(error.name)
+  );
+}
+
 export default class ErrorBoundary extends Component<Props, State> {
   state: State = { hasError: false };
 
@@ -20,6 +32,24 @@ export default class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
     console.error('Unhandled UI error:', error, info.componentStack);
+
+    if (isChunkLoadError(error) && typeof window !== 'undefined') {
+      let prev: string | null;
+      try {
+        prev = sessionStorage.getItem(CHUNK_RELOAD_STORAGE_KEY);
+      } catch {
+        prev = null;
+      }
+      const prevTs = prev ? Number(prev) : NaN;
+      if (!prev || !Number.isFinite(prevTs) || Date.now() - prevTs > CHUNK_RELOAD_WINDOW_MS) {
+        try {
+          sessionStorage.setItem(CHUNK_RELOAD_STORAGE_KEY, String(Date.now()));
+        } catch {
+          // Ignore sessionStorage write errors in restricted browser contexts
+        }
+        window.location.reload();
+      }
+    }
   }
 
   render() {

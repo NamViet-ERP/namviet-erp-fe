@@ -1,70 +1,35 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import {
-  AlertTriangle,
-  Filter,
-  Globe,
-  RotateCcw,
-  Save,
-  Search,
-  X,
-} from 'lucide-react';
-import PageHeader from '../../components/ui/PageHeader';
-import HrmPanel from '../../components/hr/HrmPanel';
+import { RotateCcw, Save } from 'lucide-react';
+import PermissionGate from '../../components/auth/PermissionGate';
 import { HrmBackButton } from '../../components/hr/HrmPageChrome';
+import HrmPanel from '../../components/hr/HrmPanel';
 import EmptyState from '../../components/ui/EmptyState';
+import PageHeader from '../../components/ui/PageHeader';
 import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import { showToast } from '../../components/ui/Toast';
-import PermissionGate from '../../components/auth/PermissionGate';
 import { usePermission } from '../../hooks/usePermission';
-import { useRoles } from '../../hooks/useRoles';
 import {
   usePermissionCatalog,
   useRolePermissions,
   useUpdateRolePermissions,
 } from '../../hooks/useRolePermissions';
+import { useRoles } from '../../hooks/useRoles';
+import { getApiErrorMessage } from '../../lib/apiClient';
 import {
   filterPermissionGroups,
-  getActionBadgeInfo,
   groupPermissionCatalog,
-  type PermissionModuleGroup,
 } from '../../lib/permissions/groupPermissionCatalog';
-import { getApiErrorMessage } from '../../lib/apiClient';
-
-type StatusFilter = 'all' | 'granted' | 'ungranted';
-type ActionFilter = 'all' | 'view' | 'create_update' | 'approve' | 'price_report';
-
-function setsEqual(a: Set<string>, b: Set<string>): boolean {
-  if (a.size !== b.size) return false;
-  for (const value of a) {
-    if (!b.has(value)) return false;
-  }
-  return true;
-}
-
-function keysOfGroup(group: PermissionModuleGroup): string[] {
-  return group.resources.flatMap(r => r.entries.map(e => e.key));
-}
-
-function countSelected(keys: string[], selected: Set<string>): number {
-  return keys.filter(k => selected.has(k)).length;
-}
-
-function highlightMatch(text: string, query: string) {
-  const trimmed = query.trim().toLowerCase();
-  if (!trimmed) return text;
-  const index = text.toLowerCase().indexOf(trimmed);
-  if (index === -1) return text;
-  return (
-    <>
-      {text.slice(0, index)}
-      <mark className="bg-amber-200 text-slate-950 rounded px-0.5 dark:bg-amber-400/30 dark:text-amber-200">
-        {text.slice(index, index + trimmed.length)}
-      </mark>
-      {text.slice(index + trimmed.length)}
-    </>
-  );
-}
+import PermissionFilterToolbar from './rolePermissions/PermissionFilterToolbar';
+import PermissionMatrixTable from './rolePermissions/PermissionMatrixTable';
+import PermissionModuleRail from './rolePermissions/PermissionModuleRail';
+import {
+  countSelected,
+  keysOfGroup,
+  setsEqual,
+  type ActionFilter,
+  type StatusFilter,
+} from './rolePermissions/rolePermissionHelpers';
 
 export default function AdminRolePermissionsPage() {
   const navigate = useNavigate();
@@ -75,7 +40,9 @@ export default function AdminRolePermissionsPage() {
   const { data: roles = [] } = useRoles();
   const roleLabel = roles.find(r => r.code === code)?.label ?? code;
 
-  const { data: catalog = [], isLoading: catalogLoading } = usePermissionCatalog();
+  const catalogQuery = usePermissionCatalog();
+  const catalog = useMemo(() => catalogQuery.data ?? [], [catalogQuery.data]);
+  const catalogLoading = catalogQuery.isLoading;
   const {
     data: rolePermissions,
     isLoading: permissionsLoading,
@@ -258,203 +225,21 @@ export default function AdminRolePermissionsPage() {
       )}
 
       <HrmPanel noPadding className="admin-role-permissions-board">
-        {/* Toolbar: Search & Filters */}
-        <div className="admin-role-permissions-toolbar">
-          <div className="admin-role-permissions-search-row">
-            <div className="admin-role-permissions-search-box">
-              <Search
-                className="admin-role-permissions-search-icon"
-                size={16}
-                aria-hidden
-              />
-              <input
-                type="text"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Tìm nhanh theo tên quyền, mã quyền (vd: view, kho, dự án, đơn giá)..."
-                className="admin-role-permissions-search-input"
-                aria-label="Tìm kiếm quyền"
-              />
-              {search && (
-                <button
-                  type="button"
-                  className="admin-role-permissions-search-clear"
-                  onClick={() => setSearch('')}
-                  title="Xóa tìm kiếm"
-                  aria-label="Xóa tìm kiếm"
-                >
-                  <X size={16} aria-hidden />
-                </button>
-              )}
-            </div>
-
-            <label className="admin-role-permissions-search-cross-module">
-              <input
-                type="checkbox"
-                checked={searchCrossModules}
-                onChange={e => setSearchCrossModules(e.target.checked)}
-                className="admin-role-permissions-table__checkbox"
-              />
-              <Globe size={14} className="text-[var(--md-primary)]" aria-hidden />
-              <span>Tìm trên tất cả phân hệ</span>
-            </label>
-          </div>
-
-          <div className="admin-role-permissions-filter-row">
-            {/* 3-step Status Filter */}
-            <div
-              className="admin-role-permissions-status-tabs"
-              role="tablist"
-              aria-label="Lọc trạng thái quyền"
-            >
-              <button
-                type="button"
-                role="tab"
-                aria-selected={statusFilter === 'all'}
-                className={`admin-role-permissions-status-tab${
-                  statusFilter === 'all'
-                    ? ' admin-role-permissions-status-tab--active'
-                    : ''
-                }`}
-                onClick={() => setStatusFilter('all')}
-              >
-                Tất cả ({totalCount})
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={statusFilter === 'granted'}
-                className={`admin-role-permissions-status-tab${
-                  statusFilter === 'granted'
-                    ? ' admin-role-permissions-status-tab--active'
-                    : ''
-                }`}
-                onClick={() => setStatusFilter('granted')}
-              >
-                Đang bật ({grantedCount})
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={statusFilter === 'ungranted'}
-                className={`admin-role-permissions-status-tab${
-                  statusFilter === 'ungranted'
-                    ? ' admin-role-permissions-status-tab--active'
-                    : ''
-                }`}
-                onClick={() => setStatusFilter('ungranted')}
-              >
-                Chưa bật ({totalCount - grantedCount})
-              </button>
-            </div>
-
-            {/* Action Type Filter Chips */}
-            <div className="admin-role-permissions-chips">
-              <span className="text-xs text-[var(--md-on-surface-variant)] font-medium mr-1 flex items-center gap-1">
-                <Filter size={12} aria-hidden />
-                Loại:
-              </span>
-              <button
-                type="button"
-                className={`admin-role-permissions-chip${
-                  actionFilter === 'all'
-                    ? ' admin-role-permissions-chip--active'
-                    : ''
-                }`}
-                onClick={() => setActionFilter('all')}
-              >
-                Tất cả
-              </button>
-              <button
-                type="button"
-                className={`admin-role-permissions-chip${
-                  actionFilter === 'view'
-                    ? ' admin-role-permissions-chip--active'
-                    : ''
-                }`}
-                onClick={() => setActionFilter('view')}
-              >
-                Chỉ quyền Xem
-              </button>
-              <button
-                type="button"
-                className={`admin-role-permissions-chip${
-                  actionFilter === 'create_update'
-                    ? ' admin-role-permissions-chip--active'
-                    : ''
-                }`}
-                onClick={() => setActionFilter('create_update')}
-              >
-                Chỉ quyền Tạo & Sửa
-              </button>
-              <button
-                type="button"
-                className={`admin-role-permissions-chip${
-                  actionFilter === 'approve'
-                    ? ' admin-role-permissions-chip--active'
-                    : ''
-                }`}
-                onClick={() => setActionFilter('approve')}
-              >
-                Chỉ quyền Duyệt
-              </button>
-              <button
-                type="button"
-                className={`admin-role-permissions-chip${
-                  actionFilter === 'price_report'
-                    ? ' admin-role-permissions-chip--active'
-                    : ''
-                }`}
-                onClick={() => setActionFilter('price_report')}
-              >
-                Quyền Giá & Báo cáo
-              </button>
-
-              {isFiltered && (
-                <button
-                  type="button"
-                  className="admin-role-permissions-reset-filter"
-                  onClick={handleResetFilters}
-                >
-                  Đặt lại bộ lọc
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Filter Summary Bar */}
-        {isFiltered && (
-          <div className="px-4 py-2 bg-[var(--md-surface-container-low)] border-b border-[var(--md-outline-variant02)] flex items-center justify-between text-xs text-[var(--md-on-surface-variant)]">
-            <span>
-              Tìm thấy{' '}
-              <strong className="text-[var(--md-on-surface)]">
-                {matchingPermissionsCount}
-              </strong>{' '}
-              quyền phù hợp
-              {search && (
-                <>
-                  {' '}
-                  với từ khóa &ldquo;
-                  <span className="text-[var(--md-primary)] font-semibold">
-                    {search}
-                  </span>
-                  &rdquo;
-                </>
-              )}
-              {searchCrossModules && ' (trên tất cả phân hệ)'}
-            </span>
-            {matchingPermissionsCount === 0 && (
-              <button
-                type="button"
-                className="text-[var(--md-primary)] hover:underline font-medium"
-                onClick={handleResetFilters}
-              >
-                Xóa bộ lọc để xem lại toàn bộ
-              </button>
-            )}
-          </div>
-        )}
+        <PermissionFilterToolbar
+          search={search}
+          onSearchChange={setSearch}
+          searchCrossModules={searchCrossModules}
+          onSearchCrossModulesChange={setSearchCrossModules}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+          actionFilter={actionFilter}
+          onActionFilterChange={setActionFilter}
+          totalCount={totalCount}
+          grantedCount={grantedCount}
+          isFiltered={isFiltered}
+          matchingPermissionsCount={matchingPermissionsCount}
+          onResetFilters={handleResetFilters}
+        />
 
         {loading ? (
           <div
@@ -501,299 +286,32 @@ export default function AdminRolePermissionsPage() {
           </div>
         ) : showSplit ? (
           <div className="admin-role-permissions-split">
-            {/* Left Rail: Module Tabs */}
-            <nav className="admin-role-permissions-rail" aria-label="Phân hệ">
-              {groups.map(fullGroup => {
-                const fullKeys = keysOfGroup(fullGroup);
-                const fullChecked = countSelected(fullKeys, selected);
-                const isSelectedModule =
-                  !searchCrossModules &&
-                  (fullGroup.module === (activeGroup?.module ?? visibleGroups[0]?.module));
-
-                // Find matches in filtered set
-                const matchingGroup = visibleGroups.find(
-                  g => g.module === fullGroup.module,
-                );
-                const matchingCount = matchingGroup
-                  ? matchingGroup.resources.reduce(
-                      (sum, r) => sum + r.entries.length,
-                      0,
-                    )
-                  : 0;
-
-                return (
-                  <button
-                    key={fullGroup.module}
-                    type="button"
-                    className={`admin-role-permissions-rail__item${
-                      isSelectedModule
-                        ? ' admin-role-permissions-rail__item--active'
-                        : ''
-                    }`}
-                    aria-current={isSelectedModule ? 'true' : undefined}
-                    onClick={() => {
-                      setSearchCrossModules(false);
-                      setActiveModule(fullGroup.module);
-                    }}
-                  >
-                    <div className="flex flex-col min-w-0 text-left">
-                      <span className="admin-role-permissions-rail__label">
-                        {fullGroup.moduleLabel}
-                      </span>
-                      {isFiltered && (
-                        <span className="text-[11px] opacity-75">
-                          {matchingCount > 0 ? `${matchingCount} kết quả` : '0 kết quả'}
-                        </span>
-                      )}
-                    </div>
-                    <span className="admin-role-permissions-rail__count tabular-nums">
-                      {fullChecked}/{fullKeys.length}
-                    </span>
-                  </button>
-                );
-              })}
-            </nav>
-
-            {/* Right Pane: Permissions Table */}
-            <section
-              className="admin-role-permissions-pane"
-              aria-labelledby="admin-role-permissions-pane-title"
-            >
-              <header className="admin-role-permissions-pane__head">
-                <div className="admin-role-permissions-pane__heading">
-                  <h2
-                    id="admin-role-permissions-pane-title"
-                    className="admin-role-permissions-pane__title"
-                  >
-                    {searchCrossModules
-                      ? 'Tất cả phân hệ'
-                      : activeGroup?.moduleLabel ?? 'Danh mục quyền'}
-                  </h2>
-                  <span className="admin-role-permissions-pane__meta tabular-nums">
-                    {inViewCheckedCount}/{inViewKeys.length} quyền đang bật trong danh sách này
-                  </span>
-                </div>
-                <PermissionGate permission="admin.roles.permissions.update">
-                  <label className="admin-role-permissions-pane__select-all">
-                    <input
-                      type="checkbox"
-                      checked={allInViewChecked}
-                      ref={el => {
-                        if (el) el.indeterminate = someInViewChecked;
-                      }}
-                      disabled={!canEdit || inViewKeys.length === 0}
-                      onChange={e => toggleKeys(inViewKeys, e.target.checked)}
-                    />
-                    <span>Chọn tất cả ({inViewKeys.length})</span>
-                  </label>
-                </PermissionGate>
-              </header>
-
-              <div className="admin-role-permissions-pane__body table-scroll">
-                <table className="w-full border-collapse hrm-table admin-role-permissions-table">
-                  <thead>
-                    <tr>
-                      <th className="table-header-cell admin-role-permissions-col-on text-center w-14">
-                        Bật
-                      </th>
-                      <th className="table-header-cell w-20 text-center">
-                        Loại
-                      </th>
-                      <th className="table-header-cell">
-                        Tên quyền & Mô tả kỹ thuật
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {displayGroups.flatMap(group => {
-                      const showModuleBanner =
-                        searchCrossModules && displayGroups.length > 1;
-
-                      const resourceRows = group.resources.flatMap(resource => {
-                        const resourceKeys = resource.entries.map(e => e.key);
-                        const resourceCheckedCount = countSelected(
-                          resourceKeys,
-                          selected,
-                        );
-                        const resourceAllChecked =
-                          resourceKeys.length > 0 &&
-                          resourceCheckedCount === resourceKeys.length;
-                        const resourceSomeChecked =
-                          resourceCheckedCount > 0 && !resourceAllChecked;
-
-                        const rows = resource.entries.map(entry => {
-                          const checked = selected.has(entry.key);
-                          const badge = getActionBadgeInfo(
-                            entry.key,
-                            entry.label,
-                          );
-
-                          return (
-                            <tr
-                              key={entry.key}
-                              className={`table-row${
-                                canEdit ? ' hrm-table-row--interactive' : ''
-                              }${
-                                checked
-                                  ? ' admin-role-permissions-table__row--on'
-                                  : ''
-                              }`}
-                              title={entry.key}
-                              onClick={() =>
-                                canEdit &&
-                                togglePermission(entry.key, !checked)
-                              }
-                            >
-                              <td className="table-cell text-center admin-role-permissions-col-on">
-                                <input
-                                  type="checkbox"
-                                  className="admin-role-permissions-table__checkbox"
-                                  checked={checked}
-                                  disabled={!canEdit}
-                                  onClick={e => e.stopPropagation()}
-                                  onChange={e =>
-                                    togglePermission(
-                                      entry.key,
-                                      e.target.checked,
-                                    )
-                                  }
-                                  aria-label={`Bật quyền ${entry.label}`}
-                                />
-                              </td>
-                              <td className="table-cell text-center whitespace-nowrap">
-                                <span
-                                  className={badge.badgeClass}
-                                  title={badge.tooltip}
-                                >
-                                  {badge.label}
-                                </span>
-                              </td>
-                              <td className="table-cell">
-                                <div className="flex flex-col gap-0.5 py-0.5">
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="font-medium text-sm text-[var(--md-on-surface)]">
-                                      {highlightMatch(entry.label, search)}
-                                    </span>
-                                    {badge.isSensitive && (
-                                      <span className="inline-flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded font-medium bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-700/60">
-                                        <AlertTriangle size={11} aria-hidden />
-                                        Quyền nhạy cảm (Đơn giá & Giá trị tồn)
-                                      </span>
-                                    )}
-                                  </div>
-                                  <span className="text-xs text-[var(--md-on-surface-variant)] font-mono opacity-80">
-                                    {highlightMatch(entry.key, search)}
-                                  </span>
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        });
-
-                        return [
-                          <tr
-                            key={`group-${group.module}-${resource.resource}`}
-                            className="admin-role-permissions-group-row"
-                          >
-                            <td
-                              className="admin-role-permissions-group"
-                              colSpan={3}
-                            >
-                              <div className="admin-role-permissions-group__content">
-                                <div className="flex items-center gap-2.5">
-                                  <label className="inline-flex items-center gap-2 cursor-pointer select-none">
-                                    <input
-                                      type="checkbox"
-                                      className="admin-role-permissions-table__checkbox"
-                                      checked={resourceAllChecked}
-                                      ref={el => {
-                                        if (el)
-                                          el.indeterminate =
-                                            resourceSomeChecked;
-                                      }}
-                                      disabled={!canEdit}
-                                      onChange={e =>
-                                        toggleKeys(
-                                          resourceKeys,
-                                          e.target.checked,
-                                        )
-                                      }
-                                      aria-label={`Chọn toàn bộ nhóm ${resource.resourceLabel}`}
-                                    />
-                                    <span className="admin-role-permissions-group__title">
-                                      {resource.resourceLabel}
-                                    </span>
-                                  </label>
-                                  <span className="admin-role-permissions-group__count tabular-nums">
-                                    {resourceCheckedCount}/{resourceKeys.length}{' '}
-                                    quyền
-                                  </span>
-                                </div>
-
-                                {canEdit && (
-                                  <div className="flex items-center gap-2 text-xs">
-                                    <button
-                                      type="button"
-                                      className="text-[var(--md-primary)] hover:underline font-medium px-2 py-0.5 rounded hover:bg-[var(--tint-primary-hover)] transition-colors"
-                                      onClick={() =>
-                                        toggleKeys(resourceKeys, true)
-                                      }
-                                      title={`Bật tất cả quyền trong nhóm ${resource.resourceLabel}`}
-                                    >
-                                      Bật hết
-                                    </button>
-                                    <span className="text-[var(--md-outline-variant02)]">
-                                      |
-                                    </span>
-                                    <button
-                                      type="button"
-                                      className="text-[var(--md-on-surface-variant)] hover:text-[var(--md-on-surface)] hover:underline font-medium px-2 py-0.5 rounded hover:bg-[var(--tint-primary-hover)] transition-colors"
-                                      onClick={() =>
-                                        toggleKeys(resourceKeys, false)
-                                      }
-                                      title={`Tắt tất cả quyền trong nhóm ${resource.resourceLabel}`}
-                                    >
-                                      Tắt hết
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-                            </td>
-                          </tr>,
-                          ...rows,
-                        ];
-                      });
-
-                      if (!showModuleBanner) return resourceRows;
-
-                      return [
-                        <tr
-                          key={`module-banner-${group.module}`}
-                          className="admin-role-permissions-group-row"
-                        >
-                          <td
-                            colSpan={3}
-                            className="bg-[var(--md-surface-container-high)] px-3 py-2 border-y border-[var(--md-outline-variant02)]"
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className="font-bold text-sm text-[var(--md-primary)] flex items-center gap-1.5">
-                                <Globe size={14} aria-hidden />
-                                Phân hệ: {group.moduleLabel}
-                              </span>
-                              <span className="text-xs text-[var(--md-on-surface-variant)] font-medium tabular-nums">
-                                {countSelected(keysOfGroup(group), selected)}/
-                                {keysOfGroup(group).length} quyền đang bật
-                              </span>
-                            </div>
-                          </td>
-                        </tr>,
-                        ...resourceRows,
-                      ];
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </section>
+            <PermissionModuleRail
+              groups={groups}
+              visibleGroups={visibleGroups}
+              activeGroup={activeGroup}
+              selected={selected}
+              searchCrossModules={searchCrossModules}
+              isFiltered={isFiltered}
+              onSelectModule={module => {
+                setSearchCrossModules(false);
+                setActiveModule(module);
+              }}
+            />
+            <PermissionMatrixTable
+              displayGroups={displayGroups}
+              activeGroup={activeGroup}
+              search={search}
+              searchCrossModules={searchCrossModules}
+              selected={selected}
+              canEdit={canEdit}
+              inViewKeys={inViewKeys}
+              inViewCheckedCount={inViewCheckedCount}
+              allInViewChecked={allInViewChecked}
+              someInViewChecked={someInViewChecked}
+              onTogglePermission={togglePermission}
+              onToggleKeys={toggleKeys}
+            />
           </div>
         ) : null}
       </HrmPanel>

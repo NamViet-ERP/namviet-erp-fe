@@ -55,7 +55,7 @@ export function useCreatePurchaseOrderForm(onCreated: (code: string) => void) {
   );
 
   const plans = plansPage?.items ?? [];
-  const masterSuppliers = suppliersPage?.items ?? [];
+  const masterSuppliers = useMemo(() => suppliersPage?.items ?? [], [suppliersPage?.items]);
   const allLines = useMemo(() => plan?.lines ?? [], [plan?.lines]);
 
   const suppliers = useMemo(() => {

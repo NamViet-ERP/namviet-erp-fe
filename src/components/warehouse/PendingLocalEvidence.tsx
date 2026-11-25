@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { FileText, Trash2 } from 'lucide-react';
 import type { PurchaseDefectAttachmentApiDto } from '../../types/api/poDefectApi';
 import type { ImportAttachment } from '../../types';
@@ -111,6 +111,10 @@ export function SavedDefectPhotoGrid({
     [attachments],
   );
   const photoKey = photos.map(p => p.id).join(',');
+  const photosRef = useRef(photos);
+  useEffect(() => {
+    photosRef.current = photos;
+  }, [photos]);
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [failed, setFailed] = useState<Record<string, boolean>>({});
   const [reloadToken, setReloadToken] = useState(0);
@@ -118,7 +122,8 @@ export function SavedDefectPhotoGrid({
   useEffect(() => {
     let alive = true;
     const created: string[] = [];
-    if (photos.length === 0) {
+    const currentPhotos = photosRef.current;
+    if (currentPhotos.length === 0) {
       return () => {
         alive = false;
       };
@@ -127,7 +132,7 @@ export function SavedDefectPhotoGrid({
       const next: Record<string, string> = {};
       const nextFailed: Record<string, boolean> = {};
       await Promise.all(
-        photos.map(async att => {
+        currentPhotos.map(async att => {
           try {
             const blob = await defectsService.getAttachmentBlob(ticketCode, att.id);
             if (!alive) return;
@@ -289,6 +294,10 @@ export function SavedImportPhotoGrid({
     [attachments, kinds],
   );
   const photoKey = photos.map(p => p.id).join(',');
+  const photosRef = useRef(photos);
+  useEffect(() => {
+    photosRef.current = photos;
+  }, [photos]);
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [failed, setFailed] = useState<Record<string, 'missing' | 'error'>>({});
   const [reloadToken, setReloadToken] = useState(0);
@@ -296,7 +305,8 @@ export function SavedImportPhotoGrid({
   useEffect(() => {
     let alive = true;
     const created: string[] = [];
-    if (photos.length === 0) {
+    const currentPhotos = photosRef.current;
+    if (currentPhotos.length === 0) {
       return () => {
         alive = false;
       };
@@ -305,7 +315,7 @@ export function SavedImportPhotoGrid({
       const next: Record<string, string> = {};
       const nextFailed: Record<string, 'missing' | 'error'> = {};
       await Promise.all(
-        photos.map(async att => {
+        currentPhotos.map(async att => {
           try {
             const blob = await importsService.downloadAttachment(importId, att.id);
             if (!alive) return;
@@ -401,6 +411,10 @@ export function SavedExportReturnPhotoGrid({
     [attachments],
   );
   const photoKey = photos.map(p => p.id).join(',');
+  const photosRef = useRef(photos);
+  useEffect(() => {
+    photosRef.current = photos;
+  }, [photos]);
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [failed, setFailed] = useState<Record<string, 'missing' | 'error'>>({});
   const [reloadToken, setReloadToken] = useState(0);
@@ -408,7 +422,8 @@ export function SavedExportReturnPhotoGrid({
   useEffect(() => {
     let alive = true;
     const created: string[] = [];
-    if (photos.length === 0) {
+    const currentPhotos = photosRef.current;
+    if (currentPhotos.length === 0) {
       return () => {
         alive = false;
       };
@@ -417,7 +432,7 @@ export function SavedExportReturnPhotoGrid({
       const next: Record<string, string> = {};
       const nextFailed: Record<string, 'missing' | 'error'> = {};
       await Promise.all(
-        photos.map(async att => {
+        currentPhotos.map(async att => {
           try {
             const blob = await exportReturnsService.downloadAttachment(returnId, att.id);
             if (!alive) return;

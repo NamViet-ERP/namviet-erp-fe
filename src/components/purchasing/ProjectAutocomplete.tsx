@@ -97,12 +97,12 @@ export default function ProjectAutocomplete({
     inputRef.current?.blur();
   };
 
-  const clearSelection = () => {
+  const clearSelection = useCallback(() => {
     onChange('');
     setDraft('');
     setFilterQuery('');
     setOpen(false);
-  };
+  }, [onChange]);
 
   useEffect(() => {
     if (!open) return;
@@ -146,7 +146,7 @@ export default function ProjectAutocomplete({
     };
     document.addEventListener('mousedown', onPointerDown);
     return () => document.removeEventListener('mousedown', onPointerDown);
-  }, [open, closedLabel, draft]);
+  }, [open, closedLabel, draft, clearSelection]);
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'ArrowDown') {

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Check, Plus, RefreshCw, Send, Undo2 } from 'lucide-react';
 import EmptyState from '../../components/ui/EmptyState';
@@ -143,11 +143,15 @@ export default function PurchaseOrdersPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<ListPageSize>(DEFAULT_LIST_PAGE_SIZE);
   const [supplierName, setSupplierName] = useState(urlSearch);
+  const prevUrlSearchRef = useRef(urlSearch);
 
   useEffect(() => {
-    if (urlSearch && urlSearch !== supplierName) {
-      setSupplierName(urlSearch);
-      setPage(1);
+    if (urlSearch !== prevUrlSearchRef.current) {
+      prevUrlSearchRef.current = urlSearch;
+      if (urlSearch) {
+        setSupplierName(urlSearch);
+        setPage(1);
+      }
     }
   }, [urlSearch]);
   const [planCode, setPlanCode] = useState('');
@@ -164,7 +168,7 @@ export default function PurchaseOrdersPage() {
   const canUnapprove = has('purchasing.orders.unapprove');
   const canPlace = has('purchasing.orders.place');
   const { data: projectsPage } = useProjects({ page: 1, pageSize: 200, status: 'Active' });
-  const projects = projectsPage?.items ?? [];
+  const projects = useMemo(() => projectsPage?.items ?? [], [projectsPage?.items]);
   const selectedProject = useMemo(
     () => projects.find(p => p.projectCode === projectCode),
     [projects, projectCode],

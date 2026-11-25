@@ -104,7 +104,7 @@ export default function PurchaseEstimateProcurementPage() {
   const convertMutation = useConvertEstimateToPlan();
   const { data: projectsPage } = useProjects({ page: 1, pageSize: 200 });
   const { data: materialsPage } = useMaterials({ page: 1, pageSize: 500 });
-  const projects = projectsPage?.items ?? [];
+  const projects = useMemo(() => projectsPage?.items ?? [], [projectsPage?.items]);
   const materials = materialsPage?.items ?? [];
 
   const runEstimateAction = async (okMsg: string, action: () => Promise<unknown>) => {

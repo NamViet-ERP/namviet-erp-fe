@@ -42,7 +42,7 @@ export function useOperationsDashboard() {
   const materialsActiveQ = useMaterials({ page: 1, pageSize: 1 });
   const materialsAllQ = useMaterials({ page: 1, pageSize: 1, includeInactive: true });
 
-  const lowStock = lowStockQ.data ?? [];
+  const lowStock = useMemo(() => lowStockQ.data ?? [], [lowStockQ.data]);
   const openOrderRows = [...(ordersNoneQ.data?.items ?? []), ...(ordersPartialQ.data?.items ?? [])].slice(0, 8);
   const pendingPaymentRows = [
     ...(paymentsSubmittedQ.data?.items ?? []),

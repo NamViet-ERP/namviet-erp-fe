@@ -167,14 +167,12 @@ function MenuBtn({ icon: Icon, label, onClick, danger }: MenuBtnProps) {
 
 interface HeaderProps {
   currentModule: Module;
-  onModuleSwitch: (module: Module) => void;
   onToggleSidebar?: () => void;
   isSidebarOpen?: boolean;
 }
 
 export default function Header({
   currentModule: _currentModule,
-  onModuleSwitch: _onModuleSwitch,
   onToggleSidebar,
   isSidebarOpen,
 }: HeaderProps) {

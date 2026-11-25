@@ -92,10 +92,13 @@ export default function ProjectPersonnelSelect({
     updatePanelPosition();
   };
 
-  const commitFreeText = (raw: string) => {
-    const next = raw.trim();
-    if (next !== value.trim()) onChange(next);
-  };
+  const commitFreeText = useCallback(
+    (raw: string) => {
+      const next = raw.trim();
+      if (next !== value.trim()) onChange(next);
+    },
+    [value, onChange],
+  );
 
   const selectPerson = (person: ProjectPersonnelItem) => {
     onChange(person.name, person);
@@ -148,7 +151,7 @@ export default function ProjectPersonnelSelect({
     };
     document.addEventListener('mousedown', onPointerDown);
     return () => document.removeEventListener('mousedown', onPointerDown);
-  }, [open, draft, value]);
+  }, [open, draft, commitFreeText]);
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'ArrowDown') {
