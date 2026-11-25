@@ -103,6 +103,27 @@ export function numToDraft(v: number | null | undefined): string {
   return String(v);
 }
 
+export function isUnknownPlanItem(
+  line: Pick<DraftLine, 'lineType' | 'materialCode'>,
+  knownMaterialCodes?: Set<string>,
+  knownServiceCodes?: Set<string>,
+): boolean {
+  const code = line.materialCode?.trim().toLowerCase() ?? '';
+  if (!code) return false;
+  const hasMaterials = Boolean(knownMaterialCodes && knownMaterialCodes.size > 0);
+  const hasServices = Boolean(knownServiceCodes && knownServiceCodes.size > 0);
+  if (!hasMaterials && !hasServices) return false;
+  const isMaterial = (line.lineType || 'material') === 'material';
+  if (isMaterial) {
+    return hasMaterials
+      && !knownMaterialCodes!.has(code)
+      && !(knownServiceCodes?.has(code));
+  }
+  return hasServices
+    && !knownServiceCodes!.has(code)
+    && !(knownMaterialCodes?.has(code));
+}
+
 export function dateToDraft(v: string | null | undefined): string {
   if (!v) return '';
   return v.slice(0, 10);
