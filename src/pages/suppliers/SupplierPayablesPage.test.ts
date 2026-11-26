@@ -330,7 +330,9 @@ describe('SupplierPayablesPage characterization', () => {
     });
     expect(container.textContent).toContain('Đang lọc theo Công ty Cổ phần Thép Hòa Phát.');
 
-    const selectEl = container.querySelector('#sup-ap-lines')?.parentElement?.querySelector('select') as HTMLSelectElement;
+    const selectWrap = container.querySelector('.sup-ap .ops-projects__toolbar .hrm-filter-select-wrap');
+    expect(selectWrap).toBeTruthy();
+    const selectEl = selectWrap?.querySelector('select.hrm-filter-select') as HTMLSelectElement;
     expect(selectEl).toBeTruthy();
     expect(selectEl.value).toBe('101');
   });

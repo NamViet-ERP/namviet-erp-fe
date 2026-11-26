@@ -77,8 +77,10 @@ export default function SupplierTierGradingPanel() {
         searchPlaceholder="Tìm theo mã, tên nhà cung cấp..."
         filters={(
           <SelectField
+            variant="hrm"
+            className="hrm-filter-select-wrap max-w-full"
+            selectClassName="hrm-filter-select max-w-full"
             aria-label="Lọc phân hạng"
-            selectClassName="form-select text-xs"
             value={ratingFilter}
             placeholder="Tất cả phân hạng (A/B/C/D)"
             options={RATING_FILTER_OPTIONS}

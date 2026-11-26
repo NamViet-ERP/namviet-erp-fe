@@ -2,7 +2,11 @@
 @layer components {
   /* Nhà cung cấp master — layout cột + chip nhóm (không đổi primitive bảng) */
   .ncc-master-table {
-    min-width: 1280px;
+    min-width: 1180px;
+  }
+  .ncc-master-table thead .table-header-cell {
+    white-space: normal;
+    line-height: var(--lh-tight);
   }
   .ncc-master-filters {
     display: flex;
@@ -55,18 +59,18 @@
     font-weight: var(--fw-regular);
   }
 
-  .ncc-master-col-code { width: 7.5rem; }
-  .ncc-master-col-name { min-width: 12rem; }
-  .ncc-master-col-phone { width: 8rem; }
-  .ncc-master-col-debt { width: 7.5rem; }
-  .ncc-master-col-limit { width: 8.5rem; }
-  .ncc-master-col-terms { min-width: 10rem; max-width: 14rem; }
-  .ncc-master-col-groups { width: 12rem; }
-  .ncc-master-col-grade { width: 6.5rem; }
-  .ncc-master-col-status { width: 9rem; }
-  .ncc-master-col-revenue { width: 8.5rem; }
-  .ncc-master-col-eval { min-width: 10rem; max-width: 14rem; }
-  .ncc-master-col-kpi { width: 6rem; }
+  .ncc-master-col-code { width: 6.25rem; }
+  .ncc-master-col-name { min-width: 10rem; }
+  .ncc-master-col-phone { width: 7.75rem; }
+  .ncc-master-col-debt { width: 6.25rem; }
+  .ncc-master-col-limit { width: 8rem; }
+  .ncc-master-col-terms { min-width: 8.5rem; max-width: 11rem; }
+  .ncc-master-col-groups { width: 9rem; }
+  .ncc-master-col-grade { width: 5.75rem; }
+  .ncc-master-col-status { width: 8.5rem; }
+  .ncc-master-col-revenue { width: 8rem; }
+  .ncc-master-col-eval { min-width: 8.5rem; max-width: 11rem; }
+  .ncc-master-col-kpi { width: 5.5rem; }
   .ncc-master-name {
     display: inline;
     margin: 0;
@@ -91,7 +95,7 @@
     flex-wrap: wrap;
     gap: 0.35rem;
     align-items: center;
-    max-width: 16rem;
+    max-width: 9.5rem;
     white-space: normal;
   }
   .ncc-master-groups__chip {
@@ -366,6 +370,8 @@
   font-size: var(--fs-xs);
   font-weight: 600;
   vertical-align: baseline;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .sup-analytics__share {
   display: flex;
@@ -779,6 +785,36 @@
   flex: 1 1 22rem;
   max-width: none;
   min-width: 0;
+}
+
+.sup-ap .ops-projects__toolbar {
+  align-items: flex-end;
+  gap: 10px;
+}
+.sup-ap .ops-projects__toolbar .ops-projects__filter-field {
+  flex: 0 1 18rem;
+  max-width: 22rem;
+  min-width: 12rem;
+}
+.sup-ap .ops-projects__toolbar .hrm-filter-select-wrap {
+  width: 100%;
+  max-width: 100%;
+}
+.sup-ap .ops-projects__toolbar select,
+.sup-ap .ops-projects__toolbar .hrm-filter-select {
+  width: 100%;
+  min-width: 0;
+  height: 40px;
+  min-height: 40px;
+  border-radius: var(--radius-sm);
+}
+.sup-ap .ops-projects__toolbar .ops-projects-tabs__btn {
+  height: 40px;
+  min-height: 40px;
+}
+.sup-ap .ops-projects__toolbar .search-bar__input {
+  height: 40px;
+  min-height: 40px;
 }
 
 

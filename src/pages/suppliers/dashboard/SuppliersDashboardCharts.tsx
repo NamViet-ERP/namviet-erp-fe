@@ -7,7 +7,7 @@ import EmptyState from '../../../components/ui/EmptyState';
 import SectionCard from '../../../components/ui/SectionCard';
 import Skeleton from '../../../components/ui/Skeleton';
 import type { SupplierDebtRowApiDto, SupplierTrendPointApiDto } from '../../../types/api/supplierDirectoryApi';
-import { formatCurrencyFull, formatCurrencyShort } from '../../../utils/formatCurrency';
+import { formatCurrency, formatCurrencyFull } from '../../../utils/formatCurrency';
 
 const CHART_DNTT = 'var(--nv-amber)';
 const CHART_REMAIN = 'var(--md-error)';
@@ -18,6 +18,18 @@ const CHART_TICK = {
   fontSize: 12,
   fontFamily: 'var(--font-sans)',
 } as const;
+
+function formatChartAxisCurrency(value: number): string {
+  if (!Number.isFinite(value) || value === 0) return '0';
+  const abs = Math.abs(value);
+  if (abs >= 1_000_000_000) {
+    return `${(value / 1_000_000_000).toFixed(1).replace(/\.0$/, '')} tỷ`;
+  }
+  if (abs >= 1_000_000) {
+    return `${(value / 1_000_000).toFixed(1).replace(/\.0$/, '')} tr`;
+  }
+  return formatCurrency(value);
+}
 
 function shortAxisLabel(value: unknown) {
   const text = String(value ?? '').trim();
@@ -82,10 +94,10 @@ export default function SuppliersDashboardCharts({ debtBySupplier, trend, loadin
             <>
               <ChartKey items={[{ color: CHART_DNTT, label: 'Đã đề nghị TT' }, { color: CHART_REMAIN, label: 'Còn phải trả' }]} />
               <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={debtBySupplier} margin={{ top: 8, right: 8, left: 4, bottom: 8 }} barGap={4} barCategoryGap="22%">
+                <BarChart data={debtBySupplier} margin={{ top: 8, right: 12, left: 10, bottom: 8 }} barGap={4} barCategoryGap="22%">
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={CHART_GRID} />
                   <XAxis dataKey="supplierName" tick={CHART_TICK} interval={0} angle={-32} textAnchor="end" height={72} tickFormatter={shortAxisLabel} />
-                  <YAxis tick={CHART_TICK} tickFormatter={v => formatCurrencyShort(Number(v))} width={52} />
+                  <YAxis tick={CHART_TICK} tickFormatter={v => formatChartAxisCurrency(Number(v))} width={74} />
                   <Tooltip formatter={(v, name) => [formatCurrencyFull(Number(v ?? 0)), String(name)]} labelFormatter={label => String(label)} />
                   <Bar dataKey="debt" name="Đã đề nghị TT" fill={CHART_DNTT} radius={[4, 4, 0, 0]} maxBarSize={36} />
                   <Bar dataKey="remaining" name="Còn phải trả" fill={CHART_REMAIN} radius={[4, 4, 0, 0]} maxBarSize={36} />
@@ -107,10 +119,10 @@ export default function SuppliersDashboardCharts({ debtBySupplier, trend, loadin
             <>
               <ChartKey items={[{ color: CHART_DNTT, label: 'Đã đề nghị TT' }, { color: CHART_PAY, label: 'Thanh toán' }]} />
               <ResponsiveContainer width="100%" height={260}>
-                <LineChart data={trend} margin={{ top: 8, right: 8, left: 4, bottom: 8 }}>
+                <LineChart data={trend} margin={{ top: 8, right: 12, left: 10, bottom: 8 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} />
                   <XAxis dataKey="month" tick={CHART_TICK} />
-                  <YAxis tick={CHART_TICK} tickFormatter={v => formatCurrencyShort(Number(v))} width={52} />
+                  <YAxis tick={CHART_TICK} tickFormatter={v => formatChartAxisCurrency(Number(v))} width={74} />
                   <Tooltip formatter={(v, name) => [formatCurrencyFull(Number(v ?? 0)), String(name)]} />
                   <Line type="monotone" dataKey="debt" name="Đã đề nghị TT" stroke={CHART_DNTT} strokeWidth={2} dot={false} />
                   <Line type="monotone" dataKey="payment" name="Thanh toán" stroke={CHART_PAY} strokeWidth={2} dot={false} />

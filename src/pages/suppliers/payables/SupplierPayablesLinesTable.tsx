@@ -65,8 +65,10 @@ export default function SupplierPayablesLinesTable({
             <label htmlFor={supplierSelectId}>Nhà cung cấp</label>
             <SelectField
               id={supplierSelectId}
+              variant="hrm"
+              className="hrm-filter-select-wrap"
+              selectClassName="hrm-filter-select"
               aria-label="Lọc nhà cung cấp"
-              selectClassName="form-input form-input-md"
               value={supplierId ? String(supplierId) : ''}
               onChange={onSupplierFilterChange}
               placeholder="Tất cả NCC"
