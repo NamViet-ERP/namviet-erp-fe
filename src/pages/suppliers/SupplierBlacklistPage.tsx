@@ -1,3 +1,4 @@
+import PageShell from '../../components/ui/PageShell';
 import SectionCard from '../../components/ui/SectionCard';
 import PageHeader from '../../components/ui/PageHeader';
 import SupplierBlacklistPanel from '../../components/suppliers/SupplierBlacklistPanel';
@@ -5,7 +6,7 @@ import SupplierBlacklistPanel from '../../components/suppliers/SupplierBlacklist
 /** Sidebar tab riêng — không nằm trong Đánh giá NCC. */
 export default function SupplierBlacklistPage() {
   return (
-    <div className="page-shell">
+    <PageShell>
       <PageHeader
         eyebrow="Nhà cung cấp"
         title="Danh sách blacklist"
@@ -14,6 +15,6 @@ export default function SupplierBlacklistPage() {
       <SectionCard noPadding>
         <SupplierBlacklistPanel embedded />
       </SectionCard>
-    </div>
+    </PageShell>
   );
 }

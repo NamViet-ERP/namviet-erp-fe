@@ -1,5 +1,6 @@
 import type React from 'react';
 import { useState } from 'react';
+import Button from '../ui/Button';
 import Modal from '../ui/Modal';
 import FormField from '../ui/FormField';
 import HrmDatePicker from '../hr/HrmDatePicker';
@@ -58,12 +59,19 @@ export default function CompleteDeliveryEvaluationModal({
       size="lg"
       footer={(
         <>
-          <button type="button" className="btn btn-secondary" onClick={onClose} disabled={isSaving}>
+          <Button type="button" variant="outlined" size="sm" onClick={onClose} disabled={isSaving}>
             Hủy
-          </button>
-          <button type="submit" form={FORM_ID} className="btn btn-primary" disabled={isSaving || !evaluation}>
+          </Button>
+          <Button
+            type="submit"
+            form={FORM_ID}
+            variant="filled"
+            size="sm"
+            disabled={isSaving || !evaluation}
+            loading={isSaving}
+          >
             {isSaving ? 'Đang lưu…' : 'Hoàn thành đánh giá'}
-          </button>
+          </Button>
         </>
       )}
     >
@@ -147,7 +155,7 @@ function CompleteForm({
                   }}
                   className={`px-3 py-2 text-xs font-semibold rounded-lg border transition-all text-center flex items-center justify-center ${
                     isSelected
-                      ? 'bg-[var(--md-primary)] text-white border-[var(--md-primary)] shadow-sm ring-2 ring-[var(--md-primary)] ring-offset-1'
+                      ? 'bg-[var(--md-primary)] text-[var(--md-on-primary)] border-[var(--md-primary)] shadow-sm ring-2 ring-[var(--md-primary)] ring-offset-1'
                       : 'bg-[var(--md-surface)] text-[var(--md-on-surface)] border-[var(--md-outline-variant)] hover:bg-[var(--md-surface-variant05)]'
                   }`}
                 >

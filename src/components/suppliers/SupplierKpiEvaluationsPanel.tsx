@@ -4,12 +4,12 @@ import { Eye, Pencil, Plus, Trash2, X } from 'lucide-react';
 import PurchasingStatusBadge from '../purchasing/PurchasingStatusBadge';
 import SupplierEvaluationFormModal from './SupplierEvaluationFormModal';
 import SupplierKpiEvaluationDetailModal from './SupplierKpiEvaluationDetailModal';
+import Button from '../ui/Button';
 import ConfirmDialog from '../ui/ConfirmDialog';
 import Dropdown from '../ui/Dropdown';
-import EmptyState from '../ui/EmptyState';
-import Pagination from '../ui/Pagination';
-import SearchBar from '../ui/SearchBar';
-import TableSkeletonRows from '../ui/TableSkeletonRows';
+import FilterToolbar from '../ui/FilterToolbar';
+import SelectField from '../ui/SelectField';
+import TableShell from '../ui/TableShell';
 import { showToast } from '../ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { formatDateCell } from '../../lib/hrm/formatters';
@@ -145,141 +145,128 @@ export default function SupplierKpiEvaluationsPanel() {
         Khác với &quot;Đánh giá theo đơn hàng&quot; (gắn 1 PO cụ thể), đánh giá này nhìn tổng thể năng lực hợp tác lâu dài.
       </p>
 
-      <div className="hrm-list-toolbar">
-        <div className="hrm-list-toolbar__filters">
-          <SearchBar
-            value={search}
-            onChange={value => {
-              setSearch(value);
-              setPage(1);
-            }}
-            placeholder="Tìm NCC, kỳ, ghi chú…"
+      <FilterToolbar
+        search={search}
+        onSearchChange={value => {
+          setSearch(value);
+          setPage(1);
+        }}
+        searchPlaceholder="Tìm NCC, kỳ, ghi chú…"
+        filters={(
+          <SelectField
+            variant="hrm"
+            className="hrm-filter-select-wrap"
+            selectClassName="hrm-filter-select"
+            aria-label="Lọc theo nhà cung cấp"
+            value={supplierFilter}
+            placeholder="Tất cả nhà cung cấp"
+            options={(suppliers?.items ?? []).map(s => ({
+              value: String(s.id),
+              label: s.supplierName,
+            }))}
+            onChange={handleSupplierFilterChange}
           />
-          <div className="hrm-list-toolbar__filter-row hrm-list-toolbar__filter-row--selects">
-            <div className="hrm-filter-select-wrap">
-              <select
-                className="hrm-filter-select"
-                value={supplierFilter}
-                aria-label="Lọc theo nhà cung cấp"
-                onChange={e => handleSupplierFilterChange(e.target.value)}
-              >
-                <option value="">Tất cả nhà cung cấp</option>
-                {(suppliers?.items ?? []).map(s => (
-                  <option key={s.id} value={s.id}>{s.supplierName}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
+        )}
+        hasActiveFilters={hasFilters}
+        onReset={() => {
+          setSearch('');
+          handleSupplierFilterChange('');
+        }}
+      />
 
       {supplierFilter ? (
-        <div className="flex items-center justify-between gap-2 px-3.5 py-2 rounded-lg bg-[var(--md-primary-container)]/30 border border-[var(--md-outline-variant)] text-xs text-[var(--md-on-surface)]">
+        <div className="flex items-center justify-between gap-2 px-3.5 py-2 rounded-lg bg-[var(--md-primary-container)] border border-[var(--md-outline-variant)] text-xs text-[var(--md-on-surface)]">
           <div className="flex items-center gap-1.5 font-medium">
             <span className="text-[var(--md-on-surface-variant)]">Đang lọc theo NCC:</span>
-            <span className="font-semibold text-primary-700 dark:text-primary-300">
+            <span className="font-semibold text-[var(--md-primary)]">
               {activeSupplier ? `${activeSupplier.supplierCode} - ${activeSupplier.supplierName}` : `NCC #${supplierFilter}`}
             </span>
           </div>
-          <button
+          <Button
             type="button"
-            className="inline-flex items-center gap-1 text-xs text-[var(--md-on-surface-variant)] hover:text-[var(--md-error)] font-medium underline"
+            variant="text"
+            size="sm"
+            leftIcon={X}
             onClick={() => handleSupplierFilterChange('')}
           >
-            <X size={12} />
             Bỏ lọc NCC
-          </button>
+          </Button>
         </div>
       ) : null}
 
       <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
         <h2 className="purchasing-section-title text-base m-0">Lịch sử đánh giá định kỳ (KPI)</h2>
-        <button type="button" className="btn btn-primary btn-sm" onClick={openCreate}>
-          <Plus size={14} aria-hidden />
+        <Button type="button" variant="filled" size="sm" leftIcon={Plus} onClick={openCreate}>
           Đánh giá định kỳ mới
-        </button>
-      </div>
-      <div className="overflow-x-auto table-scroll hrm-table-wrap">
-        <table className="w-full border-collapse hrm-table table-min-w--750">
-          <thead>
-            <tr>
-              <th className="table-header-cell">Ngày</th>
-              <th className="table-header-cell">Nhà cung cấp</th>
-              <th className="table-header-cell">Kỳ đánh giá</th>
-              <th className="table-header-cell">Người đánh giá</th>
-              <th className="table-header-cell text-right">Điểm tổng</th>
-              <th className="table-header-cell">Xếp hạng</th>
-              <th className="table-header-cell text-center">Tác vụ</th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
-              <TableSkeletonRows colSpan={7} />
-            ) : isError ? (
-              <tr>
-                <td colSpan={7}>
-                  <EmptyState message="Không tải được danh sách đánh giá định kỳ." />
-                </td>
-              </tr>
-            ) : items.length === 0 ? (
-              <tr>
-                <td colSpan={7}>
-                  <EmptyState
-                    message={hasFilters ? 'Không tìm thấy đánh giá phù hợp.' : 'Chưa có đánh giá định kỳ nào.'}
-                    action={
-                      hasFilters ? null : (
-                        <button type="button" className="btn btn-primary" onClick={openCreate}>
-                          <Plus size={16} aria-hidden />
-                          Tạo đánh giá đầu tiên
-                        </button>
-                      )
-                    }
-                  />
-                </td>
-              </tr>
-            ) : (
-              items.map(row => (
-                <tr key={row.id} className="table-row">
-                  <td className="table-cell whitespace-nowrap tabular-nums">
-                    {formatDateCell(row.evaluatedAt)}
-                  </td>
-                  <td className="table-cell font-semibold">{row.supplierName}</td>
-                  <td className="table-cell whitespace-nowrap">{row.period}</td>
-                  <td className="table-cell">{row.evaluatedByName || '—'}</td>
-                  <td className="table-cell text-right tabular-nums font-semibold">
-                    {row.score}/5
-                  </td>
-                  <td className="table-cell">
-                    <PurchasingStatusBadge
-                      label={row.gradeLabel || kpiGradeLabel(row.grade)}
-                      tone={gradeTone(row.grade)}
-                    />
-                  </td>
-                  <td className="table-cell text-center">
-                    <Dropdown trigger="Tác vụ" items={rowActions(row)} />
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+        </Button>
       </div>
 
-      {(data?.totalCount ?? 0) > 0 && !isLoading ? (
-        <Pagination
-          embedded
-          itemLabel="đánh giá"
-          currentPage={page}
-          totalPages={data?.totalPages ?? 1}
-          onPageChange={setPage}
-          pageSize={pageSize}
-          onPageSizeChange={size => {
-            setPageSize(size);
-            setPage(1);
-          }}
-          totalItems={data?.totalCount ?? 0}
-        />
-      ) : null}
+      <TableShell
+        tableClassName="w-full border-collapse hrm-table table-min-w--750"
+        colSpan={7}
+        loading={isLoading}
+        error={isError ? 'Không tải được danh sách đánh giá định kỳ.' : null}
+        isEmpty={items.length === 0}
+        emptyMessage={hasFilters ? 'Không tìm thấy đánh giá phù hợp.' : 'Chưa có đánh giá định kỳ nào.'}
+        emptyAction={
+          hasFilters ? null : (
+            <Button type="button" variant="filled" size="sm" leftIcon={Plus} onClick={openCreate}>
+              Tạo đánh giá đầu tiên
+            </Button>
+          )
+        }
+        pagination={
+          (data?.totalCount ?? 0) > 0 && !isLoading
+            ? {
+                embedded: true,
+                itemLabel: 'đánh giá',
+                currentPage: page,
+                totalPages: data?.totalPages ?? 1,
+                onPageChange: setPage,
+                pageSize,
+                onPageSizeChange: size => {
+                  setPageSize(size);
+                  setPage(1);
+                },
+                totalItems: data?.totalCount ?? 0,
+              }
+            : undefined
+        }
+        header={(
+          <tr>
+            <th className="table-header-cell">Ngày</th>
+            <th className="table-header-cell">Nhà cung cấp</th>
+            <th className="table-header-cell">Kỳ đánh giá</th>
+            <th className="table-header-cell">Người đánh giá</th>
+            <th className="table-header-cell text-right">Điểm tổng</th>
+            <th className="table-header-cell">Xếp hạng</th>
+            <th className="table-header-cell text-center">Tác vụ</th>
+          </tr>
+        )}
+      >
+        {items.map(row => (
+          <tr key={row.id} className="table-row">
+            <td className="table-cell whitespace-nowrap tabular-nums">
+              {formatDateCell(row.evaluatedAt)}
+            </td>
+            <td className="table-cell font-semibold">{row.supplierName}</td>
+            <td className="table-cell whitespace-nowrap">{row.period}</td>
+            <td className="table-cell">{row.evaluatedByName || '—'}</td>
+            <td className="table-cell text-right tabular-nums font-semibold">
+              {row.score}/5
+            </td>
+            <td className="table-cell">
+              <PurchasingStatusBadge
+                label={row.gradeLabel || kpiGradeLabel(row.grade)}
+                tone={gradeTone(row.grade)}
+              />
+            </td>
+            <td className="table-cell text-center">
+              <Dropdown trigger="Tác vụ" items={rowActions(row)} />
+            </td>
+          </tr>
+        ))}
+      </TableShell>
 
       <SupplierEvaluationFormModal
         isOpen={showForm}

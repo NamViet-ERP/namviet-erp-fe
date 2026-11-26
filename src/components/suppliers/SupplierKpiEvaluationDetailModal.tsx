@@ -1,5 +1,7 @@
+import Button from '../ui/Button';
 import Modal from '../ui/Modal';
 import FormField from '../ui/FormField';
+import TableShell from '../ui/TableShell';
 import {
   KPI_GROUPS,
   computeKpiGroupAverage,
@@ -39,13 +41,13 @@ export default function SupplierKpiEvaluationDetailModal({
       size="xl"
       footer={(
         <>
-          <button type="button" className="btn btn-secondary" onClick={onClose}>
+          <Button type="button" variant="outlined" size="sm" onClick={onClose}>
             Đóng
-          </button>
+          </Button>
           {onEdit && evaluation ? (
-            <button type="button" className="btn btn-primary" onClick={onEdit}>
+            <Button type="button" variant="filled" size="sm" onClick={onEdit}>
               Sửa đánh giá
-            </button>
+            </Button>
           ) : null}
         </>
       )}
@@ -83,23 +85,21 @@ export default function SupplierKpiEvaluationDetailModal({
                     — {Math.round(avg * 100) / 100}/5
                   </span>
                 </h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse hrm-table">
-                    <tbody>
-                      {group.criteria.map((label, i) => {
-                        const key = kpiCriterionKey(group.key, i);
-                        return (
-                          <tr key={key} className="table-row">
-                            <td className="table-cell text-pretty">{label}</td>
-                            <td className="table-cell text-right tabular-nums whitespace-nowrap">
-                              {scores[key] ?? '—'}/5
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                <TableShell tableClassName="w-full border-collapse hrm-table">
+                  <tbody>
+                    {group.criteria.map((label, i) => {
+                      const key = kpiCriterionKey(group.key, i);
+                      return (
+                        <tr key={key} className="table-row">
+                          <td className="table-cell text-pretty">{label}</td>
+                          <td className="table-cell text-right tabular-nums whitespace-nowrap">
+                            {scores[key] ?? '—'}/5
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </TableShell>
               </section>
             );
           })}

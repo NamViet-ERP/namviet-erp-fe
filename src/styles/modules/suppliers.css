@@ -159,7 +159,7 @@
   .suppliers-finance-card {
     border-radius: 12px;
     padding: 1rem 1.15rem;
-    color: #fff;
+    color: var(--md-on-primary);
     min-height: 5.5rem;
   }
   .suppliers-finance-card__label {
@@ -181,7 +181,7 @@
     background: linear-gradient(135deg, var(--nv-action), var(--nv-action-hover));
   }
   .suppliers-finance-card--remain {
-    background: linear-gradient(135deg, var(--md-success), color-mix(in srgb, var(--md-success) 70%, #000));
+    background: linear-gradient(135deg, var(--md-success), color-mix(in srgb, var(--md-success) 70%, var(--md-on-surface)));
   }
   .suppliers-dash-filters {
     display: flex;
@@ -361,7 +361,7 @@
   padding: 0.1rem 0.4rem;
   border-radius: 4px;
   background: var(--md-primary);
-  color: var(--md-on-primary, #fff);
+  color: var(--md-on-primary);
   font-family: var(--font-mono);
   font-size: var(--fs-xs);
   font-weight: 600;

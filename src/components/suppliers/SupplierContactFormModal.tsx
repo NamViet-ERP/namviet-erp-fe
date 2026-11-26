@@ -1,7 +1,9 @@
 import type React from 'react';
 import { useState } from 'react';
+import Button from '../ui/Button';
 import Modal from '../ui/Modal';
 import FormField from '../ui/FormField';
+import SelectField from '../ui/SelectField';
 import { useSuppliers } from '../../hooks/useSuppliers';
 import {
   restrictVnPhoneInput,
@@ -44,10 +46,19 @@ export default function SupplierContactFormModal({
       size="xl"
       footer={
         <>
-          <button type="button" className="btn btn-outline" onClick={onClose}>Hủy</button>
-          <button type="submit" form={FORM_ID} className="btn btn-filled" disabled={isSaving}>
+          <Button type="button" variant="outlined" size="sm" onClick={onClose}>
+            Hủy
+          </Button>
+          <Button
+            type="submit"
+            form={FORM_ID}
+            variant="filled"
+            size="sm"
+            disabled={isSaving}
+            loading={isSaving}
+          >
             Lưu
-          </button>
+          </Button>
         </>
       }
     >
@@ -113,21 +124,19 @@ function ContactForm({
 
   return (
     <form id={FORM_ID} className="space-y-3 modal-form-bordered" onSubmit={handleSubmit}>
-      <FormField label="Nhà cung cấp" required error={errors.supplierId}>
-        <select
-          className="form-select"
-          value={form.supplierId}
-          disabled={Boolean(editing) || Boolean(defaultSupplierId)}
-          onChange={e => setForm(f => ({ ...f, supplierId: e.target.value }))}
-        >
-          <option value="">- Chọn nhà cung cấp -</option>
-          {(suppliers?.items ?? []).map(s => (
-            <option key={s.id} value={s.id}>
-              {s.supplierCode} - {s.supplierName}
-            </option>
-          ))}
-        </select>
-      </FormField>
+      <SelectField
+        label="Nhà cung cấp"
+        required
+        error={errors.supplierId}
+        value={form.supplierId}
+        disabled={Boolean(editing) || Boolean(defaultSupplierId)}
+        placeholder="- Chọn nhà cung cấp -"
+        options={(suppliers?.items ?? []).map(s => ({
+          value: String(s.id),
+          label: `${s.supplierCode} - ${s.supplierName}`,
+        }))}
+        onChange={supplierId => setForm(f => ({ ...f, supplierId }))}
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <FormField label="Họ và tên" required error={errors.fullName ?? apiErrors?.fullName}>
@@ -176,18 +185,14 @@ function ContactForm({
         </FormField>
       </div>
 
-      <FormField label="Vai trò liên hệ" required>
-        <select
-          className="form-select"
-          value={form.role}
-          onChange={e => setForm(f => ({ ...f, role: e.target.value }))}
-          aria-label="Vai trò liên hệ"
-        >
-          {SUPPLIER_CONTACT_ROLES.map(r => (
-            <option key={r.value} value={r.value}>{r.label}</option>
-          ))}
-        </select>
-      </FormField>
+      <SelectField
+        label="Vai trò liên hệ"
+        aria-label="Vai trò liên hệ"
+        required
+        value={form.role}
+        options={SUPPLIER_CONTACT_ROLES}
+        onChange={role => setForm(f => ({ ...f, role }))}
+      />
 
       <FormField label="Ghi chú">
         <textarea

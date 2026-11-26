@@ -1,5 +1,6 @@
 import type React from 'react';
 import { useState } from 'react';
+import Button from '../ui/Button';
 import Modal from '../ui/Modal';
 import FormField from '../ui/FormField';
 import type { SupplierGroupApiDto } from '../../types/api/supplierDirectoryApi';
@@ -29,10 +30,19 @@ export default function SupplierGroupFormModal({
       size="lg"
       footer={
         <>
-          <button type="button" className="btn btn-outline" onClick={onClose}>Hủy</button>
-          <button type="submit" form={FORM_ID} className="btn btn-filled" disabled={isSaving}>
+          <Button type="button" variant="outlined" size="sm" onClick={onClose}>
+            Hủy
+          </Button>
+          <Button
+            type="submit"
+            form={FORM_ID}
+            variant="filled"
+            size="sm"
+            disabled={isSaving}
+            loading={isSaving}
+          >
             Lưu
-          </button>
+          </Button>
         </>
       }
     >

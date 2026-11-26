@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Pencil, Plus, Trash2, X } from 'lucide-react';
+import Button from '../../components/ui/Button';
 import PageShell from '../../components/ui/PageShell';
 import PageHeader from '../../components/ui/PageHeader';
 import SectionCard from '../../components/ui/SectionCard';
+import SelectField from '../../components/ui/SelectField';
+import TableShell from '../../components/ui/TableShell';
 import FilterToolbar from '../../components/ui/FilterToolbar';
 import PurchasingStatusBadge from '../../components/purchasing/PurchasingStatusBadge';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
-import EmptyState from '../../components/ui/EmptyState';
-import Pagination from '../../components/ui/Pagination';
-import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
 import SupplierContactFormModal from '../../components/suppliers/SupplierContactFormModal';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage, getApiFieldErrors } from '../../lib/apiClient';
@@ -140,10 +140,9 @@ export default function SupplierContactsPage() {
         title="Liên hệ NCC"
         subtitle="Danh sách người liên hệ của từng nhà cung cấp."
         actions={(
-          <button type="button" className="btn btn-primary" onClick={openCreate}>
-            <Plus size={16} aria-hidden />
+          <Button type="button" variant="filled" size="sm" leftIcon={Plus} onClick={openCreate}>
             Thêm liên hệ
-          </button>
+          </Button>
         )}
       />
       <SectionCard noPadding>
@@ -155,44 +154,74 @@ export default function SupplierContactsPage() {
           }}
           searchPlaceholder="Tìm tên, chức vụ, điện thoại, email…"
           filters={(
-            <div className="hrm-filter-select-wrap">
-              <select
-                className="hrm-filter-select"
-                value={supplierFilter}
-                aria-label="Lọc theo nhà cung cấp"
-                onChange={e => handleSupplierFilterChange(e.target.value)}
-              >
-                <option value="">Tất cả nhà cung cấp</option>
-                {(suppliers?.items ?? []).map(s => (
-                  <option key={s.id} value={s.id}>{s.supplierName}</option>
-                ))}
-              </select>
-            </div>
+            <SelectField
+              variant="hrm"
+              className="hrm-filter-select-wrap"
+              selectClassName="hrm-filter-select"
+              aria-label="Lọc theo nhà cung cấp"
+              value={supplierFilter}
+              placeholder="Tất cả nhà cung cấp"
+              options={(suppliers?.items ?? []).map(s => ({
+                value: String(s.id),
+                label: s.supplierName,
+              }))}
+              onChange={handleSupplierFilterChange}
+            />
           )}
           hasActiveFilters={hasFilters}
           onReset={handleResetFilters}
         />
-      {supplierFilter ? (
-        <div className="flex items-center justify-between gap-2 px-3.5 py-2 mb-3 rounded-lg bg-[var(--md-primary-container)]/30 border border-[var(--md-outline-variant)] text-xs text-[var(--md-on-surface)]">
-          <div className="flex items-center gap-1.5 font-medium">
-            <span className="text-[var(--md-on-surface-variant)]">Đang lọc theo NCC:</span>
-            <span className="font-semibold text-primary-700 dark:text-primary-300">
-              {activeSupplier ? `${activeSupplier.supplierCode} - ${activeSupplier.supplierName}` : `NCC #${supplierFilter}`}
-            </span>
+        {supplierFilter ? (
+          <div className="flex items-center justify-between gap-2 px-3.5 py-2 mx-4 my-2.5 rounded-lg bg-[var(--md-primary-container)] border border-[var(--md-outline-variant)] text-xs text-[var(--md-on-surface)]">
+            <div className="flex items-center gap-1.5 font-medium">
+              <span className="text-[var(--md-on-surface-variant)]">Đang lọc theo NCC:</span>
+              <span className="font-semibold text-[var(--md-primary)]">
+                {activeSupplier ? `${activeSupplier.supplierCode} - ${activeSupplier.supplierName}` : `NCC #${supplierFilter}`}
+              </span>
+            </div>
+            <Button
+              type="button"
+              variant="text"
+              size="sm"
+              leftIcon={X}
+              onClick={() => handleSupplierFilterChange('')}
+            >
+              Bỏ lọc NCC
+            </Button>
           </div>
-          <button
-            type="button"
-            className="inline-flex items-center gap-1 text-xs text-[var(--md-on-surface-variant)] hover:text-[var(--md-error)] font-medium underline"
-            onClick={() => handleSupplierFilterChange('')}
-          >
-            <X size={12} />
-            Bỏ lọc NCC
-          </button>
-        </div>
-      ) : null}
-      <div className="overflow-x-auto table-scroll hrm-table-wrap">
-        <table className="w-full border-collapse hrm-table table-min-w--950">
-          <thead>
+        ) : null}
+        <TableShell
+          tableClassName="w-full border-collapse hrm-table table-min-w--950"
+          colSpan={7}
+          loading={isLoading}
+          error={isError ? 'Không tải được danh sách liên hệ.' : null}
+          isEmpty={items.length === 0}
+          emptyMessage={hasFilters ? 'Không tìm thấy liên hệ phù hợp.' : 'Chưa có người liên hệ nào.'}
+          emptyAction={
+            hasFilters ? null : (
+              <Button type="button" variant="filled" size="sm" leftIcon={Plus} onClick={openCreate}>
+                Thêm liên hệ đầu tiên
+              </Button>
+            )
+          }
+          pagination={
+            totalCount > 0 && !isLoading
+              ? {
+                  embedded: true,
+                  itemLabel: 'liên hệ',
+                  currentPage: page,
+                  totalPages,
+                  onPageChange: setPage,
+                  pageSize,
+                  onPageSizeChange: size => {
+                    setPageSize(size);
+                    setPage(1);
+                  },
+                  totalItems: totalCount,
+                }
+              : undefined
+          }
+          header={(
             <tr>
               <th className="table-header-cell">Nhà cung cấp</th>
               <th className="table-header-cell">Họ và tên</th>
@@ -200,94 +229,52 @@ export default function SupplierContactsPage() {
               <th className="table-header-cell">Điện thoại</th>
               <th className="table-header-cell">Email</th>
               <th className="table-header-cell text-center">Vai trò</th>
-              <th className="table-header-cell text-center">Thao tác</th>
+              <th className="table-header-cell text-center hrm-table-col-actions">Thao tác</th>
             </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
-              <TableSkeletonRows colSpan={7} />
-            ) : isError ? (
-              <tr>
-                <td colSpan={7}>
-                  <EmptyState message="Không tải được danh sách liên hệ." />
-                </td>
-              </tr>
-            ) : items.length === 0 ? (
-              <tr>
-                <td colSpan={7}>
-                  <EmptyState
-                    message={hasFilters ? 'Không tìm thấy liên hệ phù hợp.' : 'Chưa có người liên hệ nào.'}
-                    action={
-                      hasFilters ? null : (
-                        <button type="button" className="btn btn-primary" onClick={openCreate}>
-                          <Plus size={16} aria-hidden />
-                          Thêm liên hệ đầu tiên
-                        </button>
-                      )
-                    }
-                  />
-                </td>
-              </tr>
-            ) : (
-              items.map(row => (
-                <tr key={row.id} className="table-row">
-                  <td className="table-cell font-medium">{row.supplierName}</td>
-                  <td className="table-cell font-semibold">{row.fullName}</td>
-                  <td className="table-cell">{row.position || '—'}</td>
-                  <td className="table-cell whitespace-nowrap tabular-nums">{row.phone || '—'}</td>
-                  <td className="table-cell truncate max-w-[16rem]">{row.email || '—'}</td>
-                  <td className="table-cell text-center">
-                    <PurchasingStatusBadge
-                      label={row.roleLabel || supplierContactRoleLabel(row.role)}
-                      tone={supplierContactRoleTone(row.role)}
-                    />
-                  </td>
-                  <td className="table-cell text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <button
-                        type="button"
-                        className="p-1.5 rounded-lg hover:bg-[var(--tint-primary-hover)] opacity-80 hover:opacity-100"
-                        aria-label={`Sửa liên hệ ${row.fullName}`}
-                        onClick={() => {
-                          setEditing(row);
-                          setContactApiErrors({});
-                          setShowForm(true);
-                        }}
-                      >
-                        <Pencil size={14} />
-                      </button>
-                      <button
-                        type="button"
-                        className="p-1.5 rounded-lg text-[var(--md-error)] hover:bg-[var(--md-error-container)] opacity-80 hover:opacity-100"
-                        aria-label={`Xóa liên hệ ${row.fullName}`}
-                        onClick={() => setDeleteTarget(row)}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {totalCount > 0 && !isLoading && (
-        <Pagination
-          embedded
-          itemLabel="liên hệ"
-          currentPage={page}
-          totalPages={totalPages}
-          onPageChange={setPage}
-          pageSize={pageSize}
-          onPageSizeChange={size => {
-            setPageSize(size);
-            setPage(1);
-          }}
-          totalItems={totalCount}
-        />
-      )}
+          )}
+        >
+          {items.map(row => (
+            <tr key={row.id} className="table-row">
+              <td className="table-cell font-medium">{row.supplierName}</td>
+              <td className="table-cell font-semibold">{row.fullName}</td>
+              <td className="table-cell">{row.position || '—'}</td>
+              <td className="table-cell whitespace-nowrap tabular-nums">{row.phone || '—'}</td>
+              <td className="table-cell truncate max-w-[16rem]">{row.email || '—'}</td>
+              <td className="table-cell text-center">
+                <PurchasingStatusBadge
+                  label={row.roleLabel || supplierContactRoleLabel(row.role)}
+                  tone={supplierContactRoleTone(row.role)}
+                />
+              </td>
+              <td className="table-cell hrm-table-col-actions">
+                <div className="hrm-table-row-actions">
+                  <button
+                    type="button"
+                    className="icon-btn"
+                    title="Sửa"
+                    aria-label={`Sửa liên hệ ${row.fullName}`}
+                    onClick={() => {
+                      setEditing(row);
+                      setContactApiErrors({});
+                      setShowForm(true);
+                    }}
+                  >
+                    <Pencil size={15} aria-hidden />
+                  </button>
+                  <button
+                    type="button"
+                    className="icon-btn icon-btn--danger"
+                    title="Xóa"
+                    aria-label={`Xóa liên hệ ${row.fullName}`}
+                    onClick={() => setDeleteTarget(row)}
+                  >
+                    <Trash2 size={15} aria-hidden />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </TableShell>
 
       <SupplierContactFormModal
         isOpen={showForm}

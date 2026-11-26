@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import PageShell from '../../components/ui/PageShell';
 import PageHeader from '../../components/ui/PageHeader';
 import TabFilter from '../../components/ui/TabFilter';
 import SectionCard from '../../components/ui/SectionCard';
@@ -68,7 +69,7 @@ export default function SupplierEvaluationsPage() {
   ];
 
   return (
-    <div className="page-shell">
+    <PageShell>
       <PageHeader
         eyebrow="Nhà cung cấp"
         title="Đánh giá & Thăng hạng NCC"
@@ -78,7 +79,7 @@ export default function SupplierEvaluationsPage() {
       <SupplierSourcingKpiCards />
 
       <SectionCard noPadding>
-        <div className="px-4 pt-3 border-b border-[var(--md-outline-variant)]">
+        <div className="erp-filter-toolbar__tabs">
           <TabFilter
             tabs={tabs}
             activeTab={tab}
@@ -89,6 +90,6 @@ export default function SupplierEvaluationsPage() {
         {tab === 'order' ? <SupplierOrderEvaluationsPanel /> : null}
         {tab === 'kpi' ? <SupplierKpiEvaluationsPanel /> : null}
       </SectionCard>
-    </div>
+    </PageShell>
   );
 }

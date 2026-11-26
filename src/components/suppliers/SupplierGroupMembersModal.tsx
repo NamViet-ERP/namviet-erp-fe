@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import Button from '../ui/Button';
 import Modal from '../ui/Modal';
 import SearchBar from '../ui/SearchBar';
 import EmptyState from '../ui/EmptyState';
@@ -37,7 +38,7 @@ export default function SupplierGroupMembersModal({
         onClose={onClose}
         title={title(group)}
         size={SIZE}
-        footer={<button type="button" className="btn btn-outline" onClick={onClose}>Hủy</button>}
+        footer={<Button type="button" variant="outlined" size="sm" onClick={onClose}>Hủy</Button>}
       >
         <Skeleton variant="rect" height={36} count={6} />
       </Modal>
@@ -126,15 +127,19 @@ function MembersPicker({
         <span className="text-xs text-[var(--md-on-surface-variant)] mr-auto tabular-nums">
           Đã chọn {selected.length} NCC
         </span>
-        <button type="button" className="btn btn-outline" onClick={onClose}>Hủy</button>
-        <button
+        <Button type="button" variant="outlined" size="sm" onClick={onClose}>
+          Hủy
+        </Button>
+        <Button
           type="button"
-          className="btn btn-filled"
+          variant="filled"
+          size="sm"
           disabled={isSaving}
+          loading={isSaving}
           onClick={() => onSubmit(selected)}
         >
           Lưu
-        </button>
+        </Button>
       </div>
     </div>
   );

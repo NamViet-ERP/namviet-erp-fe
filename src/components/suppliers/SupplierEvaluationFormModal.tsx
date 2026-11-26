@@ -1,7 +1,10 @@
 import type React from 'react';
 import { useState } from 'react';
+import Button from '../ui/Button';
 import Modal from '../ui/Modal';
 import FormField from '../ui/FormField';
+import SelectField from '../ui/SelectField';
+import TableShell from '../ui/TableShell';
 import HrmDatePicker from '../hr/HrmDatePicker';
 import { useSuppliers } from '../../hooks/useSuppliers';
 import {
@@ -21,6 +24,10 @@ import type {
 
 const FORM_ID = 'supplier-evaluation-form';
 const SCORE_LABELS = ['Rất yếu', 'Yếu', 'Trung bình', 'Tốt', 'Xuất sắc'] as const;
+const SCORE_OPTIONS = Array.from({ length: KPI_MAX - KPI_MIN + 1 }, (_, idx) => {
+  const n = KPI_MIN + idx;
+  return { value: String(n), label: `${n} — ${SCORE_LABELS[n - 1]}` };
+});
 
 interface Props {
   isOpen: boolean;
@@ -45,12 +52,19 @@ export default function SupplierEvaluationFormModal({
       size="xl"
       footer={(
         <>
-          <button type="button" className="btn btn-secondary" onClick={onClose} disabled={isSaving}>
+          <Button type="button" variant="outlined" size="sm" onClick={onClose} disabled={isSaving}>
             Hủy
-          </button>
-          <button type="submit" form={FORM_ID} className="btn btn-primary" disabled={isSaving}>
+          </Button>
+          <Button
+            type="submit"
+            form={FORM_ID}
+            variant="filled"
+            size="sm"
+            disabled={isSaving}
+            loading={isSaving}
+          >
             {isSaving ? 'Đang lưu…' : 'Lưu đánh giá'}
-          </button>
+          </Button>
         </>
       )}
     >
@@ -97,24 +111,22 @@ function EvaluationForm({
   return (
     <form id={FORM_ID} className="space-y-3 modal-form-bordered" noValidate onSubmit={handleSubmit}>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <FormField label="Nhà cung cấp" required error={errors.supplierId}>
-          <select
-            className="form-select"
-            value={supplierId}
-            disabled={Boolean(editing)}
-            onChange={e => {
-              setSupplierId(e.target.value);
-              setErrors(prev => ({ ...prev, supplierId: undefined }));
-            }}
-          >
-            <option value="">— Chọn nhà cung cấp —</option>
-            {(suppliers?.items ?? []).map(s => (
-              <option key={s.id} value={s.id}>
-                {s.supplierCode} — {s.supplierName}
-              </option>
-            ))}
-          </select>
-        </FormField>
+        <SelectField
+          label="Nhà cung cấp"
+          required
+          error={errors.supplierId}
+          value={supplierId}
+          disabled={Boolean(editing)}
+          placeholder="— Chọn nhà cung cấp —"
+          options={(suppliers?.items ?? []).map(s => ({
+            value: String(s.id),
+            label: `${s.supplierCode} — ${s.supplierName}`,
+          }))}
+          onChange={val => {
+            setSupplierId(val);
+            setErrors(prev => ({ ...prev, supplierId: undefined }));
+          }}
+        />
         <FormField label="Kỳ đánh giá" required error={errors.period}>
           <input
             className="form-input"
@@ -143,40 +155,30 @@ function EvaluationForm({
       {KPI_GROUPS.map(group => (
         <section key={group.key} className="space-y-2">
           <h3 className="purchasing-section-title mb-0 text-sm">{group.name}</h3>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse hrm-table">
-              <tbody>
-                {group.criteria.map((label, i) => {
-                  const key = kpiCriterionKey(group.key, i);
-                  return (
-                    <tr key={key} className="table-row">
-                      <td className="table-cell text-pretty">{label}</td>
-                      <td className="table-cell text-right whitespace-nowrap" style={{ width: 140 }}>
-                        <select
-                          className="form-select"
-                          aria-label={label}
-                          value={scores[key] ?? 3}
-                          onChange={e => {
-                            const n = Number(e.target.value);
-                            setScores(prev => ({ ...prev, [key]: n }));
-                          }}
-                        >
-                          {Array.from({ length: KPI_MAX - KPI_MIN + 1 }, (_, idx) => {
-                            const n = KPI_MIN + idx;
-                            return (
-                              <option key={n} value={n}>
-                                {n} — {SCORE_LABELS[n - 1]}
-                              </option>
-                            );
-                          })}
-                        </select>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <TableShell tableClassName="w-full border-collapse hrm-table">
+            <tbody>
+              {group.criteria.map((label, i) => {
+                const key = kpiCriterionKey(group.key, i);
+                return (
+                  <tr key={key} className="table-row">
+                    <td className="table-cell text-pretty">{label}</td>
+                    <td className="table-cell text-right whitespace-nowrap w-40">
+                      <SelectField
+                        aria-label={label}
+                        className="m-0 [&_.form-field__error--reserved]:hidden"
+                        value={String(scores[key] ?? 3)}
+                        options={SCORE_OPTIONS}
+                        onChange={val => {
+                          const n = Number(val);
+                          setScores(prev => ({ ...prev, [key]: n }));
+                        }}
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </TableShell>
         </section>
       ))}
 
