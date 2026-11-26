@@ -195,7 +195,7 @@ export default function SupplierImportExcelModal({
       onConfirm={() => void handleConfirmImport()}
     >
       <div className="border border-[var(--md-outline-variant)] rounded-lg overflow-hidden max-h-[380px] overflow-y-auto">
-        <table className="w-full text-left border-collapse text-xs">
+        <table className="w-full text-left border-collapse text-[length:var(--fs-xs)]">
           <thead className="sticky top-0 z-20 bg-[var(--md-surface-container-high)] text-[var(--md-on-surface)] font-semibold border-b border-[var(--md-outline-variant)] shadow-sm">
             <tr>
               <th className="py-2 px-2.5 w-12 text-center">STT</th>
@@ -208,10 +208,10 @@ export default function SupplierImportExcelModal({
               <th className="py-2 px-2.5">Nhóm ngành hàng</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[var(--md-outline-variant)]/50 bg-[var(--md-surface)]">
+          <tbody className="divide-y divide-[var(--md-outline-variant)] bg-[var(--md-surface)]">
             {filteredItems.length === 0 ? (
               <tr>
-                <td colSpan={8} className="py-8 text-center text-xs text-[var(--md-on-surface-variant)]">
+                <td colSpan={8} className="py-8 text-center text-[length:var(--fs-xs)] text-[var(--md-on-surface-variant)]">
                   Không có dòng dữ liệu nào phù hợp với bộ lọc hiện tại.
                 </td>
               </tr>
@@ -223,7 +223,7 @@ export default function SupplierImportExcelModal({
                   <tr
                     key={`${r.supplierName}-${r.originalIndex}`}
                     className={`hover:bg-[var(--md-surface-container-lowest)] transition-colors ${
-                      !r.isValid ? (isDuplicate ? 'bg-amber-500/5 dark:bg-amber-950/20' : 'bg-rose-500/5 dark:bg-rose-950/20') : ''
+                      !r.isValid ? (isDuplicate ? 'bg-[var(--tint-warning-soft)]' : 'bg-[var(--tint-error-soft)]') : ''
                     }`}
                   >
                     <td className="py-2 px-2.5 text-center text-[var(--md-on-surface-variant)] font-mono">
@@ -231,13 +231,13 @@ export default function SupplierImportExcelModal({
                     </td>
                     <td className="py-2 px-2.5 text-center">
                       {r.isValid ? (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-500/15 px-2 py-0.5 rounded-full">
+                        <span className="inline-flex items-center gap-1 text-[length:var(--fs-micro)] font-medium text-[var(--md-on-success-container)] bg-[var(--md-success-container)] px-2 py-0.5 rounded-full">
                           <CheckCircle2 size={12} className="shrink-0" />
                           <span>Hợp lệ</span>
                         </span>
                       ) : isDuplicate ? (
                         <span
-                          className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-700 dark:text-amber-300 bg-amber-500/15 px-2 py-0.5 rounded-full cursor-help"
+                          className="inline-flex items-center gap-1 text-[length:var(--fs-micro)] font-medium text-[var(--md-on-warning-container)] bg-[var(--md-warning-container)] px-2 py-0.5 rounded-full cursor-help"
                           title={r.error || 'Trùng lặp tên hoặc MST'}
                         >
                           <AlertTriangle size={12} className="shrink-0" />
@@ -245,7 +245,7 @@ export default function SupplierImportExcelModal({
                         </span>
                       ) : (
                         <span
-                          className="inline-flex items-center gap-1 text-[11px] font-medium text-rose-700 dark:text-rose-300 bg-rose-500/15 px-2 py-0.5 rounded-full cursor-help"
+                          className="inline-flex items-center gap-1 text-[length:var(--fs-micro)] font-medium text-[var(--md-on-error-container)] bg-[var(--md-error-container)] px-2 py-0.5 rounded-full cursor-help"
                           title={r.error || 'Lỗi dữ liệu'}
                         >
                           <XCircle size={12} className="shrink-0" />
@@ -254,14 +254,14 @@ export default function SupplierImportExcelModal({
                       )}
                     </td>
                     <td className="py-2 px-2.5 font-mono text-[var(--md-on-surface-variant)]">
-                      {r.supplierCode || <span className="italic text-[10px]">Tự cấp</span>}
+                      {r.supplierCode || <span className="italic text-[length:var(--fs-micro)]">Tự cấp</span>}
                     </td>
                     <td className="py-2 px-2.5">
                       <span className="font-medium text-[var(--md-on-surface)]" title={r.supplierName}>
                         {r.supplierName}
                       </span>
                       {!r.isValid && r.error && (
-                        <p className={`text-[10px] mt-0.5 font-normal ${isDuplicate ? 'text-amber-600 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                        <p className={`text-[length:var(--fs-micro)] mt-0.5 font-normal ${isDuplicate ? 'text-[var(--md-warning)]' : 'text-[var(--md-error)]'}`}>
                           ⚠ {r.error}
                         </p>
                       )}
@@ -274,7 +274,7 @@ export default function SupplierImportExcelModal({
                     </td>
                     <td className="py-2 px-2.5 text-[var(--md-on-surface)]">
                       <div>{r.supplierType || 'Nhà phân phối'}</div>
-                      <div className="text-[10px] text-[var(--md-on-surface-variant)]">{r.scope || 'Trong nước'}</div>
+                      <div className="text-[length:var(--fs-micro)] text-[var(--md-on-surface-variant)]">{r.scope || 'Trong nước'}</div>
                     </td>
                     <td className="py-2 px-2.5 max-w-[160px] truncate text-[var(--md-on-surface-variant)]" title={r.industryGroups || undefined}>
                       {r.industryGroups || '—'}

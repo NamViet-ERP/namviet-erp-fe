@@ -1,8 +1,10 @@
 import type React from 'react';
 import { RefreshCw, Users } from 'lucide-react';
-import Modal from '../../../components/ui/Modal';
-import FormField from '../../../components/ui/FormField';
+import Button from '../../../components/ui/Button';
 import CurrencyInput from '../../../components/ui/CurrencyInput';
+import FormField from '../../../components/ui/FormField';
+import Modal from '../../../components/ui/Modal';
+import SelectField from '../../../components/ui/SelectField';
 import SupplierAttachmentUploader, { type StagedAttachment } from '../../../components/suppliers/SupplierAttachmentUploader';
 import {
   parseCreditLimit,
@@ -20,6 +22,19 @@ import {
   type SupplierFormState,
   type SupplierRow,
 } from './SupplierShared';
+
+const SUPPLIER_TYPE_OPTIONS = [
+  { value: 'Nhà sản xuất', label: 'Nhà sản xuất (Manufacturer)' },
+  { value: 'Nhà phân phối', label: 'Nhà phân phối (Distributor)' },
+  { value: 'Đại lý', label: 'Đại lý ủy quyền (Agent / Dealer)' },
+  { value: 'Dịch vụ / Gia công', label: 'Dịch vụ / Gia công (Service / Fabrication)' },
+  { value: 'Thương mại khác', label: 'Thương mại khác' },
+] as const;
+
+const SUPPLIER_SCOPE_OPTIONS = [
+  { value: 'Trong nước', label: 'Trong nước (Domestic)' },
+  { value: 'Quốc tế', label: 'Quốc tế (International)' },
+] as const;
 
 interface SupplierFormModalProps {
   isOpen: boolean;
@@ -64,15 +79,19 @@ export default function SupplierFormModal({
       size="xl"
       footer={
         <>
-          <button type="button" className="btn btn-outline" onClick={onClose}>Hủy</button>
-          <button
+          <Button type="button" variant="outlined" size="sm" onClick={onClose}>
+            Hủy
+          </Button>
+          <Button
             type="submit"
             form="supplier-settings-form"
-            className="btn btn-filled"
+            variant="filled"
+            size="sm"
             disabled={isSaving}
+            loading={isSaving}
           >
             Lưu
-          </button>
+          </Button>
         </>
       }
     >
@@ -93,19 +112,21 @@ export default function SupplierFormModal({
               aria-readonly={Boolean(editing)}
             />
             {!editing && (
-              <button
+              <Button
                 type="button"
-                className="btn btn-outline btn-sm shrink-0 inline-flex items-center gap-1.5 text-xs text-[var(--md-primary)] hover:bg-[var(--md-primary)]/10 cursor-pointer"
+                variant="outlined"
+                size="sm"
+                leftIcon={RefreshCw}
+                className="shrink-0"
                 onClick={onFetchNextCode}
                 title="Lấy lại mã gợi ý tiếp theo tự động từ hệ thống"
               >
-                <RefreshCw size={13} />
-                <span>Lấy mã gợi ý</span>
-              </button>
+                Lấy mã gợi ý
+              </Button>
             )}
           </div>
           {!editing && (
-            <p className="text-[11px] text-[var(--md-on-surface-variant)] mt-1">
+            <p className="text-[length:var(--fs-micro)] text-[var(--md-on-surface-variant)] mt-1">
               Mã gợi ý tự động bởi hệ thống. Bạn có thể sửa đổi theo mã quy ước riêng của công ty (tối đa 50 ký tự).
             </p>
           )}
@@ -122,30 +143,18 @@ export default function SupplierFormModal({
           />
         </FormField>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <FormField label="Loại hình đối tác">
-            <select
-              className="form-select"
-              value={form.supplierType}
-              onChange={e => setForm(f => ({ ...f, supplierType: e.target.value }))}
-            >
-              <option value="Nhà sản xuất">Nhà sản xuất (Manufacturer)</option>
-              <option value="Nhà phân phối">Nhà phân phối (Distributor)</option>
-              <option value="Đại lý">Đại lý ủy quyền (Agent / Dealer)</option>
-              <option value="Dịch vụ / Gia công">Dịch vụ / Gia công (Service / Fabrication)</option>
-              <option value="Thương mại khác">Thương mại khác</option>
-            </select>
-          </FormField>
-
-          <FormField label="Phạm vi hoạt động">
-            <select
-              className="form-select"
-              value={form.scope}
-              onChange={e => setForm(f => ({ ...f, scope: e.target.value }))}
-            >
-              <option value="Trong nước">Trong nước (Domestic)</option>
-              <option value="Quốc tế">Quốc tế (International)</option>
-            </select>
-          </FormField>
+          <SelectField
+            label="Loại hình đối tác"
+            value={form.supplierType}
+            onChange={supplierType => setForm(f => ({ ...f, supplierType }))}
+            options={SUPPLIER_TYPE_OPTIONS}
+          />
+          <SelectField
+            label="Phạm vi hoạt động"
+            value={form.scope}
+            onChange={scope => setForm(f => ({ ...f, scope }))}
+            options={SUPPLIER_SCOPE_OPTIONS}
+          />
         </div>
 
         <FormField label="Mã số thuế (MST)" error={formErrors.taxCode}>
@@ -161,13 +170,13 @@ export default function SupplierFormModal({
           />
         </FormField>
         {/* Thông tin Người liên hệ chính */}
-        <div className="rounded-xl border border-[var(--md-outline-variant)] p-3.5 bg-[var(--md-surface-variant)]/20 space-y-3">
+        <div className="rounded-xl border border-[var(--md-outline-variant)] p-3.5 bg-[var(--md-surface-container-low)] space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-[var(--md-on-surface)] flex items-center gap-1.5">
-              <Users size={15} className="text-primary-600 dark:text-primary-400" />
+            <span className="text-[length:var(--fs-xs)] font-bold uppercase tracking-wider text-[var(--md-on-surface)] flex items-center gap-1.5">
+              <Users size={15} className="text-[var(--md-primary)]" />
               Người liên hệ chính (Primary Contact)
             </span>
-            <span className="text-[11px] text-[var(--md-on-surface-variant)]">
+            <span className="text-[length:var(--fs-micro)] text-[var(--md-on-surface-variant)]">
               Tự động tạo/đồng bộ vào danh mục Liên hệ NCC
             </span>
           </div>
@@ -314,7 +323,7 @@ export default function SupplierFormModal({
         </FormField>
         <FormField label={`Nhóm ngành hàng (chọn nhiều · đã chọn ${form.groupIds.length})`}>
           {groupOptions.length === 0 ? (
-            <p className="text-xs text-[var(--md-on-surface-variant)] text-pretty">
+            <p className="text-[length:var(--fs-xs)] text-[var(--md-on-surface-variant)] text-pretty">
               Chưa có nhóm ngành hàng. Vào “Nhóm nhà cung cấp” để tạo trước.
             </p>
           ) : (

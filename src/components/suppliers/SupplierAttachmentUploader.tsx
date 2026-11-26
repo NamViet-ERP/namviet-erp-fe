@@ -1,4 +1,4 @@
-import { useState, useRef, type DragEvent } from 'react';
+import { useEffect, useRef, useState, type DragEvent } from 'react';
 import { Upload, FileText, Download, Trash2, Check, AlertCircle, FileCheck2, FileQuestion } from 'lucide-react';
 import Button from '../ui/Button';
 import ConfirmDialog from '../ui/ConfirmDialog';
@@ -24,9 +24,11 @@ export interface SupplierAttachmentUploaderProps {
   onAttachmentChanged?: () => void;
 }
 
+const EMPTY_ATTACHMENTS: SupplierAttachmentDto[] = [];
+
 export default function SupplierAttachmentUploader({
   supplierId,
-  initialAttachments = [],
+  initialAttachments = EMPTY_ATTACHMENTS,
   stagedFiles = [],
   onAddStagedFile,
   onRemoveStagedFile,
@@ -38,12 +40,18 @@ export default function SupplierAttachmentUploader({
   const [busy, setBusy] = useState(false);
   const [dragOverDocType, setDragOverDocType] = useState<string | null>(null);
 
-  // Sync if initialAttachments changes
-  const [prevInitial, setPrevInitial] = useState(initialAttachments);
-  if (prevInitial !== initialAttachments) {
-    setPrevInitial(initialAttachments);
+  const prevInitialRef = useRef(initialAttachments);
+  const prevSupplierIdRef = useRef(supplierId);
+
+  useEffect(() => {
+    const sameSupplier = prevSupplierIdRef.current === supplierId;
+    const sameRef = prevInitialRef.current === initialAttachments;
+    const bothEmpty = prevInitialRef.current.length === 0 && initialAttachments.length === 0;
+    prevInitialRef.current = initialAttachments;
+    prevSupplierIdRef.current = supplierId;
+    if (sameSupplier && (sameRef || bothEmpty)) return;
     setAttachments(initialAttachments);
-  }
+  }, [initialAttachments, supplierId]);
 
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
@@ -135,30 +143,30 @@ export default function SupplierAttachmentUploader({
   return (
     <div className="space-y-4">
       {/* Onboarding Compliance Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-lg border border-[var(--md-outline-variant)] bg-[var(--md-surface-variant)]/30">
+      <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-lg border border-[var(--md-outline-variant)] bg-[var(--md-surface-container-low)]">
         <div>
-          <div className="text-xs font-bold uppercase tracking-wider text-[var(--md-on-surface)] flex items-center gap-1.5">
-            <FileCheck2 size={16} className="text-primary-600" />
+          <div className="text-[length:var(--fs-xs)] font-bold uppercase tracking-wider text-[var(--md-on-surface)] flex items-center gap-1.5">
+            <FileCheck2 size={16} className="text-[var(--md-primary)]" />
             Hồ sơ Onboarding đầu vào (Quy chuẩn Hạng D)
           </div>
-          <div className="text-[11px] text-[var(--md-on-surface-variant)] mt-0.5">
+          <div className="text-[length:var(--fs-micro)] text-[var(--md-on-surface-variant)] mt-0.5">
             Tải lên tài liệu thực tế (PDF, Word, Excel, hình ảnh) để lưu trữ và đánh giá xếp hạng NCC.
           </div>
         </div>
 
         <div>
           {fulfilledCount === 3 ? (
-            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 px-2.5 py-1 rounded-full border border-emerald-300 dark:border-emerald-800">
+            <span className="inline-flex items-center gap-1.5 text-[length:var(--fs-xs)] font-semibold text-[var(--md-on-success-container)] bg-[var(--md-success-container)] px-2.5 py-1 rounded-full border border-[var(--tint-success-border)]">
               <Check size={14} className="stroke-[2.5]" />
               Đạt chuẩn Hạng D — Đủ 3/3 hồ sơ đầu vào
             </span>
           ) : hasBusinessLicense ? (
-            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/50 px-2.5 py-1 rounded-full border border-blue-300 dark:border-blue-800">
+            <span className="inline-flex items-center gap-1.5 text-[length:var(--fs-xs)] font-semibold text-[var(--md-on-info-container)] bg-[var(--md-info-container)] px-2.5 py-1 rounded-full border border-[var(--md-outline-variant)]">
               <Check size={14} className="stroke-[2.5]" />
               Đạt chuẩn Hạng D — Đã có GPKD ({fulfilledCount}/3 hồ sơ)
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 px-2.5 py-1 rounded-full border border-amber-300 dark:border-amber-800">
+            <span className="inline-flex items-center gap-1.5 text-[length:var(--fs-xs)] font-semibold text-[var(--md-on-warning-container)] bg-[var(--md-warning-container)] px-2.5 py-1 rounded-full border border-[var(--tint-warning-border)]">
               <AlertCircle size={14} />
               Chưa có GPKD / ĐKKD — Bắt buộc để đạt chuẩn Hạng D
             </span>
@@ -183,11 +191,11 @@ export default function SupplierAttachmentUploader({
               onDrop={e => handleDrop(e, slot.key)}
               className={`flex flex-col justify-between rounded-xl border p-3.5 transition-all duration-150 ${
                 isDragOver
-                  ? 'border-primary-500 bg-primary-100 scale-[1.01]'
+                  ? 'border-[var(--md-primary)] bg-[var(--md-primary-container)] scale-[1.01]'
                   : isSlotFulfilled
-                  ? 'border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/15 dark:bg-emerald-950/10'
+                  ? 'border-[var(--tint-success-border)] bg-[var(--tint-success-soft)]'
                   : slot.required
-                  ? 'border-amber-200 dark:border-amber-900/50 bg-amber-50/15 dark:bg-amber-950/10'
+                  ? 'border-[var(--tint-warning-border)] bg-[var(--tint-warning-soft)]'
                   : 'border-[var(--md-outline-variant)] bg-[var(--md-surface)]'
               }`}
             >
@@ -196,30 +204,30 @@ export default function SupplierAttachmentUploader({
                 <div className="flex items-start justify-between gap-1 mb-1.5">
                   <div className="flex items-center gap-1.5">
                     {isSlotFulfilled ? (
-                      <span className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-400">
+                      <span className="flex items-center justify-center w-5 h-5 rounded-full bg-[var(--md-success-container)] text-[var(--md-on-success-container)]">
                         <Check size={12} className="stroke-[3]" />
                       </span>
                     ) : slot.required ? (
-                      <span className="flex items-center justify-center w-5 h-5 rounded-full bg-amber-100 dark:bg-amber-900/60 text-amber-600 dark:text-amber-400">
+                      <span className="flex items-center justify-center w-5 h-5 rounded-full bg-[var(--md-warning-container)] text-[var(--md-on-warning-container)]">
                         <AlertCircle size={12} />
                       </span>
                     ) : (
-                      <span className="flex items-center justify-center w-5 h-5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500">
+                      <span className="flex items-center justify-center w-5 h-5 rounded-full bg-[var(--md-surface-container-highest)] text-[var(--md-on-surface-variant)]">
                         <FileQuestion size={12} />
                       </span>
                     )}
-                    <span className="text-xs font-bold text-[var(--md-on-surface)] leading-snug">
+                    <span className="text-[length:var(--fs-xs)] font-bold text-[var(--md-on-surface)] leading-snug">
                       {slot.title}
                     </span>
                   </div>
                   {slot.required && (
-                    <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-100/70 dark:bg-amber-950/60 px-1.5 py-0.5 rounded">
+                    <span className="text-[length:var(--fs-micro)] font-semibold text-[var(--md-on-warning-container)] bg-[var(--md-warning-container)] px-1.5 py-0.5 rounded-[var(--radius-xs)]">
                       Bắt buộc
                     </span>
                   )}
                 </div>
 
-                <p className="text-[11px] text-[var(--md-on-surface-variant)] line-clamp-2 mb-3">
+                <p className="text-[length:var(--fs-micro)] text-[var(--md-on-surface-variant)] line-clamp-2 mb-3">
                   {slot.description}
                 </p>
 
@@ -228,15 +236,15 @@ export default function SupplierAttachmentUploader({
                   {slotStaged.map(staged => (
                     <div
                       key={staged.localId}
-                      className="flex items-center justify-between gap-2 p-2 rounded-lg border border-dashed border-primary-300 bg-primary-50 text-xs"
+                      className="flex items-center justify-between gap-2 p-2 rounded-lg border border-dashed border-[var(--md-primary)] bg-[var(--md-primary-container)] text-[length:var(--fs-xs)]"
                     >
                       <div className="flex items-center gap-1.5 min-w-0">
-                        <FileText size={14} className="text-primary-600 shrink-0" />
+                        <FileText size={14} className="text-[var(--md-primary)] shrink-0" />
                         <div className="min-w-0">
                           <div className="truncate font-medium text-[var(--md-on-surface)]" title={staged.file.name}>
                             {staged.file.name}
                           </div>
-                          <div className="text-[10px] text-[var(--md-on-surface-variant)]">
+                          <div className="text-[length:var(--fs-micro)] text-[var(--md-on-surface-variant)]">
                             Sẵn sàng tải lên · {(staged.file.size / 1024).toFixed(0)} KB
                           </div>
                         </div>
@@ -246,7 +254,7 @@ export default function SupplierAttachmentUploader({
                           type="button"
                           disabled={busy}
                           onClick={() => onRemoveStagedFile?.(staged.localId)}
-                          className="p-1 text-zinc-400 hover:text-red-500 transition-colors rounded"
+                          className="icon-btn icon-btn--danger shrink-0"
                           title="Hủy chọn tệp này"
                           aria-label={`Bỏ chọn ${staged.file.name}`}
                         >
@@ -259,15 +267,15 @@ export default function SupplierAttachmentUploader({
                   {slotAttachments.map(att => (
                     <div
                       key={att.id}
-                      className="flex items-center justify-between gap-2 p-2 rounded-lg border border-[var(--md-outline-variant)] bg-[var(--md-surface)] text-xs"
+                      className="flex items-center justify-between gap-2 p-2 rounded-lg border border-[var(--md-outline-variant)] bg-[var(--md-surface)] text-[length:var(--fs-xs)]"
                     >
                       <div className="flex items-center gap-1.5 min-w-0">
-                        <FileText size={14} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <FileText size={14} className="text-[var(--md-success)] shrink-0" />
                         <div className="min-w-0">
                           <div className="truncate font-medium text-[var(--md-on-surface)]" title={att.fileName}>
                             {att.fileName}
                           </div>
-                          <div className="text-[10px] text-[var(--md-on-surface-variant)]">
+                          <div className="text-[length:var(--fs-micro)] text-[var(--md-on-surface-variant)]">
                             {formatDateTimeVi(att.uploadedAt) ?? '—'}
                             {att.fileSizeBytes > 0 && ` · ${(att.fileSizeBytes / 1024).toFixed(0)} KB`}
                           </div>
@@ -278,7 +286,7 @@ export default function SupplierAttachmentUploader({
                           type="button"
                           disabled={busy}
                           onClick={() => void handleDownload(att)}
-                          className="p-1 text-zinc-500 hover:text-primary-600 transition-colors rounded"
+                          className="icon-btn"
                           title={`Tải về ${att.fileName}`}
                           aria-label={`Tải về ${att.fileName}`}
                         >
@@ -289,7 +297,7 @@ export default function SupplierAttachmentUploader({
                             type="button"
                             disabled={busy}
                             onClick={() => setDeleteTarget(att)}
-                            className="p-1 text-zinc-400 hover:text-red-500 transition-colors rounded"
+                            className="icon-btn icon-btn--danger"
                             title={`Xóa ${att.fileName}`}
                             aria-label={`Xóa ${att.fileName}`}
                           >
@@ -301,7 +309,7 @@ export default function SupplierAttachmentUploader({
                   ))}
 
                   {totalSlotItems === 0 && (
-                    <div className="py-2.5 px-3 rounded-lg border border-dashed border-[var(--md-outline-variant)] text-center text-[11px] text-[var(--md-on-surface-variant)]/70">
+                    <div className="py-2.5 px-3 rounded-lg border border-dashed border-[var(--md-outline-variant)] text-center text-[length:var(--fs-micro)] text-[var(--md-on-surface-variant)] opacity-75">
                       Chưa có tệp đính kèm
                     </div>
                   )}
@@ -330,11 +338,11 @@ export default function SupplierAttachmentUploader({
                     type="button"
                     variant="outlined"
                     size="sm"
-                    className="w-full text-xs"
+                    fullWidth
+                    leftIcon={Upload}
                     disabled={busy}
                     onClick={() => fileInputRefs.current[slot.key]?.click()}
                   >
-                    <Upload size={13} className="mr-1.5" />
                     {totalSlotItems > 0 ? 'Thêm / Đổi tệp' : 'Chọn hoặc thả tệp'}
                   </Button>
                 </div>

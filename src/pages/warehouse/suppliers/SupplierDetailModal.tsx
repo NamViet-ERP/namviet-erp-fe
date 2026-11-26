@@ -21,6 +21,14 @@ import {
   type SupplierRow,
 } from './SupplierShared';
 
+function PrimaryContactBadge() {
+  return (
+    <span className="inline-flex items-center gap-0.5 text-[length:var(--fs-micro)] font-semibold text-[var(--md-on-warning-container)] bg-[var(--md-warning-container)] px-1.5 py-0.5 rounded-[var(--radius-xs)] border border-[var(--tint-warning-border)]">
+      <Star size={10} className="fill-current text-[var(--md-warning)]" /> Chính
+    </span>
+  );
+}
+
 function SupplierViewingContacts({
   supplierId,
   onAddContact,
@@ -34,8 +42,8 @@ function SupplierViewingContacts({
   return (
     <div className="space-y-2.5 mt-3 pt-3 border-t border-[var(--md-outline-variant)]">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-bold uppercase tracking-wider text-[var(--md-on-surface)] flex items-center gap-1.5">
-          <Users size={15} className="text-primary-600 dark:text-primary-400" />
+        <span className="text-[length:var(--fs-xs)] font-bold uppercase tracking-wider text-[var(--md-on-surface)] flex items-center gap-1.5">
+          <Users size={15} className="text-[var(--md-primary)]" />
           Danh sách Người liên hệ ({contacts.length})
         </span>
         <div className="flex items-center gap-2">
@@ -43,14 +51,14 @@ function SupplierViewingContacts({
             type="button"
             variant="outlined"
             size="sm"
+            leftIcon={Plus}
             onClick={onAddContact}
-            className="text-xs"
           >
-            <Plus size={13} className="mr-1" /> Thêm liên hệ
+            Thêm liên hệ
           </Button>
           <Link
             to={`/suppliers/contacts?supplierId=${supplierId}`}
-            className="text-xs text-primary-600 hover:underline flex items-center gap-1"
+            className="text-[length:var(--fs-xs)] text-[var(--md-primary)] hover:underline flex items-center gap-1"
           >
             Quản lý <ExternalLink size={12} />
           </Link>
@@ -58,17 +66,17 @@ function SupplierViewingContacts({
       </div>
 
       {isLoading ? (
-        <div className="text-xs text-[var(--md-on-surface-variant)] py-3 text-center">
+        <div className="text-[length:var(--fs-xs)] text-[var(--md-on-surface-variant)] py-3 text-center">
           Đang tải danh sách người liên hệ...
         </div>
       ) : contacts.length === 0 ? (
-        <div className="p-3 text-center text-xs text-[var(--md-on-surface-variant)] border border-dashed rounded-lg">
+        <div className="p-3 text-center text-[length:var(--fs-xs)] text-[var(--md-on-surface-variant)] border border-dashed border-[var(--md-outline-variant)] rounded-lg">
           Chưa có thông tin người liên hệ nào cho NCC này. Bấm &quot;Thêm liên hệ&quot; để bổ sung trực tiếp.
         </div>
       ) : (
         <div className="overflow-x-auto border rounded-lg border-[var(--md-outline-variant)]">
-          <table className="w-full text-xs text-left">
-            <thead className="bg-[var(--md-surface-variant)]/40 text-[var(--md-on-surface-variant)]">
+          <table className="w-full text-[length:var(--fs-xs)] text-left">
+            <thead className="bg-[var(--md-surface-container-low)] text-[var(--md-on-surface-variant)]">
               <tr>
                 <th className="py-2 px-3">Họ tên</th>
                 <th className="py-2 px-3">Chức vụ</th>
@@ -79,15 +87,11 @@ function SupplierViewingContacts({
             </thead>
             <tbody className="divide-y divide-[var(--md-outline-variant)]">
               {contacts.map(c => (
-                <tr key={c.id} className="hover:bg-[var(--md-surface-variant)]/20">
+                <tr key={c.id} className="hover:bg-[var(--tint-primary-weak)]">
                   <td className="py-2 px-3 font-medium text-[var(--md-on-surface)]">
                     <div className="flex items-center gap-1.5">
                       {c.fullName}
-                      {c.role === 'primary' && (
-                        <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-1.5 py-0.2 rounded border border-amber-200 dark:border-amber-800">
-                          <Star size={10} className="fill-amber-500 text-amber-500" /> Chính
-                        </span>
-                      )}
+                      {c.role === 'primary' && <PrimaryContactBadge />}
                     </div>
                   </td>
                   <td className="py-2 px-3 text-[var(--md-on-surface-variant)]">{c.position || '—'}</td>
@@ -139,46 +143,50 @@ export default function SupplierDetailModal({
       size="xl"
       footer={
         <>
-          <button type="button" className="btn btn-outline" onClick={onClose}>
+          <Button type="button" variant="outlined" size="sm" onClick={onClose}>
             Đóng
-          </button>
+          </Button>
           {viewing ? (
-            <button
+            <Button
               type="button"
-              className="btn btn-danger"
+              variant="danger"
+              size="sm"
               onClick={() => onOpenBlacklist(viewing)}
             >
               Thêm vào blacklist
-            </button>
+            </Button>
           ) : null}
           {viewing && canApproveSupplier
           && normalizeSupplierApproval(viewing.approvalStatus) !== SUPPLIER_APPROVAL.Approved ? (
             <>
-              <button
+              <Button
                 type="button"
-                className="btn btn-outline"
+                variant="outlined"
+                size="sm"
                 onClick={() => onReject(viewing)}
               >
                 Từ chối
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
-                className="btn btn-filled"
+                variant="filled"
+                size="sm"
                 onClick={() => onApprove(viewing)}
               >
                 Duyệt NCC
-              </button>
+              </Button>
             </>
           ) : null}
           {viewing ? (
-            <button
+            <Button
               type="button"
-              className="btn btn-filled"
+              variant="filled"
+              size="sm"
               disabled={openingEdit}
               onClick={() => onEdit(viewing)}
             >
               Sửa
-            </button>
+            </Button>
           ) : null}
         </>
       }
@@ -187,26 +195,28 @@ export default function SupplierDetailModal({
         <div>
           {/* 360° Action Hub */}
           <div className="flex flex-wrap items-center gap-2 p-2.5 mb-4 rounded-xl bg-[var(--md-surface-variant05)] border border-[var(--md-outline-variant)]">
-            <span className="text-xs font-semibold text-[var(--md-on-surface-variant)] mr-1">360° Hub:</span>
+            <span className="text-[length:var(--fs-xs)] font-semibold text-[var(--md-on-surface-variant)] mr-1">
+              360° Hub:
+            </span>
             <Link
               to={`/suppliers/debt?supplierId=${viewing.id}`}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full bg-[var(--md-surface)] border border-[var(--md-outline-variant)] text-[var(--md-on-surface)] hover:bg-[var(--md-primary-container)] hover:text-[var(--md-on-primary-container)] hover:border-[var(--md-primary)] transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[length:var(--fs-xs)] font-medium rounded-full bg-[var(--md-surface)] border border-[var(--md-outline-variant)] text-[var(--md-on-surface)] hover:bg-[var(--md-primary-container)] hover:text-[var(--md-on-primary-container)] hover:border-[var(--md-primary)] transition-colors"
             >
-              <Banknote size={14} className="text-emerald-600 dark:text-emerald-400" />
+              <Banknote size={14} className="text-[var(--md-success)]" />
               Công nợ &amp; DNTT
             </Link>
             <Link
               to={`/purchasing/orders?search=${encodeURIComponent(viewing.supplierCode)}`}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full bg-[var(--md-surface)] border border-[var(--md-outline-variant)] text-[var(--md-on-surface)] hover:bg-[var(--md-primary-container)] hover:text-[var(--md-on-primary-container)] hover:border-[var(--md-primary)] transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[length:var(--fs-xs)] font-medium rounded-full bg-[var(--md-surface)] border border-[var(--md-outline-variant)] text-[var(--md-on-surface)] hover:bg-[var(--md-primary-container)] hover:text-[var(--md-on-primary-container)] hover:border-[var(--md-primary)] transition-colors"
             >
-              <ClipboardList size={14} className="text-blue-600 dark:text-blue-400" />
+              <ClipboardList size={14} className="text-[var(--md-primary)]" />
               Đơn mua hàng PO
             </Link>
             <Link
               to={`/suppliers/evaluations?supplierId=${viewing.id}`}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full bg-[var(--md-surface)] border border-[var(--md-outline-variant)] text-[var(--md-on-surface)] hover:bg-[var(--md-primary-container)] hover:text-[var(--md-on-primary-container)] hover:border-[var(--md-primary)] transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[length:var(--fs-xs)] font-medium rounded-full bg-[var(--md-surface)] border border-[var(--md-outline-variant)] text-[var(--md-on-surface)] hover:bg-[var(--md-primary-container)] hover:text-[var(--md-on-primary-container)] hover:border-[var(--md-primary)] transition-colors"
             >
-              <Award size={14} className="text-amber-600 dark:text-amber-400" />
+              <Award size={14} className="text-[var(--md-warning)]" />
               Đánh giá &amp; Thăng hạng
             </Link>
           </div>
@@ -228,11 +238,9 @@ export default function SupplierDetailModal({
                 <div>
                   <div className="font-semibold text-[var(--md-on-surface)] flex items-center gap-1.5">
                     {viewing.primaryContact.fullName}
-                    <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-1.5 py-0.2 rounded border border-amber-200 dark:border-amber-800">
-                      <Star size={10} className="fill-amber-500 text-amber-500" /> Chính
-                    </span>
+                    <PrimaryContactBadge />
                   </div>
-                  <div className="text-xs text-[var(--md-on-surface-variant)] mt-0.5">
+                  <div className="text-[length:var(--fs-xs)] text-[var(--md-on-surface-variant)] mt-0.5">
                     {viewing.primaryContact.position ? `${viewing.primaryContact.position} · ` : ''}
                     {viewing.primaryContact.phone || viewing.contactPhone || ''}
                     {viewing.primaryContact.email ? ` · ${viewing.primaryContact.email}` : ''}
@@ -248,7 +256,7 @@ export default function SupplierDetailModal({
                   href={viewing.website.startsWith('http') ? viewing.website : `https://${viewing.website}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-600 dark:text-blue-400 hover:underline font-mono text-xs"
+                  className="text-[var(--md-primary)] hover:underline font-mono text-[length:var(--fs-xs)]"
                 >
                   {viewing.website}
                 </a>
@@ -261,7 +269,7 @@ export default function SupplierDetailModal({
                 <span>{viewing.maxDebtDays} ngày</span>
                 <Link
                   to={`/suppliers/debt?supplierId=${viewing.id}`}
-                  className="text-xs text-primary-600 dark:text-primary-400 hover:underline inline-flex items-center gap-0.5 whitespace-nowrap"
+                  className="text-[length:var(--fs-xs)] text-[var(--md-primary)] hover:underline inline-flex items-center gap-0.5 whitespace-nowrap"
                 >
                   Xem bảng kê công nợ <ExternalLink size={11} />
                 </Link>
@@ -272,7 +280,7 @@ export default function SupplierDetailModal({
                 <span>{viewing.creditLimit ? formatCurrencyFull(viewing.creditLimit) : 'Không giới hạn'}</span>
                 <Link
                   to={`/suppliers/debt?supplierId=${viewing.id}`}
-                  className="text-xs text-primary-600 dark:text-primary-400 hover:underline inline-flex items-center gap-0.5 whitespace-nowrap"
+                  className="text-[length:var(--fs-xs)] text-[var(--md-primary)] hover:underline inline-flex items-center gap-0.5 whitespace-nowrap"
                 >
                   Xem bảng kê công nợ <ExternalLink size={11} />
                 </Link>
@@ -297,7 +305,7 @@ export default function SupplierDetailModal({
                 <span>{formatCurrencyFull(viewing.purchasedRevenue)}</span>
                 <Link
                   to={`/purchasing/orders?search=${encodeURIComponent(viewing.supplierCode)}`}
-                  className="text-xs text-primary-600 dark:text-primary-400 hover:underline inline-flex items-center gap-0.5 whitespace-nowrap"
+                  className="text-[length:var(--fs-xs)] text-[var(--md-primary)] hover:underline inline-flex items-center gap-0.5 whitespace-nowrap"
                 >
                   Xem đơn hàng PO <ExternalLink size={11} />
                 </Link>
@@ -312,7 +320,7 @@ export default function SupplierDetailModal({
                 </span>
                 <Link
                   to={`/suppliers/evaluations?supplierId=${viewing.id}&tab=kpi`}
-                  className="text-xs text-primary-600 dark:text-primary-400 hover:underline inline-flex items-center gap-0.5 whitespace-nowrap"
+                  className="text-[length:var(--fs-xs)] text-[var(--md-primary)] hover:underline inline-flex items-center gap-0.5 whitespace-nowrap"
                 >
                   Lịch sử đánh giá <ExternalLink size={11} />
                 </Link>
