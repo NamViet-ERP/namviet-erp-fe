@@ -1,7 +1,7 @@
 import { act, createElement } from 'react';
 import type React from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Link, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { rolesService } from '../../services/rolesService';
@@ -174,5 +174,74 @@ describe('AdminRolePermissionsPage characterization', () => {
       'procurement_staff',
       ['wms.materials.create', 'wms.materials.view:all'],
     );
+    expect(container.querySelector('.erp-page-shell.erp-page-shell--detail')).not.toBeNull();
+    expect(container.querySelectorAll('button.btn-primary, button.btn-outline')).toHaveLength(0);
+  });
+
+  it('resets filters and loads new baseline synchronously when route role code changes', async () => {
+    vi.mocked(rolesService.listAsync).mockResolvedValue([
+      { code: 'procurement_staff', label: 'Nhân viên Mua hàng', isActive: true },
+      { code: 'storekeeper', label: 'Thủ kho công trình', isActive: true },
+    ]);
+    vi.mocked(rolePermissionsService.getRolePermissions).mockImplementation(async roleCode => {
+      if (roleCode === 'storekeeper') {
+        return {
+          roleCode: 'storekeeper',
+          permissions: ['wms.materials.view:all', 'wms.materials.create'],
+        };
+      }
+      return {
+        roleCode: 'procurement_staff',
+        permissions: ['wms.materials.view:all'],
+      };
+    });
+
+    await act(async () => {
+      root.render(
+        createElement(
+          QueryClientProvider,
+          { client },
+          createElement(
+            MemoryRouter,
+            { initialEntries: ['/admin/settings/roles/procurement_staff/permissions'] },
+            createElement(Link, {
+              to: '/admin/settings/roles/storekeeper/permissions',
+              id: 'switch-role-link',
+            }, 'Switch role'),
+            createElement(
+              Routes,
+              null,
+              createElement(Route, {
+                path: '/admin/settings/roles/:code/permissions',
+                element: createElement(AdminRolePermissionsPage),
+              }),
+            ),
+          ),
+        ),
+      );
+    });
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 40));
+    });
+    expect(container.textContent).toContain('1/4 quyền đang bật');
+
+    const searchInput = container.querySelector('input[aria-label="Tìm kiếm quyền"]') as HTMLInputElement;
+    await act(async () => {
+      setInputValue(searchInput, 'Tạo mới');
+    });
+    expect(searchInput.value).toBe('Tạo mới');
+
+    const switchLink = container.querySelector('#switch-role-link') as HTMLAnchorElement;
+    await act(async () => {
+      switchLink.click();
+    });
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 40));
+    });
+
+    expect(container.textContent).toContain('Thủ kho công trình');
+    expect(container.textContent).toContain('2/4 quyền đang bật');
+    const updatedSearch = container.querySelector('input[aria-label="Tìm kiếm quyền"]') as HTMLInputElement;
+    expect(updatedSearch.value).toBe('');
   });
 });

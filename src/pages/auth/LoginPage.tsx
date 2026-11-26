@@ -2,6 +2,7 @@ import type React from 'react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Eye, EyeOff, ShieldAlert, FileText, Loader2 } from 'lucide-react';
+import Button from '../../components/ui/Button';
 import { showToast } from '../../components/ui/Toast';
 import ToastContainer from '../../components/ui/Toast';
 import PageLoader from '../../components/ui/PageLoader';
@@ -88,9 +89,9 @@ export default function LoginPage() {
             <div className="login-brand">
               <img src={NAMVIET_LOGIN_LOGO_URL} alt="Mayzer" className="login-brand__logo" />
             </div>
-            <h2 className="text-2xl font-bold text-[var(--md-on-surface)]">
+            <h1 className="text-2xl font-bold text-[var(--md-on-surface)]">
               Mayzer <span className="text-[var(--nv-steel)]">ERP</span>
-            </h2>
+            </h1>
             <p className="text-xs font-medium tracking-wide text-[var(--md-on-surface-variant)]">
               HỆ THỐNG QUẢN LÝ CHO NHÂN SỰ & KHO MAYZER
             </p>
@@ -168,9 +169,10 @@ export default function LoginPage() {
               </button>
             </div>
 
-            <button
+            <Button
+              variant="filled"
               type="submit"
-              className="btn btn-primary login-submit-btn w-full py-3 text-sm font-bold mt-2"
+              className="login-submit-btn w-full py-3 text-sm font-bold mt-2"
               disabled={loading}
               aria-busy={loading}
             >
@@ -178,7 +180,7 @@ export default function LoginPage() {
               {loading && (
                 <Loader2 size={18} className="login-submit-btn__spinner" aria-hidden />
               )}
-            </button>
+            </Button>
           </form>
 
           {HRM_MODULE_ENABLED && (
@@ -186,14 +188,15 @@ export default function LoginPage() {
               <p className="text-center text-xs text-[var(--md-on-surface-variant)] mb-3">
                 Bạn là ứng viên? Nộp hồ sơ tại đây
               </p>
-              <button
+              <Button
                 type="button"
+                variant="outlined"
+                leftIcon={FileText}
                 onClick={() => navigate('/recruitment/apply')}
-                className="btn btn-outlined w-full py-2.5 text-sm font-semibold flex items-center justify-center gap-2"
+                className="w-full py-2.5 text-sm font-semibold"
               >
-                <FileText size={16} />
                 Nộp đơn ứng tuyển
-              </button>
+              </Button>
             </div>
           )}
 

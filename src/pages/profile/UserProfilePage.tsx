@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '../../components/ui/PageHeader';
+import PageShell from '../../components/ui/PageShell';
 import HrmProfileStripPhoto from '../../components/hr/HrmProfileStripPhoto';
 import EmployeeRecordView from '../../components/hr/EmployeeRecordView';
 import HrmNotFound, { HrmLoadingState } from '../../components/hr/HrmNotFound';
@@ -13,9 +14,9 @@ export default function UserProfilePage() {
 
   if (!sessionUser) {
     return (
-      <div className="page-shell flex items-center justify-center min-h-[40dvh]">
+      <PageShell variant="detail" className="flex items-center justify-center min-h-[40dvh]">
         <p className="text-sm text-[var(--md-on-surface-variant)]">Không có phiên đăng nhập.</p>
-      </div>
+      </PageShell>
     );
   }
 
@@ -39,7 +40,7 @@ export default function UserProfilePage() {
   }
 
   return (
-    <div className="hrm-page w-full">
+    <PageShell variant="detail" className="hrm-page w-full">
       <PageHeader
         variant="detail"
         onBack={() => navigate(-1)}
@@ -65,6 +66,6 @@ export default function UserProfilePage() {
       </div>
 
       <EmployeeRecordView employee={employee} />
-    </div>
+    </PageShell>
   );
 }

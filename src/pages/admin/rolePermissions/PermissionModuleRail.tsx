@@ -56,7 +56,7 @@ export default function PermissionModuleRail({
                 {fullGroup.moduleLabel}
               </span>
               {isFiltered && (
-                <span className="text-[11px] opacity-75">
+                <span className="text-xs opacity-75">
                   {matchingCount > 0 ? `${matchingCount} kết quả` : '0 kết quả'}
                 </span>
               )}

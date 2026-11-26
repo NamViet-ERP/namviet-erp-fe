@@ -14,7 +14,7 @@ function highlightMatch(text: string, query: string) {
   return (
     <>
       {text.slice(0, index)}
-      <mark className="bg-amber-200 text-slate-950 rounded px-0.5 dark:bg-amber-400/30 dark:text-amber-200">
+      <mark className="bg-[var(--md-warning-container)] text-[var(--md-on-warning-container)] rounded px-0.5">
         {text.slice(index, index + trimmed.length)}
       </mark>
       {text.slice(index + trimmed.length)}
@@ -172,7 +172,7 @@ export default function PermissionMatrixTable({
                               {highlightMatch(entry.label, search)}
                             </span>
                             {badge.isSensitive && (
-                              <span className="inline-flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded font-medium bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-700/60">
+                              <span className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded font-medium bg-[var(--md-warning-container)] text-[var(--md-on-warning-container)] border border-[var(--md-outline-variant)]">
                                 <AlertTriangle size={11} aria-hidden />
                                 Quyền nhạy cảm (Đơn giá & Giá trị tồn)
                               </span>

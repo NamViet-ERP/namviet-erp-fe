@@ -2,17 +2,18 @@ import type React from 'react';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Shield, Plus, Trash2, UserCog, Pencil, KeyRound } from 'lucide-react';
+import Button from '../../components/ui/Button';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import PageHeader from '../../components/ui/PageHeader';
+import PageShell from '../../components/ui/PageShell';
 import SearchBar from '../../components/ui/SearchBar';
 import SectionCard from '../../components/ui/SectionCard';
-import Modal from '../../components/ui/Modal';
-import FormField from '../../components/ui/FormField';
-import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { showToast } from '../../components/ui/Toast';
+import { useRoles, useCreateRole, useDeleteRole, useToggleRoleStatus } from '../../hooks/useRoles';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { UI_LOADING } from '../../lib/uiMessages';
 import { isSameRoleLabel, type SystemRole } from '../../services/rolesService';
-import { useRoles, useCreateRole, useDeleteRole, useToggleRoleStatus, useUpdateRole } from '../../hooks/useRoles';
+import AdminRoleEditModal from './settings/AdminRoleEditModal';
 
 export default function AdminSettingsPage() {
   const navigate = useNavigate();
@@ -20,21 +21,17 @@ export default function AdminSettingsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<{ code: string; label: string } | null>(null);
   const [editTarget, setEditTarget] = useState<SystemRole | null>(null);
-  const [editLabel, setEditLabel] = useState('');
 
   const { data: allRoles = [], isLoading } = useRoles();
   const createMutation = useCreateRole();
-  const updateMutation = useUpdateRole();
   const deleteMutation = useDeleteRole();
   const toggleMutation = useToggleRoleStatus();
 
-  const roles = allRoles.filter(role => {
-    const q = searchTerm.trim();
-    if (!q) return true;
-    const needle = q.toLocaleLowerCase('vi');
-    return role.label.toLocaleLowerCase('vi').includes(needle)
-      || role.code.toLowerCase().includes(needle);
-  });
+  const q = searchTerm.trim();
+  const needle = q.toLocaleLowerCase('vi');
+  const roles = !q
+    ? allRoles
+    : allRoles.filter(r => r.label.toLocaleLowerCase('vi').includes(needle) || r.code.toLowerCase().includes(needle));
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +44,6 @@ export default function AdminSettingsPage() {
       showToast('warning', 'Tên vai trò đã tồn tại.');
       return;
     }
-
     try {
       await createMutation.mutateAsync({ label: val });
       showToast('success', `Đã thêm vai trò "${val}"`);
@@ -76,39 +72,8 @@ export default function AdminSettingsPage() {
     }
   };
 
-  const openEdit = (role: SystemRole) => {
-    setEditTarget(role);
-    setEditLabel(role.label);
-  };
-
-  const handleEditSave = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!editTarget) return;
-    const val = editLabel.trim();
-    if (!val) {
-      showToast('warning', 'Vui lòng nhập tên vai trò');
-      return;
-    }
-    if (val === editTarget.label) {
-      setEditTarget(null);
-      return;
-    }
-    if (allRoles.some(role => role.code !== editTarget.code && isSameRoleLabel(role.label, val))) {
-      showToast('warning', 'Tên vai trò đã tồn tại.');
-      return;
-    }
-
-    try {
-      await updateMutation.mutateAsync({ code: editTarget.code, label: val });
-      showToast('success', `Đã đổi tên vai trò thành "${val}"`);
-      setEditTarget(null);
-    } catch (err: unknown) {
-      showToast('error', getApiErrorMessage(err, 'Không thể đổi tên vai trò'));
-    }
-  };
-
   return (
-    <div className="hrm-page">
+    <PageShell variant="list" className="hrm-page">
       <PageHeader
         eyebrow="Admin"
         title="Thiết lập vai trò"
@@ -138,22 +103,13 @@ export default function AdminSettingsPage() {
               className="hrm-field-input flex-1"
               disabled={createMutation.isPending}
             />
-            <button
-              type="submit"
-              className="btn btn-primary flex items-center gap-2 rounded-xl px-4 h-10 shrink-0"
-              disabled={createMutation.isPending}
-            >
-              <Plus size={18} />
+            <Button type="submit" variant="filled" leftIcon={Plus} className="h-10 shrink-0" disabled={createMutation.isPending}>
               Thêm
-            </button>
+            </Button>
           </form>
 
           <div className="hrm-recruitment-position-search">
-            <SearchBar
-              value={searchTerm}
-              onChange={setSearchTerm}
-              placeholder="Tìm theo tên vai trò..."
-            />
+            <SearchBar value={searchTerm} onChange={setSearchTerm} placeholder="Tìm theo tên vai trò..." />
           </div>
 
           {isLoading ? (
@@ -187,7 +143,7 @@ export default function AdminSettingsPage() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => openEdit(role)}
+                        onClick={() => setEditTarget(role)}
                         className="hrm-admin-role-card__tool"
                         title="Sửa tên vai trò"
                         aria-label={`Sửa tên vai trò ${role.label}`}
@@ -224,9 +180,7 @@ export default function AdminSettingsPage() {
 
           <p className="hrm-recruitment-positions-meta">
             Tổng <strong>{roles.length}</strong> vai trò · Sắp xếp A-Z theo tên
-            {searchTerm && (
-              <> · Đang lọc theo "{searchTerm}"</>
-            )}
+            {searchTerm && <> · Đang lọc theo "{searchTerm}"</>}
           </p>
         </SectionCard>
 
@@ -253,42 +207,12 @@ export default function AdminSettingsPage() {
         </SectionCard>
       </div>
 
-      <Modal
-        isOpen={editTarget !== null}
+      <AdminRoleEditModal
+        key={editTarget ? `edit-${editTarget.code}` : 'edit-closed'}
+        target={editTarget}
+        allRoles={allRoles}
         onClose={() => setEditTarget(null)}
-        title="Sửa tên vai trò"
-        size="sm"
-        footer={
-          <>
-            <button type="button" className="btn btn-outline" onClick={() => setEditTarget(null)}>Hủy</button>
-            <button
-              type="button"
-              className="btn btn-primary"
-              disabled={updateMutation.isPending}
-              onClick={() => void handleEditSave()}
-            >
-              {updateMutation.isPending ? 'Đang lưu...' : 'Lưu'}
-            </button>
-          </>
-        }
-      >
-        {editTarget && (
-          <form id="admin-role-edit-form" onSubmit={handleEditSave} className="space-y-4 modal-form-bordered">
-            <FormField label="Tên vai trò" required>
-              <input
-                className="form-input"
-                value={editLabel}
-                onChange={e => setEditLabel(e.target.value)}
-                placeholder="VD: Admin"
-                autoFocus
-              />
-            </FormField>
-            <p className="text-xs text-[var(--md-on-surface-variant)]">
-              Chỉ đổi tên hiển thị. Quyền hệ thống và tài khoản đang dùng vai trò này không thay đổi.
-            </p>
-          </form>
-        )}
-      </Modal>
+      />
 
       <ConfirmDialog
         isOpen={deleteTarget !== null}
@@ -307,6 +231,6 @@ export default function AdminSettingsPage() {
         cancelLabel="Hủy bỏ"
         isLoading={deleteMutation.isPending}
       />
-    </div>
+    </PageShell>
   );
 }
