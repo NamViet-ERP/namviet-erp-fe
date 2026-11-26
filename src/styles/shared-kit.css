@@ -862,8 +862,10 @@
   .erp-table-shell__table {
     width: 100%;
   }
-  .erp-table-shell__empty-cell {
+  .erp-table-shell .erp-table-shell__table td.erp-table-shell__empty-cell {
     padding: 0;
+    border-inline: 0;
+    background: var(--md-surface);
   }
   .erp-table-shell__sticky-center {
     position: sticky;

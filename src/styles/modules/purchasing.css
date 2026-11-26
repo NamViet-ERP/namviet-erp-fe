@@ -4100,20 +4100,20 @@
     min-width: 2200px;
   }
   .pur-detail .pur-detail__lines-table th,
-  .pur-detail .pur-detail__lines-table td {
+  .pur-detail .pur-detail__lines-table td:not(.erp-table-shell__empty-cell) {
     padding: 0.75rem 0.9rem;
     white-space: nowrap;
     border: 1px solid var(--table-border);
     vertical-align: middle;
   }
-  .pur-detail .pur-detail__lines-table tbody td {
+  .pur-detail .pur-detail__lines-table tbody td:not(.erp-table-shell__empty-cell) {
     background: var(--md-surface);
     color: var(--md-on-surface);
   }
-  .pur-detail .pur-detail__lines-table tbody tr:nth-child(even) td {
+  .pur-detail .pur-detail__lines-table tbody tr:nth-child(even) td:not(.erp-table-shell__empty-cell) {
     background: color-mix(in srgb, var(--md-primary) 3.5%, var(--md-surface));
   }
-  .pur-detail .pur-detail__lines-table tbody tr:hover td {
+  .pur-detail .pur-detail__lines-table tbody tr:hover td:not(.erp-table-shell__empty-cell) {
     background: color-mix(in srgb, var(--md-primary) 8%, var(--md-surface));
   }
   .pur-detail .pur-detail__lines-table.pur-erp__table--plan td:nth-child(5),
