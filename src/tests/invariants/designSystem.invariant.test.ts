@@ -94,6 +94,22 @@ const GOLDEN_SURFACE_FILES = [
   'src/pages/purchasing/PurchaseWarrantiesPage.tsx',
   'src/pages/purchasing/warranties/WarrantyRegistryPanel.tsx',
   'src/pages/purchasing/warranties/WarrantyComplaintsPanel.tsx',
+  'src/pages/purchasing/PurchaseEstimateProcurementPage.tsx',
+  'src/pages/purchasing/estimates/EstimateCreateModal.tsx',
+  'src/pages/purchasing/estimates/EstimatesListTable.tsx',
+  'src/pages/purchasing/RfqQuotesPanel.tsx',
+  'src/pages/purchasing/rfq/RfqQuotesTable.tsx',
+  'src/pages/purchasing/rfq/RfqQuoteModal.tsx',
+  'src/pages/purchasing/PurchaseEstimateDetailPage.tsx',
+  'src/pages/purchasing/estimates/EstimateVersionSidebar.tsx',
+  'src/pages/purchasing/estimates/EstimateLinesEditor.tsx',
+  'src/pages/purchasing/estimates/EstimateLinesReadView.tsx',
+  'src/pages/purchasing/estimates/EstimateApprovalsPanel.tsx',
+  'src/pages/purchasing/PurchasePriceBookPage.tsx',
+  'src/components/purchasing/AdminMarkupSettingModal.tsx',
+  'src/pages/purchasing/priceBook/PriceBookTables.tsx',
+  'src/pages/purchasing/purchaseOrderDetail/CreatePoLinePicker.tsx',
+  'src/components/purchasing/PurchasePlanCreateImportBar.tsx',
 ];
 
 const RAW_HEX_RE = /#[0-9a-fA-F]{3,8}\b/;

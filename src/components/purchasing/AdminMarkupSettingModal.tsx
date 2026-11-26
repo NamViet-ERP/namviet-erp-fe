@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ShieldAlert, RotateCcw, Check, Save } from 'lucide-react';
-import Modal from '../ui/Modal';
-import { showToast } from '../ui/Toast';
-import { getApiErrorMessage } from '../../lib/apiClient';
+import { Check, RotateCcw, Save, ShieldAlert } from 'lucide-react';
 import { useCategoryTree } from '../../hooks/useCategories';
-import { childrenOf } from '../../lib/wms/materialCategoryTree';
 import type { CategoryMarkupItem, MarkupSettingsConfig } from '../../hooks/useMarkupSettings';
+import { getApiErrorMessage } from '../../lib/apiClient';
+import { childrenOf } from '../../lib/wms/materialCategoryTree';
 import { DEFAULT_MARKUP_CONFIG } from '../../services/markupSettingsService';
 import type { MaterialCategoryApiDto } from '../../types/wms';
+import Button from '../ui/Button';
+import Modal from '../ui/Modal';
+import { showToast } from '../ui/Toast';
 
 interface AdminMarkupSettingModalProps {
   isOpen: boolean;
@@ -135,12 +136,12 @@ export default function AdminMarkupSettingModal({
     <Modal
       isOpen={isOpen}
       onClose={() => { if (!busy) onClose(); }}
-      title="⚡ Cài Đặt Hệ Số Markup Quản Trị Chào Thầu"
+      title="Cài Đặt Hệ Số Markup Quản Trị Chào Thầu"
       size="lg"
     >
       <div className="space-y-4">
-        <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200">
-          <ShieldAlert className="w-5 h-5 mt-0.5 text-amber-600 dark:text-amber-400 shrink-0" />
+        <div className="flex items-start gap-3 p-3 rounded-lg bg-[var(--md-warning-container)] border border-[var(--tint-warning-border)] text-[var(--md-on-warning-container)]">
+          <ShieldAlert className="w-5 h-5 mt-0.5 text-[var(--md-warning)] shrink-0" />
           <div className="text-xs leading-relaxed">
             <strong className="font-semibold block text-sm mb-0.5">
               Khu vực Quản trị Biên Lợi Nhuận của Ban Lãnh Đạo
@@ -150,7 +151,7 @@ export default function AdminMarkupSettingModal({
           </div>
         </div>
 
-        <div className="p-3.5 rounded-lg border border-[var(--md-outline-variant02)] bg-[var(--md-surface-variant)]/20 flex flex-wrap items-center justify-between gap-4">
+        <div className="p-3.5 rounded-lg border border-[var(--md-outline-variant02)] bg-[var(--md-surface-container-low)] flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <span className="text-xs font-semibold text-[var(--md-on-surface)]">
               Markup Chung Mặc Định:
@@ -162,7 +163,7 @@ export default function AdminMarkupSettingModal({
                 max={100}
                 step={1}
                 disabled={busy}
-                className="form-input form-input-sm w-20 text-center font-bold text-amber-600 dark:text-amber-400"
+                className="form-input form-input-sm w-20 text-center font-bold text-[var(--md-warning)]"
                 value={globalPercent}
                 onChange={e => {
                   setDirty(true);
@@ -176,16 +177,17 @@ export default function AdminMarkupSettingModal({
             </span>
           </div>
 
-          <button
+          <Button
             type="button"
+            variant="tonal"
+            size="sm"
+            leftIcon={Check}
             disabled={busy || categories.length === 0}
-            className="btn btn-secondary btn-sm inline-flex items-center gap-1.5"
             onClick={handleApplyGlobalToAll}
             title="Gán hệ số chung cho tất cả các nhóm bên dưới"
           >
-            <Check size={14} />
-            <span>Áp dụng cho tất cả nhóm</span>
-          </button>
+            Áp dụng cho tất cả nhóm
+          </Button>
         </div>
 
         <div className="border border-[var(--md-outline-variant02)] rounded-lg overflow-hidden max-h-[360px] overflow-y-auto">
@@ -206,7 +208,7 @@ export default function AdminMarkupSettingModal({
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[var(--md-outline-variant02)]/50">
+            <tbody className="divide-y divide-[var(--md-outline-variant02)]">
               {categoriesLoading && categories.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="py-6 px-3 text-center text-[var(--md-on-surface-variant)]">
@@ -223,16 +225,16 @@ export default function AdminMarkupSettingModal({
                 categories.map(cat => {
                   const multiplier = (1 + cat.percent / 100).toFixed(2);
                   return (
-                    <tr key={cat.id} className="hover:bg-[var(--md-surface-variant)]/20 transition-colors">
+                    <tr key={cat.id} className="hover:bg-[var(--md-surface-container-low)] transition-colors">
                       <td className="py-2 px-3 font-medium text-[var(--md-on-surface)]">
                         <div className="flex items-center gap-1.5">
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                          <span className="pur-item-badge pur-item-badge--material font-mono">
                             {cat.id}
                           </span>
                           <span>{cat.name}</span>
                         </div>
                       </td>
-                      <td className="py-2 px-3 text-[var(--md-on-surface-variant)] text-[11px]">
+                      <td className="py-2 px-3 text-[var(--md-on-surface-variant)] text-[length:var(--fs-xs)]">
                         <input
                           type="text"
                           disabled={busy}
@@ -250,11 +252,11 @@ export default function AdminMarkupSettingModal({
                             max={100}
                             step={1}
                             disabled={busy}
-                            className="form-input form-input-sm w-16 text-center font-bold text-amber-700 dark:text-amber-300"
+                            className="form-input form-input-sm w-16 text-center font-bold text-[var(--md-warning)]"
                             value={cat.percent}
                             onChange={e => handlePercentChange(cat.id, Number(e.target.value) || 0)}
                           />
-                          <span className="text-[11px] font-medium">%</span>
+                          <span className="text-[length:var(--fs-xs)] font-medium">%</span>
                         </div>
                       </td>
                       <td className="py-2 px-3 text-right font-mono font-semibold text-[var(--md-on-surface)]">
@@ -268,7 +270,7 @@ export default function AdminMarkupSettingModal({
           </table>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between text-[11px] text-[var(--md-on-surface-variant)] pt-1">
+        <div className="flex flex-wrap items-center justify-between text-[length:var(--fs-xs)] text-[var(--md-on-surface-variant)] pt-1">
           <div>
             {config.updatedAt ? (
               <span>
@@ -277,35 +279,25 @@ export default function AdminMarkupSettingModal({
               </span>
             ) : null}
           </div>
-          <button
+          <Button
             type="button"
+            variant="text"
+            size="sm"
+            leftIcon={RotateCcw}
             disabled={busy}
-            className="text-[var(--md-on-surface-variant)] hover:text-[var(--md-on-surface)] underline inline-flex items-center gap-1 cursor-pointer"
             onClick={handleResetDefaults}
           >
-            <RotateCcw size={12} />
-            <span>Khôi phục định mức mặc định</span>
-          </button>
+            Khôi phục định mức mặc định
+          </Button>
         </div>
 
         <div className="flex items-center justify-end gap-2 pt-3 border-t border-[var(--md-outline-variant02)]">
-          <button
-            type="button"
-            disabled={busy}
-            className="btn btn-outline btn-sm"
-            onClick={onClose}
-          >
+          <Button type="button" variant="outlined" size="sm" disabled={busy} onClick={onClose}>
             Đóng
-          </button>
-          <button
-            type="button"
-            disabled={busy}
-            className="btn btn-primary btn-sm inline-flex items-center gap-1.5 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-semibold disabled:opacity-60"
-            onClick={() => void handleSave()}
-          >
-            <Save size={14} />
-            <span>{busy ? 'Đang lưu...' : 'Lưu Cấu Hình Quản Trị'}</span>
-          </button>
+          </Button>
+          <Button type="button" variant="filled" size="sm" leftIcon={Save} disabled={busy} onClick={() => void handleSave()}>
+            {busy ? 'Đang lưu...' : 'Lưu Cấu Hình Quản Trị'}
+          </Button>
         </div>
       </div>
     </Modal>

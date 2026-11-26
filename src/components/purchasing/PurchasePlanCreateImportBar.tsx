@@ -271,13 +271,13 @@ export default function PurchasePlanCreateImportBar({
                       filteredErrors.map((err, idx) => (
                         <tr key={`${err.rowNumber}-${err.field}-${idx}`} className="hover:bg-[var(--md-surface-container-low)] transition-colors">
                           <td className="table-cell text-center tabular-nums font-semibold">
-                            <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[var(--md-error-container)] text-[var(--md-on-error-container)]">
+                            <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[length:var(--fs-micro)] font-semibold bg-[var(--md-error-container)] text-[var(--md-on-error-container)]">
                               Dòng {err.rowNumber}
                             </span>
                           </td>
                           <td className="table-cell font-medium text-[var(--md-on-surface)]">
                             {err.field ? (
-                              <span className="px-1.5 py-0.5 rounded bg-[var(--md-surface-container-highest)] font-mono text-[11px]">
+                              <span className="px-1.5 py-0.5 rounded bg-[var(--md-surface-container-highest)] font-mono text-[length:var(--fs-micro)]">
                                 {err.field}
                               </span>
                             ) : (

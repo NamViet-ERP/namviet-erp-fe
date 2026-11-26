@@ -1,9 +1,15 @@
 import { Link } from 'react-router-dom';
 import EmptyState from '../../../components/ui/EmptyState';
+import SelectField from '../../../components/ui/SelectField';
 import TableSkeletonRows from '../../../components/ui/TableSkeletonRows';
-import { formatCurrency } from '../../../utils/formatCurrency';
 import type { PurchasePlanLineApiDto } from '../../../types/api/purchasingApi';
+import { formatCurrency } from '../../../utils/formatCurrency';
 import { unitPriceOf } from './poDetailHelpers';
+
+const WARRANTY_ANCHOR_OPTIONS = [
+  { value: 'delivery', label: 'Giao hàng' },
+  { value: 'acceptance', label: 'Nghiệm thu' },
+] as const;
 
 type Props = {
   planCode: string;
@@ -46,6 +52,10 @@ export function CreatePoLinePicker({
   onToggleLine,
   onToggleSelectAllVisible,
 }: Props) {
+  const serviceLineCount = supplierLines.filter(
+    l => l.lineType === 'service' || l.lineType === 'expense',
+  ).length;
+
   return (
     <section className="pur-detail__card">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
@@ -58,9 +68,9 @@ export function CreatePoLinePicker({
               <span className="px-2 py-0.5 rounded-full bg-[var(--md-surface-variant)] text-[var(--md-on-surface-variant)] font-medium">
                 {supplierLines.length} dòng
               </span>
-              {supplierLines.some(l => l.lineType === 'service' || l.lineType === 'expense') && (
-                <span className="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-medium">
-                  💼 {supplierLines.filter(l => l.lineType === 'service' || l.lineType === 'expense').length} dịch vụ
+              {serviceLineCount > 0 && (
+                <span className="pur-item-badge pur-item-badge--service">
+                  {serviceLineCount} dịch vụ
                 </span>
               )}
             </div>
@@ -129,6 +139,18 @@ export function CreatePoLinePicker({
             <tbody>
               {visibleSupplierLines.map(line => {
                 const checked = selectedLineIds.includes(line.id);
+                const badgeMod =
+                  line.lineType === 'service'
+                    ? 'pur-item-badge--service'
+                    : line.lineType === 'expense'
+                      ? 'pur-item-badge--expense'
+                      : 'pur-item-badge--material';
+                const badgeLabel =
+                  line.lineType === 'service'
+                    ? 'Dịch vụ'
+                    : line.lineType === 'expense'
+                      ? 'Chi phí'
+                      : 'Vật tư';
                 return (
                   <tr key={line.id} className={checked ? 'is-selected' : undefined}>
                     <td className="pur-erp__td-check">
@@ -144,21 +166,13 @@ export function CreatePoLinePicker({
                     <td>
                       <div className="flex flex-col gap-1 py-0.5">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span
-                            className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold border ${
-                              line.lineType === 'service'
-                                ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800'
-                                : line.lineType === 'expense'
-                                  ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-800'
-                                  : 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800'
-                            }`}
-                          >
-                            {line.lineType === 'service' ? '💼 Dịch vụ' : line.lineType === 'expense' ? '🏛️ Chi phí' : '📦 Vật tư'}
+                          <span className={`pur-item-badge ${badgeMod}`}>
+                            {badgeLabel}
                           </span>
                           <span className="font-medium text-[var(--md-on-surface)]">{line.productName}</span>
                         </div>
                         {line.materialCode && (
-                          <span className="text-[11px] text-[var(--md-on-surface-variant)] font-mono">
+                          <span className="text-[length:var(--fs-xs)] text-[var(--md-on-surface-variant)] font-mono">
                             Mã: {line.materialCode}
                           </span>
                         )}
@@ -173,7 +187,7 @@ export function CreatePoLinePicker({
                           className="text-xs opacity-75"
                           title={`Đã lên đơn: ${line.pos.map(p => `${p.poCode} (${p.orderedQty})`).join(', ')}`}
                         >
-                          <span style={{ fontSize: '0.7rem' }}>Đã có: </span>
+                          <span className="text-[length:var(--fs-micro)]">Đã có: </span>
                           {line.pos.map((p, idx) => (
                             <span key={p.poCode}>
                               {idx > 0 ? ', ' : ''}
@@ -181,13 +195,12 @@ export function CreatePoLinePicker({
                                 to={`/purchasing/orders/${encodeURIComponent(p.poCode)}`}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="pur-pay-plan__po-link"
-                                style={{ fontSize: '0.7rem' }}
+                                className="pur-pay-plan__po-link text-[length:var(--fs-micro)]"
                                 onClick={e => e.stopPropagation()}
                               >
                                 {p.poCode}
                               </Link>
-                              <span style={{ fontSize: '0.7rem' }}> ({p.orderedQty})</span>
+                              <span className="text-[length:var(--fs-micro)]"> ({p.orderedQty})</span>
                             </span>
                           ))}
                         </div>
@@ -228,20 +241,19 @@ export function CreatePoLinePicker({
                       />
                     </td>
                     <td className="pur-create-po-lines__col-anchor">
-                      <select
-                        className="form-input form-input-sm pur-create-po-lines__select-anchor"
+                      <SelectField
+                        variant="form"
+                        className="m-0 [&_.form-field__error--reserved]:hidden"
+                        selectClassName="form-input form-input-sm pur-create-po-lines__select-anchor"
                         disabled={!checked}
                         value={warrantyAnchorByLine[line.id] ?? 'delivery'}
-                        onChange={e => onWarrantyAnchorChange(prev => ({
+                        onChange={val => onWarrantyAnchorChange(prev => ({
                           ...prev,
-                          [line.id]: e.target.value,
+                          [line.id]: val,
                         }))}
+                        options={WARRANTY_ANCHOR_OPTIONS}
                         aria-label={`Mốc bảo hành ${line.productName}`}
-                        title="Thời điểm bắt đầu tính bảo hành"
-                      >
-                        <option value="delivery">Giao hàng</option>
-                        <option value="acceptance">Nghiệm thu</option>
-                      </select>
+                      />
                     </td>
                   </tr>
                 );

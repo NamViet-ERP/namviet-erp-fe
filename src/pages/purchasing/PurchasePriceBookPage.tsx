@@ -1,202 +1,38 @@
-import { useMemo, useState } from 'react';
 import { Zap } from 'lucide-react';
-import { useSession } from '../../auth/AuthProvider';
 import HrmSelect from '../../components/hr/HrmSelect';
 import AdminMarkupSettingModal from '../../components/purchasing/AdminMarkupSettingModal';
-import { rootCategoryIdOf } from '../../components/purchasing/MaterialByGroupFields';
-import PageShell from '../../components/ui/PageShell';
-import PageHeader from '../../components/ui/PageHeader';
-import SectionCard from '../../components/ui/SectionCard';
-import FilterToolbar from '../../components/ui/FilterToolbar';
+import Button from '../../components/ui/Button';
 import EmptyState from '../../components/ui/EmptyState';
+import FilterToolbar from '../../components/ui/FilterToolbar';
 import FormField from '../../components/ui/FormField';
+import PageHeader from '../../components/ui/PageHeader';
+import PageShell from '../../components/ui/PageShell';
+import SectionCard from '../../components/ui/SectionCard';
 import TabFilter from '../../components/ui/TabFilter';
-import { showToast } from '../../components/ui/Toast';
-import { isSessionAdmin } from '../../constants/systemUsers';
-import { useCategoryTree } from '../../hooks/useCategories';
-import { useMarkupSettings } from '../../hooks/useMarkupSettings';
-import { useMaterials } from '../../hooks/useMaterials';
-import { usePermission } from '../../hooks/usePermission';
-import { useProjects } from '../../hooks/useProjects';
-import {
-  usePriceBookCategories,
-  usePriceBookEstimates,
-  usePriceBookItem,
-  usePriceBookItems,
-  usePriceBookMargins,
-  usePriceBookMatrix,
-  useUpsertEstimatePrice,
-  useUpsertSellPrice,
-} from '../../hooks/usePurchasePriceBook';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import RfqQuotesPanel from './RfqQuotesPanel';
 import { EstimateKpis, EstimatesTable, MarginKpis, MarginsTable } from './priceBook/PriceBookEstimatesAndMarginsPanels';
 import PriceBookHistoryModal from './priceBook/PriceBookHistoryModal';
 import { GroupsTable, ItemsTable, MatrixTable } from './priceBook/PriceBookTables';
+import { EstimatePriceModal, SellPriceModal } from './priceBook/PriceBookUpsertModals';
 import {
-  EstimatePriceModal,
-  SellPriceModal,
-  type EstimateFormState,
-  type SellFormState,
-} from './priceBook/PriceBookUpsertModals';
-import {
-  PRICE_BOOK_TAB_INTRO,
   PRICE_BOOK_TABS,
-  PRICE_BOOK_THIS_YEAR,
-  PRICE_BOOK_YEARS,
-  categoryOption,
+  PRICE_BOOK_TAB_INTRO,
   exportEstimatesCsv,
   exportItemsCsv,
   exportMarginsCsv,
-  periodRange,
-  type PriceBookPeriodType,
   type PriceBookTab,
 } from './priceBook/priceBookHelpers';
+import {
+  PRICE_BOOK_MONTH_OPTIONS,
+  PRICE_BOOK_PERIOD_OPTIONS,
+  PRICE_BOOK_QUARTER_OPTIONS,
+  PRICE_BOOK_YEAR_OPTIONS,
+  usePriceBookController,
+} from './priceBook/usePriceBookController';
 
 export default function PurchasePriceBookPage() {
-  const { has } = usePermission();
-  const { user, permissions } = useSession();
-  const isAdmin = isSessionAdmin(user);
-  const roleLower = (user?.role ?? '').toLowerCase();
-  const isBoss = isAdmin ||
-    roleLower.includes('director') ||
-    roleLower.includes('manager') ||
-    roleLower.includes('giam_doc') ||
-    roleLower.includes('truong_phong') ||
-    roleLower.includes('bld') ||
-    permissions.includes('admin.users.view:all') ||
-    permissions.includes('purchasing.pricebook.update');
-
-  const { config: markupConfig, isSaving: isSavingMarkup, saveConfig: saveMarkupConfig, getMarkupPercent, saveItemMarkup } = useMarkupSettings();
-  const [markupModalOpen, setMarkupModalOpen] = useState(false);
-
-  const canWriteRfq = has('purchasing.rfq.create');
-  const canUpdateRfq = has('purchasing.rfq.update');
-  const canUpdateBook = has('purchasing.pricebook.update');
-
-  const [tab, setTab] = useState<PriceBookTab>('items');
-  const [search, setSearch] = useState('');
-  const [categoryId, setCategoryId] = useState<number | ''>('');
-  const [periodType, setPeriodType] = useState<PriceBookPeriodType>('all');
-  const [periodYear, setPeriodYear] = useState(PRICE_BOOK_THIS_YEAR);
-  const [periodQuarter, setPeriodQuarter] = useState(Math.ceil((new Date().getMonth() + 1) / 3));
-  const [periodMonth, setPeriodMonth] = useState(new Date().getMonth() + 1);
-  const [matrixCategoryId, setMatrixCategoryId] = useState<number | ''>('');
-  const [detailCode, setDetailCode] = useState<string | null>(null);
-  const [rfqPresetCode, setRfqPresetCode] = useState('');
-  const [sellOpen, setSellOpen] = useState(false);
-  const [sellForm, setSellForm] = useState<SellFormState>({
-    materialCode: '',
-    projectCode: '',
-    sellPrice: '',
-    effectiveDate: new Date().toISOString().slice(0, 10),
-    note: '',
-  });
-  const [estimateOpen, setEstimateOpen] = useState(false);
-  const [estimateCategoryId, setEstimateCategoryId] = useState<number | ''>('');
-  const [estimateForm, setEstimateForm] = useState<EstimateFormState>({
-    materialCode: '',
-    projectCode: '',
-    estimatePrice: '',
-    effectiveDate: new Date().toISOString().slice(0, 10),
-    note: '',
-  });
-
-  const range = periodRange(periodType, periodYear, periodQuarter, periodMonth);
-  const items = usePriceBookItems(
-    search.trim() || undefined,
-    categoryId === '' ? undefined : categoryId,
-    tab === 'items',
-    range.from,
-    range.to,
-  );
-  const allItems = usePriceBookItems(undefined, undefined, tab === 'matrix' || tab === 'margins' || tab === 'estimates');
-  const matrix = usePriceBookMatrix(matrixCategoryId === '' ? undefined : matrixCategoryId);
-  const groups = usePriceBookCategories(tab === 'groups' || tab === 'matrix');
-  const margins = usePriceBookMargins(tab === 'margins');
-  const estimates = usePriceBookEstimates(tab === 'estimates');
-  const detail = usePriceBookItem(detailCode ?? undefined);
-  const upsertSell = useUpsertSellPrice();
-  const upsertEstimate = useUpsertEstimatePrice();
-  const { data: categories = [] } = useCategoryTree();
-  const { data: materialsPage } = useMaterials({
-    page: 1,
-    pageSize: 500,
-    categoryId: estimateCategoryId === '' ? undefined : estimateCategoryId,
-  });
-  const { data: projectsPage } = useProjects({ page: 1, pageSize: 200 });
-  const materials = materialsPage?.items ?? [];
-  const projects = projectsPage?.items ?? [];
-
-  const rootCategories = useMemo(
-    () => categories.filter(c => c.level === 1 && c.code !== 'UNCATEGORIZED' && c.isActive),
-    [categories],
-  );
-
-  const matrixCategories = useMemo(() => {
-    const fromGroups = (groups.data ?? []).map(row => ({
-      id: row.categoryId,
-      code: row.categoryCode,
-      name: row.categoryName,
-    }));
-    return fromGroups.length > 0 ? fromGroups : rootCategories;
-  }, [groups.data, rootCategories]);
-  const categoryLabels = useMemo(() => rootCategories.map(categoryOption), [rootCategories]);
-  const matrixCategoryLabels = useMemo(() => matrixCategories.map(categoryOption), [matrixCategories]);
-  const itemsCategoryValue = rootCategories.find(c => c.id === categoryId);
-  const matrixCategoryValue = matrixCategories.find(c => c.id === matrixCategoryId);
-
-  if (tab === 'matrix' && matrixCategories.length > 0) {
-    const valid =
-      matrixCategoryId !== '' && matrixCategories.some(c => c.id === matrixCategoryId);
-    if (!valid) {
-      setMatrixCategoryId(matrixCategories[0]!.id);
-    }
-  }
-
-  const saveSell = async () => {
-    const price = Number(String(sellForm.sellPrice).replace(/[^\d.-]/g, ''));
-    if (!sellForm.materialCode || !sellForm.effectiveDate || !(price > 0)) {
-      showToast('error', 'Nhập vật tư, ngày hiệu lực và giá bán.');
-      return;
-    }
-    try {
-      await upsertSell.mutateAsync({
-        materialCode: sellForm.materialCode,
-        projectCode: sellForm.projectCode || null,
-        sellPrice: price,
-        effectiveDate: sellForm.effectiveDate,
-        note: sellForm.note || null,
-      });
-      showToast('success', 'Đã ghi giá bán.');
-      setSellForm(f => ({ ...f, sellPrice: '', note: '' }));
-      setSellOpen(false);
-    } catch (err) {
-      showToast('error', getApiErrorMessage(err, 'Không ghi được giá bán.'));
-    }
-  };
-
-  const saveEstimate = async () => {
-    const price = Number(String(estimateForm.estimatePrice).replace(/[^\d.-]/g, ''));
-    if (estimateCategoryId === '' || !estimateForm.materialCode || !estimateForm.effectiveDate || !(price > 0)) {
-      showToast('error', 'Chọn nhóm vật tư, vật tư, ngày hiệu lực và giá dự toán.');
-      return;
-    }
-    try {
-      await upsertEstimate.mutateAsync({
-        materialCode: estimateForm.materialCode,
-        projectCode: estimateForm.projectCode || null,
-        estimatePrice: price,
-        effectiveDate: estimateForm.effectiveDate,
-        note: estimateForm.note || null,
-      });
-      showToast('success', 'Đã ghi giá dự toán.');
-      setEstimateForm(f => ({ ...f, estimatePrice: '', note: '' }));
-      setEstimateOpen(false);
-    } catch (err) {
-      showToast('error', getApiErrorMessage(err, 'Không ghi được giá dự toán.'));
-    }
-  };
+  const vm = usePriceBookController();
 
   return (
     <PageShell>
@@ -204,309 +40,177 @@ export default function PurchasePriceBookPage() {
         eyebrow="Dự án EPC / Chào thầu"
         title="Sổ giá chào thầu & Phân tích"
         subtitle="Sổ giá chào thầu theo mặt hàng · Giá chào thầu (RFQ) · Phân tích Mua vào - Bán ra"
-        actions={
-          isBoss ? (
-            <button
-              type="button"
-              className="btn btn-primary inline-flex items-center gap-1.5 shadow-sm bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-semibold text-xs py-1.5 px-3"
-              onClick={() => setMarkupModalOpen(true)}
-              title="Cài đặt hệ số đắp giá / chào thầu theo từng nhóm hàng (Dành riêng cho BLĐ & Admin)"
-            >
-              <Zap size={14} className="text-yellow-300 fill-yellow-300 animate-pulse" />
-              <span>⚡ Cài Đặt Markup Quản Trị</span>
-            </button>
-          ) : null
-        }
+        actions={vm.isBoss ? (
+          <Button
+            type="button"
+            variant="tonal"
+            size="sm"
+            leftIcon={Zap}
+            onClick={() => vm.setMarkupModalOpen(true)}
+            title="Cài đặt hệ số đắp giá / chào thầu theo từng nhóm hàng (Dành riêng cho BLĐ & Admin)"
+          >
+            Cài Đặt Markup Quản Trị
+          </Button>
+        ) : null}
       />
+
       <SectionCard noPadding>
-        {tab === 'items' ? (
+        {vm.tab === 'items' ? (
           <FilterToolbar
-            search={search}
-            onSearchChange={setSearch}
+            search={vm.search}
+            onSearchChange={vm.setSearch}
             searchPlaceholder="Tìm theo mã/tên hàng…"
-            hasActiveFilters={Boolean(search.trim() || categoryId || periodType !== 'all')}
-            onReset={() => {
-              setCategoryId('');
-              setSearch('');
-              setPeriodType('all');
-            }}
+            hasActiveFilters={vm.hasActiveItemsFilter}
+            onReset={vm.resetItemsFilter}
             filters={(
               <div className="hrm-list-toolbar__filter-row hrm-list-toolbar__filter-row--selects">
                 <HrmSelect
                   aria-label="Nhóm hàng"
                   placeholder="Tất cả nhóm hàng"
-                  value={itemsCategoryValue ? categoryOption(itemsCategoryValue) : ''}
-                  options={categoryLabels}
-                  onChange={label => {
-                    const found = rootCategories.find(c => categoryOption(c) === label);
-                    setCategoryId(found?.id ?? '');
-                  }}
+                  value={vm.itemsCategoryLabel}
+                  options={vm.categoryLabels}
+                  onChange={vm.selectItemsCategoryLabel}
                 />
                 <HrmSelect
                   aria-label="Kỳ"
-                  value={periodType === 'all' ? 'Tất cả (toàn bộ lịch sử)' : periodType === 'month' ? 'Theo tháng' : periodType === 'quarter' ? 'Theo quý' : 'Theo năm'}
-                  options={['Tất cả (toàn bộ lịch sử)', 'Theo tháng', 'Theo quý', 'Theo năm']}
-                  onChange={label => {
-                    if (label.startsWith('Tất cả')) setPeriodType('all');
-                    else if (label === 'Theo tháng') setPeriodType('month');
-                    else if (label === 'Theo quý') setPeriodType('quarter');
-                    else setPeriodType('year');
-                  }}
+                  value={vm.periodLabel}
+                  options={PRICE_BOOK_PERIOD_OPTIONS}
+                  onChange={vm.selectPeriodLabel}
                 />
-                {periodType !== 'all' ? (
+                {vm.periodType !== 'all' ? (
                   <HrmSelect
                     aria-label="Năm"
-                    value={String(periodYear)}
-                    options={PRICE_BOOK_YEARS.map(String)}
-                    onChange={v => setPeriodYear(Number(v))}
+                    value={String(vm.periodYear)}
+                    options={PRICE_BOOK_YEAR_OPTIONS}
+                    onChange={v => vm.setPeriodYear(Number(v))}
                   />
                 ) : null}
-                {periodType === 'quarter' ? (
+                {vm.periodType === 'quarter' ? (
                   <HrmSelect
                     aria-label="Quý"
-                    value={`Quý ${periodQuarter}`}
-                    options={['Quý 1', 'Quý 2', 'Quý 3', 'Quý 4']}
-                    onChange={v => setPeriodQuarter(Number(v.replace('Quý ', '')))}
+                    value={`Quý ${vm.periodQuarter}`}
+                    options={PRICE_BOOK_QUARTER_OPTIONS}
+                    onChange={v => vm.setPeriodQuarter(Number(v.replace('Quý ', '')))}
                   />
                 ) : null}
-                {periodType === 'month' ? (
+                {vm.periodType === 'month' ? (
                   <HrmSelect
                     aria-label="Tháng"
-                    value={`Tháng ${periodMonth}`}
-                    options={Array.from({ length: 12 }, (_, i) => `Tháng ${i + 1}`)}
-                    onChange={v => setPeriodMonth(Number(v.replace('Tháng ', '')))}
+                    value={`Tháng ${vm.periodMonth}`}
+                    options={PRICE_BOOK_MONTH_OPTIONS}
+                    onChange={v => vm.setPeriodMonth(Number(v.replace('Tháng ', '')))}
                   />
                 ) : null}
               </div>
             )}
           />
         ) : null}
-      <div className="pur-pricebook-chrome">
-        <p className="pur-pricebook-intro text-[length:var(--fs-sm)] text-[var(--md-on-surface-variant)]">
-          {PRICE_BOOK_TAB_INTRO[tab]}
-        </p>
 
-        <div className="tab-filter-row">
-          <TabFilter
-            tabs={PRICE_BOOK_TABS.map(t => ({ id: t.id, label: t.label }))}
-            activeTab={tab}
-            onChange={id => setTab(id as PriceBookTab)}
-          />
-          {tab === 'items' ? (
-            <button type="button" className="btn btn-outline btn-sm" onClick={() => exportItemsCsv(items.data ?? [])}>
-              Xuất CSV
-            </button>
-          ) : null}
+        <div className="pur-pricebook-chrome">
+          <p className="pur-pricebook-intro text-[length:var(--fs-sm)] text-[var(--md-on-surface-variant)]">
+            {PRICE_BOOK_TAB_INTRO[vm.tab]}
+          </p>
+          <div className="tab-filter-row">
+            <TabFilter
+              tabs={PRICE_BOOK_TABS.map(t => ({ id: t.id, label: t.label }))}
+              activeTab={vm.tab}
+              onChange={id => vm.setTab(id as PriceBookTab)}
+            />
+            {vm.tab === 'items' ? (
+              <Button type="button" variant="outlined" size="sm" onClick={() => exportItemsCsv(vm.items.data ?? [])}>
+                Xuất CSV
+              </Button>
+            ) : null}
+          </div>
         </div>
-      </div>
 
-      {tab === 'rfq' ? (
-        <RfqQuotesPanel canWrite={canWriteRfq} canUpdate={canUpdateRfq} presetMaterialCode={rfqPresetCode} />
-      ) : null}
+        {vm.tab === 'rfq' ? (
+          <RfqQuotesPanel canWrite={vm.canWriteRfq} canUpdate={vm.canUpdateRfq} presetMaterialCode={vm.rfqPresetCode} />
+        ) : null}
 
-      {tab === 'items' ? (
-        <div className="space-y-3">
-          {items.isError ? (
-            <EmptyState message={getApiErrorMessage(items.error, 'Không tải được sổ giá.')} />
+        {vm.tab === 'items' ? (
+          vm.items.isError ? (
+            <EmptyState message={getApiErrorMessage(vm.items.error, 'Không tải được sổ giá.')} />
           ) : (
-            <ItemsTable
-              loading={items.isLoading}
-              rows={items.data ?? []}
-              onOpen={setDetailCode}
-              isBoss={isBoss}
-              getMarkupPercent={getMarkupPercent}
-              onSaveItemMarkup={saveItemMarkup}
-            />
-          )}
-        </div>
-      ) : null}
+            <ItemsTable {...vm.itemsTableProps} />
+          )
+        ) : null}
 
-      {tab === 'matrix' ? (
-        <div className="space-y-3">
-          <div className="pur-pricebook-section flex flex-wrap items-end justify-between gap-2">
-            <h2 className="text-[length:var(--fs-lg)] font-semibold m-0">So sánh giá theo nhà cung cấp</h2>
-            <FormField label="Nhóm hàng">
-              <HrmSelect
-                aria-label="Nhóm hàng"
-                placeholder="Chọn nhóm hàng"
-                value={matrixCategoryValue ? categoryOption(matrixCategoryValue) : ''}
-                options={matrixCategoryLabels}
-                onChange={label => {
-                  const found = matrixCategories.find(c => categoryOption(c) === label);
-                  setMatrixCategoryId(found?.id ?? '');
-                }}
-              />
-            </FormField>
-          </div>
-          <MatrixTable loading={matrix.isLoading} data={matrix.data} hasCategory={matrixCategoryId !== ''} />
-        </div>
-      ) : null}
-
-      {tab === 'groups' ? (
-        groups.isError ? (
-          <EmptyState message={getApiErrorMessage(groups.error, 'Không tải được phân tích nhóm hàng.')} />
-        ) : (
-          <GroupsTable
-            loading={groups.isLoading}
-            rows={groups.data ?? []}
-            onCompare={id => {
-              setMatrixCategoryId(id);
-              setTab('matrix');
-            }}
-          />
-        )
-      ) : null}
-
-      {tab === 'estimates' ? (
-        <div className="space-y-3">
-          <EstimateKpis rows={estimates.data ?? []} />
-          <div className="pur-pricebook-section flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-[length:var(--fs-lg)] font-semibold m-0">Giá dự toán & Chênh lệch so với giá mua thực tế</h2>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                className="btn btn-outline btn-sm"
-                onClick={() => exportEstimatesCsv(estimates.data ?? [])}
-              >
-                Xuất CSV
-              </button>
-              {canUpdateBook ? (
-                <button
-                  type="button"
-                  className="btn btn-primary btn-sm"
-                  onClick={() => {
-                    setEstimateCategoryId('');
-                    setEstimateForm({
-                      materialCode: '',
-                      projectCode: '',
-                      estimatePrice: '',
-                      effectiveDate: new Date().toISOString().slice(0, 10),
-                      note: '',
-                    });
-                    setEstimateOpen(true);
-                  }}
-                >
-                  + Thiết lập giá dự toán
-                </button>
-              ) : null}
+        {vm.tab === 'matrix' ? (
+          <div className="space-y-3">
+            <div className="pur-pricebook-section flex flex-wrap items-end justify-between gap-2">
+              <h2 className="text-[length:var(--fs-lg)] font-semibold m-0">So sánh giá theo nhà cung cấp</h2>
+              <FormField label="Nhóm hàng">
+                <HrmSelect
+                  aria-label="Nhóm hàng"
+                  placeholder="Chọn nhóm hàng"
+                  value={vm.matrixCategoryLabel}
+                  options={vm.matrixCategoryLabels}
+                  onChange={vm.selectMatrixCategoryLabel}
+                />
+              </FormField>
             </div>
+            <MatrixTable loading={vm.matrix.isLoading} data={vm.matrix.data} hasCategory={vm.matrixCategoryId !== ''} />
           </div>
-          <EstimatesTable
-            loading={estimates.isLoading}
-            rows={estimates.data ?? []}
-            missingEstimate={allItems.data?.filter(i => i.latestPrice != null && !(estimates.data ?? []).some(m => m.materialCode === i.materialCode)) ?? []}
-            canUpdate={canUpdateBook}
-            onEdit={row => {
-              const mat = materials.find(m => m.materialCode === row.materialCode);
-              setEstimateCategoryId(rootCategoryIdOf(mat?.categoryId, categories));
-              setEstimateForm({
-                materialCode: row.materialCode,
-                projectCode: row.projectCode ?? '',
-                estimatePrice: String(row.estimatePrice),
-                effectiveDate: row.effectiveDate?.slice(0, 10) || new Date().toISOString().slice(0, 10),
-                note: '',
-              });
-              setEstimateOpen(true);
-            }}
-            onAdd={code => {
-              const mat = materials.find(m => m.materialCode === code);
-              setEstimateCategoryId(rootCategoryIdOf(mat?.categoryId, categories));
-              setEstimateForm(f => ({ ...f, materialCode: code, projectCode: '', estimatePrice: '' }));
-              setEstimateOpen(true);
-            }}
-            onHistory={setDetailCode}
-          />
-          {canUpdateBook ? (
-            <EstimatePriceModal
-              isOpen={estimateOpen}
-              onClose={() => setEstimateOpen(false)}
-              categoryId={estimateCategoryId}
-              onCategoryChange={setEstimateCategoryId}
-              form={estimateForm}
-              setForm={setEstimateForm}
-              rootCategories={rootCategories}
-              materials={materials}
-              projects={projects}
-              isPending={upsertEstimate.isPending}
-              onSave={saveEstimate}
-            />
-          ) : null}
-        </div>
-      ) : null}
+        ) : null}
 
-      {tab === 'margins' ? (
-        <div className="space-y-3">
-          <MarginKpis rows={margins.data ?? []} />
-          <div className="pur-pricebook-section flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-[length:var(--fs-lg)] font-semibold m-0">Phân tích Mua vào - Bán ra</h2>
-            <div className="flex flex-wrap gap-2">
-              <button type="button" className="btn btn-outline btn-sm" onClick={() => exportMarginsCsv(margins.data ?? [])}>
-                Xuất CSV
-              </button>
-              {canUpdateBook ? (
-                <button type="button" className="btn btn-primary btn-sm" onClick={() => setSellOpen(true)}>
-                  + Thêm giá bán/giá chào
-                </button>
-              ) : null}
+        {vm.tab === 'groups' ? (
+          vm.groups.isError ? (
+            <EmptyState message={getApiErrorMessage(vm.groups.error, 'Không tải được phân tích nhóm hàng.')} />
+          ) : (
+            <GroupsTable
+              loading={vm.groups.isLoading}
+              rows={vm.groups.data ?? []}
+              onCompare={id => { vm.setMatrixCategoryId(id); vm.setTab('matrix'); }}
+            />
+          )
+        ) : null}
+
+        {vm.tab === 'estimates' ? (
+          <div className="space-y-3">
+            <EstimateKpis rows={vm.estimates.data ?? []} />
+            <div className="pur-pricebook-section flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-[length:var(--fs-lg)] font-semibold m-0">Giá dự toán & Chênh lệch so với giá mua thực tế</h2>
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" variant="outlined" size="sm" onClick={() => exportEstimatesCsv(vm.estimates.data ?? [])}>
+                  Xuất CSV
+                </Button>
+                {vm.canUpdateBook ? (
+                  <Button type="button" variant="filled" size="sm" onClick={vm.openCreateEstimateModal}>
+                    + Thiết lập giá dự toán
+                  </Button>
+                ) : null}
+              </div>
             </div>
+            <EstimatesTable {...vm.estimatesTableProps} />
+            {vm.canUpdateBook ? <EstimatePriceModal {...vm.estimateModalProps} /> : null}
           </div>
-          <MarginsTable
-            loading={margins.isLoading}
-            rows={margins.data ?? []}
-            missingSell={allItems.data?.filter(i => i.latestPrice != null && !(margins.data ?? []).some(m => m.materialCode === i.materialCode)) ?? []}
-            canUpdate={canUpdateBook}
-            onEdit={row => {
-              setSellForm(f => ({
-                ...f,
-                materialCode: row.materialCode,
-                projectCode: row.projectCode ?? '',
-                sellPrice: String(row.sellPrice),
-                effectiveDate: row.effectiveDate?.slice(0, 10) || f.effectiveDate,
-              }));
-              setSellOpen(true);
-            }}
-            onAddSell={code => {
-              setSellForm(f => ({ ...f, materialCode: code, projectCode: '', sellPrice: '' }));
-              setSellOpen(true);
-            }}
-            onHistory={setDetailCode}
-          />
-          {canUpdateBook ? (
-            <SellPriceModal
-              isOpen={sellOpen}
-              onClose={() => setSellOpen(false)}
-              form={sellForm}
-              setForm={setSellForm}
-              materials={materials}
-              projects={projects}
-              isPending={upsertSell.isPending}
-              onSave={saveSell}
-            />
-          ) : null}
-        </div>
-      ) : null}
+        ) : null}
 
-      <PriceBookHistoryModal
-        detailCode={detailCode}
-        detail={detail}
-        canWriteRfq={canWriteRfq}
-        onClose={() => setDetailCode(null)}
-        onAddRfq={code => {
-          setRfqPresetCode(code);
-          setDetailCode(null);
-          setTab('rfq');
-        }}
-      />
+        {vm.tab === 'margins' ? (
+          <div className="space-y-3">
+            <MarginKpis rows={vm.margins.data ?? []} />
+            <div className="pur-pricebook-section flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-[length:var(--fs-lg)] font-semibold m-0">Phân tích Mua vào - Bán ra</h2>
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" variant="outlined" size="sm" onClick={() => exportMarginsCsv(vm.margins.data ?? [])}>
+                  Xuất CSV
+                </Button>
+                {vm.canUpdateBook ? (
+                  <Button type="button" variant="filled" size="sm" onClick={() => vm.setSellOpen(true)}>
+                    + Thêm giá bán/giá chào
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+            <MarginsTable {...vm.marginsTableProps} />
+            {vm.canUpdateBook ? <SellPriceModal {...vm.sellModalProps} /> : null}
+          </div>
+        ) : null}
 
-      {isBoss && (
-        <AdminMarkupSettingModal
-          isOpen={markupModalOpen}
-          onClose={() => setMarkupModalOpen(false)}
-          config={markupConfig}
-          onSave={saveMarkupConfig}
-          isSaving={isSavingMarkup}
-        />
-      )}
+        <PriceBookHistoryModal {...vm.historyModalProps} />
+
+        {vm.isBoss ? <AdminMarkupSettingModal {...vm.adminMarkupModalProps} /> : null}
       </SectionCard>
     </PageShell>
   );
