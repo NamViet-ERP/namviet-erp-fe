@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react';
-import PageHeader from '../../components/ui/PageHeader';
-import EmptyState from '../../components/ui/EmptyState';
+import { useId, useMemo, useState } from 'react';
+import Button from '../../components/ui/Button';
 import EntityCodeLink from '../../components/ui/EntityCodeLink';
-import TableSkeletonRows from '../../components/ui/TableSkeletonRows';
-import Pagination from '../../components/ui/Pagination';
+import PageHeader from '../../components/ui/PageHeader';
+import PageShell from '../../components/ui/PageShell';
 import SectionCard from '../../components/ui/SectionCard';
+import SelectField from '../../components/ui/SelectField';
+import TableShell from '../../components/ui/TableShell';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { formatDateCell } from '../../lib/hrm/formatters';
 import { useSupplierPriceHistory } from '../../hooks/useSupplierPoAnalytics';
@@ -31,6 +32,9 @@ export default function SupplierPriceHistoryPage() {
   const [poCode, setPoCode] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_LIST_PAGE_SIZE);
+  const materialSelectId = useId();
+  const supplierSelectId = useId();
+  const poSelectId = useId();
 
   const materialOptions = useMemo(() => {
     const byCode = new Map<string, string>();
@@ -76,7 +80,7 @@ export default function SupplierPriceHistoryPage() {
   };
 
   return (
-    <div className="page-shell sup-price-history">
+    <PageShell className="sup-price-history">
       <PageHeader
         eyebrow="Nhà cung cấp"
         title="Lịch sử giá"
@@ -99,150 +103,133 @@ export default function SupplierPriceHistoryPage() {
         <div className="hrm-list-toolbar">
           <div className="hrm-list-toolbar__filters">
             <div className="sup-analytics__filters">
-              <label className="sup-analytics__filter-field">
-                <span>Hàng hoá</span>
-                <select
-                  className="form-input form-input-md"
+              <div className="sup-analytics__filter-field">
+                <label htmlFor={materialSelectId}>Hàng hoá</label>
+                <SelectField
+                  id={materialSelectId}
+                  aria-label="Hàng hoá"
+                  selectClassName="form-input form-input-md"
                   value={materialCode}
-                  onChange={e => {
-                    setMaterialCode(e.target.value);
+                  onChange={val => {
+                    setMaterialCode(val);
                     setPage(1);
                   }}
-                >
-                  <option value="">Tất cả hàng hoá</option>
-                  {materialOptions.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              </label>
-              <label className="sup-analytics__filter-field">
-                <span>Nhà cung cấp</span>
-                <select
-                  className="form-input form-input-md"
+                  placeholder="Tất cả hàng hoá"
+                  options={materialOptions}
+                />
+              </div>
+              <div className="sup-analytics__filter-field">
+                <label htmlFor={supplierSelectId}>Nhà cung cấp</label>
+                <SelectField
+                  id={supplierSelectId}
+                  aria-label="Nhà cung cấp"
+                  selectClassName="form-input form-input-md"
                   value={supplierName}
-                  onChange={e => {
-                    setSupplierName(e.target.value);
+                  onChange={val => {
+                    setSupplierName(val);
                     setPage(1);
                   }}
-                >
-                  <option value="">Tất cả nhà cung cấp</option>
-                  {supplierOptions.map(name => (
-                    <option key={name} value={name}>{name}</option>
-                  ))}
-                </select>
-              </label>
-              <label className="sup-analytics__filter-field">
-                <span>Mã PO</span>
-                <select
-                  className="form-input form-input-md"
+                  placeholder="Tất cả nhà cung cấp"
+                  options={supplierOptions}
+                />
+              </div>
+              <div className="sup-analytics__filter-field">
+                <label htmlFor={poSelectId}>Mã PO</label>
+                <SelectField
+                  id={poSelectId}
+                  aria-label="Mã PO"
+                  selectClassName="form-input form-input-md"
                   value={poCode}
-                  onChange={e => {
-                    setPoCode(e.target.value);
+                  onChange={val => {
+                    setPoCode(val);
                     setPage(1);
                   }}
-                >
-                  <option value="">Tất cả mã PO</option>
-                  {poOptions.map(code => (
-                    <option key={code} value={code}>{code}</option>
-                  ))}
-                </select>
-              </label>
+                  placeholder="Tất cả mã PO"
+                  options={poOptions}
+                />
+              </div>
               {hasFilters ? (
                 <div className="sup-analytics__filter-actions">
-                  <button type="button" className="btn btn-ghost btn-sm" onClick={resetFilters}>
+                  <Button type="button" variant="text" size="sm" onClick={resetFilters}>
                     Xóa lọc
-                  </button>
+                  </Button>
                 </div>
               ) : null}
             </div>
           </div>
         </div>
 
-        <div className="wms-inventory-table-wrap overflow-x-auto table-scroll">
-          <table className="wms-inventory-table">
-            <thead>
-              <tr>
-                <th className="table-header-cell">Ngày PO</th>
-                <th className="table-header-cell">Hàng hoá</th>
-                <th className="table-header-cell">Nhà cung cấp</th>
-                <th className="table-header-cell text-right">Đơn giá</th>
-                <th className="table-header-cell">Mã PO</th>
-                <th className="table-header-cell">Dự án</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                <TableSkeletonRows colSpan={6} rows={8} />
-              ) : isError ? (
-                <tr>
-                  <td colSpan={6}>
-                    <EmptyState message={getApiErrorMessage(error, 'Không tải được lịch sử giá.')} />
-                  </td>
-                </tr>
-              ) : paginated.length === 0 ? (
-                <tr>
-                  <td colSpan={6}>
-                    <EmptyState
-                      message={
-                        hasFilters
-                          ? 'Không tìm thấy dòng giá phù hợp.'
-                          : 'Chưa có lịch sử giá - sẽ xuất hiện khi có dòng vật tư trên PO.'
-                      }
-                    />
-                  </td>
-                </tr>
-              ) : (
-                paginated.map(row => (
-                  <tr key={row.id}>
-                    <td className="table-cell whitespace-nowrap tabular-nums">
-                      {formatDateCell(row.orderDate)}
-                    </td>
-                    <td className="table-cell">
-                      <span className="sup-analytics__code">{row.materialCode}</span>
-                      {' '}
-                      {row.materialName}
-                    </td>
-                    <td className="table-cell">{row.supplierName}</td>
-                    <td className="table-cell text-right tabular-nums whitespace-nowrap">
-                      {formatCurrencyFull(row.unitPrice)}
-                    </td>
-                    <td className="table-cell whitespace-nowrap">
-                      <EntityCodeLink
-                        code={row.poCode}
-                        to={`/purchasing/orders/${encodeURIComponent(row.poCode)}`}
-                      />
-                    </td>
-                    <td className="table-cell">
-                      {row.projectCode ? (
-                        <EntityCodeLink
-                          code={row.projectCode}
-                          to={`/warehouse/projects/${encodeURIComponent(row.projectCode)}`}
-                        />
-                      ) : '-'}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {filtered.length > 0 && !isLoading ? (
-          <Pagination
-            embedded
-            itemLabel="dòng giá"
-            currentPage={pageSafe}
-            totalPages={totalPages}
-            onPageChange={setPage}
-            pageSize={pageSize}
-            onPageSizeChange={s => {
-              setPageSize(s);
-              setPage(1);
-            }}
-            totalItems={filtered.length}
-          />
-        ) : null}
+        <TableShell
+          tableClassName="wms-inventory-table"
+          colSpan={6}
+          loading={isLoading}
+          skeletonRows={8}
+          error={isError ? getApiErrorMessage(error, 'Không tải được lịch sử giá.') : null}
+          isEmpty={paginated.length === 0}
+          emptyMessage={
+            hasFilters
+              ? 'Không tìm thấy dòng giá phù hợp.'
+              : 'Chưa có lịch sử giá - sẽ xuất hiện khi có dòng vật tư trên PO.'
+          }
+          header={(
+            <tr>
+              <th className="table-header-cell">Ngày PO</th>
+              <th className="table-header-cell">Hàng hoá</th>
+              <th className="table-header-cell">Nhà cung cấp</th>
+              <th className="table-header-cell text-right">Đơn giá</th>
+              <th className="table-header-cell">Mã PO</th>
+              <th className="table-header-cell">Dự án</th>
+            </tr>
+          )}
+          pagination={
+            filtered.length > 0 && !isLoading
+              ? {
+                  itemLabel: 'dòng giá',
+                  currentPage: pageSafe,
+                  totalPages,
+                  onPageChange: setPage,
+                  pageSize,
+                  onPageSizeChange: s => {
+                    setPageSize(s);
+                    setPage(1);
+                  },
+                  totalItems: filtered.length,
+                }
+              : undefined
+          }
+        >
+          {paginated.map(row => (
+            <tr key={row.id}>
+              <td className="table-cell whitespace-nowrap tabular-nums">
+                {formatDateCell(row.orderDate)}
+              </td>
+              <td className="table-cell">
+                <span className="sup-analytics__code">{row.materialCode}</span>
+                {' '}
+                {row.materialName}
+              </td>
+              <td className="table-cell">{row.supplierName}</td>
+              <td className="table-cell text-right tabular-nums whitespace-nowrap">
+                {formatCurrencyFull(row.unitPrice)}
+              </td>
+              <td className="table-cell whitespace-nowrap">
+                <EntityCodeLink
+                  code={row.poCode}
+                  to={`/purchasing/orders/${encodeURIComponent(row.poCode)}`}
+                />
+              </td>
+              <td className="table-cell">
+                {row.projectCode ? (
+                  <EntityCodeLink
+                    code={row.projectCode}
+                    to={`/warehouse/projects/${encodeURIComponent(row.projectCode)}`}
+                  />
+                ) : '-'}
+              </td>
+            </tr>
+          ))}
+        </TableShell>
       </SectionCard>
-    </div>
+    </PageShell>
   );
 }

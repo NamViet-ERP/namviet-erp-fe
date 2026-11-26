@@ -1,17 +1,17 @@
-import { useState, type ReactNode } from 'react';
-import {
-  Bar, BarChart, CartesianGrid, Line, LineChart,
-  ResponsiveContainer, Tooltip, XAxis, YAxis,
-} from 'recharts';
+import { useId, useMemo, useState } from 'react';
 import { Banknote, Building2, ClipboardList, Users, Wallet, WalletCards } from 'lucide-react';
-import PageHeader from '../../components/ui/PageHeader';
-import SectionCard from '../../components/ui/SectionCard';
-import Card from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
 import EmptyState from '../../components/ui/EmptyState';
-import Skeleton from '../../components/ui/Skeleton';
+import KpiCard from '../../components/ui/KpiCard';
+import MetricsStrip from '../../components/ui/MetricsStrip';
+import PageHeader from '../../components/ui/PageHeader';
+import PageShell from '../../components/ui/PageShell';
+import SectionCard from '../../components/ui/SectionCard';
+import SelectField from '../../components/ui/SelectField';
 import { useSuppliers } from '../../hooks/useSuppliers';
 import { useSuppliersDashboard } from '../../hooks/useSupplierDirectory';
-import { formatCurrencyFull, formatCurrencyShort } from '../../utils/formatCurrency';
+import { formatCurrencyFull } from '../../utils/formatCurrency';
+import SuppliersDashboardCharts, { DashBoard } from './dashboard/SuppliersDashboardCharts';
 
 const DEFAULT_PERIOD = 'this_year';
 
@@ -23,60 +23,10 @@ const PERIOD_OPTIONS: { id: string; label: string }[] = [
   { id: 'this_year', label: 'Năm nay' },
 ];
 
-const CHART_DNTT = 'var(--nv-amber)';
-const CHART_REMAIN = 'var(--md-error)';
-const CHART_PAY = 'var(--nv-action)';
-const CHART_GRID = 'var(--table-border)';
-const CHART_TICK = {
-  fill: 'var(--md-on-surface-variant)',
-  fontSize: 12,
-  fontFamily: 'var(--font-sans)',
-} as const;
-
-function shortAxisLabel(value: unknown) {
-  const text = String(value ?? '').trim();
-  if (text.length <= 20) return text;
-  return `${text.slice(0, 19)}...`;
-}
-
-function ChartKey({ items }: { items: { color: string; label: string }[] }) {
-  return (
-    <div className="chart-legend-inline" role="list">
-      {items.map(item => (
-        <span key={item.label} className="chart-legend-inline__item" role="listitem">
-          <span className="chart-legend-inline__dot" style={{ background: item.color }} aria-hidden />
-          {item.label}
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function DashBoard({
-  title,
-  desc,
-  children,
-}: {
-  title: string;
-  desc: string;
-  children: ReactNode;
-}) {
-  return (
-    <SectionCard noPadding className="ops-projects-board">
-      <div className="ops-projects-board__head">
-        <h2 className="ops-projects-board__title">{title}</h2>
-        <p className="ops-projects-board__desc">{desc}</p>
-      </div>
-      <div className="ops-projects-board__body">
-        {children}
-      </div>
-    </SectionCard>
-  );
-}
-
 export default function SuppliersDashboardPage() {
   const [period, setPeriod] = useState(DEFAULT_PERIOD);
   const [supplierFilter, setSupplierFilter] = useState('');
+  const supplierSelectId = useId();
 
   const { data: suppliers } = useSuppliers({ all: true });
   const { data, isLoading, isError } = useSuppliersDashboard({
@@ -84,7 +34,12 @@ export default function SuppliersDashboardPage() {
     supplierId: supplierFilter ? Number(supplierFilter) : undefined,
   });
 
+  const supplierOptions = useMemo(
+    () => (suppliers?.items ?? []).map(s => ({ value: String(s.id), label: s.supplierName })),
+    [suppliers?.items],
+  );
   const hasFilters = period !== DEFAULT_PERIOD || Boolean(supplierFilter);
+  const showLoading = isLoading || !data;
 
   const resetFilters = () => {
     setPeriod(DEFAULT_PERIOD);
@@ -92,7 +47,7 @@ export default function SuppliersDashboardPage() {
   };
 
   return (
-    <div className="page-shell sup-dash">
+    <PageShell variant="dashboard" className="sup-dash">
       <PageHeader
         eyebrow="Nhà cung cấp"
         title="Dashboard"
@@ -126,23 +81,22 @@ export default function SuppliersDashboardPage() {
                 })}
               </div>
             </div>
-            <label className="ops-projects__filter-field">
-              Nhà cung cấp
-              <select
-                className="form-input form-input-md"
+            <div className="ops-projects__filter-field">
+              <label htmlFor={supplierSelectId}>Nhà cung cấp</label>
+              <SelectField
+                id={supplierSelectId}
+                aria-label="Nhà cung cấp"
+                selectClassName="form-input form-input-md"
                 value={supplierFilter}
-                onChange={e => setSupplierFilter(e.target.value)}
-              >
-                <option value="">Tất cả</option>
-                {(suppliers?.items ?? []).map(s => (
-                  <option key={s.id} value={s.id}>{s.supplierName}</option>
-                ))}
-              </select>
-            </label>
+                onChange={setSupplierFilter}
+                placeholder="Tất cả"
+                options={supplierOptions}
+              />
+            </div>
             {hasFilters ? (
-              <button type="button" className="btn btn-text" onClick={resetFilters} title="Đặt lại bộ lọc">
+              <Button type="button" variant="text" size="sm" onClick={resetFilters} title="Đặt lại bộ lọc">
                 Xóa lọc
-              </button>
+              </Button>
             ) : null}
           </div>
         </div>
@@ -152,160 +106,69 @@ export default function SuppliersDashboardPage() {
         <DashBoard title="Tổng quan nhà cung cấp" desc="Không tải được dữ liệu.">
           <EmptyState message="Không tải được dữ liệu tổng quan nhà cung cấp." />
         </DashBoard>
-      ) : isLoading || !data ? (
-        <>
-          <div className="dashboard-kpi-grid dashboard-kpi-grid--3 ops-projects-kpis">
-            <Skeleton variant="rect" height={96} />
-            <Skeleton variant="rect" height={96} />
-            <Skeleton variant="rect" height={96} />
-          </div>
-          <div className="dashboard-kpi-grid dashboard-kpi-grid--3 ops-projects-kpis">
-            <Skeleton variant="rect" height={96} />
-            <Skeleton variant="rect" height={96} />
-            <Skeleton variant="rect" height={96} />
-          </div>
-          <div className="suppliers-chart-grid">
-            <DashBoard title="Biểu đồ DNTT theo nhà cung cấp" desc="Đang tải.">
-              <Skeleton variant="rect" height={260} />
-            </DashBoard>
-            <DashBoard title="DNTT và thanh toán theo tháng" desc="Đang tải.">
-              <Skeleton variant="rect" height={260} />
-            </DashBoard>
-          </div>
-        </>
       ) : (
         <>
-          <div className="dashboard-kpi-grid dashboard-kpi-grid--3 ops-projects-kpis" role="list" aria-label="Chỉ số nhà cung cấp">
-            <Card
-              title="Nhà cung cấp"
-              value={data.supplierCount}
-              accent="info"
+          <MetricsStrip columns={3} className="ops-projects-kpis" ariaLabel="Chỉ số nhà cung cấp">
+            <KpiCard
+              label="Nhà cung cấp"
+              value={data?.supplierCount ?? 0}
+              tone="info"
               icon={Building2}
               to="/suppliers/list"
+              loading={showLoading}
             />
-            <Card
-              title="Liên hệ"
-              value={data.contactCount}
-              accent="success"
+            <KpiCard
+              label="Liên hệ"
+              value={data?.contactCount ?? 0}
+              tone="success"
               icon={Users}
               to="/suppliers/contacts"
+              loading={showLoading}
             />
-            <Card
-              title="Đơn hàng trong kỳ"
-              value={data.orderCount.toLocaleString('vi-VN')}
-              accent="warning"
+            <KpiCard
+              label="Đơn hàng trong kỳ"
+              value={data ? data.orderCount.toLocaleString('vi-VN') : 0}
+              tone="warning"
               icon={ClipboardList}
               to="/purchasing/orders"
+              loading={showLoading}
             />
-          </div>
+          </MetricsStrip>
 
-          <div className="dashboard-kpi-grid dashboard-kpi-grid--3 ops-projects-kpis" role="list" aria-label="Công nợ DNTT">
-            <Card
-              title="Đã đề nghị TT"
-              value={formatCurrencyFull(data.debtTotal)}
-              accent="amber"
+          <MetricsStrip columns={3} className="ops-projects-kpis" ariaLabel="Công nợ DNTT">
+            <KpiCard
+              label="Đã đề nghị TT"
+              value={data ? formatCurrencyFull(data.debtTotal) : ''}
+              tone="primary"
               icon={WalletCards}
               to="/suppliers/debt"
+              loading={showLoading}
             />
-            <Card
-              title="Đã thanh toán"
-              value={formatCurrencyFull(data.paymentTotal)}
-              accent="info"
+            <KpiCard
+              label="Đã thanh toán"
+              value={data ? formatCurrencyFull(data.paymentTotal) : ''}
+              tone="info"
               icon={Wallet}
               to="/suppliers/debt"
+              loading={showLoading}
             />
-            <Card
-              title="Còn phải trả"
-              value={formatCurrencyFull(data.remaining)}
-              accent={data.remaining > 0 ? 'danger' : 'success'}
+            <KpiCard
+              label="Còn phải trả"
+              value={data ? formatCurrencyFull(data.remaining) : ''}
+              tone={data && data.remaining > 0 ? 'danger' : 'success'}
               icon={Banknote}
               to="/suppliers/debt"
+              loading={showLoading}
             />
-          </div>
+          </MetricsStrip>
 
-          <div className="suppliers-chart-grid">
-            <DashBoard
-              title="Biểu đồ DNTT theo nhà cung cấp"
-              desc="Đề nghị thanh toán và số còn phải trả theo từng NCC trong kỳ."
-            >
-              <div className="suppliers-chart-box">
-                {data.debtBySupplier.length === 0 ? (
-                  <EmptyState message="Chưa có đề nghị thanh toán nào trong kỳ đã chọn." />
-                ) : (
-                  <>
-                    <ChartKey items={[
-                      { color: CHART_DNTT, label: 'Đã đề nghị TT' },
-                      { color: CHART_REMAIN, label: 'Còn phải trả' },
-                    ]} />
-                    <ResponsiveContainer width="100%" height={260}>
-                      <BarChart
-                        data={data.debtBySupplier}
-                        margin={{ top: 8, right: 8, left: 4, bottom: 8 }}
-                        barGap={4}
-                        barCategoryGap="22%"
-                      >
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={CHART_GRID} />
-                        <XAxis
-                          dataKey="supplierName"
-                          tick={CHART_TICK}
-                          interval={0}
-                          angle={-32}
-                          textAnchor="end"
-                          height={72}
-                          tickFormatter={shortAxisLabel}
-                        />
-                        <YAxis
-                          tick={CHART_TICK}
-                          tickFormatter={v => formatCurrencyShort(Number(v))}
-                          width={52}
-                        />
-                        <Tooltip
-                          formatter={(v, name) => [formatCurrencyFull(Number(v ?? 0)), String(name)]}
-                          labelFormatter={label => String(label)}
-                        />
-                        <Bar dataKey="debt" name="Đã đề nghị TT" fill={CHART_DNTT} radius={[4, 4, 0, 0]} maxBarSize={36} />
-                        <Bar dataKey="remaining" name="Còn phải trả" fill={CHART_REMAIN} radius={[4, 4, 0, 0]} maxBarSize={36} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </>
-                )}
-              </div>
-            </DashBoard>
-
-            <DashBoard
-              title="DNTT và thanh toán theo tháng"
-              desc="Đề nghị và số đã thanh toán theo từng tháng trong kỳ."
-            >
-              <div className="suppliers-chart-box">
-                {data.trend.length === 0 ? (
-                  <EmptyState message="Chưa có dữ liệu theo tháng trong kỳ đã chọn." />
-                ) : (
-                  <>
-                    <ChartKey items={[
-                      { color: CHART_DNTT, label: 'Đã đề nghị TT' },
-                      { color: CHART_PAY, label: 'Thanh toán' },
-                    ]} />
-                    <ResponsiveContainer width="100%" height={260}>
-                      <LineChart data={data.trend} margin={{ top: 8, right: 8, left: 4, bottom: 8 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} />
-                        <XAxis dataKey="month" tick={CHART_TICK} />
-                        <YAxis
-                          tick={CHART_TICK}
-                          tickFormatter={v => formatCurrencyShort(Number(v))}
-                          width={52}
-                        />
-                        <Tooltip formatter={(v, name) => [formatCurrencyFull(Number(v ?? 0)), String(name)]} />
-                        <Line type="monotone" dataKey="debt" name="Đã đề nghị TT" stroke={CHART_DNTT} strokeWidth={2} dot={false} />
-                        <Line type="monotone" dataKey="payment" name="Thanh toán" stroke={CHART_PAY} strokeWidth={2} dot={false} />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </>
-                )}
-              </div>
-            </DashBoard>
-          </div>
+          <SuppliersDashboardCharts
+            debtBySupplier={data?.debtBySupplier ?? []}
+            trend={data?.trend ?? []}
+            loading={showLoading}
+          />
         </>
       )}
-    </div>
+    </PageShell>
   );
 }

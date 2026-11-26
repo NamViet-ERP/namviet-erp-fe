@@ -783,12 +783,14 @@
 
 
 /* Đổi lọc: giữ bảng cũ, chỉ giảm opacity nhẹ thay vì skeleton (tránh giật layout). */
-.sup-ap .wms-inventory-table-wrap.is-refetching {
+.sup-ap .wms-inventory-table-wrap.is-refetching,
+.sup-ap .erp-table-shell.is-refetching .wms-inventory-table-wrap {
   opacity: 0.72;
   transition: opacity var(--md-duration-fast) var(--md-easing);
 }
 @media (prefers-reduced-motion: reduce) {
-  .sup-ap .wms-inventory-table-wrap.is-refetching {
+  .sup-ap .wms-inventory-table-wrap.is-refetching,
+  .sup-ap .erp-table-shell.is-refetching .wms-inventory-table-wrap {
     transition: none;
   }
 }
