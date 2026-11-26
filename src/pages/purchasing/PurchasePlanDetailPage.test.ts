@@ -240,7 +240,7 @@ describe('PurchasePlanDetailPage characterization', () => {
     vi.mocked(purchasePlansService.getByCode).mockResolvedValue(makePlanDetail());
     await renderPlanDetail();
 
-    expect(container.textContent).toContain('KHMH KHMH-2026-014');
+    expect(container.querySelector('.page-header__title')?.textContent?.trim()).toBe('KHMH-2026-014');
     expect(container.textContent).toContain('Nhà máy Nhiệt điện Nhơn Trạch 3');
     expect(container.textContent).toContain('Nguyễn Thị Lan Anh');
     expect(container.textContent).toContain('Cấp thép kết cấu đợt 1');
@@ -385,5 +385,12 @@ describe('PurchasePlanDetailPage characterization', () => {
     });
     await flushQueries();
     expect(purchasePlansService.update).toHaveBeenCalledWith('KHMH-2026-014', { status: 'closed' });
+  });
+
+  it('prefixes header title with KHMH only when code does not already begin with KHMH', async () => {
+    vi.mocked(purchasePlansService.getByCode).mockResolvedValue(makePlanDetail({ code: '2026-014' }));
+    await renderPlanDetail('/purchasing/plans/2026-014');
+
+    expect(container.querySelector('.page-header__title')?.textContent?.trim()).toBe('KHMH 2026-014');
   });
 });

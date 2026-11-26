@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import AppLayout from './components/layout/AppLayout';
 import PageLoader from './components/ui/PageLoader';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -15,6 +15,16 @@ const CskhModuleRoutes = lazy(() => import('./routes/CskhModuleRoutes'));
 const DevAgentation = import.meta.env.DEV
   ? lazy(() => import('agentation').then(m => ({ default: m.Agentation })))
   : () => null;
+
+function RedirectEstimateDetail() {
+  const { id } = useParams<{ id: string }>();
+  return (
+    <Navigate
+      to={id ? `/operations/estimate-procurement/${encodeURIComponent(id)}` : '/operations/estimate-procurement'}
+      replace
+    />
+  );
+}
 
 export default function App() {
   const { user } = useSession();
@@ -151,7 +161,7 @@ export default function App() {
             <Route path="/purchasing/orders/:code" element={<Pages.PurchaseOrderDetailPage />} />
             <Route path="/purchasing/price-history" element={<Pages.SupplierPriceHistoryPage />} />
             <Route path="/purchasing/estimate-procurement" element={<Navigate to="/operations/estimate-procurement" replace />} />
-            <Route path="/purchasing/estimate-procurement/:id" element={<Navigate to="/operations/estimate-procurement" replace />} />
+            <Route path="/purchasing/estimate-procurement/:id" element={<RedirectEstimateDetail />} />
             <Route path="/purchasing/price-book" element={<Navigate to="/operations/price-book" replace />} />
             <Route path="/purchasing/contracts" element={<Pages.PurchaseContractsPage />} />
             <Route path="/purchasing/documents" element={<Pages.PurchaseDocumentsPage />} />

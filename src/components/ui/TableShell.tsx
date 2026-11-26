@@ -73,9 +73,11 @@ export default function TableShell({
     }
     if (isEmpty) {
       return (
-        <tr>
-          <td colSpan={colSpan}>
-            <EmptyState message={emptyMessage} icon={emptyIcon} action={emptyAction} />
+        <tr className="erp-table-shell__empty-row">
+          <td colSpan={colSpan} className="erp-table-shell__empty-cell">
+            <div className="erp-table-shell__sticky-center">
+              <EmptyState message={emptyMessage} icon={emptyIcon} action={emptyAction} />
+            </div>
           </td>
         </tr>
       );
@@ -114,8 +116,18 @@ export default function TableShell({
     );
   };
 
+  const isStructuredEmpty = isEmpty && hasStructuredHeader && !loading && !error;
+
   return (
-    <div className={['erp-table-shell', className].filter(Boolean).join(' ')}>
+    <div
+      className={[
+        'erp-table-shell',
+        isStructuredEmpty ? 'erp-table-shell--empty' : '',
+        className,
+      ]
+        .filter(Boolean)
+        .join(' ')}
+    >
       <div className={scrollCls}>
         {hasStructuredHeader ? (
           <table className={resolvedTableCls}>

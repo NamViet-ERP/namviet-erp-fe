@@ -44,7 +44,7 @@ export default function PurchaseContractsTable({
         <tr>
           <th className="table-header-cell pur-contracts-col-code">Mã</th>
           <th className="table-header-cell pur-contracts-col-no">Số HĐ</th>
-          <th className="table-header-cell">Tiêu đề</th>
+          <th className="table-header-cell min-w-[14rem]">Tiêu đề</th>
           <th className="table-header-cell">NCC</th>
           <th className="table-header-cell pur-contracts-col-po">PO / Dự án</th>
           <th className="table-header-cell pur-contracts-col-date">Hiệu lực từ</th>

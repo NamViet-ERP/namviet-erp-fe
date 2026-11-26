@@ -495,7 +495,7 @@ describe('PurchaseEstimateProcurementPage characterization', () => {
       ],
     });
     expect(showToast).toHaveBeenCalledWith('success', 'Đã tạo DT-2026-021.');
-    expect(mockNavigate).toHaveBeenCalledWith('/purchasing/estimate-procurement/est-new-01');
+    expect(mockNavigate).toHaveBeenCalledWith('/operations/estimate-procurement/est-new-01');
   });
 
   it('triggers row action menu items for draft, pending_approval, and approved estimates', async () => {

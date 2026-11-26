@@ -12,6 +12,12 @@ import PurchasePlanDetailLinesTable from './plans/PurchasePlanDetailLinesTable';
 import RelatedPurchaseOrdersCard from './plans/RelatedPurchaseOrdersCard';
 import { usePurchasePlanDetailController } from './plans/usePurchasePlanDetailController';
 
+function formatPlanTitle(code?: string): string {
+  const trimmed = code?.trim();
+  if (!trimmed) return 'Chi tiết KHMH';
+  return /^khmh([\s_-]|$)/i.test(trimmed) ? trimmed : `KHMH ${trimmed}`;
+}
+
 /** Chi tiết KHMH — header kiểu HR + meta/tổng tiền căn chỉnh + bảng dòng. */
 export default function PurchasePlanDetailPage() {
   const vm = usePurchasePlanDetailController();
@@ -27,7 +33,7 @@ export default function PurchasePlanDetailPage() {
           variant="detail"
           onBack={vm.back}
           breadcrumbs={[...baseBreadcrumbs, { label: vm.code || 'Chi tiết' }]}
-          title={vm.code ? `KHMH ${vm.code}` : 'Chi tiết KHMH'}
+          title={formatPlanTitle(vm.code)}
         />
         <EmptyState
           message={getApiErrorMessage(vm.error, 'Không tải được chi tiết KHMH.')}
@@ -48,7 +54,7 @@ export default function PurchasePlanDetailPage() {
           variant="detail"
           onBack={vm.back}
           breadcrumbs={[...baseBreadcrumbs, { label: vm.code || 'Chi tiết' }]}
-          title={vm.code ? `KHMH ${vm.code}` : 'Chi tiết KHMH'}
+          title={formatPlanTitle(vm.code)}
         />
         <section className="pur-detail__card">
           <TableShell loading skeletonRows={6} colSpan={4} tableClassName="pur-erp__table" />
@@ -66,7 +72,7 @@ export default function PurchasePlanDetailPage() {
         variant="detail"
         onBack={vm.back}
         breadcrumbs={[...baseBreadcrumbs, { label: plan.code }]}
-        title={`KHMH ${plan.code}`}
+        title={formatPlanTitle(plan.code)}
         subtitle={projectSubtitle}
         actions={(
           <PurchasePlanDetailActions

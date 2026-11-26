@@ -313,6 +313,9 @@ describe('Design System UI primitives', () => {
           }),
         ),
       );
+      expect(container.querySelector('.erp-table-shell--empty')).not.toBeNull();
+      expect(container.querySelector('.erp-table-shell__empty-cell')).not.toBeNull();
+      expect(container.querySelector('.erp-table-shell__sticky-center')).not.toBeNull();
       expect(container.querySelector('.empty-state__message')?.textContent).toBe(
         'Chưa có vật tư tồn kho trong Dự án Cầu Rạch Miễu 2.',
       );
@@ -360,6 +363,7 @@ describe('Design System UI primitives', () => {
         ),
       );
 
+      expect(container.querySelector('.erp-table-shell--empty')).toBeNull();
       expect(container.textContent).toContain('Thép hộp 50x100x2mm');
       expect(container.textContent).toContain('Xi măng Hà Tiên PCB40');
       expect(container.querySelector('tfoot')?.textContent).toContain('Tổng cộng: 2 dòng vật tư');

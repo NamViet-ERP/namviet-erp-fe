@@ -90,7 +90,7 @@ export function useEstimateProcurementController() {
       {
         label: 'Xem chi tiết',
         icon: Eye,
-        onClick: () => navigate(`/purchasing/estimate-procurement/${row.id}`),
+        onClick: () => navigate(`/operations/estimate-procurement/${encodeURIComponent(row.id)}`),
       },
     ];
     if (canUpdateEstimate && canSubmitEstimate(row.status)) {
@@ -134,7 +134,7 @@ export function useEstimateProcurementController() {
       const created = await createMutation.mutateAsync(body);
       showToast('success', `Đã tạo ${created.code}.`);
       setCreating(false);
-      navigate(`/purchasing/estimate-procurement/${created.id}`);
+      navigate(`/operations/estimate-procurement/${encodeURIComponent(created.id)}`);
     } catch (err) {
       showToast('error', getApiErrorMessage(err, 'Không tạo được dự toán.'));
     }

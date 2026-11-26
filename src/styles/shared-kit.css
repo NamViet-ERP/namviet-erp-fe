@@ -839,11 +839,20 @@
     margin-left: auto;
     flex-shrink: 0;
   }
+  .erp-filter-toolbar .form-field__error--reserved,
+  .hrm-list-toolbar .form-field__error--reserved,
+  .pur-erp__toolbar-fields .form-field__error--reserved,
+  .pur-erp__field .form-field__error--reserved {
+    display: none;
+  }
 
   .erp-table-shell {
     display: flex;
     flex-direction: column;
     min-width: 0;
+  }
+  .erp-table-shell--empty {
+    container-type: inline-size;
   }
   .erp-table-shell__scroll {
     overflow-x: auto;
@@ -852,6 +861,15 @@
   }
   .erp-table-shell__table {
     width: 100%;
+  }
+  .erp-table-shell__empty-cell {
+    padding: 0;
+  }
+  .erp-table-shell__sticky-center {
+    position: sticky;
+    left: 0;
+    width: 100cqi;
+    max-width: 100%;
   }
   .erp-table-shell__footer {
     border-top: 1px solid var(--md-outline-variant02);
