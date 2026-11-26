@@ -1,5 +1,6 @@
 import type React from 'react';
 import { useState } from 'react';
+import Button from '../ui/Button';
 import Modal from '../ui/Modal';
 import AdminPasswordField from './AdminPasswordField';
 import { showToast } from '../ui/Toast';
@@ -55,15 +56,15 @@ export default function AdminResetPasswordModal({ user, onClose }: AdminResetPas
       size="sm"
       footer={
         <>
-          <button type="button" className="btn btn-outline" onClick={close}>Hủy</button>
-          <button
+          <Button type="button" variant="outlined" onClick={close}>Hủy</Button>
+          <Button
             type="button"
-            className="btn btn-primary"
+            variant="filled"
             disabled={resetMutation.isPending}
             onClick={() => void handleResetPassword()}
           >
             {resetMutation.isPending ? 'Đang lưu...' : 'Lưu mật khẩu mới'}
-          </button>
+          </Button>
         </>
       }
     >

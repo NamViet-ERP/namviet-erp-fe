@@ -1,5 +1,6 @@
 import type React from 'react';
 import { useEffect, useState } from 'react';
+import Button from '../ui/Button';
 import Modal from '../ui/Modal';
 import FormField from '../ui/FormField';
 import HrmSelect from '../hr/HrmSelect';
@@ -107,17 +108,17 @@ export default function AdminCreateSystemUserModal({
       headerCompact
       footer={
         <>
-          <button type="button" className="btn btn-outline" onClick={close}>
+          <Button type="button" variant="outlined" onClick={close}>
             Hủy
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className="btn btn-primary"
+            variant="filled"
             disabled={createMutation.isPending}
             onClick={() => void handleCreate()}
           >
             {createMutation.isPending ? 'Đang lưu...' : 'Thêm'}
-          </button>
+          </Button>
         </>
       }
     >

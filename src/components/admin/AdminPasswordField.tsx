@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Copy, Check, Eye, EyeOff, RefreshCw } from 'lucide-react';
+import Button from '../ui/Button';
 import { showToast } from '../ui/Toast';
 import { generateTempPassword } from '../../lib/generatePassword';
 import { PASSWORD_HINT } from '../../lib/translateErrorMessage';
@@ -64,24 +65,28 @@ export default function AdminPasswordField({
             {show ? <EyeOff size={16} aria-hidden /> : <Eye size={16} aria-hidden />}
           </button>
         </div>
-        <button
+        <Button
           type="button"
-          className="btn btn-outline px-3"
+          variant="outlined"
+          size="md"
+          className="px-3"
           onClick={handleGenerate}
           aria-label="Sinh mật khẩu ngẫu nhiên"
           title="Sinh mật khẩu ngẫu nhiên"
         >
           <RefreshCw size={16} aria-hidden />
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className="btn btn-outline px-3"
+          variant="outlined"
+          size="md"
+          className="px-3"
           onClick={handleCopy}
           aria-label="Sao chép mật khẩu"
           title="Sao chép mật khẩu"
         >
           {copied ? <Check size={16} aria-hidden /> : <Copy size={16} aria-hidden />}
-        </button>
+        </Button>
       </div>
     </FormField>
   );

@@ -1,7 +1,9 @@
 import type React from 'react';
 import { useState } from 'react';
+import Button from '../ui/Button';
 import Modal from '../ui/Modal';
 import FormField from '../ui/FormField';
+import SelectField from '../ui/SelectField';
 import AdminPasswordField from './AdminPasswordField';
 import { showToast } from '../ui/Toast';
 import { validatePassword } from '../../lib/validatePassword';
@@ -72,15 +74,15 @@ export default function AdminProvisionAccountModal({
       size="xl"
       footer={
         <>
-          <button type="button" className="btn btn-outline" onClick={close}>Hủy</button>
-          <button
+          <Button type="button" variant="outlined" onClick={close}>Hủy</Button>
+          <Button
             type="button"
-            className="btn btn-primary"
+            variant="filled"
             disabled={provisionMutation.isPending}
             onClick={() => void handleProvision()}
           >
             {provisionMutation.isPending ? 'Đang lưu...' : 'Cấp tài khoản'}
-          </button>
+          </Button>
         </>
       }
     >
@@ -108,17 +110,15 @@ export default function AdminProvisionAccountModal({
               <input className="form-input" value={user.position} readOnly />
             </FormField>
           </div>
-          <FormField label="Vai trò hệ thống" required>
-            <select
-              className="form-select"
-              value={provisionRole}
-              onChange={e => setProvisionRole(e.target.value as SystemUserRole)}
-            >
-              {roleOptions.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </FormField>
+          <SelectField
+            variant="form"
+            label="Vai trò hệ thống"
+            required
+            aria-label="Vai trò hệ thống"
+            value={provisionRole}
+            onChange={v => setProvisionRole(v as SystemUserRole)}
+            options={roleOptions}
+          />
           <AdminPasswordField
             value={provisionPassword}
             onChange={v => { setProvisionPassword(v); setProvisionErrors(e => ({ ...e, password: '' })); }}

@@ -1,526 +1,134 @@
-import type React from 'react';
-import { useState } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { KeyRound, Pencil, UserPlus } from 'lucide-react';
-import PageHeader, { BackButton } from '../../components/ui/PageHeader';
-import SectionCard from '../../components/ui/SectionCard';
+import AdminProvisionAccountModal from '../../components/admin/AdminProvisionAccountModal';
+import AdminResetPasswordModal from '../../components/admin/AdminResetPasswordModal';
 import HrmNotFound, { HrmLoadingState } from '../../components/hr/HrmNotFound';
-import Modal from '../../components/ui/Modal';
-import FormField from '../../components/ui/FormField';
+import Button from '../../components/ui/Button';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
-import AdminPasswordField from '../../components/admin/AdminPasswordField';
-import AdminAccountSwitch from '../../components/admin/AdminAccountSwitch';
-import HrmSelect from '../../components/hr/HrmSelect';
-import { validatePassword } from '../../lib/validatePassword';
-import { showToast } from '../../components/ui/Toast';
-import {
-  useAdminUser,
-  useChangeAdminUserRole,
-  useProvisionAdminAccount,
-  useResetAdminPassword,
-  useToggleAdminUserStatus,
-  useUpdateAdminUserProfile,
-} from '../../hooks/useAdminUsers';
-import { useActiveRoleOptions } from '../../hooks/useRoles';
-import { formatAdminDateCell } from '../../lib/hrm/formatters';
-import { getApiErrorMessage } from '../../lib/apiClient';
-import type { AdminUserRow, AdminUserSource } from '../../services/adminUsersService';
-import { type SystemUserRole } from '../../constants/systemUsers';
-import { getSessionUser } from '../../constants/systemUsers';
-import { isCurrentAdminUserRow } from '../../lib/admin/isCurrentAdminUser';
-
-function parseSource(value: string | null): AdminUserSource {
-  return value === 'manual' ? 'manual' : 'employee';
-}
-
-function dash(value?: string): string {
-  if (!value || value === '—' || value.trim() === '') return '-';
-  return value;
-}
-
-function statusBadgeClass(user: AdminUserRow): string {
-  if (!user.hasAccount) return 'badge badge-pending';
-  return user.isActive ? 'badge badge-success' : 'badge badge-error';
-}
+import PageHeader, { BackButton } from '../../components/ui/PageHeader';
+import PageShell from '../../components/ui/PageShell';
+import AdminUserDetailBoard from './users/AdminUserDetailBoard';
+import { useAdminUserDetailController } from './users/useAdminUserDetailController';
 
 export default function AdminUserDetailPage() {
-  const { id } = useParams<{ id: string }>();
-  const [searchParams] = useSearchParams();
-  const source = parseSource(searchParams.get('source'));
-  const navigate = useNavigate();
+  const vm = useAdminUserDetailController();
 
-  const { data: user, isLoading, isError } = useAdminUser(id, source);
-  const { data: roleOptions = [] } = useActiveRoleOptions();
-  const provisionMutation = useProvisionAdminAccount();
-  const resetMutation = useResetAdminPassword();
-  const toggleMutation = useToggleAdminUserStatus();
-  const changeRoleMutation = useChangeAdminUserRole();
-  const updateProfileMutation = useUpdateAdminUserProfile();
-
-  const [showProvision, setShowProvision] = useState(false);
-  const [provisionRole, setProvisionRole] = useState<SystemUserRole>('storekeeper');
-  const [provisionPassword, setProvisionPassword] = useState('');
-  const [provisionErrors, setProvisionErrors] = useState<Record<string, string>>({});
-
-  const [showReset, setShowReset] = useState(false);
-  const [resetPassword, setResetPassword] = useState('');
-  const [resetError, setResetError] = useState('');
-
-  const [selectedRole, setSelectedRole] = useState('');
-  const [prevRoleCode, setPrevRoleCode] = useState<string | undefined>(undefined);
-
-  const [lockConfirmOpen, setLockConfirmOpen] = useState(false);
-
-  const [editingProfile, setEditingProfile] = useState(false);
-  const [editName, setEditName] = useState('');
-  const [editEmail, setEditEmail] = useState('');
-  const [profileErrors, setProfileErrors] = useState<Record<string, string>>({});
-
-  const sessionUser = getSessionUser();
-
-  if (user?.roleCode !== prevRoleCode) {
-    setPrevRoleCode(user?.roleCode);
-    setSelectedRole(user?.roleCode ?? '');
-  }
-
-  if (isLoading) {
+  if (vm.isLoading) {
     return (
-      <div className="hrm-page admin-user-detail-page">
+      <PageShell variant="detail" className="hrm-page admin-user-detail-page">
         <HrmLoadingState />
-      </div>
+      </PageShell>
     );
   }
-  if (isError || !user) {
+  if (vm.isError || !vm.user) {
     return (
       <HrmNotFound
         message="Không tìm thấy người dùng."
-        onBack={() => navigate('/admin/users')}
+        onBack={vm.goBack}
       />
     );
   }
 
-  const subtitle = user.employeeCode !== '—'
-    ? `Mã NV: ${user.employeeCode}`
-    : source === 'manual'
-      ? 'Tài khoản hệ thống'
-      : 'Chưa có mã nhân viên';
-
-  const isSelfAccount = isCurrentAdminUserRow(sessionUser, user);
-  const roleDirty = Boolean(user.hasAccount && selectedRole && selectedRole !== user.roleCode);
-  const canEditProfile = source === 'manual' && user.hasAccount;
-
-  const startEditProfile = () => {
-    setEditName(user.fullName === '—' ? '' : user.fullName);
-    setEditEmail(user.email === '—' ? '' : user.email);
-    setProfileErrors({});
-    setEditingProfile(true);
-  };
-
-  const cancelEditProfile = () => {
-    setEditingProfile(false);
-    setProfileErrors({});
-  };
-
-  const handleSaveProfile = async () => {
-    const name = editName.trim();
-    const email = editEmail.trim().toLowerCase();
-    const nextErrors: Record<string, string> = {};
-    if (!name) nextErrors.name = 'Họ tên là bắt buộc.';
-    if (!email || !email.includes('@')) nextErrors.email = 'Email không hợp lệ.';
-    setProfileErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
-
-    try {
-      await updateProfileMutation.mutateAsync({
-        toggleId: user.toggleId,
-        source,
-        name,
-        email,
-      });
-      showToast('success', 'Đã cập nhật hồ sơ tài khoản');
-      setEditingProfile(false);
-    } catch (err) {
-      showToast('error', getApiErrorMessage(err, 'Không cập nhật được hồ sơ'));
-    }
-  };
-
-  const handleToggle = async (next: boolean) => {
-    if (!user.hasAccount) return;
-    if (!user.canToggle) {
-      showToast('warning', 'Nhân viên đã nghỉ việc, không thể bật tài khoản');
-      return;
-    }
-    if (!next && isSelfAccount) {
-      showToast('warning', 'Không thể khóa tài khoản đang đăng nhập.');
-      return;
-    }
-    if (!next) {
-      setLockConfirmOpen(true);
-      return;
-    }
-    try {
-      await toggleMutation.mutateAsync({
-        toggleId: user.toggleId,
-        enabled: next,
-        source: user.source,
-      });
-      showToast('success', 'Đã bật tài khoản');
-    } catch (err) {
-      showToast('error', getApiErrorMessage(err, 'Không thể thay đổi trạng thái'));
-    }
-  };
-
-  const handleLockConfirm = async () => {
-    try {
-      await toggleMutation.mutateAsync({
-        toggleId: user.toggleId,
-        enabled: false,
-        source: user.source,
-      });
-      showToast('success', 'Đã khóa tài khoản');
-      setLockConfirmOpen(false);
-    } catch (err) {
-      showToast('error', getApiErrorMessage(err, 'Không thể thay đổi trạng thái'));
-    }
-  };
-
-  const handleChangeRole = async () => {
-    if (!user.hasAccount || !selectedRole || selectedRole === user.roleCode) return;
-    try {
-      await changeRoleMutation.mutateAsync({
-        toggleId: user.toggleId,
-        source: user.source,
-        role: selectedRole,
-      });
-      showToast('success', 'Đã cập nhật vai trò');
-    } catch (err) {
-      showToast('error', getApiErrorMessage(err, 'Không thể đổi vai trò'));
-    }
-  };
-
-  const handleProvision = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    const next: Record<string, string> = {};
-    const passErr = validatePassword(provisionPassword);
-    if (passErr) next.password = passErr;
-    setProvisionErrors(next);
-    if (Object.keys(next).length > 0) {
-      showToast('warning', passErr ?? 'Vui lòng kiểm tra lại mật khẩu');
-      return;
-    }
-
-    try {
-      await provisionMutation.mutateAsync({
-        employeeId: user.id,
-        role: provisionRole,
-        password: provisionPassword,
-      });
-      showToast('success', `Đã cấp tài khoản cho ${user.fullName}`);
-      setShowProvision(false);
-      setProvisionPassword('');
-    } catch (err) {
-      showToast('error', getApiErrorMessage(err, 'Không thể cấp tài khoản'));
-    }
-  };
-
-  const handleReset = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!user.accountUserId) return;
-    const passErr = validatePassword(resetPassword);
-    if (passErr) {
-      setResetError(passErr);
-      showToast('warning', passErr);
-      return;
-    }
-    try {
-      await resetMutation.mutateAsync({
-        accountUserId: user.accountUserId,
-        password: resetPassword,
-      });
-      showToast('success', 'Đã đặt lại mật khẩu');
-      setShowReset(false);
-      setResetPassword('');
-    } catch (err) {
-      showToast('error', getApiErrorMessage(err, 'Không thể đặt lại mật khẩu'));
-    }
-  };
-
-  const toggleTitle = user.isActive && isSelfAccount
-    ? 'Không thể khóa tài khoản đang đăng nhập'
-    : !user.canToggle
-      ? 'Nhân viên đã nghỉ việc'
-      : user.isActive
-        ? 'Khóa tài khoản'
-        : 'Mở khóa tài khoản';
-
-  const toggleHint = !user.canToggle
-    ? 'Nhân viên đã nghỉ việc, không thể bật tài khoản.'
-    : user.isActive && isSelfAccount
-      ? 'Không thể khóa tài khoản đang đăng nhập.'
-      : null;
+  const { user } = vm;
 
   return (
-    <div className="hrm-page admin-user-detail-page">
+    <PageShell variant="detail" className="hrm-page admin-user-detail-page">
       <div className="admin-user-detail-chrome">
-        <BackButton onBack={() => navigate('/admin/users')} />
+        <BackButton onBack={vm.goBack} />
         <PageHeader
           title={user.fullName}
-          subtitle={subtitle}
+          subtitle={vm.subtitle}
           actions={
             <div className="flex flex-wrap items-center gap-2">
               {user.canProvision && (
-                <button
+                <Button
                   type="button"
-                  className="btn btn-primary flex items-center gap-2"
-                  onClick={() => setShowProvision(true)}
+                  variant="filled"
+                  leftIcon={UserPlus}
+                  onClick={() => vm.setShowProvision(true)}
                 >
-                  <UserPlus size={16} aria-hidden />
                   Cấp tài khoản
-                </button>
+                </Button>
               )}
-              {canEditProfile && !editingProfile ? (
-                <button
+              {vm.canEditProfile && !vm.editingProfile ? (
+                <Button
                   type="button"
-                  className="btn btn-outline flex items-center gap-2"
-                  onClick={startEditProfile}
+                  variant="outlined"
+                  leftIcon={Pencil}
+                  onClick={vm.startEditProfile}
                 >
-                  <Pencil size={16} aria-hidden />
                   Chỉnh sửa
-                </button>
+                </Button>
               ) : null}
               {user.hasAccount && user.accountUserId && (
-                <button
+                <Button
                   type="button"
-                  className="btn btn-outline flex items-center gap-2"
-                  onClick={() => setShowReset(true)}
+                  variant="outlined"
+                  leftIcon={KeyRound}
+                  onClick={() => vm.setShowReset(true)}
                 >
-                  <KeyRound size={16} aria-hidden />
                   Đặt lại MK
-                </button>
+                </Button>
               )}
             </div>
           }
         />
       </div>
 
-      <SectionCard noPadding className="admin-user-detail-board">
-        <header className="admin-user-detail-board__head">
-          <h2 className="admin-user-detail-board__title">Tài khoản hệ thống</h2>
-          <span className={statusBadgeClass(user)}>{user.statusLabel}</span>
-        </header>
+      <AdminUserDetailBoard
+        user={user}
+        source={vm.source}
+        roleOptions={vm.roleOptions}
+        editingProfile={vm.editingProfile}
+        editName={vm.editName}
+        editEmail={vm.editEmail}
+        profileErrors={vm.profileErrors}
+        isSavingProfile={vm.isSavingProfile}
+        onEditNameChange={vm.setEditName}
+        onEditEmailChange={vm.setEditEmail}
+        onCancelEditProfile={vm.cancelEditProfile}
+        onSaveProfile={() => void vm.handleSaveProfile()}
+        selectedRole={vm.selectedRole}
+        roleDirty={vm.roleDirty}
+        isToggling={vm.isToggling}
+        isChangingRole={vm.isChangingRole}
+        toggleTitle={vm.toggleTitle}
+        toggleHint={vm.toggleHint}
+        onToggle={next => void vm.handleToggle(next)}
+        onSelectedRoleChange={vm.setSelectedRole}
+        onChangeRole={() => void vm.handleChangeRole()}
+      />
 
-        {editingProfile ? (
-          <div className="admin-user-detail-profile-edit">
-            <FormField label="Họ tên" required error={profileErrors.name}>
-              <input
-                id="admin-user-edit-name"
-                className="form-input"
-                value={editName}
-                onChange={e => setEditName(e.target.value)}
-                disabled={updateProfileMutation.isPending}
-                autoComplete="name"
-              />
-            </FormField>
-            <FormField label="Email đăng nhập" required error={profileErrors.email}>
-              <input
-                id="admin-user-edit-email"
-                type="email"
-                className="form-input"
-                value={editEmail}
-                onChange={e => setEditEmail(e.target.value)}
-                disabled={updateProfileMutation.isPending}
-                autoComplete="email"
-              />
-            </FormField>
-            <div className="admin-user-detail-profile-edit__actions">
-              <button
-                type="button"
-                className="btn btn-outline"
-                disabled={updateProfileMutation.isPending}
-                onClick={cancelEditProfile}
-              >
-                Hủy
-              </button>
-              <button
-                type="button"
-                className="btn btn-primary"
-                disabled={updateProfileMutation.isPending}
-                onClick={() => void handleSaveProfile()}
-              >
-                {updateProfileMutation.isPending ? 'Đang lưu...' : 'Lưu'}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <dl
-            className={
-              source === 'manual'
-                ? 'admin-user-detail-facts admin-user-detail-facts--cols-4'
-                : 'admin-user-detail-facts admin-user-detail-facts--cols-3'
-            }
-          >
-            <div>
-              <dt>Họ tên</dt>
-              <dd>{dash(user.fullName)}</dd>
-            </div>
-            <div>
-              <dt>Email đăng nhập</dt>
-              <dd className="admin-user-detail-facts__mono">{dash(user.email)}</dd>
-            </div>
-            <div>
-              <dt>Loại</dt>
-              <dd>{source === 'manual' ? 'Tài khoản hệ thống' : 'Nhân viên HR'}</dd>
-            </div>
-            {source === 'employee' ? (
-              <>
-                <div>
-                  <dt>Số điện thoại</dt>
-                  <dd>{dash(user.phone)}</dd>
-                </div>
-                <div>
-                  <dt>Bộ phận</dt>
-                  <dd>{dash(user.department)}</dd>
-                </div>
-                <div>
-                  <dt>Chức vụ</dt>
-                  <dd>{dash(user.position)}</dd>
-                </div>
-              </>
-            ) : null}
-            <div>
-              <dt>{source === 'manual' ? 'Ngày tạo' : 'Ngày tạo / vào làm'}</dt>
-              <dd className="tabular-nums">{dash(formatAdminDateCell(user.createdAt))}</dd>
-            </div>
-          </dl>
-        )}
-
-        {user.hasAccount ? (
-          <div
-            className={
-              source === 'manual'
-                ? 'admin-user-detail-actions admin-user-detail-actions--cols-4'
-                : 'admin-user-detail-actions admin-user-detail-actions--cols-3'
-            }
-          >
-            <div className="admin-user-detail-actions__block">
-              <span className="admin-user-detail-actions__label">Tài khoản</span>
-              <div className="admin-user-detail-actions__row">
-                <AdminAccountSwitch
-                  checked={user.isActive}
-                  disabled={toggleMutation.isPending || !user.canToggle}
-                  onChange={handleToggle}
-                  title={toggleTitle}
-                />
-              </div>
-              {toggleHint && (
-                <p className="admin-user-detail-actions__hint">{toggleHint}</p>
-              )}
-            </div>
-
-            <div className="admin-user-detail-actions__block">
-              <div className="admin-user-detail-role">
-                <span className="admin-user-detail-actions__label" id="admin-user-role-label">Vai trò</span>
-                <div className="admin-user-detail-actions__row">
-                  <HrmSelect
-                    aria-label="Vai trò"
-                    value={selectedRole}
-                    onChange={setSelectedRole}
-                    options={roleOptions}
-                    allowEmpty={false}
-                    disabled={changeRoleMutation.isPending}
-                  />
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    disabled={changeRoleMutation.isPending || !roleDirty}
-                    onClick={() => void handleChangeRole()}
-                  >
-                    {changeRoleMutation.isPending ? 'Đang lưu...' : 'Lưu vai trò'}
-                  </button>
-                </div>
-                {roleDirty && (
-                  <p className="admin-user-detail-actions__hint admin-user-detail-actions__dirty">
-                    Chưa lưu
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        ) : (
-          <p className="admin-user-detail-pending">
-            Chưa có tài khoản hệ thống.
-            {user.canProvision ? ' Dùng Cấp tài khoản ở trên để tạo.' : ''}
-          </p>
-        )}
-      </SectionCard>
-
-      <Modal
-        isOpen={showProvision}
-        onClose={() => { setShowProvision(false); setProvisionPassword(''); setProvisionErrors({}); }}
-        title="Cấp tài khoản"
-        size="md"
-        footer={
-          <>
-            <button type="button" className="btn btn-outline" onClick={() => setShowProvision(false)}>Hủy</button>
-            <button type="button" className="btn btn-primary" disabled={provisionMutation.isPending} onClick={() => void handleProvision()}>
-              {provisionMutation.isPending ? 'Đang lưu...' : 'Cấp tài khoản'}
-            </button>
-          </>
-        }
-      >
-        <form id="admin-detail-provision-form" onSubmit={handleProvision} className="space-y-4 modal-form-bordered">
-          <FormField label="Vai trò hệ thống" required>
-            <select className="form-select" value={provisionRole} onChange={e => setProvisionRole(e.target.value as SystemUserRole)}>
-              {roleOptions.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </FormField>
-          <AdminPasswordField value={provisionPassword} onChange={setProvisionPassword} error={provisionErrors.password} />
-        </form>
-      </Modal>
-
-      <Modal
-        isOpen={showReset}
-        onClose={() => { setShowReset(false); setResetPassword(''); setResetError(''); }}
-        title="Đặt lại mật khẩu"
-        size="sm"
-        footer={
-          <>
-            <button type="button" className="btn btn-outline" onClick={() => setShowReset(false)}>Hủy</button>
-            <button type="button" className="btn btn-primary" disabled={resetMutation.isPending} onClick={() => void handleReset()}>
-              {resetMutation.isPending ? 'Đang lưu...' : 'Lưu mật khẩu mới'}
-            </button>
-          </>
-        }
-      >
-        <form id="admin-detail-reset-form" onSubmit={handleReset} className="space-y-4 modal-form-bordered">
-          <AdminPasswordField
-            value={resetPassword}
-            onChange={v => { setResetPassword(v); setResetError(''); }}
-            error={resetError}
-            label="Mật khẩu mới"
-          />
-        </form>
-      </Modal>
+      <AdminProvisionAccountModal
+        key={vm.showProvision ? `provision-${user.id}` : 'provision-closed'}
+        user={vm.showProvision ? user : null}
+        onClose={() => vm.setShowProvision(false)}
+        roleOptions={vm.roleOptions}
+      />
+      <AdminResetPasswordModal
+        key={vm.showReset ? `reset-${user.id}` : 'reset-closed'}
+        user={vm.showReset ? user : null}
+        onClose={() => vm.setShowReset(false)}
+      />
 
       <ConfirmDialog
-        isOpen={lockConfirmOpen}
-        onClose={() => setLockConfirmOpen(false)}
-        onConfirm={() => void handleLockConfirm()}
+        isOpen={vm.lockConfirmOpen}
+        onClose={() => vm.setLockConfirmOpen(false)}
+        onConfirm={() => void vm.handleLockConfirm()}
         title="Khóa tài khoản"
         message={
           <>
             Bạn có chắc muốn khóa tài khoản{' '}
             <strong className="confirm-dialog__emphasis">{user.fullName}</strong>?
             <br />
-            <span className="confirm-dialog__subtext">Người dùng sẽ không thể đăng nhập cho đến khi được mở khóa.</span>
+            <span className="confirm-dialog__subtext">
+              Người dùng sẽ không thể đăng nhập cho đến khi được mở khóa.
+            </span>
           </>
         }
         confirmLabel="Khóa tài khoản"
         cancelLabel="Hủy"
-        isLoading={toggleMutation.isPending}
+        isLoading={vm.isToggling}
       />
-    </div>
+    </PageShell>
   );
 }
