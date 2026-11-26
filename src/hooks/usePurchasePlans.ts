@@ -11,10 +11,15 @@ import type {
   UpdatePurchasePlanRequest,
 } from '../types/api/purchasingApi';
 
-export function usePurchasePlans(params: PurchasePlanListParams = {}) {
+export function usePurchasePlans(
+  params: PurchasePlanListParams = {},
+  options?: { enabled?: boolean; staleTime?: number },
+) {
   return useQuery({
     queryKey: [...queryKeys.purchasePlans.all, params] as const,
     queryFn: () => purchasePlansService.list(params),
+    enabled: options?.enabled,
+    staleTime: options?.staleTime,
   });
 }
 

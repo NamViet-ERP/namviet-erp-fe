@@ -8,10 +8,15 @@ import type {
 import { projectsService, type ProjectListParams } from '../services/projectsService';
 import { queryKeys } from '../services/queryKeys';
 
-export function useProjects(params: ProjectListParams = {}) {
+export function useProjects(
+  params: ProjectListParams = {},
+  options?: { enabled?: boolean; staleTime?: number },
+) {
   return useQuery({
     queryKey: [...queryKeys.projects.all, params] as const,
     queryFn: () => projectsService.list(params),
+    enabled: options?.enabled,
+    staleTime: options?.staleTime,
   });
 }
 

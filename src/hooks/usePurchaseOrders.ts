@@ -9,10 +9,15 @@ import type {
   UpdatePurchaseOrderRequest,
 } from '../types/api/purchasingApi';
 
-export function usePurchaseOrders(params: PurchaseOrderListParams = {}) {
+export function usePurchaseOrders(
+  params: PurchaseOrderListParams = {},
+  options?: { enabled?: boolean; staleTime?: number },
+) {
   return useQuery({
     queryKey: [...queryKeys.purchaseOrders.all, params] as const,
     queryFn: () => purchaseOrdersService.list(params),
+    enabled: options?.enabled,
+    staleTime: options?.staleTime,
   });
 }
 

@@ -8,12 +8,13 @@ import type { CreatePurchasePaymentRequest } from '../types/api/poPaymentApi';
 
 export function usePurchasePayments(
   params: PurchasePaymentListParams = {},
-  options?: { enabled?: boolean },
+  options?: { enabled?: boolean; staleTime?: number },
 ) {
   return useQuery({
     queryKey: [...queryKeys.purchasePayments.all, params] as const,
     queryFn: () => purchasePaymentsService.list(params),
     enabled: options?.enabled,
+    staleTime: options?.staleTime,
   });
 }
 

@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { hasValidPm } from '../lib/projectPersonnel';
 import { useArrivalPlans } from './useArrivalPlans';
 import { useLowStockAlerts } from './useLowStockAlerts';
 import { useMaterials } from './useMaterials';
@@ -7,9 +8,9 @@ import { usePurchaseOrders } from './usePurchaseOrders';
 import { usePurchasePayments } from './usePurchasePayments';
 import { usePurchasePlans } from './usePurchasePlans';
 
-const EMPTY_PM_ID = '00000000-0000-0000-0000-000000000000';
-const ACTIVE_PROJECT_PIC_PAGE = 200;
+const CONSOLIDATED_PAGE_SIZE = 200;
 const LOW_STOCK_LIMIT = 200;
+const DASH_STALE_TIME = 60_000;
 
 function countOrDash(isLoading: boolean, value: number | undefined): number | string {
   if (isLoading && value === undefined) return '-';
@@ -17,58 +18,277 @@ function countOrDash(isLoading: boolean, value: number | undefined): number | st
 }
 
 export function useOperationsDashboard() {
-  const allProjectsQ = useProjects({ page: 1, pageSize: 1 });
-  const activeProjectsQ = useProjects({
-    page: 1,
-    pageSize: ACTIVE_PROJECT_PIC_PAGE,
-    status: 'Active',
+  // Primary queries (4 GETs on mount)
+  const projectsAllQ = useProjects(
+    { page: 1, pageSize: CONSOLIDATED_PAGE_SIZE },
+    { staleTime: DASH_STALE_TIME },
+  );
+  const ordersAllQ = usePurchaseOrders(
+    { page: 1, pageSize: CONSOLIDATED_PAGE_SIZE },
+    { staleTime: DASH_STALE_TIME },
+  );
+  const lowStockQ = useLowStockAlerts(undefined, LOW_STOCK_LIMIT, {
+    staleTime: DASH_STALE_TIME,
   });
-  const closedProjectsQ = useProjects({ page: 1, pageSize: 1, status: 'Closed' });
+  const paymentsAllQ = usePurchasePayments(
+    { page: 1, pageSize: CONSOLIDATED_PAGE_SIZE },
+    { staleTime: DASH_STALE_TIME },
+  );
 
-  const lowStockQ = useLowStockAlerts(undefined, LOW_STOCK_LIMIT);
+  // Secondary queries gated until primary settles (3 GETs => 7 total in <= 200 mode)
+  const primarySettled =
+    !projectsAllQ.isLoading && !ordersAllQ.isLoading && !lowStockQ.isLoading;
 
-  const ordersNoneQ = usePurchaseOrders({ page: 1, pageSize: 8, deliveryStatus: 'none' });
-  const ordersPartialQ = usePurchaseOrders({ page: 1, pageSize: 8, deliveryStatus: 'partial' });
-  const ordersUnpaidQ = usePurchaseOrders({ page: 1, pageSize: 1, paymentStatus: 'unpaid' });
-  const ordersPartialPayQ = usePurchaseOrders({ page: 1, pageSize: 1, paymentStatus: 'partial' });
-  const ordersWarningQ = usePurchaseOrders({ page: 1, pageSize: 1, paymentWarning: true });
+  const plansOpenQ = usePurchasePlans(
+    { page: 1, pageSize: 1 },
+    { enabled: primarySettled, staleTime: DASH_STALE_TIME },
+  );
+  const arrivalsQ = useArrivalPlans(
+    7,
+    {},
+    { enabled: primarySettled, staleTime: DASH_STALE_TIME },
+  );
+  const materialsAllQ = useMaterials(
+    { page: 1, pageSize: CONSOLIDATED_PAGE_SIZE, includeInactive: true },
+    { enabled: primarySettled, staleTime: DASH_STALE_TIME },
+  );
 
-  const paymentsDraftQ = usePurchasePayments({ page: 1, pageSize: 1, status: 'draft' });
-  const paymentsSubmittedQ = usePurchasePayments({ page: 1, pageSize: 5, status: 'submitted' });
-  const paymentsPaidQ = usePurchasePayments({ page: 1, pageSize: 1, status: 'paid' });
-  const plansOpenQ = usePurchasePlans({ page: 1, pageSize: 1 });
+  // Fallback queries enabled ONLY when dataset totalCount > 200
+  const projectsOverflow = (projectsAllQ.data?.totalCount ?? 0) > CONSOLIDATED_PAGE_SIZE;
+  const ordersOverflow = (ordersAllQ.data?.totalCount ?? 0) > CONSOLIDATED_PAGE_SIZE;
+  const paymentsOverflow = (paymentsAllQ.data?.totalCount ?? 0) > CONSOLIDATED_PAGE_SIZE;
+  const materialsOverflow = (materialsAllQ.data?.totalCount ?? 0) > CONSOLIDATED_PAGE_SIZE;
 
-  const arrivalsQ = useArrivalPlans(7);
-  const materialsActiveQ = useMaterials({ page: 1, pageSize: 1 });
-  const materialsAllQ = useMaterials({ page: 1, pageSize: 1, includeInactive: true });
+  const activeProjectsQ = useProjects(
+    { page: 1, pageSize: CONSOLIDATED_PAGE_SIZE, status: 'Active' },
+    { enabled: projectsOverflow, staleTime: DASH_STALE_TIME },
+  );
+  const closedProjectsQ = useProjects(
+    { page: 1, pageSize: 1, status: 'Closed' },
+    { enabled: projectsOverflow, staleTime: DASH_STALE_TIME },
+  );
 
-  const lowStock = useMemo(() => lowStockQ.data ?? [], [lowStockQ.data]);
-  const openOrderRows = [...(ordersNoneQ.data?.items ?? []), ...(ordersPartialQ.data?.items ?? [])].slice(0, 8);
-  const pendingPaymentRows = [
-    ...(paymentsSubmittedQ.data?.items ?? []),
-    ...(paymentsDraftQ.data?.items ?? []),
-  ].slice(0, 5);
+  const ordersNoneQ = usePurchaseOrders(
+    { page: 1, pageSize: 8, deliveryStatus: 'none' },
+    { enabled: ordersOverflow, staleTime: DASH_STALE_TIME },
+  );
+  const ordersPartialQ = usePurchaseOrders(
+    { page: 1, pageSize: 8, deliveryStatus: 'partial' },
+    { enabled: ordersOverflow, staleTime: DASH_STALE_TIME },
+  );
+  const ordersUnpaidQ = usePurchaseOrders(
+    { page: 1, pageSize: 1, paymentStatus: 'unpaid' },
+    { enabled: ordersOverflow, staleTime: DASH_STALE_TIME },
+  );
+  const ordersPartialPayQ = usePurchaseOrders(
+    { page: 1, pageSize: 1, paymentStatus: 'partial' },
+    { enabled: ordersOverflow, staleTime: DASH_STALE_TIME },
+  );
+  const ordersWarningQ = usePurchaseOrders(
+    { page: 1, pageSize: 1, paymentWarning: true },
+    { enabled: ordersOverflow, staleTime: DASH_STALE_TIME },
+  );
+
+  const paymentsDraftQ = usePurchasePayments(
+    { page: 1, pageSize: 1, status: 'draft' },
+    { enabled: paymentsOverflow, staleTime: DASH_STALE_TIME },
+  );
+  const paymentsSubmittedQ = usePurchasePayments(
+    { page: 1, pageSize: 5, status: 'submitted' },
+    { enabled: paymentsOverflow, staleTime: DASH_STALE_TIME },
+  );
+  const paymentsPaidQ = usePurchasePayments(
+    { page: 1, pageSize: 1, status: 'paid' },
+    { enabled: paymentsOverflow, staleTime: DASH_STALE_TIME },
+  );
+
+  const materialsActiveQ = useMaterials(
+    { page: 1, pageSize: 1 },
+    { enabled: primarySettled && materialsOverflow, staleTime: DASH_STALE_TIME },
+  );
+
+  const projectSummary = useMemo(() => {
+    if (!projectsOverflow && projectsAllQ.data) {
+      const items = projectsAllQ.data.items;
+      const activeItems = items.filter(p => p.status === 'Active');
+      const closedCount = items.filter(p => p.status === 'Closed').length;
+      return {
+        activeItems,
+        activeCount: activeItems.length,
+        closedCount,
+        totalCount: projectsAllQ.data.totalCount,
+        activeLoading: projectsAllQ.isLoading,
+        closedLoading: projectsAllQ.isLoading,
+        hasActiveData: true,
+      };
+    }
+    return {
+      activeItems: activeProjectsQ.data?.items ?? [],
+      activeCount: activeProjectsQ.data?.totalCount,
+      closedCount: closedProjectsQ.data?.totalCount,
+      totalCount: projectsAllQ.data?.totalCount,
+      activeLoading: projectsOverflow ? activeProjectsQ.isLoading : projectsAllQ.isLoading,
+      closedLoading: projectsOverflow ? closedProjectsQ.isLoading : projectsAllQ.isLoading,
+      hasActiveData: Boolean(projectsOverflow ? activeProjectsQ.data : projectsAllQ.data),
+    };
+  }, [
+    projectsOverflow,
+    projectsAllQ.data,
+    projectsAllQ.isLoading,
+    activeProjectsQ.data,
+    activeProjectsQ.isLoading,
+    closedProjectsQ.data,
+    closedProjectsQ.isLoading,
+  ]);
 
   const picStats = useMemo(() => {
-    const items = activeProjectsQ.data?.items ?? [];
+    const items = projectSummary.activeItems;
     let withPm = 0;
     let withSc = 0;
     let withKeeper = 0;
     for (const row of items) {
-      const hasPm = Boolean(row.pmName?.trim()) && row.pmId !== EMPTY_PM_ID;
-      if (hasPm) withPm += 1;
+      if (hasValidPm(row.pmName, row.pmId)) withPm += 1;
       if (row.scMembers?.trim()) withSc += 1;
       if ((row.warehouseKeepers?.length ?? 0) > 0) withKeeper += 1;
     }
-    const scanned = items.length;
     return {
       withPm,
       withSc,
       withKeeper,
-      withoutPm: Math.max(0, scanned - withPm),
+      withoutPm: Math.max(0, items.length - withPm),
     };
-  }, [activeProjectsQ.data?.items]);
+  }, [projectSummary.activeItems]);
 
+  const orderSummary = useMemo(() => {
+    if (!ordersOverflow && ordersAllQ.data) {
+      const items = ordersAllQ.data.items;
+      const noneOrders = items.filter(o => o.deliveryStatus === 'none');
+      const partialOrders = items.filter(o => o.deliveryStatus === 'partial');
+      return {
+        openOrderRows: [...noneOrders, ...partialOrders].slice(0, 8),
+        orderNone: noneOrders.length,
+        orderPartial: partialOrders.length,
+        poUnpaid: items.filter(o => o.paymentStatus === 'unpaid').length,
+        poPartialPay: items.filter(o => o.paymentStatus === 'partial').length,
+        poOverdue: items.filter(o => Boolean(o.paymentWarning)).length,
+        noneLoading: ordersAllQ.isLoading,
+        partialLoading: ordersAllQ.isLoading,
+        unpaidLoading: ordersAllQ.isLoading,
+        partialPayLoading: ordersAllQ.isLoading,
+        warningLoading: ordersAllQ.isLoading,
+      };
+    }
+    return {
+      openOrderRows: [
+        ...(ordersNoneQ.data?.items ?? []),
+        ...(ordersPartialQ.data?.items ?? []),
+      ].slice(0, 8),
+      orderNone: ordersNoneQ.data?.totalCount,
+      orderPartial: ordersPartialQ.data?.totalCount,
+      poUnpaid: ordersUnpaidQ.data?.totalCount,
+      poPartialPay: ordersPartialPayQ.data?.totalCount,
+      poOverdue: ordersWarningQ.data?.totalCount,
+      noneLoading: ordersOverflow ? ordersNoneQ.isLoading : ordersAllQ.isLoading,
+      partialLoading: ordersOverflow ? ordersPartialQ.isLoading : ordersAllQ.isLoading,
+      unpaidLoading: ordersOverflow ? ordersUnpaidQ.isLoading : ordersAllQ.isLoading,
+      partialPayLoading: ordersOverflow ? ordersPartialPayQ.isLoading : ordersAllQ.isLoading,
+      warningLoading: ordersOverflow ? ordersWarningQ.isLoading : ordersAllQ.isLoading,
+    };
+  }, [
+    ordersOverflow,
+    ordersAllQ.data,
+    ordersAllQ.isLoading,
+    ordersNoneQ.data,
+    ordersNoneQ.isLoading,
+    ordersPartialQ.data,
+    ordersPartialQ.isLoading,
+    ordersUnpaidQ.data,
+    ordersUnpaidQ.isLoading,
+    ordersPartialPayQ.data,
+    ordersPartialPayQ.isLoading,
+    ordersWarningQ.data,
+    ordersWarningQ.isLoading,
+  ]);
+
+  const paymentSummary = useMemo(() => {
+    if (!paymentsOverflow && paymentsAllQ.data) {
+      const items = paymentsAllQ.data.items;
+      const draftPayments = items.filter(p => p.status === 'draft');
+      const submittedPayments = items.filter(p => p.status === 'submitted');
+      const paidPayments = items.filter(p => p.status === 'paid');
+      return {
+        pendingPaymentRows: [...submittedPayments, ...draftPayments].slice(0, 5),
+        paymentDraft: draftPayments.length,
+        paymentSubmitted: submittedPayments.length,
+        paymentPaid: paidPayments.length,
+        draftLoading: paymentsAllQ.isLoading,
+        submittedLoading: paymentsAllQ.isLoading,
+        paidLoading: paymentsAllQ.isLoading,
+      };
+    }
+    return {
+      pendingPaymentRows: [
+        ...(paymentsSubmittedQ.data?.items ?? []),
+        ...(paymentsDraftQ.data?.items ?? []),
+      ].slice(0, 5),
+      paymentDraft: paymentsDraftQ.data?.totalCount,
+      paymentSubmitted: paymentsSubmittedQ.data?.totalCount,
+      paymentPaid: paymentsPaidQ.data?.totalCount,
+      draftLoading: paymentsOverflow ? paymentsDraftQ.isLoading : paymentsAllQ.isLoading,
+      submittedLoading: paymentsOverflow ? paymentsSubmittedQ.isLoading : paymentsAllQ.isLoading,
+      paidLoading: paymentsOverflow ? paymentsPaidQ.isLoading : paymentsAllQ.isLoading,
+    };
+  }, [
+    paymentsOverflow,
+    paymentsAllQ.data,
+    paymentsAllQ.isLoading,
+    paymentsDraftQ.data,
+    paymentsDraftQ.isLoading,
+    paymentsSubmittedQ.data,
+    paymentsSubmittedQ.isLoading,
+    paymentsPaidQ.data,
+    paymentsPaidQ.isLoading,
+  ]);
+
+  const materialSummary = useMemo(() => {
+    const allLoading = !primarySettled || materialsAllQ.isLoading;
+    if (!materialsOverflow && materialsAllQ.data) {
+      const items = materialsAllQ.data.items;
+      return {
+        active: items.filter(m => m.isActive).length,
+        inactive: items.filter(m => !m.isActive).length,
+        total: materialsAllQ.data.totalCount,
+        activeLoading: allLoading,
+        inactiveLoading: allLoading,
+        totalLoading: allLoading,
+      };
+    }
+    const activeCount = materialsActiveQ.data?.totalCount;
+    const totalCount = materialsAllQ.data?.totalCount;
+    const inactiveCount =
+      activeCount === undefined || totalCount === undefined
+        ? undefined
+        : Math.max(0, totalCount - activeCount);
+    const activeLoading =
+      !primarySettled || (materialsOverflow ? materialsActiveQ.isLoading : materialsAllQ.isLoading);
+    return {
+      active: activeCount,
+      inactive: inactiveCount,
+      total: totalCount,
+      activeLoading,
+      inactiveLoading: activeLoading || allLoading,
+      totalLoading: allLoading,
+    };
+  }, [
+    primarySettled,
+    materialsOverflow,
+    materialsAllQ.data,
+    materialsAllQ.isLoading,
+    materialsActiveQ.data,
+    materialsActiveQ.isLoading,
+  ]);
+
+  const lowStock = useMemo(() => lowStockQ.data ?? [], [lowStockQ.data]);
   const stockStats = useMemo(() => {
     const zeroQty = lowStock.filter(a => a.actualQty <= 0).length;
     const projectCount = new Set(lowStock.map(a => a.projectCode)).size;
@@ -88,49 +308,54 @@ export function useOperationsDashboard() {
     );
   }, [arrivalsQ.data?.projects]);
 
-  const materialsActive = materialsActiveQ.data?.totalCount;
-  const materialsAll = materialsAllQ.data?.totalCount;
-  const materialsInactive =
-    materialsActive === undefined || materialsAll === undefined
-      ? undefined
-      : Math.max(0, materialsAll - materialsActive);
-
   const isBootLoading =
-    (allProjectsQ.isLoading || activeProjectsQ.isLoading || lowStockQ.isLoading)
-    && !activeProjectsQ.data
-    && !allProjectsQ.data;
+    (projectsAllQ.isLoading || ordersAllQ.isLoading || lowStockQ.isLoading)
+    && !projectsAllQ.data
+    && !ordersAllQ.data;
 
   const isError =
-    allProjectsQ.isError
-    || activeProjectsQ.isError
+    projectsAllQ.isError
+    || ordersAllQ.isError
     || lowStockQ.isError
-    || ordersNoneQ.isError
-    || ordersPartialQ.isError;
+    || (projectsOverflow && activeProjectsQ.isError)
+    || (ordersOverflow && (ordersNoneQ.isError || ordersPartialQ.isError));
 
   const error =
-    allProjectsQ.error
-    ?? activeProjectsQ.error
+    projectsAllQ.error
+    ?? ordersAllQ.error
     ?? lowStockQ.error
-    ?? ordersNoneQ.error
-    ?? ordersPartialQ.error;
+    ?? (projectsOverflow ? activeProjectsQ.error : null)
+    ?? (ordersOverflow ? (ordersNoneQ.error ?? ordersPartialQ.error) : null);
 
   const refetchAll = () => {
-    void allProjectsQ.refetch();
-    void activeProjectsQ.refetch();
-    void closedProjectsQ.refetch();
+    void projectsAllQ.refetch();
+    void ordersAllQ.refetch();
     void lowStockQ.refetch();
-    void ordersNoneQ.refetch();
-    void ordersPartialQ.refetch();
-    void ordersUnpaidQ.refetch();
-    void ordersPartialPayQ.refetch();
-    void ordersWarningQ.refetch();
-    void paymentsDraftQ.refetch();
-    void paymentsSubmittedQ.refetch();
-    void paymentsPaidQ.refetch();
-    void plansOpenQ.refetch();
-    void arrivalsQ.refetch();
-    void materialsActiveQ.refetch();
-    void materialsAllQ.refetch();
+    void paymentsAllQ.refetch();
+    if (primarySettled) {
+      void plansOpenQ.refetch();
+      void arrivalsQ.refetch();
+      void materialsAllQ.refetch();
+    }
+    if (projectsOverflow) {
+      void activeProjectsQ.refetch();
+      void closedProjectsQ.refetch();
+    }
+    if (ordersOverflow) {
+      void ordersNoneQ.refetch();
+      void ordersPartialQ.refetch();
+      void ordersUnpaidQ.refetch();
+      void ordersPartialPayQ.refetch();
+      void ordersWarningQ.refetch();
+    }
+    if (paymentsOverflow) {
+      void paymentsDraftQ.refetch();
+      void paymentsSubmittedQ.refetch();
+      void paymentsPaidQ.refetch();
+    }
+    if (primarySettled && materialsOverflow) {
+      void materialsActiveQ.refetch();
+    }
   };
 
   return {
@@ -138,40 +363,61 @@ export function useOperationsDashboard() {
     isError,
     error,
     refetchAll,
-    activeProjects: (activeProjectsQ.data?.items ?? []).slice(0, 8),
+    activeProjects: projectSummary.activeItems.slice(0, 8),
     lowStock,
     stockPreview: lowStock.slice(0, 8),
-    openOrderRows,
-    pendingPaymentRows,
+    openOrderRows: orderSummary.openOrderRows,
+    pendingPaymentRows: paymentSummary.pendingPaymentRows,
     counts: {
-      projectActive: countOrDash(activeProjectsQ.isLoading, activeProjectsQ.data?.totalCount),
-      projectClosed: countOrDash(closedProjectsQ.isLoading, closedProjectsQ.data?.totalCount),
-      projectTotal: countOrDash(allProjectsQ.isLoading, allProjectsQ.data?.totalCount),
-      projectWithPm: countOrDash(activeProjectsQ.isLoading, activeProjectsQ.data ? picStats.withPm : undefined),
-      projectWithoutPm: countOrDash(activeProjectsQ.isLoading, activeProjectsQ.data ? picStats.withoutPm : undefined),
-      projectWithSc: countOrDash(activeProjectsQ.isLoading, activeProjectsQ.data ? picStats.withSc : undefined),
-      projectWithKeeper: countOrDash(activeProjectsQ.isLoading, activeProjectsQ.data ? picStats.withKeeper : undefined),
+      projectActive: countOrDash(projectSummary.activeLoading, projectSummary.activeCount),
+      projectClosed: countOrDash(projectSummary.closedLoading, projectSummary.closedCount),
+      projectTotal: countOrDash(projectsAllQ.isLoading, projectSummary.totalCount),
+      projectWithPm: countOrDash(
+        projectSummary.activeLoading,
+        projectSummary.hasActiveData ? picStats.withPm : undefined,
+      ),
+      projectWithoutPm: countOrDash(
+        projectSummary.activeLoading,
+        projectSummary.hasActiveData ? picStats.withoutPm : undefined,
+      ),
+      projectWithSc: countOrDash(
+        projectSummary.activeLoading,
+        projectSummary.hasActiveData ? picStats.withSc : undefined,
+      ),
+      projectWithKeeper: countOrDash(
+        projectSummary.activeLoading,
+        projectSummary.hasActiveData ? picStats.withKeeper : undefined,
+      ),
       stockBelowMin: countOrDash(lowStockQ.isLoading, lowStockQ.data ? stockStats.belowMin : undefined),
       stockZero: countOrDash(lowStockQ.isLoading, lowStockQ.data ? stockStats.zeroQty : undefined),
-      stockProjects: countOrDash(lowStockQ.isLoading, lowStockQ.data ? stockStats.projectCount : undefined),
-      orderNone: countOrDash(ordersNoneQ.isLoading, ordersNoneQ.data?.totalCount),
-      orderPartial: countOrDash(ordersPartialQ.isLoading, ordersPartialQ.data?.totalCount),
-      planCount: countOrDash(plansOpenQ.isLoading, plansOpenQ.data?.totalCount),
-      paymentDraft: countOrDash(paymentsDraftQ.isLoading, paymentsDraftQ.data?.totalCount),
-      paymentSubmitted: countOrDash(paymentsSubmittedQ.isLoading, paymentsSubmittedQ.data?.totalCount),
-      paymentPaid: countOrDash(paymentsPaidQ.isLoading, paymentsPaidQ.data?.totalCount),
-      poOverdue: countOrDash(ordersWarningQ.isLoading, ordersWarningQ.data?.totalCount),
-      poUnpaid: countOrDash(ordersUnpaidQ.isLoading, ordersUnpaidQ.data?.totalCount),
-      poPartialPay: countOrDash(ordersPartialPayQ.isLoading, ordersPartialPayQ.data?.totalCount),
-      arrivalOverdue: countOrDash(arrivalsQ.isLoading, arrivalsQ.data ? arrivalStats.overdue : undefined),
-      arrivalDueToday: countOrDash(arrivalsQ.isLoading, arrivalsQ.data ? arrivalStats.dueToday : undefined),
-      arrivalUpcoming: countOrDash(arrivalsQ.isLoading, arrivalsQ.data ? arrivalStats.upcoming : undefined),
-      materialActive: countOrDash(materialsActiveQ.isLoading, materialsActive),
-      materialInactive: countOrDash(
-        materialsActiveQ.isLoading || materialsAllQ.isLoading,
-        materialsInactive,
+      stockProjects: countOrDash(
+        lowStockQ.isLoading,
+        lowStockQ.data ? stockStats.projectCount : undefined,
       ),
-      materialTotal: countOrDash(materialsAllQ.isLoading, materialsAll),
+      orderNone: countOrDash(orderSummary.noneLoading, orderSummary.orderNone),
+      orderPartial: countOrDash(orderSummary.partialLoading, orderSummary.orderPartial),
+      planCount: countOrDash(!primarySettled || plansOpenQ.isLoading, plansOpenQ.data?.totalCount),
+      paymentDraft: countOrDash(paymentSummary.draftLoading, paymentSummary.paymentDraft),
+      paymentSubmitted: countOrDash(paymentSummary.submittedLoading, paymentSummary.paymentSubmitted),
+      paymentPaid: countOrDash(paymentSummary.paidLoading, paymentSummary.paymentPaid),
+      poOverdue: countOrDash(orderSummary.warningLoading, orderSummary.poOverdue),
+      poUnpaid: countOrDash(orderSummary.unpaidLoading, orderSummary.poUnpaid),
+      poPartialPay: countOrDash(orderSummary.partialPayLoading, orderSummary.poPartialPay),
+      arrivalOverdue: countOrDash(
+        !primarySettled || arrivalsQ.isLoading,
+        arrivalsQ.data ? arrivalStats.overdue : undefined,
+      ),
+      arrivalDueToday: countOrDash(
+        !primarySettled || arrivalsQ.isLoading,
+        arrivalsQ.data ? arrivalStats.dueToday : undefined,
+      ),
+      arrivalUpcoming: countOrDash(
+        !primarySettled || arrivalsQ.isLoading,
+        arrivalsQ.data ? arrivalStats.upcoming : undefined,
+      ),
+      materialActive: countOrDash(materialSummary.activeLoading, materialSummary.active),
+      materialInactive: countOrDash(materialSummary.inactiveLoading, materialSummary.inactive),
+      materialTotal: countOrDash(materialSummary.totalLoading, materialSummary.total),
     },
   };
 }

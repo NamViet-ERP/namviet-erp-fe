@@ -6,10 +6,15 @@ import {
 } from '../services/materialsService';
 import { queryKeys } from '../services/queryKeys';
 
-export function useMaterials(params: MaterialListParams = {}) {
+export function useMaterials(
+  params: MaterialListParams = {},
+  options?: { enabled?: boolean; staleTime?: number },
+) {
   return useQuery({
     queryKey: [...queryKeys.materials.all, params] as const,
     queryFn: () => materialsService.list(params),
+    enabled: options?.enabled,
+    staleTime: options?.staleTime,
   });
 }
 
