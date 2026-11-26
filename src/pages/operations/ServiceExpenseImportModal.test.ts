@@ -123,4 +123,67 @@ describe('ServiceExpenseImportModal Defensive Rendering', () => {
     // Confirm that statistics show 1 valid, 1 error
     expect(document.body.textContent).toContain('Xác nhận nhập (1 mục)');
   });
+
+  it('renders existing duplicate state and toggles between "Đã có (Bỏ qua)" and "Sẽ cập nhật"', async () => {
+    const mockParseResult: ServiceExpenseImportParseResultDto = {
+      totalRows: 1,
+      validRowCount: 1,
+      existingRowCount: 1,
+      errorRowCount: 0,
+      errors: [],
+      rows: [
+        {
+          rowNumber: 2,
+          code: 'DV-KD-02',
+          name: 'Dịch vụ kiểm định mối hàn siêu âm dầm thép',
+          type: 'service',
+          unit: 'Gói',
+          referencePrice: 4200000,
+          description: 'Kiểm định chất lượng kết cấu thép công trình Cầu Rạch Miễu 2',
+          isValid: true,
+          isExisting: true,
+          errors: [],
+          warnings: [],
+        },
+      ],
+    };
+
+    vi.mocked(serviceExpenseItemsService.parseImportFile).mockResolvedValueOnce(mockParseResult);
+
+    await act(async () => {
+      root.render(
+        createElement(ServiceExpenseImportModal, {
+          isOpen: true,
+          onClose: vi.fn(),
+          onSuccess: vi.fn(),
+        }),
+      );
+    });
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const spreadsheetFile = new File(['du-lieu-dich-vu'], 'danh-muc-dich-vu-epc.xlsx', {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+
+    await act(async () => {
+      Object.defineProperty(fileInput, 'files', {
+        value: [spreadsheetFile],
+        writable: true,
+      });
+      fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    expect(document.body.textContent).toContain('DV-KD-02');
+    expect(document.body.textContent).toContain('Đã có (Bỏ qua)');
+    expect(document.body.textContent).toContain('Dịch vụ');
+
+    const overwriteCheckbox = Array.from(document.body.querySelectorAll('input[type="checkbox"]'))[0] as HTMLInputElement;
+    expect(overwriteCheckbox).toBeDefined();
+
+    await act(async () => {
+      overwriteCheckbox.click();
+    });
+
+    expect(document.body.textContent).toContain('Sẽ cập nhật');
+  });
 });

@@ -119,6 +119,9 @@ describe('ServicesExpensesPage Standard Layout & Actions', () => {
   it('renders SectionCard with Mayzer navy header and unified toolbar', async () => {
     await renderPage();
 
+    expect(container.querySelector('.erp-page-shell--list')).not.toBeNull();
+    expect(container.querySelector('.page-container')).toBeNull();
+
     // Check board head
     const boardHead = container.querySelector('.mat-catalog-board__head');
     expect(boardHead).not.toBeNull();
@@ -237,5 +240,147 @@ describe('ServicesExpensesPage Standard Layout & Actions', () => {
     expect(document.body.textContent).toContain('Nhập danh mục dịch vụ & chi phí từ file Excel');
     expect(document.body.textContent).toContain('Tải file mẫu Excel (.xlsx)');
     expect(document.body.textContent).toContain('Kéo thả file Excel (.xlsx, .xls) hoặc CSV vào đây');
+  });
+
+  it('renders empty state and filtered empty state with tonal "Thêm mới ngay" button', async () => {
+    vi.mocked(serviceExpenseItemsService.list).mockResolvedValue({
+      items: [],
+      total: 0,
+      page: 1,
+      pageSize: 15,
+      totalPages: 1,
+    });
+
+    await renderPage();
+
+    expect(container.textContent).toContain('Chưa có dịch vụ hoặc chi phí nào trong danh mục.');
+    const addNowBtn = Array.from(container.querySelectorAll('button')).find(b =>
+      b.textContent?.includes('Thêm mới ngay'),
+    );
+    expect(addNowBtn).toBeDefined();
+    expect(addNowBtn?.className).toContain('btn-tonal');
+
+    // Switch type filter to trigger filtered empty copy
+    const expenseFilterBtn = Array.from(
+      container.querySelectorAll('[role="group"][aria-label="Lọc theo phân loại"] button'),
+    ).find(b => b.textContent?.includes('Chi phí ngoài')) as HTMLButtonElement;
+    expect(expenseFilterBtn).toBeDefined();
+
+    await act(async () => {
+      expenseFilterBtn.click();
+    });
+    await flushQueries();
+
+    expect(container.textContent).toContain('Không tìm thấy mục phù hợp với bộ lọc hiện tại.');
+
+    // Reset filters restores unfiltered copy
+    const resetBtn = container.querySelector('button[title="Đặt lại bộ lọc"]') as HTMLButtonElement;
+    expect(resetBtn).not.toBeNull();
+    await act(async () => {
+      resetBtn.click();
+    });
+    await flushQueries();
+
+    expect(container.textContent).toContain('Chưa có dịch vụ hoặc chi phí nào trong danh mục.');
+  });
+
+  it('renders error state with tonal "Thử lại" button that triggers refetch', async () => {
+    vi.mocked(serviceExpenseItemsService.list).mockRejectedValueOnce(new Error('Mất kết nối máy chủ'));
+
+    await renderPage();
+
+    expect(container.textContent).toContain('Không thể tải danh mục dịch vụ & chi phí.');
+    const retryBtn = Array.from(container.querySelectorAll('button')).find(b =>
+      b.textContent?.includes('Thử lại'),
+    );
+    expect(retryBtn).toBeDefined();
+    expect(retryBtn?.className).toContain('btn-tonal');
+
+    vi.mocked(serviceExpenseItemsService.list).mockResolvedValueOnce({
+      items: mockItems,
+      total: mockItems.length,
+      page: 1,
+      pageSize: 15,
+      totalPages: 1,
+    });
+
+    await act(async () => {
+      retryBtn?.click();
+    });
+    await flushQueries();
+
+    expect(container.textContent).toContain('DV-VC-01');
+  });
+
+  it('supports editing, toggling active status, and deleting via decomposed modal and dialog', async () => {
+    vi.mocked(serviceExpenseItemsService.update).mockResolvedValue({
+      ...mockItems[0],
+      name: 'Chi phí cẩu tháp 50 tấn công trường Cầu Rạch Miễu 2',
+    });
+    vi.mocked(serviceExpenseItemsService.toggleActive).mockResolvedValue({
+      ...mockItems[0],
+      isActive: false,
+    });
+    vi.mocked(serviceExpenseItemsService.delete).mockResolvedValue(undefined);
+
+    await renderPage();
+
+    // Edit row 1
+    const editBtn = container.querySelector('button[aria-label="Sửa DV-VC-01"]') as HTMLButtonElement;
+    expect(editBtn).not.toBeNull();
+    expect(editBtn.className).toContain('btn-icon');
+
+    await act(async () => {
+      editBtn.click();
+    });
+    await flushQueries();
+
+    expect(document.body.textContent).toContain('Sửa dịch vụ / chi phí: DV-VC-01');
+    const saveBtn = Array.from(document.body.querySelectorAll('button')).find(b =>
+      b.textContent?.includes('Lưu thay đổi'),
+    );
+    expect(saveBtn).toBeDefined();
+    expect(saveBtn?.className).toContain('btn-filled');
+
+    await act(async () => {
+      saveBtn?.click();
+    });
+    await flushQueries();
+
+    expect(serviceExpenseItemsService.update).toHaveBeenCalledWith(1, expect.objectContaining({
+      code: 'DV-VC-01',
+      type: 'service',
+      unit: 'Chuyến',
+    }));
+
+    // Toggle active status on row 1
+    const toggleSwitch = container.querySelector('button[role="switch"]') as HTMLButtonElement;
+    expect(toggleSwitch).not.toBeNull();
+    await act(async () => {
+      toggleSwitch.click();
+    });
+    await flushQueries();
+    expect(serviceExpenseItemsService.toggleActive).toHaveBeenCalledWith(1);
+
+    // Delete row 1
+    const deleteBtn = container.querySelector('button[aria-label="Xóa DV-VC-01"]') as HTMLButtonElement;
+    expect(deleteBtn).not.toBeNull();
+    await act(async () => {
+      deleteBtn.click();
+    });
+    await flushQueries();
+
+    expect(document.body.textContent).toContain('Xác nhận xóa');
+    const confirmDeleteBtn = Array.from(document.body.querySelectorAll('button')).find(b =>
+      b.textContent?.includes('Xóa mục này'),
+    );
+    expect(confirmDeleteBtn).toBeDefined();
+
+    await act(async () => {
+      confirmDeleteBtn?.click();
+    });
+    await flushQueries();
+
+    expect(serviceExpenseItemsService.delete).toHaveBeenCalledWith(1);
   });
 });

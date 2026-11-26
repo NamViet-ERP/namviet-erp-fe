@@ -7,6 +7,7 @@ import {
   Coins,
 } from 'lucide-react';
 import ExcelImportModalShell from '../../components/shared/ExcelImportModalShell';
+import StatusBadge from '../../components/ui/StatusBadge';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { serviceExpenseItemsService } from '../../services/serviceExpenseItemsService';
@@ -225,7 +226,7 @@ export default function ServiceExpenseImportModal({
               <th className="py-2 px-2.5">Ghi chú</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[var(--md-outline-variant)]/50 bg-[var(--md-surface)]">
+          <tbody className="divide-y divide-[var(--md-outline-variant)] bg-[var(--md-surface)]">
             {filteredRows.length === 0 ? (
               <tr>
                 <td colSpan={8} className="py-8 text-center text-xs text-[var(--md-on-surface-variant)]">
@@ -247,16 +248,16 @@ export default function ServiceExpenseImportModal({
                   <tr
                     key={`${row.rowNumber}-${idx}`}
                     className={`hover:bg-[var(--md-surface-container-lowest)] transition-colors ${
-                      hasErrors ? 'bg-rose-500/5' : isExisting ? 'bg-amber-500/5' : ''
+                      hasErrors ? 'bg-[var(--tint-error-soft)]' : isExisting ? 'bg-[var(--tint-warning-soft)]' : ''
                     }`}
                   >
-                    <td className="py-2 px-2.5 text-center text-[11px] text-[var(--md-on-surface-variant)] font-mono">
+                    <td className="py-2 px-2.5 text-center text-xs text-[var(--md-on-surface-variant)] font-mono">
                       {row.rowNumber}
                     </td>
                     <td className="py-2 px-2.5">
                       {hasErrors ? (
                         <div
-                          className="inline-flex items-center gap-1 text-[11px] font-medium text-rose-700 bg-rose-500/10 px-2 py-0.5 rounded-full"
+                          className="inline-flex items-center gap-1 text-xs font-medium text-[var(--md-on-error-container)] bg-[var(--md-error-container)] px-2 py-0.5 rounded-full"
                           title={errorTooltip}
                         >
                           <XCircle size={12} className="shrink-0" />
@@ -264,7 +265,7 @@ export default function ServiceExpenseImportModal({
                         </div>
                       ) : isExisting ? (
                         <div
-                          className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-700 bg-amber-500/10 px-2 py-0.5 rounded-full"
+                          className="inline-flex items-center gap-1 text-xs font-medium text-[var(--md-on-warning-container)] bg-[var(--md-warning-container)] px-2 py-0.5 rounded-full"
                           title={
                             overwriteExisting
                               ? 'Mã đã tồn tại - sẽ cập nhật thông tin'
@@ -275,32 +276,27 @@ export default function ServiceExpenseImportModal({
                           <span>{overwriteExisting ? 'Sẽ cập nhật' : 'Đã có (Bỏ qua)'}</span>
                         </div>
                       ) : (
-                        <div className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                        <div className="inline-flex items-center gap-1 text-xs font-medium text-[var(--md-on-success-container)] bg-[var(--md-success-container)] px-2 py-0.5 rounded-full">
                           <CheckCircle2 size={12} className="shrink-0" />
                           <span>Hợp lệ</span>
                         </div>
                       )}
                     </td>
                     <td className="py-2 px-2.5 font-mono font-medium text-[var(--md-on-surface)]">
-                      <span className="px-1.5 py-0.5 rounded bg-[var(--md-primary)]/10 text-[var(--md-primary)] border border-[var(--md-primary)]/20">
-                        {row.code || <span className="text-rose-500 italic">Trống</span>}
+                      <span className="px-1.5 py-0.5 rounded bg-[var(--md-primary-container)] text-[var(--md-on-primary-container)] border border-[var(--md-outline-variant)]">
+                        {row.code || <span className="text-[var(--md-error)] italic">Trống</span>}
                       </span>
                     </td>
                     <td className="py-2 px-2.5 text-[var(--md-on-surface)] font-medium">
                       {row.name}
-                      {hasErrors && <p className="text-[10px] text-rose-600 mt-0.5">{errorTooltip}</p>}
+                      {hasErrors && <p className="text-xs text-[var(--md-error)] mt-0.5">{errorTooltip}</p>}
                     </td>
                     <td className="py-2 px-2.5 text-center">
-                      <span
-                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border ${
-                          isExpense
-                            ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-800'
-                            : 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800'
-                        }`}
-                      >
-                        {isExpense ? <Coins size={11} aria-hidden /> : <Briefcase size={11} aria-hidden />}
-                        <span>{isExpense ? 'Chi phí ngoài' : 'Dịch vụ'}</span>
-                      </span>
+                      <StatusBadge
+                        tone={isExpense ? 'primary' : 'warning'}
+                        icon={isExpense ? Coins : Briefcase}
+                        label={isExpense ? 'Chi phí ngoài' : 'Dịch vụ'}
+                      />
                     </td>
                     <td className="py-2 px-2.5 text-center text-[var(--md-on-surface)] font-medium">
                       {row.unit}
@@ -309,7 +305,7 @@ export default function ServiceExpenseImportModal({
                       {row.referencePrice != null ? formatCurrencyFull(row.referencePrice) : '—'}
                     </td>
                     <td
-                      className="py-2 px-2.5 text-[11px] text-[var(--md-on-surface-variant)] max-w-xs truncate"
+                      className="py-2 px-2.5 text-xs text-[var(--md-on-surface-variant)] max-w-xs truncate"
                       title={row.description ?? ''}
                     >
                       {row.description || '—'}
