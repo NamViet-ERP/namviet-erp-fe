@@ -6172,18 +6172,30 @@ button.entity-code-link:focus-visible {
   font-weight: var(--fw-medium);
   color: var(--md-on-surface-variant);
 }
-.ops-projects__filter-field select {
+.ops-projects__filter-field select:not(.hrm-filter-select) {
   border-color: var(--table-border);
   border-radius: var(--radius-xs);
   min-height: 36px;
 }
-.ops-projects__filter-field select:hover:not(:disabled) {
+.ops-projects__filter-field select:not(.hrm-filter-select):hover:not(:disabled) {
   border-color: var(--nv-navy);
 }
-.ops-projects__filter-field select:focus {
+.ops-projects__filter-field select:not(.hrm-filter-select):focus {
   outline: none;
   border-color: var(--nv-navy);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--nv-amber) 28%, transparent);
+}
+.ops-projects__filter-field .hrm-filter-select-wrap {
+  width: 100%;
+  max-width: 100%;
+}
+.ops-projects__filter-field .hrm-filter-select,
+.app-shell--wms .hrm-list-toolbar .ops-projects__filter-field .hrm-filter-select {
+  width: 100%;
+  min-width: 0;
+  height: 40px;
+  min-height: 40px;
+  border-radius: var(--radius-sm);
 }
 .ops-projects__toolbar {
   display: flex;

@@ -167,12 +167,9 @@ export default function ProjectMemberMultiSelect({
         <li>
           <button
             type="button"
-            className={
-              highlight === filtered.length
-                ? 'warehouse-keeper-multi__option is-active flex items-center gap-1.5'
-                : 'warehouse-keeper-multi__option flex items-center gap-1.5'
-            }
-            style={{ fontWeight: 600, color: 'var(--md-primary, #006874)' }}
+            className={`warehouse-keeper-multi__option flex items-center gap-1.5 font-semibold text-[var(--md-primary)]${
+              highlight === filtered.length ? ' is-active' : ''
+            }`}
             onMouseDown={e => e.preventDefault()}
             onClick={() => add(trimmedDraft)}
             role="option"
@@ -185,7 +182,7 @@ export default function ProjectMemberMultiSelect({
       )}
 
       {trimmedDraft && isDraftExcluded && (
-        <li className="warehouse-keeper-multi__empty text-amber-600 font-medium" role="presentation">
+        <li className="warehouse-keeper-multi__empty text-[var(--md-warning)] font-medium" role="presentation">
           "{trimmedDraft}" đã được chọn làm PIC / Quản lý của dự án.
         </li>
       )}
