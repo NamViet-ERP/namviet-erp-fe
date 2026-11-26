@@ -6089,6 +6089,37 @@
     white-space: nowrap;
   }
 
+  /* Operations wide project tables (/operations/project-list, /operations/projects) */
+  .ops-projects .project-warehouse-table--wide {
+    min-width: 74rem;
+  }
+  .ops-projects .project-warehouse-table--wide .project-col-code {
+    width: 8.5rem;
+    min-width: 8.5rem;
+  }
+  .ops-projects .project-warehouse-table--wide .project-col-name {
+    min-width: 11.5rem;
+  }
+  .ops-projects .project-warehouse-table--wide .project-col-client {
+    min-width: 8.5rem;
+  }
+  .ops-projects .project-warehouse-table--wide .project-col-pm,
+  .ops-projects .project-warehouse-table--wide .project-col-sc {
+    min-width: 9rem;
+  }
+  .ops-projects .project-warehouse-table--wide .project-col-date {
+    width: 7rem;
+    min-width: 7rem;
+  }
+  .ops-projects .project-warehouse-table--wide .project-col-status {
+    width: 10.5rem;
+    min-width: 10.5rem;
+  }
+  .ops-projects .project-warehouse-table--wide .project-col-actions {
+    width: 19rem;
+    min-width: 19rem;
+  }
+
   /* Purchasing module styles: ./modules/purchasing.css
      Supplier module styles: ./modules/suppliers.css */
 
