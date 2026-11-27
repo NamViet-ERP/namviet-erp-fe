@@ -299,7 +299,7 @@
     border-top: 1px solid var(--md-outline-variant);
     flex: 1;
   }
-  @media (min-width: 480px) {
+  @media (min-width: 640px) {
     .chart-breakdown__list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
   .chart-breakdown__row {

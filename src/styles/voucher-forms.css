@@ -306,7 +306,7 @@
     align-items: start;
   }
 
-  @media (max-width: 720px) {
+  @media (max-width: 767px) {
     .defect-create-form__meta {
       grid-template-columns: 1fr;
     }

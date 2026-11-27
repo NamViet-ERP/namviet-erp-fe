@@ -207,9 +207,9 @@
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  @media (min-width: 1100px) {
+  @media (min-width: 1024px) {
     .suppliers-chart-grid {
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
   .suppliers-chart-box {
@@ -488,7 +488,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(18rem, 0.8fr);
 }
-@media (max-width: 840px) {
+@media (max-width: 1023px) {
   .sup-ap-overview__top {
     grid-template-columns: 1fr;
   }
@@ -546,7 +546,7 @@
   margin: 0;
   border-left: 1px solid var(--table-border);
 }
-@media (max-width: 840px) {
+@media (max-width: 1023px) {
   .sup-ap-overview__aside {
     border-left: 0;
     border-top: 1px solid var(--table-border);
@@ -602,12 +602,12 @@
   padding: 0;
   list-style: none;
 }
-@media (max-width: 1100px) {
+@media (max-width: 1023px) {
   .sup-ap-aging__cards {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
-@media (max-width: 720px) {
+@media (max-width: 767px) {
   .sup-ap-aging__cards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

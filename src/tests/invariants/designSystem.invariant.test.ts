@@ -320,6 +320,19 @@ function collectSourceFiles(dir: string): string[] {
   return out;
 }
 
+function collectCssFiles(dir: string): string[] {
+  const out: string[] = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      out.push(...collectCssFiles(full));
+    } else if (entry.name.endsWith('.css')) {
+      out.push(full);
+    }
+  }
+  return out.sort();
+}
+
 function extractMobileMediaBlocks(css: string): string[] {
   const mediaBlocks: string[] = [];
   const mediaRe = /@media\s*\(max-width:\s*639px\)\s*\{/g;
@@ -661,6 +674,59 @@ describe('Living Invariant: Design System Tokens, CSS Order & Token-Only Primiti
     for (const relPath of purchasingPartials) {
       const fileName = path.basename(relPath);
       expect(purchasingEntryCss).toContain(`@import './purchasing/${fileName}';`);
+    }
+  });
+
+  it('all Active CSS width-based @media queries strictly match the 4 canonical breakpoint tiers', () => {
+    const ALLOWED_MAX_WIDTHS = new Set(['639px', '767px', '1023px', '1279px']);
+    const ALLOWED_MIN_WIDTHS = new Set(['640px', '768px', '1024px', '1280px']);
+    const stylesDir = path.join(repoRoot, 'src/styles');
+    const cssFiles = collectCssFiles(stylesDir).filter(fullPath => {
+      const relPath = path.relative(repoRoot, fullPath).replace(/\\/g, '/');
+      return relPath !== 'src/styles/modules/cskh.css';
+    });
+
+    expect(cssFiles.length).toBeGreaterThan(0);
+
+    for (const fullPath of cssFiles) {
+      const relPath = path.relative(repoRoot, fullPath).replace(/\\/g, '/');
+      const cssWithoutComments = fs.readFileSync(fullPath, 'utf-8').replace(/\/\*[\s\S]*?\*\//g, '');
+      const mediaHeaderRe = /@media\s*([^{]+)\{/g;
+      let match: RegExpExecArray | null;
+      while ((match = mediaHeaderRe.exec(cssWithoutComments)) !== null) {
+        const condition = match[1].replace(/\s+/g, ' ').trim();
+        if (!/\bwidth\b/i.test(condition) && !/(?:min|max)-width/i.test(condition)) continue;
+
+        const maxMatches = [...condition.matchAll(/\bmax-width\s*:\s*([^)\s]+)/gi)];
+        const minMatches = [...condition.matchAll(/\bmin-width\s*:\s*([^)\s]+)/gi)];
+
+        for (const m of maxMatches) {
+          expect(
+            ALLOWED_MAX_WIDTHS.has(m[1]),
+            `${relPath}: non-canonical max-width "${m[1]}" in "@media ${condition}"`,
+          ).toBe(true);
+        }
+        for (const m of minMatches) {
+          expect(
+            ALLOWED_MIN_WIDTHS.has(m[1]),
+            `${relPath}: non-canonical min-width "${m[1]}" in "@media ${condition}"`,
+          ).toBe(true);
+        }
+
+        // Guard against bare `width:` or CSS4 range widths using non-canonical pixel values
+        const allPxInMedia = [...condition.matchAll(/\b(\d+(?:\.\d+)?px)\b/gi)].map(m => m[1]);
+        for (const px of allPxInMedia) {
+          expect(
+            ALLOWED_MAX_WIDTHS.has(px) || ALLOWED_MIN_WIDTHS.has(px),
+            `${relPath}: non-canonical pixel width "${px}" in "@media ${condition}"`,
+          ).toBe(true);
+        }
+
+        expect(
+          maxMatches.length + minMatches.length,
+          `${relPath}: @media width condition "${condition}" must use explicit min-width or max-width`,
+        ).toBeGreaterThan(0);
+      }
     }
   });
 });
