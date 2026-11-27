@@ -78,6 +78,29 @@ describe('ErrorBoundary', () => {
     });
 
     expect(reloadMock).toHaveBeenCalledTimes(1);
+    expect(container.textContent).not.toContain('Đã xảy ra lỗi');
+    expect(container.querySelector('[role="status"]')).not.toBeNull();
+    const savedTs = sessionStorage.getItem(CHUNK_RELOAD_STORAGE_KEY);
+    expect(savedTs).not.toBeNull();
+    expect(Number(savedTs)).toBeGreaterThan(0);
+  });
+
+  it('reloads once without flashing fallback UI on Vite CSS preload error', async () => {
+    await act(async () => {
+      root.render(
+        createElement(
+          ErrorBoundary,
+          null,
+          createElement(Bomb, {
+            error: new Error('Unable to preload CSS for /assets/PurchasePlansPage.css'),
+          }),
+        ),
+      );
+    });
+
+    expect(reloadMock).toHaveBeenCalledTimes(1);
+    expect(container.textContent).not.toContain('Đã xảy ra lỗi');
+    expect(container.querySelector('[role="status"]')).not.toBeNull();
     const savedTs = sessionStorage.getItem(CHUNK_RELOAD_STORAGE_KEY);
     expect(savedTs).not.toBeNull();
     expect(Number(savedTs)).toBeGreaterThan(0);

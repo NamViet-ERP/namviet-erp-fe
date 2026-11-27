@@ -9,9 +9,11 @@ import { AuthProvider } from './auth/AuthProvider';
 import { queryClient } from './lib/queryClient';
 import { startApiKeepAlive } from './lib/apiKeepAlive';
 import { startProactiveTokenRefresh } from './lib/authProactiveRefresh';
+import { installVitePreloadRecovery } from './lib/chunkLoadRecovery';
 import { authService, initAuthTokenProvider } from './services/authService';
 
 initAuthTokenProvider();
+installVitePreloadRecovery();
 startApiKeepAlive();
 startProactiveTokenRefresh();
 void authService.ensureSession();

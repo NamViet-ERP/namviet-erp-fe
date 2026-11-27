@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useRef } from 'react';
+import { Suspense, useCallback, useEffect, useState, useRef } from 'react';
 import { Outlet, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import Header from './Header';
 import Sidebar from './Sidebar';
@@ -207,7 +207,9 @@ export default function AppLayout() {
         <div className="app-main__inner">
           <div className="page-route-enter">
             <ErrorBoundary key={location.pathname}>
-              <Outlet />
+              <Suspense fallback={<PageLoader />}>
+                <Outlet />
+              </Suspense>
             </ErrorBoundary>
           </div>
         </div>
