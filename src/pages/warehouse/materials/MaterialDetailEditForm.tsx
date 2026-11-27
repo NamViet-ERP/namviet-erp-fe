@@ -1,5 +1,5 @@
 import DetailFieldGrid from '../../../components/hr/DetailFieldGrid';
-import { FieldInput, FieldTextarea, FieldView } from '../../../components/hr/DetailFields';
+import { FieldInput, FieldTextarea } from '../../../components/hr/DetailFields';
 import CurrencyInput from '../../../components/ui/CurrencyInput';
 import MaterialUnitSelect from '../../../components/warehouse/MaterialUnitSelect';
 import { MATERIAL_FIELD_PLACEHOLDERS } from '../../../constants/materialCategoryLevels';
@@ -7,6 +7,7 @@ import MaterialOriginSection from './MaterialOriginSection';
 import MaterialImageField from './MaterialImageField';
 
 export interface MaterialDetailEditState {
+  materialCode: string;
   materialName: string;
   unit: string;
   imageUrl: string;
@@ -17,7 +18,7 @@ export interface MaterialDetailEditState {
 }
 
 export interface MaterialDetailEditFormProps {
-  materialCode: string;
+  originalMaterialCode: string;
   form: MaterialDetailEditState;
   errors: Record<string, string>;
   originBrand: string;
@@ -31,7 +32,7 @@ export interface MaterialDetailEditFormProps {
 }
 
 export default function MaterialDetailEditForm({
-  materialCode,
+  originalMaterialCode,
   form,
   errors,
   originBrand,
@@ -45,7 +46,18 @@ export default function MaterialDetailEditForm({
 }: MaterialDetailEditFormProps) {
   return (
     <DetailFieldGrid layout="responsive">
-      <FieldView label="Mã vật tư" value={materialCode} />
+      <FieldInput
+        label="Mã vật tư *"
+        value={form.materialCode}
+        onChange={materialCode => onPatchForm({ materialCode })}
+        error={errors.materialCode}
+        placeholder={MATERIAL_FIELD_PLACEHOLDERS.materialCode}
+        hint={
+          form.materialCode.trim() !== originalMaterialCode
+            ? 'Đổi mã sẽ tự động đồng bộ sang tồn kho, dự án và các phiếu liên quan.'
+            : undefined
+        }
+      />
       <FieldInput
         label="Tên vật tư *"
         value={form.materialName}

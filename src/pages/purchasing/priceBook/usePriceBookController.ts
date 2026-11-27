@@ -23,6 +23,7 @@ import type {
   PriceBookEstimateRowApiDto,
   PriceBookMarginRowApiDto,
 } from '../../../types/api/purchasingApi';
+import { parseCurrencyInput } from '../../../utils/currencyInput';
 import type { EstimateFormState, SellFormState } from './PriceBookUpsertModals';
 import {
   PRICE_BOOK_THIS_YEAR,
@@ -166,7 +167,7 @@ export function usePriceBookController() {
   }, [tab, matrixCategories, matrixCategoryId]);
 
   const saveSell = async () => {
-    const price = Number(String(sellForm.sellPrice).replace(/[^\d.-]/g, ''));
+    const price = parseCurrencyInput(sellForm.sellPrice);
     if (!sellForm.materialCode || !sellForm.effectiveDate || !(price > 0)) {
       showToast('error', 'Nhập vật tư, ngày hiệu lực và giá bán.');
       return;
@@ -188,7 +189,7 @@ export function usePriceBookController() {
   };
 
   const saveEstimate = async () => {
-    const price = Number(String(estimateForm.estimatePrice).replace(/[^\d.-]/g, ''));
+    const price = parseCurrencyInput(estimateForm.estimatePrice);
     if (estimateCategoryId === '' || !estimateForm.materialCode || !estimateForm.effectiveDate || !(price > 0)) {
       showToast('error', 'Chọn nhóm vật tư, vật tư, ngày hiệu lực và giá dự toán.');
       return;

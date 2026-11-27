@@ -4,7 +4,7 @@ import Pagination from '../../../components/ui/Pagination';
 import TableShell from '../../../components/ui/TableShell';
 import VoucherStatusCell from '../../../components/warehouse/VoucherStatusCell';
 import VoucherCodeCell from '../../../components/warehouse/VoucherCodeCell';
-import { formatCurrency } from '../../../utils/formatCurrency';
+import { formatCurrencyFull } from '../../../utils/formatCurrency';
 import { getInteractiveRowProps } from '../../../lib/a11y/interactiveRow';
 import { getApiErrorMessage } from '../../../lib/apiClient';
 import { WMS_EMPTY, WMS_ERROR } from '../../../lib/wms/messages';
@@ -51,7 +51,7 @@ export default function ImportTable({
           <th className="table-header-cell text-left">Nhà cung cấp</th>
           <th className="table-header-cell text-center">Mã KHMH</th>
           {showPrices ? (
-            <th className="table-header-cell text-right whitespace-nowrap">Tổng giá trị (VNĐ)</th>
+            <th className="table-header-cell text-right whitespace-nowrap">Tổng giá trị</th>
           ) : null}
           <th className="table-header-cell text-center">Trạng thái</th>
         </tr>
@@ -85,7 +85,7 @@ export default function ImportTable({
           </td>
           {showPrices ? (
             <td className="table-cell text-right tabular-nums font-mono">
-              {isIssueFromGeneralWarehouse(imp) ? '—' : formatCurrency(imp.totalValue)}
+              {isIssueFromGeneralWarehouse(imp) ? '—' : formatCurrencyFull(imp.totalValue)}
             </td>
           ) : null}
           <td className="table-cell text-center">

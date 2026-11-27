@@ -272,7 +272,7 @@ export default function RecruitmentCostsPage() {
                 <th className="table-header-cell hrm-table-col-period">Ngày/Kỳ</th>
                 <th className="table-header-cell">Nguồn</th>
                 <th className="table-header-cell">Vị trí áp dụng</th>
-                <th className="table-header-cell hrm-table-col-money">Chi phí (VND)</th>
+                <th className="table-header-cell hrm-table-col-money">Chi phí</th>
                 <th className="table-header-cell hrm-table-col-tight">Thời hạn (ngày)</th>
                 <th className="table-header-cell hrm-table-col-tight">Năm</th>
                 <th className="table-header-cell hrm-table-col-tight">Tháng</th>
@@ -353,11 +353,10 @@ export default function RecruitmentCostsPage() {
             <input className="form-input form-input-md" value={form.period} onChange={e => setForm(f => ({ ...f, period: e.target.value }))} />
           </label>
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Số tiền (VNĐ)</span>
+            <span className="font-medium">Số tiền</span>
             <CurrencyInput
               value={form.amount > 0 ? String(form.amount) : ''}
               onChange={(_, numeric) => setForm(f => ({ ...f, amount: numeric }))}
-              suffix="đ"
             />
           </label>
           <label className="flex flex-col gap-1 text-sm">
@@ -407,7 +406,6 @@ export default function RecruitmentCostsPage() {
           <CurrencyInput
             value={budgetInput}
             onChange={(_, numeric) => setBudgetInput(numeric > 0 ? String(numeric) : '')}
-            suffix="đ"
           />
         </label>
       </Modal>

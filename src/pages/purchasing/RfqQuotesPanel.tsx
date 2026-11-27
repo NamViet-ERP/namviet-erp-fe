@@ -4,7 +4,7 @@ import Button from '../../components/ui/Button';
 import FilterToolbar from '../../components/ui/FilterToolbar';
 import FormField from '../../components/ui/FormField';
 import { getApiErrorMessage } from '../../lib/apiClient';
-import { formatCurrency } from '../../utils/formatCurrency';
+import { formatCurrencyFull } from '../../utils/formatCurrency';
 import RfqQuoteModal from './rfq/RfqQuoteModal';
 import RfqQuotesTable from './rfq/RfqQuotesTable';
 import {
@@ -161,7 +161,7 @@ export default forwardRef<RfqQuotesPanelHandle, {
         <div className="rfq-chip-row">
           {vm.averages.data.map(a => (
             <span key={a.period} className="badge badge-info">
-              {a.period}: {formatCurrency(a.averagePrice)} ({a.quoteCount} BG)
+              {a.period}: {formatCurrencyFull(a.averagePrice)} ({a.quoteCount} BG)
             </span>
           ))}
         </div>

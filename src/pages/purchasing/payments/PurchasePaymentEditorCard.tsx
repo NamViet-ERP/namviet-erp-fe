@@ -193,7 +193,7 @@ export default function PurchasePaymentEditorCard({
                 value={amount}
                 readOnly
                 placeholder={nextStage ? formatCurrency(nextStage.amount) : '0'}
-                inputMode="numeric"
+                inputMode="decimal"
                 aria-label="Số tiền đề nghị"
               />
               <span className="pur-dntt__amount-suffix">VNĐ</span>

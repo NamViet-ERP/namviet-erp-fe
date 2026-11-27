@@ -398,16 +398,16 @@ describe('PurchasePriceBookPage Characterization', () => {
     const row1 = rows[0] as HTMLTableRowElement;
     expect(row1.textContent).toContain('VT-ONG-01');
     expect(row1.textContent).toContain('Ống thép đúc DN100');
-    expect(row1.textContent).toContain('1.000.000\u00a0đ');
-    expect(row1.textContent).toContain('1.150.000\u00a0đ');
+    expect(row1.textContent).toContain('1.000.000\u00a0VNĐ');
+    expect(row1.textContent).toContain('1.150.000\u00a0VNĐ');
     expect(row1.textContent).toContain('(+15%)');
 
     const row2 = rows[1] as HTMLTableRowElement;
     expect(row2.textContent).toContain('VT-VAN-02');
     expect(row2.textContent).toContain('Van bướm tay gạt DN150');
     expect(row2.textContent).toContain('Vượt trần');
-    expect(row2.textContent).toContain('2.200.000\u00a0đ');
-    expect(row2.textContent).toContain('2.640.000\u00a0đ');
+    expect(row2.textContent).toContain('2.200.000\u00a0VNĐ');
+    expect(row2.textContent).toContain('2.640.000\u00a0VNĐ');
     expect(row2.textContent).toContain('(+20%)');
 
     await act(async () => {
@@ -419,7 +419,7 @@ describe('PurchasePriceBookPage Characterization', () => {
     const dialog = document.querySelector('[role="dialog"]');
     expect(dialog).not.toBeNull();
     expect(dialog?.textContent).toContain('VT-ONG-01 · Ống thép đúc DN100');
-    expect(dialog?.textContent).toContain('Giá trần: 1.200.000\u00a0đ');
+    expect(dialog?.textContent).toContain('Giá trần: 1.200.000\u00a0VNĐ');
     expect(dialog?.textContent).toContain('PO-2026-019');
     expect(dialog?.textContent).toContain('Đã mua (PO)');
 
@@ -490,7 +490,7 @@ describe('PurchasePriceBookPage Characterization', () => {
       itemOverrides: { 'VT-VAN-02': 20, 'VT-ONG-01': 25 },
     });
     expect(showToast).toHaveBeenCalledWith('success', 'Đã lưu Markup (+25%) cho mã VT-ONG-01');
-    expect(container.querySelector('tbody')?.textContent).toContain('1.250.000\u00a0đ');
+    expect(container.querySelector('tbody')?.textContent).toContain('1.250.000\u00a0VNĐ');
   });
 
   it('hides boss markup button and inline markup edit control for non-boss staff', async () => {
@@ -520,7 +520,7 @@ describe('PurchasePriceBookPage Characterization', () => {
       'button[title="Bấm để chỉnh sửa nhanh % Markup riêng cho mặt hàng này"]',
     );
     expect(inlineEditBtn).toBeNull();
-    expect(container.querySelector('tbody')?.textContent).toContain('1.150.000\u00a0đ');
+    expect(container.querySelector('tbody')?.textContent).toContain('1.150.000\u00a0VNĐ');
   });
 
   it('switches to estimates and margins tabs and renders KPIs, tables, and upsert modals', async () => {
@@ -530,7 +530,7 @@ describe('PurchasePriceBookPage Characterization', () => {
     expect(container.textContent).toContain('Số mặt hàng đã có giá dự toán');
     expect(container.textContent).toContain('Biên lợi nhuận TB so với dự toán');
     expect(container.textContent).toContain('Mặt hàng đang mua vượt giá dự toán');
-    expect(container.textContent).toContain('1.100.000\u00a0đ');
+    expect(container.textContent).toContain('1.100.000\u00a0VNĐ');
     expect(container.textContent).toContain('+9.1%');
     expect(container.textContent).toContain('Lịch sử (2)');
     expect(container.textContent).toContain('Mặt hàng đã có giá mua nhưng chưa thiết lập giá dự toán');
@@ -552,8 +552,8 @@ describe('PurchasePriceBookPage Characterization', () => {
     expect(container.textContent).toContain('Số mặt hàng đã có giá bán');
     expect(container.textContent).toContain('Margin trung bình');
     expect(container.textContent).toContain('Mặt hàng margin dưới 10%');
-    expect(container.textContent).toContain('1.300.000\u00a0đ');
-    expect(container.textContent).toContain('300.000\u00a0đ');
+    expect(container.textContent).toContain('1.300.000\u00a0VNĐ');
+    expect(container.textContent).toContain('300.000\u00a0VNĐ');
     expect(container.textContent).toContain('23.1%');
     expect(container.textContent).toContain('Lịch sử (1)');
     expect(container.textContent).toContain('Mặt hàng đã có giá mua nhưng chưa thiết lập giá bán');
@@ -574,7 +574,7 @@ describe('PurchasePriceBookPage Characterization', () => {
     await clickTab('Phân tích theo nhóm hàng');
     expect(container.textContent).toContain('PIPE');
     expect(container.textContent).toContain('Hệ ống thép');
-    expect(container.textContent).toContain('50.000.000\u00a0đ');
+    expect(container.textContent).toContain('50.000.000\u00a0VNĐ');
     expect(container.textContent).toContain('100%');
 
     const compareBtn = findButton('Xem so sánh NCC');
@@ -587,7 +587,7 @@ describe('PurchasePriceBookPage Characterization', () => {
     expect(purchasePriceBookService.matrix).toHaveBeenCalledWith(1);
     expect(container.textContent).toContain('Thép Hòa Phát');
     expect(container.textContent).toContain('Thép Việt Đức');
-    expect(container.textContent).toContain('1.000.000\u00a0đ ★');
+    expect(container.textContent).toContain('1.000.000\u00a0VNĐ ★');
   });
 
   it('edits and saves estimate and sell prices via modals', async () => {

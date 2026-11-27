@@ -16,7 +16,7 @@ import EntityCodeLink from '../../components/ui/EntityCodeLink';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { WMS_ERROR } from '../../lib/wms/messages';
-import { formatCurrency } from '../../utils/formatCurrency';
+import { formatCurrencyFull } from '../../utils/formatCurrency';
 import { reportsService } from '../../services/reportsService';
 import { queryKeys } from '../../services/queryKeys';
 import { useProjects } from '../../hooks/useProjects';
@@ -92,13 +92,13 @@ export default function WarehouseReportsPage() {
     { label: 'Phiếu nhập', value: movement?.importCount, tone: 'primary' },
     {
       label: 'Giá trị nhập',
-      value: movement ? `${formatCurrency(movement.importValue)} đ` : undefined,
+      value: movement ? formatCurrencyFull(movement.importValue) : undefined,
       tone: 'success',
     },
     { label: 'Phiếu xuất', value: movement?.exportCount, tone: 'warning' },
     {
       label: 'Giá trị xuất',
-      value: movement ? `${formatCurrency(movement.exportValue)} đ` : undefined,
+      value: movement ? formatCurrencyFull(movement.exportValue) : undefined,
       tone: 'info',
     },
     { label: 'Phiếu chuyển', value: movement?.transferCount, tone: 'neutral' },

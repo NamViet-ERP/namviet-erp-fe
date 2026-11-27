@@ -4,7 +4,7 @@ import type { ListPageSize } from '../../../constants/pagination';
 import { formatDateCell } from '../../../lib/hrm/formatters';
 import type { DropdownItem } from '../../../types';
 import type { PurchaseRfqQuoteApiDto } from '../../../types/api/purchasingApi';
-import { formatCurrency } from '../../../utils/formatCurrency';
+import { formatCurrencyFull } from '../../../utils/formatCurrency';
 import { RFQ_STATUS_LABEL, rfqStatusBadge } from './useRfqQuotesController';
 
 const COLS = 9;
@@ -79,7 +79,7 @@ export default function RfqQuotesTable({
             {row.materialName}
           </td>
           <td className="table-cell">{row.supplierName}</td>
-          <td className="table-cell text-right tabular-nums">{formatCurrency(row.unitPrice)}</td>
+          <td className="table-cell text-right tabular-nums">{formatCurrencyFull(row.unitPrice)}</td>
           <td className="table-cell">{row.validUntil ? formatDateCell(row.validUntil) : '-'}</td>
           <td className="table-cell">{row.leadTimeDays != null ? `${row.leadTimeDays} ngày` : '-'}</td>
           <td className="table-cell">{row.paymentTerm || '-'}</td>

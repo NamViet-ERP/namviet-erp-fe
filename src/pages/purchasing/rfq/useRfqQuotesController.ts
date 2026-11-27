@@ -18,6 +18,7 @@ import { getApiErrorMessage } from '../../../lib/apiClient';
 import { downloadCsv } from '../../../lib/csvExport';
 import type { DropdownItem } from '../../../types';
 import type { PurchaseRfqQuoteApiDto, UpsertPurchaseRfqQuoteRequest } from '../../../types/api/purchasingApi';
+import { parseCurrencyInput } from '../../../utils/currencyInput';
 
 export const RFQ_THIS_YEAR = new Date().getFullYear();
 export const RFQ_YEARS = Array.from({ length: 5 }, (_, i) => RFQ_THIS_YEAR - i);
@@ -207,7 +208,7 @@ export function useRfqQuotesController({
       supplierId: matched?.id ?? 0,
       projectCode: form.projectCode || null,
       quoteDate: form.quoteDate,
-      unitPrice: Number(String(form.unitPrice).replace(/[^\d.-]/g, '')),
+      unitPrice: parseCurrencyInput(form.unitPrice),
       validUntil: form.validUntil,
       leadTimeDays: form.leadTimeDays ? Number(form.leadTimeDays) : null,
       paymentTerm: form.paymentTerm || null,
@@ -223,7 +224,7 @@ export function useRfqQuotesController({
     if (!form.supplierName) nextErrors.supplierName = 'Chọn nhà cung cấp.';
     if (!form.quoteDate) nextErrors.quoteDate = 'Chọn ngày báo giá.';
     if (!form.validUntil) nextErrors.validUntil = 'Chọn hạn giữ giá.';
-    const price = Number(String(form.unitPrice).replace(/[^\d.-]/g, ''));
+    const price = parseCurrencyInput(form.unitPrice);
     if (!(price > 0)) nextErrors.unitPrice = 'Nhập đơn báo giá.';
     setFormErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;

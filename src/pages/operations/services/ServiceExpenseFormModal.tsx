@@ -148,12 +148,12 @@ export default function ServiceExpenseFormModal({
           />
         </FormField>
 
-        <FormField label="Đơn giá tham chiếu (VNĐ)">
+        <FormField label="Đơn giá tham chiếu">
           <CurrencyInput
             value={formData.referencePrice}
             onChange={val => onChange(prev => ({ ...prev, referencePrice: val }))}
-            placeholder="VD: 3,500,000"
-            aria-label="Đơn giá tham chiếu"
+            placeholder="VD: 3.500.000"
+            ariaLabel="Đơn giá tham chiếu"
           />
           <p className="mt-1 text-xs text-[var(--md-on-surface-variant)]">
             Dùng làm mức giá dự kiến tham khảo khi lập KHMH

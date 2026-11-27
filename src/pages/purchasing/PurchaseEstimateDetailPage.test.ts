@@ -344,7 +344,7 @@ describe('PurchaseEstimateDetailPage characterization', () => {
     expect(container.querySelectorAll('.pur-estimate-edit__table tbody tr').length).toBe(1);
 
     const qtyInput = container.querySelector<HTMLInputElement>('input[aria-label="Số lượng dòng 1"]')!;
-    const priceInput = container.querySelector<HTMLInputElement>('.pur-estimate-edit__table input[inputmode="numeric"]')!;
+    const priceInput = container.querySelector<HTMLInputElement>('.pur-estimate-edit__table input.currency-input-group__input')!;
     await act(async () => {
       setInputValue(qtyInput, '15');
       setInputValue(priceInput, '2200000');

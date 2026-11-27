@@ -8,6 +8,8 @@ import type {
 
 const ENDPOINT = '/api/warehouse/materials';
 
+export type MaterialStatusFilter = 'active' | 'inactive' | 'all';
+
 export interface MaterialListParams {
   page?: number;
   pageSize?: number;
@@ -19,6 +21,7 @@ export interface MaterialListParams {
   kieu?: string;
   categoryId?: number;
   includeInactive?: boolean;
+  status?: MaterialStatusFilter;
   all?: boolean;
 }
 
@@ -53,6 +56,7 @@ export const materialsService = {
       kieu: params.kieu,
       categoryId: params.categoryId,
       includeInactive: params.includeInactive,
+      status: params.status,
       all: params.all,
     });
     return {

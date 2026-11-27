@@ -376,7 +376,7 @@ describe('PurchasePaymentDetailPage characterization', () => {
     expect(previewArticle?.textContent).toContain('GIẤY ĐỀ NGHỊ THANH TOÁN');
     expect(previewArticle?.textContent).toContain('Công ty Cổ phần Thép Hòa Phát');
     expect(previewArticle?.textContent).toContain('Thép hình I300x150x6.5x9');
-    expect(previewArticle?.textContent).toContain('150.000.000 đ');
+    expect(previewArticle?.textContent).toContain('150.000.000\u00a0VNĐ');
 
     const submitBtn = findButtonByText(container, 'Gửi đề nghị');
     await act(async () => {

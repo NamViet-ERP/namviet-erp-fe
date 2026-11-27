@@ -9,7 +9,7 @@ import { getInteractiveRowProps } from '../../../lib/a11y/interactiveRow';
 import { formatDateCell, formatDateTimeVi } from '../../../lib/hrm/formatters';
 import type { DropdownItem } from '../../../types';
 import type { PurchasePaymentApiDto } from '../../../types/api/purchasingApi';
-import { formatCurrency } from '../../../utils/formatCurrency';
+import { formatCurrencyFull } from '../../../utils/formatCurrency';
 import { paymentStatusBadgeClass, paymentStatusLabel } from './paymentStatusHelpers';
 
 const COL_COUNT = 10;
@@ -110,7 +110,7 @@ export default function PurchasePaymentsTable({
             <td className="pur-erp__td-num">{row.stageNumber ?? '-'}</td>
             <td>{row.supplierName || '-'}</td>
             <td>{row.invoiceNo || '-'}</td>
-            <td className="pur-erp__td-num">{formatCurrency(row.amount)}</td>
+            <td className="pur-erp__td-num">{formatCurrencyFull(row.amount)}</td>
             <td>{formatDateCell(row.dueDate)}</td>
             <td className="pur-erp__td-status">
               <div className="pur-plan-status-cell">

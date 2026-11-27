@@ -3,7 +3,7 @@ import EmptyState from '../../../components/ui/EmptyState';
 import SelectField from '../../../components/ui/SelectField';
 import TableSkeletonRows from '../../../components/ui/TableSkeletonRows';
 import type { PurchasePlanLineApiDto } from '../../../types/api/purchasingApi';
-import { formatCurrency } from '../../../utils/formatCurrency';
+import { formatCurrencyFull } from '../../../utils/formatCurrency';
 import { unitPriceOf } from './poDetailHelpers';
 
 const WARRANTY_ANCHOR_OPTIONS = [
@@ -221,7 +221,7 @@ export function CreatePoLinePicker({
                       />
                     </td>
                     <td className="pur-erp__td-num pur-create-po-lines__col-price">
-                      {formatCurrency(unitPriceOf(line))} (VNĐ)
+                      {formatCurrencyFull(unitPriceOf(line))}
                     </td>
                     <td className="pur-erp__td-num pur-create-po-lines__col-warranty">
                       <input

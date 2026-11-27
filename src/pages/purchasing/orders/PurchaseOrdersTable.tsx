@@ -15,7 +15,7 @@ import {
 } from '../../../lib/purchasing/purchaseOrderStatus';
 import type { DropdownItem } from '../../../types';
 import type { PurchaseOrderApiDto } from '../../../types/api/purchasingApi';
-import { formatCurrency } from '../../../utils/formatCurrency';
+import { formatCurrencyFull } from '../../../utils/formatCurrency';
 
 const COL_COUNT_BASE = 12;
 
@@ -138,7 +138,7 @@ export default function PurchaseOrdersTable({
           <th>KHMH</th>
           <th>Dự án</th>
           <th>Nhà cung cấp</th>
-          <th className="pur-erp__th-num">Tổng tiền (VNĐ)</th>
+          <th className="pur-erp__th-num">Tổng tiền</th>
           <th className="pur-erp__th-status">Trạng thái</th>
           <th className="pur-erp__th-status">Trạng thái đặt</th>
           <th className="pur-erp__th-status">Trạng thái giao</th>
@@ -190,7 +190,7 @@ export default function PurchaseOrdersTable({
                 : (row.projectCode || '—')}
             </td>
             <td>{row.supplierName || '—'}</td>
-            <td className="pur-erp__td-num tabular-nums font-mono">{formatCurrency(row.totalAmount)}</td>
+            <td className="pur-erp__td-num tabular-nums font-mono">{formatCurrencyFull(row.totalAmount)}</td>
             <td className="pur-erp__td-status" onClick={e => e.stopPropagation()}>
               <PoApprovalStatusCell
                 row={row}

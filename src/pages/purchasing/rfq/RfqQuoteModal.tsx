@@ -104,7 +104,6 @@ export default function RfqQuoteModal({
         <FormField label="Đơn báo giá" required error={formErrors.unitPrice}>
           <CurrencyInput
             value={form.unitPrice}
-            suffix="VND"
             onChange={unitPrice => {
               onPatchForm({ unitPrice });
               onClearError('unitPrice');

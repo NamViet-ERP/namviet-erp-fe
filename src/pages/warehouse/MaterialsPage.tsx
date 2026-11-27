@@ -18,7 +18,7 @@ import { useMaterials } from '../../hooks/useMaterials';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { resolveLeafCategoryId } from '../../lib/wms/materialCategoryTree';
 import { WMS_EMPTY, WMS_ERROR } from '../../lib/wms/messages';
-import { materialsService } from '../../services/materialsService';
+import { materialsService, type MaterialStatusFilter } from '../../services/materialsService';
 import { queryKeys } from '../../services/queryKeys';
 import MaterialDetailView from './MaterialDetailView';
 import MaterialImportModal from './MaterialImportModal';
@@ -61,7 +61,7 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
   const [filterSelection, setFilterSelection] = useState<Array<number | ''>>([...emptySelection]);
   const [showCreate, setShowCreate] = useState(false);
   const [showImport, setShowImport] = useState(false);
-  const [showInactive, setShowInactive] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<MaterialStatusFilter>('active');
 
   const { user } = useSession();
   const isAdmin = isSessionAdmin(user);
@@ -78,7 +78,7 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
     pageSize,
     search: search || undefined,
     categoryId: filterCategoryId,
-    includeInactive: showInactive || undefined,
+    status: statusFilter,
   });
 
   const items = data?.items ?? [];
@@ -98,6 +98,7 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
   const resetFilters = () => {
     setFilterSelection([...emptySelection]);
     setSearch('');
+    setStatusFilter('active');
     setPage(1);
   };
 
@@ -135,6 +136,13 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
             next.delete('code');
             return next;
           });
+        }}
+        onCodeChanged={nextCode => {
+          setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            next.set('code', nextCode);
+            return next;
+          }, { replace: true });
         }}
       />
     );
@@ -196,8 +204,8 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
           onFilterLevelChange={setFilterLevel}
           search={search}
           onSearchChange={v => { setSearch(v); setPage(1); }}
-          showInactive={showInactive}
-          onToggleInactive={() => { setShowInactive(v => !v); setPage(1); }}
+          statusFilter={statusFilter}
+          onStatusFilterChange={next => { setStatusFilter(next); setPage(1); }}
           onResetFilters={resetFilters}
         />
 
@@ -208,7 +216,11 @@ function MaterialsPage({ initialHighlight }: { initialHighlight?: string }) {
           loading={isLoading}
           error={isError ? WMS_ERROR.loadMaterials : null}
           isEmpty={items.length === 0}
-          emptyMessage={WMS_EMPTY.noMaterials}
+          emptyMessage={
+            statusFilter === 'inactive'
+              ? 'Không có vật tư nào đang ngừng sử dụng.'
+              : WMS_EMPTY.noMaterials
+          }
           pagination={
             totalCount > 0 && !isLoading
               ? {

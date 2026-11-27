@@ -24,6 +24,34 @@ vi.mock('../lib/apiClient', () => ({
 
 import { materialsService } from './materialsService';
 
+describe('materialsService.list', () => {
+  beforeEach(() => {
+    get.mockReset();
+  });
+
+  it('forwards status filter parameter to apiClient.get', async () => {
+    get.mockResolvedValueOnce({
+      items: [],
+      totalCount: 0,
+      page: 1,
+      pageSize: 15,
+      totalPages: 0,
+    });
+
+    await materialsService.list({ status: 'inactive', page: 1, pageSize: 15 });
+
+    expect(get).toHaveBeenCalledTimes(1);
+    expect(get).toHaveBeenCalledWith(
+      '/api/warehouse/materials',
+      expect.objectContaining({
+        status: 'inactive',
+        page: 1,
+        pageSize: 15,
+      }),
+    );
+  });
+});
+
 describe('materialsService.parseImportFile', () => {
   beforeEach(() => {
     postForm.mockReset();

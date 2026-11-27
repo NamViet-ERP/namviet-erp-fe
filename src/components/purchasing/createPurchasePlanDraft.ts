@@ -4,6 +4,7 @@ import type {
   PurchasePlanLineApiDto,
   PurchasePlanLineType,
 } from '../../types/api/purchasingApi';
+import { parseCurrencyInput } from '../../utils/currencyInput';
 
 export type { PurchasePlanLineType };
 
@@ -83,19 +84,24 @@ export function parseNum(v: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+export function parseOptionalCurrency(v: string): number | null {
+  const t = v.trim();
+  if (!t || t.startsWith('-') || !/[0-9]/.test(t)) return null;
+  return parseCurrencyInput(t);
+}
+
 export function lineAmount(qty: string, unitPrice: string, kgPerUnit?: string): number {
   const q = parseNum(qty) ?? 0;
-  const p = parseNum(unitPrice) ?? 0;
+  const p = parseOptionalCurrency(unitPrice) ?? 0;
   const kg = parseNum(kgPerUnit ?? '');
   if (q <= 0 || p <= 0) return 0;
-  return kg != null && kg > 0
-    ? Math.round(q * kg * p)
-    : Math.round(q * p);
+  const raw = kg != null && kg > 0 ? q * kg * p : q * p;
+  return Math.round(raw * 100) / 100;
 }
 
 export function currencyToDraft(v: number | null | undefined): string {
   if (v == null || !Number.isFinite(v)) return '';
-  return String(Math.round(v));
+  return String(Math.round(v * 100) / 100);
 }
 
 export function numToDraft(v: number | null | undefined): string {
@@ -147,15 +153,15 @@ export function toApiLines(drafts: DraftLine[]): CreatePurchasePlanLineRequest[]
         lineNote: d.lineNote.trim() || null,
         kgPerUnit: isMaterial ? parseNum(d.kgPerUnit) : null,
         purchaseStatus: d.purchaseStatus.trim() || null,
-        budgetUnitPrice: parseNum(d.budgetUnitPrice),
+        budgetUnitPrice: parseOptionalCurrency(d.budgetUnitPrice),
         budgetAmount: lineAmount(d.quantity, d.budgetUnitPrice, isMaterial ? d.kgPerUnit : undefined) || null,
-        proposalUnitPrice: parseNum(d.proposalUnitPrice),
+        proposalUnitPrice: parseOptionalCurrency(d.proposalUnitPrice),
         proposalAmount: lineAmount(d.quantity, d.proposalUnitPrice, isMaterial ? d.kgPerUnit : undefined) || null,
         proposalSupplierName: d.proposalSupplierName.trim() || null,
-        purchaseUnitPrice: parseNum(d.purchaseUnitPrice),
+        purchaseUnitPrice: parseOptionalCurrency(d.purchaseUnitPrice),
         purchaseAmount: lineAmount(d.quantity, d.purchaseUnitPrice, isMaterial ? d.kgPerUnit : undefined) || null,
         purchaseSupplierName: d.purchaseSupplierName.trim() || null,
-        selectedUnitPrice: parseNum(d.selectedUnitPrice),
+        selectedUnitPrice: parseOptionalCurrency(d.selectedUnitPrice),
         selectedAmount: lineAmount(d.quantity, d.selectedUnitPrice, isMaterial ? d.kgPerUnit : undefined) || null,
         selectedSupplierName: d.selectedSupplierName.trim() || null,
         selectionReason: d.selectionReason.trim() || null,
@@ -163,11 +169,11 @@ export function toApiLines(drafts: DraftLine[]): CreatePurchasePlanLineRequest[]
         expectedDeliveryDate: d.expectedDeliveryDate.trim() || null,
         actualReceiptDate: d.actualReceiptDate.trim() || null,
         quotes: d.quotes
-          .filter(q => q.supplierName.trim() || parseNum(q.unitPrice) != null)
+          .filter(q => q.supplierName.trim() || parseOptionalCurrency(q.unitPrice) != null)
           .map((q, i) => ({
             sortOrder: q.sortOrder || i + 1,
-            unitPrice: parseNum(q.unitPrice),
-            amount: parseNum(q.amount),
+            unitPrice: parseOptionalCurrency(q.unitPrice),
+            amount: parseOptionalCurrency(q.amount),
             supplierName: q.supplierName.trim() || null,
           })),
       };

@@ -19,7 +19,7 @@ import { getInteractiveRowProps } from '../../../lib/a11y/interactiveRow';
 import { formatDateTimeVi } from '../../../lib/hrm/formatters';
 import type { DropdownItem } from '../../../types';
 import type { PurchasePlanApiDto } from '../../../types/api/purchasingApi';
-import { formatCurrency } from '../../../utils/formatCurrency';
+import { formatCurrencyFull } from '../../../utils/formatCurrency';
 import {
   planApprovalMeta,
   planStatusBadgeClass,
@@ -178,10 +178,10 @@ export default function PurchasePlansTable({
                 ? `${row.projectName} (${row.projectCode})`
                 : (row.projectCode || '-')}
             </td>
-            <td className="pur-erp__td-num">{formatCurrency(row.budgetTotal)} (VNĐ)</td>
-            <td className="pur-erp__td-num">{formatCurrency(row.proposalTotal)} (VNĐ)</td>
-            <td className="pur-erp__td-num">{formatCurrency(row.purchaseTotal)} (VNĐ)</td>
-            <td className="pur-erp__td-num">{formatCurrency(row.paidTotal)} (VNĐ)</td>
+            <td className="pur-erp__td-num">{formatCurrencyFull(row.budgetTotal)}</td>
+            <td className="pur-erp__td-num">{formatCurrencyFull(row.proposalTotal)}</td>
+            <td className="pur-erp__td-num">{formatCurrencyFull(row.purchaseTotal)}</td>
+            <td className="pur-erp__td-num">{formatCurrencyFull(row.paidTotal)}</td>
             <td className="pur-erp__td-status">
               <div className="pur-plan-status-cell">
                 <span className={`pur-plan-status ${planStatusBadgeClass(row.status)}`}>

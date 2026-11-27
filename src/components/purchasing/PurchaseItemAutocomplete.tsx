@@ -2,7 +2,7 @@ import { useCallback, useMemo } from 'react';
 import { Briefcase, Coins, Package } from 'lucide-react';
 import type { MaterialApiDto } from '../../services/materialsService';
 import type { ServiceExpenseItemApiDto } from '../../types/api/serviceExpenseItem';
-import { formatCurrency } from '../../utils/formatCurrency';
+import { formatCurrencyFull } from '../../utils/formatCurrency';
 import EntityCombobox from '../ui/EntityCombobox';
 import type { PurchasePlanLineType } from './createPurchasePlanDraft';
 
@@ -175,7 +175,7 @@ export default function PurchaseItemAutocomplete({
               <div className="pur-item-option__meta">
                 {item.referencePrice != null && item.referencePrice > 0 ? (
                   <span className="pur-item-option__price">
-                    {formatCurrency(item.referencePrice)}
+                    {formatCurrencyFull(item.referencePrice)}
                   </span>
                 ) : null}
                 <span className="pur-item-option__unit">{item.unit}</span>

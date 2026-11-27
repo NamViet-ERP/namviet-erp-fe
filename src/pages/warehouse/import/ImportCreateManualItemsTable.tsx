@@ -3,7 +3,7 @@ import type { Material } from '../../../types';
 import QtyStepper from '../../../components/ui/QtyStepper';
 import MaterialAutocomplete from '../../../components/ui/MaterialAutocomplete';
 import CurrencyInput from '../../../components/ui/CurrencyInput';
-import { formatCurrency } from '../../../utils/formatCurrency';
+import { formatCurrencyFull } from '../../../utils/formatCurrency';
 import type { MaterialQtyPriceLine } from '../voucher/voucherFormTypes';
 import { importLineTotal } from './importUtils';
 import type { ImportFormFieldErrors } from '../../../lib/wms/importFormSchema';
@@ -44,7 +44,7 @@ export default function ImportCreateManualItemsTable({
             <th className="table-header-cell text-center">Mặt hàng</th>
             <th className="table-header-cell text-center import-manual-col-qty">{qtyColumnLabel}</th>
             <th className="table-header-cell text-center import-po-col-unit">ĐVT</th>
-            {canViewPrices && <th className="table-header-cell text-center">Đơn giá</th>}
+            {canViewPrices && <th className="table-header-cell text-center import-manual-col-price">Đơn giá</th>}
             {canViewPrices && (
               <th className="table-header-cell text-center import-po-col-amount">Thành tiền</th>
             )}
@@ -115,9 +115,10 @@ export default function ImportCreateManualItemsTable({
                   </div>
                 </td>
                 {canViewPrices && (
-                  <td className="table-cell text-center align-top">
+                  <td className="table-cell text-center align-top import-manual-col-price">
                     <CurrencyInput
-                      className={`form-input text-xs text-right input-no-spinner${lineErr?.unitPrice ? ' form-input--error' : ''}`}
+                      compact
+                      hasError={Boolean(lineErr?.unitPrice)}
                       value={it.unitPrice}
                       onChange={(_raw, numeric) => {
                         const next = [...items];
@@ -135,7 +136,7 @@ export default function ImportCreateManualItemsTable({
                 {canViewPrices && (
                   <td className="table-cell text-center tabular-nums font-semibold text-[var(--md-on-surface)] import-po-col-amount">
                     <div className="import-cell-placeholder import-cell-placeholder--center font-semibold">
-                      {total > 0 ? formatCurrency(total) : '-'}
+                      {total > 0 ? formatCurrencyFull(total) : '-'}
                     </div>
                   </td>
                 )}
@@ -167,7 +168,7 @@ export default function ImportCreateManualItemsTable({
                 Tổng cộng
               </td>
               <td className="table-cell text-center font-bold tabular-nums text-[var(--md-primary)] py-2">
-                {formatCurrency(formGrandTotal)} đ
+                {formatCurrencyFull(formGrandTotal)}
               </td>
               <td />
             </tr>

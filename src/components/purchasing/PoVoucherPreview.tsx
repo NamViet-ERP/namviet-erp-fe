@@ -71,7 +71,7 @@ function buildDeliveryText(lines: PoVoucherLine[]): string | undefined {
 export default function PoVoucherPreview({ model }: { model: PoVoucherModel }) {
   const vatRate = model.vatRate ?? 0.1;
   const subtotal = model.totalAmount;
-  const vat = Math.round(subtotal * vatRate);
+  const vat = Math.round(subtotal * vatRate * 100) / 100;
   const grandTotal = subtotal + vat;
   const hasLines = model.lines.length > 0;
 
@@ -167,8 +167,8 @@ export default function PoVoucherPreview({ model }: { model: PoVoucherModel }) {
             <th className="po-sheet__col-model">Model</th>
             <th className="po-sheet__col-unit">Unit</th>
             <th className="po-sheet__col-qty">Quantity</th>
-            <th className="po-sheet__col-price">Unit Price (VND)</th>
-            <th className="po-sheet__col-amt">Amount (VND)</th>
+            <th className="po-sheet__col-price">Unit Price</th>
+            <th className="po-sheet__col-amt">Amount</th>
           </tr>
         </thead>
         <tbody>
@@ -180,8 +180,8 @@ export default function PoVoucherPreview({ model }: { model: PoVoucherModel }) {
                 <td className="po-sheet__center">{val(line.model, '')}</td>
                 <td className="po-sheet__center">{val(line.unit)}</td>
                 <td className="po-sheet__center">{formatCurrency(line.qty)}</td>
-                <td className="po-sheet__num">{formatCurrencyFull(Math.round(line.unitPrice))}</td>
-                <td className="po-sheet__num">{formatCurrencyFull(Math.round(line.amount))}</td>
+                <td className="po-sheet__num">{formatCurrencyFull(line.unitPrice)}</td>
+                <td className="po-sheet__num">{formatCurrencyFull(line.amount)}</td>
               </tr>
             ))
           ) : (
@@ -198,15 +198,15 @@ export default function PoVoucherPreview({ model }: { model: PoVoucherModel }) {
         <tbody>
           <tr>
             <th scope="row">Subtotal:</th>
-            <td>{formatCurrencyFull(Math.round(subtotal))}</td>
+            <td>{formatCurrencyFull(subtotal)}</td>
           </tr>
           <tr>
             <th scope="row">VAT {(vatRate * 100).toFixed(0)}%:</th>
-            <td>{formatCurrencyFull(Math.round(vat))}</td>
+            <td>{formatCurrencyFull(vat)}</td>
           </tr>
           <tr className="po-sheet__sum-grand">
             <th scope="row">Grand Total:</th>
-            <td>{formatCurrencyFull(Math.round(grandTotal))}</td>
+            <td>{formatCurrencyFull(grandTotal)}</td>
           </tr>
         </tbody>
       </table>

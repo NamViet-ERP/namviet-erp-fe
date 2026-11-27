@@ -6,7 +6,7 @@ import PermissionGate from '../../../components/auth/PermissionGate';
 import TableSkeletonRows from '../../../components/ui/TableSkeletonRows';
 import VoucherStatusCell from '../../../components/warehouse/VoucherStatusCell';
 import { getInteractiveRowProps } from '../../../lib/a11y/interactiveRow';
-import { formatCurrency } from '../../../utils/formatCurrency';
+import { formatCurrencyFull } from '../../../utils/formatCurrency';
 import { formatDateCell, formatDateTimeVi } from '../../../lib/hrm/formatters';
 import type { Import } from '../../../types';
 import type { PurchaseOrderApiDto } from '../../../types/api/purchasingApi';
@@ -152,7 +152,7 @@ export function PoRelatedImportsSection({ poCode, order, directDispatch = false 
                     <td className="table-cell tabular-nums">{receiptDateLabel(imp)}</td>
                     {flow.canViewPrices ? (
                       <td className="table-cell text-right tabular-nums">
-                        {isIssueFromGeneralWarehouse(imp) ? '—' : formatCurrency(imp.totalValue)}
+                        {isIssueFromGeneralWarehouse(imp) ? '—' : formatCurrencyFull(imp.totalValue)}
                       </td>
                     ) : null}
                 </tr>

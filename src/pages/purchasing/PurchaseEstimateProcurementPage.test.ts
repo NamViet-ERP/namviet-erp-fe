@@ -384,8 +384,8 @@ describe('PurchaseEstimateProcurementPage characterization', () => {
       expect.objectContaining({ projectCode: 'DA-NHONTRACH-03' }),
     );
     expect(container.textContent).toContain('Ngân sách VT:');
-    expect(container.textContent).toContain('500.000.000\u00a0đ');
-    expect(container.textContent).toContain('150.000.000\u00a0đ');
+    expect(container.textContent).toContain('500.000.000\u00a0VNĐ');
+    expect(container.textContent).toContain('150.000.000\u00a0VNĐ');
 
     const resetBtn = findButton(container, 'Xóa lọc');
     await act(async () => {
@@ -435,7 +435,7 @@ describe('PurchaseEstimateProcurementPage characterization', () => {
     const modalProjectInput = dialog.querySelector<HTMLInputElement>('input[placeholder="Chọn dự án…"]')!;
     await selectComboboxOption(modalProjectInput, 'DA-NHONTRACH-03');
     expect(dialog.textContent).toContain('Ngân sách dự toán vật tư:');
-    expect(dialog.textContent).toContain('150.000.000\u00a0đ');
+    expect(dialog.textContent).toContain('150.000.000\u00a0VNĐ');
 
     await act(async () => {
       submitBtn.click();
@@ -466,7 +466,7 @@ describe('PurchaseEstimateProcurementPage characterization', () => {
 
     // 5. Enter qty + unit price exceeding remaining budget -> shows warning banner
     const qtyInput = dialog.querySelector<HTMLInputElement>('input[aria-label="Số lượng dòng 1"]')!;
-    const priceInputs = dialog.querySelectorAll<HTMLInputElement>('tbody input[inputmode="numeric"]');
+    const priceInputs = dialog.querySelectorAll<HTMLInputElement>('tbody input.currency-input-group__input');
     const priceInput = priceInputs[0];
 
     await act(async () => {
@@ -474,7 +474,7 @@ describe('PurchaseEstimateProcurementPage characterization', () => {
       setInputValue(priceInput, '1000000');
     });
 
-    expect(dialog.textContent).toContain('Cảnh báo: Giá trị mua sắm (200.000.000\u00a0đ) vượt quá ngân sách còn lại!');
+    expect(dialog.textContent).toContain('Cảnh báo: Giá trị mua sắm (200.000.000\u00a0VNĐ) vượt quá ngân sách còn lại!');
     expect(dialog.textContent).toContain('1 dòng · Tổng 200.000.000 VNĐ');
 
     // 6. Submit creation

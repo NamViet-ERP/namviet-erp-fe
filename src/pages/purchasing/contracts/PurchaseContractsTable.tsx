@@ -7,7 +7,7 @@ import TableShell from '../../../components/ui/TableShell';
 import { getInteractiveRowProps } from '../../../lib/a11y/interactiveRow';
 import { formatDateCell } from '../../../lib/hrm/formatters';
 import type { PurchaseContractApiDto } from '../../../types/api/purchasingApi';
-import { formatCurrency } from '../../../utils/formatCurrency';
+import { formatCurrencyFull } from '../../../utils/formatCurrency';
 import { contractStatusLabel, contractStatusTone } from './usePurchaseContractsController';
 
 const COL_COUNT = 10;
@@ -89,7 +89,7 @@ export default function PurchaseContractsTable({
             {formatDateCell(row.effectiveTo ?? undefined)}
           </td>
           <td className="table-cell text-right tabular-nums">
-            {row.amount != null ? formatCurrency(row.amount) : '—'}
+            {row.amount != null ? formatCurrencyFull(row.amount) : '—'}
           </td>
           <td className="table-cell">
             <div className="pur-contract-status">

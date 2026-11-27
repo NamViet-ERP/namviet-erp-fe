@@ -15,11 +15,11 @@ import {
 import { getApiErrorMessage } from '../../../lib/apiClient';
 import { formatDateTimeVi } from '../../../lib/hrm/formatters';
 import type { SupplierMaterialRiskPairRequest } from '../../../types/api/purchasingApi';
-import { formatCurrency } from '../../../utils/formatCurrency';
+import { formatCurrencyFull } from '../../../utils/formatCurrency';
 
 function formatPlanMoney(v: number | null | undefined): string {
   if (v == null) return '—';
-  return formatCurrency(v);
+  return formatCurrencyFull(v);
 }
 
 export type PlanTotalTone = 'budget' | 'proposal' | 'purchase' | 'paid';

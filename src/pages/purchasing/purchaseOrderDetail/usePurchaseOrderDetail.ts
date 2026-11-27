@@ -20,6 +20,7 @@ import {
   poPaymentWarningStatus,
   poPlacementStatus,
 } from '../../../lib/purchasing/purchaseOrderStatus';
+import { parseCurrencyInput } from '../../../utils/currencyInput';
 
 export type PoEditLineDraft = {
   qty: string;
@@ -139,8 +140,8 @@ export function usePurchaseOrderDetail(code: string) {
       }
       return {
         planLineId,
-        qty: Number(draft?.qty ?? line.ordered),
-        unitPrice: Number(draft?.unitPrice ?? line.poPrice),
+        qty: Number(String(draft?.qty ?? line.ordered).replace(',', '.')),
+        unitPrice: draft ? parseCurrencyInput(draft.unitPrice) : line.poPrice,
         expectedDeliveryDate: draft?.expectedDeliveryDate?.trim()
           ? draft.expectedDeliveryDate.trim()
           : null,

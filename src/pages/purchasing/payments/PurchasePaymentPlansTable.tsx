@@ -9,7 +9,7 @@ import type {
   PurchasePaymentPlanRowApiDto,
   PurchasePaymentPlanStageApiDto,
 } from '../../../types/api/purchasingApi';
-import { formatCurrency } from '../../../utils/formatCurrency';
+import { formatCurrencyFull } from '../../../utils/formatCurrency';
 
 function stageStatusLabel(status: string): string {
   switch (status.trim().toLowerCase()) {
@@ -41,7 +41,7 @@ function StageCell({ stage }: { stage: PurchasePaymentPlanStageApiDto }) {
     <div className={`pur-pay-plan__stage pur-pay-plan__stage--${tone}`}>
       <div className="pur-pay-plan__stage-money">
         <span className="pur-pay-plan__stage-amt tabular-nums">
-          {formatCurrency(stage.amount)}
+          {formatCurrencyFull(stage.amount)}
         </span>
         <span
           className="pur-pay-plan__stage-pct tabular-nums"
@@ -69,7 +69,7 @@ function ProgressCell({
   const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
   return (
     <div className="pur-pay-plan__total">
-      <span className="pur-pay-plan__total-amt tabular-nums">{formatCurrency(amount)}</span>
+      <span className="pur-pay-plan__total-amt tabular-nums">{formatCurrencyFull(amount)}</span>
       <div className="pur-pay-plan__progress" aria-label={`Hoàn thành ${completed}/${total}`}>
         <div className="pur-pay-plan__progress-track">
           <div className="pur-pay-plan__progress-fill" style={{ width: `${pct}%` }} />

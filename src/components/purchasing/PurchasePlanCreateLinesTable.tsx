@@ -9,7 +9,7 @@ import type { MaterialApiDto } from '../../services/materialsService';
 import type { SupplierApiDto } from '../../services/suppliersService';
 import type { ServiceExpenseItemApiDto } from '../../types/api/serviceExpenseItem';
 import type { SupplierMaterialRiskApiDto } from '../../types/api/purchasingApi';
-import { formatCurrency } from '../../utils/formatCurrency';
+import { formatCurrencyFull } from '../../utils/formatCurrency';
 import {
   MAX_BUDGET_UNIT_PRICE,
   isUnknownPlanItem,
@@ -86,7 +86,7 @@ export default function PurchasePlanCreateLinesTable({
               <th className="table-header-cell text-left">Mặt hàng (Vật tư / Dịch vụ / Chi phí) *</th>
               <th className="table-header-cell text-center w-24">ĐVT *</th>
               <th className="table-header-cell text-center w-28">SL *</th>
-              <th className="table-header-cell text-right w-44">Đơn giá dự toán</th>
+              <th className="table-header-cell text-right w-48">Đơn giá dự toán</th>
               <th className="table-header-cell text-right w-44">Thành tiền dự toán</th>
               <th className="table-header-cell text-center w-12" aria-label="Chi tiết" />
               <th className="table-header-cell text-center w-12" aria-label="Xóa" />
@@ -158,8 +158,8 @@ export default function PurchasePlanCreateLinesTable({
                       </td>
                       <td className="table-cell text-center"><input className="form-input form-input-sm text-center" value={line.unit} disabled={linesLocked || unitLocked} readOnly={unitLocked} onChange={e => onUpdateLine(line.key, { unit: e.target.value })} placeholder={isMaterial ? 'Kg' : 'Gói'} aria-label={`ĐVT dòng ${lineIndex}`} /></td>
                       <td className="table-cell text-center"><QtyStepper value={line.quantity} min={0} className={linesLocked ? 'opacity-60 pointer-events-none' : ''} onChange={qty => onUpdateLine(line.key, { quantity: qty })} ariaLabel={`Số lượng dòng ${lineIndex}`} /></td>
-                      <td className="table-cell text-right"><CurrencyInput className="form-input form-input-sm text-right input-no-spinner" value={line.budgetUnitPrice} min={0} max={MAX_BUDGET_UNIT_PRICE} onChange={(_raw, numeric) => { if (!linesLocked) onUpdateLine(line.key, { budgetUnitPrice: numeric > 0 ? String(numeric) : '' }); }} placeholder="0" /></td>
-                      <td className="table-cell text-right tabular-nums font-semibold"><div className="import-cell-placeholder import-cell-placeholder--end pr-2">{amount > 0 ? formatCurrency(amount) : '—'}</div></td>
+                      <td className="table-cell text-right"><CurrencyInput compact value={line.budgetUnitPrice} min={0} max={MAX_BUDGET_UNIT_PRICE} onChange={(_raw, numeric) => { if (!linesLocked) onUpdateLine(line.key, { budgetUnitPrice: numeric > 0 ? String(numeric) : '' }); }} placeholder="0" /></td>
+                      <td className="table-cell text-right tabular-nums font-semibold"><div className="import-cell-placeholder import-cell-placeholder--end pr-2">{amount > 0 ? formatCurrencyFull(amount) : '—'}</div></td>
                       <td className="table-cell text-center"><button type="button" className={`pur-create-plan__expand${openDetail ? ' is-open' : ''}`} disabled={linesLocked} aria-expanded={openDetail} aria-label={openDetail ? 'Thu gọn chi tiết' : 'Mở chi tiết'} onClick={() => onToggleExpand(line.key)}><ChevronDown size={16} /></button></td>
                       <td className="table-cell text-center"><button type="button" className="icon-btn icon-btn--danger" disabled={linesLocked} aria-label={`Xóa dòng ${lineIndex}`} title="Xóa dòng" onClick={() => onRemoveLine(line.key)}><Trash2 size={15} /></button></td>
                     </tr>
@@ -183,7 +183,7 @@ export default function PurchasePlanCreateLinesTable({
                 {totals.filled} dòng · Tổng dự toán
               </td>
               <td className="table-cell text-right font-bold tabular-nums text-[var(--md-primary)] pr-2">
-                {totals.budget > 0 ? `${formatCurrency(totals.budget)} đ` : '—'}
+                {totals.budget > 0 ? formatCurrencyFull(totals.budget) : '—'}
               </td>
               <td colSpan={2} />
             </tr>
@@ -198,8 +198,8 @@ export default function PurchasePlanCreateLinesTable({
 
         {(totals.proposal > 0 || totals.purchase > 0) && (
           <div className="pur-create-plan__subtotals">
-            {totals.proposal > 0 ? <span>Đề xuất: <strong>{formatCurrency(totals.proposal)} đ</strong></span> : null}
-            {totals.purchase > 0 ? <span>Mua hàng: <strong>{formatCurrency(totals.purchase)} đ</strong></span> : null}
+            {totals.proposal > 0 ? <span>Đề xuất: <strong>{formatCurrencyFull(totals.proposal)}</strong></span> : null}
+            {totals.purchase > 0 ? <span>Mua hàng: <strong>{formatCurrencyFull(totals.purchase)}</strong></span> : null}
           </div>
         )}
       </div>

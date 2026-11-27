@@ -15,6 +15,7 @@ import {
 import { getApiErrorMessage } from '../../../lib/apiClient';
 import { formatDateTimeVi } from '../../../lib/hrm/formatters';
 import { canEditEstimate } from '../../../lib/purchaseEstimateStatus';
+import { parseCurrencyInput } from '../../../utils/currencyInput';
 
 export type EstimateDraftLine = {
   key: string;
@@ -119,8 +120,8 @@ export function useEstimateDetailController(id?: string) {
       .filter(l => l.materialCode)
       .map(l => ({
         materialCode: l.materialCode,
-        newQty: Number(String(l.newQty).replace(/[^\d.-]/g, '')) || 0,
-        estimateUnitPrice: Number(String(l.estimateUnitPrice).replace(/[^\d.-]/g, '')) || 0,
+        newQty: Number(String(l.newQty).replace(/[^\d.,-]/g, '').replace(',', '.')) || 0,
+        estimateUnitPrice: parseCurrencyInput(l.estimateUnitPrice),
       }));
     if (lines.length === 0) {
       showToast('error', 'Giữ ít nhất một dòng vật tư.');

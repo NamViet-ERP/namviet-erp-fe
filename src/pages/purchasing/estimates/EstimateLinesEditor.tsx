@@ -93,7 +93,6 @@ export default function EstimateLinesEditor({
               <CurrencyInput
                 value={line.estimateUnitPrice}
                 onChange={estimateUnitPrice => onUpdateLine(line.key, { estimateUnitPrice })}
-                suffix="VND"
               />
             </td>
             <td className="table-cell text-center">

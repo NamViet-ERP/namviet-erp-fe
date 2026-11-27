@@ -1,3 +1,5 @@
+import { parseCurrencyInput } from '../../utils/currencyInput';
+
 export const SUPPLIER_APPROVAL = {
   New: 'new',
   Approved: 'approved',
@@ -58,9 +60,11 @@ export function parseCreditLimit(
 ): { ok: true; value: number | null } | { ok: false; error: string } {
   const trimmed = raw.trim();
   if (!trimmed) return { ok: true, value: null };
-  const digits = trimmed.replace(/\D/g, '');
-  if (!digits) return { ok: true, value: null };
-  const value = Number(digits);
+  if (trimmed.startsWith('-')) {
+    return { ok: false, error: 'Hạn mức công nợ phải từ 0 trở lên.' };
+  }
+  if (!/\d/.test(trimmed)) return { ok: true, value: null };
+  const value = parseCurrencyInput(trimmed);
   if (!Number.isFinite(value) || value < SUPPLIER_LIMITS.creditLimitMin) {
     return { ok: false, error: 'Hạn mức công nợ phải từ 0 trở lên.' };
   }

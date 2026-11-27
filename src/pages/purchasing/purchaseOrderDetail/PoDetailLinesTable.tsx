@@ -1,6 +1,8 @@
+import CurrencyInput from '../../../components/ui/CurrencyInput';
 import EmptyState from '../../../components/ui/EmptyState';
 import { formatDateCell } from '../../../lib/hrm/formatters';
-import { formatCurrency } from '../../../utils/formatCurrency';
+import { parseCurrencyInput } from '../../../utils/currencyInput';
+import { formatCurrencyFull } from '../../../utils/formatCurrency';
 import type { PurchaseOrderLineApiDto } from '../../../types/api/purchasingApi';
 import type { PoEditLineDraft } from './usePurchaseOrderDetail';
 
@@ -58,8 +60,12 @@ export function PoDetailLinesTable({
             <tbody>
               {lines.map(line => {
                 const draft = editLines[line.id];
-                const qty = editing ? Number(draft?.qty ?? line.ordered) : line.ordered;
-                const price = editing ? Number(draft?.unitPrice ?? line.poPrice) : line.poPrice;
+                const qty = editing
+                  ? (Number(String(draft?.qty ?? line.ordered).replace(',', '.')) || 0)
+                  : line.ordered;
+                const price = editing
+                  ? parseCurrencyInput(draft?.unitPrice ?? String(line.poPrice))
+                  : line.poPrice;
                 const amount = Number.isFinite(qty * price) ? qty * price : line.lineAmount;
                 return (
                   <tr key={line.id}>
@@ -84,21 +90,18 @@ export function PoDetailLinesTable({
                     </td>
                     <td className="pur-erp__td-num">
                       {editing ? (
-                        <input
-                          className="form-input text-right"
-                          type="number"
-                          min={0}
-                          step="any"
-                          aria-label={`Đơn giá ${line.name}`}
+                        <CurrencyInput
+                          compact
+                          ariaLabel={`Đơn giá ${line.name}`}
                           value={draft?.unitPrice ?? ''}
-                          onChange={e => onEditLinesChange(prev => ({
+                          onChange={unitPrice => onEditLinesChange(prev => ({
                             ...prev,
-                            [line.id]: { ...prev[line.id]!, unitPrice: e.target.value },
+                            [line.id]: { ...prev[line.id]!, unitPrice },
                           }))}
                         />
-                      ) : formatCurrency(line.poPrice)}
+                      ) : formatCurrencyFull(line.poPrice)}
                     </td>
-                    <td className="pur-erp__td-num">{formatCurrency(amount)}</td>
+                    <td className="pur-erp__td-num">{formatCurrencyFull(amount)}</td>
                     <td>
                       {editing ? (
                         <input

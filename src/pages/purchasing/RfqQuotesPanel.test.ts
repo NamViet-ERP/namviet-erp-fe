@@ -327,7 +327,7 @@ describe('RfqQuotesPanel characterization', () => {
 
     expect(container.textContent).toContain('Công ty Cổ phần Thép Hòa Phát: 3/4 (75%)');
     expect(container.textContent).not.toContain('Công ty Cổ phần Đầu tư Van Minh Hòa: 0/2');
-    expect(container.textContent).toContain('Q4/2026: 1.600.000 (2 BG)');
+    expect(container.textContent).toContain('Q4/2026: 1.600.000\u00a0VNĐ (2 BG)');
 
     await selectHrmOption('Lọc theo NCC', 'Công ty Cổ phần Thép Hòa Phát');
     await flushQueries();
@@ -397,7 +397,7 @@ describe('RfqQuotesPanel characterization', () => {
     const supplierInput = dialog.querySelector<HTMLInputElement>('input[placeholder="Chọn nhà cung cấp…"]')!;
     await selectComboboxOption(supplierInput, 'Thép Hòa Phát');
 
-    const priceInput = dialog.querySelector<HTMLInputElement>('input[inputmode="numeric"]')!;
+    const priceInput = dialog.querySelector<HTMLInputElement>('input.currency-input-group__input')!;
     await act(async () => {
       setInputValue(priceInput, '1080000');
     });
@@ -443,7 +443,7 @@ describe('RfqQuotesPanel characterization', () => {
 
     const editDialog = document.querySelector('[role="dialog"]')!;
     expect(editDialog.textContent).toContain('Sửa báo giá');
-    const editPriceInput = editDialog.querySelector<HTMLInputElement>('input[inputmode="numeric"]')!;
+    const editPriceInput = editDialog.querySelector<HTMLInputElement>('input.currency-input-group__input')!;
     await act(async () => {
       setInputValue(editPriceInput, '1020000');
     });

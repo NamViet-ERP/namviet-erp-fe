@@ -1,5 +1,5 @@
 import Button from '../../../components/ui/Button';
-import { formatCurrency } from '../../../utils/formatCurrency';
+import { formatCurrencyFull } from '../../../utils/formatCurrency';
 
 interface ImportCreateModalFooterProps {
   onClose: () => void;
@@ -43,7 +43,7 @@ export default function ImportCreateModalFooter({
             <>
               <span className="text-[var(--md-on-surface-variant)]">Tổng giá trị: </span>
               <span className="font-bold text-[var(--md-primary)] tabular-nums">
-                {formatCurrency(displayGrandTotal)} đ
+                {formatCurrencyFull(displayGrandTotal)}
               </span>
             </>
           ) : (

@@ -4,7 +4,7 @@ import EmptyState from '../ui/EmptyState';
 import TableSkeletonRows from '../ui/TableSkeletonRows';
 import Badge from '../ui/Badge';
 import { useProjectLedger } from '../../hooks/useProjects';
-import { formatCurrency } from '../../utils/formatCurrency';
+import { formatCurrencyFull } from '../../utils/formatCurrency';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { WMS_ERROR } from '../../lib/wms/messages';
 
@@ -19,7 +19,7 @@ function kindLabel(kind: string) {
 }
 
 function summaryLabel(kind: string, itemQty: number, totalValue: number | null | undefined) {
-  if (kind === 'import' && totalValue != null) return `${formatCurrency(totalValue)} đ`;
+  if (kind === 'import' && totalValue != null) return formatCurrencyFull(totalValue);
   return `${itemQty} VT`;
 }
 

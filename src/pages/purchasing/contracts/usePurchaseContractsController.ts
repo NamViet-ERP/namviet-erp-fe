@@ -18,6 +18,7 @@ import { getApiErrorMessage } from '../../../lib/apiClient';
 import { purchaseContractsService } from '../../../services/purchaseContractsService';
 import { findSupplierByName } from '../../../services/suppliersService';
 import type { PurchaseContractApiDto } from '../../../types/api/purchasingApi';
+import { parseCurrencyInput } from '../../../utils/currencyInput';
 
 export const CONTRACT_STATUS_OPTIONS = [
   { value: '', label: 'Tất cả trạng thái' },
@@ -212,7 +213,7 @@ export function usePurchaseContractsController() {
 
   const buildBody = () => {
     const matched = findSupplierByName(suppliers, form.supplierName);
-    const amountNum = Number(String(form.amount).replace(/[^\d.-]/g, ''));
+    const amountNum = parseCurrencyInput(form.amount);
     return {
       contractNo: form.contractNo.trim(),
       title: form.title.trim(),

@@ -5,7 +5,7 @@ import StatusBadge from '../../../components/ui/StatusBadge';
 import TableShell from '../../../components/ui/TableShell';
 import type { ListPageSize } from '../../../constants/pagination';
 import type { ServiceExpenseItemApiDto } from '../../../types/api/serviceExpenseItem';
-import { formatCurrency } from '../../../utils/formatCurrency';
+import { formatCurrencyFull } from '../../../utils/formatCurrency';
 
 interface ServicesExpensesTableProps {
   items: ServiceExpenseItemApiDto[];
@@ -130,7 +130,7 @@ export default function ServicesExpensesTable({
             <td className="table-cell text-right font-medium tabular-nums">
               {item.referencePrice != null ? (
                 <span className="text-[var(--md-on-surface)]">
-                  {formatCurrency(item.referencePrice)}
+                  {formatCurrencyFull(item.referencePrice)}
                 </span>
               ) : (
                 <span className="text-[var(--md-on-surface-variant)] opacity-40">—</span>

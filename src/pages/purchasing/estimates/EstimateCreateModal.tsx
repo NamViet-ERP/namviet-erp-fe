@@ -10,6 +10,7 @@ import { showToast } from '../../../components/ui/Toast';
 import type { MaterialApiDto } from '../../../services/materialsService';
 import type { CreatePurchaseEstimateRequest } from '../../../types/api/purchasingApi';
 import type { WarehouseProjectApiDto } from '../../../types/wms';
+import { parseCurrencyInput } from '../../../utils/currencyInput';
 import { formatCurrencyFull, formatCurrencyVnd } from '../../../utils/formatCurrency';
 
 type CreateLine = {
@@ -61,8 +62,8 @@ export default function EstimateCreateModal({
 
   const createTotal = useMemo(
     () => createLines.reduce((sum, line) => {
-      const qty = Number(String(line.qty).replace(/[^\d.-]/g, '')) || 0;
-      const price = Number(String(line.price).replace(/[^\d.-]/g, '')) || 0;
+      const qty = Number(String(line.qty).replace(/[^\d.,-]/g, '').replace(',', '.')) || 0;
+      const price = parseCurrencyInput(line.price);
       return sum + qty * price;
     }, 0),
     [createLines],
@@ -84,8 +85,8 @@ export default function EstimateCreateModal({
       .filter(l => l.materialCode)
       .map(l => ({
         materialCode: l.materialCode,
-        newQty: Number(String(l.qty).replace(/[^\d.-]/g, '')) || 0,
-        estimateUnitPrice: Number(String(l.price).replace(/[^\d.-]/g, '')) || 0,
+        newQty: Number(String(l.qty).replace(/[^\d.,-]/g, '').replace(',', '.')) || 0,
+        estimateUnitPrice: parseCurrencyInput(l.price),
       }));
     if (lines.length === 0) {
       showToast('error', 'Thêm ít nhất một vật tư.');
@@ -212,8 +213,8 @@ export default function EstimateCreateModal({
               </thead>
               <tbody>
                 {createLines.map((line, index) => {
-                  const qty = Number(String(line.qty).replace(/[^\d.-]/g, '')) || 0;
-                  const price = Number(String(line.price).replace(/[^\d.-]/g, '')) || 0;
+                  const qty = Number(String(line.qty).replace(/[^\d.,-]/g, '').replace(',', '.')) || 0;
+                  const price = parseCurrencyInput(line.price);
                   return (
                     <tr key={line.key} className="table-row">
                       <td className="table-cell text-center tabular-nums text-[var(--md-on-surface-variant)]">
@@ -242,7 +243,6 @@ export default function EstimateCreateModal({
                           value={line.price}
                           onChange={next =>
                             setCreateLines(prev => prev.map(l => (l.key === line.key ? { ...l, price: next } : l)))}
-                          suffix="VND"
                         />
                       </td>
                       <td className="table-cell text-right tabular-nums font-medium">

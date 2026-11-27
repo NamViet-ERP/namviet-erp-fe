@@ -79,10 +79,10 @@ export default function AdminOpeningStockPreviewTable({ items }: AdminOpeningSto
                   {it.qty.toLocaleString('vi-VN')}
                 </td>
                 <td className="py-2 px-2.5 text-right tabular-nums text-[var(--md-on-surface)]">
-                  {it.unitPrice > 0 ? formatCurrencyFull(it.unitPrice) : '0 ₫'}
+                  {formatCurrencyFull(it.unitPrice > 0 ? it.unitPrice : 0)}
                 </td>
                 <td className="py-2 px-2.5 text-right font-medium tabular-nums text-[var(--md-success)]">
-                  {it.totalAmount > 0 ? formatCurrencyFull(it.totalAmount) : '0 ₫'}
+                  {formatCurrencyFull(it.totalAmount > 0 ? it.totalAmount : 0)}
                 </td>
               </tr>
             ))

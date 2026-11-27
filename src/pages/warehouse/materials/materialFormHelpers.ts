@@ -9,6 +9,7 @@ import {
 } from '../../../constants/materialCategoryLevels';
 import { categoryLevel, resolveLeafCategoryId } from '../../../lib/wms/materialCategoryTree';
 import type { MaterialCategoryApiDto } from '../../../types/wms';
+import { parseCurrencyInput } from '../../../utils/currencyInput';
 
 export type CategorySelection = Array<number | ''>;
 
@@ -43,8 +44,13 @@ export function validateMaterialForm(params: {
       errors[`level${lvl}`] = materialSelectError(MATERIAL_CATEGORY_LEVELS[lvl - 1].label);
     }
   }
-  if (params.requireCode && !params.materialCode?.trim()) {
-    errors.materialCode = materialInputError('mã vật tư');
+  if (params.requireCode) {
+    const trimmedCode = params.materialCode?.trim() ?? '';
+    if (!trimmedCode) {
+      errors.materialCode = materialInputError('mã vật tư');
+    } else if (trimmedCode.length > 100) {
+      errors.materialCode = 'Mã vật tư tối đa 100 ký tự';
+    }
   }
   if (!params.materialName.trim()) errors.materialName = materialInputError('tên vật tư');
   if (!params.unit.trim()) errors.unit = materialSelectError('đơn vị tính');
@@ -58,7 +64,8 @@ export function validateMaterialForm(params: {
 
 export function parseCeilingPrice(raw: string): number | null {
   if (!raw) return null;
-  return Number(String(raw).replace(/[^\d.-]/g, '')) || null;
+  const n = parseCurrencyInput(raw);
+  return n > 0 ? n : null;
 }
 
 export function buildMaterialUpsertBody(params: {

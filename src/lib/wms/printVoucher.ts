@@ -1,4 +1,4 @@
-import { formatCurrency } from '../../utils/formatCurrency';
+import { formatCurrencyFull } from '../../utils/formatCurrency';
 import { showToast } from '../../components/ui/Toast';
 
 export interface VoucherPrintField {
@@ -52,11 +52,11 @@ function buildLineCells(line: VoucherPrintLine, columns: string[]): string {
       cells.push(`<td class="center">${escapeHtml(line.unit || '—')}</td>`);
     } else if (col === 'Đơn giá') {
       cells.push(
-        `<td class="num">${line.unitPrice != null ? escapeHtml(formatCurrency(line.unitPrice)) : '—'}</td>`,
+        `<td class="num">${line.unitPrice != null ? escapeHtml(formatCurrencyFull(line.unitPrice)) : '—'}</td>`,
       );
     } else if (col === 'Thành tiền') {
       cells.push(
-        `<td class="num strong">${line.lineTotal != null ? escapeHtml(formatCurrency(line.lineTotal)) : '—'}</td>`,
+        `<td class="num strong">${line.lineTotal != null ? escapeHtml(formatCurrencyFull(line.lineTotal)) : '—'}</td>`,
       );
     } else if (col === 'Hệ thống') {
       cells.push(`<td class="num">${escapeHtml(String(line.qty))}</td>`);
@@ -83,7 +83,7 @@ export function buildVoucherPrintHtml(payload: VoucherPrintPayload): string {
     .join('');
   const totalRow =
     payload.grandTotal != null
-      ? `<div class="grand-total"><span>${escapeHtml(payload.grandTotalLabel || 'Tổng cộng')}</span><strong>${escapeHtml(formatCurrency(payload.grandTotal))} đ</strong></div>`
+      ? `<div class="grand-total"><span>${escapeHtml(payload.grandTotalLabel || 'Tổng cộng')}</span><strong>${escapeHtml(formatCurrencyFull(payload.grandTotal))}</strong></div>`
       : '';
 
   return `<!DOCTYPE html>

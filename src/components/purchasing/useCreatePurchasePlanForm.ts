@@ -19,7 +19,7 @@ import type {
   SupplierMaterialRiskApiDto,
   SupplierMaterialRiskPairRequest,
 } from '../../types/api/purchasingApi';
-import { formatCurrency } from '../../utils/formatCurrency';
+import { formatCurrencyVnd } from '../../utils/formatCurrency';
 import {
   MAX_BUDGET_UNIT_PRICE,
   emptyLine,
@@ -28,6 +28,7 @@ import {
   isUnknownPlanItem,
   lineAmount,
   parseNum,
+  parseOptionalCurrency,
   toApiLines,
   type DraftLine,
   type PurchasePlanLineType,
@@ -250,12 +251,12 @@ export function useCreatePurchasePlanForm({
       return;
     }
     for (let i = 0; i < lines.length; i += 1) {
-      const price = parseNum(lines[i].budgetUnitPrice);
+      const price = parseOptionalCurrency(lines[i].budgetUnitPrice);
       if (price == null) continue;
       if (price < 0 || price > MAX_BUDGET_UNIT_PRICE) {
         showToast(
           'warning',
-          `Dòng ${i + 1}: Đơn giá ngân sách phải từ 0 đến ${formatCurrency(MAX_BUDGET_UNIT_PRICE)}.`,
+          `Dòng ${i + 1}: Đơn giá ngân sách phải từ 0 đến ${formatCurrencyVnd(MAX_BUDGET_UNIT_PRICE)}.`,
         );
         return;
       }

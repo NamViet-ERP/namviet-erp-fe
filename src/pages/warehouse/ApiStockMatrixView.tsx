@@ -28,7 +28,7 @@ import {
 } from '../../lib/wms/stockTerminology';
 import { WMS_EMPTY, WMS_ERROR } from '../../lib/wms/messages';
 import type { StockMatrixRowApiDto } from '../../types/wms';
-import { formatCurrency } from '../../utils/formatCurrency';
+import { formatCurrencyFull } from '../../utils/formatCurrency';
 
 export default function ApiStockMatrixView() {
   const { data: rows = [], isLoading, isError, refetch } = useStockMatrix();
@@ -152,7 +152,7 @@ export default function ApiStockMatrixView() {
                 </th>
                 <th className="table-header-cell text-right stock-col-qty" title="Tồn kho dự án + nhập/hoàn trả/chuyển kho dự kiến">Tồn DK dự án</th>
                 {canViewPrices ? (
-                  <th className="table-header-cell text-right stock-col-price" title="WAC từ phiếu nhập đã duyệt trong 12 tháng (ngày duyệt)">Giá bình quân (VNĐ)</th>
+                  <th className="table-header-cell text-right stock-col-price" title="WAC từ phiếu nhập đã duyệt trong 12 tháng (ngày duyệt)">Giá bình quân</th>
                 ) : null}
                 <th className="table-header-cell text-center stock-col-projects">Dự án</th>
               </tr>
@@ -225,7 +225,7 @@ export default function ApiStockMatrixView() {
                       {canViewPrices ? (
                         <td className="table-cell text-right tabular-nums stock-col-price text-[var(--md-on-surface)]">
                           {row.weightedAverageUnitCost > 0
-                            ? formatCurrency(row.weightedAverageUnitCost)
+                            ? formatCurrencyFull(row.weightedAverageUnitCost)
                             : '—'}
                         </td>
                       ) : null}

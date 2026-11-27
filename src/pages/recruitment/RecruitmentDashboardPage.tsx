@@ -12,7 +12,7 @@ import EmptyState from '../../components/ui/EmptyState';
 import { showToast } from '../../components/ui/Toast';
 import { useRecruitmentDashboard } from '../../hooks/useRecruitmentDashboard';
 import { getApiErrorMessage } from '../../lib/apiClient';
-import { formatCurrency } from '../../utils/formatCurrency';
+import { formatCurrency, formatCurrencyFull } from '../../utils/formatCurrency';
 import type { CardAccent } from '../../types';
 
 const CHART_NAVY = 'var(--nv-navy)';
@@ -231,7 +231,7 @@ export default function RecruitmentDashboardPage() {
         </SectionCard>
 
         <SectionCard className="recruitment-dash-chart">
-          <h2 className="recruitment-dash-chart__title">Chi phí theo Nguồn (VNĐ)</h2>
+          <h2 className="recruitment-dash-chart__title">Chi phí theo Nguồn</h2>
           {costBySource.isError ? (
             <EmptyState message="Chưa có dữ liệu chi phí hoặc chưa được phép xem." />
           ) : costData.length === 0 ? (
@@ -256,7 +256,7 @@ export default function RecruitmentDashboardPage() {
                     axisLine={false}
                     tickLine={false}
                   />
-                  <Tooltip formatter={value => [`${formatCurrency(Number(value ?? 0))} đ`, 'Chi phí']} />
+                  <Tooltip formatter={value => [formatCurrencyFull(Number(value ?? 0)), 'Chi phí']} />
                   <Bar dataKey="totalAmount" name="Chi phí" fill={CHART_AMBER} radius={[0, 4, 4, 0]} maxBarSize={22} />
                 </BarChart>
               </ResponsiveContainer>

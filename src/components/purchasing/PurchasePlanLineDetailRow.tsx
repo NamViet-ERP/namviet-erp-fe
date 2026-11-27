@@ -5,7 +5,8 @@ import FormField from '../ui/FormField';
 import SupplierAutocomplete from '../ui/SupplierAutocomplete';
 import type { SupplierApiDto } from '../../services/suppliersService';
 import type { SupplierMaterialRiskApiDto } from '../../types/api/purchasingApi';
-import { formatCurrency } from '../../utils/formatCurrency';
+import { parseCurrencyInput } from '../../utils/currencyInput';
+import { formatCurrencyFull } from '../../utils/formatCurrency';
 import type { DraftLine } from './createPurchasePlanDraft';
 
 interface PurchasePlanLineDetailRowProps {
@@ -133,7 +134,7 @@ export default function PurchasePlanLineDetailRow({
                 <div className="pur-create-plan__price-fields">
                   <FormField label={stage.priceLabel} className="pur-create-plan__ff">
                     <CurrencyInput
-                      className="form-input form-input-sm text-right input-no-spinner"
+                      compact
                       ariaLabel={stage.priceLabel}
                       value={line[stage.priceKey]}
                       onChange={(_raw, numeric) => {
@@ -179,7 +180,7 @@ export default function PurchasePlanLineDetailRow({
                   <div key={q.key} className="pur-create-plan__quote-card">
                     <span>#{q.sortOrder}</span>
                     <strong>{q.supplierName || '—'}</strong>
-                    <span className="tabular-nums">{q.unitPrice ? formatCurrency(Number(q.unitPrice)) : '—'}</span>
+                    <span className="tabular-nums">{q.unitPrice ? formatCurrencyFull(parseCurrencyInput(q.unitPrice)) : '—'}</span>
                   </div>
                 ))}
               </div>

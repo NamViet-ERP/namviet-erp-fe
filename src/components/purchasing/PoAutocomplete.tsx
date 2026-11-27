@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import type { PurchaseOrderApiDto } from '../../types/api/purchasingApi';
-import { formatCurrency } from '../../utils/formatCurrency';
+import { formatCurrencyFull } from '../../utils/formatCurrency';
 import EntityCombobox from '../ui/EntityCombobox';
 
 interface PoAutocompleteProps {
@@ -14,7 +14,7 @@ interface PoAutocompleteProps {
 
 function poLabel(o: PurchaseOrderApiDto) {
   const supplier = o.supplierName?.trim() || '—';
-  return `${o.code} · ${supplier} · ${formatCurrency(o.totalAmount)} đ`;
+  return `${o.code} · ${supplier} · ${formatCurrencyFull(o.totalAmount)}`;
 }
 
 /** Combobox chọn PO — không cho nhập mã tự do. */
@@ -64,7 +64,7 @@ export default function PoAutocomplete({
             {o.supplierName || '—'}
           </span>
           <span className="search-autocomplete__code" title={o.code}>
-            {o.code} · {formatCurrency(o.totalAmount)} đ
+            {o.code} · {formatCurrencyFull(o.totalAmount)}
           </span>
         </>
       )}

@@ -28,6 +28,12 @@ describe('createPurchasePlanDraft', () => {
       expect(lineAmount('10', '50000', undefined)).toBe(500000);
     });
 
+    it('calculates amount with decimal unitPrice and kgPerUnit cleanly', () => {
+      expect(lineAmount('2', '1000,5')).toBe(2001);
+      expect(lineAmount('1.5', '1.000,5')).toBe(1500.75);
+      expect(lineAmount('2', '26818.18', '1')).toBe(53636.36);
+    });
+
     it('returns 0 when qty or unitPrice is invalid or <= 0', () => {
       expect(lineAmount('0', '50000', '200')).toBe(0);
       expect(lineAmount('-5', '50000', '200')).toBe(0);
@@ -39,11 +45,11 @@ describe('createPurchasePlanDraft', () => {
   });
 
   describe('currencyToDraft', () => {
-    it('rounds float prices to integer string and prevents scientific/overflow digits', () => {
-      // Lỗi nổ số 26.818.181.818.181.816 do số lẻ thập phân từ công thức Excel
-      expect(currencyToDraft(26818.181818181816)).toBe('26818');
+    it('preserves up to 2 decimals while preventing long float noise', () => {
+      expect(currencyToDraft(26818.181818181816)).toBe('26818.18');
+      expect(currencyToDraft(20000.75)).toBe('20000.75');
       expect(currencyToDraft(14821600)).toBe('14821600');
-      expect(currencyToDraft(1234.5)).toBe('1235');
+      expect(currencyToDraft(1234.5)).toBe('1234.5');
       expect(currencyToDraft(0)).toBe('0');
     });
 
@@ -116,13 +122,13 @@ describe('createPurchasePlanDraft', () => {
       expect(drafts[0].quantity).toBe('1');
       // kgPerUnit giữ nguyên số thập phân
       expect(drafts[0].kgPerUnit).toBe('2434.5');
-      // Đơn giá được làm tròn sạch sẽ
+      // Đơn giá giữ tối đa 2 chữ số thập phân sạch sẽ
       expect(drafts[0].budgetUnitPrice).toBe('26000');
-      expect(drafts[0].proposalUnitPrice).toBe('26818');
-      expect(drafts[0].selectedUnitPrice).toBe('26818');
+      expect(drafts[0].proposalUnitPrice).toBe('26818.18');
+      expect(drafts[0].selectedUnitPrice).toBe('26818.18');
       expect(drafts[0].quotes).toHaveLength(1);
-      expect(drafts[0].quotes[0].unitPrice).toBe('26818');
-      expect(drafts[0].quotes[0].amount).toBe('65275455');
+      expect(drafts[0].quotes[0].unitPrice).toBe('26818.18');
+      expect(drafts[0].quotes[0].amount).toBe('65275454.55');
     });
 
     it('loads service and expense preview lines even without materialCode', () => {
@@ -214,10 +220,10 @@ describe('createPurchasePlanDraft', () => {
       expect(drafts[0].productName).toBe('Ống thép đúc');
       expect(drafts[0].description).toBe('Ống dẫn dầu áp lực cao');
       expect(drafts[0].kgPerUnit).toBe('12.5');
-      expect(drafts[0].budgetUnitPrice).toBe('20001');
+      expect(drafts[0].budgetUnitPrice).toBe('20000.75');
       expect(drafts[0].quotes).toHaveLength(1);
-      expect(drafts[0].quotes[0].unitPrice).toBe('19000');
-      expect(drafts[0].quotes[0].amount).toBe('95000');
+      expect(drafts[0].quotes[0].unitPrice).toBe('19000.4');
+      expect(drafts[0].quotes[0].amount).toBe('95000.2');
     });
 
     it('returns [emptyLine()] when existing plan lines are null or empty', () => {
@@ -320,6 +326,49 @@ describe('createPurchasePlanDraft', () => {
       expect(apiLines[1].productName).toBe('Nhân công vận hành chạy thử');
       expect(apiLines[1].budgetUnitPrice).toBe(20000000);
       expect(apiLines[1].budgetAmount).toBe(20000000);
+    });
+
+    it('parses Vietnamese-formatted currency strings and decimal unit prices in toApiLines', () => {
+      const lines = [
+        {
+          ...emptyLine(),
+          materialCode: 'VT-001',
+          productName: 'Thép tấm A515',
+          unit: 'Tấm',
+          quantity: '2',
+          budgetUnitPrice: '1.500.000,5',
+          proposalUnitPrice: '26.818,18',
+          purchaseUnitPrice: '1.200.000',
+          selectedUnitPrice: '1.200.000,25',
+          quotes: [
+            {
+              key: 'q-1',
+              sortOrder: 1,
+              supplierName: 'NCC A',
+              unitPrice: '19.000,4',
+              amount: '38.000,8',
+            },
+          ],
+        },
+      ];
+
+      const apiLines = toApiLines(lines);
+      expect(apiLines).toHaveLength(1);
+      expect(apiLines[0].budgetUnitPrice).toBe(1500000.5);
+      expect(apiLines[0].budgetAmount).toBe(3000001);
+      expect(apiLines[0].proposalUnitPrice).toBe(26818.18);
+      expect(apiLines[0].proposalAmount).toBe(53636.36);
+      expect(apiLines[0].purchaseUnitPrice).toBe(1200000);
+      expect(apiLines[0].selectedUnitPrice).toBe(1200000.25);
+      expect(apiLines[0].selectedAmount).toBe(2400000.5);
+      expect(apiLines[0].quotes).toEqual([
+        {
+          sortOrder: 1,
+          supplierName: 'NCC A',
+          unitPrice: 19000.4,
+          amount: 38000.8,
+        },
+      ]);
     });
   });
 });

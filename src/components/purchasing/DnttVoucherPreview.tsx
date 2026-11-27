@@ -8,7 +8,7 @@ import {
   Stamp,
   UserRound,
 } from 'lucide-react';
-import { formatCurrency } from '../../utils/formatCurrency';
+import { formatCurrency, formatCurrencyFull } from '../../utils/formatCurrency';
 import { amountToVietnameseWords } from '../../utils/amountToVietnameseWords';
 import { formatDateCell } from '../../lib/hrm/formatters';
 
@@ -61,7 +61,7 @@ export default function DnttVoucherPreview({ model }: { model: DnttPreviewModel 
     ?? [model.poCode && 'PO', model.invoiceNo && 'Hóa đơn'].filter(Boolean).length;
 
   const planProject = [model.planCode, model.projectLabel].filter(Boolean).join(' · ');
-  const amountLabel = model.amount > 0 ? `${formatCurrency(model.amount)} đ` : '—';
+  const amountLabel = model.amount > 0 ? formatCurrencyFull(model.amount) : '—';
   const wordsLabel = model.amount > 0
     ? `${amountToVietnameseWords(model.amount)}./.`
     : '—';
@@ -152,19 +152,19 @@ export default function DnttVoucherPreview({ model }: { model: DnttPreviewModel 
                 <td>
                   <div className="dntt05__line-name">{line.name}</div>
                   <div className="dntt05__line-meta">
-                    {[line.code, line.unit && `ĐVT: ${line.unit}`, `SL: ${formatCurrency(line.qty)}`, `ĐG: ${formatCurrency(line.unitPrice)}`]
+                    {[line.code, line.unit && `ĐVT: ${line.unit}`, `SL: ${formatCurrency(line.qty)}`, `ĐG: ${formatCurrencyFull(line.unitPrice)}`]
                       .filter(Boolean)
                       .join(' · ')}
                   </div>
                 </td>
-                <td className="dntt05__num">{formatCurrency(line.amount)}</td>
+                <td className="dntt05__num">{formatCurrencyFull(line.amount)}</td>
               </tr>
             ))
           ) : (
             <tr>
               <td className="dntt05__center">1</td>
               <td>{contentText || '—'}</td>
-              <td className="dntt05__num">{model.amount > 0 ? formatCurrency(model.amount) : '—'}</td>
+              <td className="dntt05__num">{model.amount > 0 ? formatCurrencyFull(model.amount) : '—'}</td>
             </tr>
           )}
         </tbody>

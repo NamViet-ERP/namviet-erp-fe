@@ -8,11 +8,11 @@ import type {
   PurchasePlanLineApiDto,
   PurchasePlanLinePoApiDto,
 } from '../../../types/api/purchasingApi';
-import { formatCurrency } from '../../../utils/formatCurrency';
+import { formatCurrencyFull } from '../../../utils/formatCurrency';
 
 function money(v: number | null | undefined): string {
   if (v == null) return '—';
-  return formatCurrency(v);
+  return formatCurrencyFull(v);
 }
 
 function qty(v: number | null | undefined): string {
@@ -40,7 +40,7 @@ function LineQuotes({ line }: { line: PurchasePlanLineApiDto }) {
         <ul className="pur-detail__quote-list">
           {quotes.map(q => (
             <li key={q.id}>
-              {q.supplierName || '—'}: {formatCurrency(q.unitPrice ?? 0)}
+              {q.supplierName || '—'}: {formatCurrencyFull(q.unitPrice ?? 0)}
               {q.note ? ` - ${q.note}` : ''}
             </li>
           ))}

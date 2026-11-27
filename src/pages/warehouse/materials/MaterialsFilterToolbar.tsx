@@ -2,7 +2,14 @@ import { RotateCcw } from 'lucide-react';
 import Button from '../../../components/ui/Button';
 import SearchBar from '../../../components/ui/SearchBar';
 import { MATERIAL_CATEGORY_LEVELS } from '../../../constants/materialCategoryLevels';
+import type { MaterialStatusFilter } from '../../../services/materialsService';
 import type { MaterialCategoryApiDto } from '../../../types/wms';
+
+const STATUS_OPTIONS: Array<{ value: MaterialStatusFilter; label: string }> = [
+  { value: 'active', label: 'Đang dùng' },
+  { value: 'inactive', label: 'Ngừng sử dụng' },
+  { value: 'all', label: 'Tất cả' },
+];
 
 interface MaterialsFilterToolbarProps {
   filterSelection: Array<number | ''>;
@@ -11,8 +18,8 @@ interface MaterialsFilterToolbarProps {
   onFilterLevelChange: (levelIndex: number, value: number | '') => void;
   search: string;
   onSearchChange: (value: string) => void;
-  showInactive: boolean;
-  onToggleInactive: () => void;
+  statusFilter: MaterialStatusFilter;
+  onStatusFilterChange: (next: MaterialStatusFilter) => void;
   onResetFilters: () => void;
 }
 
@@ -23,8 +30,8 @@ export default function MaterialsFilterToolbar({
   onFilterLevelChange,
   search,
   onSearchChange,
-  showInactive,
-  onToggleInactive,
+  statusFilter,
+  onStatusFilterChange,
   onResetFilters,
 }: MaterialsFilterToolbarProps) {
   return (
@@ -60,14 +67,34 @@ export default function MaterialsFilterToolbar({
             onChange={onSearchChange}
             placeholder="Tìm mã vật tư, tên vật tư..."
           />
-          <button
-            type="button"
-            onClick={onToggleInactive}
-            className={`mat-catalog__status${showInactive ? ' is-on' : ''}`}
-            aria-pressed={showInactive}
+          <div
+            role="group"
+            aria-label="Trạng thái sử dụng vật tư"
+            className="mat-catalog__status-group"
           >
-            {showInactive ? 'Hiện cả ngừng SD' : 'Chỉ đang dùng'}
-          </button>
+            {STATUS_OPTIONS.map(opt => {
+              const isActive = statusFilter === opt.value;
+              const classes = [
+                'mat-catalog__status-opt',
+                opt.value === 'inactive' ? 'mat-catalog__status-opt--inactive' : '',
+                isActive ? 'is-active' : '',
+                'whitespace-nowrap',
+              ]
+                .filter(Boolean)
+                .join(' ');
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => onStatusFilterChange(opt.value)}
+                  className={classes}
+                  aria-pressed={isActive}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
           <Button
             type="button"
             variant="text"

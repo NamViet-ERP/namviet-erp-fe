@@ -13,7 +13,7 @@ import { fmtStockQty } from '../../../lib/wms/stockQtyFormat';
 import type { WmsLowStockAlertApiDto } from '../../../services/alertsService';
 import type { PurchaseOrderApiDto, PurchasePaymentApiDto } from '../../../types/api/purchasingApi';
 import type { WarehouseProjectApiDto } from '../../../types/wms';
-import { formatCurrency } from '../../../utils/formatCurrency';
+import { formatCurrencyFull } from '../../../utils/formatCurrency';
 import {
   ORDER_FILTERS, PAYMENT_FILTERS, PROJECT_FILTERS, STOCK_FILTERS,
   hasPm, paymentStatusBadge, projectStatusLabel,
@@ -202,7 +202,7 @@ export default function OperationsDashboardBoards({
               <td className="table-cell"><EntityCodeLink code={row.code} to={`/purchasing/payments/${encodeURIComponent(row.code)}`} /></td>
               <td className="table-cell tabular-nums">{row.poCode}</td>
               <td className="table-cell">{row.supplierName || '-'}</td>
-              <td className="table-cell text-right tabular-nums">{formatCurrency(row.amount)}</td>
+              <td className="table-cell text-right tabular-nums">{formatCurrencyFull(row.amount)}</td>
               <td className="table-cell"><StatusBadge {...paymentStatusBadge(row.status)} /></td>
             </tr>
           ))}

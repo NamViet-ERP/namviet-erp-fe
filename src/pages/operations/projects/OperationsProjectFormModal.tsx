@@ -3,6 +3,7 @@ import HrmDatePicker from '../../../components/hr/HrmDatePicker';
 import ProjectMemberMultiSelect from '../../../components/operations/ProjectMemberMultiSelect';
 import ProjectPersonnelSelect from '../../../components/operations/ProjectPersonnelSelect';
 import Button from '../../../components/ui/Button';
+import CurrencyInput from '../../../components/ui/CurrencyInput';
 import FormField from '../../../components/ui/FormField';
 import Modal from '../../../components/ui/Modal';
 import type { WarehouseProjectApiDto } from '../../../types/wms';
@@ -100,13 +101,12 @@ export default function OperationsProjectFormModal({
           />
         </FormField>
         <FormField label="Ngân sách VT (tối thiểu 1)" htmlFor="modal-material-budget" error={errors.materialBudget}>
-          <input
+          <CurrencyInput
             id="modal-material-budget"
-            name="materialBudget"
-            className="form-input"
-            inputMode="decimal"
             value={form.materialBudget}
-            onChange={e => onChange(f => ({ ...f, materialBudget: e.target.value }))}
+            min={0}
+            placeholder="VD: 1.000.000.000"
+            onChange={materialBudget => onChange(f => ({ ...f, materialBudget }))}
           />
         </FormField>
         <FormField label="Ngày bắt đầu" htmlFor="modal-start-date" required error={errors.startDate}>

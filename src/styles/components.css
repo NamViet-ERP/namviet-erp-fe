@@ -1288,10 +1288,58 @@
   }
   .currency-input-group__suffix {
     flex-shrink: 0;
+    padding-left: 8px;
+    border-left: 1px solid var(--md-outline-variant02);
     color: var(--md-on-surface-variant);
-    font-size: var(--fs-md);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
     user-select: none;
     white-space: nowrap;
+  }
+  .currency-input-group--sm {
+    height: 32px;
+    padding: 0 8px;
+    gap: 6px;
+    font-size: var(--fs-xs);
+    border-radius: var(--radius-xs);
+  }
+  .currency-input-group--sm .currency-input-group__suffix {
+    padding-left: 6px;
+  }
+  .currency-input-group--error {
+    border-color: var(--md-error);
+    background: color-mix(in srgb, var(--md-error) 5%, var(--md-surface));
+  }
+  .currency-input-group--error:hover {
+    border-color: var(--md-error);
+    background: color-mix(in srgb, var(--md-error) 9%, var(--md-surface));
+  }
+  .currency-input-group--error:focus-within {
+    border-color: var(--md-error);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--md-error) 18%, transparent);
+  }
+  .hrm-field .currency-input-group {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    border-radius: 8px;
+    border: 1px solid var(--md-outline-variant02);
+    background: var(--md-surface);
+    color: var(--md-on-surface);
+    font-size: var(--fs-md);
+    box-sizing: border-box;
+    transition: border-color var(--md-duration) var(--md-easing), box-shadow var(--md-duration) var(--md-easing);
+  }
+  .hrm-field .currency-input-group:focus-within {
+    border-color: var(--md-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--md-primary) 18%, transparent);
+  }
+  .hrm-field .currency-input-group.currency-input-group--error {
+    border-color: var(--md-error);
+  }
+  .hrm-field .currency-input-group.currency-input-group--error:focus-within {
+    border-color: var(--md-error);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--md-error) 18%, transparent);
   }
 
   /* Compact input (for toolbar search, shorter height) */

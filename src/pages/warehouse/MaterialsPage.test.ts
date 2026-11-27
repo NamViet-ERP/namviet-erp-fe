@@ -1,12 +1,14 @@
 import { act, createElement } from 'react';
 import type React from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { materialsService } from '../../services/materialsService';
-import type { MaterialApiDto } from '../../types/wms';
+import type { MaterialApiDto, MaterialCategoryApiDto } from '../../types/wms';
 import MaterialsPageRoute from './MaterialsPage';
+
+const mockCategoriesRef = vi.hoisted(() => ({ current: [] as MaterialCategoryApiDto[] }));
 
 vi.mock('../../services/materialsService', () => ({
   materialsService: {
@@ -22,13 +24,21 @@ vi.mock('../../services/materialsService', () => ({
 }));
 
 vi.mock('../../hooks/useCategories', () => ({
-  useCategoryCascade: () => ({
-    categories: [],
-    optionsByLevel: [[], [], [], [], []],
-    isLoading: false,
-  }),
+  useCategoryCascade: (selection: Array<number | ''> = ['', '', '', '', '']) => {
+    const cats = mockCategoriesRef.current;
+    if (cats.length === 0) {
+      return { categories: [], optionsByLevel: [[], [], [], [], []], isLoading: false };
+    }
+    const optionsByLevel: MaterialCategoryApiDto[][] = [[], [], [], [], []];
+    for (let lvl = 1; lvl <= 5; lvl++) {
+      if (lvl > 1 && selection[lvl - 2] === '') continue;
+      const pid = lvl === 1 ? null : (selection[lvl - 2] as number);
+      optionsByLevel[lvl - 1] = cats.filter(c => c.parentId === pid && c.isActive);
+    }
+    return { categories: cats, optionsByLevel, isLoading: false };
+  },
   useCategoryTree: () => ({
-    data: [],
+    data: mockCategoriesRef.current,
     isLoading: false,
   }),
 }));
@@ -146,9 +156,22 @@ let root: Root;
 let container: HTMLDivElement;
 let client: QueryClient;
 
+function LocationSpy() {
+  const loc = useLocation();
+  return createElement('output', { 'data-testid': 'location-search', 'data-search': loc.search, hidden: true });
+}
+
+function setInputValue(input: HTMLInputElement, value: string) {
+  const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+  setter?.call(input, value);
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
 beforeEach(() => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
   vi.resetAllMocks();
+  mockCategoriesRef.current = [];
   mockSessionUser.mockReturnValue({
     user: { id: 'usr-staff', username: 'staff1', role: 'staff' },
     permissions: ['wms.materials.view:all'],
@@ -195,6 +218,7 @@ async function renderPage(initialEntries?: (string | { pathname: string; state?:
         createElement(
           MemoryRouter,
           initialEntries ? { initialEntries, initialIndex } : null,
+          createElement(LocationSpy),
           createElement(MaterialsPageRoute),
         ),
       ),
@@ -515,5 +539,189 @@ describe('MaterialsPage Delete ConfirmDialog & 375px Header Wrap', () => {
     expect(materialsService.remove).toHaveBeenCalledWith('BH-BHN-HT20-120 tubex3000');
     expect(document.body.querySelector('[role="alertdialog"]')).toBeNull();
     confirmSpy.mockRestore();
+  });
+});
+
+describe('MaterialsPage 3-State Status Switcher', () => {
+  it('requests active by default, switches to inactive with empty state, switches to all, and resets to active', async () => {
+    client = new QueryClient({
+      defaultOptions: { queries: { retry: false, staleTime: 0 } },
+    });
+
+    await renderPage(['/operations/materials']);
+
+    expect(materialsService.list).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'active', page: 1, pageSize: 15 }),
+    );
+
+    const group = container.querySelector('[role="group"][aria-label="Trạng thái sử dụng vật tư"]');
+    expect(group).not.toBeNull();
+
+    const buttons = [...group!.querySelectorAll('button')];
+    expect(buttons.map(b => b.textContent?.trim())).toEqual(['Đang dùng', 'Ngừng sử dụng', 'Tất cả']);
+    const [activeBtn, inactiveBtn, allBtn] = buttons;
+
+    expect(activeBtn.getAttribute('aria-pressed')).toBe('true');
+    expect(activeBtn.className).toContain('is-active');
+    expect(inactiveBtn.getAttribute('aria-pressed')).toBe('false');
+    expect(allBtn.getAttribute('aria-pressed')).toBe('false');
+
+    // Click Ngừng sử dụng -> returns empty list -> shows dedicated empty message
+    vi.mocked(materialsService.list).mockResolvedValueOnce({
+      items: [],
+      totalCount: 0,
+      page: 1,
+      pageSize: 15,
+      totalPages: 0,
+    });
+    await act(async () => {
+      inactiveBtn.click();
+    });
+    await flushQueries();
+
+    expect(materialsService.list).toHaveBeenLastCalledWith(
+      expect.objectContaining({ status: 'inactive', page: 1 }),
+    );
+    expect(inactiveBtn.getAttribute('aria-pressed')).toBe('true');
+    expect(inactiveBtn.className).toContain('mat-catalog__status-opt--inactive');
+    expect(inactiveBtn.className).toContain('is-active');
+    expect(container.textContent).toContain('Không có vật tư nào đang ngừng sử dụng.');
+
+    // Click Tất cả
+    await act(async () => {
+      allBtn.click();
+    });
+    await flushQueries();
+
+    expect(materialsService.list).toHaveBeenLastCalledWith(
+      expect.objectContaining({ status: 'all', page: 1 }),
+    );
+    expect(allBtn.getAttribute('aria-pressed')).toBe('true');
+
+    // Click Xóa lọc -> resets back to status: 'active'
+    const resetBtn = [...container.querySelectorAll('button')].find(btn =>
+      btn.textContent?.includes('Xóa lọc'),
+    ) as HTMLButtonElement;
+    expect(resetBtn).toBeDefined();
+
+    await act(async () => {
+      resetBtn.click();
+    });
+    await flushQueries();
+
+    expect(materialsService.list).toHaveBeenLastCalledWith(
+      expect.objectContaining({ status: 'active', page: 1 }),
+    );
+    expect(activeBtn.getAttribute('aria-pressed')).toBe('true');
+  });
+});
+
+describe('MaterialsPage Editable Material Code on Detail View', () => {
+  it('allows editing materialCode with validation, sync hint, update payload, cache sync, and URL ?code= update', async () => {
+    const oldCode = 'BH-BHN-HT20-120 tubex3000';
+    const newCode = 'BH-BHN-HT20-NEW';
+    mockCategoriesRef.current = [
+      { id: 10, code: 'CK', name: 'Cơ khí', level: 1, parentId: null, sortOrder: 1, isActive: true },
+      { id: 1, code: 'BHN', name: 'Bộ hâm', level: 2, parentId: 10, sortOrder: 1, isActive: true },
+    ];
+    vi.mocked(materialsService.update).mockResolvedValue(undefined);
+    vi.mocked(materialsService.getByCode).mockImplementation(async (code: string) => {
+      if (code === newCode) {
+        return { ...mockMaterials[0], materialCode: newCode };
+      }
+      return mockMaterials.find(m => m.materialCode === code) ?? mockMaterials[0];
+    });
+
+    await renderPage([`/operations/materials?code=${encodeURIComponent(oldCode)}`]);
+
+    const editBtn = [...container.querySelectorAll('button')].find(btn =>
+      btn.textContent?.includes('Chỉnh sửa'),
+    ) as HTMLButtonElement;
+    expect(editBtn).toBeDefined();
+
+    await act(async () => {
+      editBtn.click();
+    });
+
+    const codeField = [...container.querySelectorAll('.hrm-field')].find(field =>
+      field.querySelector('.hrm-field__label')?.textContent?.trim() === 'Mã vật tư *',
+    );
+    expect(codeField).toBeDefined();
+    const codeInput = codeField!.querySelector('input') as HTMLInputElement;
+    expect(codeInput).not.toBeNull();
+    expect(codeInput.value).toBe(oldCode);
+
+    // Clear input -> triggers required validation
+    await act(async () => {
+      setInputValue(codeInput, '   ');
+    });
+    const saveBtn = [...container.querySelectorAll('button')].find(btn =>
+      btn.textContent?.trim() === 'Lưu',
+    ) as HTMLButtonElement;
+    expect(saveBtn).toBeDefined();
+
+    await act(async () => {
+      saveBtn.click();
+    });
+
+    expect(container.textContent).toContain('Vui lòng nhập mã vật tư');
+    expect(materialsService.update).not.toHaveBeenCalled();
+
+    // Change to > 100 chars -> triggers max length validation
+    await act(async () => {
+      setInputValue(codeInput, 'A'.repeat(101));
+    });
+    await act(async () => {
+      saveBtn.click();
+    });
+    expect(container.textContent).toContain('Mã vật tư tối đa 100 ký tự');
+    expect(materialsService.update).not.toHaveBeenCalled();
+
+    // Enter new valid code -> shows sync hint and updates header subtitle
+    await act(async () => {
+      setInputValue(codeInput, newCode);
+    });
+
+    expect(container.textContent).toContain(
+      'Đổi mã sẽ tự động đồng bộ sang tồn kho, dự án và các phiếu liên quan.',
+    );
+    expect(container.textContent).toContain(`Mã vật tư: ${newCode}`);
+
+    const removeQueriesSpy = vi.spyOn(client, 'removeQueries');
+    const invalidateQueriesSpy = vi.spyOn(client, 'invalidateQueries');
+    vi.mocked(materialsService.getByCode).mockClear();
+
+    await act(async () => {
+      saveBtn.click();
+    });
+    await flushQueries();
+
+    expect(materialsService.update).toHaveBeenCalledWith(
+      oldCode,
+      expect.objectContaining({ materialCode: newCode }),
+    );
+    expect(materialsService.getByCode).not.toHaveBeenCalledWith(oldCode);
+    expect(materialsService.getByCode).toHaveBeenCalledWith(newCode);
+    expect(removeQueriesSpy).toHaveBeenCalledWith({
+      queryKey: ['materials', oldCode],
+      type: 'inactive',
+    });
+    expect(invalidateQueriesSpy).not.toHaveBeenCalledWith({
+      queryKey: ['materials', oldCode],
+    });
+    expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['materials', newCode] });
+    expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['stock', 'matrix'] });
+    expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['projects'] });
+    expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['purchasePlans'] });
+    expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['purchaseOrders'] });
+
+    expect(
+      container.querySelector('[data-testid="location-search"]')?.getAttribute('data-search'),
+    ).toBe(`?code=${newCode}`);
+    expect(container.textContent).toContain(`Mã vật tư: ${newCode}`);
+    const editBtnAfterSave = [...container.querySelectorAll('button')].find(btn =>
+      btn.textContent?.includes('Chỉnh sửa'),
+    );
+    expect(editBtnAfterSave).toBeDefined();
   });
 });

@@ -9,7 +9,7 @@ import {
   poPlacementStatus,
 } from '../../../lib/purchasing/purchaseOrderStatus';
 import type { PurchasePlanRelatedPoApiDto } from '../../../types/api/purchasingApi';
-import { formatCurrency } from '../../../utils/formatCurrency';
+import { formatCurrencyFull } from '../../../utils/formatCurrency';
 
 interface RelatedPurchaseOrdersCardProps {
   orders?: PurchasePlanRelatedPoApiDto[] | null;
@@ -60,7 +60,7 @@ export default function RelatedPurchaseOrdersCard({ orders }: RelatedPurchaseOrd
               <td>{order.supplierName || '—'}</td>
               <td className="pur-erp__td-num">{order.itemCount}</td>
               <td className="pur-erp__td-num tabular-nums font-semibold">
-                {formatCurrency(order.totalAmount)}
+                {formatCurrencyFull(order.totalAmount)}
               </td>
               <td className="pur-erp__td-status">
                 <PoStatusPill label={approval.label} tone={approval.tone} />

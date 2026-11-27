@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import SectionCard from '../../components/ui/SectionCard';
 import DetailFieldGrid from '../../components/hr/DetailFieldGrid';
 import { FieldView } from '../../components/hr/DetailFields';
@@ -8,6 +9,7 @@ import HrmNotFound, { HrmLoadingState } from '../../components/hr/HrmNotFound';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { showToast } from '../../components/ui/Toast';
 import { getApiErrorMessage } from '../../lib/apiClient';
+import { queryKeys } from '../../services/queryKeys';
 import {
   useMaterial,
   useUpdateMaterial,
@@ -43,6 +45,7 @@ import {
 } from './materials/materialFormHelpers';
 
 const emptyEditForm: MaterialDetailEditState = {
+  materialCode: '',
   materialName: '',
   unit: '',
   imageUrl: '',
@@ -59,9 +62,21 @@ function pathCell(m: MaterialApiDto, key: keyof MaterialApiDto['categoryPath']) 
 interface MaterialDetailViewProps {
   code: string;
   onBack: () => void;
+  onCodeChanged?: (nextCode: string) => void;
 }
 
-export default function MaterialDetailView({ code, onBack }: MaterialDetailViewProps) {
+export default function MaterialDetailView({ code, onBack, onCodeChanged }: MaterialDetailViewProps) {
+  const qc = useQueryClient();
+  const renamedFromRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const oldCode = renamedFromRef.current;
+    if (oldCode && oldCode !== code) {
+      renamedFromRef.current = null;
+      qc.removeQueries({ queryKey: queryKeys.materials.detail(oldCode), type: 'inactive' });
+    }
+  }, [code, qc]);
+
   const { data: material, isLoading, isError } = useMaterial(code);
   const { data: categories = [] } = useCategoryTree();
   const updateMutation = useUpdateMaterial();
@@ -88,6 +103,7 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
   const resetEditFromMaterial = () => {
     setEditSelection(selectionFromCategoryId(categories, material.categoryId));
     setEditForm({
+      materialCode: material.materialCode,
       materialName: material.materialName,
       unit: material.unit,
       imageUrl: material.imageUrl ?? '',
@@ -120,8 +136,10 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
     const nextErrors = validateMaterialForm({
       selection: editSelection,
       categories,
+      materialCode: editForm.materialCode,
       materialName: editForm.materialName,
       unit: editForm.unit,
+      requireCode: true,
     });
     setEditErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
@@ -129,9 +147,12 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
     const categoryId = resolveLeafCategoryId(editSelection);
     if (!categoryId) return;
 
+    const nextCode = editForm.materialCode.trim();
+    const isCodeChanged = nextCode !== material.materialCode;
+
     try {
       setIsUploadingImage(Boolean(imageFile));
-      const uploaded = await uploadMaterialImageIfSelected(imageFile, editForm.imageUrl, material.materialCode);
+      const uploaded = await uploadMaterialImageIfSelected(imageFile, editForm.imageUrl, nextCode);
       setIsUploadingImage(false);
       if (!uploaded.ok) return;
 
@@ -140,14 +161,20 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
         code: material.materialCode,
         body: buildMaterialUpsertBody({
           ...editForm,
-          materialCode: material.materialCode,
+          materialCode: nextCode,
           categoryId,
           origin: finalOrigin,
           imageUrl: uploaded.imageUrl,
           isConsumable: material.isConsumable,
         }),
       });
-      showToast('success', 'Đã cập nhật thông tin vật tư');
+      if (isCodeChanged) {
+        renamedFromRef.current = material.materialCode;
+        onCodeChanged?.(nextCode);
+        showToast('success', `Đã cập nhật và đổi mã vật tư thành ${nextCode}`);
+      } else {
+        showToast('success', 'Đã cập nhật thông tin vật tư');
+      }
       setIsEditing(false);
     } catch (err) {
       setIsUploadingImage(false);
@@ -190,7 +217,7 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
           { label: material.materialCode },
         ]}
         title={isEditing ? editForm.materialName || material.materialName : material.materialName}
-        subtitle={`Mã vật tư: ${material.materialCode}${!isActive ? ' · Ngừng sử dụng' : ''}`}
+        subtitle={`Mã vật tư: ${isEditing ? (editForm.materialCode.trim() || material.materialCode) : material.materialCode}${!isActive ? ' · Ngừng sử dụng' : ''}`}
         actions={
           <HrmEditActions
             isEditing={isEditing}
@@ -224,7 +251,7 @@ export default function MaterialDetailView({ code, onBack }: MaterialDetailViewP
       <SectionCard variant="detail" title="Thông tin vật tư">
         {isEditing ? (
           <MaterialDetailEditForm
-            materialCode={material.materialCode}
+            originalMaterialCode={material.materialCode}
             form={editForm}
             errors={editErrors}
             originBrand={originParts.brand}

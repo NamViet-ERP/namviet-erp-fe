@@ -14,6 +14,7 @@ import type {
   ServiceExpenseItemApiDto,
   ServiceExpenseType,
 } from '../../../types/api/serviceExpenseItem';
+import { parseCurrencyInput } from '../../../utils/currencyInput';
 
 export type ServiceExpenseTypeFilter = 'all' | 'service' | 'expense';
 
@@ -151,7 +152,7 @@ export function useServicesExpensesController() {
       return;
     }
 
-    const refPriceNum = formData.referencePrice ? Number(formData.referencePrice) : null;
+    const refPriceNum = formData.referencePrice.trim() ? parseCurrencyInput(formData.referencePrice) : null;
     if (refPriceNum != null && (Number.isNaN(refPriceNum) || refPriceNum < 0)) {
       showToast('warning', 'Đơn giá tham chiếu không hợp lệ.');
       return;

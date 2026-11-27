@@ -43,7 +43,7 @@ function validateEditForm(form: {
   if (parseCurrencyInput(form.materialBudget) <= 0) {
     errs.materialBudget = 'Vui lòng nhập ngân sách vật tư';
   } else if (parseCurrencyInput(form.materialBudget) > MAX_MATERIAL_BUDGET) {
-    errs.materialBudget = `Ngân sách tối đa ${MAX_MATERIAL_BUDGET_LABEL} đ`;
+    errs.materialBudget = `Ngân sách tối đa ${MAX_MATERIAL_BUDGET_LABEL} VNĐ`;
   }
   return errs;
 }
@@ -174,7 +174,6 @@ function ProjectEditModal({
           </FormField>
           <FormField label="Ngân sách Vật tư" required error={editErrors.materialBudget}>
             <CurrencyInput
-              suffix="(VNĐ)"
               className="tabular-nums"
               value={editForm.materialBudget}
               onChange={(_raw, numeric) => {

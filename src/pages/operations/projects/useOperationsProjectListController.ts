@@ -11,6 +11,7 @@ import { getApiErrorMessage, getApiFieldErrors } from '../../../lib/apiClient';
 import { nextProjectCode } from '../../../lib/cskh/commandCenter';
 import { projectsService } from '../../../services/projectsService';
 import type { WarehouseProjectApiDto } from '../../../types/wms';
+import { parseCurrencyInput } from '../../../utils/currencyInput';
 
 export type ProjectStatusFilter = 'all' | 'Active' | 'Transferring' | 'Closed';
 
@@ -230,7 +231,7 @@ export function useOperationsProjectListController() {
       return;
     }
     setErrors({});
-    const budget = Number(String(form.materialBudget).replace(/[^\d.]/g, '')) || 1;
+    const budget = parseCurrencyInput(form.materialBudget) || 1;
     const scMembersString = form.scMembers.map(s => s.trim()).filter(Boolean).join(', ') || null;
     try {
       if (editing) {
