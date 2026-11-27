@@ -6,6 +6,7 @@ import Pagination from '../../../components/ui/Pagination';
 import TableShell from '../../../components/ui/TableShell';
 import VoucherStatusCell from '../../../components/warehouse/VoucherStatusCell';
 import VoucherCodeCell from '../../../components/warehouse/VoucherCodeCell';
+import { getInteractiveRowProps } from '../../../lib/a11y/interactiveRow';
 import { getApiErrorMessage } from '../../../lib/apiClient';
 import { WMS_EMPTY, WMS_ERROR } from '../../../lib/wms/messages';
 import { destinationLabel, transferProjectLabel } from './transferUtils';
@@ -83,6 +84,7 @@ export default function TransferTable({
             key={tf.id}
             className="table-row wms-inventory-row--interactive"
             onClick={() => onOpenDetail(tf)}
+            {...getInteractiveRowProps(() => onOpenDetail(tf), `Xem phiếu chuyển ${tf.voucherCode}`)}
           >
             <td className="table-cell">
               <VoucherCodeCell

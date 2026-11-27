@@ -165,6 +165,7 @@ export default function CreateComplaintTicketPanel({
           <FormField label="Loại lỗi" required>
             <select
               className="form-input"
+              aria-label="Loại lỗi"
               value={defectType}
               onChange={e => setDefectType(e.target.value)}
             >
@@ -176,6 +177,7 @@ export default function CreateComplaintTicketPanel({
           <FormField label="Mức độ nghiêm trọng" required>
             <select
               className="form-input"
+              aria-label="Mức độ nghiêm trọng"
               value={severity}
               onChange={e => setSeverity(e.target.value)}
             >

@@ -4,6 +4,7 @@ import Button from '../../../components/ui/Button';
 import EntityCodeLink from '../../../components/ui/EntityCodeLink';
 import Pagination from '../../../components/ui/Pagination';
 import TableShell from '../../../components/ui/TableShell';
+import { getInteractiveRowProps } from '../../../lib/a11y/interactiveRow';
 import { formatDateCell } from '../../../lib/hrm/formatters';
 import type { PurchaseContractApiDto } from '../../../types/api/purchasingApi';
 import { formatCurrency } from '../../../utils/formatCurrency';
@@ -60,6 +61,7 @@ export default function PurchaseContractsTable({
           key={row.id}
           className="table-row wms-inventory-row--interactive cursor-pointer"
           onClick={() => onOpenEdit(row)}
+          {...getInteractiveRowProps(() => onOpenEdit(row), `Xem hợp đồng ${row.code}`)}
         >
           <td className="table-cell pur-contracts-col-code">
             <EntityCodeLink code={row.code} onClick={() => onOpenEdit(row)} />

@@ -113,22 +113,22 @@ export default function PublicEstimateEditStep({
             </tr>
           }
         >
-          {proposals.map(p => (
+          {proposals.map((p, idx) => (
             <tr key={p.key} className="table-row">
               <td className="table-cell">
-                <input className="form-input" value={p.name} placeholder="Tên hàng đề xuất" onChange={e => onUpdateProposal(p.key, 'name', e.target.value)} />
+                <input className="form-input" value={p.name} placeholder="Tên hàng đề xuất" aria-label={`Tên hàng đề xuất dòng ${idx + 1}`} onChange={e => onUpdateProposal(p.key, 'name', e.target.value)} />
               </td>
               <td className="table-cell">
-                <input className="form-input" value={p.spec} placeholder="Thông số / quy cách" onChange={e => onUpdateProposal(p.key, 'spec', e.target.value)} />
+                <input className="form-input" value={p.spec} placeholder="Thông số / quy cách" aria-label={`Thông số quy cách dòng ${idx + 1}`} onChange={e => onUpdateProposal(p.key, 'spec', e.target.value)} />
               </td>
               <td className="table-cell">
-                <input className="form-input" value={p.unit} placeholder="ĐVT" onChange={e => onUpdateProposal(p.key, 'unit', e.target.value)} />
+                <input className="form-input" value={p.unit} placeholder="ĐVT" aria-label={`Đơn vị tính dòng ${idx + 1}`} onChange={e => onUpdateProposal(p.key, 'unit', e.target.value)} />
               </td>
               <td className="table-cell">
-                <input className="form-input" inputMode="decimal" value={p.qty} onChange={e => onUpdateProposal(p.key, 'qty', e.target.value)} />
+                <input className="form-input" inputMode="decimal" value={p.qty} aria-label={`Số lượng đề xuất dòng ${idx + 1}`} onChange={e => onUpdateProposal(p.key, 'qty', e.target.value)} />
               </td>
               <td className="table-cell">
-                <input className="form-input" value={p.note} placeholder="Lý do / mô tả thêm" onChange={e => onUpdateProposal(p.key, 'note', e.target.value)} />
+                <input className="form-input" value={p.note} placeholder="Lý do / mô tả thêm" aria-label={`Lý do đề xuất dòng ${idx + 1}`} onChange={e => onUpdateProposal(p.key, 'note', e.target.value)} />
               </td>
               <td className="table-cell">
                 <Button type="button" variant="text" size="sm" onClick={() => onRemoveProposal(p.key)}>

@@ -128,6 +128,7 @@ export default function RegionsTabPanel() {
             value={newRegionName}
             onChange={e => setNewRegionName(e.target.value)}
             placeholder="Tên nhóm nước (VD: G7, EU, ĐNA, Châu Á, Khác...)"
+            aria-label="Tên nhóm nước mới"
             className="hrm-field-input flex-1"
             disabled={createRegionMutation.isPending}
           />
@@ -136,6 +137,7 @@ export default function RegionsTabPanel() {
             value={newRegionDesc}
             onChange={e => setNewRegionDesc(e.target.value)}
             placeholder="Mô tả / Ghi chú (tuỳ chọn)"
+            aria-label="Mô tả nhóm nước mới"
             className="hrm-field-input sm:w-56"
             disabled={createRegionMutation.isPending}
           />
@@ -200,6 +202,7 @@ export default function RegionsTabPanel() {
                     className={`hrm-toggle-switch${item.isActive ? ' hrm-toggle-switch--on' : ''}`}
                     role="switch"
                     aria-checked={item.isActive}
+                    aria-label={`${item.isActive ? 'Tắt' : 'Bật'} nhóm nước ${item.name}`}
                     title={item.isActive ? 'Đang bật' : 'Đang tắt'}
                   >
                     <span className="hrm-toggle-switch__thumb" aria-hidden />

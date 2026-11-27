@@ -1,10 +1,12 @@
 import { formatCurrencyInput, parseCurrencyInput } from '../../utils/currencyInput';
 
 interface Props {
+  id?: string;
   value: string;
   onChange: (raw: string, numeric: number) => void;
   className?: string;
   placeholder?: string;
+  ariaLabel?: string;
   min?: number;
   max?: number;
   suffix?: string;
@@ -12,10 +14,12 @@ interface Props {
 }
 
 export default function CurrencyInput({
+  id,
   value,
   onChange,
   className,
   placeholder = '',
+  ariaLabel,
   min = 0,
   max,
   suffix,
@@ -34,8 +38,10 @@ export default function CurrencyInput({
 
   const input = (
     <input
+      id={id}
       type="text"
       inputMode="numeric"
+      aria-label={ariaLabel}
       disabled={disabled}
       className={inputClassName}
       placeholder={placeholder}

@@ -1,5 +1,6 @@
 import { AlertTriangle, Globe } from 'lucide-react';
 import PermissionGate from '../../../components/auth/PermissionGate';
+import { getInteractiveRowProps } from '../../../lib/a11y/interactiveRow';
 import {
   getActionBadgeInfo,
   type PermissionModuleGroup,
@@ -136,10 +137,17 @@ export default function PermissionMatrixTable({
                           : ''
                       }`}
                       title={entry.key}
-                      onClick={() =>
-                        canEdit &&
-                        onTogglePermission(entry.key, !checked)
+                      onClick={
+                        canEdit
+                          ? () => onTogglePermission(entry.key, !checked)
+                          : undefined
                       }
+                      {...(canEdit
+                        ? getInteractiveRowProps(
+                            () => onTogglePermission(entry.key, !checked),
+                            `${checked ? 'Tắt' : 'Bật'} quyền ${entry.label}`,
+                          )
+                        : {})}
                     >
                       <td className="table-cell text-center admin-role-permissions-col-on">
                         <input

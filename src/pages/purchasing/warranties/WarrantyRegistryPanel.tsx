@@ -5,6 +5,7 @@ import EntityCodeLink from '../../../components/ui/EntityCodeLink';
 import SelectField from '../../../components/ui/SelectField';
 import TableShell from '../../../components/ui/TableShell';
 import type { ListPageSize } from '../../../constants/pagination';
+import { getInteractiveRowProps } from '../../../lib/a11y/interactiveRow';
 import { getApiErrorMessage } from '../../../lib/apiClient';
 import { formatDateCell } from '../../../lib/hrm/formatters';
 import type { PurchaseWarrantyApiDto } from '../../../services/purchaseWarrantiesService';
@@ -145,6 +146,7 @@ export default function WarrantyRegistryPanel({
             key={row.id}
             className="table-row wms-inventory-row--interactive"
             onClick={() => onOpenDetail(row)}
+            {...getInteractiveRowProps(() => onOpenDetail(row), `Xem chi tiết bảo hành ${row.materialName}`)}
           >
             <td className="table-cell">
               <div className="font-semibold">{row.materialName}</div>

@@ -17,6 +17,7 @@ interface WarehouseKeeperMultiSelectProps {
   onChange: (next: ProjectWarehouseKeeperDto[]) => void;
   disabled?: boolean;
   placeholder?: string;
+  ariaLabel?: string;
 }
 
 export default function WarehouseKeeperMultiSelect({
@@ -24,6 +25,7 @@ export default function WarehouseKeeperMultiSelect({
   onChange,
   disabled = false,
   placeholder = 'Chọn ≥1 thủ kho…',
+  ariaLabel,
 }: WarehouseKeeperMultiSelectProps) {
   const [options, setOptions] = useState<ProjectWarehouseKeeperDto[]>([]);
   const [loading, setLoading] = useState(false);
@@ -237,6 +239,7 @@ export default function WarehouseKeeperMultiSelect({
           aria-expanded={open}
           aria-controls={listId}
           aria-autocomplete="list"
+          aria-label={ariaLabel ?? placeholder}
         />
         <button
           type="button"

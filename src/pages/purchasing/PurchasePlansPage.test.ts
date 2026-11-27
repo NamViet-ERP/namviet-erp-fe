@@ -126,7 +126,7 @@ async function renderPage(kind: 'plan' | 'adhoc' = 'plan') {
 }
 
 describe('PurchasePlansPage Clickable Rows & Navigation', () => {
-  it('renders data rows with cursor-pointer, pur-erp__row-clickable, role="button", and title', async () => {
+  it('renders data rows with cursor-pointer, pur-erp__row-clickable, native row semantics, tabIndex=0, aria-label, and title', async () => {
     await renderPage();
     const rows = container.querySelectorAll('tbody tr');
     expect(rows.length).toBe(2);
@@ -134,8 +134,9 @@ describe('PurchasePlansPage Clickable Rows & Navigation', () => {
     const firstRow = rows[0] as HTMLTableRowElement;
     expect(firstRow.className).toContain('pur-erp__row-clickable');
     expect(firstRow.className).toContain('cursor-pointer');
-    expect(firstRow.getAttribute('role')).toBe('button');
+    expect(firstRow.getAttribute('role')).toBeNull();
     expect(firstRow.getAttribute('tabindex')).toBe('0');
+    expect(firstRow.getAttribute('aria-label')).toBe('Xem chi tiết KHMH-2026-001');
     expect(firstRow.getAttribute('title')).toBe('Nhấn để xem chi tiết KHMH-2026-001');
 
     const rejectedRow = rows[1] as HTMLTableRowElement;
@@ -175,6 +176,14 @@ describe('PurchasePlansPage Clickable Rows & Navigation', () => {
     // Other keys should not navigate
     act(() => {
       firstRow.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    });
+    expect(mockNavigate).not.toHaveBeenCalled();
+
+    // Enter/Space on nested interactive link/button must not trigger row navigation
+    const nestedLink = firstRow.querySelector('a') as HTMLAnchorElement | null;
+    expect(nestedLink).not.toBeNull();
+    act(() => {
+      nestedLink!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
     });
     expect(mockNavigate).not.toHaveBeenCalled();
   });

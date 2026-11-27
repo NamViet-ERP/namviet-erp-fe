@@ -250,8 +250,8 @@ export default function ExcelImportModalShell({
             <div className="flex items-center gap-2.5">
               {templateTitle ? (
                 <>
-                  <div className="w-9 h-9 rounded-lg bg-[var(--md-primary)]/10 text-[var(--md-primary)] flex items-center justify-center shrink-0">
-                    <FileSpreadsheet size={18} />
+                  <div className="w-9 h-9 rounded-lg bg-[var(--md-primary-container)] text-[var(--md-on-primary-container)] flex items-center justify-center shrink-0">
+                    <FileSpreadsheet size={18} aria-hidden="true" />
                   </div>
                   <div>
                     <div className="text-xs font-semibold text-[var(--md-on-surface)]">{templateTitle}</div>
@@ -264,7 +264,7 @@ export default function ExcelImportModalShell({
                 <>
                   <button
                     type="button"
-                    className="btn btn-outline btn-sm text-xs flex items-center gap-1.5 cursor-pointer text-[var(--md-primary)] hover:bg-[var(--md-primary)]/10"
+                    className="btn btn-outline btn-sm text-xs flex items-center gap-1.5 cursor-pointer text-[var(--md-primary)] hover:bg-[var(--md-primary-container)]"
                     onClick={onDownloadTemplate}
                     disabled={isDownloadingTemplate}
                   >
@@ -310,7 +310,7 @@ export default function ExcelImportModalShell({
                 className="hidden"
                 onChange={handleFileChange}
                 disabled={isParsing || isImporting}
-                aria-label={selectFileAriaLabel}
+                aria-label={selectFileAriaLabel ?? 'Chọn file Excel tải lên'}
               />
               <button
                 type="button"
@@ -318,7 +318,7 @@ export default function ExcelImportModalShell({
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isParsing || isImporting}
               >
-                <FileSpreadsheet size={13} />
+                <FileSpreadsheet size={13} aria-hidden="true" />
                 <span>{selectedFile ? 'Chọn file khác' : 'Chọn file Excel tải lên'}</span>
               </button>
             </div>
@@ -326,12 +326,21 @@ export default function ExcelImportModalShell({
 
           {(alwaysShowDropzone || (!selectedFile && !isParsing)) && (
             <div
+              role="button"
+              tabIndex={0}
+              aria-label={dropzoneTitle}
               onDrop={handleDrop}
               onDragOver={handleDragOver}
               onClick={() => fileInputRef.current?.click()}
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  fileInputRef.current?.click();
+                }
+              }}
               className={`flex flex-col items-center justify-center p-6 sm:p-8 border-2 border-dashed rounded-xl cursor-pointer transition-colors text-center ${
                 selectedFile
-                  ? 'border-[var(--md-primary)] bg-[var(--md-primary)]/5'
+                  ? 'border-[var(--md-primary)] bg-[var(--md-surface-container-low)]'
                   : 'border-[var(--md-outline-variant)] hover:border-[var(--md-primary)] bg-[var(--md-surface-container-lowest)]'
               }`}
             >
@@ -368,8 +377,8 @@ export default function ExcelImportModalShell({
           )}
 
           {parseError && (
-            <div className="p-3 rounded-lg border border-[var(--md-error)]/30 bg-[color-mix(in_srgb,var(--md-error)_8%,transparent)] text-xs text-[var(--md-error)] flex items-start gap-2">
-              <XCircle size={16} className="shrink-0 mt-0.5" />
+            <div className="p-3 rounded-lg border border-[var(--md-error)] bg-[color-mix(in_srgb,var(--md-error)_8%,transparent)] text-xs text-[var(--md-error)] flex items-start gap-2">
+              <XCircle size={16} className="shrink-0 mt-0.5" aria-hidden="true" />
               <div>
                 <p className="font-semibold">Lỗi đọc file:</p>
                 <p>{parseError}</p>
@@ -380,9 +389,9 @@ export default function ExcelImportModalShell({
           {hasPreview && !isParsing && (
             <div className="space-y-3">
               {availableSheets && availableSheets.length > 1 && onSheetChange && (
-                <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-2 rounded-lg border border-[var(--md-primary)]/30 bg-[var(--md-primary)]/5">
+                <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-2 rounded-lg border border-[var(--md-primary)] bg-[var(--md-surface-container-low)]">
                   <div className="flex items-center gap-2">
-                    <FileSpreadsheet size={16} className="text-[var(--md-primary)] shrink-0" />
+                    <FileSpreadsheet size={16} className="text-[var(--md-primary)] shrink-0" aria-hidden="true" />
                     <span className="text-xs font-semibold text-[var(--md-on-surface)]">
                       Chọn Sheet cần xem / nhập:
                     </span>
@@ -392,6 +401,7 @@ export default function ExcelImportModalShell({
                   </div>
                   <select
                     value={activeSheet}
+                    aria-label="Chọn Sheet cần xem / nhập"
                     onChange={e => onSheetChange(e.target.value)}
                     disabled={isParsing || isImporting}
                     className="text-xs font-semibold px-3 py-1.5 rounded-md border border-[var(--md-outline-variant)] bg-[var(--md-surface)] text-[var(--md-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--md-primary)] cursor-pointer shadow-sm hover:border-[var(--md-primary)] transition-colors"
@@ -472,10 +482,11 @@ export default function ExcelImportModalShell({
 
                       {!overwriteOption && onSearchChange && (
                         <div className="relative flex-1 max-w-sm">
-                          <Search size={14} className="absolute left-3 top-2.5 text-[var(--md-on-surface-variant)]" />
+                          <Search size={14} className="absolute left-3 top-2.5 text-[var(--md-on-surface-variant)]" aria-hidden="true" />
                           <input
                             type="text"
-                            className="w-full pl-8 pr-8 py-1.5 text-xs rounded-md border border-[var(--md-outline-variant)] bg-[var(--md-surface)] text-[var(--md-on-surface)] placeholder:text-[var(--md-on-surface-variant)]/60 focus:outline-none focus:ring-1 focus:ring-[var(--md-primary)]"
+                            aria-label={searchPlaceholder}
+                            className="w-full pl-8 pr-8 py-1.5 text-xs rounded-md border border-[var(--md-outline-variant)] bg-[var(--md-surface)] text-[var(--md-on-surface)] placeholder:text-[var(--md-on-surface-variant)] focus:outline-none focus:ring-1 focus:ring-[var(--md-primary)]"
                             placeholder={searchPlaceholder}
                             value={searchValue}
                             onChange={e => onSearchChange(e.target.value)}
@@ -483,10 +494,11 @@ export default function ExcelImportModalShell({
                           {searchValue && (
                             <button
                               type="button"
+                              aria-label="Xóa từ khóa tìm kiếm"
                               onClick={() => onSearchChange('')}
                               className="absolute right-2.5 top-2 text-[var(--md-on-surface-variant)] hover:text-[var(--md-on-surface)]"
                             >
-                              <X size={14} />
+                              <X size={14} aria-hidden="true" />
                             </button>
                           )}
                         </div>
@@ -496,10 +508,11 @@ export default function ExcelImportModalShell({
 
                   {overwriteOption && onSearchChange && (
                     <div className="relative">
-                      <Search size={14} className="absolute left-3 top-2.5 text-[var(--md-on-surface-variant)]" />
+                      <Search size={14} className="absolute left-3 top-2.5 text-[var(--md-on-surface-variant)]" aria-hidden="true" />
                       <input
                         type="text"
-                        className="w-full pl-8 pr-8 py-1.5 text-xs rounded-md border border-[var(--md-outline-variant)] bg-[var(--md-surface)] text-[var(--md-on-surface)] placeholder:text-[var(--md-on-surface-variant)]/60 focus:outline-none focus:ring-1 focus:ring-[var(--md-primary)]"
+                        aria-label={searchPlaceholder}
+                        className="w-full pl-8 pr-8 py-1.5 text-xs rounded-md border border-[var(--md-outline-variant)] bg-[var(--md-surface)] text-[var(--md-on-surface)] placeholder:text-[var(--md-on-surface-variant)] focus:outline-none focus:ring-1 focus:ring-[var(--md-primary)]"
                         placeholder={searchPlaceholder}
                         value={searchValue}
                         onChange={e => onSearchChange(e.target.value)}
@@ -507,10 +520,11 @@ export default function ExcelImportModalShell({
                       {searchValue && (
                         <button
                           type="button"
+                          aria-label="Xóa từ khóa tìm kiếm"
                           onClick={() => onSearchChange('')}
                           className="absolute right-2.5 top-2 text-[var(--md-on-surface-variant)] hover:text-[var(--md-on-surface)]"
                         >
-                          <X size={14} />
+                          <X size={14} aria-hidden="true" />
                         </button>
                       )}
                     </div>

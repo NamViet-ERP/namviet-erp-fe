@@ -145,6 +145,7 @@ export default function WarrantyDetailModal({
                 <FormField label="Mốc tính hạn">
                   <select
                     className="form-input"
+                    aria-label="Mốc tính hạn"
                     value={anchorType}
                     onChange={e => setAnchorType(e.target.value)}
                   >
@@ -237,6 +238,7 @@ export default function WarrantyDetailModal({
           <FormField label="Điểm dịch vụ (1-5)" required>
             <select
               className="form-input"
+              aria-label="Điểm dịch vụ (1-5)"
               value={serviceRating}
               onChange={e => setServiceRating(e.target.value)}
             >

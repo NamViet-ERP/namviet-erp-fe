@@ -4,6 +4,7 @@ import {
   materialCodeParts,
   parseOriginParts,
 } from '../../../constants/materialCategoryLevels';
+import { getInteractiveRowProps } from '../../../lib/a11y/interactiveRow';
 import { resolveMediaUrl } from '../../../lib/hrm/employeeApiMapper';
 import type { MaterialApiDto } from '../../../types/wms';
 
@@ -43,6 +44,7 @@ export default function MaterialsTableRow({
     <tr
       className="table-row mat-catalog-row"
       onClick={() => onSelect(m.materialCode)}
+      {...getInteractiveRowProps(() => onSelect(m.materialCode), `Xem chi tiết vật tư ${m.materialCode}`)}
     >
       {/* 1. Ảnh */}
       <td className="table-cell text-center mat-col-thumb">

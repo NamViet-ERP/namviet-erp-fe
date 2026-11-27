@@ -197,6 +197,7 @@ const RGBA_RE = /\brgba\(/i;
 const INLINE_FONT_SIZE_RE = /\bfontSize\s*:/;
 const PRIMARY_OPACITY_MODIFIER_RE =
   /\b(?:bg|text|border|ring|divide|from|to|via)-primary(?:-[0-9]+)?\/[0-9]+/;
+const CSS_VAR_PRIMARY_OPACITY_RE = /\[var\(--md-primary\)\]\/\d+/;
 
 type RgbTuple = [number, number, number];
 
@@ -607,7 +608,7 @@ describe('Living Invariant: Design System Tokens, CSS Order & Token-Only Primiti
     expect(ruleSnippet).not.toContain('var(--md-secondary)');
   });
 
-  it('canonical UI primitives and Golden Reference page contain zero raw hex, palette classes, dark:, text-[Npx], rgba(, or inline fontSize', () => {
+  it('canonical UI primitives and Golden Reference page contain zero raw hex, palette classes, dark:, text-[Npx], rgba(, inline fontSize, or CSS-var primary /opacity modifiers', () => {
     for (const relPath of GOLDEN_SURFACE_FILES) {
       const fullPath = path.join(repoRoot, relPath);
       expect(fs.existsSync(fullPath)).toBe(true);
@@ -619,6 +620,10 @@ describe('Living Invariant: Design System Tokens, CSS Order & Token-Only Primiti
       expect(source, `${relPath} must not contain text-[Npx] arbitrary sizes`).not.toMatch(ARBITRARY_FONT_PX_RE);
       expect(source, `${relPath} must not contain rgba( literals`).not.toMatch(RGBA_RE);
       expect(source, `${relPath} must not contain inline fontSize`).not.toMatch(INLINE_FONT_SIZE_RE);
+      expect(
+        source,
+        `${relPath} must not use unsupported /opacity modifiers on [var(--md-primary)]`,
+      ).not.toMatch(CSS_VAR_PRIMARY_OPACITY_RE);
     }
   });
 

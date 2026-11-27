@@ -73,6 +73,7 @@ export function PoDetailLinesTable({
                           type="number"
                           min={0}
                           step="any"
+                          aria-label={`Số lượng ${line.name}`}
                           value={draft?.qty ?? ''}
                           onChange={e => onEditLinesChange(prev => ({
                             ...prev,
@@ -88,6 +89,7 @@ export function PoDetailLinesTable({
                           type="number"
                           min={0}
                           step="any"
+                          aria-label={`Đơn giá ${line.name}`}
                           value={draft?.unitPrice ?? ''}
                           onChange={e => onEditLinesChange(prev => ({
                             ...prev,
@@ -102,6 +104,7 @@ export function PoDetailLinesTable({
                         <input
                           className="form-input"
                           type="date"
+                          aria-label={`Ngày dự kiến giao ${line.name}`}
                           value={draft?.expectedDeliveryDate ?? ''}
                           onChange={e => onEditLinesChange(prev => ({
                             ...prev,
@@ -121,6 +124,7 @@ export function PoDetailLinesTable({
                           type="number"
                           min={0}
                           max={120}
+                          aria-label={`Tháng bảo hành ${line.name}`}
                           value={draft?.warrantyMonths ?? ''}
                           onChange={e => onEditLinesChange(prev => ({
                             ...prev,
@@ -133,6 +137,7 @@ export function PoDetailLinesTable({
                       {editing ? (
                         <select
                           className="form-input"
+                          aria-label={`Mốc bảo hành ${line.name}`}
                           value={draft?.warrantyAnchorType ?? 'delivery'}
                           onChange={e => onEditLinesChange(prev => ({
                             ...prev,
@@ -150,6 +155,7 @@ export function PoDetailLinesTable({
                       {editing ? (
                         <input
                           className="form-input"
+                          aria-label={`Ghi chú ${line.name}`}
                           value={draft?.note ?? ''}
                           onChange={e => onEditLinesChange(prev => ({
                             ...prev,

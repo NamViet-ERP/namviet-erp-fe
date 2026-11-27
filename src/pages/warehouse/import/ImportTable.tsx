@@ -5,6 +5,7 @@ import TableShell from '../../../components/ui/TableShell';
 import VoucherStatusCell from '../../../components/warehouse/VoucherStatusCell';
 import VoucherCodeCell from '../../../components/warehouse/VoucherCodeCell';
 import { formatCurrency } from '../../../utils/formatCurrency';
+import { getInteractiveRowProps } from '../../../lib/a11y/interactiveRow';
 import { getApiErrorMessage } from '../../../lib/apiClient';
 import { WMS_EMPTY, WMS_ERROR } from '../../../lib/wms/messages';
 import { isIssueFromGeneralWarehouse } from './importUtils';
@@ -61,6 +62,7 @@ export default function ImportTable({
           key={imp.id}
           className="table-row wms-inventory-row--interactive"
           onClick={() => onOpenDetail(imp)}
+          {...getInteractiveRowProps(() => onOpenDetail(imp), `Xem phiếu nhập ${imp.voucherCode}`)}
         >
           <td className="table-cell text-center">
             <VoucherCodeCell

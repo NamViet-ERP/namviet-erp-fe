@@ -77,9 +77,10 @@ function StockMaterialProjectContent({ row }: { row: StockMatrixRowApiDto }) {
       </div>
 
       <div className="relative">
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--md-on-surface-variant)]" />
+        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--md-on-surface-variant)]" aria-hidden="true" />
         <input
           type="search"
+          aria-label="Lọc theo tên hoặc mã dự án"
           className="form-input pl-9 text-sm w-full"
           placeholder="Lọc theo tên hoặc mã dự án..."
           value={q}

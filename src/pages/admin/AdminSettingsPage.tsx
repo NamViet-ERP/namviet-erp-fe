@@ -100,6 +100,7 @@ export default function AdminSettingsPage() {
               value={label}
               onChange={e => setLabel(e.target.value)}
               placeholder="Tên vai trò (VD: Trưởng phòng Kho)"
+              aria-label="Tên vai trò mới"
               className="hrm-field-input flex-1"
               disabled={createMutation.isPending}
             />
@@ -158,6 +159,7 @@ export default function AdminSettingsPage() {
                       className={`hrm-toggle-switch hrm-admin-role-card__toggle${role.isActive ? ' hrm-toggle-switch--on' : ''}`}
                       role="switch"
                       aria-checked={role.isActive}
+                      aria-label={`${role.isActive ? 'Tắt' : 'Bật'} vai trò ${role.label}`}
                       title={role.isActive ? 'Đang bật' : 'Đang tắt'}
                     >
                       <span className="hrm-toggle-switch__thumb" aria-hidden />

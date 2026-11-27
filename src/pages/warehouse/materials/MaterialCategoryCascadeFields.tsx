@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import FormField from '../../../components/ui/FormField';
 import {
   MATERIAL_CATEGORY_LEVELS,
@@ -23,6 +24,7 @@ export default function MaterialCategoryCascadeFields({
   onSelectLevel,
   variant = 'form',
 }: MaterialCategoryCascadeFieldsProps) {
+  const baseId = useId();
   const gridClass = variant === 'hrm'
     ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3'
     : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3';
@@ -34,9 +36,11 @@ export default function MaterialCategoryCascadeFields({
         const options = optionsByLevel[idx]?.filter(c => idx > 0 || c.code !== 'UNCATEGORIZED') ?? [];
         const error = errors[`level${lvl.level}`];
         const required = isRequiredCategoryLevel(lvl.level);
+        const selectId = `${baseId}-${lvl.key}`;
 
         const selectEl = (
           <select
+            id={selectId}
             className={variant === 'hrm' ? 'hrm-field-select' : 'form-input form-input-md w-full'}
             disabled={disabled}
             value={selection[idx]}
@@ -63,7 +67,7 @@ export default function MaterialCategoryCascadeFields({
         }
 
         return (
-          <FormField key={lvl.key} label={lvl.label} required={required} error={error}>
+          <FormField key={lvl.key} label={lvl.label} htmlFor={selectId} required={required} error={error}>
             {selectEl}
           </FormField>
         );

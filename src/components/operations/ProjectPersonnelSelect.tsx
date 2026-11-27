@@ -15,6 +15,7 @@ interface ProjectPersonnelSelectProps {
   value: string;
   onChange: (name: string, item?: ProjectPersonnelItem) => void;
   placeholder?: string;
+  ariaLabel?: string;
   disabled?: boolean;
   options?: ProjectPersonnelItem[];
   excludeNames?: string[];
@@ -24,6 +25,7 @@ export default function ProjectPersonnelSelect({
   value,
   onChange,
   placeholder = 'Chọn hoặc nhập PIC / Quản lý…',
+  ariaLabel,
   disabled = false,
   options: overrideOptions,
   excludeNames,
@@ -241,6 +243,7 @@ export default function ProjectPersonnelSelect({
           aria-expanded={open}
           aria-controls={listId}
           aria-autocomplete="list"
+          aria-label={ariaLabel ?? placeholder}
           disabled={disabled}
           className="form-input search-autocomplete__input"
           value={inputValue}

@@ -6,6 +6,7 @@ import Pagination from '../../../components/ui/Pagination';
 import TableShell from '../../../components/ui/TableShell';
 import VoucherStatusCell from '../../../components/warehouse/VoucherStatusCell';
 import VoucherCodeCell from '../../../components/warehouse/VoucherCodeCell';
+import { getInteractiveRowProps } from '../../../lib/a11y/interactiveRow';
 import { getApiErrorMessage } from '../../../lib/apiClient';
 
 interface ExportReturnTableProps {
@@ -83,6 +84,7 @@ export default function ExportReturnTable({
             key={row.id}
             className="table-row wms-inventory-row--interactive"
             onClick={() => onOpenDetail(row)}
+            {...getInteractiveRowProps(() => onOpenDetail(row), `Xem phiếu hoàn trả ${row.voucherCode}`)}
           >
             <td className="table-cell">
               <VoucherCodeCell

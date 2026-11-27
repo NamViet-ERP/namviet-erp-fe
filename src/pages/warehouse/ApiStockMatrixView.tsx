@@ -9,6 +9,7 @@ import AdminOpeningStockModal from '../../components/warehouse/AdminOpeningStock
 import { useStockMatrix } from '../../hooks/useStockMatrix';
 import { useSession } from '../../auth/AuthProvider';
 import { isSessionAdmin } from '../../constants/systemUsers';
+import { getInteractiveRowProps } from '../../lib/a11y/interactiveRow';
 import { useCanViewWmsPrices } from '../../lib/wms/priceVisibility';
 import { fmtPlannedStock, fmtStockQtyOrDash } from '../../lib/wms/stockQtyFormat';
 import {
@@ -81,6 +82,7 @@ export default function ApiStockMatrixView() {
             <select
               className="form-select w-full sm:w-72 text-sm"
               value={projectFilter}
+              aria-label="Lọc theo dự án hoặc kho"
               onChange={e => { setProjectFilter(e.target.value); setPage(1); }}
             >
               <option value="all">Tất cả vật tư</option>
@@ -182,6 +184,7 @@ export default function ApiStockMatrixView() {
                     <tr
                       key={row.materialCode}
                       onClick={() => setSelectedRow(row)}
+                      {...getInteractiveRowProps(() => setSelectedRow(row), `Xem phân bổ tồn kho ${row.materialCode}`)}
                       className="wms-inventory-row--interactive table-row"
                     >
                       <td className="table-cell stock-col-code">

@@ -8,6 +8,7 @@ interface SupplierAutocompleteProps {
   onChange: (value: string) => void;
   suppliers: SupplierApiDto[];
   placeholder?: string;
+  ariaLabel?: string;
   compact?: boolean;
   disabled?: boolean;
 }
@@ -17,6 +18,7 @@ export default function SupplierAutocomplete({
   onChange,
   suppliers,
   placeholder = 'Chọn nhà cung cấp…',
+  ariaLabel,
   compact = false,
   disabled = false,
 }: SupplierAutocompleteProps) {
@@ -50,6 +52,7 @@ export default function SupplierAutocomplete({
       resolveClosedLabel={resolveClosedLabel}
       allowFreeText
       placeholder={placeholder}
+      ariaLabel={ariaLabel ?? placeholder}
       emptyMessage="Không có NCC khớp — có thể giữ tên đã gõ, hoặc thêm mới tại Thiết lập → Danh mục NCC."
       compact={compact}
       disabled={disabled}

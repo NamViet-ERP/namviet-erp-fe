@@ -5,6 +5,7 @@ import ConfirmDialog from '../../../components/ui/ConfirmDialog';
 import PermissionGate from '../../../components/auth/PermissionGate';
 import TableSkeletonRows from '../../../components/ui/TableSkeletonRows';
 import VoucherStatusCell from '../../../components/warehouse/VoucherStatusCell';
+import { getInteractiveRowProps } from '../../../lib/a11y/interactiveRow';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { formatDateCell, formatDateTimeVi } from '../../../lib/hrm/formatters';
 import type { Import } from '../../../types';
@@ -123,6 +124,10 @@ export function PoRelatedImportsSection({ poCode, order, directDispatch = false 
                   key={imp.id}
                   className="table-row cursor-pointer"
                   onClick={() => flow.openDetail(imp)}
+                  {...getInteractiveRowProps(
+                    () => flow.openDetail(imp),
+                    `Xem chi tiết phiếu ${isDirect && imp.linkedTicketCode ? imp.linkedTicketCode : imp.voucherCode}`,
+                  )}
                 >
                     <td className="table-cell">
                       <EntityCodeLink

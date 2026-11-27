@@ -9,6 +9,7 @@ import type {
   usePriceBookCategories,
   usePriceBookMatrix,
 } from '../../../hooks/usePurchasePriceBook';
+import { getInteractiveRowProps } from '../../../lib/a11y/interactiveRow';
 import { getApiErrorMessage } from '../../../lib/apiClient';
 import type { PriceBookItemApiDto } from '../../../types/api/purchasingApi';
 import { formatCurrencyFull } from '../../../utils/formatCurrency';
@@ -89,6 +90,7 @@ export function ItemsTable({
           key={row.materialCode}
           className="table-row wms-inventory-row--interactive"
           onClick={() => onOpen(row.materialCode)}
+          {...getInteractiveRowProps(() => onOpen(row.materialCode), `Xem lịch sử giá ${row.materialCode}`)}
         >
           <td className="table-cell pur-pricebook-col-goods">
             <div><span className="mat-code-cell__badge">{row.materialCode}</span></div>
@@ -140,6 +142,7 @@ export function ItemsTable({
                           step={1}
                           autoFocus
                           disabled={isRowSaving}
+                          aria-label="Phần trăm markup (%)"
                           className="w-14 px-1 py-0.5 text-center text-xs font-bold rounded border border-[var(--md-warning)] bg-[var(--md-surface)] text-[var(--md-on-surface)]"
                           value={tempPercent}
                           onChange={e => setTempPercent(e.target.value)}
@@ -154,16 +157,18 @@ export function ItemsTable({
                           className="p-1 rounded bg-[var(--md-primary)] text-[var(--md-on-primary)] hover:opacity-90 disabled:opacity-60"
                           onClick={e => void handleSaveMarkup(row.materialCode, e)}
                           title="Lưu"
+                          aria-label="Lưu đơn giá"
                         >
-                          <Check size={12} />
+                          <Check size={12} aria-hidden="true" />
                         </button>
                         <button
                           type="button"
                           className="p-1 rounded bg-[var(--md-surface-container-high)] text-[var(--md-on-surface-variant)] hover:bg-[var(--md-surface-container-highest)]"
                           onClick={handleCancelEdit}
                           title="Hủy"
+                          aria-label="Hủy chỉnh sửa"
                         >
-                          <X size={12} />
+                          <X size={12} aria-hidden="true" />
                         </button>
                       </div>
                     ) : (

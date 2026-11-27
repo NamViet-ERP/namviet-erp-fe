@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import { MATERIAL_SELECT_PLACEHOLDER } from '../../constants/materialCategoryLevels';
 import FormField from '../ui/FormField';
 import { useMaterialUnits } from '../../hooks/useMaterialUnits';
@@ -24,6 +25,7 @@ export default function MaterialUnitSelect({
   preserveUnknownValue = false,
   variant = 'form',
 }: MaterialUnitSelectProps) {
+  const selectId = useId();
   const { data: units = [], isLoading } = useMaterialUnits(true);
   const safeValue = (value ?? '').trim();
   const showLegacy =
@@ -37,6 +39,7 @@ export default function MaterialUnitSelect({
 
   const select = (
     <select
+      id={selectId}
       className={resolvedSelectClass}
       value={value ?? ''}
       disabled={isLoading}
@@ -53,7 +56,7 @@ export default function MaterialUnitSelect({
   if (variant === 'hrm') {
     return (
       <div className={['hrm-field', className].filter(Boolean).join(' ')}>
-        <label className="hrm-field__label">
+        <label htmlFor={selectId} className="hrm-field__label">
           Đơn vị tính
           {required && <span className="text-[var(--md-error)]"> *</span>}
         </label>
@@ -64,7 +67,7 @@ export default function MaterialUnitSelect({
   }
 
   return (
-    <FormField label="Đơn vị tính" required={required} error={error} className={className}>
+    <FormField label="Đơn vị tính" htmlFor={selectId} required={required} error={error} className={className}>
       {select}
     </FormField>
   );

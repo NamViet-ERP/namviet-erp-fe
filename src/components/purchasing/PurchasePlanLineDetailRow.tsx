@@ -89,25 +89,25 @@ export default function PurchasePlanLineDetailRow({
               </div>
             </FormField>
             <FormField label="Hệ" className="pur-create-plan__ff">
-              <input className="form-input form-input-sm" value={line.systemName} disabled={linesLocked} onChange={e => onUpdateLine(line.key, { systemName: e.target.value })} />
+              <input aria-label="Hệ" className="form-input form-input-sm" value={line.systemName} disabled={linesLocked} onChange={e => onUpdateLine(line.key, { systemName: e.target.value })} />
             </FormField>
             <FormField label="Danh mục / Nhóm" className="pur-create-plan__ff">
-              <input className="form-input form-input-sm" value={line.category} disabled={linesLocked} onChange={e => onUpdateLine(line.key, { category: e.target.value })} />
+              <input aria-label="Danh mục / Nhóm" className="form-input form-input-sm" value={line.category} disabled={linesLocked} onChange={e => onUpdateLine(line.key, { category: e.target.value })} />
             </FormField>
             <FormField label="Quy cách" className="pur-create-plan__ff">
-              <input className="form-input form-input-sm" value={line.spec} disabled={linesLocked} onChange={e => onUpdateLine(line.key, { spec: e.target.value })} />
+              <input aria-label="Quy cách" className="form-input form-input-sm" value={line.spec} disabled={linesLocked} onChange={e => onUpdateLine(line.key, { spec: e.target.value })} />
             </FormField>
             <FormField label="Diễn giải" className="pur-create-plan__ff">
-              <input className="form-input form-input-sm" value={line.description} disabled={linesLocked} onChange={e => onUpdateLine(line.key, { description: e.target.value })} placeholder="Diễn giải mục đích sử dụng..." />
+              <input aria-label="Diễn giải" className="form-input form-input-sm" value={line.description} disabled={linesLocked} onChange={e => onUpdateLine(line.key, { description: e.target.value })} placeholder="Diễn giải mục đích sử dụng..." />
             </FormField>
             <FormField label="KG/ĐVT" className="pur-create-plan__ff">
-              <input className="form-input form-input-sm pur-create-plan__input--num" inputMode="decimal" value={!isMaterial ? '-' : line.kgPerUnit} disabled={linesLocked || !isMaterial} onChange={e => onUpdateLine(line.key, { kgPerUnit: e.target.value })} placeholder={!isMaterial ? 'Không áp dụng' : ''} />
+              <input aria-label="KG/ĐVT" className="form-input form-input-sm pur-create-plan__input--num" inputMode="decimal" value={!isMaterial ? '-' : line.kgPerUnit} disabled={linesLocked || !isMaterial} onChange={e => onUpdateLine(line.key, { kgPerUnit: e.target.value })} placeholder={!isMaterial ? 'Không áp dụng' : ''} />
             </FormField>
             <FormField label="Tình trạng" className="pur-create-plan__ff">
-              <input className="form-input form-input-sm" value={line.purchaseStatus} disabled={linesLocked} onChange={e => onUpdateLine(line.key, { purchaseStatus: e.target.value })} placeholder="chưa mua" />
+              <input aria-label="Tình trạng" className="form-input form-input-sm" value={line.purchaseStatus} disabled={linesLocked} onChange={e => onUpdateLine(line.key, { purchaseStatus: e.target.value })} placeholder="chưa mua" />
             </FormField>
             <FormField label="Ghi chú dòng" className="pur-create-plan__ff">
-              <input className="form-input form-input-sm" value={line.lineNote} disabled={linesLocked} onChange={e => onUpdateLine(line.key, { lineNote: e.target.value })} />
+              <input aria-label="Ghi chú dòng" className="form-input form-input-sm" value={line.lineNote} disabled={linesLocked} onChange={e => onUpdateLine(line.key, { lineNote: e.target.value })} />
             </FormField>
             <FormField label="Ngày cần hàng" className="pur-create-plan__ff">
               <HrmDatePicker value={line.requiredDate} disabled={linesLocked} onChange={requiredDate => onUpdateLine(line.key, { requiredDate })} />
@@ -134,6 +134,7 @@ export default function PurchasePlanLineDetailRow({
                   <FormField label={stage.priceLabel} className="pur-create-plan__ff">
                     <CurrencyInput
                       className="form-input form-input-sm text-right input-no-spinner"
+                      ariaLabel={stage.priceLabel}
                       value={line[stage.priceKey]}
                       onChange={(_raw, numeric) => {
                         if (!linesLocked) {
@@ -150,11 +151,13 @@ export default function PurchasePlanLineDetailRow({
                       suppliers={suppliers}
                       onChange={v => onUpdateLine(line.key, { [stage.supplierKey]: v })}
                       placeholder="Chọn NCC…"
+                      ariaLabel={stage.supplierLabel}
                     />
                   </FormField>
                   {stage.withReason ? (
                     <FormField label="Lý do chọn" className="pur-create-plan__ff pur-create-plan__ff--span">
                       <input
+                        aria-label="Lý do chọn"
                         className="form-input form-input-sm"
                         value={line.selectionReason}
                         disabled={linesLocked}

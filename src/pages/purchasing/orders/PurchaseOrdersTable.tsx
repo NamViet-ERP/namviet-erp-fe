@@ -4,6 +4,7 @@ import Dropdown from '../../../components/ui/Dropdown';
 import EntityCodeLink from '../../../components/ui/EntityCodeLink';
 import Pagination from '../../../components/ui/Pagination';
 import TableShell from '../../../components/ui/TableShell';
+import { getInteractiveRowProps } from '../../../lib/a11y/interactiveRow';
 import { formatDateTimeVi } from '../../../lib/hrm/formatters';
 import {
   PoStatusPill,
@@ -160,6 +161,7 @@ export default function PurchaseOrdersTable({
             key={row.code}
             className="cursor-pointer"
             onClick={() => onOpenOrder(row.code)}
+            {...getInteractiveRowProps(() => onOpenOrder(row.code), `Xem đơn hàng ${row.code}`)}
           >
             <td className="pur-erp__td-datetime">{formatDateTimeVi(row.createdAt) ?? '—'}</td>
             <td className="pur-erp__td-code" onClick={e => e.stopPropagation()}>

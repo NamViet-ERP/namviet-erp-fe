@@ -451,7 +451,7 @@ export default function EntityCombobox<T>({
               ? `${listId}-option-${safeHighlight}`
               : undefined
           }
-          aria-label={ariaLabel}
+          aria-label={ariaLabel ?? placeholder}
           aria-invalid={hasError ? 'true' : undefined}
           disabled={disabled}
           className={[

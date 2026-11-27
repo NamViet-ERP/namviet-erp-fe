@@ -40,9 +40,10 @@ export default function HrmImageUpload({
           <button
             type="button"
             onClick={onRemove}
+            aria-label={`Xóa ${label}`}
             className="text-[var(--md-error)] bg-transparent border-none cursor-pointer p-1 rounded-full hover:bg-[var(--md-error-container)]"
           >
-            <Trash2 size={16} />
+            <Trash2 size={16} aria-hidden="true" />
           </button>
         </div>
       )}
@@ -50,6 +51,7 @@ export default function HrmImageUpload({
         ref={ref}
         type="file"
         accept="image/*"
+        aria-label={label}
         className="hidden"
         onChange={e => e.target.files?.[0] && pick(e.target.files[0])}
       />

@@ -8,6 +8,7 @@ interface MaterialAutocompleteProps {
   onChange: (materialCode: string) => void;
   materials: MaterialApiDto[];
   placeholder?: string;
+  ariaLabel?: string;
   compact?: boolean;
   disabled?: boolean;
   /** Closed input label: full `code — name` (default) or name only. */
@@ -27,6 +28,7 @@ export default function MaterialAutocomplete({
   onChange,
   materials,
   placeholder = 'Gõ mã hoặc tên vật tư…',
+  ariaLabel,
   compact = false,
   disabled = false,
   displayLabel = 'code-name',
@@ -71,6 +73,7 @@ export default function MaterialAutocomplete({
       optionStacked
       clearOnEmptyInput
       placeholder={placeholder}
+      ariaLabel={ariaLabel ?? placeholder}
       emptyMessage="Không có vật tư khớp."
       compact={compact}
       disabled={disabled}

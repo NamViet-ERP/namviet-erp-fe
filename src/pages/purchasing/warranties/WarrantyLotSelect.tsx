@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import FormField from '../../../components/ui/FormField';
 import type { PurchaseWarrantyApiDto } from '../../../services/purchaseWarrantiesService';
 import { statusLabel } from './warrantyLabels';
@@ -10,10 +11,12 @@ interface WarrantyLotSelectProps {
 }
 
 export default function WarrantyLotSelect({ lots, value, onChange, error }: WarrantyLotSelectProps) {
+  const selectId = useId();
   const options = lots.filter(lot => lot.status !== 'void');
   return (
-    <FormField label="Lô hàng đã nhận" required error={error}>
+    <FormField label="Lô hàng đã nhận" htmlFor={selectId} required error={error}>
       <select
+        id={selectId}
         className="form-input"
         value={value}
         onChange={e => onChange(e.target.value)}

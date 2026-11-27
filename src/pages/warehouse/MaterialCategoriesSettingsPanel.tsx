@@ -230,6 +230,7 @@ export default function MaterialCategoriesSettingsPanel() {
             value={newName}
             onChange={e => setNewName(e.target.value)}
             placeholder={`Thêm ${levelLabel} mới...`}
+            aria-label={`Thêm ${levelLabel} mới`}
             className="hrm-field-input flex-1"
             disabled={createMutation.isPending || (activeLevel > 1 && parentId === '')}
           />
@@ -300,6 +301,7 @@ export default function MaterialCategoriesSettingsPanel() {
                         <input
                           className="hrm-field-input w-full"
                           value={editName}
+                          aria-label={`Sửa tên ${item.name}`}
                           onChange={e => setEditName(e.target.value)}
                           onKeyDown={e => {
                             if (e.key === 'Enter') void saveEdit(item);

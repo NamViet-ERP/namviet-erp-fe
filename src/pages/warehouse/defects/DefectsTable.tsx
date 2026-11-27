@@ -4,6 +4,7 @@ import Dropdown from '../../../components/ui/Dropdown';
 import EntityCodeLink from '../../../components/ui/EntityCodeLink';
 import Pagination from '../../../components/ui/Pagination';
 import TableShell from '../../../components/ui/TableShell';
+import { getInteractiveRowProps } from '../../../lib/a11y/interactiveRow';
 import { getApiErrorMessage } from '../../../lib/apiClient';
 import type { DropdownItem } from '../../../types';
 import type { PurchaseDefectApiDto } from '../../../types/api/poDefectApi';
@@ -68,6 +69,7 @@ export default function DefectsTable({
             key={row.ticketCode}
             className="table-row wms-inventory-row--interactive"
             onClick={() => onOpenDetail(row)}
+            {...getInteractiveRowProps(() => onOpenDetail(row), `Xem phiếu hàng lỗi ${row.ticketCode}`)}
           >
             <td className="table-cell text-center">
               <EntityCodeLink code={row.ticketCode} onClick={() => onOpenDetail(row)} />

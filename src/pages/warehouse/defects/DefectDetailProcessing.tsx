@@ -35,6 +35,7 @@ export default function DefectDetailProcessing({
           <FormField label="Nguyên nhân">
             <select
               className="form-input"
+              aria-label="Nguyên nhân"
               value={causeSource}
               onChange={e => onCauseSourceChange(e.target.value)}
             >
@@ -46,6 +47,7 @@ export default function DefectDetailProcessing({
           <FormField label="Hướng xử lý">
             <select
               className="form-input"
+              aria-label="Hướng xử lý"
               value={handlingMethod}
               onChange={e => onHandlingMethodChange(e.target.value)}
             >
@@ -59,6 +61,7 @@ export default function DefectDetailProcessing({
           <textarea
             className="form-input min-h-[4.5rem]"
             rows={3}
+            aria-label="Phản hồi của NCC"
             value={supplierFeedback}
             onChange={e => onSupplierFeedbackChange(e.target.value)}
             placeholder="Ghi nhận phản hồi từ nhà cung cấp..."

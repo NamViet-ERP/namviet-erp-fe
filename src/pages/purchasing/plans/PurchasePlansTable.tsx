@@ -15,6 +15,7 @@ import Dropdown from '../../../components/ui/Dropdown';
 import EntityCodeLink from '../../../components/ui/EntityCodeLink';
 import Pagination from '../../../components/ui/Pagination';
 import TableShell from '../../../components/ui/TableShell';
+import { getInteractiveRowProps } from '../../../lib/a11y/interactiveRow';
 import { formatDateTimeVi } from '../../../lib/hrm/formatters';
 import type { DropdownItem } from '../../../types';
 import type { PurchasePlanApiDto } from '../../../types/api/purchasingApi';
@@ -161,16 +162,9 @@ export default function PurchasePlansTable({
           <tr
             key={row.code}
             className={rowClasses}
-            role="button"
-            tabIndex={0}
             title={`Nhấn để xem chi tiết ${row.code}`}
             onClick={() => onNavigateDetail(row.code)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                onNavigateDetail(row.code);
-              }
-            }}
+            {...getInteractiveRowProps(() => onNavigateDetail(row.code), `Xem chi tiết ${row.code}`)}
           >
             <td className="tabular-nums">{formatDateTimeVi(row.createdAt) ?? '-'}</td>
             <td className="pur-erp__td-code" onClick={e => e.stopPropagation()}>

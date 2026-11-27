@@ -282,9 +282,10 @@ export default function Sidebar({
             type="button"
             onClick={onToggle}
             title="Mở rộng"
+            aria-label="Mở rộng thanh điều hướng"
             className="sidebar-module-btn sidebar-module-btn--expand"
           >
-            <ModuleIcon size={16} />
+            <ModuleIcon size={16} aria-hidden="true" />
           </button>
         ) : (
           <>
@@ -297,11 +298,11 @@ export default function Sidebar({
                   aria-label="Quay lại"
                   className="sidebar-module-btn sidebar-module-btn--back"
                 >
-                  <ChevronLeft size={16} />
+                  <ChevronLeft size={16} aria-hidden="true" />
                 </button>
               )}
               <div className="sidebar-module-icon">
-                <ModuleIcon size={16} />
+                <ModuleIcon size={16} aria-hidden="true" />
               </div>
               <span className="sidebar-module-label">{headerLabel}</span>
             </div>
@@ -309,9 +310,10 @@ export default function Sidebar({
               type="button"
               onClick={onToggle}
               title="Thu gọn"
+              aria-label="Thu gọn thanh điều hướng"
               className="sidebar-module-btn sidebar-module-btn--collapse desktop-only-flex"
             >
-              <ChevronsLeft size={16} />
+              <ChevronsLeft size={16} aria-hidden="true" />
             </button>
             {onCloseMobile && (
               <button

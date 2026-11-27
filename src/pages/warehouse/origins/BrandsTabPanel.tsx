@@ -137,6 +137,7 @@ export default function BrandsTabPanel() {
             value={newBrandName}
             onChange={e => setNewBrandName(e.target.value)}
             placeholder="Tên hãng/nhãn hiệu (VD: Hòa Phát, Wilo, Ebara...)"
+            aria-label="Tên hãng hoặc nhãn hiệu mới"
             className="hrm-field-input flex-1"
             disabled={createBrandMutation.isPending}
           />
@@ -145,6 +146,7 @@ export default function BrandsTabPanel() {
             value={newBrandCountry}
             onChange={e => setNewBrandCountry(e.target.value)}
             placeholder="Quốc gia (tuỳ chọn)"
+            aria-label="Quốc gia của hãng mới"
             className="hrm-field-input sm:w-44"
             disabled={createBrandMutation.isPending}
           />
@@ -216,6 +218,7 @@ export default function BrandsTabPanel() {
                     className={`hrm-toggle-switch${item.isActive ? ' hrm-toggle-switch--on' : ''}`}
                     role="switch"
                     aria-checked={item.isActive}
+                    aria-label={`${item.isActive ? 'Tắt' : 'Bật'} nhãn hiệu ${item.name}`}
                     title={item.isActive ? 'Đang bật' : 'Đang tắt'}
                   >
                     <span className="hrm-toggle-switch__thumb" aria-hidden />

@@ -5,6 +5,7 @@ import Badge from '../../../components/ui/Badge';
 import EntityCodeLink from '../../../components/ui/EntityCodeLink';
 import Pagination from '../../../components/ui/Pagination';
 import TableShell from '../../../components/ui/TableShell';
+import { getInteractiveRowProps } from '../../../lib/a11y/interactiveRow';
 import { getApiErrorMessage } from '../../../lib/apiClient';
 import { formatDateCell } from '../../../lib/hrm/formatters';
 import { isSystemRoleAccount } from '../../../lib/projectPersonnel';
@@ -74,6 +75,7 @@ export default function ProjectsTable({
             key={p.projectCode}
             className="table-row wms-inventory-row--interactive"
             onClick={() => onRowClick(p.projectCode)}
+            {...getInteractiveRowProps(() => onRowClick(p.projectCode), `Xem chi tiết kho dự án ${p.projectCode}`)}
           >
             <td className="table-cell whitespace-nowrap project-col-code">
               <EntityCodeLink

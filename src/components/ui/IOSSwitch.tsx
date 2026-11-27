@@ -3,6 +3,7 @@ export interface IOSSwitchProps {
   disabled?: boolean;
   onChange: (next: boolean) => void;
   title?: string;
+  ariaLabel?: string;
   /** Prevent click from bubbling — use inside clickable table rows. */
   stopPropagation?: boolean;
 }
@@ -12,8 +13,10 @@ export default function IOSSwitch({
   disabled,
   onChange,
   title,
+  ariaLabel,
   stopPropagation = false,
 }: IOSSwitchProps) {
+  const label = ariaLabel ?? title ?? (checked ? 'Đang bật' : 'Đang tắt');
   return (
     <button
       type="button"
@@ -27,6 +30,7 @@ export default function IOSSwitch({
       } ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
       role="switch"
       aria-checked={checked}
+      aria-label={label}
       title={title ?? (checked ? 'Đang bật' : 'Đang tắt')}
     >
       <span

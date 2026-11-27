@@ -163,6 +163,7 @@ export default function AdminMarkupSettingModal({
                 max={100}
                 step={1}
                 disabled={busy}
+                aria-label="Markup chung mặc định (%)"
                 className="form-input form-input-sm w-20 text-center font-bold text-[var(--md-warning)]"
                 value={globalPercent}
                 onChange={e => {
@@ -238,6 +239,7 @@ export default function AdminMarkupSettingModal({
                         <input
                           type="text"
                           disabled={busy}
+                          aria-label={`Ghi chú nhóm ${cat.name}`}
                           className="form-input form-input-sm w-full"
                           placeholder="Ghi chú nhóm hàng..."
                           value={cat.note ?? ''}
@@ -252,6 +254,7 @@ export default function AdminMarkupSettingModal({
                             max={100}
                             step={1}
                             disabled={busy}
+                            aria-label={`Markup (%) nhóm ${cat.name}`}
                             className="form-input form-input-sm w-16 text-center font-bold text-[var(--md-warning)]"
                             value={cat.percent}
                             onChange={e => handlePercentChange(cat.id, Number(e.target.value) || 0)}

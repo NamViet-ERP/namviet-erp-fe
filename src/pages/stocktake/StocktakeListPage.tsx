@@ -20,6 +20,7 @@ import {
   useStocktakes,
   useUpdateStocktake,
 } from '../../hooks/useStocktakes';
+import { getInteractiveRowProps } from '../../lib/a11y/interactiveRow';
 import { getApiErrorMessage } from '../../lib/apiClient';
 import { UI_ERROR } from '../../lib/uiMessages';
 import { printVoucherWithFeedback } from '../../lib/wms/printVoucher';
@@ -202,7 +203,12 @@ export default function StocktakeListPage() {
           }
         >
           {paginated.map(st => (
-            <tr key={st.id} className="table-row wms-inventory-row--interactive" onClick={() => openDetail(st)}>
+            <tr
+              key={st.id}
+              className="table-row wms-inventory-row--interactive"
+              onClick={() => openDetail(st)}
+              {...getInteractiveRowProps(() => openDetail(st), `Xem phiếu kiểm kê ${st.voucherCode}`)}
+            >
               <td className="table-cell">{st.date}</td>
               <td className="table-cell"><EntityCodeLink code={st.voucherCode} onClick={() => openDetail(st)} /></td>
               <td className="table-cell">

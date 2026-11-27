@@ -6,6 +6,7 @@ import EntityCodeLink from '../../../components/ui/EntityCodeLink';
 import StatusBadge from '../../../components/ui/StatusBadge';
 import TableShell from '../../../components/ui/TableShell';
 import type { ListPageSize } from '../../../constants/pagination';
+import { getInteractiveRowProps } from '../../../lib/a11y/interactiveRow';
 import { adminUserToggleKey } from '../../../lib/admin/isCurrentAdminUser';
 import { getApiErrorMessage } from '../../../lib/apiClient';
 import { formatAdminDateCell } from '../../../lib/hrm/formatters';
@@ -120,6 +121,7 @@ export default function AdminUsersTable({
           key={`${user.source}-${user.id}`}
           className="table-row hrm-table-row--interactive"
           onClick={e => handleRowClick(user, e)}
+          {...getInteractiveRowProps(() => onRowNavigate(user), `Xem chi tiết tài khoản ${user.fullName}`)}
           title="Xem chi tiết"
         >
           <td className="table-cell admin-users-col-code">

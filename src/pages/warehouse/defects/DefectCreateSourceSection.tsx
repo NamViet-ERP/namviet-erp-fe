@@ -87,6 +87,7 @@ export default function DefectCreateSourceSection({
         <FormField label="Loại nguồn" required>
           <select
             className="form-input"
+            aria-label="Loại nguồn"
             value={sourceType}
             onChange={e => onSourceTypeChange(e.target.value as SourceType)}
           >
@@ -107,6 +108,7 @@ export default function DefectCreateSourceSection({
           >
             <select
               className="form-input"
+              aria-label="Phiếu PO"
               value={selectedPoCode}
               disabled={purchaseOrdersLoading}
               onChange={e => onSelectedPoCodeChange(e.target.value)}

@@ -238,7 +238,7 @@ export default function StocktakeCreateModal({
                       />
                     </td>
                     <td className="table-cell w-28">
-                      <input type="text" readOnly tabIndex={-1} aria-readonly className="form-input text-right tabular-nums cursor-default" value={it.systemQty || '—'} />
+                      <input type="text" readOnly tabIndex={-1} aria-readonly aria-label={`Tồn hệ thống dòng ${i + 1}`} className="form-input text-right tabular-nums cursor-default" value={it.systemQty || '—'} />
                     </td>
                     <td className="table-cell w-28">
                       <div className={!it.materialCode ? 'opacity-40 pointer-events-none' : undefined}>
@@ -259,6 +259,7 @@ export default function StocktakeCreateModal({
                     <td className="table-cell">
                       <input
                         type="text"
+                        aria-label={`Lý do chênh lệch dòng ${i + 1}`}
                         className="form-input text-xs"
                         value={it.reason}
                         onChange={e => updateItem(i, 'reason', e.target.value)}

@@ -132,12 +132,14 @@ export default function CountriesTabPanel() {
             value={newOriginName}
             onChange={e => setNewOriginName(e.target.value)}
             placeholder="Tên quốc gia (VD: Việt Nam, Đức, Nhật Bản...)"
+            aria-label="Tên quốc gia sản xuất mới"
             className="hrm-field-input flex-1"
             disabled={createOriginMutation.isPending}
           />
           <select
             value={newOriginRegion}
             onChange={e => setNewOriginRegion(e.target.value)}
+            aria-label="Nhóm nước của quốc gia mới"
             className="hrm-field-select sm:w-48"
             disabled={createOriginMutation.isPending}
           >
@@ -211,6 +213,7 @@ export default function CountriesTabPanel() {
                     className={`hrm-toggle-switch${item.isActive ? ' hrm-toggle-switch--on' : ''}`}
                     role="switch"
                     aria-checked={item.isActive}
+                    aria-label={`${item.isActive ? 'Tắt' : 'Bật'} xuất xứ ${item.name}`}
                     title={item.isActive ? 'Đang bật' : 'Đang tắt'}
                   >
                     <span className="hrm-toggle-switch__thumb" aria-hidden />
@@ -271,6 +274,7 @@ export default function CountriesTabPanel() {
             <select
               value={editOriginRegion}
               onChange={e => setEditOriginRegion(e.target.value)}
+              aria-label="Nhóm nước mặc định"
               className="form-input w-full"
             >
               <option value="">-- Chưa gán nhóm nước --</option>

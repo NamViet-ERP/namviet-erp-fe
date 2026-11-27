@@ -21,8 +21,14 @@ export default function SearchBar({
   return (
     <div className="search-bar">
       {onRefresh && (
-        <button type="button" onClick={onRefresh} title="Làm mới" className="search-bar__refresh">
-          <RefreshCw size={18} />
+        <button
+          type="button"
+          onClick={onRefresh}
+          title="Làm mới"
+          aria-label="Làm mới"
+          className="search-bar__refresh"
+        >
+          <RefreshCw size={18} aria-hidden="true" />
         </button>
       )}
       <div className="search-bar__wrap">

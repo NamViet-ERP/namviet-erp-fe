@@ -84,6 +84,7 @@ export default function ImportCreateHeaderFields({
             ) : (
               <select
                 className="form-input"
+                aria-label="Mã đơn hàng"
                 value={selectedPoCode}
                 disabled={poLoading}
                 onChange={e => onSelectedPoCodeChange?.(e.target.value)}

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { COMMON_ORIGIN_COUNTRIES } from '../../constants/materialCategoryLevels';
 import { useMaterialOrigins } from '../../hooks/useMaterialOrigins';
 import FormField from '../ui/FormField';
@@ -28,6 +28,7 @@ export default function MaterialCountrySelect({
   preserveUnknownValue = true,
   variant = 'form',
 }: MaterialCountrySelectProps) {
+  const fieldId = useId();
   const { data: dbOrigins = [] } = useMaterialOrigins(true);
   const [isCustomMode, setIsCustomMode] = useState(false);
 
@@ -120,6 +121,7 @@ export default function MaterialCountrySelect({
   const content = isCustomMode ? (
     <div className="flex items-center gap-1.5">
       <input
+        id={fieldId}
         type="text"
         className={resolvedInputClass}
         value={value ?? ''}
@@ -138,6 +140,7 @@ export default function MaterialCountrySelect({
     </div>
   ) : (
     <select
+      id={fieldId}
       className={resolvedSelectClass}
       value={safeValue}
       onChange={e => handleSelectChange(e.target.value)}
@@ -160,7 +163,7 @@ export default function MaterialCountrySelect({
   if (variant === 'hrm') {
     return (
       <div className={['hrm-field', className].filter(Boolean).join(' ')}>
-        <label className="hrm-field__label">
+        <label htmlFor={fieldId} className="hrm-field__label">
           Nước sản xuất
           {required && <span className="text-[var(--md-error)]"> *</span>}
         </label>
@@ -171,7 +174,7 @@ export default function MaterialCountrySelect({
   }
 
   return (
-    <FormField label="Nước sản xuất" required={required} error={error} className={className}>
+    <FormField label="Nước sản xuất" htmlFor={fieldId} required={required} error={error} className={className}>
       {content}
     </FormField>
   );

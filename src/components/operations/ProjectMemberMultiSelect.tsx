@@ -14,6 +14,7 @@ interface ProjectMemberMultiSelectProps {
   value: string[];
   onChange: (members: string[]) => void;
   placeholder?: string;
+  ariaLabel?: string;
   disabled?: boolean;
   options?: ProjectPersonnelItem[];
   excludeNames?: string[];
@@ -23,6 +24,7 @@ export default function ProjectMemberMultiSelect({
   value,
   onChange,
   placeholder = 'Chọn thành viên SC từ danh sách…',
+  ariaLabel,
   disabled = false,
   options: overrideOptions,
   excludeNames,
@@ -269,6 +271,7 @@ export default function ProjectMemberMultiSelect({
           aria-expanded={open}
           aria-controls={listId}
           aria-autocomplete="list"
+          aria-label={ariaLabel ?? placeholder}
         />
       </div>
       {panel && createPortal(panel, document.body)}

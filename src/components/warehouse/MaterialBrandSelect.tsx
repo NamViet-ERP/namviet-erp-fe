@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { useMaterialBrands } from '../../hooks/useMaterialBrands';
 import FormField from '../ui/FormField';
 
@@ -43,6 +43,7 @@ export default function MaterialBrandSelect({
   preserveUnknownValue = true,
   variant = 'form',
 }: MaterialBrandSelectProps) {
+  const fieldId = useId();
   const { data: dbBrands = [] } = useMaterialBrands(true);
   const [isCustomMode, setIsCustomMode] = useState(false);
 
@@ -100,6 +101,7 @@ export default function MaterialBrandSelect({
   const content = isCustomMode ? (
     <div className="flex items-center gap-1.5">
       <input
+        id={fieldId}
         type="text"
         className={resolvedInputClass}
         value={value ?? ''}
@@ -118,6 +120,7 @@ export default function MaterialBrandSelect({
     </div>
   ) : (
     <select
+      id={fieldId}
       className={resolvedSelectClass}
       value={safeValue}
       onChange={e => handleSelectChange(e.target.value)}
@@ -140,7 +143,7 @@ export default function MaterialBrandSelect({
   if (variant === 'hrm') {
     return (
       <div className={['hrm-field', className].filter(Boolean).join(' ')}>
-        <label className="hrm-field__label">
+        <label htmlFor={fieldId} className="hrm-field__label">
           Hãng / Nhãn hiệu
           {required && <span className="text-[var(--md-error)]"> *</span>}
         </label>
@@ -151,7 +154,7 @@ export default function MaterialBrandSelect({
   }
 
   return (
-    <FormField label="Nhãn hiệu / Hãng" required={required} error={error} className={className}>
+    <FormField label="Nhãn hiệu / Hãng" htmlFor={fieldId} required={required} error={error} className={className}>
       {content}
     </FormField>
   );

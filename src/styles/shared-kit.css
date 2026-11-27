@@ -1217,4 +1217,9 @@
     font-weight: var(--fw-medium);
     color: var(--md-primary);
   }
+
+  tr[tabindex='0']:focus-visible {
+    outline: 2px solid var(--md-primary);
+    outline-offset: -2px;
+  }
 }

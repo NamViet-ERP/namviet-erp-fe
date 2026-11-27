@@ -144,6 +144,7 @@ export default function MaterialUnitsSettingsPanel() {
               value={newName}
               onChange={e => setNewName(e.target.value)}
               placeholder="Tên đơn vị (VD: Cái, Mét khối)"
+              aria-label="Tên đơn vị tính mới"
               className="hrm-field-input flex-1"
               disabled={createMutation.isPending}
             />
@@ -209,6 +210,7 @@ export default function MaterialUnitsSettingsPanel() {
                       className={`hrm-toggle-switch${item.isActive ? ' hrm-toggle-switch--on' : ''}`}
                       role="switch"
                       aria-checked={item.isActive}
+                      aria-label={`${item.isActive ? 'Tắt' : 'Bật'} đơn vị ${item.name}`}
                       title={item.isActive ? 'Đang bật' : 'Đang tắt'}
                     >
                       <span className="hrm-toggle-switch__thumb" aria-hidden />
