@@ -608,4 +608,59 @@ describe('Living Invariant: Design System Tokens, CSS Order & Token-Only Primiti
       expect(source, `${relPath} must not contain inline fontSize`).not.toMatch(INLINE_FONT_SIZE_RE);
     }
   });
+
+  it('all Active CSS files contain zero raw hex colors and preserve modular import ordering', () => {
+    const componentsPartialsDir = path.join(repoRoot, 'src/styles/components');
+    const purchasingPartialsDir = path.join(repoRoot, 'src/styles/modules/purchasing');
+    const componentPartials = fs
+      .readdirSync(componentsPartialsDir)
+      .filter(name => name.endsWith('.css'))
+      .sort()
+      .map(name => `src/styles/components/${name}`);
+    const purchasingPartials = fs
+      .readdirSync(purchasingPartialsDir)
+      .filter(name => name.endsWith('.css'))
+      .sort()
+      .map(name => `src/styles/modules/purchasing/${name}`);
+
+    expect(componentPartials.length).toBeGreaterThan(0);
+    expect(purchasingPartials.length).toBeGreaterThan(0);
+
+    const activeCssFiles = [
+      'src/styles/base.css',
+      'src/styles/components.css',
+      ...componentPartials,
+      'src/styles/shared-kit.css',
+      'src/styles/utilities.css',
+      'src/styles/voucher-forms.css',
+      'src/styles/modules/arrival-plans.css',
+      'src/styles/modules/materials.css',
+      'src/styles/modules/suppliers.css',
+      'src/styles/modules/purchasing.css',
+      ...purchasingPartials,
+    ];
+
+    for (const relPath of activeCssFiles) {
+      const fullPath = path.join(repoRoot, relPath);
+      expect(fs.existsSync(fullPath), `${relPath} must exist`).toBe(true);
+      const css = fs.readFileSync(fullPath, 'utf-8');
+      expect(css, `${relPath} must not contain raw hex colors`).not.toMatch(RAW_HEX_RE);
+    }
+
+    const indexCss = fs.readFileSync(path.join(repoRoot, 'src/index.css'), 'utf-8');
+    const componentsIdx = indexCss.indexOf("@import './styles/components.css';");
+    const sharedKitIdx = indexCss.indexOf("@import './styles/shared-kit.css';");
+    for (const relPath of componentPartials) {
+      const fileName = path.basename(relPath);
+      const partialIdx = indexCss.indexOf(`@import './styles/components/${fileName}';`);
+      expect(partialIdx, `${relPath} must be imported in src/index.css`).toBeGreaterThan(componentsIdx);
+      expect(partialIdx, `${relPath} must be imported before shared-kit.css`).toBeLessThan(sharedKitIdx);
+    }
+
+    const purchasingEntryCss = fs.readFileSync(path.join(repoRoot, 'src/styles/modules/purchasing.css'), 'utf-8');
+    for (const relPath of purchasingPartials) {
+      const fileName = path.basename(relPath);
+      expect(purchasingEntryCss).toContain(`@import './purchasing/${fileName}';`);
+    }
+  });
 });

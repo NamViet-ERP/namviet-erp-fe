@@ -2,6 +2,10 @@
 @import './styles/tokens.css';
 @import './styles/base.css';
 @import './styles/components.css';
+@import './styles/components/shell-chrome.css';
+@import './styles/components/dashboard-charts.css';
+@import './styles/components/wms-panels-trees.css';
+@import './styles/components/ops-projects-gantt.css';
 @import './styles/shared-kit.css';
 /* Module styles follow shared components to preserve the original cascade. */
 @import './styles/modules/index.css';

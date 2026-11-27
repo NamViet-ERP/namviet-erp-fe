@@ -1,0 +1,1027 @@
+/* WMS panels, coordination tiles, voucher detail tables, stock matrix, project cards, and category tree. */
+@layer components {
+  /* ── WMS side panels (filters) ── */
+  .wms-side-panel {
+    border-radius: 16px;
+    padding: 20px;
+    background: var(--md-surface-container);
+    border: 1px solid var(--md-outline-variant02);
+    box-shadow: var(--md-shadow-1);
+  }
+  .wms-side-panel__title {
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--md-on-surface-variant);
+    margin-bottom: 16px;
+  }
+  .wms-stat-mini {
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid var(--md-outline-variant);
+    background: var(--md-surface-container-low);
+  }
+  .wms-stat-mini__label {
+    font-size: var(--fs-micro);
+    text-transform: uppercase;
+    font-weight: 500;
+    color: var(--md-on-surface-variant);
+    display: block;
+  }
+  .wms-stat-mini__value {
+    font-size: var(--fs-md);
+    font-weight: 700;
+    margin-top: 2px;
+    display: block;
+    color: var(--md-on-surface);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── WMS coordination / detail tiles ── */
+  .wms-section-heading {
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--md-on-surface);
+  }
+  .wms-feature-badge {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: var(--fs-micro);
+    font-weight: 700;
+    background: var(--md-primary-container);
+    color: var(--md-on-primary-container);
+  }
+  .wms-inset-card {
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid var(--md-outline-variant);
+    background: var(--md-surface-container-low);
+  }
+  .wms-kv-list { display: flex; flex-direction: column; gap: 6px; }
+  .wms-kv-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: var(--fs-micro);
+    gap: 8px;
+  }
+  .wms-kv-row__label {
+    color: var(--md-on-surface-variant);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .wms-kv-row__value {
+    font-weight: 600;
+    color: var(--md-on-surface);
+    flex-shrink: 0;
+  }
+  .wms-kv-row__value--primary { color: var(--md-primary); }
+  .wms-kv-row__value--success { color: var(--md-success); }
+  .wms-scan-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    background: color-mix(in srgb, var(--md-scrim) 92%, transparent);
+  }
+  .wms-scan-spinner { position: relative; width: 64px; height: 64px; }
+  .wms-scan-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 4px solid var(--tint-warning-border);
+  }
+  .wms-scan-ring--spin {
+    border-top-color: var(--status-warning);
+    animation: spin 1s linear infinite;
+  }
+  .wms-scan-ring--reverse {
+    inset: 8px;
+    border-color: var(--tint-warning-soft);
+    border-bottom-color: var(--status-warning);
+    animation: spin 1s linear infinite reverse;
+  }
+  .wms-scan-overlay__title {
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--status-warning);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  .wms-scan-overlay__sub {
+    font-size: var(--fs-micro);
+    color: var(--md-on-surface-variant);
+    margin-top: 4px;
+  }
+  .wms-result-card__title {
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--md-on-surface);
+  }
+  .wms-result-highlight {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--md-outline-variant);
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    color: var(--md-success);
+  }
+  .wms-success-panel { text-align: center; }
+  .wms-success-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    border: 1px solid var(--md-success);
+    background: var(--md-success-container);
+    color: var(--md-success);
+  }
+  .wms-status-chip {
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: var(--fs-micro);
+    background: var(--md-success-container);
+    color: var(--md-on-success-container);
+  }
+  .surface-panel__filter-bar {
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--md-outline-variant);
+  }
+  .wms-detail-tile {
+    border-radius: 12px;
+    padding: 16px;
+    background: var(--md-surface-container-low);
+  }
+  .wms-detail-tile__label {
+    font-size: var(--fs-xs);
+    color: var(--md-on-surface-variant);
+    display: block;
+  }
+  .wms-detail-tile__value {
+    font-weight: 600;
+    color: var(--md-on-surface);
+    display: block;
+    margin-top: 2px;
+  }
+  .wms-detail-tile__value--lg {
+    font-size: var(--fs-xl);
+    font-weight: 700;
+    color: var(--md-primary);
+  }
+  .wms-detail-tile--success {
+    border: 1px solid var(--md-outline-variant);
+    background: var(--md-success-container);
+  }
+  .wms-detail-tile--success .wms-detail-tile__label {
+    color: var(--md-on-success-container);
+    opacity: 0.8;
+  }
+  .wms-detail-tile--success .wms-detail-tile__value {
+    font-size: var(--fs-3xl);
+    font-weight: 700;
+    color: var(--md-on-success-container);
+    margin-top: 0;
+  }
+  .wms-detail-tile--primary {
+    border: 1px solid var(--md-outline-variant);
+    background: var(--md-primary-container);
+  }
+  .wms-detail-tile--primary .wms-detail-tile__label {
+    color: var(--md-on-primary-container);
+    opacity: 0.8;
+  }
+  .wms-detail-tile--primary .wms-detail-tile__value {
+    font-size: var(--fs-3xl);
+    font-weight: 700;
+    color: var(--md-on-primary-container);
+    margin-top: 0;
+  }
+  .wms-meta-label {
+    font-size: var(--fs-micro);
+    color: var(--md-on-surface-variant);
+    display: block;
+  }
+  .wms-meta-value {
+    font-weight: 700;
+    color: var(--md-on-surface);
+    display: block;
+    margin-top: 2px;
+  }
+  .wms-meta-value--error { color: var(--md-error); }
+  .table-min-w--650 { min-width: 650px; }
+  .table-min-w--850 { min-width: 850px; }
+  .table-min-w--950 { min-width: 950px; }
+  .table-min-w--1400 { min-width: 1400px; }
+  .surface-panel__footer {
+    padding: 12px 16px 16px;
+    border-top: 1px solid var(--md-outline-variant);
+    margin-top: 8px;
+  }
+  .wms-detail-summary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+    padding: 16px;
+    border-radius: 12px;
+    background: var(--md-surface-container-low);
+  }
+  @media (min-width: 768px) {
+    .wms-detail-summary { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+
+  /* ── Transaction form line items (import/export/transfer modals) ── */
+  .import-items-table {
+    table-layout: fixed;
+    width: 100%;
+  }
+  .import-items-table--import { min-width: 640px; }
+  .import-items-table--import :is(th, td):nth-child(1) { width: 32%; }
+  .import-items-table--import :is(th, td):nth-child(2) { width: 12%; }
+  .import-items-table--import :is(th, td):nth-child(3) { width: 10%; }
+  .import-items-table--import :is(th, td):nth-child(4) { width: 16%; }
+  .import-items-table--import :is(th, td):nth-child(5) { width: 16%; }
+  .import-items-table--import :is(th, td):nth-child(6) { width: 40px; }
+  .import-items-table--export { min-width: 560px; }
+  .import-items-table--export :is(th, td):nth-child(1) { width: 36%; }
+  .import-items-table--export :is(th, td):nth-child(2) { width: 14%; }
+  .import-items-table--export :is(th, td):nth-child(3) { width: 10%; }
+  .import-items-table--export :is(th, td):nth-child(4) { width: 12%; }
+  .import-items-table--export :is(th, td):nth-child(5) { width: 40px; }
+  .import-items-table--transfer { min-width: 680px; }
+  .import-items-table--transfer :is(th, td):nth-child(1) { width: 30%; }
+  .import-items-table--transfer :is(th, td):nth-child(2) { width: 12%; }
+  .import-items-table--transfer :is(th, td):nth-child(3) { width: 8%; }
+  .import-items-table--transfer :is(th, td):nth-child(4) { width: 10%; }
+  .import-items-table--transfer :is(th, td):nth-child(5) { width: 18%; }
+  .import-items-table--transfer :is(th, td):nth-child(6) { width: 40px; }
+  .import-items-table--exportReturn { min-width: 820px; }
+  .import-items-table--exportReturn th {
+    vertical-align: middle;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .import-items-table--exportReturn .export-return-col-code { width: 7rem; }
+  .import-items-table--exportReturn .export-return-col-name { width: 36%; }
+  .import-items-table--exportReturn .export-return-col-qty { width: 5.75rem; }
+  .import-items-table--exportReturn .export-return-col-return { width: 8.75rem; }
+  .import-items-table--exportReturn .export-return-col-unit { width: 3.5rem; }
+  .import-items-table--exportReturn .export-return-qty-cell .qty-stepper {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+  }
+
+  .export-return-list-table {
+    table-layout: fixed;
+    width: 100%;
+    min-width: 0;
+  }
+  .export-return-list-table :is(th, td):nth-child(1) { width: 9rem; }
+  .export-return-list-table :is(th, td):nth-child(2) { width: 9rem; }
+  .export-return-list-table :is(th, td):nth-child(3) {
+    width: 11rem;
+    max-width: 11rem;
+  }
+  .export-return-list-table :is(th, td):nth-child(4) { width: 6.5rem; }
+  .export-return-list-table :is(th, td):nth-child(5) { width: 10.5rem; }
+  .export-return-list-table :is(th, td):nth-child(6) { width: 4.5rem; }
+  .export-return-list-table .export-return-project-cell {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 11rem;
+  }
+
+  .table-min-w--720 { min-width: 720px; }
+
+  /* ── WMS settings panels ── */
+  .wms-settings-hero__icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: var(--md-primary-container);
+    border: 1px solid var(--md-outline-variant);
+    color: var(--md-primary);
+  }
+  .wms-settings-hero__title {
+    font-weight: 700;
+    font-size: var(--fs-xl);
+    text-transform: uppercase;
+    color: var(--md-on-surface);
+  }
+  .wms-settings-hero__sub {
+    font-size: var(--fs-xs);
+    color: var(--md-on-surface-variant);
+  }
+  .wms-settings-divider {
+    border-top: 1px solid var(--md-outline-variant);
+  }
+
+  /* Cây vật tư — ERP chrome */
+  .mat-cat-settings-board.hrm-panel {
+    overflow: hidden;
+    border-color: var(--table-border);
+  }
+  .mat-cat-settings-board__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px 10px;
+    background: var(--nv-table-header-bg);
+    color: var(--nv-table-header-text);
+    box-shadow: inset 0 -2px 0 var(--table-header-lip);
+  }
+  .mat-cat-settings-board__title {
+    margin: 0;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-semibold);
+    color: var(--nv-table-header-text);
+  }
+  .mat-cat-settings-board__desc {
+    margin: 4px 0 0;
+    font-size: var(--fs-xs);
+    color: color-mix(in srgb, var(--nv-table-header-text) 82%, var(--nv-amber));
+  }
+  .mat-cat-levels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--table-border);
+    background: var(--md-surface-container);
+  }
+  .mat-cat-levels__btn {
+    height: 36px;
+    min-width: 40px;
+    padding: 0 12px;
+    border: 1px solid var(--table-border);
+    border-radius: var(--radius-sm);
+    background: var(--md-surface-container-high);
+    color: var(--md-on-surface);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-medium);
+    cursor: pointer;
+    transition: background-color 150ms var(--md-easing), border-color 150ms var(--md-easing);
+  }
+  .mat-cat-levels__btn:hover {
+    border-color: var(--nv-navy);
+    background: var(--md-surface-container);
+  }
+  .mat-cat-levels__btn.is-active {
+    background: var(--nv-navy);
+    color: var(--nv-table-header-text);
+    border-color: var(--nv-navy);
+    box-shadow: inset 0 -2px 0 var(--table-header-lip);
+    font-weight: var(--fw-semibold);
+  }
+  .mat-cat-levels__btn:focus-visible {
+    outline: 2px solid var(--nv-amber);
+    outline-offset: 2px;
+  }
+  .mat-cat-settings-board__body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--table-border);
+  }
+  .mat-cat-settings-board__parent {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-medium);
+    color: var(--md-on-surface-variant);
+  }
+  .mat-cat-settings-board__parent select {
+    border-color: var(--table-border);
+  }
+  .mat-cat-settings-board__parent select:focus {
+    outline: none;
+    border-color: var(--nv-navy);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--nv-amber) 28%, transparent);
+  }
+  .mat-cat-settings-board__add {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+  .mat-cat-settings-board__add .hrm-field-input {
+    border-color: var(--table-border);
+    border-radius: var(--radius-xs);
+    min-width: 12rem;
+  }
+  .mat-cat-settings-board__add .hrm-field-input:focus {
+    border-color: var(--nv-navy);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--nv-amber) 28%, transparent);
+  }
+  .mat-cat-settings-board__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+  .mat-cat-settings-board__toolbar .search-bar {
+    flex: 1 1 16rem;
+    min-width: 0;
+  }
+  .mat-cat-settings-board__toolbar .search-bar__input.form-input-compact {
+    border-color: var(--table-border);
+  }
+  .mat-cat-settings-board__toolbar .search-bar__input.form-input-compact:focus {
+    border-color: var(--nv-navy);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--nv-amber) 28%, transparent);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mat-cat-levels__btn {
+      transition: none;
+    }
+  }
+  .mat-cat-settings-board__name--off {
+    color: var(--md-on-surface-variant);
+  }
+  .mat-cat-settings-board__actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .mat-cat-settings-board__delete {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid var(--table-border);
+    border-radius: var(--radius-sm);
+    background: var(--md-surface-container-high);
+    color: var(--md-error);
+    cursor: pointer;
+  }
+  .mat-cat-settings-board__delete:hover {
+    background: var(--md-error-container);
+    border-color: var(--md-error);
+  }
+  .mat-cat-settings-board__delete:focus-visible {
+    outline: 2px solid var(--nv-amber);
+    outline-offset: 2px;
+  }
+  .mat-cat-settings-board__foot {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 16px;
+    border-top: 1px solid var(--table-border);
+    font-size: var(--fs-xs);
+    color: var(--md-on-surface-variant);
+  }
+  .mat-cat-settings-board__foot strong {
+    font-weight: var(--fw-semibold);
+    color: var(--md-on-surface);
+  }
+
+  .wms-token-chip {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: var(--fs-xs);
+    border: 1px solid var(--md-outline-variant);
+  }
+  .wms-token-chip--info,
+  .wms-token-chip--increase {
+    background: var(--md-info-container);
+    color: var(--md-on-info-container);
+  }
+  .wms-token-chip--decrease {
+    background: var(--md-error-container);
+    color: var(--md-on-error-container);
+  }
+
+  /* Material detail — activate / discontinue section */
+  .hrm-detail-section--status-active {
+    border-color: color-mix(in srgb, var(--md-error) 35%, var(--md-outline-variant02));
+  }
+  .hrm-detail-section--status-active .hrm-detail-section__head {
+    border-bottom-color: color-mix(in srgb, var(--md-outline-variant) 80%, transparent);
+    background: color-mix(in srgb, var(--md-error) 6%, var(--md-surface-container-high));
+  }
+  .hrm-detail-section--status-active .hrm-detail-section__title { color: var(--md-error); }
+  .hrm-detail-section--status-inactive {
+    border-color: color-mix(in srgb, var(--md-tertiary) 35%, var(--md-outline-variant02));
+  }
+  .hrm-detail-section--status-inactive .hrm-detail-section__head {
+    border-bottom-color: color-mix(in srgb, var(--md-outline-variant) 80%, transparent);
+    background: color-mix(in srgb, var(--md-tertiary) 6%, var(--md-surface-container-high));
+  }
+  .hrm-detail-section--status-inactive .hrm-detail-section__title { color: var(--md-tertiary); }
+
+
+  /* ── WMS inventory table — tồn kho + kho dự án ── */
+  .wms-inventory-table-wrap {
+    overflow-x: auto;
+  }
+  .wms-inventory-table-wrap--flush-top .wms-inventory-table thead th:first-child {
+    border-top-left-radius: var(--radius-md);
+  }
+  .wms-inventory-table-wrap--flush-top .wms-inventory-table thead th:last-child {
+    border-top-right-radius: var(--radius-md);
+  }
+  .wms-inventory-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+  .wms-inventory-table .table-header-cell,
+  .wms-inventory-table .table-cell {
+    border: 1px solid var(--table-border);
+  }
+  /* Header row owns the navy fill so cells can round the wrapper corners. */
+  .wms-inventory-table thead tr {
+    background: var(--nv-table-header-bg);
+    color: var(--nv-table-header-text);
+  }
+  .wms-inventory-table thead .table-header-cell {
+    background: var(--nv-table-header-bg);
+    border-color: var(--table-header-border);
+    border-bottom: 2px solid var(--table-header-lip);
+  }
+  .wms-inventory-table .wms-inventory-row--interactive {
+    cursor: pointer;
+  }
+
+
+  /* ── WMS voucher detail modal ── */
+  .wms-voucher-detail .md-dialog__title--mono {
+    font-family: var(--font-mono);
+    letter-spacing: 0.02em;
+  }
+  .wms-voucher-detail__hint {
+    margin-top: 6px;
+    font-size: var(--fs-sm);
+    line-height: var(--lh-normal);
+    color: var(--md-on-surface-variant);
+  }
+  .wms-voucher-detail .md-dialog__body {
+    padding-top: 12px;
+  }
+  .wms-voucher-detail__section-label {
+    margin-bottom: 10px;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-semibold);
+    letter-spacing: 0.01em;
+    text-transform: none;
+    color: var(--md-on-surface-variant);
+  }
+  .wms-voucher-detail .md-dialog__footer {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  /* Embedded-table variant: quiet header inside a dialog. Same type scale,
+     density, grid and zebra as the list table — only the header fill differs. */
+  .wms-voucher-detail-table-wrap {
+    overflow: auto;
+    border: 1px solid var(--table-border);
+    border-radius: var(--radius-md);
+    background: var(--md-surface);
+  }
+  .wms-voucher-detail-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+  .wms-voucher-detail-table--fixed {
+    table-layout: fixed;
+  }
+  .wms-voucher-detail-table thead tr {
+    background: var(--md-surface-container-high);
+  }
+  .wms-voucher-detail-table thead .table-header-cell {
+    color: var(--md-on-surface);
+    background: var(--md-surface-container-high);
+    border-color: var(--table-border);
+    border-bottom: 2px solid var(--table-header-lip);
+  }
+  .wms-voucher-detail-table tfoot .table-cell {
+    background: var(--md-surface-container-low);
+    border-top: 1px solid var(--table-border);
+  }
+
+  /* Editable cells: stronger frame so clerks can spot where to type */
+  .wms-voucher-detail-table .form-input,
+  .wms-voucher-detail-table .form-select {
+    border: 1.5px solid color-mix(in srgb, var(--md-on-surface) 38%, var(--md-outline));
+    background: var(--md-surface);
+    box-shadow: none;
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  .wms-voucher-detail-table .form-input:hover:not(:disabled):not(:read-only),
+  .wms-voucher-detail-table .form-select:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--nv-steel) 45%, var(--md-on-surface));
+  }
+  .wms-voucher-detail-table .form-input:focus,
+  .wms-voucher-detail-table .form-select:focus {
+    border-color: var(--md-primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--md-primary) 22%, transparent);
+  }
+
+  .wms-voucher-detail-table .form-input.form-input--error {
+    border-color: var(--md-error);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--md-error) 22%, transparent);
+  }
+  .wms-voucher-detail-col-stt {
+    width: 3.25rem;
+  }
+  .wms-voucher-detail-col-code {
+    width: 8rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .wms-voucher-detail-col-qty {
+    width: 5.5rem;
+  }
+  .wms-voucher-detail-col-unit {
+    width: 4.75rem;
+  }
+  .wms-voucher-detail-col-money {
+    width: 8rem;
+  }
+
+  /* HL detail: vừa đủ; NK duyệt (nhiều cột): rộng gần full viewport */
+  .wms-voucher-detail--lines.md-dialog--wide {
+    max-width: min(1180px, calc(100vw - 32px));
+    width: min(1180px, calc(100vw - 32px));
+  }
+  .wms-voucher-detail--receive.md-dialog--wide {
+    max-width: min(1520px, calc(100vw - 24px));
+    width: min(1520px, calc(100vw - 24px));
+  }
+  .wms-voucher-detail-table--receive {
+    min-width: 72rem;
+  }
+  .wms-voucher-detail-table--receive .wms-voucher-detail-col-name {
+    width: 11rem;
+    min-width: 9rem;
+  }
+  .wms-voucher-detail-table--receive .wms-voucher-detail-col-settle {
+    width: 6.75rem;
+    min-width: 6.75rem;
+  }
+  .wms-voucher-detail-table--receive .wms-voucher-detail-col-reason {
+    width: 14rem;
+    min-width: 12rem;
+  }
+  .wms-voucher-detail-table--receive .wms-voucher-detail-col-settle .form-input {
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+
+  /* Tồn kho — column widths & full horizontal expansion (never wrap column headers) */
+  .stock-matrix-table {
+    table-layout: auto;
+    width: 100%;
+    min-width: max-content;
+  }
+  .stock-matrix-table thead .table-header-cell {
+    padding: 8px 10px;
+    font-size: var(--fs-xs);
+    line-height: 1.25;
+    white-space: nowrap;
+    vertical-align: middle;
+    letter-spacing: 0.02em;
+  }
+  .stock-matrix-table .table-cell {
+    padding: 7px 10px;
+    font-size: var(--fs-xs);
+    vertical-align: middle;
+  }
+  .stock-col-code {
+    min-width: 13.5rem;
+    max-width: 18rem;
+    overflow: hidden;
+  }
+  .stock-col-name {
+    min-width: 12rem;
+    max-width: 22rem;
+    overflow: hidden;
+  }
+  .stock-col-unit {
+    min-width: 3.75rem;
+    white-space: nowrap;
+  }
+  .stock-col-qty {
+    min-width: 6.5rem;
+    white-space: nowrap;
+  }
+  .stock-col-price {
+    min-width: 9.5rem;
+    white-space: nowrap;
+  }
+  .stock-col-projects {
+    min-width: 4rem;
+    white-space: nowrap;
+  }
+  .stock-cell-truncate {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+  }
+  .stock-cell-general {
+    background: var(--tint-primary-weak);
+  }
+  .stock-qty--reserved { color: var(--status-error); }
+  .stock-qty--pending { color: var(--status-warning); }
+
+  .wms-history-kind {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .wms-history-kind--import { color: var(--md-primary); }
+  .wms-history-kind--export { color: var(--status-error); }
+  .wms-history-kind--transfer { color: var(--status-warning); }
+
+  .wms-badge-new {
+    margin-left: 8px;
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: var(--fs-micro);
+    font-weight: 700;
+    border-radius: 9999px;
+    background: var(--md-error);
+    color: var(--md-on-error);
+  }
+  .stock-project-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.75rem;
+    height: 1.75rem;
+    padding: 0 0.35rem;
+    border-radius: var(--radius-xs);
+    font-size: var(--fs-micro);
+    font-weight: var(--fw-bold);
+    background: var(--md-primary-container);
+    color: var(--md-on-primary-container);
+  }
+  .stock-modal-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: 0.65rem;
+    background: var(--md-surface-container-low);
+    border: 1px solid var(--md-outline-variant);
+  }
+  .stock-modal-stat-label {
+    font-size: var(--fs-micro);
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--md-on-surface-variant);
+  }
+  .stock-modal-stat-value {
+    font-size: var(--fs-xl);
+    font-weight: 700;
+  }
+  .stock-modal-table-wrap {
+    /* Horizontal only — vertical scroll lives on .md-dialog__body (avoid nested scroll jank) */
+    overflow-x: auto;
+    border: 1px solid var(--table-border);
+    border-radius: var(--radius-md);
+  }
+  .stock-modal-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--md-surface-container-high);
+  }
+
+  /* Kho dự án list — card layout with stock metrics */
+  .wms-project-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 16px 16px;
+  }
+  .wms-project-card {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 16px 18px;
+    border-radius: 14px;
+    border: 1px solid var(--md-outline-variant02);
+    background: var(--md-surface-container-low);
+    cursor: pointer;
+    transition: border-color 150ms var(--md-easing), box-shadow 150ms var(--md-easing), transform 150ms var(--md-easing);
+  }
+  .wms-project-card:hover {
+    border-color: color-mix(in srgb, var(--md-primary) 28%, var(--md-outline-variant02));
+    box-shadow: var(--md-shadow-2);
+    transform: translateY(-1px);
+  }
+  .wms-project-card:focus-visible {
+    outline: 2px solid var(--md-primary);
+    outline-offset: 2px;
+  }
+  .wms-project-card__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .wms-project-card__identity {
+    min-width: 0;
+    flex: 1;
+  }
+  .wms-project-card__code {
+    display: inline-block;
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    color: var(--md-primary);
+    margin-bottom: 4px;
+  }
+  .wms-project-card__name {
+    font-size: var(--fs-lg);
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--md-on-surface);
+    margin: 0 0 6px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .wms-project-card__meta {
+    font-size: var(--fs-xs);
+    color: var(--md-on-surface-variant);
+    margin: 0;
+  }
+  .wms-project-card__meta-sep {
+    margin: 0 6px;
+    opacity: 0.5;
+  }
+  .wms-project-card__status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .wms-project-card__chevron {
+    color: var(--md-on-surface-variant);
+    opacity: 0;
+    transition: opacity 150ms var(--md-easing), transform 150ms var(--md-easing);
+  }
+  .wms-project-card:hover .wms-project-card__chevron {
+    opacity: 0.65;
+    transform: translateX(2px);
+  }
+  .wms-project-card__metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+  }
+  @media (max-width: 768px) {
+    .wms-project-card__metrics {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  .wms-project-metric {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--md-outline-variant02);
+    background: var(--md-surface-container);
+  }
+  .wms-project-metric__label {
+    font-size: var(--fs-micro);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--md-on-surface-variant);
+  }
+  .wms-project-metric__value {
+    font-size: var(--fs-xl);
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--md-on-surface);
+  }
+  .wms-project-metric--actual .wms-project-metric__value {
+    color: var(--md-on-surface);
+  }
+  .wms-project-metric--planned .wms-project-metric__value {
+    color: var(--status-warning);
+  }
+  .wms-project-metric--reserved .wms-project-metric__value {
+    color: var(--status-error);
+  }
+  .wms-project-metric--count .wms-project-metric__value {
+    color: var(--md-primary);
+  }
+  .wms-project-card-skeleton {
+    height: 132px;
+    border-radius: 14px;
+    background: linear-gradient(
+      90deg,
+      var(--md-surface-container-low) 0%,
+      color-mix(in srgb, var(--md-on-surface) 6%, var(--md-surface-container-low)) 50%,
+      var(--md-surface-container-low) 100%
+    );
+    background-size: 200% 100%;
+    animation: hrm-skeleton-shimmer 1.4s ease-in-out infinite;
+  }
+
+  /* Kho dự án — column widths (shared wms-inventory-table skin) */
+  .project-warehouse-table {
+    table-layout: auto;
+    min-width: 56rem;
+  }
+  .project-warehouse-table--wide {
+    min-width: 78rem;
+  }
+  .project-detail-page .project-detail-stat-grid {
+    gap: 12px;
+  }
+  .app-shell--wms .project-detail-page .project-detail-stat-grid .hrm-stat-card,
+  .app-shell--wms .project-detail-page .project-detail-stat-grid .kpi-card {
+    padding: 11px 14px;
+  }
+  .project-warehouse-table .project-col-code {
+    width: 13rem;
+    min-width: 13rem;
+    white-space: nowrap;
+  }
+  .project-warehouse-table .project-col-name {
+    min-width: 14rem;
+    white-space: normal;
+    overflow-wrap: break-word;
+  }
+  .project-warehouse-table .project-col-client {
+    min-width: 11rem;
+  }
+  .project-warehouse-table .project-col-sc {
+    min-width: 10rem;
+  }
+  .project-warehouse-table .project-col-pm {
+    min-width: 10rem;
+  }
+  .project-warehouse-table .project-col-date {
+    width: 8rem;
+    min-width: 8rem;
+    white-space: nowrap;
+  }
+  .project-warehouse-table .project-col-qty {
+    width: 5.5rem;
+    white-space: nowrap;
+  }
+  .project-warehouse-table .project-col-count {
+    width: 4.5rem;
+    white-space: nowrap;
+  }
+  .project-warehouse-table .project-col-status {
+    width: 11.5rem;
+    min-width: 11.5rem;
+    white-space: nowrap;
+    overflow: visible;
+  }
+  .project-warehouse-table .project-col-actions {
+    width: 19rem;
+    min-width: 19rem;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+}

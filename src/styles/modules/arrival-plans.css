@@ -11,9 +11,9 @@
   align-items: center;
   min-height: 42px;
   padding: 6px 10px;
-  border: 1px solid var(--md-outline-variant, #c4c7c5);
+  border: 1px solid var(--md-outline-variant);
   border-radius: 10px;
-  background: var(--md-surface, #fff);
+  background: var(--md-surface);
 }
 
 .warehouse-keeper-multi__input {
@@ -54,7 +54,7 @@
   justify-content: center;
   border: 0;
   background: transparent;
-  color: var(--md-outline, #747775);
+  color: var(--md-outline);
   cursor: pointer;
   padding: 4px;
   border-radius: 6px;
@@ -62,15 +62,15 @@
 }
 
 .warehouse-keeper-multi__toggle:hover {
-  color: var(--md-on-surface, #1d1b20);
+  color: var(--md-on-surface);
 }
 
 .warehouse-keeper-multi__panel {
   margin: 0;
   padding: 4px;
   list-style: none;
-  background: var(--md-surface, #fff);
-  border: 1px solid var(--md-outline-variant, #c4c7c5);
+  background: var(--md-surface);
+  border: 1px solid var(--md-outline-variant);
   border-radius: 10px;
   box-shadow: 0 8px 24px rgb(0 0 0 / 12%);
   overflow: auto;
@@ -96,7 +96,7 @@
 .warehouse-keeper-multi__empty {
   padding: 10px 12px;
   font-size: var(--fs-sm);
-  color: var(--md-on-surface-variant, #5f6368);
+  color: var(--md-on-surface-variant);
   line-height: 1.35;
 }
 
@@ -119,9 +119,9 @@
 }
 
 .arrival-plans-day-chip {
-  border: 1px solid var(--md-outline-variant, #c4c7c5);
-  background: var(--md-surface, #fff);
-  color: var(--md-on-surface, #1a1c1e);
+  border: 1px solid var(--md-outline-variant);
+  background: var(--md-surface);
+  color: var(--md-on-surface);
   border-radius: 999px;
   padding: 6px 12px;
   font-size: var(--fs-sm);
@@ -146,7 +146,7 @@
 }
 
 .arrival-plans-project {
-  border-top: 1px solid var(--md-outline-variant, #e2e4e2);
+  border-top: 1px solid var(--md-outline-variant);
 }
 
 .arrival-plans-project.is-highlight .arrival-plans-project__head {
@@ -188,7 +188,7 @@
 
 .arrival-plans-project__name {
   font-weight: 650;
-  color: var(--md-on-surface, #1a1c1e);
+  color: var(--md-on-surface);
 }
 
 .arrival-plans-project__meta {
@@ -203,20 +203,20 @@
   align-items: center;
   padding: 3px 8px;
   border-radius: 6px;
-  background: var(--md-surface-container, #f0f1f0);
+  background: var(--md-surface-container);
   font-size: var(--fs-xs);
   font-weight: 600;
-  color: var(--md-on-surface-variant, #444746);
+  color: var(--md-on-surface-variant);
 }
 
 .arrival-plans-pill--qty {
-  background: color-mix(in srgb, var(--md-tertiary, #386a20) 12%, transparent);
-  color: var(--md-tertiary, #386a20);
+  background: color-mix(in srgb, var(--md-success) 12%, transparent);
+  color: var(--md-success);
 }
 
 .arrival-plans-pill--date {
-  background: color-mix(in srgb, #b45309 12%, transparent);
-  color: #9a3412;
+  background: var(--md-warning-container);
+  color: var(--md-on-warning-container);
 }
 
 .arrival-plans-pill--upcoming {
@@ -225,13 +225,13 @@
 }
 
 .arrival-plans-pill--due-today {
-  background: color-mix(in srgb, #b45309 14%, transparent);
-  color: #9a3412;
+  background: var(--md-warning-container);
+  color: var(--md-on-warning-container);
 }
 
 .arrival-plans-pill--overdue {
-  background: color-mix(in srgb, var(--md-error, #b3261e) 14%, transparent);
-  color: var(--md-error, #b3261e);
+  background: color-mix(in srgb, var(--md-error) 14%, transparent);
+  color: var(--md-error);
   font-weight: 700;
 }
 
@@ -263,9 +263,9 @@
   border-radius: 10px;
   background: linear-gradient(
     90deg,
-    var(--md-surface-container, #eceeee) 0%,
-    color-mix(in srgb, var(--md-surface-container, #eceeee) 40%, #fff) 50%,
-    var(--md-surface-container, #eceeee) 100%
+    var(--md-surface-container-low) 0%,
+    color-mix(in srgb, var(--md-surface-container-highest) 55%, var(--md-surface-container-low)) 50%,
+    var(--md-surface-container-low) 100%
   );
   background-size: 200% 100%;
 }
