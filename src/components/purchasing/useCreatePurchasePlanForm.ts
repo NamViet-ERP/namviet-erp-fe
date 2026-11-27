@@ -55,10 +55,10 @@ export function useCreatePurchasePlanForm({
   const entityLabel = isAdhoc ? 'mua hàng phát sinh' : 'KHMH';
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: projectsPage } = useProjects({ page: 1, pageSize: 200, status: 'Active' });
-  const { data: suppliersPage } = useSuppliers({ all: true });
-  const { data: materialsPage } = useMaterials({ all: true });
-  const { data: serviceItemsPage } = useServiceExpenseItems({ all: true });
+  const { data: projectsPage } = useProjects({ page: 1, pageSize: 200, status: 'Active' }, { enabled: open });
+  const { data: suppliersPage } = useSuppliers({ all: true }, { enabled: open });
+  const { data: materialsPage } = useMaterials({ all: true }, { enabled: open });
+  const { data: serviceItemsPage } = useServiceExpenseItems({ all: true }, { enabled: open });
   const { data: editPlan } = usePurchasePlan(open && editCode ? editCode : undefined);
 
   const createMutation = useCreatePurchasePlan();
@@ -91,12 +91,12 @@ export function useCreatePurchasePlanForm({
     || templateMutation.isPending;
 
   const knownMaterialCodes = useMemo(
-    () => new Set(materials.map(m => m.materialCode.trim().toLowerCase())),
+    () => new Set(materials.map(m => (m.materialCode ?? '').trim().toLowerCase()).filter(Boolean)),
     [materials],
   );
 
   const knownServiceCodes = useMemo(
-    () => new Set(serviceItems.map(s => s.code.trim().toLowerCase())),
+    () => new Set(serviceItems.map(s => (s.code ?? '').trim().toLowerCase()).filter(Boolean)),
     [serviceItems],
   );
 

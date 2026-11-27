@@ -7,7 +7,10 @@ import {
 import { queryKeys } from '../services/queryKeys';
 import { DEFAULT_LIST_PAGE_SIZE } from '../constants/pagination';
 
-export function useSuppliers(params: SupplierListParams & { all?: boolean } = {}) {
+export function useSuppliers(
+  params: SupplierListParams & { all?: boolean } = {},
+  options?: { enabled?: boolean; staleTime?: number },
+) {
   const page = params.all ? 1 : (params.page ?? 1);
   const pageSize = params.all ? 500 : (params.pageSize ?? DEFAULT_LIST_PAGE_SIZE);
 
@@ -32,6 +35,8 @@ export function useSuppliers(params: SupplierListParams & { all?: boolean } = {}
         isBlacklisted: params.isBlacklisted,
         approvalStatus: params.approvalStatus,
       }),
+    enabled: options?.enabled,
+    staleTime: options?.staleTime,
   });
 }
 

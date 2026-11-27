@@ -8,10 +8,15 @@ import type {
   UpdateServiceExpenseItemRequest,
 } from '../types/api/serviceExpenseItem';
 
-export function useServiceExpenseItems(params: ServiceExpenseItemQueryParams = {}) {
+export function useServiceExpenseItems(
+  params: ServiceExpenseItemQueryParams = {},
+  options?: { enabled?: boolean; staleTime?: number },
+) {
   return useQuery({
     queryKey: queryKeys.serviceExpenseItems.list(params),
     queryFn: () => serviceExpenseItemsService.list(params),
+    enabled: options?.enabled,
+    staleTime: options?.staleTime,
   });
 }
 

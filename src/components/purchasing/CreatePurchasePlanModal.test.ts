@@ -460,4 +460,37 @@ describe('CreatePurchasePlanModal characterization', () => {
       expect.stringContaining('VT-CHUA-KHAI-BAO'),
     );
   });
+
+  it('does not fetch modal catalog or project lists when open is false', async () => {
+    await renderModal({ open: false });
+
+    expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+    expect(projectsService.list).not.toHaveBeenCalled();
+    expect(suppliersService.list).not.toHaveBeenCalled();
+    expect(materialsService.list).not.toHaveBeenCalled();
+    expect(serviceExpenseItemsService.list).not.toHaveBeenCalled();
+  });
+
+  it('ignores null materialCode or service code entries when open is true', async () => {
+    vi.mocked(materialsService.list).mockResolvedValue({
+      items: [{ ...sampleMaterials[0], materialCode: null }, sampleMaterials[0]] as never,
+      totalCount: 2,
+      page: 1,
+      pageSize: 500,
+      totalPages: 1,
+    });
+    vi.mocked(serviceExpenseItemsService.list).mockResolvedValue({
+      items: [{ ...sampleServices[0], code: null }, sampleServices[0]] as never,
+      total: 2,
+      page: 1,
+      pageSize: 500,
+      totalPages: 1,
+    });
+
+    await renderModal({ open: true });
+
+    const dialog = document.body.querySelector('[role="dialog"]') as HTMLElement;
+    expect(dialog).not.toBeNull();
+    expect(dialog.textContent).toContain('Tạo kế hoạch mua hàng');
+  });
 });
