@@ -268,7 +268,7 @@ describe('SupplierGroupsPage 2-level hierarchy', () => {
     );
   });
 
-  it('opens contextual single-field create-child modal with NO textarea, edits child preserving legacy description, and disables parent selector when editing parent with children', async () => {
+  it('opens contextual single-field create-child modal with parent context banner and NO select/textarea, edits child preserving legacy description, and edits parent without parent select', async () => {
     await renderPage();
 
     const addChildBtn = container.querySelector(
@@ -283,11 +283,12 @@ describe('SupplierGroupsPage 2-level hierarchy', () => {
 
     const dialog = document.body.querySelector('[role="dialog"]')!;
     expect(dialog.textContent).toContain('Thêm mô tả cho nhóm');
+    expect(dialog.querySelector('select')).toBeNull();
     expect(dialog.querySelector('textarea')).toBeNull();
+    const parentContext = dialog.querySelector('.supplier-group-form__parent-context');
+    expect(parentContext).not.toBeNull();
+    expect(parentContext?.textContent).toContain('Thuộc nhóm: Vật tư Điện');
     expect(dialog.querySelectorAll('input.form-input')).toHaveLength(1);
-    const parentSelect = dialog.querySelector('select') as HTMLSelectElement;
-    expect(parentSelect.value).toBe('1');
-    expect(parentSelect.disabled).toBe(false);
 
     const nameInput = dialog.querySelector('input.form-input') as HTMLInputElement;
     expect(nameInput.placeholder).toBe('VD: Lắp đặt, Cung cấp vật tư, Gia công…');
@@ -308,7 +309,7 @@ describe('SupplierGroupsPage 2-level hierarchy', () => {
     });
     expect(showToast).toHaveBeenCalledWith('success', 'Đã thêm mô tả con');
 
-    // Edit existing child with legacy description -> NO textarea and preserves legacy description
+    // Edit existing child with legacy description -> NO select/textarea, shows parent context, preserves legacy description
     const editChildBtn = container.querySelector(
       'button[aria-label="Sửa mô tả Dây cáp điện"]',
     ) as HTMLButtonElement;
@@ -319,7 +320,11 @@ describe('SupplierGroupsPage 2-level hierarchy', () => {
 
     const editChildDialog = document.body.querySelector('[role="dialog"]')!;
     expect(editChildDialog.textContent).toContain('Sửa mô tả con');
+    expect(editChildDialog.querySelector('select')).toBeNull();
     expect(editChildDialog.querySelector('textarea')).toBeNull();
+    expect(
+      editChildDialog.querySelector('.supplier-group-form__parent-context')?.textContent,
+    ).toContain('Thuộc nhóm: Vật tư Điện');
     expect(editChildDialog.querySelectorAll('input.form-input')).toHaveLength(1);
     const editChildInput = editChildDialog.querySelector('input.form-input') as HTMLInputElement;
     expect(editChildInput.value).toBe('Dây cáp điện');
@@ -342,7 +347,7 @@ describe('SupplierGroupsPage 2-level hierarchy', () => {
     });
     expect(showToast).toHaveBeenCalledWith('success', 'Đã cập nhật mô tả con');
 
-    // Edit parent that has 2 children -> parent select disabled + hint shown
+    // Edit parent -> NO parent select ("Nhóm (Cấp cha)"), renders Tên nhóm, Mô tả chung, and Danh sách mô tả bên trong
     const editParentBtn = container.querySelector(
       'button[aria-label="Sửa nhóm Vật tư Điện"]',
     ) as HTMLButtonElement;
@@ -353,11 +358,13 @@ describe('SupplierGroupsPage 2-level hierarchy', () => {
 
     const editDialog = document.body.querySelector('[role="dialog"]')!;
     expect(editDialog.textContent).toContain('Sửa nhóm nhà cung cấp');
-    const editParentSelect = editDialog.querySelector('select') as HTMLSelectElement;
-    expect(editParentSelect.disabled).toBe(true);
-    expect(editDialog.textContent).toContain(
-      'Nhóm đang có 2 mô tả con nên không thể chuyển thành mục con.',
-    );
+    expect(editDialog.querySelector('select')).toBeNull();
+    expect(editDialog.querySelector('.supplier-group-form__parent-context')).toBeNull();
+    expect(editDialog.textContent).not.toContain('Nhóm (Cấp cha)');
+    expect(editDialog.textContent).toContain('Tên nhóm');
+    expect(editDialog.textContent).toContain('Mô tả chung');
+    expect(editDialog.querySelector('textarea')).not.toBeNull();
+    expect(editDialog.textContent).toContain('Danh sách mô tả bên trong (tùy chọn)');
   });
 
   it('creates a group with 2 single-input child descriptions in a single request and focuses newly added rows', async () => {
@@ -372,6 +379,12 @@ describe('SupplierGroupsPage 2-level hierarchy', () => {
     await flush();
 
     const dialog = document.body.querySelector('[role="dialog"]')!;
+    expect(dialog.querySelector('select')).toBeNull();
+    expect(dialog.querySelector('.supplier-group-form__parent-context')).toBeNull();
+    expect(dialog.textContent).not.toContain('Nhóm (Cấp cha)');
+    expect(dialog.textContent).toContain('Tên nhóm');
+    expect(dialog.textContent).toContain('Mô tả chung');
+    expect(dialog.querySelector('textarea')).not.toBeNull();
     expect(dialog.textContent).toContain('Danh sách mô tả bên trong (tùy chọn)');
 
     const parentNameInput = dialog.querySelector('input.form-input') as HTMLInputElement;

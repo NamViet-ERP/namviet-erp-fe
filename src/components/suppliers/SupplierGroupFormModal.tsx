@@ -4,7 +4,6 @@ import { AlertTriangle, X } from 'lucide-react';
 import Button from '../ui/Button';
 import Modal from '../ui/Modal';
 import FormField from '../ui/FormField';
-import SelectField from '../ui/SelectField';
 import {
   isSameGroupNameExact,
   isSameGroupNameFolded,
@@ -106,9 +105,7 @@ function GroupForm({
 
   const [name, setName] = useState(editing?.name ?? '');
   const [description, setDescription] = useState(editing?.description ?? '');
-  const [parentGroupId, setParentGroupId] = useState<number | null>(() =>
-    editing ? (editing.parentGroupId ?? null) : (defaultParentId ?? null),
-  );
+  const parentGroupId = editing ? (editing.parentGroupId ?? null) : (defaultParentId ?? null);
   const [subRows, setSubRows] = useState<SubGroupDraftRow[]>(() => {
     if (editing != null && editing.parentGroupId == null) {
       return resolvedGroups
@@ -139,7 +136,6 @@ function GroupForm({
     }
   }, [subRows]);
 
-  const hasChildren = Boolean(editing && editing.childCount > 0);
   const isChildContext = parentGroupId !== null;
   const trimmedName = name.trim();
 
@@ -151,23 +147,7 @@ function GroupForm({
     [resolvedGroups, parentGroupId],
   );
 
-  const selectOptions = useMemo(() => {
-    const roots = resolvedGroups
-      .filter(g => g.parentGroupId == null && g.id !== editing?.id)
-      .sort((a, b) => a.name.localeCompare(b.name, 'vi', { sensitivity: 'base' }))
-      .map(g => ({ value: String(g.id), label: g.name }));
-
-    if (
-      editing?.parentGroupId != null &&
-      !roots.some(opt => opt.value === String(editing.parentGroupId))
-    ) {
-      roots.unshift({
-        value: String(editing.parentGroupId),
-        label: editing.parentGroupName ?? `Nhóm #${editing.parentGroupId}`,
-      });
-    }
-    return roots;
-  }, [resolvedGroups, editing]);
+  const parentDisplayName = selectedParent?.name ?? editing?.parentGroupName ?? '';
 
   const duplicateNameError = useMemo(() => {
     if (!trimmedName) return '';
@@ -179,7 +159,7 @@ function GroupForm({
           isSameGroupNameExact(g.name, name),
       );
       if (siblingDup) {
-        return `Mô tả "${trimmedName}" đã tồn tại trong nhóm "${selectedParent?.name ?? ''}".`;
+        return `Mô tả "${trimmedName}" đã tồn tại trong nhóm "${parentDisplayName}".`;
       }
       return '';
     }
@@ -194,7 +174,7 @@ function GroupForm({
       return `Nhóm "${trimmedName}" đã tồn tại.`;
     }
     return '';
-  }, [trimmedName, parentGroupId, resolvedGroups, editing?.id, name, selectedParent?.name]);
+  }, [trimmedName, parentGroupId, resolvedGroups, editing?.id, name, parentDisplayName]);
 
   const nameError =
     duplicateNameError ||
@@ -205,10 +185,10 @@ function GroupForm({
       : '');
 
   const childAntiRepeatWarning = useMemo(() => {
-    if (!isChildContext || !selectedParent) return '';
-    if (!isSameGroupNameFolded(name, selectedParent.name)) return '';
-    return `Không cần lặp lại tên nhóm "${selectedParent.name}" — hãy nhập mô tả cụ thể (VD: Lắp đặt, Cung cấp vật tư) để tránh hiển thị lặp "${selectedParent.name} › ${selectedParent.name}".`;
-  }, [isChildContext, selectedParent, name]);
+    if (!isChildContext || !parentDisplayName) return '';
+    if (!isSameGroupNameFolded(name, parentDisplayName)) return '';
+    return `Không cần lặp lại tên nhóm "${parentDisplayName}" — hãy nhập mô tả cụ thể (VD: Lắp đặt, Cung cấp vật tư) để tránh hiển thị lặp "${parentDisplayName} › ${parentDisplayName}".`;
+  }, [isChildContext, parentDisplayName, name]);
 
   const subRowStates = useMemo(() => {
     return subRows.map(row => {
@@ -295,19 +275,12 @@ function GroupForm({
 
   return (
     <form id={FORM_ID} className="space-y-3 modal-form-bordered" onSubmit={handleSubmit}>
-      <SelectField
-        label="Nhóm (Cấp cha)"
-        value={parentGroupId !== null ? String(parentGroupId) : ''}
-        onChange={val => setParentGroupId(val ? Number(val) : null)}
-        placeholder="— Nhóm chính (Cấp 1 - Không thuộc nhóm cha) —"
-        options={selectOptions}
-        disabled={hasChildren}
-        hint={
-          hasChildren && editing
-            ? `Nhóm đang có ${editing.childCount} mô tả con nên không thể chuyển thành mục con.`
-            : undefined
-        }
-      />
+      {isChildContext ? (
+        <div className="supplier-group-form__parent-context">
+          Thuộc nhóm:{' '}
+          <strong>{selectedParent?.name ?? editing?.parentGroupName ?? `#${parentGroupId}`}</strong>
+        </div>
+      ) : null}
       <FormField
         label={isChildContext ? 'Mô tả' : 'Tên nhóm'}
         htmlFor={nameInputId}
@@ -341,7 +314,7 @@ function GroupForm({
 
       {!isChildContext ? (
         <>
-          <FormField label="Mô tả chung (nếu không chia dòng con)" htmlFor={descInputId}>
+          <FormField label="Mô tả chung" htmlFor={descInputId}>
             <textarea
               id={descInputId}
               className="form-input"

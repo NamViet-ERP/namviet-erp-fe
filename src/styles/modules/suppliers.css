@@ -387,7 +387,25 @@
     padding: 0.5rem;
   }
 
-  /* SupplierGroupFormModal — anti-repetition guidance & inline batch sub-groups */
+  /* SupplierGroupFormModal — parent context, anti-repetition guidance & inline batch sub-groups */
+  .supplier-group-form__parent-context {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem;
+    max-width: 100%;
+    padding: 0.45rem 0.75rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid color-mix(in srgb, var(--md-primary) 24%, var(--md-outline-variant));
+    background: var(--md-primary-container);
+    color: var(--md-on-primary-container);
+    font-size: var(--fs-sm);
+    line-height: var(--lh-normal);
+  }
+  .supplier-group-form__parent-context strong {
+    font-weight: var(--fw-semibold);
+    overflow-wrap: anywhere;
+  }
   .supplier-group-form__hint {
     margin: 0.3rem 0 0;
     font-size: var(--fs-xs);
