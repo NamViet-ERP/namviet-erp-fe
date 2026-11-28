@@ -5,6 +5,7 @@ import {
   filterSupplierGroupTree,
   formatSupplierGroupPath,
   getParentSelectionState,
+  groupIndustryTags,
   isSameGroupNameExact,
   isSameGroupNameFolded,
   toggleChildGroupSelection,
@@ -213,5 +214,69 @@ describe('supplierGroupTree', () => {
     expect(isSameGroupNameExact('   ', '   ')).toBe(false);
     expect(isSameGroupNameExact(null, 'Bảo Ôn')).toBe(false);
     expect(isSameGroupNameExact('Bảo Ôn', undefined)).toBe(false);
+  });
+
+  it('groupIndustryTags groups multi-child parents, preserves first-seen order & casing, and keeps standalone items', () => {
+    expect(
+      groupIndustryTags([
+        'Bảo Ôn › 123',
+        'VAN',
+        'bảo ôn › 12345',
+        'Thép hình',
+      ]),
+    ).toEqual([
+      {
+        key: 'bảo ôn',
+        parent: 'Bảo Ôn',
+        children: ['123', '12345'],
+        rawItems: ['Bảo Ôn › 123', 'bảo ôn › 12345'],
+      },
+      {
+        key: 'van',
+        parent: 'VAN',
+        children: [],
+        rawItems: ['VAN'],
+      },
+      {
+        key: 'thép hình',
+        parent: 'Thép hình',
+        children: [],
+        rawItems: ['Thép hình'],
+      },
+    ]);
+  });
+
+  it('groupIndustryTags deduplicates children & standalone entries, trims whitespace, and splits only at first separator', () => {
+    expect(
+      groupIndustryTags([
+        '',
+        '   ',
+        '  Bảo Ôn › 123  ',
+        'Bảo Ôn › 123',
+        'bảo ôn ›  123',
+        'Vật tư › Điện › Dây cáp',
+        '  VAN ',
+        'van',
+      ]),
+    ).toEqual([
+      {
+        key: 'bảo ôn',
+        parent: 'Bảo Ôn',
+        children: ['123'],
+        rawItems: ['Bảo Ôn › 123'],
+      },
+      {
+        key: 'vật tư',
+        parent: 'Vật tư',
+        children: ['Điện › Dây cáp'],
+        rawItems: ['Vật tư › Điện › Dây cáp'],
+      },
+      {
+        key: 'van',
+        parent: 'VAN',
+        children: [],
+        rawItems: ['VAN'],
+      },
+    ]);
   });
 });

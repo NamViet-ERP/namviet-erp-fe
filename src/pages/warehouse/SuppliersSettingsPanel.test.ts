@@ -332,15 +332,11 @@ describe('SuppliersSettingsPanel characterization', () => {
       'Mã NCC',
       'Tên nhà cung cấp',
       'Người liên hệ',
-      'Hạn công nợ',
-      'Hạn mức',
-      'Điều khoản thanh toán',
       'Nhóm ngành hàng',
+      'Công nợ & Điều khoản',
       'Hạng',
       'Trạng thái',
-      'Doanh số đã mua',
-      'Đánh giá gần nhất',
-      'Điểm KPI',
+      'Doanh số & Đánh giá',
       'Tác vụ',
     ]);
 
@@ -360,6 +356,8 @@ describe('SuppliersSettingsPanel characterization', () => {
     expect(firstRow.textContent).toContain('Thép tấm');
     expect(firstRow.textContent).toContain('Phụ kiện hàn');
     expect(firstRow.textContent).toContain('+1');
+    expect(firstRow.textContent).toContain('Q3/2026');
+    expect(firstRow.textContent).toContain('86');
 
     const secondRow = rows[1]!;
     expect(secondRow.textContent).toContain('NCC-002');
@@ -368,6 +366,102 @@ describe('SuppliersSettingsPanel characterization', () => {
     expect(secondRow.textContent).toContain('Hạng D');
     expect(secondRow.textContent).toContain('Mới - chờ duyệt');
     expect(secondRow.textContent).toContain('Cáp điện');
+    expect(secondRow.textContent).toContain('Chưa đánh giá');
+  });
+
+  it('groups industry tags by parent group into horizontal clusters without repeating parent prefix', async () => {
+    vi.mocked(useSuppliers).mockReturnValue({
+      data: {
+        items: [
+          {
+            ...mockSuppliers[1]!,
+            id: 201,
+            supplierCode: 'NCC-099',
+            supplierName: 'Công ty TNHH Cách Nhiệt Nam Phát',
+            contactPhone: null,
+            primaryContact: null,
+            industryGroups: ['Bảo Ôn › 123', 'Bảo Ôn › 12345', 'VAN'],
+          },
+        ],
+        totalCount: 1,
+        page: 1,
+        pageSize: 15,
+        totalPages: 1,
+      },
+      isLoading: false,
+      isError: false,
+    } as unknown as ReturnType<typeof useSuppliers>);
+
+    await renderPanel();
+
+    const row = container.querySelector('tbody tr')!;
+    const clusters = row.querySelectorAll('.ncc-master-groups__cluster');
+    expect(clusters).toHaveLength(1);
+    expect(clusters[0]!.querySelector('.ncc-master-groups__parent')?.textContent).toBe('Bảo Ôn');
+    expect([...clusters[0]!.querySelectorAll('.ncc-master-groups__sub-chip')].map(el => el.textContent)).toEqual([
+      '123',
+      '12345',
+    ]);
+    expect(row.textContent).not.toContain('Bảo Ôn ›');
+
+    const standaloneChips = [...row.querySelectorAll('.ncc-master-groups__chip')].map(el => el.textContent);
+    expect(standaloneChips).toEqual(['VAN']);
+
+    const emptyContact = row.querySelector('.ncc-master-muted.ncc-master-nowrap');
+    expect(emptyContact?.textContent).toBe('Chưa có liên hệ');
+  });
+
+  it('caps visible children per cluster at 3 and sums rawItems.length for overflowed clusters', async () => {
+    vi.mocked(useSuppliers).mockReturnValue({
+      data: {
+        items: [
+          {
+            ...mockSuppliers[1]!,
+            id: 202,
+            supplierCode: 'NCC-100',
+            supplierName: 'Công ty CP Cơ Điện Tổng Hợp',
+            industryGroups: [
+              'Bảo Ôn › 123',
+              'Bảo Ôn › 12345',
+              'Bảo Ôn › 678',
+              'Bảo Ôn › 999',
+              'VAN',
+              'Cáp điện',
+              'Thép › Hộp',
+              'Thép › Ống',
+            ],
+          },
+        ],
+        totalCount: 1,
+        page: 1,
+        pageSize: 15,
+        totalPages: 1,
+      },
+      isLoading: false,
+      isError: false,
+    } as unknown as ReturnType<typeof useSuppliers>);
+
+    await renderPanel();
+
+    const groupsCell = container.querySelector('tbody tr .ncc-master-groups')!;
+    const clusters = groupsCell.querySelectorAll('.ncc-master-groups__cluster');
+    expect(clusters).toHaveLength(1);
+    expect([...clusters[0]!.querySelectorAll('.ncc-master-groups__sub-chip')].map(el => el.textContent)).toEqual([
+      '123',
+      '12345',
+      '678',
+    ]);
+    const clusterOverflow = clusters[0]!.querySelector('.ncc-master-groups__more');
+    expect(clusterOverflow?.textContent).toBe('+1');
+    expect(clusterOverflow?.getAttribute('title')).toBe('999');
+
+    expect([...groupsCell.querySelectorAll(':scope > .ncc-master-groups__chip')].map(el => el.textContent)).toEqual([
+      'VAN',
+      'Cáp điện',
+    ]);
+    const cellOverflow = groupsCell.querySelector(':scope > .ncc-master-groups__more');
+    expect(cellOverflow?.textContent).toBe('+2');
+    expect(cellOverflow?.getAttribute('title')).toBe('Thép › Hộp, Thép › Ống');
   });
 
   it('opens detail modal with 360° Hub links and triggers useSupplierContacts when clicking a supplier name', async () => {
@@ -822,5 +916,79 @@ describe('SuppliersSettingsPanel characterization', () => {
         page: 1,
       }),
     );
+  });
+
+  it('activates floating sticky table header below fixed .nv-header when scrolled down past table thead', async () => {
+    const chromeHeader = document.createElement('header');
+    chromeHeader.className = 'nv-header';
+    chromeHeader.style.position = 'fixed';
+    document.body.prepend(chromeHeader);
+
+    let theadTop = 220;
+    let tbodyBottom = 860;
+    const colWidths = [116, 184, 168, 224, 184, 100, 144, 188.5, 112];
+
+    const rectSpy = vi
+      .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
+      .mockImplementation(function (this: HTMLElement) {
+        if (this === chromeHeader) {
+          return { x: 0, y: 0, top: 0, left: 0, right: 1440, bottom: 60, width: 1440, height: 60, toJSON: () => ({}) } as DOMRect;
+        }
+        if (this.classList.contains('erp-table-shell__scroll')) {
+          return { x: 252, y: theadTop, top: theadTop, left: 252, right: 1418, bottom: tbodyBottom, width: 1166, height: tbodyBottom - theadTop, toJSON: () => ({}) } as DOMRect;
+        }
+        if (this.tagName === 'TABLE') {
+          return { x: 252, y: theadTop, top: theadTop, left: 252, right: 1672.5, bottom: tbodyBottom, width: 1420.5, height: tbodyBottom - theadTop, toJSON: () => ({}) } as DOMRect;
+        }
+        if (this.tagName === 'THEAD') {
+          return { x: 252, y: theadTop, top: theadTop, left: 252, right: 1672.5, bottom: theadTop + 42, width: 1420.5, height: 42, toJSON: () => ({}) } as DOMRect;
+        }
+        if (this.tagName === 'TBODY') {
+          return { x: 252, y: theadTop + 42, top: theadTop + 42, left: 252, right: 1672.5, bottom: tbodyBottom, width: 1420.5, height: tbodyBottom - theadTop - 42, toJSON: () => ({}) } as DOMRect;
+        }
+        if (this.tagName === 'TH') {
+          const idx = this.parentElement ? Array.from(this.parentElement.children).indexOf(this) : 0;
+          const w = colWidths[idx] ?? 120;
+          return { x: 252, y: theadTop, top: theadTop, left: 252, right: 252 + w, bottom: theadTop + 42, width: w, height: 42, toJSON: () => ({}) } as DOMRect;
+        }
+        return { x: 0, y: 0, top: 0, left: 0, right: 0, bottom: 0, width: 0, height: 0, toJSON: () => ({}) } as DOMRect;
+      });
+
+    try {
+      await renderPanel();
+      expect(document.body.querySelector('.erp-table-shell__sticky-float')).toBeNull();
+
+      theadTop = 20;
+      await act(async () => {
+        window.dispatchEvent(new Event('scroll'));
+      });
+
+      const floatEl = document.body.querySelector<HTMLDivElement>('.erp-table-shell__sticky-float');
+      expect(floatEl).not.toBeNull();
+      expect(floatEl?.parentElement).toBe(document.body);
+      expect(floatEl?.style.top).toBe('60px');
+      expect(
+        [...(floatEl?.querySelectorAll('thead th') ?? [])].map(th => th.textContent?.trim()),
+      ).toEqual([
+        'Mã NCC',
+        'Tên nhà cung cấp',
+        'Người liên hệ',
+        'Nhóm ngành hàng',
+        'Công nợ & Điều khoản',
+        'Hạng',
+        'Trạng thái',
+        'Doanh số & Đánh giá',
+        'Tác vụ',
+      ]);
+
+      tbodyBottom = 80;
+      await act(async () => {
+        window.dispatchEvent(new Event('scroll'));
+      });
+      expect(document.body.querySelector('.erp-table-shell__sticky-float')).toBeNull();
+    } finally {
+      rectSpy.mockRestore();
+      chromeHeader.remove();
+    }
   });
 });

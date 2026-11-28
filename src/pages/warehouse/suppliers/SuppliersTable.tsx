@@ -124,6 +124,7 @@ export default function SuppliersTable({
 }: SuppliersTableProps) {
   return (
     <TableShell
+      stickyPageHeader
       tableClassName="w-full border-collapse hrm-table ncc-master-table"
       colSpan={COL_COUNT}
       loading={isLoading}
@@ -155,118 +156,112 @@ export default function SuppliersTable({
         <tr>
           <th className="table-header-cell ncc-master-col-code">Mã NCC</th>
           <th className="table-header-cell ncc-master-col-name">Tên nhà cung cấp</th>
-          <th className="table-header-cell ncc-master-col-phone">Người liên hệ</th>
-          <th className="table-header-cell text-right ncc-master-col-debt">Hạn công nợ</th>
-          <th className="table-header-cell text-right ncc-master-col-limit">Hạn mức</th>
-          <th className="table-header-cell ncc-master-col-terms">Điều khoản thanh toán</th>
+          <th className="table-header-cell ncc-master-col-contact">Người liên hệ</th>
           <th className="table-header-cell ncc-master-col-groups">Nhóm ngành hàng</th>
+          <th className="table-header-cell ncc-master-col-terms">Công nợ &amp; Điều khoản</th>
           <th className="table-header-cell text-center ncc-master-col-grade">Hạng</th>
           <th className="table-header-cell text-center ncc-master-col-status">Trạng thái</th>
-          <th className="table-header-cell text-right ncc-master-col-revenue">Doanh số đã mua</th>
-          <th className="table-header-cell ncc-master-col-eval">Đánh giá gần nhất</th>
-          <th className="table-header-cell text-right ncc-master-col-kpi">Điểm KPI</th>
-          <th className="table-header-cell text-center hrm-table-col-actions">Tác vụ</th>
+          <th className="table-header-cell text-right ncc-master-col-finance">Doanh số &amp; Đánh giá</th>
+          <th className="table-header-cell text-center hrm-table-col-actions ncc-master-col-actions">Tác vụ</th>
         </tr>
       }
     >
-      {items.map(s => (
-        <tr key={s.id} className="table-row">
-          <td className="table-cell font-mono whitespace-nowrap ncc-master-col-code">
-            {s.supplierCode}
-          </td>
-          <td className="table-cell ncc-master-col-name">
-            <button
-              type="button"
-              className="ncc-master-name"
-              onClick={() => onViewSupplier(s)}
-            >
-              {s.supplierName}
-            </button>
-            {s.taxCode && (
-              <div className="text-[length:var(--fs-micro)] text-[var(--md-on-surface-variant)] font-mono">
-                MST: {s.taxCode}
-              </div>
-            )}
-          </td>
-          <td className="table-cell ncc-master-col-phone">
-            {s.primaryContact ? (
-              <div className="flex flex-col text-[length:var(--fs-xs)]">
-                <span className="font-semibold text-[var(--md-on-surface)] flex items-center gap-1">
-                  <span className="truncate max-w-[140px]" title={s.primaryContact.fullName}>
-                    {s.primaryContact.fullName}
+      {items.map(s => {
+        const nameMeta = [s.taxCode ? `MST: ${s.taxCode}` : null, s.supplierType]
+          .filter(Boolean)
+          .join(' · ');
+
+        return (
+          <tr key={s.id} className="table-row">
+            <td className="table-cell whitespace-nowrap ncc-master-col-code">
+              <span className="ncc-master-code">{s.supplierCode}</span>
+            </td>
+            <td className="table-cell ncc-master-col-name">
+              <button
+                type="button"
+                className="ncc-master-name"
+                onClick={() => onViewSupplier(s)}
+              >
+                {s.supplierName}
+              </button>
+              {nameMeta ? (
+                <div className="ncc-master-subline">{nameMeta}</div>
+              ) : null}
+            </td>
+            <td className="table-cell ncc-master-col-contact">
+              {s.primaryContact ? (
+                <div className="ncc-master-contact">
+                  <div className="ncc-master-contact__header">
+                    <span className="ncc-master-contact__name" title={s.primaryContact.fullName}>
+                      {s.primaryContact.fullName}
+                    </span>
+                    {(s.contactCount ?? 0) > 1 ? (
+                      <span
+                        className="ncc-master-contact__more"
+                        title={`${s.contactCount} liên hệ`}
+                      >
+                        +{(s.contactCount ?? 0) - 1}
+                      </span>
+                    ) : null}
+                  </div>
+                  <span className="ncc-master-contact__phone">
+                    {s.primaryContact.phone || s.contactPhone || '—'}
                   </span>
-                  {s.contactCount && s.contactCount > 1 ? (
+                  {s.primaryContact.position ? (
                     <span
-                      className="inline-flex items-center text-[length:var(--fs-micro)] font-normal text-[var(--md-on-primary-container)] bg-[var(--md-primary-container)] px-1 py-0.5 rounded-[var(--radius-xs)]"
-                      title={`${s.contactCount} liên hệ`}
+                      className="ncc-master-contact__role"
+                      title={s.primaryContact.position}
                     >
-                      +{s.contactCount - 1}
+                      {s.primaryContact.position}
                     </span>
                   ) : null}
-                </span>
-                <span className="text-[length:var(--fs-micro)] text-[var(--md-on-surface-variant)] tabular-nums">
-                  {s.primaryContact.phone || s.contactPhone || '—'}
-                </span>
-                {s.primaryContact.position && (
-                  <span
-                    className="text-[length:var(--fs-micro)] text-[var(--md-on-surface-variant)] opacity-75 truncate max-w-[140px]"
-                    title={s.primaryContact.position}
-                  >
-                    {s.primaryContact.position}
-                  </span>
-                )}
+                </div>
+              ) : s.contactPhone ? (
+                <span className="ncc-master-contact__phone">{s.contactPhone}</span>
+              ) : (
+                <span className="ncc-master-muted ncc-master-nowrap">Chưa có liên hệ</span>
+              )}
+            </td>
+            <td className="table-cell ncc-master-col-groups">
+              <IndustryGroupsCell groups={s.industryGroups ?? []} />
+            </td>
+            <td className="table-cell ncc-master-col-terms">
+              <div className="ncc-master-debt-primary tabular-nums">
+                {s.maxDebtDays} ngày · {s.creditLimit ? formatCurrencyFull(s.creditLimit) : 'Không giới hạn'}
               </div>
-            ) : s.contactPhone ? (
-              <span className="tabular-nums text-[length:var(--fs-xs)]">{s.contactPhone}</span>
-            ) : (
-              <span className="text-[var(--md-on-surface-variant)] italic text-[length:var(--fs-xs)]">
-                Chưa có liên hệ
-              </span>
-            )}
-          </td>
-          <td className="table-cell text-right tabular-nums whitespace-nowrap ncc-master-col-debt">
-            {s.maxDebtDays} ngày
-          </td>
-          <td className="table-cell text-right tabular-nums whitespace-nowrap ncc-master-col-limit">
-            {s.creditLimit ? formatCurrencyFull(s.creditLimit) : 'Không giới hạn'}
-          </td>
-          <td className="table-cell ncc-master-col-terms">
-            <span className="line-clamp-2" title={s.paymentTerms || undefined}>
-              {s.paymentTerms || '—'}
-            </span>
-          </td>
-          <td className="table-cell ncc-master-col-groups">
-            <IndustryGroupsCell groups={s.industryGroups ?? []} />
-          </td>
-          <td className="table-cell text-center ncc-master-col-grade">
-            <RatingBadge rating={s.rating} />
-          </td>
-          <td className="table-cell text-center ncc-master-col-status">
-            <ApprovalStatusBadge status={s.approvalStatus} />
-          </td>
-          <td className="table-cell text-right tabular-nums whitespace-nowrap ncc-master-col-revenue">
-            {formatCurrencyFull(s.purchasedRevenue)}
-          </td>
-          <td className="table-cell ncc-master-col-eval">
-            {s.latestEvaluation ? (
-              <span
-                className="line-clamp-2"
-                title={`${s.latestEvaluation.period} - ${s.latestEvaluation.gradeLabel || s.latestEvaluation.grade} - ${s.latestEvaluation.evaluatedAt}`}
-              >
-                {s.latestEvaluation.period} - {s.latestEvaluation.gradeLabel || s.latestEvaluation.grade}
-              </span>
-            ) : (
-              '—'
-            )}
-          </td>
-          <td className="table-cell text-right tabular-nums ncc-master-col-kpi">
-            {s.latestEvaluation ? s.latestEvaluation.score : '—'}
-          </td>
-          <td className="table-cell text-center hrm-table-col-actions">
-            <Dropdown trigger="Tác vụ" items={rowActions(s)} />
-          </td>
-        </tr>
-      ))}
+              {s.paymentTerms ? (
+                <div className="ncc-master-subline line-clamp-1" title={s.paymentTerms}>
+                  {s.paymentTerms}
+                </div>
+              ) : null}
+            </td>
+            <td className="table-cell text-center ncc-master-col-grade">
+              <RatingBadge rating={s.rating} />
+            </td>
+            <td className="table-cell text-center ncc-master-col-status">
+              <ApprovalStatusBadge status={s.approvalStatus} />
+            </td>
+            <td className="table-cell text-right ncc-master-col-finance">
+              <div className="ncc-master-revenue tabular-nums">
+                {formatCurrencyFull(s.purchasedRevenue)}
+              </div>
+              {s.latestEvaluation ? (
+                <div
+                  className="ncc-master-subline"
+                  title={`${s.latestEvaluation.period} · ${s.latestEvaluation.gradeLabel || s.latestEvaluation.grade} (${s.latestEvaluation.score}đ) · ${s.latestEvaluation.evaluatedAt}`}
+                >
+                  {s.latestEvaluation.period} · {s.latestEvaluation.gradeLabel || s.latestEvaluation.grade} ({s.latestEvaluation.score}đ)
+                </div>
+              ) : (
+                <div className="ncc-master-subline">Chưa đánh giá</div>
+              )}
+            </td>
+            <td className="table-cell text-center hrm-table-col-actions ncc-master-col-actions">
+              <Dropdown trigger="Tác vụ" items={rowActions(s)} />
+            </td>
+          </tr>
+        );
+      })}
     </TableShell>
   );
 }

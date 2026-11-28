@@ -889,6 +889,28 @@
     font-size: var(--fs-xs);
     color: var(--md-on-surface-variant);
   }
+  .erp-table-shell__sticky-float {
+    position: fixed;
+    z-index: 30;
+    overflow: hidden;
+    pointer-events: none;
+    user-select: none;
+    box-shadow: var(--md-shadow-2);
+  }
+  .erp-table-shell__sticky-scroll {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .erp-table-shell__sticky-scroll::-webkit-scrollbar {
+    display: none;
+  }
+  .erp-table-shell__sticky-float .erp-table-shell__sticky-table {
+    table-layout: fixed;
+    margin: 0;
+  }
 
   .erp-metrics-strip {
     display: grid;

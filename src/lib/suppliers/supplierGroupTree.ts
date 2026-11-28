@@ -257,3 +257,84 @@ export function filterSupplierGroupTree(
 
   return { nodes, autoExpandIds };
 }
+
+export interface GroupedIndustryTagCluster {
+  key: string;
+  parent: string;
+  children: string[];
+  rawItems: string[];
+}
+
+const INDUSTRY_GROUP_SEPARATOR = ' › ';
+
+/**
+ * Parses trimmed supplier industry group labels (`"{Parent} › {Child}"` or standalone `"{Parent}"`),
+ * grouping child tags under their parent in first-seen order without duplicate children.
+ */
+export function groupIndustryTags(
+  groups: readonly string[],
+): GroupedIndustryTagCluster[] {
+  const clusters: GroupedIndustryTagCluster[] = [];
+  const byParentKey = new Map<
+    string,
+    { cluster: GroupedIndustryTagCluster; seenChildKeys: Set<string>; seenRawKeys: Set<string> }
+  >();
+
+  for (const rawEntry of groups) {
+    const trimmed = rawEntry.trim();
+    if (!trimmed) continue;
+
+    const sepIdx = trimmed.indexOf(INDUSTRY_GROUP_SEPARATOR);
+    let parent = trimmed;
+    let child: string | null = null;
+
+    if (sepIdx !== -1) {
+      const left = trimmed.slice(0, sepIdx).trim();
+      const right = trimmed.slice(sepIdx + INDUSTRY_GROUP_SEPARATOR.length).trim();
+      if (left && right) {
+        parent = left;
+        child = right;
+      } else {
+        parent = left || right;
+      }
+    }
+
+    if (!parent) continue;
+
+    const key = parent.toLowerCase();
+    let entry = byParentKey.get(key);
+    if (!entry) {
+      const cluster: GroupedIndustryTagCluster = {
+        key,
+        parent,
+        children: [],
+        rawItems: [],
+      };
+      entry = {
+        cluster,
+        seenChildKeys: new Set<string>(),
+        seenRawKeys: new Set<string>(),
+      };
+      byParentKey.set(key, entry);
+      clusters.push(cluster);
+    }
+
+    if (child !== null) {
+      const childKey = child.toLowerCase();
+      if (!entry.seenChildKeys.has(childKey)) {
+        entry.seenChildKeys.add(childKey);
+        entry.cluster.children.push(child);
+        const rawKey = `${key}${INDUSTRY_GROUP_SEPARATOR}${childKey}`;
+        if (!entry.seenRawKeys.has(rawKey)) {
+          entry.seenRawKeys.add(rawKey);
+          entry.cluster.rawItems.push(trimmed);
+        }
+      }
+    } else if (!entry.seenRawKeys.has(key)) {
+      entry.seenRawKeys.add(key);
+      entry.cluster.rawItems.push(trimmed);
+    }
+  }
+
+  return clusters;
+}

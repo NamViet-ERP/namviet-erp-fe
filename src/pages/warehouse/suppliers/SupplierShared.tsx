@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { getApiErrorMessage, getApiFieldErrors } from '../../../lib/apiClient';
+import { groupIndustryTags } from '../../../lib/suppliers/supplierGroupTree';
 import {
   normalizeSupplierApproval,
   isSameSupplierName,
@@ -17,7 +18,7 @@ import type { UpsertSupplierRequest } from '../../../types/wms';
 // eslint-disable-next-line react-refresh/only-export-components
 export const RATING_OPTIONS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 export const GROUPS_VISIBLE_IN_TABLE = 3;
-export const COL_COUNT = 13;
+export const COL_COUNT = 9;
 
 export type FormErrors = Partial<
   Record<
@@ -177,22 +178,44 @@ export function ApprovalStatusBadge({ status }: { status?: string | null }) {
 }
 
 export function IndustryGroupsCell({ groups }: { groups: string[] }) {
-  if (groups.length === 0) return <span>—</span>;
+  const clusters = groupIndustryTags(groups);
+  if (clusters.length === 0) return <span>—</span>;
 
-  const visible = groups.slice(0, GROUPS_VISIBLE_IN_TABLE);
-  const hidden = groups.slice(GROUPS_VISIBLE_IN_TABLE);
-  const allTitle = groups.join(', ');
+  const visibleClusters = clusters.slice(0, GROUPS_VISIBLE_IN_TABLE);
+  const hiddenClusters = clusters.slice(GROUPS_VISIBLE_IN_TABLE);
+  const hiddenCount = hiddenClusters.reduce((sum, cluster) => sum + cluster.rawItems.length, 0);
+  const hiddenTitles = hiddenClusters.flatMap(cluster => cluster.rawItems).join(', ');
+  const allTitle = clusters.flatMap(cluster => cluster.rawItems).join(', ');
 
   return (
     <div className="ncc-master-groups" title={allTitle} aria-label={`Nhóm ngành hàng: ${allTitle}`}>
-      {visible.map(group => (
-        <span key={group} className="ncc-master-groups__chip">
-          {group}
-        </span>
-      ))}
-      {hidden.length > 0 ? (
-        <span className="ncc-master-groups__more" title={hidden.join(', ')}>
-          +{hidden.length}
+      {visibleClusters.map(cluster =>
+        cluster.children.length > 0 ? (
+          <span key={cluster.key} className="ncc-master-groups__cluster">
+            <span className="ncc-master-groups__parent">{cluster.parent}</span>
+            {cluster.children.slice(0, 3).map(child => (
+              <span key={child} className="ncc-master-groups__sub-chip">
+                {child}
+              </span>
+            ))}
+            {cluster.children.length > 3 ? (
+              <span
+                className="ncc-master-groups__more"
+                title={cluster.children.slice(3).join(', ')}
+              >
+                +{cluster.children.length - 3}
+              </span>
+            ) : null}
+          </span>
+        ) : (
+          <span key={cluster.key} className="ncc-master-groups__chip">
+            {cluster.parent}
+          </span>
+        ),
+      )}
+      {hiddenCount > 0 ? (
+        <span className="ncc-master-groups__more" title={hiddenTitles}>
+          +{hiddenCount}
         </span>
       ) : null}
     </div>
