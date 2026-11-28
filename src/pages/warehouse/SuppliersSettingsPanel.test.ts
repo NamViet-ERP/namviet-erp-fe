@@ -130,8 +130,8 @@ const mockSuppliers: SupplierApiDto[] = [
 ];
 
 const mockGroups: SupplierGroupApiDto[] = [
-  { id: 1, name: 'Thép hình', description: 'Thép kết cấu', supplierCount: 4 },
-  { id: 2, name: 'Cáp điện', description: 'Cáp hạ thế & trung thế', supplierCount: 2 },
+  { id: 1, name: 'Thép hình', description: 'Thép kết cấu', supplierCount: 4, childCount: 0 },
+  { id: 2, name: 'Cáp điện', description: 'Cáp hạ thế & trung thế', supplierCount: 2, childCount: 0 },
 ];
 
 const mockContacts: SupplierContactApiDto[] = [
@@ -194,6 +194,12 @@ function setTextareaValue(textarea: HTMLTextAreaElement, value: string) {
   const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!.set!;
   setter.call(textarea, value);
   textarea.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+function setSelectValue(select: HTMLSelectElement, value: string) {
+  const setter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value')!.set!;
+  setter.call(select, value);
+  select.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
 beforeEach(() => {
@@ -668,5 +674,153 @@ describe('SuppliersSettingsPanel characterization', () => {
     });
     await flush();
     expect(deleteMutateAsync).toHaveBeenCalledWith(101);
+  });
+
+  it('renders hierarchical SupplierGroupTreePicker inside SupplierFormModal and submits selected child group IDs', async () => {
+    const hierarchicalGroups: SupplierGroupApiDto[] = [
+      { id: 10, name: 'Vật tư Điện', description: 'Thiết bị điện', supplierCount: 0, childCount: 2 },
+      {
+        id: 11,
+        name: 'Dây cáp điện',
+        description: 'Cáp hạ thế',
+        supplierCount: 2,
+        parentGroupId: 10,
+        parentGroupName: 'Vật tư Điện',
+        childCount: 0,
+      },
+      {
+        id: 12,
+        name: 'Đèn chiếu sáng',
+        description: null,
+        supplierCount: 1,
+        parentGroupId: 10,
+        parentGroupName: 'Vật tư Điện',
+        childCount: 0,
+      },
+    ];
+    vi.mocked(useSupplierGroups).mockReturnValue({
+      data: {
+        items: hierarchicalGroups,
+        totalCount: hierarchicalGroups.length,
+        page: 1,
+        pageSize: 500,
+        totalPages: 1,
+      },
+    } as unknown as ReturnType<typeof useSupplierGroups>);
+
+    await renderPanel();
+
+    const addBtn = [...container.querySelectorAll('button')].find(btn =>
+      btn.textContent?.includes('Thêm NCC'),
+    ) as HTMLButtonElement;
+    await act(async () => {
+      addBtn.click();
+    });
+    await flush();
+
+    const dialog = document.body.querySelector('[role="dialog"]')!;
+    expect(dialog.querySelector('.supplier-group-picker')).not.toBeNull();
+    expect(dialog.textContent).toContain('Vật tư Điện');
+    expect(dialog.textContent).not.toContain('Dây cáp điện');
+
+    const expandBtn = dialog.querySelector('button[aria-expanded][data-group-id="10"]') as HTMLButtonElement;
+    expect(expandBtn).not.toBeNull();
+    await act(async () => {
+      expandBtn.click();
+    });
+    await flush();
+
+    expect(dialog.textContent).toContain('Dây cáp điện');
+    const cableLabel = [...dialog.querySelectorAll('label')].find(l =>
+      l.textContent?.includes('Dây cáp điện'),
+    )!;
+    const cableCheckbox = cableLabel.querySelector('input[type="checkbox"]') as HTMLInputElement;
+    await act(async () => {
+      cableCheckbox.click();
+    });
+    await flush();
+
+    expect(dialog.textContent).toContain('Vật tư Điện › Dây cáp điện');
+
+    const form = document.getElementById('supplier-settings-form') as HTMLFormElement;
+    const inputs = [...form.querySelectorAll('input.form-input')];
+    const nameInput = inputs[1] as HTMLInputElement;
+    await act(async () => {
+      setInputValue(nameInput, 'Công ty TNHH Điện Quang');
+    });
+
+    await act(async () => {
+      form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    });
+    await flush();
+
+    expect(supplierGroupsService.setGroupsOfSupplier).toHaveBeenCalledWith(103, { groupIds: [11] });
+  });
+
+  it('orders Nhóm ngành hàng filter dropdown in 2-level tree order and syncs ?groupId= URL param', async () => {
+    const hierarchicalGroups: SupplierGroupApiDto[] = [
+      { id: 20, name: 'Vật tư Điện', supplierCount: 0, childCount: 2 },
+      {
+        id: 21,
+        name: 'Dây cáp điện',
+        supplierCount: 2,
+        parentGroupId: 20,
+        parentGroupName: 'Vật tư Điện',
+        childCount: 0,
+      },
+      {
+        id: 22,
+        name: 'Đèn chiếu sáng',
+        supplierCount: 1,
+        parentGroupId: 20,
+        parentGroupName: 'Vật tư Điện',
+        childCount: 0,
+      },
+      { id: 10, name: 'Cơ khí', supplierCount: 3, childCount: 0 },
+    ];
+    vi.mocked(useSupplierGroups).mockReturnValue({
+      data: {
+        items: hierarchicalGroups,
+        totalCount: hierarchicalGroups.length,
+        page: 1,
+        pageSize: 500,
+        totalPages: 1,
+      },
+    } as unknown as ReturnType<typeof useSupplierGroups>);
+
+    await renderPanel('/suppliers/list?groupId=21');
+
+    const groupSelect = container.querySelector('select[aria-label="Nhóm ngành hàng"]') as HTMLSelectElement;
+    expect(groupSelect).not.toBeNull();
+    expect(groupSelect.value).toBe('21');
+
+    const optionLabels = [...groupSelect.options].map(opt => opt.textContent);
+    expect(optionLabels).toEqual([
+      'Tất cả nhóm ngành hàng',
+      'Cơ khí',
+      'Vật tư Điện',
+      '↳ Dây cáp điện',
+      '↳ Đèn chiếu sáng',
+    ]);
+
+    expect(useSuppliers).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        groupId: 21,
+        page: 1,
+      }),
+    );
+
+    await act(async () => {
+      setSelectValue(groupSelect, '10');
+    });
+    await flush();
+
+    expect(groupSelect.value).toBe('10');
+    expect(useSuppliers).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        groupId: 10,
+        page: 1,
+      }),
+    );
   });
 });

@@ -26,13 +26,15 @@ import {
   fromExistingPlanLines,
   fromPreviewLines,
   isUnknownPlanItem,
-  lineAmount,
   parseNum,
   parseOptionalCurrency,
+  resolveDraftStageAmount,
   toApiLines,
   type DraftLine,
+  type PlanAmountSourceMode,
   type PurchasePlanLineType,
 } from './createPurchasePlanDraft';
+import { buildPurchasePlanReconciliation } from './purchasePlanReconciliation';
 
 interface UseCreatePurchasePlanFormParams {
   open: boolean;
@@ -73,6 +75,7 @@ export function useCreatePurchasePlanForm({
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<PurchasePlanImportPreviewApiDto | null>(null);
+  const [amountSourceMode, setAmountSourceMode] = useState<PlanAmountSourceMode>('excel');
   const [hydratedCode, setHydratedCode] = useState<string | null>(null);
 
   const projects = useMemo(() => projectsPage?.items ?? [], [projectsPage?.items]);
@@ -110,7 +113,13 @@ export function useCreatePurchasePlanForm({
       .filter(({ line }) => isUnknownPlanItem(line, knownMaterialCodes, knownServiceCodes));
   }, [lines, materialsPage, materials, serviceItemsPage, serviceItems, knownMaterialCodes, knownServiceCodes]);
 
+  const reconciliation = useMemo(
+    () => (preview && !isEdit ? buildPurchasePlanReconciliation(lines) : null),
+    [preview, isEdit, lines],
+  );
+
   const totals = useMemo(() => {
+    const effectiveMode: PlanAmountSourceMode = isEdit ? 'excel' : amountSourceMode;
     let budget = 0;
     let proposal = 0;
     let purchase = 0;
@@ -121,12 +130,12 @@ export function useCreatePurchasePlanForm({
         ? Boolean(line.materialCode.trim() && line.unit.trim() && (parseNum(line.quantity) ?? 0) > 0)
         : Boolean(line.productName.trim() && line.unit.trim() && (parseNum(line.quantity) ?? 0) > 0);
       if (isFilled) filled += 1;
-      budget += lineAmount(line.quantity, line.budgetUnitPrice, isMaterial ? line.kgPerUnit : undefined);
-      proposal += lineAmount(line.quantity, line.proposalUnitPrice, isMaterial ? line.kgPerUnit : undefined);
-      purchase += lineAmount(line.quantity, line.purchaseUnitPrice, isMaterial ? line.kgPerUnit : undefined);
+      budget += resolveDraftStageAmount(line, 'budget', effectiveMode) ?? 0;
+      proposal += resolveDraftStageAmount(line, 'proposal', effectiveMode) ?? 0;
+      purchase += (resolveDraftStageAmount(line, 'selected', effectiveMode) ?? resolveDraftStageAmount(line, 'purchase', effectiveMode)) ?? 0;
     }
     return { budget, proposal, purchase, filled };
-  }, [lines]);
+  }, [lines, isEdit, amountSourceMode]);
 
   const riskPairs = useMemo((): SupplierMaterialRiskPairRequest[] => {
     const seen = new Set<string>();
@@ -198,6 +207,7 @@ export function useCreatePurchasePlanForm({
     setExpanded({});
     setFile(null);
     setPreview(null);
+    setAmountSourceMode('excel');
     setHydratedCode(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   }, []);
@@ -229,7 +239,52 @@ export function useCreatePurchasePlanForm({
   };
 
   const updateLine = (key: string, patch: Partial<DraftLine>) => {
-    setLines(prev => prev.map(l => (l.key === key ? { ...l, ...patch } : l)));
+    setLines(prev => prev.map(l => {
+      if (l.key !== key) return l;
+      const next: DraftLine = { ...l, ...patch };
+      const budgetInputsChanged =
+        (patch.quantity !== undefined && patch.quantity !== l.quantity)
+        || (patch.kgPerUnit !== undefined && patch.kgPerUnit !== l.kgPerUnit)
+        || (patch.budgetUnitPrice !== undefined && patch.budgetUnitPrice !== l.budgetUnitPrice);
+      if (budgetInputsChanged && !('budgetAmount' in patch) && !('lockBudgetAmount' in patch)) {
+        next.lockBudgetAmount = false;
+        next.budgetAmount = '';
+      }
+      const proposalKgChanged = patch.proposalKgPerUnit !== undefined && patch.proposalKgPerUnit !== l.proposalKgPerUnit;
+      const proposalPriceChanged = patch.proposalUnitPrice !== undefined && patch.proposalUnitPrice !== l.proposalUnitPrice;
+      if (
+        (proposalKgChanged || proposalPriceChanged)
+        && !('proposalAmount' in patch)
+        && !('lockProposalAmount' in patch)
+      ) {
+        next.lockProposalAmount = false;
+        next.proposalAmount = '';
+      }
+      const purchaseKgChanged = patch.purchaseKgPerUnit !== undefined && patch.purchaseKgPerUnit !== l.purchaseKgPerUnit;
+      const purchasePriceChanged = patch.purchaseUnitPrice !== undefined && patch.purchaseUnitPrice !== l.purchaseUnitPrice;
+      if (
+        (purchaseKgChanged || purchasePriceChanged)
+        && !('purchaseAmount' in patch)
+        && !('lockPurchaseAmount' in patch)
+      ) {
+        next.lockPurchaseAmount = false;
+        next.purchaseAmount = '';
+      }
+      const selectedPriceChanged = patch.selectedUnitPrice !== undefined && patch.selectedUnitPrice !== l.selectedUnitPrice;
+      const selectedInputsChanged =
+        selectedPriceChanged
+        || purchaseKgChanged
+        || (proposalKgChanged && !next.purchaseKgPerUnit.trim());
+      if (
+        selectedInputsChanged
+        && !('selectedAmount' in patch)
+        && !('lockSelectedAmount' in patch)
+      ) {
+        next.lockSelectedAmount = false;
+        next.selectedAmount = '';
+      }
+      return next;
+    }));
   };
 
   const removeLine = (key: string) => {
@@ -275,7 +330,7 @@ export function useCreatePurchasePlanForm({
       );
       return;
     }
-    const apiLines = toApiLines(lines);
+    const apiLines = toApiLines(lines, isEdit ? 'excel' : amountSourceMode);
     const hasPartial = lines.some(l => l.materialCode.trim() || l.productName.trim() || l.unit.trim());
     if (hasPartial && apiLines.length === 0) {
       showToast('warning', 'Dòng hàng chưa đủ: cần chọn Tên vật tư / Dịch vụ, ĐVT và SL > 0.');
@@ -338,6 +393,7 @@ export function useCreatePurchasePlanForm({
     try {
       const result = await previewMutation.mutateAsync({ projectCode, file });
       setPreview(result);
+      setAmountSourceMode('excel');
       setLines(fromPreviewLines(result.lines ?? []));
       setExpanded({});
       if (result.validRowCount === 0) {
@@ -354,6 +410,7 @@ export function useCreatePurchasePlanForm({
   const clearFile = () => {
     setFile(null);
     setPreview(null);
+    setAmountSourceMode('excel');
     if (fileInputRef.current) fileInputRef.current.value = '';
     setLines(isEdit && editPlan ? fromExistingPlanLines(editPlan.lines) : [emptyLine()]);
     setExpanded({});
@@ -379,6 +436,9 @@ export function useCreatePurchasePlanForm({
     expanded,
     file,
     preview,
+    amountSourceMode,
+    setAmountSourceMode,
+    reconciliation,
     suppliers,
     materials,
     serviceItems,

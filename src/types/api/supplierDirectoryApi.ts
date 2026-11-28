@@ -10,6 +10,7 @@ type Schemas = components['schemas'];
 export type SupplierGroupApiDto = Schemas['SupplierGroupDto'];
 export type SupplierGroupPagedApiDto = Schemas['SupplierGroupPagedResponse'];
 export type UpsertSupplierGroupRequest = Schemas['UpsertSupplierGroupRequest'];
+export type UpsertSupplierSubGroupItem = Schemas['UpsertSupplierSubGroupItem'];
 export type SupplierGroupMemberApiDto = Schemas['SupplierGroupMemberDto'];
 export type SetSupplierGroupMembersRequest = Schemas['SetSupplierGroupMembersRequest'];
 export type SupplierGroupRefApiDto = Schemas['SupplierGroupRefDto'];

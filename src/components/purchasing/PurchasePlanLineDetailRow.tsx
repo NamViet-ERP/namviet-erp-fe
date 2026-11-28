@@ -22,6 +22,8 @@ const PRICE_STAGES: ReadonlyArray<{
   mod: string;
   title: string;
   hint: string;
+  kgLabel?: string;
+  kgKey?: 'proposalKgPerUnit' | 'purchaseKgPerUnit';
   priceLabel: string;
   priceKey: 'proposalUnitPrice' | 'purchaseUnitPrice' | 'selectedUnitPrice';
   supplierLabel: string;
@@ -33,6 +35,8 @@ const PRICE_STAGES: ReadonlyArray<{
     mod: 'proposal',
     title: 'Đề xuất mua',
     hint: 'Giá / NCC đề xuất từ Excel',
+    kgLabel: 'KG/ĐVT đề xuất',
+    kgKey: 'proposalKgPerUnit',
     priceLabel: 'Đơn giá đề xuất',
     priceKey: 'proposalUnitPrice',
     supplierLabel: 'NCC đề xuất',
@@ -43,6 +47,8 @@ const PRICE_STAGES: ReadonlyArray<{
     mod: 'purchase',
     title: 'Giá mua thực tế',
     hint: 'Sau khi đặt / nhận báo giá',
+    kgLabel: 'KG/ĐVT mua hàng',
+    kgKey: 'purchaseKgPerUnit',
     priceLabel: 'Đơn giá mua',
     priceKey: 'purchaseUnitPrice',
     supplierLabel: 'NCC mua hàng',
@@ -155,6 +161,19 @@ export default function PurchasePlanLineDetailRow({
                       ariaLabel={stage.supplierLabel}
                     />
                   </FormField>
+                  {stage.kgKey && stage.kgLabel ? (
+                    <FormField label={stage.kgLabel} className="pur-create-plan__ff pur-create-plan__ff--span">
+                      <input
+                        aria-label={stage.kgLabel}
+                        className="form-input form-input-sm pur-create-plan__input--num"
+                        inputMode="decimal"
+                        value={!isMaterial ? '-' : line[stage.kgKey]}
+                        disabled={linesLocked || !isMaterial}
+                        onChange={e => onUpdateLine(line.key, { [stage.kgKey!]: e.target.value })}
+                        placeholder={!isMaterial ? 'Không áp dụng' : 'Trống → SL × ĐG'}
+                      />
+                    </FormField>
+                  ) : null}
                   {stage.withReason ? (
                     <FormField label="Lý do chọn" className="pur-create-plan__ff pur-create-plan__ff--span">
                       <input

@@ -13,8 +13,9 @@ import { formatCurrencyFull } from '../../utils/formatCurrency';
 import {
   MAX_BUDGET_UNIT_PRICE,
   isUnknownPlanItem,
-  lineAmount,
+  resolveDraftStageAmount,
   type DraftLine,
+  type PlanAmountSourceMode,
   type PurchasePlanLineType,
 } from './createPurchasePlanDraft';
 
@@ -33,6 +34,7 @@ interface PurchasePlanCreateLinesTableProps {
   suppliers: SupplierApiDto[];
   linesLocked: boolean;
   totals: Totals;
+  amountSourceMode?: PlanAmountSourceMode;
   risksByLineKey: Map<string, SupplierMaterialRiskApiDto[]>;
   knownMaterialCodes?: Set<string>;
   knownServiceCodes?: Set<string>;
@@ -56,6 +58,7 @@ export default function PurchasePlanCreateLinesTable({
   suppliers,
   linesLocked,
   totals,
+  amountSourceMode = 'excel',
   risksByLineKey,
   knownMaterialCodes,
   knownServiceCodes,
@@ -107,7 +110,7 @@ export default function PurchasePlanCreateLinesTable({
                 const isMaterial = resolvedType === 'material';
                 const badge = LINE_TYPE_BADGE[resolvedType] ?? LINE_TYPE_BADGE.material;
                 const hasUnknownItem = isUnknownPlanItem(line, knownMaterialCodes, knownServiceCodes);
-                const amount = lineAmount(line.quantity, line.budgetUnitPrice, isMaterial ? line.kgPerUnit : undefined);
+                const amount = resolveDraftStageAmount(line, 'budget', amountSourceMode);
                 const unitLocked = Boolean(line.materialCode.trim());
 
                 return (
@@ -159,7 +162,7 @@ export default function PurchasePlanCreateLinesTable({
                       <td className="table-cell text-center"><input className="form-input form-input-sm text-center" value={line.unit} disabled={linesLocked || unitLocked} readOnly={unitLocked} onChange={e => onUpdateLine(line.key, { unit: e.target.value })} placeholder={isMaterial ? 'Kg' : 'Gói'} aria-label={`ĐVT dòng ${lineIndex}`} /></td>
                       <td className="table-cell text-center"><QtyStepper value={line.quantity} min={0} className={linesLocked ? 'opacity-60 pointer-events-none' : ''} onChange={qty => onUpdateLine(line.key, { quantity: qty })} ariaLabel={`Số lượng dòng ${lineIndex}`} /></td>
                       <td className="table-cell text-right"><CurrencyInput compact value={line.budgetUnitPrice} min={0} max={MAX_BUDGET_UNIT_PRICE} onChange={(_raw, numeric) => { if (!linesLocked) onUpdateLine(line.key, { budgetUnitPrice: numeric > 0 ? String(numeric) : '' }); }} placeholder="0" /></td>
-                      <td className="table-cell text-right tabular-nums font-semibold"><div className="import-cell-placeholder import-cell-placeholder--end pr-2">{amount > 0 ? formatCurrencyFull(amount) : '—'}</div></td>
+                      <td className="table-cell text-right tabular-nums font-semibold"><div className="import-cell-placeholder import-cell-placeholder--end pr-2">{amount != null ? formatCurrencyFull(amount) : '—'}</div></td>
                       <td className="table-cell text-center"><button type="button" className={`pur-create-plan__expand${openDetail ? ' is-open' : ''}`} disabled={linesLocked} aria-expanded={openDetail} aria-label={openDetail ? 'Thu gọn chi tiết' : 'Mở chi tiết'} onClick={() => onToggleExpand(line.key)}><ChevronDown size={16} /></button></td>
                       <td className="table-cell text-center"><button type="button" className="icon-btn icon-btn--danger" disabled={linesLocked} aria-label={`Xóa dòng ${lineIndex}`} title="Xóa dòng" onClick={() => onRemoveLine(line.key)}><Trash2 size={15} /></button></td>
                     </tr>

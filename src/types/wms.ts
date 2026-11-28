@@ -149,7 +149,7 @@ export interface SupplierAttachmentDto {
   downloadUrl?: string | null;
 }
 
-export type SupplierApiDto = Schemas['SupplierDto'] & {
+export type SupplierApiDto = Omit<Schemas['SupplierDto'], 'primaryContact' | 'contactCount'> & {
   taxCode?: string | null;
   supplierType?: string | null;
   scope?: string | null;

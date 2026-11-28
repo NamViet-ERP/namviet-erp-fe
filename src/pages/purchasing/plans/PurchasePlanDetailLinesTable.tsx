@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import Button from '../../../components/ui/Button';
 import TableShell from '../../../components/ui/TableShell';
+import { DEFAULT_LIST_PAGE_SIZE, type ListPageSize } from '../../../constants/pagination';
 import { formatDateCell } from '../../../lib/hrm/formatters';
 import type {
   PurchasePlanLineApiDto,
@@ -104,6 +105,15 @@ interface PurchasePlanDetailLinesTableProps {
 }
 
 export default function PurchasePlanDetailLinesTable({ lines }: PurchasePlanDetailLinesTableProps) {
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<ListPageSize>(DEFAULT_LIST_PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(lines.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pagedLines = useMemo(
+    () => lines.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+    [lines, currentPage, pageSize],
+  );
+
   return (
     <section className="pur-detail__card" aria-label="Danh sách mặt hàng">
       <h2 className="pur-detail__section-title">Danh sách mặt hàng</h2>
@@ -113,6 +123,22 @@ export default function PurchasePlanDetailLinesTable({ lines }: PurchasePlanDeta
         colSpan={31}
         isEmpty={lines.length === 0}
         emptyMessage="KHMH chưa có dòng hàng."
+        pagination={
+          lines.length > 0
+            ? {
+                currentPage,
+                totalPages,
+                pageSize,
+                totalItems: lines.length,
+                itemLabel: 'mặt hàng',
+                onPageChange: setPage,
+                onPageSizeChange: nextSize => {
+                  setPageSize(nextSize);
+                  setPage(1);
+                },
+              }
+            : undefined
+        }
         header={(
           <tr>
             <th className="pur-erp__th-num pur-detail__th pur-detail__th--base">STT</th>
@@ -149,9 +175,9 @@ export default function PurchasePlanDetailLinesTable({ lines }: PurchasePlanDeta
           </tr>
         )}
       >
-        {lines.map((line, idx) => (
+        {pagedLines.map((line, idx) => (
           <tr key={line.id}>
-            <td className="pur-erp__td-num">{line.lineNo || idx + 1}</td>
+            <td className="pur-erp__td-num">{line.lineNo || (currentPage - 1) * pageSize + idx + 1}</td>
             <td>{line.systemName || '—'}</td>
             <td>{line.category || '—'}</td>
             <td>{line.materialCode || '—'}</td>

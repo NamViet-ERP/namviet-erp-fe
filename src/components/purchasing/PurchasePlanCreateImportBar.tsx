@@ -1,7 +1,24 @@
 import { useState, useMemo, type RefObject } from 'react';
-import { AlertCircle, Check, Copy, Download, FileSpreadsheet, Search, Upload } from 'lucide-react';
+import {
+  AlertCircle,
+  AlertTriangle,
+  Check,
+  CheckCircle2,
+  Copy,
+  Download,
+  FileSpreadsheet,
+  Search,
+  Upload,
+} from 'lucide-react';
 import Modal from '../ui/Modal';
 import type { PurchasePlanImportPreviewApiDto } from '../../types/api/purchasingApi';
+import { formatCurrency, formatCurrencyFull } from '../../utils/formatCurrency';
+import type { DraftAmountStage, PlanAmountSourceMode } from './createPurchasePlanDraft';
+import {
+  RECONCILIATION_STAGES,
+  RECONCILIATION_TOLERANCE_VND,
+  type PurchasePlanReconciliationReport,
+} from './purchasePlanReconciliation';
 
 interface PurchasePlanCreateImportBarProps {
   busy: boolean;
@@ -10,6 +27,9 @@ interface PurchasePlanCreateImportBarProps {
   fileInputRef: RefObject<HTMLInputElement | null>;
   templatePending: boolean;
   previewPending: boolean;
+  amountSourceMode?: PlanAmountSourceMode;
+  onAmountSourceModeChange?: (mode: PlanAmountSourceMode) => void;
+  reconciliation?: PurchasePlanReconciliationReport | null;
   onDownloadTemplate: () => void;
   onFileChange: (file: File | null) => void;
   onImport: () => void;
@@ -21,6 +41,33 @@ function cleanErrorMessage(msg?: string): string {
   return msg.replace(/^(?:Dòng(?: Excel)? \d+:\s*)+/i, '').trim();
 }
 
+function formatSignedCurrency(diff: number): string {
+  if (diff === 0) return formatCurrencyFull(0);
+  const formatted = formatCurrencyFull(Math.abs(diff));
+  return diff > 0 ? `+${formatted}` : `-${formatted}`;
+}
+
+async function copyTextToClipboard(text: string): Promise<boolean> {
+  try {
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    }
+    return true;
+  } catch (err) {
+    console.error('Failed to copy to clipboard', err);
+    return false;
+  }
+}
+
 export default function PurchasePlanCreateImportBar({
   busy,
   file,
@@ -28,6 +75,9 @@ export default function PurchasePlanCreateImportBar({
   fileInputRef,
   templatePending,
   previewPending,
+  amountSourceMode,
+  onAmountSourceModeChange,
+  reconciliation,
   onDownloadTemplate,
   onFileChange,
   onImport,
@@ -36,6 +86,12 @@ export default function PurchasePlanCreateImportBar({
   const [showAllErrorsModal, setShowAllErrorsModal] = useState(false);
   const [filterText, setFilterText] = useState('');
   const [copied, setCopied] = useState(false);
+  const [showReconcileModal, setShowReconcileModal] = useState(false);
+  const [reconcileStageFilter, setReconcileStageFilter] = useState<'all' | DraftAmountStage>('all');
+  const [reconcileQuery, setReconcileQuery] = useState('');
+  const [copiedMismatches, setCopiedMismatches] = useState(false);
+
+  const activeMode: PlanAmountSourceMode = amountSourceMode ?? 'excel';
 
   const filteredErrors = useMemo(() => {
     if (!preview?.errors) return [];
@@ -49,6 +105,24 @@ export default function PurchasePlanCreateImportBar({
     });
   }, [preview, filterText]);
 
+  const filteredMismatches = useMemo(() => {
+    if (!reconciliation?.mismatches) return [];
+    const query = reconcileQuery.trim().toLowerCase();
+    return reconciliation.mismatches.filter(m => {
+      if (reconcileStageFilter !== 'all' && m.stage !== reconcileStageFilter) {
+        return false;
+      }
+      if (!query) return true;
+      return (
+        String(m.rowNumber).includes(query)
+        || m.materialCode.toLowerCase().includes(query)
+        || m.productName.toLowerCase().includes(query)
+        || m.stageLabel.toLowerCase().includes(query)
+        || m.reason.toLowerCase().includes(query)
+      );
+    });
+  }, [reconciliation, reconcileStageFilter, reconcileQuery]);
+
   const handleCopyErrors = async () => {
     if (!preview?.errors?.length) return;
     const text = preview.errors
@@ -57,24 +131,33 @@ export default function PurchasePlanCreateImportBar({
         return `Dòng Excel ${err.rowNumber}: [${err.field || 'Chung'}] ${cleanMsg}`;
       })
       .join('\n');
-    try {
-      if (navigator?.clipboard?.writeText) {
-        await navigator.clipboard.writeText(text);
-      } else {
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        textarea.style.position = 'fixed';
-        textarea.style.opacity = '0';
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
-      }
+    const ok = await copyTextToClipboard(text);
+    if (ok) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy to clipboard', err);
     }
+  };
+
+  const handleCopyMismatches = async () => {
+    if (!reconciliation?.mismatches?.length) return;
+    const text = reconciliation.mismatches
+      .map(m => {
+        const excelTxt = m.excelAmount != null ? formatCurrencyFull(m.excelAmount) : 'Trống';
+        const webTxt = m.webAmount != null ? formatCurrencyFull(m.webAmount) : 'Trống';
+        return `Dòng Excel ${m.rowNumber}: [${m.materialCode || m.productName} - ${m.stageLabel}] Excel=${excelTxt} | Web=${webTxt} | Chênh=${formatSignedCurrency(m.diff)} | ${m.reason}`;
+      })
+      .join('\n');
+    const ok = await copyTextToClipboard(text);
+    if (ok) {
+      setCopiedMismatches(true);
+      setTimeout(() => setCopiedMismatches(false), 2000);
+    }
+  };
+
+  const closeReconcileModal = () => {
+    setShowReconcileModal(false);
+    setReconcileStageFilter('all');
+    setReconcileQuery('');
   };
 
   return (
@@ -176,6 +259,260 @@ export default function PurchasePlanCreateImportBar({
             </ul>
           ) : null}
         </div>
+      )}
+
+      {preview && reconciliation && preview.validRowCount > 0 && (
+        <div className="pur-create-plan__reconcile" aria-label="Đối chiếu giá Excel và Web tính">
+          <div className="pur-create-plan__reconcile-head">
+            <div className="pur-create-plan__reconcile-title-group">
+              {reconciliation.hasMismatch ? (
+                <>
+                  <span className="pur-create-plan__reconcile-status pur-create-plan__reconcile-status--warn">
+                    <AlertTriangle size={14} aria-hidden />
+                    <span>
+                      Lệch {reconciliation.mismatchedRowCount} dòng ({reconciliation.mismatches.length} mục)
+                    </span>
+                  </span>
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-sm pur-create-plan__reconcile-detail-btn"
+                    onClick={() => setShowReconcileModal(true)}
+                  >
+                    Xem chi tiết dòng lệch
+                  </button>
+                </>
+              ) : (
+                <span className="pur-create-plan__reconcile-status pur-create-plan__reconcile-status--ok">
+                  <CheckCircle2 size={14} aria-hidden />
+                  <span>Khớp 100% giữa Excel và công thức Web</span>
+                </span>
+              )}
+            </div>
+
+            <div
+              className="pur-create-plan__mode-switch flex-row items-center whitespace-nowrap"
+              role="radiogroup"
+              aria-label="Nguồn thành tiền lưu vào KHMH"
+            >
+              <button
+                type="button"
+                role="radio"
+                aria-checked={activeMode === 'excel'}
+                disabled={busy}
+                className={`pur-create-plan__mode-pill${activeMode === 'excel' ? ' is-active' : ''}`}
+                onClick={() => onAmountSourceModeChange?.('excel')}
+              >
+                Dùng giá Excel
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={activeMode === 'web'}
+                disabled={busy}
+                className={`pur-create-plan__mode-pill${activeMode === 'web' ? ' is-active' : ''}`}
+                onClick={() => onAmountSourceModeChange?.('web')}
+              >
+                Dùng giá Web tính
+              </button>
+            </div>
+          </div>
+
+          <p className="pur-create-plan__reconcile-note">
+            Công thức Web: trống KG/ĐVT → SL × ĐG · có KG/ĐVT → SL × KG/ĐVT × ĐG (theo đúng KG/ĐVT từng nhóm).
+          </p>
+
+          <div className="pur-create-plan__reconcile-table-wrap">
+            <table className="form-table pur-create-plan__reconcile-table">
+              <thead>
+                <tr>
+                  <th className="table-header-cell text-left">Nhóm</th>
+                  <th className="table-header-cell text-right">Giá Excel</th>
+                  <th className="table-header-cell text-right">Giá Web tính</th>
+                  <th className="table-header-cell text-right">Chênh lệch</th>
+                  <th className="table-header-cell text-center">Trạng thái</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reconciliation.stages.map(stageSummary => {
+                  const hasStageDiff = !stageSummary.matched || Math.abs(stageSummary.diff) > RECONCILIATION_TOLERANCE_VND;
+                  const diffTone = stageSummary.diff > 0
+                    ? ' pur-create-plan__reconcile-diff--pos'
+                    : stageSummary.diff < 0
+                      ? ' pur-create-plan__reconcile-diff--neg'
+                      : ' pur-create-plan__reconcile-diff--zero';
+                  return (
+                    <tr key={stageSummary.stage}>
+                      <td className="table-cell font-semibold">{stageSummary.label}</td>
+                      <td className="table-cell text-right tabular-nums">{formatCurrencyFull(stageSummary.excelTotal)}</td>
+                      <td className="table-cell text-right tabular-nums">{formatCurrencyFull(stageSummary.webTotal)}</td>
+                      <td className={`table-cell text-right tabular-nums font-semibold${diffTone}`}>
+                        {formatSignedCurrency(stageSummary.diff)}
+                      </td>
+                      <td className="table-cell text-center">
+                        {hasStageDiff ? (
+                          <span className="pur-create-plan__reconcile-badge pur-create-plan__reconcile-badge--warn">
+                            Lệch {stageSummary.mismatchCount} dòng
+                          </span>
+                        ) : (
+                          <span className="pur-create-plan__reconcile-badge pur-create-plan__reconcile-badge--ok">
+                            Khớp
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {preview && reconciliation && preview.validRowCount > 0 && (
+        <Modal
+          isOpen={showReconcileModal}
+          onClose={closeReconcileModal}
+          size="lg"
+          title={`Chi tiết dòng lệch Excel vs Web (${reconciliation.mismatches.length} mục trên ${reconciliation.mismatchedRowCount} dòng)`}
+          subtitle={
+            <div className="pur-reconcile-modal__subtitle">
+              File: <strong>{file?.name ?? 'Excel'}</strong> — Sheet: <strong>{preview.sheetName || '—'}</strong>
+            </div>
+          }
+          beforeBody={
+            <div className="pur-reconcile-modal__toolbar">
+              <div className="pur-reconcile-modal__search-wrap">
+                <Search size={15} className="pur-reconcile-modal__search-icon" aria-hidden />
+                <input
+                  type="search"
+                  value={reconcileQuery}
+                  onChange={e => setReconcileQuery(e.target.value)}
+                  placeholder="Tìm theo dòng, mã VT, tên hàng hoặc nguyên nhân…"
+                  aria-label="Tìm kiếm dòng lệch"
+                  className="form-input form-input-sm pur-reconcile-modal__search"
+                />
+              </div>
+
+              <div className="pur-reconcile-modal__filters" role="group" aria-label="Lọc theo nhóm">
+                <button
+                  type="button"
+                  aria-pressed={reconcileStageFilter === 'all'}
+                  className={`pur-reconcile-modal__filter-pill${reconcileStageFilter === 'all' ? ' is-active' : ''}`}
+                  onClick={() => setReconcileStageFilter('all')}
+                >
+                  Tất cả
+                </button>
+                {RECONCILIATION_STAGES.map(s => (
+                  <button
+                    key={s.stage}
+                    type="button"
+                    aria-pressed={reconcileStageFilter === s.stage}
+                    className={`pur-reconcile-modal__filter-pill${reconcileStageFilter === s.stage ? ' is-active' : ''}`}
+                    onClick={() => setReconcileStageFilter(s.stage)}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                className="btn btn-outline btn-sm pur-reconcile-modal__copy-btn"
+                aria-label="Sao chép danh sách lệch"
+                onClick={handleCopyMismatches}
+              >
+                {copiedMismatches ? (
+                  <>
+                    <Check size={14} aria-hidden />
+                    <span>Đã sao chép!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy size={14} aria-hidden />
+                    <span>Sao chép danh sách lệch</span>
+                  </>
+                )}
+              </button>
+            </div>
+          }
+          footer={
+            <div className="pur-reconcile-modal__footer">
+              <span className="pur-reconcile-modal__count">
+                Hiển thị <strong>{filteredMismatches.length}</strong> / <strong>{reconciliation.mismatches.length}</strong> mục lệch
+              </span>
+              <button type="button" className="btn btn-primary btn-sm" onClick={closeReconcileModal}>
+                Đóng
+              </button>
+            </div>
+          }
+        >
+          <div className="pur-reconcile-modal__body">
+            <div className="pur-reconcile-modal__table-wrap">
+              <table className="form-table pur-reconcile-modal__table">
+                <thead>
+                  <tr>
+                    <th className="table-header-cell text-center">Dòng Excel</th>
+                    <th className="table-header-cell text-left">Mã VT / Tên hàng</th>
+                    <th className="table-header-cell text-left">Nhóm</th>
+                    <th className="table-header-cell text-right">SL</th>
+                    <th className="table-header-cell text-right">KG/ĐVT nhóm</th>
+                    <th className="table-header-cell text-right">Đơn giá</th>
+                    <th className="table-header-cell text-right">Giá Excel</th>
+                    <th className="table-header-cell text-right">Giá Web tính</th>
+                    <th className="table-header-cell text-right">Chênh lệch</th>
+                    <th className="table-header-cell text-left">Nguyên nhân gợi ý</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredMismatches.length === 0 ? (
+                    <tr>
+                      <td colSpan={10} className="table-cell pur-reconcile-modal__empty">
+                        Không có mục lệch phù hợp với bộ lọc hiện tại.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredMismatches.map((m, idx) => (
+                      <tr key={`${m.lineKey}-${m.stage}-${idx}`}>
+                        <td className="table-cell text-center tabular-nums">
+                          <span className="pur-reconcile-modal__row-pill">Dòng {m.rowNumber}</span>
+                        </td>
+                        <td className="table-cell">
+                          <div className="pur-reconcile-modal__item-cell">
+                            {m.materialCode ? (
+                              <span className="pur-reconcile-modal__item-code">{m.materialCode}</span>
+                            ) : null}
+                            <span className="pur-reconcile-modal__item-name">{m.productName || '—'}</span>
+                          </div>
+                        </td>
+                        <td className="table-cell font-semibold">{m.stageLabel}</td>
+                        <td className="table-cell text-right tabular-nums">
+                          {formatCurrency(m.quantity)}
+                          {m.unit ? ` ${m.unit}` : ''}
+                        </td>
+                        <td className="table-cell text-right tabular-nums">
+                          {m.stageKg != null ? formatCurrency(m.stageKg) : '—'}
+                        </td>
+                        <td className="table-cell text-right tabular-nums">
+                          {m.unitPrice != null ? formatCurrencyFull(m.unitPrice) : '—'}
+                        </td>
+                        <td className="table-cell text-right tabular-nums">
+                          {m.excelAmount != null ? formatCurrencyFull(m.excelAmount) : 'Trống'}
+                        </td>
+                        <td className="table-cell text-right tabular-nums">
+                          {m.webAmount != null ? formatCurrencyFull(m.webAmount) : 'Trống'}
+                        </td>
+                        <td className="table-cell text-right tabular-nums font-semibold pur-reconcile-modal__diff-cell">
+                          {formatSignedCurrency(m.diff)}
+                        </td>
+                        <td className="table-cell pur-reconcile-modal__reason-cell">{m.reason}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </Modal>
       )}
 
       {preview && (

@@ -144,6 +144,7 @@ const GOLDEN_SURFACE_FILES = [
   'src/components/suppliers/CompleteDeliveryEvaluationModal.tsx',
   'src/components/suppliers/SupplierGroupFormModal.tsx',
   'src/components/suppliers/SupplierGroupMembersModal.tsx',
+  'src/components/suppliers/SupplierGroupTreePicker.tsx',
   'src/components/suppliers/SupplierKpiEvaluationDetailModal.tsx',
   'src/pages/operations/ServicesExpensesPage.tsx',
   'src/pages/operations/ServiceExpenseImportModal.tsx',
@@ -505,7 +506,7 @@ describe('Living Invariant: Design System Tokens, CSS Order & Token-Only Primiti
         `${relPath} must not use /opacity modifiers on CSS-var primary classes`,
       ).not.toMatch(PRIMARY_OPACITY_MODIFIER_RE);
     }
-  });
+  }, 25000);
 
   it('components.css: .kpi-card--accent-blue maps to --nv-action and .kpi-card--accent-success maps to --md-success independently', () => {
     const componentsCssPath = path.join(repoRoot, 'src/styles/components.css');

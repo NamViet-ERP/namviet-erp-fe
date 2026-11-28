@@ -5874,6 +5874,21 @@
               "type": "boolean",
               "default": false
             }
+          },
+          {
+            "name": "all",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -5922,6 +5937,101 @@
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/warehouse/materials/by-code": {
+      "get": {
+        "tags": [
+          "Materials"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Materials"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertMaterialRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertMaterialRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertMaterialRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Materials"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -6104,6 +6214,15 @@
         "tags": [
           "Materials"
         ],
+        "parameters": [
+          {
+            "name": "sheetName",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "multipart/form-data": {
@@ -6196,6 +6315,27 @@
         }
       }
     },
+    "/api/warehouse/materials/actions/discontinue": {
+      "post": {
+        "tags": [
+          "Materials"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/warehouse/materials/{code}/discontinue": {
       "post": {
         "tags": [
@@ -6206,6 +6346,27 @@
             "name": "code",
             "in": "path",
             "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/warehouse/materials/actions/reactivate": {
+      "post": {
+        "tags": [
+          "Materials"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
             "schema": {
               "type": "string"
             }
@@ -6232,6 +6393,47 @@
               "type": "string"
             }
           }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/warehouse/materials/clear-all": {
+      "delete": {
+        "tags": [
+          "Materials"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClearAllMaterialsResultDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClearAllMaterialsResultDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClearAllMaterialsResultDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/warehouse/materials/actions/cleanup-false-specs": {
+      "post": {
+        "tags": [
+          "Materials"
         ],
         "responses": {
           "200": {
@@ -6393,6 +6595,115 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/material-units/import-template": {
+      "get": {
+        "tags": [
+          "MaterialUnits"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/material-units/parse-import-file": {
+      "post": {
+        "tags": [
+          "MaterialUnits"
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              },
+              "encoding": {
+                "file": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialUnitImportParseResultDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialUnitImportParseResultDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialUnitImportParseResultDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/material-units/import-batch": {
+      "post": {
+        "tags": [
+          "MaterialUnits"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MaterialUnitImportBatchRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MaterialUnitImportBatchRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/MaterialUnitImportBatchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialUnitImportResultDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialUnitImportResultDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialUnitImportResultDto"
+                }
+              }
+            }
           }
         }
       }
@@ -12227,6 +12538,81 @@
         }
       }
     },
+    "/api/purchasing/markup-settings": {
+      "get": {
+        "tags": [
+          "PurchasePriceBook"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceBookMarkupSettingsDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceBookMarkupSettingsDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceBookMarkupSettingsDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "PurchasePriceBook"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePriceBookMarkupSettingsRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePriceBookMarkupSettingsRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePriceBookMarkupSettingsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceBookMarkupSettingsDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceBookMarkupSettingsDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceBookMarkupSettingsDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/purchasing/rfq-quotes": {
       "get": {
         "tags": [
@@ -14286,6 +14672,435 @@
         }
       }
     },
+    "/api/purchasing/service-categories": {
+      "get": {
+        "tags": [
+          "ServiceExpenseCategories"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ServiceExpenseCategoryDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ServiceExpenseCategoryDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ServiceExpenseCategoryDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/service-items": {
+      "get": {
+        "tags": [
+          "ServiceExpenseItems"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "isActive",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "all",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceExpenseItemPagedResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceExpenseItemPagedResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceExpenseItemPagedResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "ServiceExpenseItems"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateServiceExpenseItemRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateServiceExpenseItemRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateServiceExpenseItemRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceExpenseItemDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceExpenseItemDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceExpenseItemDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/service-items/{id}": {
+      "get": {
+        "tags": [
+          "ServiceExpenseItems"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceExpenseItemDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceExpenseItemDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceExpenseItemDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ServiceExpenseItems"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateServiceExpenseItemRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateServiceExpenseItemRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateServiceExpenseItemRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceExpenseItemDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceExpenseItemDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceExpenseItemDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "ServiceExpenseItems"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchasing/service-items/{id}/toggle-active": {
+      "patch": {
+        "tags": [
+          "ServiceExpenseItems"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceExpenseItemDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceExpenseItemDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceExpenseItemDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/service-items/import-template": {
+      "get": {
+        "tags": [
+          "ServiceExpenseItems"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchasing/service-items/parse-import-file": {
+      "post": {
+        "tags": [
+          "ServiceExpenseItems"
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              },
+              "encoding": {
+                "file": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceExpenseImportParseResultDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceExpenseImportParseResultDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceExpenseImportParseResultDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchasing/service-items/import-batch": {
+      "post": {
+        "tags": [
+          "ServiceExpenseItems"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceExpenseImportBatchRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceExpenseImportBatchRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceExpenseImportBatchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceExpenseImportResultDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceExpenseImportResultDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceExpenseImportResultDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/settings/{section}": {
       "get": {
         "tags": [
@@ -14378,6 +15193,134 @@
                   "items": {
                     "$ref": "#/components/schemas/StockMatrixRowDto"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/stock/admin/opening-balance/template": {
+      "get": {
+        "tags": [
+          "Stock"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/stock/admin/opening-balance/preview": {
+      "post": {
+        "tags": [
+          "Stock"
+        ],
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              },
+              "encoding": {
+                "file": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpeningStockPreviewResponseDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpeningStockPreviewResponseDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpeningStockPreviewResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/stock/admin/opening-balance/import-excel": {
+      "post": {
+        "tags": [
+          "Stock"
+        ],
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              },
+              "encoding": {
+                "file": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpeningStockImportResultDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpeningStockImportResultDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpeningStockImportResultDto"
                 }
               }
             }
@@ -15803,6 +16746,143 @@
         }
       }
     },
+    "/api/warehouse/suppliers/sourcing-kpi": {
+      "get": {
+        "tags": [
+          "Suppliers"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourcingKpiSummaryDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourcingKpiSummaryDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourcingKpiSummaryDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/warehouse/suppliers/{id}/tier-evaluation": {
+      "post": {
+        "tags": [
+          "Suppliers"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitTierEvaluationRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitTierEvaluationRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitTierEvaluationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierTierEvaluationDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierTierEvaluationDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierTierEvaluationDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/warehouse/suppliers/{id}/grade-history": {
+      "get": {
+        "tags": [
+          "Suppliers"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SupplierTierEvaluationDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SupplierTierEvaluationDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SupplierTierEvaluationDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/warehouse/suppliers": {
       "get": {
         "tags": [
@@ -15956,6 +17036,134 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SupplierNextCodeDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/warehouse/suppliers/template-excel": {
+      "get": {
+        "tags": [
+          "Suppliers"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/warehouse/suppliers/preview-excel": {
+      "post": {
+        "tags": [
+          "Suppliers"
+        ],
+        "parameters": [
+          {
+            "name": "sheetName",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              },
+              "encoding": {
+                "file": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierImportPreviewResponseDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierImportPreviewResponseDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierImportPreviewResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/warehouse/suppliers/import-excel": {
+      "post": {
+        "tags": [
+          "Suppliers"
+        ],
+        "parameters": [
+          {
+            "name": "sheetName",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              },
+              "encoding": {
+                "file": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierImportResultDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierImportResultDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierImportResultDto"
                 }
               }
             }
@@ -16275,6 +17483,184 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/warehouse/suppliers/{id}/attachments": {
+      "get": {
+        "tags": [
+          "Suppliers"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SupplierAttachmentDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SupplierAttachmentDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SupplierAttachmentDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Suppliers"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "docType": {
+                    "type": "string",
+                    "default": "other"
+                  }
+                }
+              },
+              "encoding": {
+                "file": {
+                  "style": "form"
+                },
+                "docType": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierAttachmentDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierAttachmentDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierAttachmentDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/warehouse/suppliers/{id}/attachments/{attachmentId}/download": {
+      "get": {
+        "tags": [
+          "Suppliers"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "attachmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/warehouse/suppliers/{id}/attachments/{attachmentId}": {
+      "delete": {
+        "tags": [
+          "Suppliers"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "attachmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
           }
         }
       }
@@ -18020,6 +19406,33 @@
         },
         "additionalProperties": false
       },
+      "ClearAllMaterialsResultDto": {
+        "required": [
+          "hardDeleted",
+          "message",
+          "softDeleted",
+          "totalProcessed"
+        ],
+        "type": "object",
+        "properties": {
+          "totalProcessed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hardDeleted": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "softDeleted": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "ClosePurchaseWarrantyClaimRequest": {
         "required": [
           "serviceRating"
@@ -19075,7 +20488,6 @@
       },
       "CreatePurchasePlanLineRequest": {
         "required": [
-          "materialCode",
           "productName",
           "quantity",
           "unit"
@@ -19083,7 +20495,8 @@
         "type": "object",
         "properties": {
           "materialCode": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "productName": {
             "type": "string"
@@ -19094,6 +20507,10 @@
           "quantity": {
             "type": "number",
             "format": "double"
+          },
+          "lineType": {
+            "type": "string",
+            "nullable": true
           },
           "systemName": {
             "type": "string",
@@ -19231,6 +20648,10 @@
             "items": {
               "$ref": "#/components/schemas/CreatePurchasePlanLineQuoteRequest"
             },
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
             "nullable": true
           }
         },
@@ -19381,6 +20802,48 @@
             "type": "integer",
             "format": "int32",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateServiceExpenseItemRequest": {
+        "required": [
+          "code",
+          "isActive",
+          "name",
+          "sortOrder",
+          "type",
+          "unit"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "referencePrice": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false
@@ -21071,6 +22534,17 @@
             "items": {
               "$ref": "#/components/schemas/MaterialImportErrorDto"
             }
+          },
+          "availableSheets": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "selectedSheet": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -21303,6 +22777,172 @@
         },
         "additionalProperties": false
       },
+      "MaterialUnitImportBatchRequest": {
+        "required": [
+          "overwriteExisting",
+          "rows"
+        ],
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MaterialUnitImportRowDto"
+            }
+          },
+          "overwriteExisting": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MaterialUnitImportErrorDto": {
+        "required": [
+          "field",
+          "message",
+          "rowNumber"
+        ],
+        "type": "object",
+        "properties": {
+          "rowNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "field": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MaterialUnitImportParseResultDto": {
+        "required": [
+          "errorRowCount",
+          "errors",
+          "existingRowCount",
+          "rows",
+          "totalRows",
+          "validRowCount"
+        ],
+        "type": "object",
+        "properties": {
+          "totalRows": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "validRowCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "existingRowCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorRowCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MaterialUnitImportRowDto"
+            }
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MaterialUnitImportErrorDto"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "MaterialUnitImportResultDto": {
+        "required": [
+          "createdCount",
+          "errors",
+          "importedNames",
+          "skippedCount",
+          "totalProcessed",
+          "updatedCount"
+        ],
+        "type": "object",
+        "properties": {
+          "createdCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "updatedCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "skippedCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalProcessed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "importedNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "MaterialUnitImportRowDto": {
+        "required": [
+          "isActive",
+          "isExisting",
+          "isValid",
+          "name",
+          "rowNumber",
+          "sortOrder"
+        ],
+        "type": "object",
+        "properties": {
+          "rowNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "isValid": {
+            "type": "boolean"
+          },
+          "errorMessage": {
+            "type": "string",
+            "nullable": true
+          },
+          "isExisting": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
       "NextProjectCodeResponse": {
         "required": [
           "projectCode"
@@ -21311,6 +22951,129 @@
         "properties": {
           "projectCode": {
             "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "OpeningStockImportResultDto": {
+        "required": [
+          "message",
+          "skippedCount",
+          "ticketCode",
+          "totalAmount",
+          "totalItems",
+          "totalQty"
+        ],
+        "type": "object",
+        "properties": {
+          "ticketCode": {
+            "type": "string"
+          },
+          "totalItems": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalQty": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "message": {
+            "type": "string"
+          },
+          "skippedCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "OpeningStockItemPreviewDto": {
+        "required": [
+          "isValid",
+          "materialCode",
+          "materialName",
+          "qty",
+          "totalAmount",
+          "unit",
+          "unitPrice"
+        ],
+        "type": "object",
+        "properties": {
+          "materialCode": {
+            "type": "string"
+          },
+          "materialName": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "qty": {
+            "type": "number",
+            "format": "double"
+          },
+          "unitPrice": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "isValid": {
+            "type": "boolean"
+          },
+          "error": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OpeningStockPreviewResponseDto": {
+        "required": [
+          "errorRows",
+          "items",
+          "totalAmount",
+          "totalQty",
+          "totalRows",
+          "validRows"
+        ],
+        "type": "object",
+        "properties": {
+          "totalRows": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "validRows": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorRows": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalQty": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OpeningStockItemPreviewDto"
+            }
           }
         },
         "additionalProperties": false
@@ -21864,6 +23627,68 @@
           "sellHistoryCount": {
             "type": "integer",
             "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PriceBookMarkupCategoryDto": {
+        "required": [
+          "id",
+          "name",
+          "percent"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "percent": {
+            "type": "number",
+            "format": "double"
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PriceBookMarkupSettingsDto": {
+        "required": [
+          "categories",
+          "globalMarkupPercent",
+          "itemOverrides"
+        ],
+        "type": "object",
+        "properties": {
+          "globalMarkupPercent": {
+            "type": "number",
+            "format": "double"
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PriceBookMarkupCategoryDto"
+            }
+          },
+          "itemOverrides": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "updatedBy": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -24339,6 +26164,10 @@
             "items": {
               "$ref": "#/components/schemas/PurchaseOrderInstallmentDto"
             }
+          },
+          "supplierTaxCode": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -25198,7 +27027,7 @@
         "required": [
           "isValid",
           "lineNo",
-          "materialCode",
+          "lineType",
           "productName",
           "quantity",
           "quotes",
@@ -25224,7 +27053,8 @@
             "nullable": true
           },
           "materialCode": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "productName": {
             "type": "string"
@@ -25367,6 +27197,13 @@
           },
           "isValid": {
             "type": "boolean"
+          },
+          "lineType": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -25468,6 +27305,7 @@
           "defectQty",
           "id",
           "lineNo",
+          "lineType",
           "orderedQty",
           "productName",
           "quantity",
@@ -25658,6 +27496,13 @@
             "items": {
               "$ref": "#/components/schemas/PurchasePlanLinePoDto"
             },
+            "nullable": true
+          },
+          "lineType": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
             "nullable": true
           }
         },
@@ -27295,6 +29140,311 @@
         },
         "additionalProperties": false
       },
+      "ServiceExpenseCategoryDto": {
+        "required": [
+          "code",
+          "id",
+          "isActive",
+          "name",
+          "sortOrder"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ServiceExpenseImportBatchRequest": {
+        "required": [
+          "overwriteExisting",
+          "rows"
+        ],
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ServiceExpenseImportRowDto"
+            }
+          },
+          "overwriteExisting": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ServiceExpenseImportParseResultDto": {
+        "required": [
+          "errorRowCount",
+          "errorRows",
+          "existingRowCount",
+          "existingRows",
+          "rows",
+          "totalRows",
+          "validRowCount",
+          "validRows"
+        ],
+        "type": "object",
+        "properties": {
+          "totalRows": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "validRows": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorRows": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "existingRows": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ServiceExpenseImportRowDto"
+            }
+          },
+          "validRowCount": {
+            "type": "integer",
+            "format": "int32",
+            "readOnly": true
+          },
+          "errorRowCount": {
+            "type": "integer",
+            "format": "int32",
+            "readOnly": true
+          },
+          "existingRowCount": {
+            "type": "integer",
+            "format": "int32",
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ServiceExpenseImportResultDto": {
+        "required": [
+          "createdCount",
+          "errors",
+          "insertedCount",
+          "skippedCount",
+          "totalProcessed",
+          "updatedCount"
+        ],
+        "type": "object",
+        "properties": {
+          "totalProcessed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "insertedCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "updatedCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "skippedCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "createdCount": {
+            "type": "integer",
+            "format": "int32",
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ServiceExpenseImportRowDto": {
+        "required": [
+          "code",
+          "errors",
+          "isExisting",
+          "isValid",
+          "name",
+          "rowNumber",
+          "type",
+          "unit",
+          "warnings"
+        ],
+        "type": "object",
+        "properties": {
+          "rowNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "referencePrice": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "isValid": {
+            "type": "boolean"
+          },
+          "errorMessage": {
+            "type": "string",
+            "nullable": true
+          },
+          "isExisting": {
+            "type": "boolean"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "readOnly": true
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ServiceExpenseItemDto": {
+        "required": [
+          "code",
+          "createdAt",
+          "id",
+          "isActive",
+          "name",
+          "sortOrder",
+          "type",
+          "unit",
+          "updatedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "referencePrice": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ServiceExpenseItemPagedResponse": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "total",
+          "totalPages"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ServiceExpenseItemDto"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
       "SetSupplierGroupMembersRequest": {
         "required": [
           "supplierIds"
@@ -27323,6 +29473,59 @@
               "type": "integer",
               "format": "int32"
             }
+          }
+        },
+        "additionalProperties": false
+      },
+      "SourcingKpiSummaryDto": {
+        "required": [
+          "gradeACount",
+          "gradeBCount",
+          "gradeCCount",
+          "gradeDCount",
+          "otherGradeCount",
+          "promotionRatePercent",
+          "totalNewThisMonth",
+          "totalPromotedThisMonth",
+          "totalSuppliers"
+        ],
+        "type": "object",
+        "properties": {
+          "totalSuppliers": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalNewThisMonth": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPromotedThisMonth": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "gradeACount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "gradeBCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "gradeCCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "gradeDCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "otherGradeCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "promotionRatePercent": {
+            "type": "number",
+            "format": "double"
           }
         },
         "additionalProperties": false
@@ -27592,6 +29795,98 @@
             "items": {
               "$ref": "#/components/schemas/PurchaseEstimateProposalInput"
             },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SubmitTierEvaluationRequest": {
+        "required": [
+          "paymentScore",
+          "priceScore",
+          "profileScore",
+          "serviceScore"
+        ],
+        "type": "object",
+        "properties": {
+          "priceScore": {
+            "type": "number",
+            "format": "double"
+          },
+          "profileScore": {
+            "type": "number",
+            "format": "double"
+          },
+          "paymentScore": {
+            "type": "number",
+            "format": "double"
+          },
+          "serviceScore": {
+            "type": "number",
+            "format": "double"
+          },
+          "targetGrade": {
+            "type": "string",
+            "nullable": true
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          },
+          "detailsJson": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupplierAttachmentDto": {
+        "required": [
+          "contentType",
+          "docType",
+          "docTypeLabel",
+          "fileName",
+          "fileSizeBytes",
+          "id",
+          "supplierId",
+          "uploadedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "supplierId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "docType": {
+            "type": "string"
+          },
+          "docTypeLabel": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "fileSizeBytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "contentType": {
+            "type": "string"
+          },
+          "uploadedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "uploadedByName": {
+            "type": "string",
+            "nullable": true
+          },
+          "downloadUrl": {
+            "type": "string",
             "nullable": true
           }
         },
@@ -27897,6 +30192,7 @@
       "SupplierDto": {
         "required": [
           "approvalStatus",
+          "contactCount",
           "id",
           "industryGroups",
           "isBlacklisted",
@@ -27969,6 +30265,36 @@
           },
           "latestEvaluation": {
             "$ref": "#/components/schemas/SupplierLatestEvaluationDto"
+          },
+          "taxCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "supplierType": {
+            "type": "string",
+            "nullable": true
+          },
+          "scope": {
+            "type": "string",
+            "nullable": true
+          },
+          "website": {
+            "type": "string",
+            "nullable": true
+          },
+          "primaryContact": {
+            "$ref": "#/components/schemas/SupplierPrimaryContactDto"
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupplierAttachmentDto"
+            },
+            "nullable": true
+          },
+          "contactCount": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false
@@ -28116,6 +30442,7 @@
       },
       "SupplierGroupDto": {
         "required": [
+          "childCount",
           "id",
           "name",
           "supplierCount"
@@ -28134,6 +30461,19 @@
             "nullable": true
           },
           "supplierCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "parentGroupId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "parentGroupName": {
+            "type": "string",
+            "nullable": true
+          },
+          "childCount": {
             "type": "integer",
             "format": "int32"
           }
@@ -28209,6 +30549,148 @@
           },
           "name": {
             "type": "string"
+          },
+          "parentGroupId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "parentGroupName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupplierImportPreviewResponseDto": {
+        "required": [
+          "errorRows",
+          "rows",
+          "totalRows",
+          "validRows"
+        ],
+        "type": "object",
+        "properties": {
+          "totalRows": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "validRows": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorRows": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupplierImportRowPreviewDto"
+            }
+          },
+          "availableSheets": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "selectedSheet": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupplierImportResultDto": {
+        "required": [
+          "errors",
+          "failedCount",
+          "importedCount",
+          "totalRows"
+        ],
+        "type": "object",
+        "properties": {
+          "totalRows": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "importedCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "failedCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupplierImportRowPreviewDto": {
+        "required": [
+          "isValid",
+          "maxDebtDays",
+          "supplierName"
+        ],
+        "type": "object",
+        "properties": {
+          "supplierCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "supplierName": {
+            "type": "string"
+          },
+          "taxCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "contactPhone": {
+            "type": "string",
+            "nullable": true
+          },
+          "website": {
+            "type": "string",
+            "nullable": true
+          },
+          "supplierType": {
+            "type": "string",
+            "nullable": true
+          },
+          "scope": {
+            "type": "string",
+            "nullable": true
+          },
+          "maxDebtDays": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "creditLimit": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "paymentTerms": {
+            "type": "string",
+            "nullable": true
+          },
+          "industryGroups": {
+            "type": "string",
+            "nullable": true
+          },
+          "isValid": {
+            "type": "boolean"
+          },
+          "error": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -28751,6 +31233,111 @@
           "daysUntilDue": {
             "type": "integer",
             "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupplierPrimaryContactDto": {
+        "required": [
+          "fullName",
+          "id",
+          "role"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "position": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "role": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupplierTierEvaluationDto": {
+        "required": [
+          "createdAt",
+          "id",
+          "newGrade",
+          "paymentScore",
+          "priceScore",
+          "profileScore",
+          "serviceScore",
+          "supplierId",
+          "totalScore"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "supplierId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "oldGrade": {
+            "type": "string",
+            "nullable": true
+          },
+          "newGrade": {
+            "type": "string"
+          },
+          "totalScore": {
+            "type": "number",
+            "format": "double"
+          },
+          "priceScore": {
+            "type": "number",
+            "format": "double"
+          },
+          "profileScore": {
+            "type": "number",
+            "format": "double"
+          },
+          "paymentScore": {
+            "type": "number",
+            "format": "double"
+          },
+          "serviceScore": {
+            "type": "number",
+            "format": "double"
+          },
+          "evaluationDetailsJson": {
+            "type": "string",
+            "nullable": true
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          },
+          "evaluatedById": {
+            "type": "string",
+            "nullable": true
+          },
+          "evaluatedByName": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
           }
         },
         "additionalProperties": false
@@ -29301,6 +31888,34 @@
         "properties": {
           "evaluation": {
             "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdatePriceBookMarkupSettingsRequest": {
+        "required": [
+          "globalMarkupPercent"
+        ],
+        "type": "object",
+        "properties": {
+          "globalMarkupPercent": {
+            "type": "number",
+            "format": "double"
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PriceBookMarkupCategoryDto"
+            },
+            "nullable": true
+          },
+          "itemOverrides": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number",
+              "format": "double"
+            },
             "nullable": true
           }
         },
@@ -29908,6 +32523,48 @@
         },
         "additionalProperties": false
       },
+      "UpdateServiceExpenseItemRequest": {
+        "required": [
+          "code",
+          "isActive",
+          "name",
+          "sortOrder",
+          "type",
+          "unit"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "referencePrice": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
       "UpdateSupplierModuleSettingsRequest": {
         "required": [
           "evaluationCycle",
@@ -30449,6 +33106,18 @@
           "description": {
             "type": "string",
             "nullable": true
+          },
+          "parentGroupId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "subGroups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UpsertSupplierSubGroupItem"
+            },
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -30482,6 +33151,82 @@
           "creditLimit": {
             "type": "number",
             "format": "double",
+            "nullable": true
+          },
+          "taxCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "supplierType": {
+            "type": "string",
+            "nullable": true
+          },
+          "scope": {
+            "type": "string",
+            "nullable": true
+          },
+          "website": {
+            "type": "string",
+            "nullable": true
+          },
+          "contactName": {
+            "type": "string",
+            "nullable": true
+          },
+          "contactEmail": {
+            "type": "string",
+            "nullable": true
+          },
+          "contactPosition": {
+            "type": "string",
+            "nullable": true
+          },
+          "primaryContactName": {
+            "type": "string",
+            "nullable": true
+          },
+          "primaryContactEmail": {
+            "type": "string",
+            "nullable": true
+          },
+          "primaryContactPosition": {
+            "type": "string",
+            "nullable": true
+          },
+          "resolvedContactName": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          },
+          "resolvedContactEmail": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          },
+          "resolvedContactPosition": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpsertSupplierSubGroupItem": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
             "nullable": true
           }
         },

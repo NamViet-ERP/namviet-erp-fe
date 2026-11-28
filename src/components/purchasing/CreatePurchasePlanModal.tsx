@@ -98,6 +98,9 @@ export default function CreatePurchasePlanModal({
             fileInputRef={vm.fileInputRef}
             templatePending={vm.templatePending}
             previewPending={vm.previewPending}
+            amountSourceMode={vm.amountSourceMode}
+            onAmountSourceModeChange={vm.setAmountSourceMode}
+            reconciliation={vm.reconciliation}
             onDownloadTemplate={() => { void vm.downloadTemplate(); }}
             onFileChange={vm.handleFileChange}
             onImport={() => { void vm.runPreview(); }}
@@ -134,6 +137,7 @@ export default function CreatePurchasePlanModal({
           suppliers={vm.suppliers}
           linesLocked={vm.busy}
           totals={vm.totals}
+          amountSourceMode={vm.isEdit ? 'excel' : vm.amountSourceMode}
           risksByLineKey={vm.risksByLineKey}
           knownMaterialCodes={vm.knownMaterialCodes}
           knownServiceCodes={vm.knownServiceCodes}

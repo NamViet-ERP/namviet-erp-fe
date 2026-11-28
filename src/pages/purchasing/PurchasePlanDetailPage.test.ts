@@ -393,4 +393,67 @@ describe('PurchasePlanDetailPage characterization', () => {
 
     expect(container.querySelector('.page-header__title')?.textContent?.trim()).toBe('KHMH 2026-014');
   });
+
+  it('paginates PurchasePlanDetailLinesTable when a KHMH has more than 15 lines', async () => {
+    const manyLines = Array.from({ length: 22 }, (_, index) => {
+      const n = index + 1;
+      return {
+        id: 200 + n,
+        lineNo: n,
+        systemName: 'Hệ kết cấu thép',
+        category: 'Thép hình',
+        materialCode: `VT-THEP-${String(n).padStart(3, '0')}`,
+        productName: `Thép hình H${200 + n} tiêu chuẩn`,
+        spec: 'SS400',
+        unit: 'Cây',
+        quantity: 10 + n,
+        kgPerUnit: 120,
+        budgetUnitPrice: 1_500_000,
+        budgetAmount: (10 + n) * 1_500_000,
+        orderedQty: 0,
+        receivedQty: 0,
+        defectQty: 0,
+        remainingOrderableQty: 10 + n,
+        quotes: [],
+        pos: [],
+      };
+    });
+
+    vi.mocked(purchasePlansService.getByCode).mockResolvedValue(makePlanDetail({ lines: manyLines }));
+    await renderPlanDetail();
+
+    const getBodyRows = () => container.querySelectorAll('.pur-detail__lines-table tbody tr');
+    const getPaginationCount = () => container.querySelector('.pagination-bar__count')?.textContent?.trim();
+
+    // Initially renders 15 rows (1–15 / 22 mặt hàng), shows page 1 & page 2 buttons, does NOT render row 16 yet
+    expect(getBodyRows().length).toBe(15);
+    expect(getPaginationCount()).toBe('1–15 / 22 mặt hàng');
+    expect(container.querySelector('button[aria-label="Trang 1"]')).toBeTruthy();
+    const page2Btn = container.querySelector('button[aria-label="Trang 2"]') as HTMLButtonElement | null;
+    expect(page2Btn).toBeTruthy();
+    expect(container.textContent).toContain('Thép hình H215 tiêu chuẩn');
+    expect(container.textContent).not.toContain('Thép hình H216 tiêu chuẩn');
+
+    // Clicking Trang 2 renders rows 16–22 (16–22 / 22 mặt hàng)
+    act(() => {
+      page2Btn!.click();
+    });
+    expect(getBodyRows().length).toBe(7);
+    expect(getPaginationCount()).toBe('16–22 / 22 mặt hàng');
+    expect(container.textContent).toContain('Thép hình H216 tiêu chuẩn');
+    expect(container.textContent).toContain('Thép hình H222 tiêu chuẩn');
+    expect(container.textContent).not.toContain('Thép hình H201 tiêu chuẩn');
+
+    // Changing page size select (#pagination-page-size) to 25 shows all 22 rows (1–22 / 22 mặt hàng)
+    const sizeSelect = container.querySelector('#pagination-page-size') as HTMLSelectElement | null;
+    expect(sizeSelect).toBeTruthy();
+    act(() => {
+      sizeSelect!.value = '25';
+      sizeSelect!.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    expect(getBodyRows().length).toBe(22);
+    expect(getPaginationCount()).toBe('1–22 / 22 mặt hàng');
+    expect(container.textContent).toContain('Thép hình H201 tiêu chuẩn');
+    expect(container.textContent).toContain('Thép hình H222 tiêu chuẩn');
+  });
 });

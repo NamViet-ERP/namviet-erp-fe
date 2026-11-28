@@ -6,6 +6,7 @@ import FormField from '../../../components/ui/FormField';
 import Modal from '../../../components/ui/Modal';
 import SelectField from '../../../components/ui/SelectField';
 import SupplierAttachmentUploader, { type StagedAttachment } from '../../../components/suppliers/SupplierAttachmentUploader';
+import SupplierGroupTreePicker from '../../../components/suppliers/SupplierGroupTreePicker';
 import {
   parseCreditLimit,
   parseMaxDebtDays,
@@ -322,34 +323,12 @@ export default function SupplierFormModal({
           />
         </FormField>
         <FormField label={`Nhóm ngành hàng (chọn nhiều · đã chọn ${form.groupIds.length})`}>
-          {groupOptions.length === 0 ? (
-            <p className="text-[length:var(--fs-xs)] text-[var(--md-on-surface-variant)] text-pretty">
-              Chưa có nhóm ngành hàng. Vào “Nhóm nhà cung cấp” để tạo trước.
-            </p>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 rounded-xl border border-[var(--md-outline-variant)] p-3">
-              {groupOptions.map(group => {
-                const checked = form.groupIds.includes(group.id);
-                return (
-                  <label key={group.id} className="inline-flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={e => {
-                        setForm(prev => ({
-                          ...prev,
-                          groupIds: e.target.checked
-                            ? [...prev.groupIds, group.id]
-                            : prev.groupIds.filter(id => id !== group.id),
-                        }));
-                      }}
-                    />
-                    <span>{group.name}</span>
-                  </label>
-                );
-              })}
-            </div>
-          )}
+          <SupplierGroupTreePicker
+            groups={groupOptions}
+            selectedIds={form.groupIds}
+            onChange={groupIds => setForm(prev => ({ ...prev, groupIds }))}
+            emptyMessage="Chưa có nhóm ngành hàng. Vào “Nhóm nhà cung cấp” để tạo trước."
+          />
         </FormField>
       </form>
     </Modal>

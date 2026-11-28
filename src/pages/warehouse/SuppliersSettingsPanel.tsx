@@ -112,8 +112,8 @@ export default function SuppliersSettingsPanel({
                     c.setPage(1);
                   }}
                   groupIdFromUrl={c.groupIdFromUrl}
-                  filteredGroupName={c.filteredGroupName}
-                  onClearGroupFilter={c.clearGroupFilter}
+                  groupOptions={c.groupOptions}
+                  onGroupFilterChange={c.setGroupFilter}
                 />
               </div>
             )}

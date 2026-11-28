@@ -8,6 +8,7 @@ import { materialsService } from '../../services/materialsService';
 import { serviceExpenseItemsService } from '../../services/serviceExpenseItemsService';
 import { purchasePlansService } from '../../services/purchasePlansService';
 import { showToast } from '../ui/Toast';
+import { formatCurrencyFull } from '../../utils/formatCurrency';
 import type { PurchasePlanDetailApiDto, PurchasePlanImportPreviewApiDto } from '../../types/api/purchasingApi';
 import CreatePurchasePlanModal from './CreatePurchasePlanModal';
 
@@ -492,5 +493,411 @@ describe('CreatePurchasePlanModal characterization', () => {
     const dialog = document.body.querySelector('[role="dialog"]') as HTMLElement;
     expect(dialog).not.toBeNull();
     expect(dialog.textContent).toContain('Tạo kế hoạch mua hàng');
+  });
+
+  it('preserves exact Excel amounts and displayed VND totals on import and create without auto-recalculation', async () => {
+    vi.mocked(materialsService.list).mockResolvedValue({
+      items: [
+        {
+          ...sampleMaterials[0],
+          materialCode: 'VT-INOX-304',
+          materialName: 'Tấm Inox 304 dày 10mm',
+          unit: 'Tấm',
+        },
+        {
+          ...sampleMaterials[0],
+          materialCode: 'VT-THEP-TAM',
+          materialName: 'Thép tấm A515 dày 20mm',
+          unit: 'Tấm',
+        },
+      ] as never,
+      totalCount: 2,
+      page: 1,
+      pageSize: 500,
+      totalPages: 1,
+    });
+
+    const previewWithExactAmounts: PurchasePlanImportPreviewApiDto = {
+      projectCode: 'DA-CRM2',
+      sheetName: 'KHMH_INOX',
+      totalRows: 2,
+      validRowCount: 2,
+      errorRowCount: 0,
+      mappedColumns: [],
+      errors: [],
+      lines: [
+        {
+          rowNumber: 2,
+          lineNo: 1,
+          isValid: true,
+          lineType: 'material',
+          materialCode: 'VT-INOX-304',
+          productName: 'Tấm Inox 304 dày 10mm',
+          unit: 'Tấm',
+          quantity: 16,
+          kgPerUnit: 194,
+          budgetUnitPrice: 928_000,
+          budgetAmount: 180_032_000,
+          proposalKgPerUnit: 194,
+          proposalUnitPrice: 13_916_000,
+          proposalAmount: 222_656_000,
+          purchaseKgPerUnit: 194,
+          purchaseUnitPrice: 13_725_000,
+          purchaseAmount: 219_600_000,
+          selectedUnitPrice: 13_916_000,
+          selectedAmount: 222_656_000,
+          quotes: [],
+        },
+        {
+          rowNumber: 3,
+          lineNo: 2,
+          isValid: true,
+          lineType: 'material',
+          materialCode: 'VT-THEP-TAM',
+          productName: 'Thép tấm A515 dày 20mm',
+          unit: 'Tấm',
+          quantity: 1,
+          kgPerUnit: 2434,
+          budgetUnitPrice: 26_000,
+          budgetAmount: 63_284_000,
+          proposalKgPerUnit: 2434,
+          proposalUnitPrice: 26_681.56,
+          proposalAmount: 64_942_909,
+          purchaseKgPerUnit: 2434,
+          purchaseUnitPrice: 64_046_455,
+          purchaseAmount: 64_046_455,
+          selectedUnitPrice: 26_681.56,
+          selectedAmount: 64_942_909,
+          quotes: [],
+        },
+      ],
+    };
+    vi.mocked(purchasePlansService.importPreview).mockResolvedValue(previewWithExactAmounts);
+
+    await renderModal({});
+
+    const dialog = document.body.querySelector('[role="dialog"]') as HTMLElement;
+    const projectSelect = dialog.querySelector('select[aria-label="Dự án"]') as HTMLSelectElement;
+    await act(async () => {
+      setSelectValue(projectSelect, 'DA-CRM2');
+    });
+
+    const fileInput = dialog.querySelector('input[aria-label="File Excel KHMH"]') as HTMLInputElement;
+    const excelFile = new File(['excel-bytes'], 'khmh_inox.xlsx', {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    Object.defineProperty(fileInput, 'files', { value: [excelFile], configurable: true });
+    await act(async () => {
+      fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    const importBtn = [...dialog.querySelectorAll('button')].find(
+      b => b.textContent?.trim() === 'Import',
+    ) as HTMLButtonElement;
+    await act(async () => {
+      importBtn.click();
+    });
+    await flushQueries();
+
+    const tfoot = dialog.querySelector('table.pur-create-plan__table tfoot') as HTMLElement;
+    const subtotals = dialog.querySelector('.pur-create-plan__subtotals') as HTMLElement;
+    expect(tfoot.textContent).toContain(formatCurrencyFull(243_316_000));
+    expect(subtotals.textContent).toContain(`Đề xuất: ${formatCurrencyFull(287_598_909)}`);
+    expect(subtotals.textContent).toContain(`Mua hàng: ${formatCurrencyFull(287_598_909)}`);
+
+    const submitBtn = [...dialog.querySelectorAll('.md-dialog__footer button')].find(
+      b => b.textContent?.includes('Tạo KHMH'),
+    ) as HTMLButtonElement;
+    await act(async () => {
+      submitBtn.click();
+    });
+    await flushQueries();
+
+    expect(purchasePlansService.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        projectCode: 'DA-CRM2',
+        lines: [
+          expect.objectContaining({
+            materialCode: 'VT-INOX-304',
+            quantity: 16,
+            kgPerUnit: 194,
+            budgetAmount: 180_032_000,
+            proposalAmount: 222_656_000,
+            purchaseAmount: 219_600_000,
+            selectedAmount: 222_656_000,
+          }),
+          expect.objectContaining({
+            materialCode: 'VT-THEP-TAM',
+            quantity: 1,
+            kgPerUnit: 2434,
+            budgetAmount: 63_284_000,
+            proposalAmount: 64_942_909,
+            purchaseAmount: 64_046_455,
+            selectedAmount: 64_942_909,
+          }),
+        ],
+      }),
+    );
+  });
+
+  it('unlocks only budgetAmount when quantity changes on an imported line while keeping proposal/purchase/selected locked', async () => {
+    vi.mocked(materialsService.list).mockResolvedValue({
+      items: [
+        {
+          ...sampleMaterials[0],
+          materialCode: 'VT-INOX-304',
+          materialName: 'Tấm Inox 304 dày 10mm',
+          unit: 'Tấm',
+        },
+      ] as never,
+      totalCount: 1,
+      page: 1,
+      pageSize: 500,
+      totalPages: 1,
+    });
+
+    vi.mocked(purchasePlansService.importPreview).mockResolvedValue({
+      projectCode: 'DA-CRM2',
+      sheetName: 'KHMH_INOX',
+      totalRows: 1,
+      validRowCount: 1,
+      errorRowCount: 0,
+      mappedColumns: [],
+      errors: [],
+      lines: [
+        {
+          rowNumber: 2,
+          lineNo: 1,
+          isValid: true,
+          lineType: 'material',
+          materialCode: 'VT-INOX-304',
+          productName: 'Tấm Inox 304 dày 10mm',
+          unit: 'Tấm',
+          quantity: 16,
+          kgPerUnit: 194,
+          budgetUnitPrice: 58_000,
+          budgetAmount: 180_032_000,
+          proposalUnitPrice: 13_916_000,
+          proposalAmount: 222_656_000,
+          purchaseUnitPrice: 13_725_000,
+          purchaseAmount: 219_600_000,
+          selectedUnitPrice: 13_916_000,
+          selectedAmount: 222_656_000,
+          quotes: [],
+        },
+      ],
+    });
+
+    await renderModal({});
+
+    const dialog = document.body.querySelector('[role="dialog"]') as HTMLElement;
+    const projectSelect = dialog.querySelector('select[aria-label="Dự án"]') as HTMLSelectElement;
+    await act(async () => {
+      setSelectValue(projectSelect, 'DA-CRM2');
+    });
+
+    const fileInput = dialog.querySelector('input[aria-label="File Excel KHMH"]') as HTMLInputElement;
+    const excelFile = new File(['excel-bytes'], 'khmh_inox.xlsx', {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    Object.defineProperty(fileInput, 'files', { value: [excelFile], configurable: true });
+    await act(async () => {
+      fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    const importBtn = [...dialog.querySelectorAll('button')].find(
+      b => b.textContent?.trim() === 'Import',
+    ) as HTMLButtonElement;
+    await act(async () => {
+      importBtn.click();
+    });
+    await flushQueries();
+
+    // Change quantity from 16 -> 20
+    const qtyInput = dialog.querySelector('input[aria-label="Số lượng dòng 1"]') as HTMLInputElement;
+    expect(qtyInput).not.toBeNull();
+    await act(async () => {
+      setInputValue(qtyInput, '20');
+    });
+
+    const submitBtn = [...dialog.querySelectorAll('.md-dialog__footer button')].find(
+      b => b.textContent?.includes('Tạo KHMH'),
+    ) as HTMLButtonElement;
+    await act(async () => {
+      submitBtn.click();
+    });
+    await flushQueries();
+
+    expect(purchasePlansService.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        lines: [
+          expect.objectContaining({
+            materialCode: 'VT-INOX-304',
+            quantity: 20,
+            // Budget recalculated for new qty: 20 * 194 * 58_000 = 225_040_000
+            budgetAmount: 225_040_000,
+            // Proposal, purchase, selected remain locked to Excel verbatim amounts
+            proposalAmount: 222_656_000,
+            purchaseAmount: 219_600_000,
+            selectedAmount: 222_656_000,
+          }),
+        ],
+      }),
+    );
+  });
+
+  it('switches between Dùng giá Excel and Dùng giá Web tính, updating displayed totals and submitted payload with stage-isolated KG/ĐVT', async () => {
+    vi.mocked(materialsService.list).mockResolvedValue({
+      items: [
+        {
+          ...sampleMaterials[0],
+          materialCode: 'VT-INOX-304',
+          materialName: 'Tấm Inox 304 dày 10mm',
+          unit: 'Tấm',
+        },
+        {
+          ...sampleMaterials[0],
+          materialCode: 'VT-VAN-BI',
+          materialName: 'Van bi mặt bích DN100',
+          unit: 'Cái',
+        },
+      ] as never,
+      totalCount: 2,
+      page: 1,
+      pageSize: 500,
+      totalPages: 1,
+    });
+
+    vi.mocked(purchasePlansService.importPreview).mockResolvedValue({
+      projectCode: 'DA-CRM2',
+      sheetName: 'KHMH_RECONCILE',
+      totalRows: 2,
+      validRowCount: 2,
+      errorRowCount: 0,
+      mappedColumns: [],
+      errors: [],
+      lines: [
+        {
+          rowNumber: 4,
+          lineNo: 1,
+          isValid: true,
+          lineType: 'material',
+          materialCode: 'VT-INOX-304',
+          productName: 'Tấm Inox 304 dày 10mm',
+          unit: 'Tấm',
+          quantity: 16,
+          kgPerUnit: 194,
+          budgetUnitPrice: 58_000,
+          budgetAmount: 180_032_000,
+          proposalKgPerUnit: null,
+          proposalUnitPrice: 58_000,
+          proposalAmount: 180_032_000, // Excel multiplied by 194, Web computes 16 * 58.000 = 928.000
+          purchaseKgPerUnit: null,
+          purchaseUnitPrice: 13_725_000,
+          purchaseAmount: 219_600_000,
+          selectedUnitPrice: 13_725_000,
+          selectedAmount: 219_600_000,
+          quotes: [],
+        },
+        {
+          rowNumber: 5,
+          lineNo: 2,
+          isValid: true,
+          lineType: 'material',
+          materialCode: 'VT-VAN-BI',
+          productName: 'Van bi mặt bích DN100',
+          unit: 'Cái',
+          quantity: 10,
+          budgetUnitPrice: 500_000,
+          budgetAmount: 4_500_000, // Excel discounted 4.5M vs Web 10 * 500k = 5M
+          quotes: [],
+        },
+      ],
+    });
+
+    await renderModal({});
+
+    const dialog = document.body.querySelector('[role="dialog"]') as HTMLElement;
+    const projectSelect = dialog.querySelector('select[aria-label="Dự án"]') as HTMLSelectElement;
+    await act(async () => {
+      setSelectValue(projectSelect, 'DA-CRM2');
+    });
+
+    const fileInput = dialog.querySelector('input[aria-label="File Excel KHMH"]') as HTMLInputElement;
+    const excelFile = new File(['excel-bytes'], 'khmh_reconcile.xlsx', {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    Object.defineProperty(fileInput, 'files', { value: [excelFile], configurable: true });
+    await act(async () => {
+      fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    const importBtn = [...dialog.querySelectorAll('button')].find(
+      b => b.textContent?.trim() === 'Import',
+    ) as HTMLButtonElement;
+    await act(async () => {
+      importBtn.click();
+    });
+    await flushQueries();
+
+    // Reconciliation summary is visible with mismatch info
+    const reconcilePanel = dialog.querySelector('.pur-create-plan__reconcile') as HTMLElement;
+    expect(reconcilePanel).not.toBeNull();
+    expect(reconcilePanel.textContent).toContain('Lệch 2 dòng (2 mục)');
+
+    // Default mode is Dùng giá Excel
+    const tfoot = dialog.querySelector('table.pur-create-plan__table tfoot') as HTMLElement;
+    const subtotals = dialog.querySelector('.pur-create-plan__subtotals') as HTMLElement;
+    expect(tfoot.textContent).toContain(formatCurrencyFull(184_532_000));
+    expect(subtotals.textContent).toContain(`Đề xuất: ${formatCurrencyFull(180_032_000)}`);
+
+    // Switch to Dùng giá Web tính
+    const webModeBtn = [...reconcilePanel.querySelectorAll('button[role="radio"]')].find(
+      b => b.textContent?.trim() === 'Dùng giá Web tính',
+    ) as HTMLButtonElement;
+    expect(webModeBtn).toBeTruthy();
+    await act(async () => {
+      webModeBtn.click();
+    });
+
+    expect(webModeBtn.getAttribute('aria-checked')).toBe('true');
+    expect(tfoot.textContent).toContain(formatCurrencyFull(185_032_000));
+    expect(subtotals.textContent).toContain(`Đề xuất: ${formatCurrencyFull(928_000)}`);
+
+    // Also verify KG/ĐVT đề xuất & KG/ĐVT mua hàng inputs exist inside expanded detail row
+    const expandBtn = dialog.querySelector('button[aria-label="Mở chi tiết"]') as HTMLButtonElement;
+    await act(async () => {
+      expandBtn.click();
+    });
+    expect(dialog.querySelector('input[aria-label="KG/ĐVT đề xuất"]')).not.toBeNull();
+    expect(dialog.querySelector('input[aria-label="KG/ĐVT mua hàng"]')).not.toBeNull();
+
+    // Submit while in Web mode -> payload carries Web-calculated amounts
+    const submitBtn = [...dialog.querySelectorAll('.md-dialog__footer button')].find(
+      b => b.textContent?.includes('Tạo KHMH'),
+    ) as HTMLButtonElement;
+    await act(async () => {
+      submitBtn.click();
+    });
+    await flushQueries();
+
+    expect(purchasePlansService.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        projectCode: 'DA-CRM2',
+        lines: [
+          expect.objectContaining({
+            materialCode: 'VT-INOX-304',
+            budgetAmount: 180_032_000,
+            proposalAmount: 928_000,
+            purchaseAmount: 219_600_000,
+            selectedAmount: 219_600_000,
+          }),
+          expect.objectContaining({
+            materialCode: 'VT-VAN-BI',
+            budgetAmount: 5_000_000,
+          }),
+        ],
+      }),
+    );
   });
 });

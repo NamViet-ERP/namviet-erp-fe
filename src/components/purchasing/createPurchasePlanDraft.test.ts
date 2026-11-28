@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+  computeWebStageAmount,
   currencyToDraft,
   emptyLine,
   fromExistingPlanLines,
   fromPreviewLines,
   lineAmount,
+  resolveDraftStageAmount,
   toApiLines,
 } from './createPurchasePlanDraft';
 import type { PurchasePlanLineApiDto } from '../../types/api/purchasingApi';
@@ -117,6 +119,7 @@ describe('createPurchasePlanDraft', () => {
       ]);
 
       expect(drafts).toHaveLength(1);
+      expect(drafts[0].excelRowNumber).toBe(2);
       expect(drafts[0].materialCode).toBe('VT-001');
       expect(drafts[0].productName).toBe('Thép tấm A515');
       expect(drafts[0].quantity).toBe('1');
@@ -244,7 +247,9 @@ describe('createPurchasePlanDraft', () => {
           quantity: '2',
           kgPerUnit: '1000',
           budgetUnitPrice: '25000',
+          proposalKgPerUnit: '1000',
           proposalUnitPrice: '26000',
+          purchaseKgPerUnit: '1000',
           purchaseUnitPrice: '25500',
           selectedUnitPrice: '25500',
         },
@@ -369,6 +374,339 @@ describe('createPurchasePlanDraft', () => {
           amount: 38000.8,
         },
       ]);
+    });
+
+    it('preserves exact Inox 304 Excel amounts on import round-trip without multiplying by kgPerUnit', () => {
+      const drafts = fromPreviewLines([
+        {
+          rowNumber: 5,
+          lineNo: 1,
+          isValid: true,
+          lineType: 'material',
+          materialCode: 'VT-INOX-304',
+          productName: 'Tấm Inox 304 dày 10mm',
+          unit: 'Tấm',
+          quantity: 16,
+          kgPerUnit: 194,
+          statusNote: 'Đã duyệt mẫu',
+          budgetUnitPrice: 928_000,
+          budgetAmount: 180_032_000,
+          proposalKgPerUnit: 194,
+          proposalUnitPrice: 13_916_000,
+          proposalAmount: 222_656_000,
+          proposalSupplierName: 'Công ty Inox Nam Phát',
+          proposalNote: 'Giá đã gồm cắt CNC',
+          proposalStatus: 'Đã trình',
+          orderedDate: '2026-11-12T00:00:00Z',
+          deliveryNote: 'Giao tại xưởng Bình Dương',
+          purchaseKgPerUnit: 194,
+          purchaseUnitPrice: 13_725_000,
+          purchaseAmount: 219_600_000,
+          purchaseSupplierName: 'Công ty Inox Nam Phát',
+          purchaseNote: 'Chiết khấu 1.4%',
+          selectedUnitPrice: 13_916_000,
+          selectedAmount: 222_656_000,
+          selectedSupplierName: 'Công ty Inox Nam Phát',
+          quotes: [],
+        },
+      ]);
+
+      expect(drafts[0].lockBudgetAmount).toBe(true);
+      expect(drafts[0].lockProposalAmount).toBe(true);
+      expect(drafts[0].lockPurchaseAmount).toBe(true);
+      expect(drafts[0].lockSelectedAmount).toBe(true);
+
+      const apiLines = toApiLines(drafts);
+      expect(apiLines).toHaveLength(1);
+      expect(apiLines[0].budgetAmount).toBe(180_032_000);
+      expect(apiLines[0].proposalAmount).toBe(222_656_000);
+      expect(apiLines[0].purchaseAmount).toBe(219_600_000);
+      expect(apiLines[0].selectedAmount).toBe(222_656_000);
+      expect(apiLines[0].statusNote).toBe('Đã duyệt mẫu');
+      expect(apiLines[0].proposalKgPerUnit).toBe(194);
+      expect(apiLines[0].proposalNote).toBe('Giá đã gồm cắt CNC');
+      expect(apiLines[0].proposalStatus).toBe('Đã trình');
+      expect(apiLines[0].orderedDate).toBe('2026-11-12');
+      expect(apiLines[0].deliveryNote).toBe('Giao tại xưởng Bình Dương');
+      expect(apiLines[0].purchaseKgPerUnit).toBe(194);
+      expect(apiLines[0].purchaseNote).toBe('Chiết khấu 1.4%');
+    });
+
+    it('preserves lump-sum, blank (null), and explicit 0 Excel amounts verbatim', () => {
+      const drafts = fromPreviewLines([
+        {
+          rowNumber: 6,
+          lineNo: 1,
+          isValid: true,
+          lineType: 'material',
+          materialCode: 'VT-TRON-GOI',
+          productName: 'Bu lông neo M24 trọn gói',
+          unit: 'Bộ',
+          quantity: 60,
+          budgetAmount: 0,
+          proposalUnitPrice: 1_345_300,
+          proposalAmount: 1_345_300,
+          quotes: [],
+        },
+        {
+          rowNumber: 7,
+          lineNo: 2,
+          isValid: true,
+          lineType: 'material',
+          materialCode: 'VT-BO-TRONG-TT',
+          productName: 'Thép tấm không nhập thành tiền đề xuất',
+          unit: 'Tấm',
+          quantity: 4,
+          kgPerUnit: 250,
+          proposalUnitPrice: 26_818.18,
+          proposalAmount: null,
+          quotes: [],
+        },
+      ]);
+
+      const apiLines = toApiLines(drafts);
+      expect(apiLines).toHaveLength(2);
+      expect(apiLines[0].budgetAmount).toBe(0);
+      expect(apiLines[0].proposalAmount).toBe(1_345_300);
+      expect(apiLines[1].proposalUnitPrice).toBe(26_818.18);
+      expect(apiLines[1].proposalAmount).toBeNull();
+    });
+
+    it('preserves stored amounts and metadata verbatim on edit round-trip via fromExistingPlanLines', () => {
+      const existing: PurchasePlanLineApiDto[] = [
+        {
+          id: 707,
+          lineNo: 1,
+          lineType: 'material',
+          materialCode: 'VT-INOX-304',
+          productName: 'Tấm Inox 304 dày 10mm',
+          unit: 'Tấm',
+          quantity: 16,
+          kgPerUnit: 194,
+          statusNote: 'Đã ký PO',
+          budgetUnitPrice: 928_000,
+          budgetAmount: 180_032_000,
+          proposalKgPerUnit: 194,
+          proposalUnitPrice: 13_916_000,
+          proposalAmount: 222_656_000,
+          proposalNote: 'Trọn gói 16 tấm',
+          proposalStatus: 'Duyệt',
+          orderedDate: '2026-11-15T00:00:00Z',
+          deliveryNote: 'Xe tải 5 tấn',
+          purchaseKgPerUnit: 194,
+          purchaseUnitPrice: 13_725_000,
+          purchaseAmount: 219_600_000,
+          purchaseNote: 'Bao vận chuyển',
+          selectedUnitPrice: 13_916_000,
+          selectedAmount: 222_656_000,
+          orderedQty: 0,
+          receivedQty: 0,
+          defectQty: 0,
+          remainingOrderableQty: 16,
+          quotes: [
+            {
+              id: 1,
+              sortOrder: 1,
+              kgPerUnit: 194,
+              unitPrice: 13_916_000,
+              amount: 222_656_000,
+              supplierName: 'Công ty Inox Nam Phát',
+              note: 'Giao 3 ngày',
+              status: 'Chọn',
+            },
+          ],
+        },
+      ];
+
+      const drafts = fromExistingPlanLines(existing);
+      const apiLines = toApiLines(drafts);
+      expect(apiLines).toHaveLength(1);
+      expect(apiLines[0].budgetAmount).toBe(180_032_000);
+      expect(apiLines[0].proposalAmount).toBe(222_656_000);
+      expect(apiLines[0].purchaseAmount).toBe(219_600_000);
+      expect(apiLines[0].selectedAmount).toBe(222_656_000);
+      expect(apiLines[0].statusNote).toBe('Đã ký PO');
+      expect(apiLines[0].proposalNote).toBe('Trọn gói 16 tấm');
+      expect(apiLines[0].proposalStatus).toBe('Duyệt');
+      expect(apiLines[0].orderedDate).toBe('2026-11-15');
+      expect(apiLines[0].deliveryNote).toBe('Xe tải 5 tấn');
+      expect(apiLines[0].purchaseNote).toBe('Bao vận chuyển');
+      expect(apiLines[0].quotes).toEqual([
+        {
+          sortOrder: 1,
+          kgPerUnit: 194,
+          unitPrice: 13_916_000,
+          amount: 222_656_000,
+          supplierName: 'Công ty Inox Nam Phát',
+          note: 'Giao 3 ngày',
+          status: 'Chọn',
+        },
+      ]);
+    });
+
+    it('preserves quote kgPerUnit, note, status, and amount even when unitPrice and supplierName are blank', () => {
+      const drafts = fromPreviewLines([
+        {
+          rowNumber: 9,
+          lineNo: 1,
+          isValid: true,
+          lineType: 'material',
+          materialCode: 'VT-QUOTE-01',
+          productName: 'Thép hình I200',
+          unit: 'Cây',
+          quantity: 10,
+          quotes: [
+            {
+              sortOrder: 1,
+              kgPerUnit: 21.3,
+              unitPrice: null,
+              amount: 45_000_000,
+              supplierName: null,
+              note: 'Báo giá trọn lô',
+              status: 'Chờ duyệt',
+            },
+          ],
+        },
+      ]);
+
+      const apiLines = toApiLines(drafts);
+      expect(apiLines[0].quotes).toEqual([
+        {
+          sortOrder: 1,
+          kgPerUnit: 21.3,
+          unitPrice: null,
+          amount: 45_000_000,
+          supplierName: null,
+          note: 'Báo giá trọn lô',
+          status: 'Chờ duyệt',
+        },
+      ]);
+    });
+  });
+
+  describe('resolveDraftStageAmount', () => {
+    it('returns stored amount verbatim when locked and computes via lineAmount when unlocked', () => {
+      const manual = {
+        ...emptyLine(),
+        quantity: '2',
+        kgPerUnit: '100',
+        budgetUnitPrice: '25000',
+        proposalKgPerUnit: '50',
+        proposalUnitPrice: '30000',
+      };
+      expect(resolveDraftStageAmount(manual, 'budget')).toBe(5_000_000);
+      expect(resolveDraftStageAmount(manual, 'proposal')).toBe(3_000_000);
+      expect(resolveDraftStageAmount(manual, 'purchase')).toBeNull();
+
+      const lockedZero = {
+        ...manual,
+        lockBudgetAmount: true,
+        budgetAmount: '0',
+      };
+      expect(resolveDraftStageAmount(lockedZero, 'budget')).toBe(0);
+
+      const lockedBlank = {
+        ...manual,
+        lockProposalAmount: true,
+        proposalAmount: '',
+      };
+      expect(resolveDraftStageAmount(lockedBlank, 'proposal')).toBeNull();
+    });
+
+    it('isolates KG/ĐVT per stage so proposal/purchase/selected never inherit budget kgPerUnit', () => {
+      // Tấm Inox 304: Dự toán tính theo KG (16 × 194 × 58.000 = 180.032.000),
+      // Đề xuất & Mua hàng tính theo Tấm (KG/ĐVT nhóm trống -> SL × ĐG, không nhân 194)
+      const inoxLine = {
+        ...emptyLine(),
+        materialCode: 'VT-INOX-304',
+        productName: 'Tấm Inox 304 dày 10mm',
+        unit: 'Tấm',
+        quantity: '16',
+        kgPerUnit: '194',
+        budgetUnitPrice: '58000',
+        proposalKgPerUnit: '',
+        proposalUnitPrice: '13916000',
+        purchaseKgPerUnit: '',
+        purchaseUnitPrice: '13725000',
+        selectedUnitPrice: '13916000',
+      };
+
+      expect(computeWebStageAmount(inoxLine, 'budget')).toBe(180_032_000);
+      expect(computeWebStageAmount(inoxLine, 'proposal')).toBe(222_656_000);
+      expect(computeWebStageAmount(inoxLine, 'purchase')).toBe(219_600_000);
+      expect(computeWebStageAmount(inoxLine, 'selected')).toBe(222_656_000);
+    });
+
+    it('uses steel plate stage KG/ĐVT cleanly and resolves selected KG from purchaseKgPerUnit || proposalKgPerUnit only', () => {
+      const steelPlate = {
+        ...emptyLine(),
+        materialCode: 'VT-THEP-TAM',
+        productName: 'Thép tấm A515 dày 20mm',
+        unit: 'Tấm',
+        quantity: '1',
+        kgPerUnit: '2434',
+        budgetUnitPrice: '26000',
+        proposalKgPerUnit: '2434',
+        proposalUnitPrice: '26681.56',
+        purchaseKgPerUnit: '',
+        purchaseUnitPrice: '64046455',
+        selectedUnitPrice: '26681.56',
+      };
+
+      expect(computeWebStageAmount(steelPlate, 'budget')).toBe(63_284_000);
+      expect(computeWebStageAmount(steelPlate, 'proposal')).toBe(64_942_917.04);
+      expect(computeWebStageAmount(steelPlate, 'purchase')).toBe(64_046_455);
+      // selected falls back to proposalKgPerUnit (2434), never to budget kgPerUnit
+      expect(computeWebStageAmount(steelPlate, 'selected')).toBe(64_942_917.04);
+
+      const purchaseOverridesProposalKg = {
+        ...steelPlate,
+        purchaseKgPerUnit: '2500',
+        selectedUnitPrice: '26000',
+      };
+      expect(computeWebStageAmount(purchaseOverridesProposalKg, 'selected')).toBe(65_000_000);
+    });
+
+    it('switches between excel verbatim and web computed amounts cleanly in resolveDraftStageAmount and toApiLines', () => {
+      const drafts = fromPreviewLines([
+        {
+          rowNumber: 12,
+          lineNo: 1,
+          isValid: true,
+          lineType: 'material',
+          materialCode: 'VT-INOX-304',
+          productName: 'Tấm Inox 304',
+          unit: 'Tấm',
+          quantity: 16,
+          kgPerUnit: 194,
+          budgetUnitPrice: 58_000,
+          budgetAmount: 180_032_000,
+          proposalKgPerUnit: null,
+          proposalUnitPrice: 58_000,
+          proposalAmount: 180_032_000, // Excel multiplied by 194 even though proposalKgPerUnit was blank
+          purchaseKgPerUnit: null,
+          purchaseUnitPrice: 13_725_000,
+          purchaseAmount: 219_600_000,
+          selectedUnitPrice: 13_916_000,
+          selectedAmount: 222_656_000,
+          quotes: [],
+        },
+      ]);
+
+      expect(drafts[0].excelRowNumber).toBe(12);
+      // Default / 'excel' mode keeps Excel proposalAmount verbatim
+      expect(resolveDraftStageAmount(drafts[0], 'proposal', 'excel')).toBe(180_032_000);
+      // 'web' mode computes SL × ĐG = 16 × 58.000 = 928.000 because proposalKgPerUnit is missing
+      expect(resolveDraftStageAmount(drafts[0], 'proposal', 'web')).toBe(928_000);
+
+      const excelPayload = toApiLines(drafts, 'excel');
+      expect(excelPayload[0].proposalAmount).toBe(180_032_000);
+
+      const webPayload = toApiLines(drafts, 'web');
+      expect(webPayload[0].budgetAmount).toBe(180_032_000);
+      expect(webPayload[0].proposalAmount).toBe(928_000);
+      expect(webPayload[0].purchaseAmount).toBe(219_600_000);
+      expect(webPayload[0].selectedAmount).toBe(222_656_000);
     });
   });
 });

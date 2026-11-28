@@ -1,12 +1,15 @@
+import { useMemo } from 'react';
 import { Plus } from 'lucide-react';
 import Button from '../../../components/ui/Button';
 import Dropdown from '../../../components/ui/Dropdown';
 import SelectField from '../../../components/ui/SelectField';
 import TableShell from '../../../components/ui/TableShell';
 import type { ListPageSize } from '../../../constants/pagination';
+import { buildSupplierGroupTree } from '../../../lib/suppliers/supplierGroupTree';
 import { SUPPLIER_APPROVAL } from '../../../lib/suppliers/supplierStatus';
 import { WMS_ERROR } from '../../../lib/wms/messages';
 import type { DropdownItem } from '../../../types';
+import type { SupplierGroupApiDto } from '../../../types/api/supplierDirectoryApi';
 import { formatCurrencyFull } from '../../../utils/formatCurrency';
 import {
   ApprovalStatusBadge,
@@ -23,8 +26,8 @@ interface SuppliersFilterBarProps {
   statusFilter: string;
   onStatusFilterChange: (value: string) => void;
   groupIdFromUrl?: number;
-  filteredGroupName?: string;
-  onClearGroupFilter: () => void;
+  groupOptions: SupplierGroupApiDto[];
+  onGroupFilterChange: (groupId?: number) => void;
 }
 
 export function SuppliersFilterBar({
@@ -33,9 +36,21 @@ export function SuppliersFilterBar({
   statusFilter,
   onStatusFilterChange,
   groupIdFromUrl,
-  filteredGroupName,
-  onClearGroupFilter,
+  groupOptions,
+  onGroupFilterChange,
 }: SuppliersFilterBarProps) {
+  const groupSelectOptions = useMemo(() => {
+    const tree = buildSupplierGroupTree(groupOptions);
+    const opts: { value: string; label: string }[] = [];
+    for (const node of tree) {
+      opts.push({ value: String(node.group.id), label: node.group.name });
+      for (const child of node.children) {
+        opts.push({ value: String(child.id), label: `↳ ${child.name}` });
+      }
+    }
+    return opts;
+  }, [groupOptions]);
+
   return (
     <div className="ncc-master-filters">
       <SelectField
@@ -62,15 +77,16 @@ export function SuppliersFilterBar({
         ]}
         onChange={onStatusFilterChange}
       />
-      {groupIdFromUrl ? (
-        <button
-          type="button"
-          className="hrm-filter-reset"
-          onClick={onClearGroupFilter}
-        >
-          Nhóm: {filteredGroupName ?? `#${groupIdFromUrl}`}
-        </button>
-      ) : null}
+      <SelectField
+        variant="hrm"
+        className="hrm-filter-select-wrap"
+        selectClassName="hrm-filter-select"
+        aria-label="Nhóm ngành hàng"
+        placeholder="Tất cả nhóm ngành hàng"
+        value={groupIdFromUrl ? String(groupIdFromUrl) : ''}
+        options={groupSelectOptions}
+        onChange={val => onGroupFilterChange(val ? Number(val) : undefined)}
+      />
     </div>
   );
 }

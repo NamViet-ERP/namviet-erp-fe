@@ -4965,6 +4965,8 @@ export interface paths {
                     kieu?: string;
                     categoryId?: number;
                     includeInactive?: boolean;
+                    all?: boolean;
+                    status?: string;
                 };
                 header?: never;
                 path?: never;
@@ -5011,6 +5013,89 @@ export interface paths {
             };
         };
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/materials/by-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    code?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["MaterialDto"];
+                        "application/json": components["schemas"]["MaterialDto"];
+                        "text/json": components["schemas"]["MaterialDto"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: {
+                    code?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpsertMaterialRequest"];
+                    "text/json": components["schemas"]["UpsertMaterialRequest"];
+                    "application/*+json": components["schemas"]["UpsertMaterialRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: {
+                    code?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -5219,7 +5304,9 @@ export interface paths {
         put?: never;
         post: {
             parameters: {
-                query?: never;
+                query?: {
+                    sheetName?: string;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -5295,6 +5382,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/warehouse/materials/actions/discontinue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: {
+                    code?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/warehouse/materials/{code}/discontinue": {
         parameters: {
             query?: never;
@@ -5330,6 +5452,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/warehouse/materials/actions/reactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: {
+                    code?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/warehouse/materials/{code}/reactivate": {
         parameters: {
             query?: never;
@@ -5346,6 +5503,76 @@ export interface paths {
                 path: {
                     code: string;
                 };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/materials/clear-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ClearAllMaterialsResultDto"];
+                        "application/json": components["schemas"]["ClearAllMaterialsResultDto"];
+                        "text/json": components["schemas"]["ClearAllMaterialsResultDto"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/materials/actions/cleanup-false-specs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
                 cookie?: never;
             };
             requestBody?: never;
@@ -5486,6 +5713,126 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/material-units/import-template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/material-units/parse-import-file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["MaterialUnitImportParseResultDto"];
+                        "application/json": components["schemas"]["MaterialUnitImportParseResultDto"];
+                        "text/json": components["schemas"]["MaterialUnitImportParseResultDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/material-units/import-batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["MaterialUnitImportBatchRequest"];
+                    "text/json": components["schemas"]["MaterialUnitImportBatchRequest"];
+                    "application/*+json": components["schemas"]["MaterialUnitImportBatchRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["MaterialUnitImportResultDto"];
+                        "application/json": components["schemas"]["MaterialUnitImportResultDto"];
+                        "text/json": components["schemas"]["MaterialUnitImportResultDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -9974,6 +10321,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/purchasing/markup-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PriceBookMarkupSettingsDto"];
+                        "application/json": components["schemas"]["PriceBookMarkupSettingsDto"];
+                        "text/json": components["schemas"]["PriceBookMarkupSettingsDto"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdatePriceBookMarkupSettingsRequest"];
+                    "text/json": components["schemas"]["UpdatePriceBookMarkupSettingsRequest"];
+                    "application/*+json": components["schemas"]["UpdatePriceBookMarkupSettingsRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PriceBookMarkupSettingsDto"];
+                        "application/json": components["schemas"]["PriceBookMarkupSettingsDto"];
+                        "text/json": components["schemas"]["PriceBookMarkupSettingsDto"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/purchasing/rfq-quotes": {
         parameters: {
             query?: never;
@@ -11528,6 +11939,360 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/purchasing/service-categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ServiceExpenseCategoryDto"][];
+                        "application/json": components["schemas"]["ServiceExpenseCategoryDto"][];
+                        "text/json": components["schemas"]["ServiceExpenseCategoryDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/service-items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                    search?: string;
+                    type?: string;
+                    isActive?: boolean;
+                    all?: boolean;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ServiceExpenseItemPagedResponse"];
+                        "application/json": components["schemas"]["ServiceExpenseItemPagedResponse"];
+                        "text/json": components["schemas"]["ServiceExpenseItemPagedResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateServiceExpenseItemRequest"];
+                    "text/json": components["schemas"]["CreateServiceExpenseItemRequest"];
+                    "application/*+json": components["schemas"]["CreateServiceExpenseItemRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ServiceExpenseItemDto"];
+                        "application/json": components["schemas"]["ServiceExpenseItemDto"];
+                        "text/json": components["schemas"]["ServiceExpenseItemDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/service-items/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ServiceExpenseItemDto"];
+                        "application/json": components["schemas"]["ServiceExpenseItemDto"];
+                        "text/json": components["schemas"]["ServiceExpenseItemDto"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateServiceExpenseItemRequest"];
+                    "text/json": components["schemas"]["UpdateServiceExpenseItemRequest"];
+                    "application/*+json": components["schemas"]["UpdateServiceExpenseItemRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ServiceExpenseItemDto"];
+                        "application/json": components["schemas"]["ServiceExpenseItemDto"];
+                        "text/json": components["schemas"]["ServiceExpenseItemDto"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/service-items/{id}/toggle-active": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ServiceExpenseItemDto"];
+                        "application/json": components["schemas"]["ServiceExpenseItemDto"];
+                        "text/json": components["schemas"]["ServiceExpenseItemDto"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/purchasing/service-items/import-template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/service-items/parse-import-file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ServiceExpenseImportParseResultDto"];
+                        "application/json": components["schemas"]["ServiceExpenseImportParseResultDto"];
+                        "text/json": components["schemas"]["ServiceExpenseImportParseResultDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/service-items/import-batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ServiceExpenseImportBatchRequest"];
+                    "text/json": components["schemas"]["ServiceExpenseImportBatchRequest"];
+                    "application/*+json": components["schemas"]["ServiceExpenseImportBatchRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ServiceExpenseImportResultDto"];
+                        "application/json": components["schemas"]["ServiceExpenseImportResultDto"];
+                        "text/json": components["schemas"]["ServiceExpenseImportResultDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/settings/{section}": {
         parameters: {
             query?: never;
@@ -11619,6 +12384,131 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stock/admin/opening-balance/template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stock/admin/opening-balance/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: {
+                    projectCode?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["OpeningStockPreviewResponseDto"];
+                        "application/json": components["schemas"]["OpeningStockPreviewResponseDto"];
+                        "text/json": components["schemas"]["OpeningStockPreviewResponseDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stock/admin/opening-balance/import-excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: {
+                    projectCode?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["OpeningStockImportResultDto"];
+                        "application/json": components["schemas"]["OpeningStockImportResultDto"];
+                        "text/json": components["schemas"]["OpeningStockImportResultDto"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -12629,6 +13519,127 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/warehouse/suppliers/sourcing-kpi": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SourcingKpiSummaryDto"];
+                        "application/json": components["schemas"]["SourcingKpiSummaryDto"];
+                        "text/json": components["schemas"]["SourcingKpiSummaryDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/suppliers/{id}/tier-evaluation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SubmitTierEvaluationRequest"];
+                    "text/json": components["schemas"]["SubmitTierEvaluationRequest"];
+                    "application/*+json": components["schemas"]["SubmitTierEvaluationRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierTierEvaluationDto"];
+                        "application/json": components["schemas"]["SupplierTierEvaluationDto"];
+                        "text/json": components["schemas"]["SupplierTierEvaluationDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/suppliers/{id}/grade-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierTierEvaluationDto"][];
+                        "application/json": components["schemas"]["SupplierTierEvaluationDto"][];
+                        "text/json": components["schemas"]["SupplierTierEvaluationDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/warehouse/suppliers": {
         parameters: {
             query?: never;
@@ -12732,6 +13743,131 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/suppliers/template-excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/suppliers/preview-excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: {
+                    sheetName?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierImportPreviewResponseDto"];
+                        "application/json": components["schemas"]["SupplierImportPreviewResponseDto"];
+                        "text/json": components["schemas"]["SupplierImportPreviewResponseDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/suppliers/import-excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: {
+                    sheetName?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierImportResultDto"];
+                        "application/json": components["schemas"]["SupplierImportResultDto"];
+                        "text/json": components["schemas"]["SupplierImportResultDto"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -12996,6 +14132,149 @@ export interface paths {
                         "application/json": components["schemas"]["SupplierDto"];
                         "text/json": components["schemas"]["SupplierDto"];
                     };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/suppliers/{id}/attachments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierAttachmentDto"][];
+                        "application/json": components["schemas"]["SupplierAttachmentDto"][];
+                        "text/json": components["schemas"]["SupplierAttachmentDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file?: string;
+                        /** @default other */
+                        docType?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierAttachmentDto"];
+                        "application/json": components["schemas"]["SupplierAttachmentDto"];
+                        "text/json": components["schemas"]["SupplierAttachmentDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/suppliers/{id}/attachments/{attachmentId}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                    attachmentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse/suppliers/{id}/attachments/{attachmentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                    attachmentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
                 };
             };
         };
@@ -14138,6 +15417,15 @@ export interface components {
             /** Format: int32 */
             readonly totalPages: number;
         };
+        ClearAllMaterialsResultDto: {
+            /** Format: int32 */
+            totalProcessed: number;
+            /** Format: int32 */
+            hardDeleted: number;
+            /** Format: int32 */
+            softDeleted: number;
+            message: string;
+        };
         ClosePurchaseWarrantyClaimRequest: {
             /** Format: int32 */
             serviceRating: number;
@@ -14426,11 +15714,12 @@ export interface components {
             status?: string | null;
         };
         CreatePurchasePlanLineRequest: {
-            materialCode: string;
+            materialCode?: string | null;
             productName: string;
             unit: string;
             /** Format: double */
             quantity: number;
+            lineType?: string | null;
             systemName?: string | null;
             category?: string | null;
             spec?: string | null;
@@ -14476,6 +15765,7 @@ export interface components {
             selectedSupplierName?: string | null;
             selectionReason?: string | null;
             quotes?: components["schemas"]["CreatePurchasePlanLineQuoteRequest"][] | null;
+            description?: string | null;
         };
         CreatePurchasePlanRequest: {
             projectCode: string;
@@ -14517,6 +15807,18 @@ export interface components {
             status: string;
             /** Format: int32 */
             departmentId?: number | null;
+        };
+        CreateServiceExpenseItemRequest: {
+            code: string;
+            name: string;
+            type: string;
+            unit: string;
+            /** Format: double */
+            referencePrice?: number | null;
+            description?: string | null;
+            isActive: boolean;
+            /** Format: int32 */
+            sortOrder: number;
         };
         CreateStocktakeDto: {
             voucherCode?: string | null;
@@ -14982,6 +16284,8 @@ export interface components {
             errorRowCount: number;
             rows: components["schemas"]["MaterialImportRowDto"][];
             errors: components["schemas"]["MaterialImportErrorDto"][];
+            availableSheets?: string[] | null;
+            selectedSheet?: string | null;
         };
         MaterialImportResultDto: {
             /** Format: int32 */
@@ -15046,8 +16350,93 @@ export interface components {
             sortOrder: number;
             isActive: boolean;
         };
+        MaterialUnitImportBatchRequest: {
+            rows: components["schemas"]["MaterialUnitImportRowDto"][];
+            overwriteExisting: boolean;
+        };
+        MaterialUnitImportErrorDto: {
+            /** Format: int32 */
+            rowNumber: number;
+            field: string;
+            message: string;
+        };
+        MaterialUnitImportParseResultDto: {
+            /** Format: int32 */
+            totalRows: number;
+            /** Format: int32 */
+            validRowCount: number;
+            /** Format: int32 */
+            existingRowCount: number;
+            /** Format: int32 */
+            errorRowCount: number;
+            rows: components["schemas"]["MaterialUnitImportRowDto"][];
+            errors: components["schemas"]["MaterialUnitImportErrorDto"][];
+        };
+        MaterialUnitImportResultDto: {
+            /** Format: int32 */
+            createdCount: number;
+            /** Format: int32 */
+            updatedCount: number;
+            /** Format: int32 */
+            skippedCount: number;
+            /** Format: int32 */
+            totalProcessed: number;
+            importedNames: string[];
+            errors: string[];
+        };
+        MaterialUnitImportRowDto: {
+            /** Format: int32 */
+            rowNumber: number;
+            name: string;
+            /** Format: int32 */
+            sortOrder: number;
+            isActive: boolean;
+            note?: string | null;
+            isValid: boolean;
+            errorMessage?: string | null;
+            isExisting: boolean;
+        };
         NextProjectCodeResponse: {
             projectCode: string;
+        };
+        OpeningStockImportResultDto: {
+            ticketCode: string;
+            /** Format: int32 */
+            totalItems: number;
+            /** Format: double */
+            totalQty: number;
+            /** Format: double */
+            totalAmount: number;
+            message: string;
+            /** Format: int32 */
+            skippedCount: number;
+        };
+        OpeningStockItemPreviewDto: {
+            materialCode: string;
+            materialName: string;
+            unit: string;
+            /** Format: double */
+            qty: number;
+            /** Format: double */
+            unitPrice: number;
+            /** Format: double */
+            totalAmount: number;
+            note?: string | null;
+            isValid: boolean;
+            error?: string | null;
+        };
+        OpeningStockPreviewResponseDto: {
+            /** Format: int32 */
+            totalRows: number;
+            /** Format: int32 */
+            validRows: number;
+            /** Format: int32 */
+            errorRows: number;
+            /** Format: double */
+            totalQty: number;
+            /** Format: double */
+            totalAmount: number;
+            items: components["schemas"]["OpeningStockItemPreviewDto"][];
         };
         PermissionCatalogEntryDto: {
             key: string;
@@ -15223,6 +16612,24 @@ export interface components {
             marginPct?: number | null;
             /** Format: int32 */
             sellHistoryCount: number;
+        };
+        PriceBookMarkupCategoryDto: {
+            id: string;
+            name: string;
+            /** Format: double */
+            percent: number;
+            note?: string | null;
+        };
+        PriceBookMarkupSettingsDto: {
+            /** Format: double */
+            globalMarkupPercent: number;
+            categories: components["schemas"]["PriceBookMarkupCategoryDto"][];
+            itemOverrides: {
+                [key: string]: number;
+            };
+            /** Format: date-time */
+            updatedAt?: string | null;
+            updatedBy?: string | null;
         };
         PriceBookMatrixCellDto: {
             /** Format: int32 */
@@ -15940,6 +17347,7 @@ export interface components {
             createdByName?: string | null;
             lines: components["schemas"]["PurchaseOrderLineDto"][];
             installments: components["schemas"]["PurchaseOrderInstallmentDto"][];
+            supplierTaxCode?: string | null;
         };
         PurchaseOrderDto: {
             code: string;
@@ -16208,7 +17616,7 @@ export interface components {
             lineNo: number;
             systemName?: string | null;
             category?: string | null;
-            materialCode: string;
+            materialCode?: string | null;
             productName: string;
             spec?: string | null;
             unit: string;
@@ -16257,6 +17665,8 @@ export interface components {
             selectionReason?: string | null;
             quotes: components["schemas"]["PurchasePlanImportQuotePreviewDto"][];
             isValid: boolean;
+            lineType: string;
+            description?: string | null;
         };
         PurchasePlanImportPreviewDto: {
             projectCode: string;
@@ -16348,6 +17758,8 @@ export interface components {
             remainingOrderableQty: number;
             quotes: components["schemas"]["PurchasePlanLineQuoteDto"][];
             pos?: components["schemas"]["PurchasePlanLinePoDto"][] | null;
+            lineType: string;
+            description?: string | null;
         };
         PurchasePlanLinePoDto: {
             poCode: string;
@@ -16847,11 +18259,120 @@ export interface components {
             roleCode: string;
             permissions: string[];
         };
+        ServiceExpenseCategoryDto: {
+            /** Format: int32 */
+            id: number;
+            code: string;
+            name: string;
+            description?: string | null;
+            /** Format: int32 */
+            sortOrder: number;
+            isActive: boolean;
+        };
+        ServiceExpenseImportBatchRequest: {
+            rows: components["schemas"]["ServiceExpenseImportRowDto"][];
+            overwriteExisting: boolean;
+        };
+        ServiceExpenseImportParseResultDto: {
+            /** Format: int32 */
+            totalRows: number;
+            /** Format: int32 */
+            validRows: number;
+            /** Format: int32 */
+            errorRows: number;
+            /** Format: int32 */
+            existingRows: number;
+            rows: components["schemas"]["ServiceExpenseImportRowDto"][];
+            /** Format: int32 */
+            readonly validRowCount: number;
+            /** Format: int32 */
+            readonly errorRowCount: number;
+            /** Format: int32 */
+            readonly existingRowCount: number;
+        };
+        ServiceExpenseImportResultDto: {
+            /** Format: int32 */
+            totalProcessed: number;
+            /** Format: int32 */
+            insertedCount: number;
+            /** Format: int32 */
+            updatedCount: number;
+            /** Format: int32 */
+            skippedCount: number;
+            errors: string[];
+            /** Format: int32 */
+            readonly createdCount: number;
+        };
+        ServiceExpenseImportRowDto: {
+            /** Format: int32 */
+            rowNumber: number;
+            code: string;
+            name: string;
+            type: string;
+            unit: string;
+            /** Format: double */
+            referencePrice?: number | null;
+            description?: string | null;
+            isValid: boolean;
+            errorMessage?: string | null;
+            isExisting: boolean;
+            readonly errors: string[];
+            readonly warnings: string[];
+        };
+        ServiceExpenseItemDto: {
+            /** Format: int32 */
+            id: number;
+            code: string;
+            name: string;
+            type: string;
+            unit: string;
+            /** Format: double */
+            referencePrice?: number | null;
+            description?: string | null;
+            isActive: boolean;
+            /** Format: int32 */
+            sortOrder: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        ServiceExpenseItemPagedResponse: {
+            items: components["schemas"]["ServiceExpenseItemDto"][];
+            /** Format: int32 */
+            total: number;
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalPages: number;
+        };
         SetSupplierGroupMembersRequest: {
             supplierIds: number[];
         };
         SetSupplierGroupsRequest: {
             groupIds: number[];
+        };
+        SourcingKpiSummaryDto: {
+            /** Format: int32 */
+            totalSuppliers: number;
+            /** Format: int32 */
+            totalNewThisMonth: number;
+            /** Format: int32 */
+            totalPromotedThisMonth: number;
+            /** Format: int32 */
+            gradeACount: number;
+            /** Format: int32 */
+            gradeBCount: number;
+            /** Format: int32 */
+            gradeCCount: number;
+            /** Format: int32 */
+            gradeDCount: number;
+            /** Format: int32 */
+            otherGradeCount: number;
+            /** Format: double */
+            promotionRatePercent: number;
         };
         StockDefectLinePreviewDto: {
             materialCode: string;
@@ -16927,6 +18448,35 @@ export interface components {
             preparerName: string;
             lines: components["schemas"]["PurchaseEstimateLineInput"][];
             proposals?: components["schemas"]["PurchaseEstimateProposalInput"][] | null;
+        };
+        SubmitTierEvaluationRequest: {
+            /** Format: double */
+            priceScore: number;
+            /** Format: double */
+            profileScore: number;
+            /** Format: double */
+            paymentScore: number;
+            /** Format: double */
+            serviceScore: number;
+            targetGrade?: string | null;
+            reason?: string | null;
+            detailsJson?: string | null;
+        };
+        SupplierAttachmentDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int32 */
+            supplierId: number;
+            docType: string;
+            docTypeLabel: string;
+            fileName: string;
+            /** Format: int64 */
+            fileSizeBytes: number;
+            contentType: string;
+            /** Format: date-time */
+            uploadedAt: string;
+            uploadedByName?: string | null;
+            downloadUrl?: string | null;
         };
         SupplierBlacklistDto: {
             /** Format: int32 */
@@ -17043,6 +18593,14 @@ export interface components {
             purchasedRevenue: number;
             industryGroups: string[];
             latestEvaluation?: components["schemas"]["SupplierLatestEvaluationDto"];
+            taxCode?: string | null;
+            supplierType?: string | null;
+            scope?: string | null;
+            website?: string | null;
+            primaryContact?: components["schemas"]["SupplierPrimaryContactDto"];
+            attachments?: components["schemas"]["SupplierAttachmentDto"][] | null;
+            /** Format: int32 */
+            contactCount: number;
         };
         SupplierDtoPagedResult: {
             items: components["schemas"]["SupplierDto"][];
@@ -17094,6 +18652,11 @@ export interface components {
             description?: string | null;
             /** Format: int32 */
             supplierCount: number;
+            /** Format: int32 */
+            parentGroupId?: number | null;
+            parentGroupName?: string | null;
+            /** Format: int32 */
+            childCount: number;
         };
         SupplierGroupMemberDto: {
             /** Format: int32 */
@@ -17116,6 +18679,46 @@ export interface components {
             /** Format: int32 */
             id: number;
             name: string;
+            /** Format: int32 */
+            parentGroupId?: number | null;
+            parentGroupName?: string | null;
+        };
+        SupplierImportPreviewResponseDto: {
+            /** Format: int32 */
+            totalRows: number;
+            /** Format: int32 */
+            validRows: number;
+            /** Format: int32 */
+            errorRows: number;
+            rows: components["schemas"]["SupplierImportRowPreviewDto"][];
+            availableSheets?: string[] | null;
+            selectedSheet?: string | null;
+        };
+        SupplierImportResultDto: {
+            /** Format: int32 */
+            totalRows: number;
+            /** Format: int32 */
+            importedCount: number;
+            /** Format: int32 */
+            failedCount: number;
+            errors: string[];
+        };
+        SupplierImportRowPreviewDto: {
+            supplierCode?: string | null;
+            supplierName: string;
+            taxCode?: string | null;
+            contactPhone?: string | null;
+            website?: string | null;
+            supplierType?: string | null;
+            scope?: string | null;
+            /** Format: int32 */
+            maxDebtDays: number;
+            /** Format: double */
+            creditLimit?: number | null;
+            paymentTerms?: string | null;
+            industryGroups?: string | null;
+            isValid: boolean;
+            error?: string | null;
         };
         SupplierLatestEvaluationDto: {
             period: string;
@@ -17287,6 +18890,39 @@ export interface components {
             /** Format: int32 */
             daysUntilDue: number;
         };
+        SupplierPrimaryContactDto: {
+            /** Format: int32 */
+            id: number;
+            fullName: string;
+            position?: string | null;
+            phone?: string | null;
+            email?: string | null;
+            role: string;
+        };
+        SupplierTierEvaluationDto: {
+            /** Format: int32 */
+            id: number;
+            /** Format: int32 */
+            supplierId: number;
+            oldGrade?: string | null;
+            newGrade: string;
+            /** Format: double */
+            totalScore: number;
+            /** Format: double */
+            priceScore: number;
+            /** Format: double */
+            profileScore: number;
+            /** Format: double */
+            paymentScore: number;
+            /** Format: double */
+            serviceScore: number;
+            evaluationDetailsJson?: string | null;
+            reason?: string | null;
+            evaluatedById?: string | null;
+            evaluatedByName?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
         SupplierTrendPointDto: {
             month: string;
             /** Format: double */
@@ -17441,6 +19077,14 @@ export interface components {
         };
         UpdateImportReceiptEvaluationRequest: {
             evaluation?: string | null;
+        };
+        UpdatePriceBookMarkupSettingsRequest: {
+            /** Format: double */
+            globalMarkupPercent: number;
+            categories?: components["schemas"]["PriceBookMarkupCategoryDto"][] | null;
+            itemOverrides?: {
+                [key: string]: number;
+            } | null;
         };
         UpdateProjectBottleneckRequest: {
             name?: string | null;
@@ -17613,6 +19257,18 @@ export interface components {
         UpdateRolePermissionsRequest: {
             permissions: string[];
         };
+        UpdateServiceExpenseItemRequest: {
+            code: string;
+            name: string;
+            type: string;
+            unit: string;
+            /** Format: double */
+            referencePrice?: number | null;
+            description?: string | null;
+            isActive: boolean;
+            /** Format: int32 */
+            sortOrder: number;
+        };
         UpdateSupplierModuleSettingsRequest: {
             /** Format: double */
             gradeAMinScore: number;
@@ -17773,6 +19429,9 @@ export interface components {
         UpsertSupplierGroupRequest: {
             name: string;
             description?: string | null;
+            /** Format: int32 */
+            parentGroupId?: number | null;
+            subGroups?: components["schemas"]["UpsertSupplierSubGroupItem"][] | null;
         };
         UpsertSupplierRequest: {
             supplierCode?: string | null;
@@ -17783,6 +19442,25 @@ export interface components {
             paymentTerms?: string | null;
             /** Format: double */
             creditLimit?: number | null;
+            taxCode?: string | null;
+            supplierType?: string | null;
+            scope?: string | null;
+            website?: string | null;
+            contactName?: string | null;
+            contactEmail?: string | null;
+            contactPosition?: string | null;
+            primaryContactName?: string | null;
+            primaryContactEmail?: string | null;
+            primaryContactPosition?: string | null;
+            readonly resolvedContactName?: string | null;
+            readonly resolvedContactEmail?: string | null;
+            readonly resolvedContactPosition?: string | null;
+        };
+        UpsertSupplierSubGroupItem: {
+            /** Format: int32 */
+            id?: number | null;
+            name: string;
+            description?: string | null;
         };
         WarehouseDto: {
             id: string;

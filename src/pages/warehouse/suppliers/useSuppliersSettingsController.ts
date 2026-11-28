@@ -6,6 +6,7 @@ import { usePermission } from '../../../hooks/usePermission';
 import { showToast } from '../../../components/ui/Toast';
 import { getApiErrorMessage } from '../../../lib/apiClient';
 import { DEFAULT_LIST_PAGE_SIZE, type ListPageSize } from '../../../constants/pagination';
+import { formatSupplierGroupPath } from '../../../lib/suppliers/supplierGroupTree';
 import { formatCurrencyInput } from '../../../utils/formatCurrency';
 import {
   useApproveSupplier,
@@ -96,10 +97,12 @@ export function useSuppliersSettingsController() {
   const items = data?.items ?? [];
   const totalCount = data?.totalCount ?? 0;
   const totalPages = data?.totalPages ?? 1;
-  const groupOptions = groupPage?.items ?? [];
-  const filteredGroupName = groupIdFromUrl
-    ? groupOptions.find(g => g.id === groupIdFromUrl)?.name
-    : undefined;
+  const groupOptions = useMemo(() => groupPage?.items ?? [], [groupPage?.items]);
+  const filteredGroupName = useMemo(() => {
+    if (!groupIdFromUrl) return undefined;
+    const groupMap = new Map(groupOptions.map(g => [g.id, g]));
+    return formatSupplierGroupPath(groupIdFromUrl, groupMap) || undefined;
+  }, [groupIdFromUrl, groupOptions]);
   const isSaving = createMutation.isPending || updateMutation.isPending || openingEdit;
   const hasActiveFilters = Boolean(search || ratingFilter || statusFilter || groupIdFromUrl);
 
@@ -107,11 +110,19 @@ export function useSuppliersSettingsController() {
     void qc.invalidateQueries({ queryKey: queryKeys.suppliers.all });
   };
 
-  const clearGroupFilter = () => {
+  const setGroupFilter = (groupId?: number) => {
     const next = new URLSearchParams(searchParams);
-    next.delete('groupId');
+    if (groupId && Number.isFinite(groupId) && groupId > 0) {
+      next.set('groupId', String(groupId));
+    } else {
+      next.delete('groupId');
+    }
     setSearchParams(next, { replace: true });
     setPage(1);
+  };
+
+  const clearGroupFilter = () => {
+    setGroupFilter(undefined);
   };
 
   const resetFilters = () => {
@@ -365,6 +376,7 @@ export function useSuppliersSettingsController() {
     isApproving: approveMutation.isPending,
     isRejecting: rejectMutation.isPending,
     invalidateSuppliers,
+    setGroupFilter,
     clearGroupFilter,
     resetFilters,
     openCreate,

@@ -2,6 +2,9 @@ import { act, createElement, createRef } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import PurchasePlanCreateImportBar from './PurchasePlanCreateImportBar';
+import { emptyLine } from './createPurchasePlanDraft';
+import { buildPurchasePlanReconciliation } from './purchasePlanReconciliation';
+import { formatCurrencyFull } from '../../utils/formatCurrency';
 import type { PurchasePlanImportPreviewApiDto } from '../../types/api/purchasingApi';
 
 describe('PurchasePlanCreateImportBar with Error Details Modal', () => {
@@ -190,5 +193,161 @@ describe('PurchasePlanCreateImportBar with Error Details Modal', () => {
 
     const errorItem = container.querySelector('.pur-create-plan__preview-errors li');
     expect(errorItem?.textContent?.trim()).toBe('Dòng Excel 4: Mã vật tư không tồn tại');
+  });
+
+  it('renders 100% matched reconciliation summary table and toggles amountSourceMode pills', async () => {
+    const matchedLine = {
+      ...emptyLine(),
+      key: 'matched-1',
+      excelRowNumber: 2,
+      materialCode: 'VT-INOX-304',
+      productName: 'Tấm Inox 304 dày 10mm',
+      unit: 'Tấm',
+      quantity: '16',
+      kgPerUnit: '194',
+      budgetUnitPrice: '58000',
+      budgetAmount: '180032000',
+      proposalUnitPrice: '13916000',
+      proposalAmount: '222656000',
+      purchaseUnitPrice: '13725000',
+      purchaseAmount: '219600000',
+      selectedUnitPrice: '13916000',
+      selectedAmount: '222656000',
+    };
+    const report = buildPurchasePlanReconciliation([matchedLine]);
+    const onModeChange = vi.fn();
+
+    await act(() => root.render(createElement(PurchasePlanCreateImportBar, {
+      ...defaultProps,
+      amountSourceMode: 'excel',
+      onAmountSourceModeChange: onModeChange,
+      reconciliation: report,
+    })));
+
+    const panel = container.querySelector('.pur-create-plan__reconcile') as HTMLElement;
+    expect(panel).toBeTruthy();
+    expect(panel.textContent).toContain('Khớp 100% giữa Excel và công thức Web');
+    expect(panel.textContent).toContain('Công thức Web: trống KG/ĐVT → SL × ĐG · có KG/ĐVT → SL × KG/ĐVT × ĐG');
+    expect(panel.textContent).toContain(formatCurrencyFull(180_032_000));
+    expect(panel.textContent).toContain(formatCurrencyFull(222_656_000));
+    expect(panel.textContent).toContain(formatCurrencyFull(219_600_000));
+
+    const stageRows = panel.querySelectorAll('.pur-create-plan__reconcile-table tbody tr');
+    expect(stageRows).toHaveLength(4);
+    expect([...stageRows].map(r => r.querySelector('td')?.textContent?.trim())).toEqual([
+      'Dự toán',
+      'Đề xuất',
+      'Mua hàng',
+      'NCC chọn',
+    ]);
+
+    const excelRadio = panel.querySelector('button[role="radio"]:first-child') as HTMLButtonElement;
+    const webRadio = panel.querySelector('button[role="radio"]:last-child') as HTMLButtonElement;
+    expect(excelRadio.getAttribute('aria-checked')).toBe('true');
+    expect(webRadio.getAttribute('aria-checked')).toBe('false');
+
+    await act(() => {
+      webRadio.click();
+    });
+    expect(onModeChange).toHaveBeenCalledWith('web');
+  });
+
+  it('opens mismatch detail modal, filters by stage and search query, and copies mismatches', async () => {
+    const writeTextMock = vi.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, { clipboard: { writeText: writeTextMock } });
+
+    const lines = [
+      {
+        ...emptyLine(),
+        key: 'line-1',
+        excelRowNumber: 7,
+        materialCode: 'VT-THEP-TAM',
+        productName: 'Thép tấm A515',
+        unit: 'Tấm',
+        quantity: '16',
+        kgPerUnit: '194',
+        budgetUnitPrice: '58000',
+        budgetAmount: '180032000', // matches
+        proposalKgPerUnit: '',
+        proposalUnitPrice: '58000',
+        proposalAmount: '180032000', // mismatch in proposal (missing stage KG)
+      },
+      {
+        ...emptyLine(),
+        key: 'line-2',
+        excelRowNumber: 12,
+        materialCode: 'VT-BULONG',
+        productName: 'Bu lông neo M24',
+        unit: 'Bộ',
+        quantity: '60',
+        budgetUnitPrice: '10000',
+        budgetAmount: '600000',
+        purchaseUnitPrice: '1345300',
+        purchaseAmount: '1345300', // lump sum mismatch in purchase
+        selectedUnitPrice: '1345300',
+        selectedAmount: '', // missing amount in selected
+      },
+    ];
+    const report = buildPurchasePlanReconciliation(lines);
+
+    await act(() => root.render(createElement(PurchasePlanCreateImportBar, {
+      ...defaultProps,
+      reconciliation: report,
+    })));
+
+    const panel = container.querySelector('.pur-create-plan__reconcile') as HTMLElement;
+    expect(panel.textContent).toContain('Lệch 2 dòng (3 mục)');
+
+    const openDetailBtn = panel.querySelector('.pur-create-plan__reconcile-detail-btn') as HTMLButtonElement;
+    expect(openDetailBtn?.textContent).toContain('Xem chi tiết dòng lệch');
+
+    await act(() => {
+      openDetailBtn.click();
+    });
+
+    const modal = document.querySelector('[role="dialog"]') as HTMLElement;
+    expect(modal).toBeTruthy();
+    expect(modal.querySelectorAll('tbody tr')).toHaveLength(3);
+    expect(modal.textContent).toContain('VT-THEP-TAM');
+    expect(modal.textContent).toContain('VT-BULONG');
+    expect(modal.textContent).toContain('Thiếu KG/ĐVT của nhóm này trong Excel');
+    expect(modal.textContent).toContain('Excel nhập giá trọn gói (không nhân SL)');
+    expect(modal.textContent).toContain('Excel để trống Thành tiền');
+
+    // Filter by stage "Đề xuất"
+    const proposalPill = [...modal.querySelectorAll('.pur-reconcile-modal__filter-pill')].find(
+      b => b.textContent?.trim() === 'Đề xuất',
+    ) as HTMLButtonElement;
+    expect(proposalPill).toBeTruthy();
+    await act(() => {
+      proposalPill.click();
+    });
+    expect(modal.querySelectorAll('tbody tr')).toHaveLength(1);
+    expect(modal.querySelector('tbody tr')?.textContent).toContain('Dòng 7');
+
+    // Reset filter to "Tất cả" and search by "M24"
+    const allPill = [...modal.querySelectorAll('.pur-reconcile-modal__filter-pill')].find(
+      b => b.textContent?.trim() === 'Tất cả',
+    ) as HTMLButtonElement;
+    await act(() => {
+      allPill.click();
+    });
+    const searchInput = modal.querySelector('input[aria-label="Tìm kiếm dòng lệch"]') as HTMLInputElement;
+    await act(() => {
+      const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
+      nativeSetter?.call(searchInput, 'M24');
+      searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+      searchInput.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    expect(modal.querySelectorAll('tbody tr')).toHaveLength(2);
+
+    // Copy mismatch list
+    const copyBtn = modal.querySelector('button[aria-label="Sao chép danh sách lệch"]') as HTMLButtonElement;
+    await act(async () => {
+      copyBtn.click();
+    });
+    expect(writeTextMock).toHaveBeenCalledTimes(1);
+    expect(writeTextMock.mock.calls[0][0]).toContain('VT-THEP-TAM');
+    expect(writeTextMock.mock.calls[0][0]).toContain('VT-BULONG');
   });
 });
